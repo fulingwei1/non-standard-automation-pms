@@ -11,6 +11,7 @@ from app.schemas.project import (
     ProjectUpdate,
     ProjectResponse,
     ProjectListResponse,
+    ProjectDetailResponse,
 )
 
 router = APIRouter()
@@ -54,7 +55,6 @@ def create_project(
     """
     Create new project.
     """
-    # Check if project number exists
     project = (
         db.query(Project)
         .filter(Project.project_code == project_in.project_code)
@@ -66,31 +66,44 @@ def create_project(
             detail="The project with this project number already exists in the system.",
         )
 
-    project = Project(
-        project_code=project_in.project_code,
-        project_name=project_in.project_name,
-        short_name=project_in.short_name,
-        customer_id=project_in.customer_id,
-        contract_no=project_in.contract_no,
-        project_type=project_in.project_type,
-        # business_type=project_in.business_type,
-        # machine_count=project_in.machine_count,
-        contract_date=project_in.contract_date,
-        planned_start_date=project_in.planned_start_date,
-        planned_end_date=project_in.planned_end_date,
-        # delivery_date attribute missing in model
-        contract_amount=project_in.contract_amount,
-        budget_amount=project_in.budget_amount,
-        pm_id=project_in.pm_id,
-        description=project_in.description,
-    )
+    # Convert schema to dict and remove any fields not in model
+    project_data = project_in.model_dump()
+
+    # Remove machine_count if it's strictly for logic
+    project_data.pop("machine_count", None)
+
+    project = Project(**project_data)
+
+    # Optionally populate redundant fields from related objects
+    if project.customer_id:
+        from app.models.project import Customer
+
+        customer = db.query(Customer).get(project.customer_id)
+        if customer:
+            project.customer_name = customer.customer_name
+            project.customer_contact = customer.contact_person
+            project.customer_phone = customer.contact_phone
+
+    if project.pm_id:
+        from app.models.user import User
+
+        pm = db.query(User).get(project.pm_id)
+        if pm:
+            project.pm_name = pm.real_name or pm.username
+
     db.add(project)
     db.commit()
     db.refresh(project)
+
+    # Initialize standard stages for the project
+    from app.utils.project_utils import init_project_stages
+
+    init_project_stages(db, project.id)
+
     return project
 
 
-@router.get("/{project_id}", response_model=ProjectResponse)
+@router.get("/{project_id}", response_model=ProjectDetailResponse)
 def read_project(
     *,
     db: Session = Depends(deps.get_db),
@@ -102,6 +115,15 @@ def read_project(
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+
+    # Add dynamically fetched data if redundant fields are empty
+    if not project.customer_name and project.customer:
+        project.customer_name = project.customer.customer_name
+    if not project.pm_name and project.manager:
+        project.pm_name = project.manager.real_name or project.manager.username
+
+    # Convert dynamic relationships to lists for Pydantic
+    # Pydantic detail response will automatically use these
     return project
 
 
@@ -119,22 +141,28 @@ def update_project(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    update_data = project_in.dict(exclude_unset=True)
-
-    # Field mapping
-    if "manager_id" in update_data:
-        update_data["pm_id"] = update_data.pop("manager_id")
-    if "customer_contract_no" in update_data:
-        update_data["contract_no"] = update_data.pop("customer_contract_no")
-    if "project_short_name" in update_data:
-        update_data["short_name"] = update_data.pop("project_short_name")
-
-    # Ignoring fields not in model
-    valid_fields = {c.name for c in Project.__table__.columns}
+    update_data = project_in.model_dump(exclude_unset=True)
 
     for field, value in update_data.items():
-        if field in valid_fields:
+        if hasattr(project, field):
             setattr(project, field, value)
+
+    # Update redundant fields if ID changed
+    if "customer_id" in update_data:
+        from app.models.project import Customer
+
+        customer = db.query(Customer).get(project.customer_id)
+        if customer:
+            project.customer_name = customer.customer_name
+            project.customer_contact = customer.contact_person
+            project.customer_phone = customer.contact_phone
+
+    if "pm_id" in update_data:
+        from app.models.user import User
+
+        pm = db.query(User).get(project.pm_id)
+        if pm:
+            project.pm_name = pm.real_name or pm.username
 
     db.add(project)
     db.commit()

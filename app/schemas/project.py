@@ -5,7 +5,7 @@
 
 from typing import Optional, List
 from pydantic import BaseModel, Field
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 
 from .common import BaseSchema, TimestampSchema
@@ -19,14 +19,20 @@ class CustomerCreate(BaseModel):
 
     customer_code: str = Field(max_length=50, description="客户编码")
     customer_name: str = Field(max_length=200, description="客户名称")
-    customer_short_name: Optional[str] = Field(default=None, max_length=50)
+    short_name: Optional[str] = Field(default=None, max_length=50)
     customer_type: Optional[str] = None
     industry: Optional[str] = None
-    region: Optional[str] = None
+    scale: Optional[str] = None
     address: Optional[str] = None
     contact_person: Optional[str] = None
     contact_phone: Optional[str] = None
     contact_email: Optional[str] = None
+    legal_person: Optional[str] = None
+    tax_no: Optional[str] = None
+    bank_name: Optional[str] = None
+    bank_account: Optional[str] = None
+    credit_limit: Optional[Decimal] = None
+    payment_terms: Optional[str] = None
     remark: Optional[str] = None
 
 
@@ -34,16 +40,22 @@ class CustomerUpdate(BaseModel):
     """更新客户"""
 
     customer_name: Optional[str] = None
-    customer_short_name: Optional[str] = None
+    short_name: Optional[str] = None
     customer_type: Optional[str] = None
     industry: Optional[str] = None
-    region: Optional[str] = None
+    scale: Optional[str] = None
     address: Optional[str] = None
     contact_person: Optional[str] = None
     contact_phone: Optional[str] = None
     contact_email: Optional[str] = None
+    legal_person: Optional[str] = None
+    tax_no: Optional[str] = None
+    bank_name: Optional[str] = None
+    bank_account: Optional[str] = None
     credit_level: Optional[str] = None
-    is_active: Optional[bool] = None
+    credit_limit: Optional[Decimal] = None
+    payment_terms: Optional[str] = None
+    status: Optional[str] = None
     remark: Optional[str] = None
 
 
@@ -53,14 +65,22 @@ class CustomerResponse(TimestampSchema):
     id: int
     customer_code: str
     customer_name: str
-    customer_short_name: Optional[str] = None
+    short_name: Optional[str] = None
     customer_type: Optional[str] = None
     industry: Optional[str] = None
-    region: Optional[str] = None
+    scale: Optional[str] = None
     contact_person: Optional[str] = None
     contact_phone: Optional[str] = None
+    contact_email: Optional[str] = None
+    address: Optional[str] = None
     credit_level: str = "B"
-    is_active: bool = True
+    credit_limit: Optional[Decimal] = None
+    status: str = "ACTIVE"
+    legal_person: Optional[str] = None
+    tax_no: Optional[str] = None
+
+    class Config:
+        from_attributes = True
 
 
 # ==================== 项目 ====================
@@ -176,14 +196,14 @@ class ProjectDetailResponse(ProjectResponse):
 class MachineCreate(BaseModel):
     """创建设备"""
 
-    machine_code: str = Field(max_length=50, description="设备编号")
+    machine_code: str = Field(max_length=50, description="设备编码")
     machine_name: str = Field(max_length=200, description="设备名称")
     project_id: int = Field(description="项目ID")
+    machine_no: Optional[int] = 1
     machine_type: Optional[str] = None
-    machine_model: Optional[str] = None
     specification: Optional[str] = None
-    planned_complete_date: Optional[date] = None
-    budget_cost: Optional[Decimal] = Field(default=0)
+    planned_start_date: Optional[date] = None
+    planned_end_date: Optional[date] = None
     remark: Optional[str] = None
 
 
@@ -191,19 +211,24 @@ class MachineUpdate(BaseModel):
     """更新设备"""
 
     machine_name: Optional[str] = None
+    machine_no: Optional[int] = None
     machine_type: Optional[str] = None
-    machine_model: Optional[str] = None
     specification: Optional[str] = None
-    serial_number: Optional[str] = None
+    stage: Optional[str] = None
     status: Optional[str] = None
-    current_stage: Optional[str] = None
-    progress_pct: Optional[int] = None
-    planned_complete_date: Optional[date] = None
-    actual_complete_date: Optional[date] = None
+    health: Optional[str] = None
+    progress_pct: Optional[Decimal] = None
+    planned_start_date: Optional[date] = None
+    planned_end_date: Optional[date] = None
+    actual_start_date: Optional[date] = None
+    actual_end_date: Optional[date] = None
+    fat_date: Optional[date] = None
+    fat_result: Optional[str] = None
+    sat_date: Optional[date] = None
+    sat_result: Optional[str] = None
     ship_date: Optional[date] = None
-    install_date: Optional[date] = None
-    budget_cost: Optional[Decimal] = None
-    actual_cost: Optional[Decimal] = None
+    ship_address: Optional[str] = None
+    tracking_no: Optional[str] = None
     remark: Optional[str] = None
 
 
@@ -213,17 +238,18 @@ class MachineResponse(TimestampSchema):
     id: int
     machine_code: str
     machine_name: str
+    machine_no: int
     project_id: int
     project_name: Optional[str] = None
     machine_type: Optional[str] = None
-    machine_model: Optional[str] = None
-    status: str = "PLANNING"
-    current_stage: str = "S1"
-    progress_pct: int = 0
-    planned_complete_date: Optional[date] = None
-    actual_complete_date: Optional[date] = None
-    budget_cost: Decimal = 0
-    actual_cost: Decimal = 0
+    stage: str = "S1"
+    status: str = "ST01"
+    health: str = "H1"
+    progress_pct: Decimal = 0
+    planned_start_date: Optional[date] = None
+    planned_end_date: Optional[date] = None
+    actual_start_date: Optional[date] = None
+    actual_end_date: Optional[date] = None
 
     class Config:
         from_attributes = True
@@ -236,14 +262,15 @@ class MilestoneCreate(BaseModel):
     """创建里程碑"""
 
     project_id: int = Field(description="项目ID")
-    milestone_type: str = Field(description="里程碑类型")
+    machine_id: Optional[int] = None
+    milestone_code: str = Field(max_length=50, description="里程碑编码")
     milestone_name: str = Field(max_length=200, description="里程碑名称")
-    planned_date: Optional[date] = None
-    reminder_days: int = Field(default=7, ge=0)
-    is_key: bool = False
-    related_stage: Optional[str] = None
-    deliverable: Optional[str] = None
-    remark: Optional[str] = None
+    milestone_type: str = Field(default="CUSTOM", description="里程碑类型")
+    planned_date: date = Field(description="计划日期")
+    stage_code: Optional[str] = None
+    deliverables: Optional[str] = None
+    owner_id: Optional[int] = None
+    description: Optional[str] = None
 
 
 class MilestoneUpdate(BaseModel):
@@ -253,10 +280,10 @@ class MilestoneUpdate(BaseModel):
     planned_date: Optional[date] = None
     actual_date: Optional[date] = None
     status: Optional[str] = None
-    reminder_days: Optional[int] = None
-    is_key: Optional[bool] = None
-    deliverable: Optional[str] = None
-    remark: Optional[str] = None
+    deliverables: Optional[str] = None
+    owner_id: Optional[int] = None
+    description: Optional[str] = None
+    completion_note: Optional[str] = None
 
 
 class MilestoneResponse(TimestampSchema):
@@ -264,13 +291,15 @@ class MilestoneResponse(TimestampSchema):
 
     id: int
     project_id: int
-    milestone_type: str
+    machine_id: Optional[int] = None
+    milestone_code: str
     milestone_name: str
-    planned_date: Optional[date] = None
+    milestone_type: str
+    planned_date: date
     actual_date: Optional[date] = None
     status: str = "PENDING"
-    is_key: bool = False
-    related_stage: Optional[str] = None
+    stage_code: Optional[str] = None
+    owner_id: Optional[int] = None
 
 
 # ==================== 项目成员 ====================
@@ -281,21 +310,201 @@ class ProjectMemberCreate(BaseModel):
 
     project_id: int
     user_id: int
-    role_in_project: str = Field(max_length=50)
-    responsibility: Optional[str] = None
-    join_date: Optional[date] = None
-    workload_pct: int = Field(default=100, ge=0, le=100)
+    role_code: str = Field(max_length=50)
+    allocation_pct: Decimal = Field(default=100, ge=0, le=100)
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    remark: Optional[str] = None
 
 
 class ProjectMemberResponse(BaseSchema):
     """项目成员响应"""
 
     id: int
+    project_id: int
     user_id: int
     username: str
     real_name: Optional[str] = None
-    role_in_project: str
-    responsibility: Optional[str] = None
-    join_date: Optional[date] = None
+    role_code: str
+    allocation_pct: Decimal = 100
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
     is_active: bool = True
-    workload_pct: int = 100
+    remark: Optional[str] = None
+
+
+# ==================== 项目阶段 ====================
+
+
+class ProjectStageCreate(BaseModel):
+    """创建项目阶段（配置）"""
+
+    project_id: int
+    stage_code: str = Field(max_length=20)
+    stage_name: str = Field(max_length=50)
+    stage_order: int
+    description: Optional[str] = None
+    gate_conditions: Optional[str] = None
+    required_deliverables: Optional[str] = None
+    default_duration_days: Optional[int] = None
+    color: Optional[str] = None
+    icon: Optional[str] = None
+
+
+class ProjectStageUpdate(BaseModel):
+    """更新项目阶段"""
+
+    stage_name: Optional[str] = None
+    stage_order: Optional[int] = None
+    description: Optional[str] = None
+    gate_conditions: Optional[str] = None
+    required_deliverables: Optional[str] = None
+    default_duration_days: Optional[int] = None
+    color: Optional[str] = None
+    icon: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class ProjectStageResponse(TimestampSchema):
+    """项目阶段响应"""
+
+    id: int
+    project_id: int
+    stage_code: str
+    stage_name: str
+    stage_order: int
+    description: Optional[str] = None
+    gate_conditions: Optional[str] = None
+    required_deliverables: Optional[str] = None
+    default_duration_days: Optional[int] = None
+    color: Optional[str] = None
+    icon: Optional[str] = None
+
+    # 计划与进度
+    progress_pct: int = 0
+    status: str = "PENDING"
+    planned_start_date: Optional[date] = None
+    planned_end_date: Optional[date] = None
+    actual_start_date: Optional[date] = None
+    actual_end_date: Optional[date] = None
+
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+
+# ==================== 项目状态 ====================
+
+
+class ProjectStatusCreate(BaseModel):
+    """创建项目状态"""
+
+    stage_id: int
+    status_code: str
+    status_name: str
+    status_order: int
+    description: Optional[str] = None
+    status_type: str = "NORMAL"
+    auto_next_status: Optional[str] = None
+
+
+class ProjectStatusResponse(TimestampSchema):
+    """项目状态响应"""
+
+    id: int
+    stage_id: int
+    status_code: str
+    status_name: str
+    status_order: int
+    description: Optional[str] = None
+    status_type: str
+    auto_next_status: Optional[str] = None
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+
+# ==================== 项目成本 ====================
+
+
+class ProjectCostCreate(BaseModel):
+    """创建成本记录"""
+
+    project_id: int
+    machine_id: Optional[int] = None
+    cost_type: str = Field(max_length=50)
+    cost_category: str = Field(max_length=50)
+    source_module: Optional[str] = None
+    source_type: Optional[str] = None
+    source_id: Optional[int] = None
+    source_no: Optional[str] = None
+    amount: Decimal
+    tax_amount: Optional[Decimal] = 0
+    description: Optional[str] = None
+    cost_date: date
+
+
+class ProjectCostResponse(TimestampSchema):
+    """成本记录响应"""
+
+    id: int
+    project_id: int
+    machine_id: Optional[int] = None
+    cost_type: str
+    cost_category: str
+    source_module: Optional[str] = None
+    source_type: Optional[str] = None
+    source_id: Optional[int] = None
+    source_no: Optional[str] = None
+    amount: Decimal
+    tax_amount: Decimal
+    description: Optional[str] = None
+    cost_date: date
+
+    class Config:
+        from_attributes = True
+
+
+# ==================== 项目文档 ====================
+
+
+class ProjectDocumentCreate(BaseModel):
+    """创建文档记录"""
+
+    project_id: int
+    machine_id: Optional[int] = None
+    doc_type: str = Field(max_length=50)
+    doc_category: Optional[str] = None
+    doc_name: str = Field(max_length=200)
+    doc_no: Optional[str] = None
+    version: str = "1.0"
+    file_path: str
+    file_name: str
+    file_size: Optional[int] = None
+    file_type: Optional[str] = None
+    description: Optional[str] = None
+
+
+class ProjectDocumentResponse(TimestampSchema):
+    """文档记录响应"""
+
+    id: int
+    project_id: int
+    machine_id: Optional[int] = None
+    doc_type: str
+    doc_category: Optional[str] = None
+    doc_name: str
+    doc_no: Optional[str] = None
+    version: str
+    file_path: str
+    file_name: str
+    status: str
+    approved_by: Optional[int] = None
+    approved_at: Optional[date] = None
+    description: Optional[str] = None
+    uploaded_by: Optional[int] = None
+
+    class Config:
+        from_attributes = True

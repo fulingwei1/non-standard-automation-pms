@@ -80,4 +80,46 @@ for f in files:
         raise e
 
 conn.close()
+print("Database migration execution completed.")
+
+# Seed initial data (Admin User)
+print("Seeding initial data...")
+try:
+    from app.models.base import get_session
+    from app.models.user import User
+    from app.models.organization import Employee
+    from app.core import security
+
+    with get_session() as db:
+        # Check if admin already exists
+        admin = db.query(User).filter(User.username == "admin").first()
+        if not admin:
+            # Create an employee for admin
+            emp = Employee(
+                employee_code="E0001",
+                name="System Admin",
+                department="IT",
+                role="ADMIN",
+            )
+            db.add(emp)
+            db.flush()  # Get emp.id
+
+            # Create the user
+            user = User(
+                username="admin",
+                employee_id=emp.id,
+                password_hash=security.get_password_hash("password123"),
+                real_name="System Admin",
+                is_active=True,
+                is_superuser=True,
+                auth_type="password",
+            )
+            db.add(user)
+            db.commit()
+            print("Default admin user created: admin / password123")
+        else:
+            print("Admin user already exists.")
+except Exception as e:
+    print(f"Error seeding initial data: {e}")
+
 print("Database initialization completed.")

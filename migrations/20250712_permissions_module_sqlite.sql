@@ -7,11 +7,22 @@ BEGIN;
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     employee_id INTEGER NOT NULL,
-    username VARCHAR(50) UNIQUE,
-    auth_type VARCHAR(20) DEFAULT 'wechat',
-    last_login_at DATETIME,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    auth_type VARCHAR(20) DEFAULT 'password',
+    email VARCHAR(100),
+    phone VARCHAR(20),
+    real_name VARCHAR(50),
+    employee_no VARCHAR(50),
+    department VARCHAR(100),
+    position VARCHAR(100),
+    avatar VARCHAR(500),
     is_active BOOLEAN DEFAULT TRUE,
+    is_superuser BOOLEAN DEFAULT FALSE,
+    last_login_at DATETIME,
+    last_login_ip VARCHAR(50),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (employee_id) REFERENCES employees(id)
 );
 

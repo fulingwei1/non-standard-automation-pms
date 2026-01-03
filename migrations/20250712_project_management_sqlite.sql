@@ -145,10 +145,21 @@ CREATE INDEX idx_machines_stage ON machines(stage);
 
 CREATE TABLE IF NOT EXISTS project_stages (
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-    stage_code          VARCHAR(20) NOT NULL UNIQUE,          -- 阶段编码：S1-S9
+    project_id          INTEGER NOT NULL,                     -- 所属项目
+    stage_code          VARCHAR(20) NOT NULL,                 -- 阶段编码：S1-S9
     stage_name          VARCHAR(50) NOT NULL,                 -- 阶段名称
     stage_order         INTEGER NOT NULL,                     -- 阶段顺序
     description         TEXT,                                 -- 阶段描述
+
+    -- 计划与实际
+    planned_start_date  DATE,
+    planned_end_date    DATE,
+    actual_start_date   DATE,
+    actual_end_date     DATE,
+
+    -- 进度
+    progress_pct        INTEGER DEFAULT 0,
+    status              VARCHAR(20) DEFAULT 'PENDING',
 
     -- 门控条件
     gate_conditions     TEXT,                                 -- 进入条件JSON
@@ -162,7 +173,11 @@ CREATE TABLE IF NOT EXISTS project_stages (
     icon                VARCHAR(50),                          -- 图标
 
     is_active           BOOLEAN DEFAULT 1,
-    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (project_id) REFERENCES projects(id),
+    UNIQUE(project_id, stage_code)
 );
 
 -- ============================================
@@ -171,8 +186,8 @@ CREATE TABLE IF NOT EXISTS project_stages (
 
 CREATE TABLE IF NOT EXISTS project_statuses (
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-    stage_code          VARCHAR(20) NOT NULL,                 -- 所属阶段
-    status_code         VARCHAR(20) NOT NULL UNIQUE,          -- 状态编码
+    stage_id            INTEGER NOT NULL,                     -- 所属阶段ID
+    status_code         VARCHAR(20) NOT NULL,                 -- 状态编码
     status_name         VARCHAR(50) NOT NULL,                 -- 状态名称
     status_order        INTEGER NOT NULL,                     -- 状态顺序
     description         TEXT,                                 -- 状态描述
@@ -186,10 +201,11 @@ CREATE TABLE IF NOT EXISTS project_statuses (
     is_active           BOOLEAN DEFAULT 1,
     created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (stage_code) REFERENCES project_stages(stage_code)
+    FOREIGN KEY (stage_id) REFERENCES project_stages(id),
+    UNIQUE(stage_id, status_code)
 );
 
-CREATE INDEX idx_project_statuses_stage ON project_statuses(stage_code);
+CREATE INDEX idx_project_statuses_stage ON project_statuses(stage_id);
 
 -- ============================================
 -- 5. 项目状态变更日志

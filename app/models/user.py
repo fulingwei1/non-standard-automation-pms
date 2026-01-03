@@ -15,8 +15,12 @@ class User(Base, TimestampMixin):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    employee_id = Column(
+        Integer, ForeignKey("employees.id"), nullable=False, comment="员工ID"
+    )
     username = Column(String(50), unique=True, nullable=False, comment="用户名")
     password_hash = Column(String(255), nullable=False, comment="密码哈希")
+    auth_type = Column(String(20), default="password", comment="认证方式")
     email = Column(String(100), unique=True, comment="邮箱")
     phone = Column(String(20), comment="手机号")
     real_name = Column(String(50), comment="真实姓名")
