@@ -1,0 +1,7 @@
+stateDiagram-v2
+    [*] --> NEW
+    NEW --> QUALIFYING: 跟进
+    QUALIFYING --> CONVERTED: G1通过
+    QUALIFYING --> INVALID: 无效
+    INVALID --> [*]
+    CONVERTED --> [*]

@@ -1,0 +1,33 @@
+Found 14 migration files.
+Preparation: migrations/00000001_initial_employees_sqlite.sql
+Preparation: migrations/00000002_initial_payments_sqlite.sql
+Preparation: migrations/20250712_o2c_sales_module_sqlite.sql
+Preparation: migrations/20250712_permissions_module_sqlite.sql
+Preparation: migrations/20250712_permissions_z_seed_sqlite.sql
+Preparation: migrations/20250712_progress_tracking_sqlite.sql
+Preparation: migrations/20250712_project_management_sqlite.sql
+Preparation: migrations/20250712_purchase_material_sqlite.sql
+Preparation: migrations/20250712_role_management_sqlite.sql
+Preparation: migrations/20250712_role_management_z_seed_sqlite.sql
+Preparation: migrations/20260102_acceptance_sqlite.sql
+Preparation: migrations/20260102_alert_management_sqlite.sql
+Preparation: migrations/20260102_ecn_management_sqlite.sql
+Preparation: migrations/20260102_outsourcing_sqlite.sql
+Executing migrations/00000001_initial_employees_sqlite.sql...
+Executing migrations/00000002_initial_payments_sqlite.sql...
+Executing migrations/20250712_o2c_sales_module_sqlite.sql...
+Executing migrations/20250712_permissions_module_sqlite.sql...
+Executing migrations/20250712_permissions_z_seed_sqlite.sql...
+Executing migrations/20250712_progress_tracking_sqlite.sql...
+Executing migrations/20250712_project_management_sqlite.sql...
+Executing migrations/20250712_purchase_material_sqlite.sql...
+Executing migrations/20250712_role_management_sqlite.sql...
+Executing migrations/20250712_role_management_z_seed_sqlite.sql...
+Error executing migrations/20250712_role_management_z_seed_sqlite.sql: FOREIGN KEY constraint failed
+Traceback (most recent call last):
+  File "/Users/flw/非标自动化项目管理系统/init_db.py", line 72, in <module>
+    raise e
+  File "/Users/flw/非标自动化项目管理系统/init_db.py", line 67, in <module>
+    cursor.executescript(sql_script)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+sqlite3.IntegrityError: FOREIGN KEY constraint failed

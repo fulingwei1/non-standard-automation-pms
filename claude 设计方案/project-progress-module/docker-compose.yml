@@ -1,0 +1,140 @@
+version: '3.8'
+
+services:
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    container_name: project-progress-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123456
+      MYSQL_DATABASE: project_progress
+      MYSQL_USER: project
+      MYSQL_PASSWORD: project123
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/ddl_script.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: project-progress-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 后端API服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: project-progress-backend
+    restart: always
+    environment:
+      - DATABASE_URL=mysql+pymysql://project:project123@mysql:3306/project_progress
+      - REDIS_URL=redis://redis:6379/0
+      - WECHAT_CORP_ID=${WECHAT_CORP_ID:-}
+      - WECHAT_AGENT_ID=${WECHAT_AGENT_ID:-}
+      - WECHAT_SECRET=${WECHAT_SECRET:-}
+      - TZ=Asia/Shanghai
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Celery Worker (异步任务)
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: project-progress-celery-worker
+    restart: always
+    environment:
+      - DATABASE_URL=mysql+pymysql://project:project123@mysql:3306/project_progress
+      - REDIS_URL=redis://redis:6379/0
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - redis
+      - mysql
+    command: celery -A app.tasks worker -l info -Q default,alerts,notifications
+
+  # Celery Beat (定时任务)
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: project-progress-celery-beat
+    restart: always
+    environment:
+      - DATABASE_URL=mysql+pymysql://project:project123@mysql:3306/project_progress
+      - REDIS_URL=redis://redis:6379/0
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - redis
+      - mysql
+    command: celery -A app.tasks beat -l info
+
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: project-progress-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_BASE_URL=http://backend:8000/api
+
+  # Nginx反向代理 (生产环境)
+  nginx:
+    image: nginx:alpine
+    container_name: project-progress-nginx
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - backend
+      - frontend
+    profiles:
+      - production
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  default:
+    name: project-progress-network

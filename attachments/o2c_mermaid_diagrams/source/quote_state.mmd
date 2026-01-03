@@ -1,0 +1,9 @@
+stateDiagram-v2
+    [*] --> DRAFT
+    DRAFT --> IN_REVIEW: 提交
+    IN_REVIEW --> APPROVED: 通过
+    IN_REVIEW --> REJECTED: 驳回
+    APPROVED --> SENT: 发送
+    SENT --> EXPIRED: 超期
+    REJECTED --> DRAFT: 修改
+    EXPIRED --> DRAFT: 续期/新版本

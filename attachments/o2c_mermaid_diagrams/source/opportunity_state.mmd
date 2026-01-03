@@ -1,0 +1,11 @@
+stateDiagram-v2
+    [*] --> DISCOVERY
+    DISCOVERY --> QUALIFIED: G2通过
+    DISCOVERY --> ON_HOLD: 客户搁置
+    QUALIFIED --> PROPOSAL
+    PROPOSAL --> NEGOTIATION
+    NEGOTIATION --> WON: G3通过
+    NEGOTIATION --> LOST
+    ON_HOLD --> DISCOVERY: 重启
+    LOST --> [*]
+    WON --> [*]

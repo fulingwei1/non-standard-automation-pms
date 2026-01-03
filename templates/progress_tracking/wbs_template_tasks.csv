@@ -1,0 +1,6 @@
+template_id,task_name,stage,default_owner_role,plan_days,weight,depends_on_template_task_id
+1,RequirementReview,S2,PM,3,1,
+1,DesignReview,S4,MECH,5,2,1
+1,BOMRelease,S5,PMC,2,1,2
+1,AssemblyComplete,S6,ASSEMBLY,4,2,3
+1,FATTest,S7,QA,3,2,4
