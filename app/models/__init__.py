@@ -45,6 +45,20 @@ from .production import (
     WorkOrder, WorkReport, ProductionException,
     MaterialRequisition, MaterialRequisitionItem, ProductionDailyReport
 )
+from .pmo import (
+    PmoProjectInitiation, PmoProjectPhase, PmoChangeRequest,
+    PmoProjectRisk, PmoProjectCost, PmoMeeting,
+    PmoResourceAllocation, PmoProjectClosure
+)
+from .task_center import (
+    TaskUnified, JobDutyTemplate, TaskOperationLog,
+    TaskComment, TaskReminder
+)
+from .presale import (
+    PresaleSupportTicket, PresaleTicketDeliverable, PresaleTicketProgress,
+    PresaleSolution, PresaleSolutionCost, PresaleSolutionTemplate,
+    PresaleWorkload, PresaleCustomerTechProfile, PresaleTenderRecord
+)
 
 __all__ = [
     # Base
@@ -80,4 +94,15 @@ __all__ = [
     'Equipment', 'EquipmentMaintenance', 'ProductionPlan',
     'WorkOrder', 'WorkReport', 'ProductionException',
     'MaterialRequisition', 'MaterialRequisitionItem', 'ProductionDailyReport',
+    # PMO
+    'PmoProjectInitiation', 'PmoProjectPhase', 'PmoChangeRequest',
+    'PmoProjectRisk', 'PmoProjectCost', 'PmoMeeting',
+    'PmoResourceAllocation', 'PmoProjectClosure',
+    # Task Center
+    'TaskUnified', 'JobDutyTemplate', 'TaskOperationLog',
+    'TaskComment', 'TaskReminder',
+    # Presale
+    'PresaleSupportTicket', 'PresaleTicketDeliverable', 'PresaleTicketProgress',
+    'PresaleSolution', 'PresaleSolutionCost', 'PresaleSolutionTemplate',
+    'PresaleWorkload', 'PresaleCustomerTechProfile', 'PresaleTenderRecord',
 ]
