@@ -39,6 +39,12 @@ from .alert import (
     ExceptionEvent, ExceptionAction, ExceptionEscalation,
     AlertStatistics, ProjectHealthSnapshot, AlertRuleTemplate
 )
+from .production import (
+    Workshop, Workstation, Worker, WorkerSkill, ProcessDict,
+    Equipment, EquipmentMaintenance, ProductionPlan,
+    WorkOrder, WorkReport, ProductionException,
+    MaterialRequisition, MaterialRequisitionItem, ProductionDailyReport
+)
 
 __all__ = [
     # Base
@@ -69,4 +75,9 @@ __all__ = [
     'AlertRule', 'AlertRecord', 'AlertNotification',
     'ExceptionEvent', 'ExceptionAction', 'ExceptionEscalation',
     'AlertStatistics', 'ProjectHealthSnapshot', 'AlertRuleTemplate',
+    # Production
+    'Workshop', 'Workstation', 'Worker', 'WorkerSkill', 'ProcessDict',
+    'Equipment', 'EquipmentMaintenance', 'ProductionPlan',
+    'WorkOrder', 'WorkReport', 'ProductionException',
+    'MaterialRequisition', 'MaterialRequisitionItem', 'ProductionDailyReport',
 ]
