@@ -29,6 +29,7 @@ from .acceptance import (
     AcceptanceOrder, AcceptanceOrderItem, AcceptanceIssue,
     IssueFollowUp, AcceptanceSignature, AcceptanceReport
 )
+from .issue import Issue, IssueFollowUpRecord
 from .outsourcing import (
     OutsourcingVendor, OutsourcingOrder, OutsourcingOrderItem,
     OutsourcingDelivery, OutsourcingDeliveryItem, OutsourcingInspection,
@@ -94,6 +95,8 @@ __all__ = [
     'AcceptanceTemplate', 'TemplateCategory', 'TemplateCheckItem',
     'AcceptanceOrder', 'AcceptanceOrderItem', 'AcceptanceIssue',
     'IssueFollowUp', 'AcceptanceSignature', 'AcceptanceReport',
+    # Issue
+    'Issue', 'IssueFollowUpRecord',
     # Outsourcing
     'OutsourcingVendor', 'OutsourcingOrder', 'OutsourcingOrderItem',
     'OutsourcingDelivery', 'OutsourcingDeliveryItem', 'OutsourcingInspection',

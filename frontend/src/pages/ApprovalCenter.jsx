@@ -1,0 +1,606 @@
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  ClipboardCheck,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Search,
+  Filter,
+  FileText,
+  Package,
+  DollarSign,
+  Users,
+  Wrench,
+  ChevronRight,
+  MessageSquare,
+  Eye,
+  Check,
+  X,
+  RotateCcw,
+} from 'lucide-react'
+import { PageHeader } from '../components/layout'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '../components/ui/card'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Badge } from '../components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '../components/ui/dialog'
+import { cn } from '../lib/utils'
+import { fadeIn, staggerContainer } from '../lib/animations'
+
+// Mock approval data
+const mockApprovals = [
+  {
+    id: 'APV-20260104-001',
+    type: 'ecn',
+    title: '设计变更申请 - BMS老化设备传动机构',
+    applicant: '张工',
+    applicantDept: '机械设计部',
+    submitTime: '2026-01-04 09:30',
+    status: 'pending',
+    priority: 'high',
+    projectId: 'PJ250108001',
+    projectName: 'BMS老化测试设备',
+    description: '因客户需求变更，需调整传动机构尺寸，由原来的300mm调整为350mm',
+    attachments: ['变更说明.pdf', '新版图纸.dwg'],
+    impact: {
+      cost: '+¥12,000',
+      schedule: '+3天',
+      scope: '机械结构',
+    },
+    approvalFlow: [
+      { role: '技术负责人', user: '李工', status: 'approved', time: '2026-01-04 10:15', comment: '同意变更' },
+      { role: '项目经理', user: '王经理', status: 'pending', time: null, comment: null },
+      { role: '部门经理', user: '陈总', status: 'waiting', time: null, comment: null },
+    ],
+  },
+  {
+    id: 'APV-20260104-002',
+    type: 'purchase',
+    title: '采购申请 - 精密导轨及滑块',
+    applicant: '王采购',
+    applicantDept: '采购部',
+    submitTime: '2026-01-04 08:45',
+    status: 'pending',
+    priority: 'urgent',
+    projectId: 'PJ250108001',
+    projectName: 'BMS老化测试设备',
+    description: '项目急需THK精密导轨4套，申请紧急采购',
+    attachments: ['报价单.pdf'],
+    amount: 28900,
+    supplier: 'THK(深圳)销售',
+    approvalFlow: [
+      { role: '项目经理', user: '王经理', status: 'pending', time: null, comment: null },
+      { role: '财务审核', user: '张财务', status: 'waiting', time: null, comment: null },
+    ],
+  },
+  {
+    id: 'APV-20260103-003',
+    type: 'overtime',
+    title: '加班申请 - 周末调试',
+    applicant: '刘工',
+    applicantDept: '测试调试部',
+    submitTime: '2026-01-03 17:30',
+    status: 'approved',
+    priority: 'normal',
+    projectId: 'PJ250105002',
+    projectName: 'EOL功能测试设备',
+    description: '为赶项目进度，申请周六加班进行设备调试',
+    duration: '8小时',
+    approvalFlow: [
+      { role: '组长', user: '赵组长', status: 'approved', time: '2026-01-03 18:00', comment: '同意' },
+      { role: '部门经理', user: '陈总', status: 'approved', time: '2026-01-03 18:30', comment: '注意安全' },
+    ],
+  },
+  {
+    id: 'APV-20260103-004',
+    type: 'leave',
+    title: '请假申请 - 年假',
+    applicant: '孙工',
+    applicantDept: '电气设计部',
+    submitTime: '2026-01-03 14:00',
+    status: 'rejected',
+    priority: 'normal',
+    description: '申请1月8日-10日年假3天',
+    duration: '3天',
+    approvalFlow: [
+      { role: '组长', user: '钱组长', status: 'rejected', time: '2026-01-03 15:00', comment: '当前项目紧急，建议延后' },
+    ],
+    rejectReason: '当前项目紧急，建议延后',
+  },
+]
+
+const typeConfigs = {
+  ecn: { label: '设计变更', icon: Wrench, color: 'text-purple-400', bgColor: 'bg-purple-500/10' },
+  purchase: { label: '采购申请', icon: Package, color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
+  overtime: { label: '加班申请', icon: Clock, color: 'text-amber-400', bgColor: 'bg-amber-500/10' },
+  leave: { label: '请假申请', icon: Users, color: 'text-emerald-400', bgColor: 'bg-emerald-500/10' },
+  payment: { label: '付款申请', icon: DollarSign, color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
+}
+
+const statusConfigs = {
+  pending: { label: '待审批', color: 'bg-amber-500', textColor: 'text-amber-400' },
+  approved: { label: '已通过', color: 'bg-emerald-500', textColor: 'text-emerald-400' },
+  rejected: { label: '已驳回', color: 'bg-red-500', textColor: 'text-red-400' },
+  waiting: { label: '等待中', color: 'bg-slate-500', textColor: 'text-slate-400' },
+}
+
+const priorityConfigs = {
+  normal: { label: '普通', color: 'border-slate-500 text-slate-400' },
+  high: { label: '紧急', color: 'border-amber-500 text-amber-400' },
+  urgent: { label: '特急', color: 'border-red-500 text-red-400' },
+}
+
+function ApprovalCard({ approval, onView, onApprove, onReject }) {
+  const type = typeConfigs[approval.type]
+  const status = statusConfigs[approval.status]
+  const priority = priorityConfigs[approval.priority]
+  const TypeIcon = type.icon
+
+  const isPending = approval.status === 'pending'
+  const currentStep = approval.approvalFlow.findIndex((step) => step.status === 'pending')
+
+  return (
+    <motion.div
+      whileHover={{ scale: 1.01 }}
+      className={cn(
+        'rounded-xl border overflow-hidden transition-colors',
+        isPending ? 'bg-surface-1 border-border' : 'bg-surface-1/50 border-border/50'
+      )}
+    >
+      <div className="p-4">
+        {/* Header */}
+        <div className="flex items-start gap-3 mb-3">
+          <div className={cn('p-2 rounded-lg', type.bgColor)}>
+            <TypeIcon className={cn('w-5 h-5', type.color)} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <Badge variant="outline" className={cn('text-[10px]', type.color)}>
+                {type.label}
+              </Badge>
+              {approval.priority !== 'normal' && (
+                <Badge variant="outline" className={cn('text-[10px] border', priority.color)}>
+                  {priority.label}
+                </Badge>
+              )}
+              <Badge className={cn('text-[10px] ml-auto', status.color)}>
+                {status.label}
+              </Badge>
+            </div>
+            <h3 className="font-medium text-white">{approval.title}</h3>
+          </div>
+        </div>
+
+        {/* Project & Applicant */}
+        <div className="text-sm text-slate-400 mb-3">
+          <div className="flex items-center gap-4">
+            <span>申请人：{approval.applicant}</span>
+            <span>·</span>
+            <span>{approval.applicantDept}</span>
+          </div>
+          {approval.projectId && (
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-accent">{approval.projectId}</span>
+              <span>·</span>
+              <span className="truncate">{approval.projectName}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Description */}
+        <p className="text-sm text-slate-300 mb-3 line-clamp-2">{approval.description}</p>
+
+        {/* Impact (for ECN) */}
+        {approval.impact && (
+          <div className="flex gap-3 mb-3 text-xs">
+            <span className="px-2 py-1 rounded bg-surface-2 text-slate-400">
+              成本：<span className="text-amber-400">{approval.impact.cost}</span>
+            </span>
+            <span className="px-2 py-1 rounded bg-surface-2 text-slate-400">
+              工期：<span className="text-amber-400">{approval.impact.schedule}</span>
+            </span>
+          </div>
+        )}
+
+        {/* Amount (for Purchase) */}
+        {approval.amount && (
+          <div className="mb-3">
+            <span className="text-2xl font-bold text-white">
+              ¥{approval.amount.toLocaleString()}
+            </span>
+          </div>
+        )}
+
+        {/* Reject Reason */}
+        {approval.rejectReason && (
+          <div className="p-2 rounded-lg bg-red-500/10 text-xs text-red-300 mb-3 flex items-center gap-2">
+            <XCircle className="w-3 h-3" />
+            驳回原因：{approval.rejectReason}
+          </div>
+        )}
+
+        {/* Approval Flow Preview */}
+        <div className="flex items-center gap-2 mb-3">
+          {approval.approvalFlow.map((step, index) => (
+            <div key={index} className="flex items-center gap-1">
+              <div
+                className={cn(
+                  'w-6 h-6 rounded-full flex items-center justify-center text-[10px]',
+                  step.status === 'approved'
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : step.status === 'rejected'
+                    ? 'bg-red-500/20 text-red-400'
+                    : step.status === 'pending'
+                    ? 'bg-amber-500/20 text-amber-400 ring-2 ring-amber-500/50'
+                    : 'bg-surface-2 text-slate-500'
+                )}
+              >
+                {step.status === 'approved' ? (
+                  <Check className="w-3 h-3" />
+                ) : step.status === 'rejected' ? (
+                  <X className="w-3 h-3" />
+                ) : (
+                  index + 1
+                )}
+              </div>
+              {index < approval.approvalFlow.length - 1 && (
+                <ChevronRight className="w-3 h-3 text-slate-600" />
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Time */}
+        <div className="text-xs text-slate-500 mb-3">
+          提交时间：{approval.submitTime}
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center justify-between pt-3 border-t border-border/50">
+          <Button variant="ghost" size="sm" onClick={() => onView(approval)}>
+            <Eye className="w-4 h-4 mr-1" />
+            查看详情
+          </Button>
+          {isPending && (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-red-400 hover:text-red-300"
+                onClick={() => onReject(approval)}
+              >
+                <X className="w-4 h-4 mr-1" />
+                驳回
+              </Button>
+              <Button size="sm" onClick={() => onApprove(approval)}>
+                <Check className="w-4 h-4 mr-1" />
+                通过
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+function ApprovalDetailDialog({ approval, open, onOpenChange, onApprove, onReject }) {
+  const [comment, setComment] = useState('')
+
+  if (!approval) return null
+
+  const type = typeConfigs[approval.type]
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <type.icon className={cn('w-5 h-5', type.color)} />
+            {approval.title}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          {/* Basic Info */}
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <label className="text-xs text-slate-500">申请人</label>
+              <p className="text-white">{approval.applicant} ({approval.applicantDept})</p>
+            </div>
+            <div>
+              <label className="text-xs text-slate-500">提交时间</label>
+              <p className="text-white">{approval.submitTime}</p>
+            </div>
+            {approval.projectId && (
+              <>
+                <div>
+                  <label className="text-xs text-slate-500">关联项目</label>
+                  <p className="text-white">{approval.projectId}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-slate-500">项目名称</label>
+                  <p className="text-white">{approval.projectName}</p>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="text-xs text-slate-500">申请说明</label>
+            <p className="text-white mt-1">{approval.description}</p>
+          </div>
+
+          {/* Impact */}
+          {approval.impact && (
+            <div className="grid grid-cols-3 gap-4">
+              <div className="p-3 rounded-lg bg-surface-2">
+                <label className="text-xs text-slate-500">成本影响</label>
+                <p className="text-amber-400 font-medium">{approval.impact.cost}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-surface-2">
+                <label className="text-xs text-slate-500">工期影响</label>
+                <p className="text-amber-400 font-medium">{approval.impact.schedule}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-surface-2">
+                <label className="text-xs text-slate-500">影响范围</label>
+                <p className="text-white font-medium">{approval.impact.scope}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Approval Flow */}
+          <div>
+            <label className="text-xs text-slate-500 mb-2 block">审批流程</label>
+            <div className="space-y-2">
+              {approval.approvalFlow.map((step, index) => (
+                <div
+                  key={index}
+                  className={cn(
+                    'p-3 rounded-lg flex items-center justify-between',
+                    step.status === 'pending'
+                      ? 'bg-amber-500/10 border border-amber-500/30'
+                      : 'bg-surface-2'
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={cn(
+                        'w-8 h-8 rounded-full flex items-center justify-center',
+                        step.status === 'approved'
+                          ? 'bg-emerald-500/20 text-emerald-400'
+                          : step.status === 'rejected'
+                          ? 'bg-red-500/20 text-red-400'
+                          : step.status === 'pending'
+                          ? 'bg-amber-500/20 text-amber-400'
+                          : 'bg-surface-0 text-slate-500'
+                      )}
+                    >
+                      {step.status === 'approved' ? (
+                        <CheckCircle2 className="w-4 h-4" />
+                      ) : step.status === 'rejected' ? (
+                        <XCircle className="w-4 h-4" />
+                      ) : step.status === 'pending' ? (
+                        <AlertCircle className="w-4 h-4" />
+                      ) : (
+                        <Clock className="w-4 h-4" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm text-white">{step.role}</p>
+                      <p className="text-xs text-slate-400">{step.user}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    {step.time && (
+                      <p className="text-xs text-slate-500">{step.time}</p>
+                    )}
+                    {step.comment && (
+                      <p className="text-xs text-slate-400">{step.comment}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Comment Input */}
+          {approval.status === 'pending' && (
+            <div>
+              <label className="text-xs text-slate-500 mb-2 block">审批意见</label>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="请输入审批意见（可选）"
+                className="w-full h-20 px-3 py-2 rounded-lg bg-surface-2 border border-border text-white placeholder-slate-500 focus:border-accent focus:outline-none resize-none"
+              />
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            关闭
+          </Button>
+          {approval.status === 'pending' && (
+            <>
+              <Button
+                variant="outline"
+                className="text-red-400 hover:text-red-300"
+                onClick={() => onReject(approval)}
+              >
+                驳回
+              </Button>
+              <Button onClick={() => onApprove(approval)}>通过</Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+export default function ApprovalCenter() {
+  const [approvals, setApprovals] = useState(mockApprovals)
+  const [statusFilter, setStatusFilter] = useState('pending')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedApproval, setSelectedApproval] = useState(null)
+  const [showDetail, setShowDetail] = useState(false)
+
+  const filteredApprovals = approvals.filter((approval) => {
+    if (statusFilter !== 'all' && approval.status !== statusFilter) return false
+    if (searchQuery && !approval.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false
+    }
+    return true
+  })
+
+  const stats = {
+    pending: approvals.filter((a) => a.status === 'pending').length,
+    approved: approvals.filter((a) => a.status === 'approved').length,
+    rejected: approvals.filter((a) => a.status === 'rejected').length,
+  }
+
+  const handleView = (approval) => {
+    setSelectedApproval(approval)
+    setShowDetail(true)
+  }
+
+  const handleApprove = (approval) => {
+    setApprovals((prev) =>
+      prev.map((a) =>
+        a.id === approval.id ? { ...a, status: 'approved' } : a
+      )
+    )
+    setShowDetail(false)
+  }
+
+  const handleReject = (approval) => {
+    setApprovals((prev) =>
+      prev.map((a) =>
+        a.id === approval.id ? { ...a, status: 'rejected' } : a
+      )
+    )
+    setShowDetail(false)
+  }
+
+  return (
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+      className="space-y-6"
+    >
+      <PageHeader
+        title="审批中心"
+        description="处理待审批事项，查看审批记录"
+      />
+
+      {/* Stats */}
+      <motion.div variants={fadeIn} className="grid grid-cols-3 gap-4">
+        {[
+          { label: '待审批', value: stats.pending, icon: Clock, color: 'text-amber-400' },
+          { label: '已通过', value: stats.approved, icon: CheckCircle2, color: 'text-emerald-400' },
+          { label: '已驳回', value: stats.rejected, icon: XCircle, color: 'text-red-400' },
+        ].map((stat, index) => (
+          <Card key={index} className="bg-surface-1/50">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-400">{stat.label}</p>
+                  <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
+                </div>
+                <stat.icon className={cn('w-8 h-8', stat.color)} />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </motion.div>
+
+      {/* Filters */}
+      <motion.div variants={fadeIn}>
+        <Card className="bg-surface-1/50">
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+              <div className="flex items-center gap-2">
+                {[
+                  { value: 'pending', label: '待审批' },
+                  { value: 'approved', label: '已通过' },
+                  { value: 'rejected', label: '已驳回' },
+                  { value: 'all', label: '全部' },
+                ].map((filter) => (
+                  <Button
+                    key={filter.value}
+                    variant={statusFilter === filter.value ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setStatusFilter(filter.value)}
+                  >
+                    {filter.label}
+                  </Button>
+                ))}
+              </div>
+              <div className="relative w-full md:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  placeholder="搜索审批..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Approval List */}
+      <motion.div variants={fadeIn} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {filteredApprovals.map((approval) => (
+          <ApprovalCard
+            key={approval.id}
+            approval={approval}
+            onView={handleView}
+            onApprove={handleApprove}
+            onReject={handleReject}
+          />
+        ))}
+      </motion.div>
+
+      {/* Empty State */}
+      {filteredApprovals.length === 0 && (
+        <motion.div variants={fadeIn} className="text-center py-16">
+          <ClipboardCheck className="w-16 h-16 mx-auto text-slate-600 mb-4" />
+          <h3 className="text-lg font-medium text-slate-400">暂无审批</h3>
+          <p className="text-sm text-slate-500 mt-1">
+            {statusFilter === 'pending' ? '没有待处理的审批事项' : '没有符合条件的审批记录'}
+          </p>
+        </motion.div>
+      )}
+
+      {/* Detail Dialog */}
+      <ApprovalDetailDialog
+        approval={selectedApproval}
+        open={showDetail}
+        onOpenChange={setShowDetail}
+        onApprove={handleApprove}
+        onReject={handleReject}
+      />
+    </motion.div>
+  )
+}
+

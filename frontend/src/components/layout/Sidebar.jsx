@@ -1,0 +1,784 @@
+import { Link, useLocation } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
+import { cn } from '../../lib/utils'
+import { getRoleInfo, getNavForRole, isEngineerRole } from '../../lib/roleConfig'
+import {
+  LayoutDashboard,
+  BarChart3,
+  Briefcase,
+  Box,
+  ListTodo,
+  ShoppingCart,
+  Package,
+  AlertTriangle,
+  ClipboardCheck,
+  ClipboardList,
+  FileText,
+  Users,
+  Settings,
+  ChevronLeft,
+  LogOut,
+  Bell,
+  Clock,
+  Calendar,
+  Kanban,
+  Building2,
+  Truck,
+  PackagePlus,
+  PackageMinus,
+  Boxes,
+  Target,
+  CreditCard,
+  Calculator,
+  FileCheck,
+  Receipt,
+  UserCog,
+  Shield,
+  Cog,
+  User,
+  Wrench,
+  BookOpen,
+  Lightbulb,
+  DollarSign,
+  Archive,
+} from 'lucide-react'
+
+// Icon mapping
+const iconMap = {
+  LayoutDashboard,
+  BarChart3,
+  Briefcase,
+  Kanban,
+  Calendar,
+  ListTodo,
+  ShoppingCart,
+  Package,
+  AlertTriangle,
+  ClipboardList,
+  ClipboardCheck,
+  Bell,
+  Clock,
+  Settings,
+  Building2,
+  Truck,
+  PackagePlus,
+  PackageMinus,
+  Boxes,
+  Users,
+  Target,
+  CreditCard,
+  Calculator,
+  FileCheck,
+  FileText,
+  Receipt,
+  UserCog,
+  Shield,
+  Cog,
+  Wrench,
+  BookOpen,
+  Lightbulb,
+  DollarSign,
+  Archive,
+}
+
+// Default navigation groups (for admin and general use)
+const defaultNavGroups = [
+  {
+    label: '概览',
+    items: [
+      { name: '仪表盘', path: '/', icon: 'LayoutDashboard' },
+      { name: '运营大屏', path: '/operation', icon: 'BarChart3' },
+    ],
+  },
+  {
+    label: '项目管理',
+    items: [
+      { name: '项目看板', path: '/board', icon: 'Kanban' },
+      { name: '项目列表', path: '/projects', icon: 'Briefcase' },
+      { name: '排期看板', path: '/schedule', icon: 'Calendar' },
+      { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
+    ],
+  },
+  {
+    label: '运营管理',
+    items: [
+      { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
+      { name: '齐套分析', path: '/materials', icon: 'Package' },
+      { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
+    ],
+  },
+  {
+    label: '质量验收',
+    items: [
+      { name: '验收管理', path: '/acceptance', icon: 'ClipboardList' },
+      { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck', badge: '2' },
+    ],
+  },
+  {
+    label: '个人中心',
+    items: [
+      { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '5' },
+      { name: '岗位打卡', path: '/punch-in', icon: 'Clock' },
+      { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '个人设置', path: '/settings', icon: 'Settings' },
+    ],
+  },
+]
+
+// Engineer nav with workstation (Gantt/Calendar view)
+const engineerNavGroups = [
+  {
+    label: '我的工作',
+    items: [
+      { name: '工作台', path: '/workstation', icon: 'LayoutDashboard' },
+      { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
+      { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+    ],
+  },
+  {
+    label: '个人中心',
+    items: [
+      { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '5' },
+      { name: '个人设置', path: '/settings', icon: 'Settings' },
+    ],
+  },
+]
+
+// PMC nav groups
+const pmcNavGroups = [
+  {
+    label: '概览',
+    items: [
+      { name: '仪表盘', path: '/', icon: 'LayoutDashboard' },
+      { name: '运营大屏', path: '/operation', icon: 'BarChart3' },
+    ],
+  },
+  {
+    label: '生产计划',
+    items: [
+      { name: '项目看板', path: '/board', icon: 'Kanban' },
+      { name: '排期看板', path: '/schedule', icon: 'Calendar' },
+      { name: '齐套分析', path: '/materials', icon: 'Package' },
+    ],
+  },
+  {
+    label: '采购跟踪',
+    items: [
+      { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
+      { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
+    ],
+  },
+  {
+    label: '个人中心',
+    items: [
+      { name: '通知中心', path: '/notifications', icon: 'Bell' },
+      { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '个人设置', path: '/settings', icon: 'Settings' },
+    ],
+  },
+]
+
+// Buyer nav groups
+const buyerNavGroups = [
+  {
+    label: '概览',
+    items: [
+      { name: '仪表盘', path: '/', icon: 'LayoutDashboard' },
+    ],
+  },
+  {
+    label: '采购管理',
+    items: [
+      { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
+      { name: '供应商管理', path: '/suppliers', icon: 'Building2' },
+      { name: '到货跟踪', path: '/arrivals', icon: 'Truck' },
+    ],
+  },
+  {
+    label: '个人中心',
+    items: [
+      { name: '通知中心', path: '/notifications', icon: 'Bell' },
+      { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '个人设置', path: '/settings', icon: 'Settings' },
+    ],
+  },
+]
+
+// Department manager nav groups
+const deptManagerNavGroups = [
+  {
+    label: '概览',
+    items: [
+      { name: '仪表盘', path: '/', icon: 'LayoutDashboard' },
+      { name: '运营大屏', path: '/operation', icon: 'BarChart3' },
+    ],
+  },
+  {
+    label: '项目管理',
+    items: [
+      { name: '项目看板', path: '/board', icon: 'Kanban' },
+      { name: '排期看板', path: '/schedule', icon: 'Calendar' },
+      { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
+    ],
+  },
+  {
+    label: '团队管理',
+    items: [
+      { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck', badge: '2' },
+      { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
+    ],
+  },
+  {
+    label: '个人中心',
+    items: [
+      { name: '通知中心', path: '/notifications', icon: 'Bell' },
+      { name: '个人设置', path: '/settings', icon: 'Settings' },
+    ],
+  },
+]
+
+// Production manager nav groups
+const productionManagerNavGroups = [
+  {
+    label: '生产管理',
+    items: [
+      { name: '生产工作台', path: '/production-dashboard', icon: 'LayoutDashboard' },
+      { name: '项目看板', path: '/board', icon: 'Kanban' },
+      { name: '排期看板', path: '/schedule', icon: 'Calendar' },
+    ],
+  },
+  {
+    label: '运营管理',
+    items: [
+      { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
+      { name: '齐套分析', path: '/materials', icon: 'Package' },
+      { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
+    ],
+  },
+  {
+    label: '个人中心',
+    items: [
+      { name: '通知中心', path: '/notifications', icon: 'Bell' },
+      { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '个人设置', path: '/settings', icon: 'Settings' },
+    ],
+  },
+]
+
+// Assembler specific nav groups
+const assemblerNavGroups = [
+  {
+    label: '我的工作',
+    items: [
+      { name: '装配任务', path: '/assembly-tasks', icon: 'Wrench' },
+      { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+    ],
+  },
+  {
+    label: '个人中心',
+    items: [
+      { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '5' },
+      { name: '个人设置', path: '/settings', icon: 'Settings' },
+    ],
+  },
+]
+
+// Sales engineer nav groups
+const salesNavGroups = [
+  {
+    label: '销售工作',
+    items: [
+      { name: '销售工作台', path: '/sales-dashboard', icon: 'LayoutDashboard' },
+      { name: '客户管理', path: '/customers', icon: 'Building2' },
+      { name: '商机看板', path: '/opportunities', icon: 'Target' },
+    ],
+  },
+  {
+    label: '销售管理',
+    items: [
+      { name: '线索评估', path: '/lead-assessment', icon: 'Target' },
+      { name: '报价管理', path: '/quotations', icon: 'Calculator' },
+      { name: '合同管理', path: '/contracts', icon: 'FileCheck' },
+      { name: '回款跟踪', path: '/payments', icon: 'CreditCard' },
+    ],
+  },
+  {
+    label: '项目跟踪',
+    items: [
+      { name: '项目进度', path: '/sales-projects', icon: 'Briefcase' },
+      { name: '项目看板', path: '/board', icon: 'Kanban' },
+    ],
+  },
+  {
+    label: '个人中心',
+    items: [
+      { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '3' },
+      { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '个人设置', path: '/settings', icon: 'Settings' },
+    ],
+  },
+]
+
+// Business support nav groups
+const businessSupportNavGroups = [
+  {
+    label: '商务工作',
+    items: [
+      { name: '商务工作台', path: '/business-support', icon: 'LayoutDashboard' },
+      { name: '客户管理', path: '/customers', icon: 'Building2' },
+      { name: '投标管理', path: '/bidding', icon: 'Target' },
+    ],
+  },
+  {
+    label: '合同与订单',
+    items: [
+      { name: '合同管理', path: '/contracts', icon: 'FileCheck' },
+      { name: '报价管理', path: '/quotations', icon: 'Calculator' },
+      { name: '项目订单', path: '/sales-projects', icon: 'Briefcase' },
+    ],
+  },
+  {
+    label: '财务与发货',
+    items: [
+      { name: '回款跟踪', path: '/payments', icon: 'CreditCard' },
+      { name: '对账开票', path: '/invoices', icon: 'Receipt' },
+      { name: '出货管理', path: '/shipments', icon: 'Package' },
+    ],
+  },
+  {
+    label: '文档与归档',
+    items: [
+      { name: '文件管理', path: '/documents', icon: 'Archive' },
+      { name: '验收管理', path: '/acceptance', icon: 'ClipboardList' },
+    ],
+  },
+  {
+    label: '个人中心',
+    items: [
+      { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '3' },
+      { name: '个人设置', path: '/settings', icon: 'Settings' },
+    ],
+  },
+]
+
+// Procurement engineer nav groups
+const procurementNavGroups = [
+  {
+    label: '采购工作',
+    items: [
+      { name: '采购工作台', path: '/procurement-dashboard', icon: 'LayoutDashboard' },
+      { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
+      { name: '供应商管理', path: '/suppliers', icon: 'Building2' },
+    ],
+  },
+  {
+    label: '物料管理',
+    items: [
+      { name: '物料跟踪', path: '/materials', icon: 'Package' },
+      { name: '到货跟踪', path: '/arrivals', icon: 'Truck' },
+      { name: '齐套分析', path: '/bom-analysis', icon: 'Boxes' },
+    ],
+  },
+  {
+    label: '成本控制',
+    items: [
+      { name: '预算管理', path: '/budgets', icon: 'CreditCard' },
+      { name: '成本分析', path: '/cost-analysis', icon: 'BarChart3' },
+    ],
+  },
+  {
+    label: '个人中心',
+    items: [
+      { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '2' },
+      { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '个人设置', path: '/settings', icon: 'Settings' },
+    ],
+  },
+]
+
+// Pre-sales technical engineer nav groups
+const presalesNavGroups = [
+  {
+    label: '技术支持',
+    items: [
+      { name: '工作台', path: '/presales-dashboard', icon: 'LayoutDashboard' },
+      { name: '任务中心', path: '/presales-tasks', icon: 'ListTodo' },
+    ],
+  },
+  {
+    label: '方案管理',
+    items: [
+      { name: '方案中心', path: '/solutions', icon: 'FileText' },
+      { name: '需求调研', path: '/requirement-survey', icon: 'ClipboardList' },
+      { name: '投标中心', path: '/bidding', icon: 'Target' },
+    ],
+  },
+  {
+    label: '知识库',
+    items: [
+      { name: '知识检索', path: '/knowledge-base', icon: 'BookOpen' },
+    ],
+  },
+  {
+    label: '个人中心',
+    items: [
+      { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '2' },
+      { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '个人设置', path: '/settings', icon: 'Settings' },
+    ],
+  },
+]
+
+// Get navigation groups based on user role
+function getNavGroupsForRole(role) {
+  switch (role) {
+    case 'assembler':
+    case '装配技工':
+      return assemblerNavGroups
+    case 'sales':
+    case '销售工程师':
+      return salesNavGroups
+    case 'business_support':
+    case '商务支持':
+    case '商务支持专员':
+      return businessSupportNavGroups
+    case 'procurement':
+    case '采购工程师':
+    case '采购专员':
+      return procurementNavGroups
+    case 'presales':
+    case '售前技术工程师':
+      return presalesNavGroups
+    case 'me_engineer':
+    case 'ee_engineer':
+    case 'sw_engineer':
+    case 'te_engineer':
+      return engineerNavGroups
+    case 'pmc':
+      return pmcNavGroups
+    case 'buyer':
+      return buyerNavGroups
+    case 'dept_manager':
+      return deptManagerNavGroups
+    case 'production_manager':
+    case '生产部经理':
+      return productionManagerNavGroups
+    case 'manufacturing_director':
+    case '制造总监':
+      return [
+        {
+          label: '概览',
+          items: [
+            { name: '仪表盘', path: '/', icon: 'LayoutDashboard' },
+            { name: '运营大屏', path: '/operation', icon: 'BarChart3' },
+          ],
+        },
+        {
+          label: '生产管理',
+          items: [
+            { name: '生产工作台', path: '/production-dashboard', icon: 'LayoutDashboard' },
+            { name: '项目看板', path: '/board', icon: 'Kanban' },
+            { name: '排期看板', path: '/schedule', icon: 'Calendar' },
+          ],
+        },
+        {
+          label: '运营管理',
+          items: [
+            { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
+            { name: '齐套分析', path: '/materials', icon: 'Package' },
+            { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
+          ],
+        },
+        {
+          label: '个人中心',
+          items: [
+            { name: '通知中心', path: '/notifications', icon: 'Bell' },
+            { name: '个人设置', path: '/settings', icon: 'Settings' },
+          ],
+        },
+      ]
+    case 'customer_service_manager':
+    case '客服部经理':
+      return [
+        {
+          label: '概览',
+          items: [
+            { name: '仪表盘', path: '/', icon: 'LayoutDashboard' },
+          ],
+        },
+        {
+          label: '客服管理',
+          items: [
+            { name: '工作台', path: '/customer-service-dashboard', icon: 'LayoutDashboard' },
+            { name: '项目看板', path: '/board', icon: 'Kanban' },
+            { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
+          ],
+        },
+        {
+          label: '个人中心',
+          items: [
+            { name: '通知中心', path: '/notifications', icon: 'Bell' },
+            { name: '个人设置', path: '/settings', icon: 'Settings' },
+          ],
+        },
+      ]
+    case 'customer_service_engineer':
+    case '客服工程师':
+      return [
+        {
+          label: '我的工作',
+          items: [
+            { name: '工作台', path: '/customer-service-dashboard', icon: 'LayoutDashboard' },
+            { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
+            { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+          ],
+        },
+        {
+          label: '个人中心',
+          items: [
+            { name: '通知中心', path: '/notifications', icon: 'Bell' },
+            { name: '个人设置', path: '/settings', icon: 'Settings' },
+          ],
+        },
+      ]
+    case 'te_leader':
+    case 'me_leader':
+    case 'ee_leader':
+      return [
+        {
+          label: '概览',
+          items: [
+            { name: '仪表盘', path: '/', icon: 'LayoutDashboard' },
+          ],
+        },
+        {
+          label: '团队管理',
+          items: [
+            { name: '项目看板', path: '/board', icon: 'Kanban' },
+            { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
+          ],
+        },
+        {
+          label: '个人中心',
+          items: [
+            { name: '通知中心', path: '/notifications', icon: 'Bell' },
+            { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+            { name: '个人设置', path: '/settings', icon: 'Settings' },
+          ],
+        },
+      ]
+    default:
+      return defaultNavGroups
+  }
+}
+
+export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
+  const location = useLocation()
+
+  // Get user role from localStorage if not provided
+  const currentUser = user || JSON.parse(localStorage.getItem('user') || '{}')
+  const role = currentUser?.role || 'admin'
+  const roleInfo = getRoleInfo(role)
+
+  // Get navigation groups based on role
+  const navGroups = getNavGroupsForRole(role)
+
+  return (
+    <aside
+      className={cn(
+        'fixed left-0 top-0 h-screen z-40',
+        'flex flex-col',
+        'bg-surface-50/80 backdrop-blur-xl',
+        'border-r border-white/5',
+        'transition-all duration-300 ease-out',
+        collapsed ? 'w-[72px]' : 'w-60'
+      )}
+    >
+      {/* Logo */}
+      <div
+        className={cn(
+          'flex items-center h-16 px-4',
+          'border-b border-white/5'
+        )}
+      >
+        <div
+          className={cn(
+            'flex items-center justify-center',
+            'w-10 h-10 rounded-xl',
+            'bg-gradient-to-br from-violet-600 to-indigo-600',
+            'shadow-lg shadow-violet-500/30'
+          )}
+        >
+          <Box className="h-5 w-5 text-white" />
+        </div>
+        <AnimatePresence>
+          {!collapsed && (
+            <motion.span
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: 'auto' }}
+              exit={{ opacity: 0, width: 0 }}
+              className="ml-3 text-lg font-semibold text-white whitespace-nowrap overflow-hidden"
+            >
+              PMS 系统
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Role indicator */}
+      {!collapsed && (
+        <div className="px-4 py-3 border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500/20 to-indigo-500/20 flex items-center justify-center">
+              <User className="w-4 h-4 text-violet-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate">
+                {currentUser?.name || '用户'}
+              </p>
+              <p className="text-xs text-slate-500 truncate">
+                {roleInfo.name}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto custom-scrollbar py-4 px-3">
+        {navGroups.map((group, gi) => (
+          <div key={gi} className="mb-6">
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="px-3 mb-2 text-xs font-medium text-slate-500 uppercase tracking-wider"
+                >
+                  {group.label}
+                </motion.p>
+              )}
+            </AnimatePresence>
+            <div className="space-y-1">
+              {group.items.map((item) => {
+                const isActive = location.pathname === item.path
+                const Icon = iconMap[item.icon] || Box
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={cn(
+                      'relative flex items-center gap-3 px-3 py-2.5 rounded-xl',
+                      'text-sm font-medium transition-all duration-200',
+                      'group',
+                      isActive
+                        ? 'text-white bg-white/[0.08]'
+                        : 'text-slate-400 hover:text-white hover:bg-white/[0.04]',
+                      collapsed && 'justify-center'
+                    )}
+                  >
+                    {/* Active indicator */}
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeNav"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-full bg-primary"
+                        transition={{ type: 'spring', duration: 0.5 }}
+                      />
+                    )}
+
+                    <Icon
+                      className={cn(
+                        'h-5 w-5 flex-shrink-0',
+                        isActive
+                          ? 'text-primary'
+                          : 'text-slate-500 group-hover:text-slate-300'
+                      )}
+                    />
+
+                    <AnimatePresence>
+                      {!collapsed && (
+                        <motion.span
+                          initial={{ opacity: 0, width: 0 }}
+                          animate={{ opacity: 1, width: 'auto' }}
+                          exit={{ opacity: 0, width: 0 }}
+                          className="whitespace-nowrap overflow-hidden"
+                        >
+                          {item.name}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Badge */}
+                    {item.badge && !collapsed && (
+                      <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-red-500/20 text-red-400">
+                        {item.badge}
+                      </span>
+                    )}
+
+                    {/* Tooltip for collapsed state */}
+                    {collapsed && (
+                      <div
+                        className={cn(
+                          'absolute left-full ml-2 px-3 py-1.5 rounded-lg',
+                          'bg-surface-200 text-white text-sm whitespace-nowrap',
+                          'opacity-0 invisible group-hover:opacity-100 group-hover:visible',
+                          'transition-all duration-200 z-50'
+                        )}
+                      >
+                        {item.name}
+                        <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-surface-200 rotate-45" />
+                      </div>
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* Footer */}
+      <div className="p-3 border-t border-white/5 space-y-1">
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className={cn(
+              'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl',
+              'text-sm font-medium text-red-400',
+              'hover:text-red-300 hover:bg-red-500/10',
+              'transition-all duration-200',
+              collapsed && 'justify-center'
+            )}
+          >
+            <LogOut className="h-5 w-5" />
+            {!collapsed && <span>退出登录</span>}
+          </button>
+        )}
+
+        {onToggle && (
+          <button
+            onClick={onToggle}
+            className={cn(
+              'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl',
+              'text-sm font-medium text-slate-400',
+              'hover:text-white hover:bg-white/[0.04]',
+              'transition-all duration-200',
+              collapsed && 'justify-center'
+            )}
+          >
+            <ChevronLeft
+              className={cn(
+                'h-5 w-5 transition-transform duration-300',
+                collapsed && 'rotate-180'
+              )}
+            />
+            {!collapsed && <span>收起侧边栏</span>}
+          </button>
+        )}
+      </div>
+    </aside>
+  )
+}
+
+export default Sidebar

@@ -12,6 +12,7 @@ from app.api.v1.endpoints import (
     documents,
     users,
     roles,
+    issues,
 )
 
 api_router = APIRouter()
@@ -27,3 +28,4 @@ api_router.include_router(costs.router, prefix="/costs", tags=["costs"])
 api_router.include_router(documents.router, prefix="/documents", tags=["documents"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(roles.router, prefix="/roles", tags=["roles"])
+api_router.include_router(issues.router, prefix="/issues", tags=["issues"])

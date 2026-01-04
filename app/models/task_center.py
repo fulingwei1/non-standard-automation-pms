@@ -92,15 +92,15 @@ class TaskUnified(Base, TimestampMixin):
     parent_task_id = Column(Integer, ForeignKey('task_unified.id'), comment='父任务ID')
     
     # 项目关联
-    project_id = Column(Integer, ForeignKey('project.id'), comment='关联项目ID')
+    project_id = Column(Integer, ForeignKey('projects.id'), comment='关联项目ID')
     project_code = Column(String(50), comment='项目编号')
     project_name = Column(String(200), comment='项目名称')
     wbs_code = Column(String(50), comment='WBS编码')
     
     # 人员分配
-    assignee_id = Column(Integer, ForeignKey('user.id'), nullable=False, comment='执行人ID')
+    assignee_id = Column(Integer, ForeignKey('users.id'), nullable=False, comment='执行人ID')
     assignee_name = Column(String(50), comment='执行人姓名')
-    assigner_id = Column(Integer, ForeignKey('user.id'), comment='指派人ID')
+    assigner_id = Column(Integer, ForeignKey('users.id'), comment='指派人ID')
     assigner_name = Column(String(50), comment='指派人姓名')
     
     # 时间信息
@@ -129,7 +129,7 @@ class TaskUnified(Base, TimestampMixin):
     
     # 转办信息
     is_transferred = Column(Boolean, default=False, comment='是否转办')
-    transfer_from_id = Column(Integer, ForeignKey('user.id'), comment='转办来源人ID')
+    transfer_from_id = Column(Integer, ForeignKey('users.id'), comment='转办来源人ID')
     transfer_from_name = Column(String(50), comment='转办来源人')
     transfer_reason = Column(Text, comment='转办原因')
     transfer_time = Column(DateTime, comment='转办时间')
@@ -147,8 +147,8 @@ class TaskUnified(Base, TimestampMixin):
     reminder_before_hours = Column(Integer, default=24, comment='提前提醒小时数')
     
     # 审计字段
-    created_by = Column(Integer, ForeignKey('user.id'), comment='创建人ID')
-    updated_by = Column(Integer, ForeignKey('user.id'), comment='更新人ID')
+    created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
+    updated_by = Column(Integer, ForeignKey('users.id'), comment='更新人ID')
     
     # 关系
     parent_task = relationship('TaskUnified', remote_side=[id], backref='sub_tasks')
@@ -217,7 +217,7 @@ class TaskOperationLog(Base):
     operation_desc = Column(Text, comment='操作描述')
     old_value = Column(JSON, comment='变更前值')
     new_value = Column(JSON, comment='变更后值')
-    operator_id = Column(Integer, ForeignKey('user.id'), comment='操作人ID')
+    operator_id = Column(Integer, ForeignKey('users.id'), comment='操作人ID')
     operator_name = Column(String(50), comment='操作人')
     operation_time = Column(DateTime, default=datetime.now, comment='操作时间')
     
@@ -242,7 +242,7 @@ class TaskComment(Base):
     content = Column(Text, nullable=False, comment='评论内容')
     comment_type = Column(String(20), default='COMMENT', comment='评论类型')
     parent_id = Column(Integer, ForeignKey('task_comment.id'), comment='回复的评论ID')
-    commenter_id = Column(Integer, ForeignKey('user.id'), comment='评论人ID')
+    commenter_id = Column(Integer, ForeignKey('users.id'), comment='评论人ID')
     commenter_name = Column(String(50), comment='评论人')
     mentioned_users = Column(JSON, comment='@的用户')
     created_at = Column(DateTime, default=datetime.now, comment='创建时间')
@@ -265,7 +265,7 @@ class TaskReminder(Base, TimestampMixin):
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
     task_id = Column(Integer, ForeignKey('task_unified.id'), nullable=False, comment='任务ID')
-    user_id = Column(Integer, ForeignKey('user.id'), nullable=False, comment='用户ID')
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, comment='用户ID')
     
     reminder_type = Column(String(20), nullable=False, comment='提醒类型:DEADLINE/OVERDUE/CUSTOM')
     remind_at = Column(DateTime, nullable=False, comment='提醒时间')

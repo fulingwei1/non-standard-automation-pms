@@ -1,10 +1,48 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN" class="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#030304" />
+    <meta name="description" content="非标自动化项目管理系统 - 世界一流UI/UX设计" />
+    
+    <!-- Preconnect to font sources -->
+    <link rel="preconnect" href="https://rsms.me" crossorigin />
+    
+    <!-- Inter Variable Font -->
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+    
+    <title>项目管理系统 | PMS</title>
+    
+    <style>
+      /* Prevent FOUC */
+      html {
+        background-color: #030304;
+      }
+      
+      /* Loading state */
+      #root:empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      
+      #root:empty::after {
+        content: '';
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(139, 92, 246, 0.2);
+        border-top-color: #8b5cf6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

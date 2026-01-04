@@ -1,0 +1,531 @@
+/**
+ * Material Tracking Page - Real-time material inventory and arrival tracking
+ * Monitors material status from purchase to receipt and usage
+ */
+
+import { useState, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Package,
+  TrendingUp,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Search,
+  Filter,
+  Plus,
+  MapPin,
+  Calendar,
+  Truck,
+  Boxes,
+  BarChart3,
+  Eye,
+  Download,
+  AlertCircle,
+  Zap,
+} from 'lucide-react'
+import { PageHeader } from '../components/layout'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Button,
+  Badge,
+  Input,
+  Progress,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '../components/ui'
+import { cn, formatCurrency, formatDate } from '../lib/utils'
+import { fadeIn, staggerContainer } from '../lib/animations'
+
+// Mock material tracking data
+const mockMaterials = [
+  {
+    id: 'MAT-001',
+    code: 'MAT-2025-001',
+    name: '32位MCU芯片 STM32F103',
+    category: '半导体',
+    supplier: '深圳电子元器件有限公司',
+    poNumber: 'PO-2025-0001',
+    totalQuantity: 500,
+    arrivedQuantity: 250,
+    usedQuantity: 50,
+    remainingQuantity: 200,
+    status: 'partial-arrived', // not-arrived | partial-arrived | fully-arrived | in-use | completed
+    poDate: '2025-11-15',
+    expectedDate: '2025-11-25',
+    actualArrivalDate: '2025-11-24',
+    location: '仓库A-01',
+    batch: 'BATCH-20251124-001',
+    qualityStatus: 'qualified', // qualified | pending-inspection | rejected
+    storageCondition: 'normal', // normal | temperature-controlled | moisture-controlled
+    unitPrice: 45.5,
+    totalValue: 22750,
+    arrivedValue: 11375,
+    usedValue: 2275,
+    project: 'BMS老化测试设备',
+    nextAction: '继续到货',
+    daysUntilExpiry: 180,
+  },
+  {
+    id: 'MAT-002',
+    code: 'MAT-2025-002',
+    name: '电阻 1/4W 10K',
+    category: '被动元件',
+    supplier: '深圳元器件供应商',
+    poNumber: 'PO-2025-0001',
+    totalQuantity: 2000,
+    arrivedQuantity: 2000,
+    usedQuantity: 500,
+    remainingQuantity: 1500,
+    status: 'fully-arrived',
+    poDate: '2025-11-15',
+    expectedDate: '2025-11-20',
+    actualArrivalDate: '2025-11-19',
+    location: '仓库B-05',
+    batch: 'BATCH-20251119-002',
+    qualityStatus: 'qualified',
+    storageCondition: 'normal',
+    unitPrice: 0.15,
+    totalValue: 300,
+    arrivedValue: 300,
+    usedValue: 75,
+    project: 'BMS老化测试设备',
+    nextAction: '按需领取',
+    daysUntilExpiry: 365,
+  },
+  {
+    id: 'MAT-003',
+    code: 'MAT-2025-003',
+    name: '铝电解电容 100uF/16V',
+    category: '被动元件',
+    supplier: '日本太阳诱电代理',
+    poNumber: 'PO-2025-0002',
+    totalQuantity: 1000,
+    arrivedQuantity: 500,
+    usedQuantity: 100,
+    remainingQuantity: 400,
+    status: 'partial-arrived',
+    poDate: '2025-11-16',
+    expectedDate: '2025-12-01',
+    actualArrivalDate: '2025-11-28',
+    location: '仓库C-03',
+    batch: 'BATCH-20251128-003',
+    qualityStatus: 'qualified',
+    storageCondition: 'temperature-controlled',
+    unitPrice: 0.85,
+    totalValue: 850,
+    arrivedValue: 425,
+    usedValue: 85,
+    project: 'BMS老化测试设备',
+    nextAction: '等待后续到货',
+    daysUntilExpiry: 240,
+  },
+  {
+    id: 'MAT-004',
+    code: 'MAT-2025-004',
+    name: '电源模块 110-240V/12V 5A',
+    category: '模块',
+    supplier: '深圳电源厂商',
+    poNumber: 'PO-2025-0003',
+    totalQuantity: 50,
+    arrivedQuantity: 0,
+    usedQuantity: 0,
+    remainingQuantity: 0,
+    status: 'not-arrived',
+    poDate: '2025-11-18',
+    expectedDate: '2025-12-05',
+    actualArrivalDate: null,
+    location: null,
+    batch: null,
+    qualityStatus: null,
+    storageCondition: null,
+    unitPrice: 280,
+    totalValue: 14000,
+    arrivedValue: 0,
+    usedValue: 0,
+    project: 'BMS老化测试设备',
+    nextAction: '跟进供应商',
+    daysUntilExpiry: null,
+  },
+  {
+    id: 'MAT-005',
+    code: 'MAT-2025-005',
+    name: 'USB连接器 Type-C',
+    category: '连接器',
+    supplier: '连接器制造商',
+    poNumber: 'PO-2025-0001',
+    totalQuantity: 100,
+    arrivedQuantity: 100,
+    usedQuantity: 80,
+    remainingQuantity: 20,
+    status: 'in-use',
+    poDate: '2025-11-15',
+    expectedDate: '2025-11-22',
+    actualArrivalDate: '2025-11-21',
+    location: '仓库A-10',
+    batch: 'BATCH-20251121-005',
+    qualityStatus: 'qualified',
+    storageCondition: 'normal',
+    unitPrice: 3.2,
+    totalValue: 320,
+    arrivedValue: 320,
+    usedValue: 256,
+    project: 'BMS老化测试设备',
+    nextAction: '适时补货',
+    daysUntilExpiry: 365,
+  },
+]
+
+const statusConfig = {
+  'not-arrived': {
+    label: '未到货',
+    color: 'bg-red-500/20 text-red-400',
+    icon: AlertTriangle,
+    description: '采购订单已下达，等待物料到达',
+  },
+  'partial-arrived': {
+    label: '部分到货',
+    color: 'bg-amber-500/20 text-amber-400',
+    icon: Truck,
+    description: '物料已部分到达，继续等待后续',
+  },
+  'fully-arrived': {
+    label: '全部到货',
+    color: 'bg-emerald-500/20 text-emerald-400',
+    icon: CheckCircle2,
+    description: '采购的全部物料已到达仓库',
+  },
+  'in-use': {
+    label: '使用中',
+    color: 'bg-blue-500/20 text-blue-400',
+    icon: Zap,
+    description: '物料正在生产中使用',
+  },
+  'completed': {
+    label: '已完成',
+    color: 'bg-slate-500/20 text-slate-400',
+    icon: CheckCircle2,
+    description: '物料已全部使用或返库',
+  },
+}
+
+const qualityStatusConfig = {
+  'qualified': { label: '合格', color: 'bg-emerald-500/20 text-emerald-400' },
+  'pending-inspection': { label: '待检验', color: 'bg-amber-500/20 text-amber-400' },
+  'rejected': { label: '不合格', color: 'bg-red-500/20 text-red-400' },
+}
+
+const MaterialRow = ({ material, onView }) => {
+  const statusCfg = statusConfig[material.status]
+  const StatusIcon = statusCfg.icon
+  const arrivalProgress = (material.arrivedQuantity / material.totalQuantity) * 100
+  const usageProgress = (material.usedQuantity / material.arrivedQuantity) * 100
+
+  return (
+    <motion.div
+      variants={fadeIn}
+      className="group rounded-lg border border-slate-700/50 bg-slate-800/40 p-4 hover:bg-slate-800/60 transition-all"
+    >
+      <div className="space-y-3">
+        {/* Header Row */}
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <h3 className="font-semibold text-slate-100">{material.name}</h3>
+            <p className="text-sm text-slate-500 mt-1">
+              {material.code} • {material.category} • {material.supplier}
+            </p>
+          </div>
+          <Badge className={cn('text-sm', statusCfg.color)}>
+            <StatusIcon className="w-3 h-3 mr-1" />
+            {statusCfg.label}
+          </Badge>
+        </div>
+
+        {/* Quantity and Value Info */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <p className="text-slate-400 mb-1">订购数量</p>
+            <p className="font-semibold text-slate-100">{material.totalQuantity}</p>
+          </div>
+          <div>
+            <p className="text-slate-400 mb-1">已到数量</p>
+            <p className="font-semibold text-emerald-400">{material.arrivedQuantity}</p>
+          </div>
+          <div>
+            <p className="text-slate-400 mb-1">已用数量</p>
+            <p className="font-semibold text-blue-400">{material.usedQuantity}</p>
+          </div>
+          <div>
+            <p className="text-slate-400 mb-1">剩余数量</p>
+            <p className="font-semibold text-amber-400">{material.remainingQuantity}</p>
+          </div>
+        </div>
+
+        {/* Progress Bars */}
+        <div className="space-y-2">
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-slate-400">到货进度</span>
+              <span className="text-xs font-medium text-slate-300">{arrivalProgress.toFixed(0)}%</span>
+            </div>
+            <Progress value={arrivalProgress} className="h-1.5" />
+          </div>
+          {material.arrivedQuantity > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-slate-400">使用进度</span>
+                <span className="text-xs font-medium text-slate-300">
+                  {usageProgress.toFixed(0)}%
+                </span>
+              </div>
+              <Progress value={usageProgress} className="h-1.5" />
+            </div>
+          )}
+        </div>
+
+        {/* Timeline and Status */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm pt-2 border-t border-slate-700/30">
+          <div>
+            <p className="text-slate-500 text-xs mb-1">预期日期</p>
+            <p className="text-slate-300">{formatDate(material.expectedDate)}</p>
+          </div>
+          {material.actualArrivalDate && (
+            <div>
+              <p className="text-slate-500 text-xs mb-1">实际日期</p>
+              <p className="text-slate-300">{formatDate(material.actualArrivalDate)}</p>
+            </div>
+          )}
+          <div>
+            <p className="text-slate-500 text-xs mb-1">位置</p>
+            <p className="text-slate-300">{material.location || '—'}</p>
+          </div>
+          {material.daysUntilExpiry && (
+            <div>
+              <p className="text-slate-500 text-xs mb-1">保质期</p>
+              <p className={cn('text-sm font-medium', material.daysUntilExpiry < 30 ? 'text-red-400' : 'text-slate-300')}>
+                {material.daysUntilExpiry} 天
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Action Bar */}
+        <div className="flex items-center justify-between pt-2 border-t border-slate-700/30">
+          <div className="flex gap-2">
+            {material.qualityStatus && (
+              <Badge className={cn('text-xs', qualityStatusConfig[material.qualityStatus]?.color)}>
+                {qualityStatusConfig[material.qualityStatus]?.label}
+              </Badge>
+            )}
+            <Badge className="bg-slate-700/50 text-slate-300 text-xs">
+              {material.nextAction}
+            </Badge>
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 w-8 p-0"
+            onClick={() => onView(material)}
+          >
+            <Eye className="w-4 h-4 text-blue-400" />
+          </Button>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+export default function MaterialTracking() {
+  const [materials] = useState(mockMaterials)
+  const [searchText, setSearchText] = useState('')
+  const [filterStatus, setFilterStatus] = useState('all')
+
+  const filteredMaterials = useMemo(() => {
+    return materials.filter(m => {
+      const matchSearch =
+        m.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        m.code.toLowerCase().includes(searchText.toLowerCase()) ||
+        m.supplier.toLowerCase().includes(searchText.toLowerCase())
+
+      const matchStatus = filterStatus === 'all' || m.status === filterStatus
+
+      return matchSearch && matchStatus
+    })
+  }, [materials, searchText, filterStatus])
+
+  const stats = useMemo(() => {
+    return {
+      total: materials.length,
+      fullArrived: materials.filter(m => m.status === 'fully-arrived').length,
+      notArrived: materials.filter(m => m.status === 'not-arrived').length,
+      totalValue: materials.reduce((sum, m) => sum + m.totalValue, 0),
+      arrivedValue: materials.reduce((sum, m) => sum + m.arrivedValue, 0),
+      usedValue: materials.reduce((sum, m) => sum + m.usedValue, 0),
+    }
+  }, [materials])
+
+  return (
+    <div className="space-y-6 pb-8">
+      <PageHeader
+        title="物料跟踪"
+        description="实时监控物料采购、到货和使用状态"
+        action={{
+          label: '新建物料',
+          icon: Plus,
+          onClick: () => console.log('New material'),
+        }}
+      />
+
+      {/* Statistics */}
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5"
+      >
+        <motion.div variants={fadeIn}>
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-sm text-slate-400">物料总数</p>
+              <p className="text-3xl font-bold text-blue-400 mt-2">{stats.total}</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={fadeIn}>
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-sm text-slate-400">全部到货</p>
+              <p className="text-3xl font-bold text-emerald-400 mt-2">{stats.fullArrived}</p>
+              <p className="text-xs text-slate-500 mt-1">{((stats.fullArrived / stats.total) * 100).toFixed(0)}%</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={fadeIn}>
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-sm text-slate-400">未到货</p>
+              <p className="text-3xl font-bold text-red-400 mt-2">{stats.notArrived}</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={fadeIn}>
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-sm text-slate-400">合同金额</p>
+              <p className="text-2xl font-bold text-amber-400 mt-2">{formatCurrency(stats.totalValue)}</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={fadeIn}>
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-sm text-slate-400">已到金额</p>
+              <p className="text-2xl font-bold text-emerald-400 mt-2">{formatCurrency(stats.arrivedValue)}</p>
+              <p className="text-xs text-slate-500 mt-1">{((stats.arrivedValue / stats.totalValue) * 100).toFixed(1)}%</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
+
+      {/* Search and Filter */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+              <Input
+                placeholder="搜索物料名、物料码、供应商..."
+                value={searchText}
+                onChange={e => setSearchText(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={filterStatus === 'all' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setFilterStatus('all')}
+              >
+                全部状态
+              </Button>
+              {Object.entries(statusConfig).map(([key, cfg]) => (
+                <Button
+                  key={key}
+                  variant={filterStatus === key ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setFilterStatus(key)}
+                  className={cn(filterStatus === key && cfg.color)}
+                >
+                  {cfg.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Materials Grid */}
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 gap-4"
+      >
+        <AnimatePresence>
+          {filteredMaterials.length > 0 ? (
+            filteredMaterials.map(material => (
+              <MaterialRow
+                key={material.id}
+                material={material}
+                onView={m => console.log('View material', m)}
+              />
+            ))
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="py-12 text-center"
+            >
+              <Package className="w-12 h-12 text-slate-500 mx-auto mb-3" />
+              <p className="text-slate-400">没有符合条件的物料</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
+      {/* Alert Summary */}
+      {materials.some(m => m.status === 'not-arrived' && m.daysUntilExpiry) && (
+        <Card className="bg-red-500/5 border-red-500/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-400">
+              <AlertCircle className="w-5 h-5" />
+              待处理提醒
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              {materials
+                .filter(m => m.status === 'not-arrived')
+                .map(m => (
+                  <li key={m.id} className="text-sm text-slate-300 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-red-400" />
+                    {m.name} - 预期到货: {formatDate(m.expectedDate)}
+                  </li>
+                ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+}
