@@ -95,6 +95,60 @@ const routes = [
     meta: { title: '生产管理驾驶舱' }
   },
   {
+    path: '/material/dashboard',
+    name: 'MaterialDashboard',
+    component: () => import('@/views/MaterialDashboard.vue'),
+    meta: { title: '物料保障看板' }
+  },
+  {
+    path: '/material/shortage-report',
+    name: 'ShortageReport',
+    component: () => import('@/views/ShortageReport.vue'),
+    meta: { title: '缺料上报' }
+  },
+  {
+    path: '/material/kit-check',
+    name: 'KitCheckPage',
+    component: () => import('@/views/KitCheckPage.vue'),
+    meta: { title: '齐套分析' }
+  },
+  {
+    path: '/material/alerts',
+    name: 'MaterialAlerts',
+    component: () => import('@/views/MaterialAlerts.vue'),
+    meta: { title: '缺料预警' }
+  },
+  {
+    path: '/material/arrivals',
+    name: 'ArrivalTracking',
+    component: () => import('@/views/ArrivalTracking.vue'),
+    meta: { title: '到货跟踪' }
+  },
+  {
+    path: '/material/reports',
+    name: 'MaterialReports',
+    component: () => import('@/views/MaterialReports.vue'),
+    meta: { title: '物料统计报表' }
+  },
+  {
+    path: '/project/reports',
+    name: 'ProjectReports',
+    component: () => import('@/views/ProjectReports.vue'),
+    meta: { title: '项目统计报表' }
+  },
+  {
+    path: '/production/reports',
+    name: 'ProductionReports',
+    component: () => import('@/views/ProductionReports.vue'),
+    meta: { title: '生产统计报表' }
+  },
+  {
+    path: '/export-center',
+    name: 'ExportCenter',
+    component: () => import('@/views/ExportCenter.vue'),
+    meta: { title: '报表中心' }
+  },
+  {
     path: '/timesheet',
     name: 'Timesheet',
     component: () => import('@/views/TimesheetPage.vue'),

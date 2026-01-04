@@ -39,6 +39,39 @@ from .alert import (
     ExceptionEvent, ExceptionAction, ExceptionEscalation,
     AlertStatistics, ProjectHealthSnapshot, AlertRuleTemplate
 )
+from .production import (
+    Workshop, Workstation, Worker, WorkerSkill, ProcessDict,
+    Equipment, EquipmentMaintenance, ProductionPlan,
+    WorkOrder, WorkReport, ProductionException,
+    MaterialRequisition, MaterialRequisitionItem, ProductionDailyReport
+)
+from .pmo import (
+    PmoProjectInitiation, PmoProjectPhase, PmoChangeRequest,
+    PmoProjectRisk, PmoProjectCost, PmoMeeting,
+    PmoResourceAllocation, PmoProjectClosure
+)
+from .task_center import (
+    TaskUnified, JobDutyTemplate, TaskOperationLog,
+    TaskComment, TaskReminder
+)
+from .presale import (
+    PresaleSupportTicket, PresaleTicketDeliverable, PresaleTicketProgress,
+    PresaleSolution, PresaleSolutionCost, PresaleSolutionTemplate,
+    PresaleWorkload, PresaleCustomerTechProfile, PresaleTenderRecord
+)
+from .performance import (
+    PerformancePeriod, PerformanceIndicator, PerformanceResult,
+    PerformanceEvaluation, PerformanceAppeal, ProjectContribution,
+    PerformanceRankingSnapshot
+)
+from .timesheet import (
+    Timesheet, TimesheetBatch, TimesheetSummary,
+    OvertimeApplication, TimesheetApprovalLog, TimesheetRule
+)
+from .report_center import (
+    ReportTemplate, ReportDefinition, ReportGeneration,
+    ReportSubscription, DataImportTask, DataExportTask, ImportTemplate
+)
 
 __all__ = [
     # Base
@@ -69,4 +102,30 @@ __all__ = [
     'AlertRule', 'AlertRecord', 'AlertNotification',
     'ExceptionEvent', 'ExceptionAction', 'ExceptionEscalation',
     'AlertStatistics', 'ProjectHealthSnapshot', 'AlertRuleTemplate',
+    # Production
+    'Workshop', 'Workstation', 'Worker', 'WorkerSkill', 'ProcessDict',
+    'Equipment', 'EquipmentMaintenance', 'ProductionPlan',
+    'WorkOrder', 'WorkReport', 'ProductionException',
+    'MaterialRequisition', 'MaterialRequisitionItem', 'ProductionDailyReport',
+    # PMO
+    'PmoProjectInitiation', 'PmoProjectPhase', 'PmoChangeRequest',
+    'PmoProjectRisk', 'PmoProjectCost', 'PmoMeeting',
+    'PmoResourceAllocation', 'PmoProjectClosure',
+    # Task Center
+    'TaskUnified', 'JobDutyTemplate', 'TaskOperationLog',
+    'TaskComment', 'TaskReminder',
+    # Presale
+    'PresaleSupportTicket', 'PresaleTicketDeliverable', 'PresaleTicketProgress',
+    'PresaleSolution', 'PresaleSolutionCost', 'PresaleSolutionTemplate',
+    'PresaleWorkload', 'PresaleCustomerTechProfile', 'PresaleTenderRecord',
+    # Performance
+    'PerformancePeriod', 'PerformanceIndicator', 'PerformanceResult',
+    'PerformanceEvaluation', 'PerformanceAppeal', 'ProjectContribution',
+    'PerformanceRankingSnapshot',
+    # Timesheet
+    'Timesheet', 'TimesheetBatch', 'TimesheetSummary',
+    'OvertimeApplication', 'TimesheetApprovalLog', 'TimesheetRule',
+    # Report Center
+    'ReportTemplate', 'ReportDefinition', 'ReportGeneration',
+    'ReportSubscription', 'DataImportTask', 'DataExportTask', 'ImportTemplate',
 ]
