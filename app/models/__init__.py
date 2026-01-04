@@ -59,6 +59,19 @@ from .presale import (
     PresaleSolution, PresaleSolutionCost, PresaleSolutionTemplate,
     PresaleWorkload, PresaleCustomerTechProfile, PresaleTenderRecord
 )
+from .performance import (
+    PerformancePeriod, PerformanceIndicator, PerformanceResult,
+    PerformanceEvaluation, PerformanceAppeal, ProjectContribution,
+    PerformanceRankingSnapshot
+)
+from .timesheet import (
+    Timesheet, TimesheetBatch, TimesheetSummary,
+    OvertimeApplication, TimesheetApprovalLog, TimesheetRule
+)
+from .report_center import (
+    ReportTemplate, ReportDefinition, ReportGeneration,
+    ReportSubscription, DataImportTask, DataExportTask, ImportTemplate
+)
 
 __all__ = [
     # Base
@@ -105,4 +118,14 @@ __all__ = [
     'PresaleSupportTicket', 'PresaleTicketDeliverable', 'PresaleTicketProgress',
     'PresaleSolution', 'PresaleSolutionCost', 'PresaleSolutionTemplate',
     'PresaleWorkload', 'PresaleCustomerTechProfile', 'PresaleTenderRecord',
+    # Performance
+    'PerformancePeriod', 'PerformanceIndicator', 'PerformanceResult',
+    'PerformanceEvaluation', 'PerformanceAppeal', 'ProjectContribution',
+    'PerformanceRankingSnapshot',
+    # Timesheet
+    'Timesheet', 'TimesheetBatch', 'TimesheetSummary',
+    'OvertimeApplication', 'TimesheetApprovalLog', 'TimesheetRule',
+    # Report Center
+    'ReportTemplate', 'ReportDefinition', 'ReportGeneration',
+    'ReportSubscription', 'DataImportTask', 'DataExportTask', 'ImportTemplate',
 ]
