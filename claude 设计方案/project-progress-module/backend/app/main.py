@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # 导入路由
 from app.api.v1 import project, task, timesheet, workload
-from app.api.v1 import auth, system, data_import, reports, performance, task_center, reminder, batch_operations, presale, pmo, production
+from app.api.v1 import auth, system, data_import, reports, performance, task_center, reminder, batch_operations, presale, pmo, production, material
 
 app = FastAPI(
     title="项目进度管理系统",
@@ -37,6 +37,7 @@ app.include_router(batch_operations.router, prefix="/api/v1", tags=["批量操�
 app.include_router(presale.router, prefix="/api/v1", tags=["售前技术支持"])
 app.include_router(pmo.router, prefix="/api/v1", tags=["项目管理部"])
 app.include_router(production.router, prefix="/api/v1", tags=["生产管理"])
+app.include_router(material.router, prefix="/api/v1", tags=["物料保障"])
 app.include_router(project.router, prefix="/api/v1/projects", tags=["项目管理"])
 app.include_router(task.router, prefix="/api/v1/tasks", tags=["任务管理"])
 app.include_router(timesheet.router, prefix="/api/v1/timesheets", tags=["工时管理"])
