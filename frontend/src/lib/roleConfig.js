@@ -8,13 +8,13 @@ export const ROLE_DEFINITIONS = {
     name: '董事长',
     dataScope: 'all',
     description: '公司战略决策、重大事项审批、全面监控',
-    navGroups: ['overview', 'project', 'operation', 'quality', 'personal'],
+    navGroups: ['chairman'],
   },
   gm: {
     name: '总经理',
     dataScope: 'all',
     description: '战略决策、重大项目审批、经营指标监控',
-    navGroups: ['overview', 'project', 'operation', 'quality', 'personal'],
+    navGroups: ['general_manager'],
   },
   super_admin: {
     name: '管理员',
@@ -167,7 +167,13 @@ export const ROLE_DEFINITIONS = {
     name: '人事经理',
     dataScope: 'all',
     description: '人力资源规划、招聘管理、绩效管理、员工关系',
-    navGroups: ['overview', 'personal'],
+    navGroups: ['overview', 'hr_management', 'personal'],
+  },
+  administrative_manager: {
+    name: '行政经理',
+    dataScope: 'all',
+    description: '行政事务管理、办公用品管理、会议管理、车辆管理、固定资产管理、员工考勤',
+    navGroups: ['administrative'],
   },
   viewer: {
     name: '只读用户',
@@ -180,21 +186,21 @@ export const ROLE_DEFINITIONS = {
     name: '销售总监',
     dataScope: 'all',
     description: '销售战略规划、团队管理、业绩监控',
-    navGroups: ['overview', 'project', 'personal'],
+    navGroups: ['sales_director'],
     focusStages: ['S1', 'S7'],
   },
   sales_manager: {
     name: '销售经理',
     dataScope: 'department',
     description: '销售团队管理、客户关系维护、业绩达成',
-    navGroups: ['sales_work', 'sales', 'personal'],
+    navGroups: ['sales_manager_work', 'sales', 'personal'],
     focusStages: ['S1', 'S7'],
   },
   presales_manager: {
     name: '售前技术部经理',
     dataScope: 'department',
     description: '售前团队管理、技术方案审核、投标支持',
-    navGroups: ['presales_work', 'presales_mgmt', 'personal'],
+    navGroups: ['presales_manager_work', 'presales_mgmt', 'personal'],
     focusStages: ['S1', 'S2'],
   },
   // 项目管理角色
@@ -303,6 +309,44 @@ export const ROLE_DEFINITIONS = {
 
 // 导航组定义
 export const NAV_GROUPS = {
+  // 董事长专用导航
+  chairman: {
+    label: '战略决策',
+    items: [
+      { name: '董事长工作台', path: '/chairman-dashboard', icon: 'LayoutDashboard' },
+      { name: '经营报表', path: '/business-reports', icon: 'BarChart3' },
+      { name: '战略分析', path: '/strategy-analysis', icon: 'Target' },
+      { name: '项目看板', path: '/board', icon: 'Kanban' },
+      { name: '项目列表', path: '/projects', icon: 'Briefcase' },
+      { name: '运营大屏', path: '/operation', icon: 'BarChart3' },
+      { name: '销售业绩', path: '/sales-director-dashboard', icon: 'TrendingUp' },
+      { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck' },
+      { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '决策事项', path: '/key-decisions', icon: 'Crown' },
+      { name: '部门管理', path: '/departments', icon: 'Building2' },
+      { name: '人员管理', path: '/employees', icon: 'Users' },
+      { name: '绩效管理', path: '/performance', icon: 'Award' },
+    ],
+  },
+  // 总经理专用导航
+  general_manager: {
+    label: '经营管理',
+    items: [
+      { name: '总经理工作台', path: '/gm-dashboard', icon: 'LayoutDashboard' },
+      { name: '经营报表', path: '/business-reports', icon: 'BarChart3' },
+      { name: '运营大屏', path: '/operation', icon: 'BarChart3' },
+      { name: '项目看板', path: '/board', icon: 'Kanban' },
+      { name: '项目列表', path: '/projects', icon: 'Briefcase' },
+      { name: '排期看板', path: '/schedule', icon: 'Calendar' },
+      { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck' },
+      { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
+      { name: '齐套分析', path: '/materials', icon: 'Package' },
+      { name: '验收管理', path: '/acceptance', icon: 'ClipboardList' },
+    ],
+  },
   overview: {
     label: '概览',
     items: [
@@ -322,6 +366,7 @@ export const NAV_GROUPS = {
     label: '我的工作',
     items: [
       { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
     ],
   },
@@ -331,6 +376,7 @@ export const NAV_GROUPS = {
     items: [
       { name: '工作台', path: '/workstation', icon: 'LayoutDashboard' },
       { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
     ],
   },
@@ -339,6 +385,7 @@ export const NAV_GROUPS = {
     label: '我的工作',
     items: [
       { name: '装配任务', path: '/assembly-tasks', icon: 'Wrench' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
     ],
   },
@@ -357,6 +404,7 @@ export const NAV_GROUPS = {
       { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
       { name: '供应商管理', path: '/suppliers', icon: 'Building2' },
       { name: '到货跟踪', path: '/arrivals', icon: 'Truck' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
   },
   warehouse: {
@@ -365,6 +413,7 @@ export const NAV_GROUPS = {
       { name: '入库管理', path: '/inbound', icon: 'PackagePlus' },
       { name: '出库管理', path: '/outbound', icon: 'PackageMinus' },
       { name: '库存查询', path: '/inventory', icon: 'Boxes' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
   },
   quality: {
@@ -372,6 +421,7 @@ export const NAV_GROUPS = {
     items: [
       { name: '验收管理', path: '/acceptance', icon: 'ClipboardList' },
       { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck', badge: '2' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
   },
   // 销售专用工作台导航
@@ -381,6 +431,16 @@ export const NAV_GROUPS = {
       { name: '工作台', path: '/sales-dashboard', icon: 'LayoutDashboard' },
       { name: '客户管理', path: '/customers', icon: 'Users' },
       { name: '商机跟踪', path: '/opportunities', icon: 'Target' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+    ],
+  },
+  sales_manager_work: {
+    label: '我的工作',
+    items: [
+      { name: '销售经理工作台', path: '/sales-manager-dashboard', icon: 'LayoutDashboard' },
+      { name: '客户管理', path: '/customers', icon: 'Users' },
+      { name: '商机跟踪', path: '/opportunities', icon: 'Target' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
   },
   sales: {
@@ -391,6 +451,23 @@ export const NAV_GROUPS = {
       { name: '合同管理', path: '/contracts', icon: 'FileSignature' },
       { name: '回款管理', path: '/payments', icon: 'CreditCard' },
       { name: '项目跟踪', path: '/sales-projects', icon: 'FolderKanban' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+    ],
+  },
+  // 销售总监专用导航
+  sales_director: {
+    label: '销售管理',
+    items: [
+      { name: '销售总监工作台', path: '/sales-director-dashboard', icon: 'LayoutDashboard' },
+      { name: '销售报表', path: '/sales-reports', icon: 'BarChart3' },
+      { name: '团队管理', path: '/sales-team', icon: 'Users' },
+      { name: '客户管理', path: '/customers', icon: 'Building2' },
+      { name: '商机看板', path: '/opportunities', icon: 'Target' },
+      { name: '合同管理', path: '/contracts', icon: 'FileCheck' },
+      { name: '合同审批', path: '/contract-approval', icon: 'ClipboardCheck' },
+      { name: '回款监控', path: '/payments', icon: 'CreditCard' },
+      { name: '项目看板', path: '/board', icon: 'Kanban' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
   },
   // 商务支持专员专用导航
@@ -406,6 +483,7 @@ export const NAV_GROUPS = {
       { name: '回款跟踪', path: '/payments', icon: 'CreditCard' },
       { name: '对账开票', path: '/invoices', icon: 'Receipt' },
       { name: '验收管理', path: '/acceptance', icon: 'ClipboardList' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
   },
   // 售前技术工程师专用导航
@@ -414,6 +492,16 @@ export const NAV_GROUPS = {
     items: [
       { name: '工作台', path: '/presales-dashboard', icon: 'LayoutDashboard' },
       { name: '任务中心', path: '/presales-tasks', icon: 'ListTodo' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+    ],
+  },
+  // 售前技术部经理专用导航
+  presales_manager_work: {
+    label: '工作台',
+    items: [
+      { name: '经理工作台', path: '/presales-manager-dashboard', icon: 'LayoutDashboard' },
+      { name: '任务中心', path: '/presales-tasks', icon: 'ListTodo' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
   },
   presales_mgmt: {
@@ -422,12 +510,14 @@ export const NAV_GROUPS = {
       { name: '方案中心', path: '/solutions', icon: 'FileText' },
       { name: '需求调研', path: '/requirement-survey', icon: 'ClipboardList' },
       { name: '投标中心', path: '/bidding', icon: 'Target' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
   },
   knowledge: {
     label: '知识库',
     items: [
       { name: '知识检索', path: '/knowledge-base', icon: 'BookOpen' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
   },
   finance: {
@@ -436,6 +526,19 @@ export const NAV_GROUPS = {
       { name: '成本核算', path: '/costs', icon: 'Calculator' },
       { name: '付款审批', path: '/payment-approval', icon: 'FileCheck' },
       { name: '项目结算', path: '/settlement', icon: 'Receipt' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+    ],
+  },
+  hr_management: {
+    label: '人事管理',
+    items: [
+      { name: '人事工作台', path: '/hr-manager-dashboard', icon: 'LayoutDashboard' },
+      { name: '员工管理', path: '/employees', icon: 'Users' },
+      { name: '招聘管理', path: '/recruitment', icon: 'UserPlus' },
+      { name: '绩效管理', path: '/performance', icon: 'Award' },
+      { name: '考勤管理', path: '/attendance', icon: 'Calendar' },
+      { name: '员工关系', path: '/employee-relations', icon: 'Heart' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
   },
   system: {
@@ -444,14 +547,32 @@ export const NAV_GROUPS = {
       { name: '用户管理', path: '/users', icon: 'UserCog' },
       { name: '角色权限', path: '/roles', icon: 'Shield' },
       { name: '系统配置', path: '/config', icon: 'Cog' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
   },
   personal: {
     label: '个人中心',
     items: [
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '5' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
+    ],
+  },
+  // 行政经理专用导航
+  administrative: {
+    label: '行政管理',
+    items: [
+      { name: '行政工作台', path: '/administrative-dashboard', icon: 'LayoutDashboard' },
+      { name: '办公用品管理', path: '/office-supplies', icon: 'Package' },
+      { name: '会议管理', path: '/meetings', icon: 'Calendar' },
+      { name: '车辆管理', path: '/vehicles', icon: 'Car' },
+      { name: '固定资产', path: '/fixed-assets', icon: 'Building2' },
+      { name: '员工考勤', path: '/attendance', icon: 'ClockIn' },
+      { name: '请假管理', path: '/leave-management', icon: 'CalendarDays' },
+      { name: '审批中心', path: '/administrative-approvals', icon: 'ClipboardCheck' },
+      { name: '费用统计', path: '/administrative-expenses', icon: 'BarChart3' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
   },
 }
@@ -491,6 +612,23 @@ export function isEngineerRole(roleCode) {
 
 // 模拟用户数据
 export const DEMO_USERS = {
+  // 管理层
+  chairman: {
+    id: 0,
+    username: 'chairman',
+    name: '董事长',
+    role: 'chairman',
+    department: '董事会',
+    avatar: null,
+  },
+  gm: {
+    id: 2,
+    username: 'gm',
+    name: '总经理',
+    role: 'gm',
+    department: '总经理办公室',
+    avatar: null,
+  },
   admin: {
     id: 1,
     username: 'admin',
@@ -751,6 +889,14 @@ export const DEMO_USERS = {
     name: '李经理',
     role: 'hr_manager',
     department: '人事部',
+    avatar: null,
+  },
+  administrative_manager: {
+    id: 33,
+    username: 'wang_admin_mgr',
+    name: '王经理',
+    role: 'administrative_manager',
+    department: '行政部',
     avatar: null,
   },
 }

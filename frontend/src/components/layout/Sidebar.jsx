@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   Package,
   AlertTriangle,
+  AlertCircle,
   ClipboardCheck,
   ClipboardList,
   FileText,
@@ -41,6 +42,9 @@ import {
   Lightbulb,
   DollarSign,
   Archive,
+  Crown,
+  Award,
+  TrendingUp,
 } from 'lucide-react'
 
 // Icon mapping
@@ -54,6 +58,7 @@ const iconMap = {
   ShoppingCart,
   Package,
   AlertTriangle,
+  AlertCircle,
   ClipboardList,
   ClipboardCheck,
   Bell,
@@ -79,6 +84,9 @@ const iconMap = {
   Lightbulb,
   DollarSign,
   Archive,
+  Crown,
+  Award,
+  TrendingUp,
 }
 
 // Default navigation groups (for admin and general use)
@@ -105,6 +113,7 @@ const defaultNavGroups = [
       { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
       { name: '齐套分析', path: '/materials', icon: 'Package' },
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
   },
   {
@@ -112,6 +121,7 @@ const defaultNavGroups = [
     items: [
       { name: '验收管理', path: '/acceptance', icon: 'ClipboardList' },
       { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck', badge: '2' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
   },
   {
@@ -132,7 +142,15 @@ const engineerNavGroups = [
     items: [
       { name: '工作台', path: '/workstation', icon: 'LayoutDashboard' },
       { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+    ],
+  },
+  {
+    label: '监控与预警',
+    items: [
+      { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
   },
   {
@@ -195,10 +213,105 @@ const buyerNavGroups = [
     ],
   },
   {
+    label: '监控与预警',
+    items: [
+      { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
+    ],
+  },
+  {
     label: '个人中心',
     items: [
       { name: '通知中心', path: '/notifications', icon: 'Bell' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '个人设置', path: '/settings', icon: 'Settings' },
+    ],
+  },
+]
+
+// General Manager nav groups
+const generalManagerNavGroups = [
+  {
+    label: '经营管理',
+    items: [
+      { name: '总经理工作台', path: '/gm-dashboard', icon: 'LayoutDashboard' },
+      { name: '经营报表', path: '/business-reports', icon: 'BarChart3' },
+      { name: '运营大屏', path: '/operation', icon: 'BarChart3' },
+    ],
+  },
+  {
+    label: '项目管理',
+    items: [
+      { name: '项目看板', path: '/board', icon: 'Kanban' },
+      { name: '项目列表', path: '/projects', icon: 'Briefcase' },
+      { name: '排期看板', path: '/schedule', icon: 'Calendar' },
+    ],
+  },
+  {
+    label: '审批与监控',
+    items: [
+      { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck', badge: '8' },
+      { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+    ],
+  },
+  {
+    label: '运营管理',
+    items: [
+      { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
+      { name: '齐套分析', path: '/materials', icon: 'Package' },
+      { name: '验收管理', path: '/acceptance', icon: 'ClipboardList' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+    ],
+  },
+  {
+    label: '个人中心',
+    items: [
+      { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '5' },
+      { name: '个人设置', path: '/settings', icon: 'Settings' },
+    ],
+  },
+]
+
+// Chairman nav groups
+const chairmanNavGroups = [
+  {
+    label: '战略决策',
+    items: [
+      { name: '董事长工作台', path: '/chairman-dashboard', icon: 'LayoutDashboard' },
+      { name: '经营报表', path: '/business-reports', icon: 'BarChart3' },
+      { name: '战略分析', path: '/strategy-analysis', icon: 'Target' },
+    ],
+  },
+  {
+    label: '全面监控',
+    items: [
+      { name: '项目看板', path: '/board', icon: 'Kanban' },
+      { name: '项目列表', path: '/projects', icon: 'Briefcase' },
+      { name: '运营大屏', path: '/operation', icon: 'BarChart3' },
+      { name: '销售业绩', path: '/sales-director-dashboard', icon: 'TrendingUp' },
+    ],
+  },
+  {
+    label: '重大事项',
+    items: [
+      { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck', badge: '5' },
+      { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '决策事项', path: '/key-decisions', icon: 'Crown' },
+    ],
+  },
+  {
+    label: '组织管理',
+    items: [
+      { name: '部门管理', path: '/departments', icon: 'Building2' },
+      { name: '人员管理', path: '/employees', icon: 'Users' },
+      { name: '绩效管理', path: '/performance', icon: 'Award' },
+    ],
+  },
+  {
+    label: '个人中心',
+    items: [
+      { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '8' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
   },
@@ -221,13 +334,14 @@ const deptManagerNavGroups = [
       { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
     ],
   },
-  {
-    label: '团队管理',
-    items: [
-      { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck', badge: '2' },
-      { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
-    ],
-  },
+        {
+          label: '团队管理',
+          items: [
+            { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck', badge: '2' },
+            { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
+            { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+          ],
+        },
   {
     label: '个人中心',
     items: [
@@ -253,6 +367,7 @@ const productionManagerNavGroups = [
       { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
       { name: '齐套分析', path: '/materials', icon: 'Package' },
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
   },
   {
@@ -272,6 +387,63 @@ const assemblerNavGroups = [
     items: [
       { name: '装配任务', path: '/assembly-tasks', icon: 'Wrench' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+    ],
+  },
+  {
+    label: '监控与预警',
+    items: [
+      { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+    ],
+  },
+  {
+    label: '个人中心',
+    items: [
+      { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '5' },
+      { name: '个人设置', path: '/settings', icon: 'Settings' },
+    ],
+  },
+]
+
+// Sales director nav groups
+const salesDirectorNavGroups = [
+  {
+    label: '销售管理',
+    items: [
+      { name: '销售总监工作台', path: '/sales-director-dashboard', icon: 'LayoutDashboard' },
+      { name: '销售报表', path: '/sales-reports', icon: 'BarChart3' },
+      { name: '团队管理', path: '/sales-team', icon: 'Users' },
+    ],
+  },
+  {
+    label: '客户与商机',
+    items: [
+      { name: '客户管理', path: '/customers', icon: 'Building2' },
+      { name: '商机看板', path: '/opportunities', icon: 'Target' },
+      { name: '销售漏斗', path: '/sales-funnel', icon: 'Filter' },
+    ],
+  },
+  {
+    label: '合同与回款',
+    items: [
+      { name: '合同管理', path: '/contracts', icon: 'FileCheck' },
+      { name: '合同审批', path: '/contract-approval', icon: 'ClipboardCheck' },
+      { name: '回款监控', path: '/payments', icon: 'CreditCard' },
+      { name: '对账开票', path: '/invoices', icon: 'Receipt' },
+    ],
+  },
+  {
+    label: '项目跟踪',
+    items: [
+      { name: '项目看板', path: '/board', icon: 'Kanban' },
+      { name: '项目列表', path: '/projects', icon: 'Briefcase' },
+    ],
+  },
+  {
+    label: '监控与预警',
+    items: [
+      { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
   },
   {
@@ -307,6 +479,13 @@ const salesNavGroups = [
     items: [
       { name: '项目进度', path: '/sales-projects', icon: 'Briefcase' },
       { name: '项目看板', path: '/board', icon: 'Kanban' },
+    ],
+  },
+  {
+    label: '监控与预警',
+    items: [
+      { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
   },
   {
@@ -353,6 +532,13 @@ const businessSupportNavGroups = [
     ],
   },
   {
+    label: '监控与预警',
+    items: [
+      { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+    ],
+  },
+  {
     label: '个人中心',
     items: [
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '3' },
@@ -387,10 +573,49 @@ const procurementNavGroups = [
     ],
   },
   {
+    label: '监控与预警',
+    items: [
+      { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
+    ],
+  },
+  {
     label: '个人中心',
     items: [
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '2' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '个人设置', path: '/settings', icon: 'Settings' },
+    ],
+  },
+]
+
+// Procurement manager nav groups
+const procurementManagerNavGroups = [
+  {
+    label: '概览',
+    items: [
+      { name: '仪表盘', path: '/', icon: 'LayoutDashboard' },
+      { name: '采购工作台', path: '/procurement-manager-dashboard', icon: 'LayoutDashboard' },
+    ],
+  },
+  {
+    label: '采购管理',
+    items: [
+      { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
+      { name: '供应商管理', path: '/suppliers', icon: 'Building2' },
+      { name: '到货跟踪', path: '/arrivals', icon: 'Truck' },
+    ],
+  },
+  {
+    label: '监控与预警',
+    items: [
+      { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+    ],
+  },
+  {
+    label: '个人中心',
+    items: [
+      { name: '通知中心', path: '/notifications', icon: 'Bell' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
   },
@@ -420,6 +645,13 @@ const presalesNavGroups = [
     ],
   },
   {
+    label: '监控与预警',
+    items: [
+      { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
+      { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+    ],
+  },
+  {
     label: '个人中心',
     items: [
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '2' },
@@ -429,43 +661,132 @@ const presalesNavGroups = [
   },
 ]
 
+// Check if role should have access to procurement and material analysis modules
+function hasProcurementAccess(role) {
+  const procurementRoles = [
+    'procurement_engineer',
+    'procurement_manager',
+    'procurement',
+    'buyer',
+    '采购工程师',
+    '采购专员',
+    '采购部经理',
+    'pmc',
+    'production_manager',
+    'manufacturing_director',
+    '生产部经理',
+    '制造总监',
+    'gm',
+    '总经理',
+    'chairman',
+    '董事长',
+    'admin',
+    'super_admin',
+    'pm',
+    '项目经理',
+  ]
+  return procurementRoles.includes(role)
+}
+
+// Filter navigation items based on role permissions
+function filterNavItemsByRole(navGroups, role) {
+  const hasAccess = hasProcurementAccess(role)
+  
+  // Paths that require procurement access
+  const procurementPaths = ['/purchases', '/materials', '/bom-analysis']
+  
+  return navGroups.map(group => {
+    // Filter items in all groups, not just "运营管理"
+    return {
+      ...group,
+      items: group.items.filter(item => {
+        // Filter 采购订单 and 齐套分析 based on role
+        // These paths should only be visible to roles with procurement access
+        if (procurementPaths.includes(item.path)) {
+          return hasAccess
+        }
+        // Show all other items
+        return true
+      })
+    }
+  }).filter(group => {
+    // Remove groups that have no items after filtering
+    return group.items && group.items.length > 0
+  })
+}
+
 // Get navigation groups based on user role
 function getNavGroupsForRole(role) {
+  let navGroups
+  
   switch (role) {
+    case 'chairman':
+    case '董事长':
+      navGroups = chairmanNavGroups
+      break
+    case 'gm':
+    case '总经理':
+      navGroups = generalManagerNavGroups
+      break
     case 'assembler':
     case '装配技工':
-      return assemblerNavGroups
+      navGroups = assemblerNavGroups
+      break
+    case 'sales_director':
+    case '销售总监':
+      // 使用 roleConfig 中的配置，确保不包含问题管理
+      navGroups = getNavForRole('sales_director')
+      break
+    case 'sales_manager':
+    case '销售经理':
+      // 使用 roleConfig 中的配置，确保不包含问题管理
+      navGroups = getNavForRole('sales_manager')
+      break
     case 'sales':
     case '销售工程师':
-      return salesNavGroups
+      navGroups = salesNavGroups
+      break
     case 'business_support':
     case '商务支持':
     case '商务支持专员':
-      return businessSupportNavGroups
+      navGroups = businessSupportNavGroups
+      break
     case 'procurement':
     case '采购工程师':
     case '采购专员':
-      return procurementNavGroups
+      navGroups = procurementNavGroups
+      break
+    case 'procurement_manager':
+    case 'procurement_engineer':
+    case '采购部经理':
+      navGroups = procurementManagerNavGroups
+      break
     case 'presales':
     case '售前技术工程师':
-      return presalesNavGroups
+      navGroups = presalesNavGroups
+      break
     case 'me_engineer':
     case 'ee_engineer':
     case 'sw_engineer':
     case 'te_engineer':
-      return engineerNavGroups
+      navGroups = engineerNavGroups
+      break
     case 'pmc':
-      return pmcNavGroups
+      navGroups = pmcNavGroups
+      break
     case 'buyer':
-      return buyerNavGroups
+      navGroups = buyerNavGroups
+      break
     case 'dept_manager':
-      return deptManagerNavGroups
+      navGroups = deptManagerNavGroups
+      break
     case 'production_manager':
     case '生产部经理':
-      return productionManagerNavGroups
+      navGroups = productionManagerNavGroups
+      break
     case 'manufacturing_director':
     case '制造总监':
-      return [
+      navGroups = [
         {
           label: '概览',
           items: [
@@ -487,6 +808,7 @@ function getNavGroupsForRole(role) {
             { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
             { name: '齐套分析', path: '/materials', icon: 'Package' },
             { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
+            { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
           ],
         },
         {
@@ -497,9 +819,10 @@ function getNavGroupsForRole(role) {
           ],
         },
       ]
+      break
     case 'customer_service_manager':
     case '客服部经理':
-      return [
+      navGroups = [
         {
           label: '概览',
           items: [
@@ -512,6 +835,14 @@ function getNavGroupsForRole(role) {
             { name: '工作台', path: '/customer-service-dashboard', icon: 'LayoutDashboard' },
             { name: '项目看板', path: '/board', icon: 'Kanban' },
             { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
+            { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+          ],
+        },
+        {
+          label: '监控与预警',
+          items: [
+            { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
+            { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
           ],
         },
         {
@@ -522,15 +853,24 @@ function getNavGroupsForRole(role) {
           ],
         },
       ]
+      break
     case 'customer_service_engineer':
     case '客服工程师':
-      return [
+      navGroups = [
         {
           label: '我的工作',
           items: [
             { name: '工作台', path: '/customer-service-dashboard', icon: 'LayoutDashboard' },
             { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
+            { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
             { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+          ],
+        },
+        {
+          label: '监控与预警',
+          items: [
+            { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
+            { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
           ],
         },
         {
@@ -541,10 +881,11 @@ function getNavGroupsForRole(role) {
           ],
         },
       ]
+      break
     case 'te_leader':
     case 'me_leader':
     case 'ee_leader':
-      return [
+      navGroups = [
         {
           label: '概览',
           items: [
@@ -556,6 +897,14 @@ function getNavGroupsForRole(role) {
           items: [
             { name: '项目看板', path: '/board', icon: 'Kanban' },
             { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
+            { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+          ],
+        },
+        {
+          label: '监控与预警',
+          items: [
+            { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
+            { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
           ],
         },
         {
@@ -567,9 +916,13 @@ function getNavGroupsForRole(role) {
           ],
         },
       ]
+      break
     default:
-      return defaultNavGroups
+      navGroups = defaultNavGroups
   }
+  
+  // Filter navigation items based on role permissions
+  return filterNavItemsByRole(navGroups, role)
 }
 
 export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
