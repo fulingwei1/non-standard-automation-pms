@@ -85,12 +85,12 @@ print("Database migration execution completed.")
 # Seed initial data (Admin User)
 print("Seeding initial data...")
 try:
-    from app.models.base import get_session
+    from app.models.base import get_db_session
     from app.models.user import User
     from app.models.organization import Employee
     from app.core import security
 
-    with get_session() as db:
+    with get_db_session() as db:
         # Check if admin already exists
         admin = db.query(User).filter(User.username == "admin").first()
         if not admin:

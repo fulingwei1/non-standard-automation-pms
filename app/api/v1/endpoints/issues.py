@@ -8,10 +8,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc, or_, and_, func
 
 from app.api import deps
+from app.core.security import get_current_user
 from app.models.issue import Issue, IssueFollowUpRecord
 from app.models.user import User
-from app.models.project import Project
-from app.models.machine import Machine
+from app.models.project import Project, Machine
 from app.schemas.issue import (
     IssueCreate,
     IssueUpdate,
@@ -41,7 +41,7 @@ def generate_issue_no(db: Session) -> str:
 @router.get("/", response_model=IssueListResponse)
 def list_issues(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(get_current_user),
     category: Optional[str] = Query(None, description="问题分类"),
     project_id: Optional[int] = Query(None, description="项目ID"),
     machine_id: Optional[int] = Query(None, description="机台ID"),
@@ -168,7 +168,7 @@ def list_issues(
 def get_issue(
     issue_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """获取问题详情"""
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
@@ -224,12 +224,18 @@ def get_issue(
 def create_issue(
     issue_in: IssueCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """创建问题"""
     # 生成问题编号
     issue_no = generate_issue_no(db)
     
+    # 获取处理人姓名（安全处理NULL情况）
+    assignee_name = None
+    if issue_in.assignee_id:
+        assignee = db.query(User).filter(User.id == issue_in.assignee_id).first()
+        assignee_name = assignee.real_name if assignee else None
+
     # 创建问题
     issue = Issue(
         issue_no=issue_no,
@@ -245,10 +251,10 @@ def create_issue(
         title=issue_in.title,
         description=issue_in.description,
         reporter_id=current_user.id,
-        reporter_name=current_user.name,
+        reporter_name=current_user.real_name,
         report_date=datetime.now(),
         assignee_id=issue_in.assignee_id,
-        assignee_name=db.query(User).filter(User.id == issue_in.assignee_id).first().name if issue_in.assignee_id else None,
+        assignee_name=assignee_name,
         due_date=issue_in.due_date,
         status='OPEN',
         impact_scope=issue_in.impact_scope,
@@ -270,7 +276,7 @@ def update_issue(
     issue_id: int,
     issue_in: IssueUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """更新问题"""
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
@@ -278,7 +284,7 @@ def update_issue(
         raise HTTPException(status_code=404, detail="问题不存在")
     
     # 更新字段
-    update_data = issue_in.dict(exclude_unset=True)
+    update_data = issue_in.model_dump(exclude_unset=True)
     if 'attachments' in update_data:
         update_data['attachments'] = str(update_data['attachments'])
     if 'tags' in update_data:
@@ -286,7 +292,7 @@ def update_issue(
     if 'assignee_id' in update_data and update_data['assignee_id']:
         assignee = db.query(User).filter(User.id == update_data['assignee_id']).first()
         if assignee:
-            update_data['assignee_name'] = assignee.name
+            update_data['assignee_name'] = assignee.real_name
     
     for field, value in update_data.items():
         setattr(issue, field, value)
@@ -302,7 +308,7 @@ def assign_issue(
     issue_id: int,
     assign_req: IssueAssignRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """分配问题"""
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
@@ -316,16 +322,16 @@ def assign_issue(
     # 更新分配信息
     old_assignee_id = issue.assignee_id
     issue.assignee_id = assign_req.assignee_id
-    issue.assignee_name = assignee.name
+    issue.assignee_name = assignee.real_name
     issue.due_date = assign_req.due_date
-    
+
     # 创建跟进记录
     follow_up = IssueFollowUpRecord(
         issue_id=issue_id,
         follow_up_type='ASSIGNMENT',
-        content=assign_req.comment or f"问题已分配给 {assignee.name}",
+        content=assign_req.comment or f"问题已分配给 {assignee.real_name}",
         operator_id=current_user.id,
-        operator_name=current_user.name,
+        operator_name=current_user.real_name,
         old_status=None,
         new_status=None,
     )
@@ -342,7 +348,7 @@ def resolve_issue(
     issue_id: int,
     resolve_req: IssueResolveRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """解决问题"""
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
@@ -355,15 +361,15 @@ def resolve_issue(
     issue.solution = resolve_req.solution
     issue.resolved_at = datetime.now()
     issue.resolved_by = current_user.id
-    issue.resolved_by_name = current_user.name
-    
+    issue.resolved_by_name = current_user.real_name
+
     # 创建跟进记录
     follow_up = IssueFollowUpRecord(
         issue_id=issue_id,
         follow_up_type='SOLUTION',
         content=resolve_req.comment or "问题已解决",
         operator_id=current_user.id,
-        operator_name=current_user.name,
+        operator_name=current_user.real_name,
         old_status=old_status,
         new_status='RESOLVED',
     )
@@ -380,7 +386,7 @@ def verify_issue(
     issue_id: int,
     verify_req: IssueVerifyRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """验证问题"""
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
@@ -393,7 +399,7 @@ def verify_issue(
     # 更新验证信息
     issue.verified_at = datetime.now()
     issue.verified_by = current_user.id
-    issue.verified_by_name = current_user.name
+    issue.verified_by_name = current_user.real_name
     issue.verified_result = verify_req.verified_result
     
     if verify_req.verified_result == 'VERIFIED':
@@ -405,15 +411,15 @@ def verify_issue(
         follow_up_type='VERIFICATION',
         content=verify_req.comment or f"问题验证结果：{verify_req.verified_result}",
         operator_id=current_user.id,
-        operator_name=current_user.name,
+        operator_name=current_user.real_name,
         old_status='RESOLVED',
         new_status=issue.status,
     )
     db.add(follow_up)
-    
+
     db.commit()
     db.refresh(issue)
-    
+
     return get_issue(issue.id, db, current_user)
 
 
@@ -422,24 +428,24 @@ def change_issue_status(
     issue_id: int,
     status_req: IssueStatusChangeRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """变更问题状态"""
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
-    
+
     # 更新状态
     old_status = issue.status
     issue.status = status_req.status
-    
+
     # 创建跟进记录
     follow_up = IssueFollowUpRecord(
         issue_id=issue_id,
         follow_up_type='STATUS_CHANGE',
         content=status_req.comment or f"状态从 {old_status} 变更为 {status_req.status}",
         operator_id=current_user.id,
-        operator_name=current_user.name,
+        operator_name=current_user.real_name,
         old_status=old_status,
         new_status=status_req.status,
     )
@@ -455,7 +461,7 @@ def change_issue_status(
 def get_issue_follow_ups(
     issue_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """获取问题跟进记录"""
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
@@ -488,7 +494,7 @@ def create_issue_follow_up(
     issue_id: int,
     follow_up_in: IssueFollowUpCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """创建问题跟进记录"""
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
@@ -500,7 +506,7 @@ def create_issue_follow_up(
         follow_up_type=follow_up_in.follow_up_type,
         content=follow_up_in.content,
         operator_id=current_user.id,
-        operator_name=current_user.name,
+        operator_name=current_user.real_name,
         old_status=follow_up_in.old_status,
         new_status=follow_up_in.new_status,
         attachments=str(follow_up_in.attachments) if follow_up_in.attachments else None,
@@ -532,7 +538,7 @@ def create_issue_follow_up(
 @router.get("/statistics/overview", response_model=IssueStatistics)
 def get_issue_statistics(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(get_current_user),
     project_id: Optional[int] = Query(None, description="项目ID"),
 ) -> Any:
     """获取问题统计"""
