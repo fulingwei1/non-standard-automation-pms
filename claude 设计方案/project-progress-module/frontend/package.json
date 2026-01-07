@@ -1,0 +1,38 @@
+{
+  "name": "project-progress-frontend",
+  "version": "1.0.0",
+  "description": "项目进度管理系统前端",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix"
+  },
+  "dependencies": {
+    "vue": "^3.4.15",
+    "vue-router": "^4.2.5",
+    "pinia": "^2.1.7",
+    "element-plus": "^2.5.3",
+    "@element-plus/icons-vue": "^2.3.1",
+    "axios": "^1.6.5",
+    "dayjs": "^1.11.10",
+    "lodash-es": "^4.17.21",
+    "echarts": "^5.4.3",
+    "vue-echarts": "^6.6.8"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.3",
+    "vite": "^5.0.11",
+    "sass": "^1.70.0",
+    "eslint": "^8.56.0",
+    "eslint-plugin-vue": "^9.20.1",
+    "unplugin-auto-import": "^0.17.4",
+    "unplugin-vue-components": "^0.26.0",
+    "vitest": "^1.2.0",
+    "@vue/test-utils": "^2.4.3",
+    "jsdom": "^24.0.0"
+  }
+}

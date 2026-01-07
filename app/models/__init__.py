@@ -1,0 +1,213 @@
+# -*- coding: utf-8 -*-
+"""
+数据模型包
+
+导出所有ORM模型供外部使用
+"""
+
+from .base import Base, TimestampMixin, get_engine, get_session, init_db
+from .enums import *
+from .user import User, Role, Permission, RolePermission, UserRole, PermissionAudit
+from .project import (
+    Project, Machine, ProjectStage, ProjectStatus,
+    ProjectMember, ProjectMilestone, ProjectPaymentPlan, ProjectCost, ProjectDocument, Customer,
+    ProjectStatusLog, ProjectTemplate
+)
+from .material import (
+    Material, MaterialCategory, Supplier, MaterialSupplier,
+    BomHeader, BomItem, MaterialShortage
+)
+from .shortage import (
+    ShortageReport, MaterialArrival, ArrivalFollowUp,
+    MaterialSubstitution, MaterialTransfer,
+    WorkOrderBom, MaterialRequirement, KitCheck,
+    AlertHandleLog, ShortageDailyReport, ShortageAlert
+)
+from .purchase import (
+    PurchaseOrder, PurchaseOrderItem, GoodsReceipt, GoodsReceiptItem,
+    PurchaseRequest, PurchaseRequestItem
+)
+from .ecn import (
+    Ecn, EcnEvaluation, EcnApproval, EcnTask,
+    EcnAffectedMaterial, EcnAffectedOrder, EcnLog,
+    EcnType, EcnApprovalMatrix
+)
+from .acceptance import (
+    AcceptanceTemplate, TemplateCategory, TemplateCheckItem,
+    AcceptanceOrder, AcceptanceOrderItem, AcceptanceIssue,
+    IssueFollowUp, AcceptanceSignature, AcceptanceReport
+)
+from .issue import Issue, IssueFollowUpRecord, IssueStatisticsSnapshot, IssueTemplate
+from .outsourcing import (
+    OutsourcingVendor, OutsourcingOrder, OutsourcingOrderItem,
+    OutsourcingDelivery, OutsourcingDeliveryItem, OutsourcingInspection,
+    OutsourcingPayment, OutsourcingEvaluation, OutsourcingProgress
+)
+from .alert import (
+    AlertRule, AlertRecord, AlertNotification,
+    ExceptionEvent, ExceptionAction, ExceptionEscalation,
+    AlertStatistics, ProjectHealthSnapshot, AlertRuleTemplate
+)
+from .production import (
+    Workshop, Workstation, Worker, WorkerSkill, ProcessDict,
+    Equipment, EquipmentMaintenance, ProductionPlan,
+    WorkOrder, WorkReport, ProductionException,
+    MaterialRequisition, MaterialRequisitionItem, ProductionDailyReport
+)
+from .pmo import (
+    PmoProjectInitiation, PmoProjectPhase, PmoChangeRequest,
+    PmoProjectRisk, PmoProjectCost, PmoMeeting,
+    PmoResourceAllocation, PmoProjectClosure
+)
+from .task_center import (
+    TaskUnified, JobDutyTemplate, TaskOperationLog,
+    TaskComment, TaskReminder
+)
+from .presale import (
+    PresaleSupportTicket, PresaleTicketDeliverable, PresaleTicketProgress,
+    PresaleSolution, PresaleSolutionCost, PresaleSolutionTemplate,
+    PresaleWorkload, PresaleCustomerTechProfile, PresaleTenderRecord
+)
+from .performance import (
+    PerformancePeriod, PerformanceIndicator, PerformanceResult,
+    PerformanceEvaluation, PerformanceAppeal, ProjectContribution,
+    PerformanceRankingSnapshot
+)
+from .timesheet import (
+    Timesheet, TimesheetBatch, TimesheetSummary,
+    OvertimeApplication, TimesheetApprovalLog, TimesheetRule
+)
+from .report_center import (
+    ReportTemplate, ReportDefinition, ReportGeneration,
+    ReportSubscription, DataImportTask, DataExportTask, ImportTemplate
+)
+from .technical_spec import (
+    TechnicalSpecRequirement, SpecMatchRecord
+)
+from .progress import (
+    WbsTemplate, WbsTemplateTask, Task, TaskDependency,
+    ProgressLog, ScheduleBaseline, BaselineTask, ProgressReport
+)
+from .notification import (
+    Notification, NotificationSettings
+)
+from .sales import (
+    Lead, LeadFollowUp, Opportunity, OpportunityRequirement,
+    Quote, QuoteVersion, QuoteItem,
+    Contract, ContractDeliverable, ContractAmendment,
+    Invoice, ReceivableDispute,
+    QuoteApproval, ContractApproval, InvoiceApproval
+)
+from .business_support import (
+    BiddingProject, BiddingDocument,
+    ContractReview, ContractSealRecord,
+    PaymentReminder, DocumentArchive,
+    SalesOrder, SalesOrderItem, DeliveryOrder,
+    AcceptanceTracking, AcceptanceTrackingRecord,
+    Reconciliation
+)
+from .service import (
+    ServiceTicket, ServiceRecord, CustomerCommunication,
+    CustomerSatisfaction, KnowledgeBase
+)
+from .rd_project import (
+    RdProjectCategory, RdProject, RdCostType, RdCost,
+    RdCostAllocationRule, RdReportRecord
+)
+from .project_review import (
+    ProjectReview, ProjectLesson, ProjectBestPractice
+)
+
+__all__ = [
+    # Base
+    'Base', 'TimestampMixin', 'get_engine', 'get_session', 'init_db',
+    # User
+    'User', 'Role', 'Permission', 'RolePermission', 'UserRole', 'PermissionAudit',
+    # Project
+    'Project', 'Machine', 'ProjectStage', 'ProjectStatus',
+    'ProjectMember', 'ProjectMilestone', 'ProjectPaymentPlan', 'ProjectCost', 'ProjectDocument', 'Customer',
+    'ProjectStatusLog', 'ProjectTemplate',
+    # Material
+    'Material', 'MaterialCategory', 'Supplier', 'MaterialSupplier',
+    'BomHeader', 'BomItem', 'MaterialShortage',
+    # Shortage
+    'ShortageReport', 'MaterialArrival', 'ArrivalFollowUp',
+    'MaterialSubstitution', 'MaterialTransfer',
+    'WorkOrderBom', 'MaterialRequirement', 'KitCheck',
+    'AlertHandleLog', 'ShortageDailyReport', 'ShortageAlert',
+    # Purchase
+    'PurchaseOrder', 'PurchaseOrderItem', 'GoodsReceipt', 'GoodsReceiptItem',
+    'PurchaseRequest', 'PurchaseRequestItem',
+    # ECN
+    'Ecn', 'EcnEvaluation', 'EcnApproval', 'EcnTask',
+    'EcnAffectedMaterial', 'EcnAffectedOrder', 'EcnLog',
+    'EcnType', 'EcnApprovalMatrix',
+    # Acceptance
+    'AcceptanceTemplate', 'TemplateCategory', 'TemplateCheckItem',
+    'AcceptanceOrder', 'AcceptanceOrderItem', 'AcceptanceIssue',
+    'IssueFollowUp', 'AcceptanceSignature', 'AcceptanceReport',
+    # Issue
+    'Issue', 'IssueFollowUpRecord', 'IssueStatisticsSnapshot', 'IssueTemplate',
+    # Outsourcing
+    'OutsourcingVendor', 'OutsourcingOrder', 'OutsourcingOrderItem',
+    'OutsourcingDelivery', 'OutsourcingDeliveryItem', 'OutsourcingInspection',
+    'OutsourcingPayment', 'OutsourcingEvaluation', 'OutsourcingProgress',
+    # Alert
+    'AlertRule', 'AlertRecord', 'AlertNotification',
+    'ExceptionEvent', 'ExceptionAction', 'ExceptionEscalation',
+    'AlertStatistics', 'ProjectHealthSnapshot', 'AlertRuleTemplate',
+    # Production
+    'Workshop', 'Workstation', 'Worker', 'WorkerSkill', 'ProcessDict',
+    'Equipment', 'EquipmentMaintenance', 'ProductionPlan',
+    'WorkOrder', 'WorkReport', 'ProductionException',
+    'MaterialRequisition', 'MaterialRequisitionItem', 'ProductionDailyReport',
+    # PMO
+    'PmoProjectInitiation', 'PmoProjectPhase', 'PmoChangeRequest',
+    'PmoProjectRisk', 'PmoProjectCost', 'PmoMeeting',
+    'PmoResourceAllocation', 'PmoProjectClosure',
+    # Task Center
+    'TaskUnified', 'JobDutyTemplate', 'TaskOperationLog',
+    'TaskComment', 'TaskReminder',
+    # Presale
+    'PresaleSupportTicket', 'PresaleTicketDeliverable', 'PresaleTicketProgress',
+    'PresaleSolution', 'PresaleSolutionCost', 'PresaleSolutionTemplate',
+    'PresaleWorkload', 'PresaleCustomerTechProfile', 'PresaleTenderRecord',
+    # Performance
+    'PerformancePeriod', 'PerformanceIndicator', 'PerformanceResult',
+    'PerformanceEvaluation', 'PerformanceAppeal', 'ProjectContribution',
+    'PerformanceRankingSnapshot',
+    # Timesheet
+    'Timesheet', 'TimesheetBatch', 'TimesheetSummary',
+    'OvertimeApplication', 'TimesheetApprovalLog', 'TimesheetRule',
+    # Report Center
+    'ReportTemplate', 'ReportDefinition', 'ReportGeneration',
+    'ReportSubscription', 'DataImportTask', 'DataExportTask', 'ImportTemplate',
+    # Technical Spec
+    'TechnicalSpecRequirement', 'SpecMatchRecord',
+    # Progress
+    'WbsTemplate', 'WbsTemplateTask', 'Task', 'TaskDependency',
+    'ProgressLog', 'ScheduleBaseline', 'BaselineTask', 'ProgressReport',
+    # Notification
+    'Notification', 'NotificationSettings',
+    # Sales
+    'Lead', 'LeadFollowUp', 'Opportunity', 'OpportunityRequirement',
+    'Quote', 'QuoteVersion', 'QuoteItem',
+    'Contract', 'ContractDeliverable', 'ContractAmendment',
+    'Invoice', 'ReceivableDispute',
+    'QuoteApproval', 'ContractApproval', 'InvoiceApproval',
+    # Business Support
+    'BiddingProject', 'BiddingDocument',
+    'ContractReview', 'ContractSealRecord',
+    'PaymentReminder', 'DocumentArchive',
+    'SalesOrder', 'SalesOrderItem', 'DeliveryOrder',
+    'AcceptanceTracking', 'AcceptanceTrackingRecord',
+    'Reconciliation',
+    # Service
+    'ServiceTicket', 'ServiceRecord', 'CustomerCommunication',
+    'CustomerSatisfaction', 'KnowledgeBase',
+    # RD Project
+    'RdProjectCategory', 'RdProject', 'RdCostType', 'RdCost',
+    'RdCostAllocationRule', 'RdReportRecord',
+    # Project Review
+    'ProjectReview', 'ProjectLesson', 'ProjectBestPractice',
+]

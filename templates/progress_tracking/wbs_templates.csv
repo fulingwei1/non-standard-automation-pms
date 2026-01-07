@@ -1,0 +1,3 @@
+template_code,template_name,project_type,equipment_type,version_no,is_active
+WBS-T-001,SingleMachine,Single,ICT,V1,1
+WBS-T-002,LineSystem,Line,EOL,V1,1

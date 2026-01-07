@@ -1,0 +1,88 @@
+# -*- coding: utf-8 -*-
+"""
+应用配置
+"""
+
+import os
+from typing import List, Optional
+from pydantic import field_validator
+from pydantic_settings import BaseSettings
+
+
+class Settings(BaseSettings):
+    """应用配置类"""
+
+    # 应用信息
+    APP_NAME: str = "非标自动化项目管理系统"
+    APP_VERSION: str = "1.0.0"
+    DEBUG: bool = False
+
+    # API配置
+    API_V1_PREFIX: str = "/api/v1"
+
+    # 数据库配置
+    DATABASE_URL: Optional[str] = None
+    SQLITE_DB_PATH: str = "data/app.db"
+    
+    # Redis配置
+    REDIS_URL: Optional[str] = None  # Redis连接URL，格式: redis://localhost:6379/0
+
+    # JWT配置
+    SECRET_KEY: str  # 必须从环境变量读取，不允许默认值
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24小时
+
+    # CORS配置
+    CORS_ORIGINS: List[str] = []  # 从环境变量读取，Pydantic会自动解析逗号分隔的字符串
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v) -> List[str]:
+        """解析CORS来源字符串为列表"""
+        if isinstance(v, list):
+            # 验证列表不为空
+            if not v:
+                raise ValueError("CORS_ORIGINS 不能为空列表，请设置允许的来源")
+            return v
+        if isinstance(v, str):
+            if not v or not v.strip():
+                raise ValueError("CORS_ORIGINS 环境变量不能为空，请设置允许的来源（多个用逗号分隔）")
+            origins = [origin.strip() for origin in v.split(",") if origin.strip()]
+            if not origins:
+                raise ValueError("CORS_ORIGINS 必须包含至少一个有效的来源")
+            return origins
+        raise ValueError("CORS_ORIGINS 必须是字符串或列表")
+
+    # 文件上传配置
+    UPLOAD_DIR: str = "uploads"
+    MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
+
+    # 分页配置
+    DEFAULT_PAGE_SIZE: int = 20
+    MAX_PAGE_SIZE: int = 100
+
+    class Config:
+        env_file = ".env"
+        case_sensitive = True
+
+
+# 创建全局配置实例
+try:
+    settings = Settings()
+except Exception as e:
+    import sys
+    print("=" * 60, file=sys.stderr)
+    print("配置错误：缺少必要的环境变量", file=sys.stderr)
+    print("=" * 60, file=sys.stderr)
+    print("请设置以下环境变量：", file=sys.stderr)
+    print("  - SECRET_KEY: JWT密钥（必须）", file=sys.stderr)
+    print("  - CORS_ORIGINS: CORS允许的来源，多个用逗号分隔（必须）", file=sys.stderr)
+    print("示例：", file=sys.stderr)
+    print("  export SECRET_KEY='your-secret-key-here'", file=sys.stderr)
+    print("  export CORS_ORIGINS='http://localhost:5173,http://localhost:3000'", file=sys.stderr)
+    print("=" * 60, file=sys.stderr)
+    raise
+
+# 确保必要的目录存在
+os.makedirs(os.path.dirname(settings.SQLITE_DB_PATH), exist_ok=True)
+os.makedirs(settings.UPLOAD_DIR, exist_ok=True)

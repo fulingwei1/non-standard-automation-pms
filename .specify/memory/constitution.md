@@ -1,50 +1,142 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+  Sync Impact Report
+  ===================
+  Version change: 0.0.0 → 1.0.0 (Initial Release)
+
+  Added Principles:
+  - I. 数据完整性优先
+  - II. 角色权限分离
+  - III. 可追溯性
+  - IV. 测试优先
+  - V. 简洁实用
+
+  Added Sections:
+  - 技术约束
+  - 开发工作流
+  - 治理规则
+
+  Templates Status:
+  - .specify/templates/plan-template.md: ✅ 兼容（无需修改）
+  - .specify/templates/spec-template.md: ✅ 兼容（无需修改）
+  - .specify/templates/tasks-template.md: ✅ 兼容（无需修改）
+
+  Deferred Items: None
+-->
+
+# 非标自动化项目管理系统 Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. 数据完整性优先
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+系统 MUST 确保所有业务数据的完整性和一致性：
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+- 项目、BOM、设计文档之间的关联关系 MUST 保持一致
+- 删除操作 MUST 检查依赖关系，禁止级联删除核心业务数据
+- 所有金额、数量计算 MUST 使用精确数值类型，避免浮点误差
+- 数据变更 MUST 记录操作人、操作时间、变更内容
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+**理由**：非标自动化项目涉及大量物料和成本核算，数据错误将直接导致项目亏损或交付延期。
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### II. 角色权限分离
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+系统 MUST 实现基于角色的访问控制（RBAC）：
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+- 项目经理：项目创建、资源分配、进度审批、成本查看
+- 设计工程师：图纸上传、BOM 编制、技术变更申请
+- 采购人员：供应商管理、采购订单、到货确认
+- 生产装配人员：工时记录、装配进度、问题反馈
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+**理由**：不同角色职责明确分离，防止越权操作，确保流程合规。
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### III. 可追溯性
+
+所有关键业务操作 MUST 保留完整审计轨迹：
+
+- 设计变更 MUST 记录版本历史，支持任意版本回溯
+- BOM 变更 MUST 关联变更原因和审批记录
+- 项目状态变更 MUST 记录操作人和时间戳
+- 采购和库存变动 MUST 关联原始单据
+
+**理由**：非标项目周期长、变更频繁，可追溯性是问题排查和责任认定的基础。
+
+### IV. 测试优先
+
+功能开发 MUST 遵循测试驱动开发（TDD）：
+
+- 核心业务逻辑 MUST 有单元测试覆盖
+- API 接口 MUST 有契约测试
+- 关键用户流程 MUST 有集成测试
+- 测试先行：先编写失败的测试，再实现功能
+
+**理由**：项目管理系统的数据正确性直接影响业务决策，测试是质量保障的基础。
+
+### V. 简洁实用
+
+系统设计 MUST 遵循 YAGNI 原则：
+
+- 只实现明确需求的功能，不做过度设计
+- 优先使用成熟稳定的技术方案
+- 界面设计面向一线用户，操作步骤最小化
+- 避免不必要的抽象层和复杂架构
+
+**理由**：非标自动化行业用户技术背景各异，系统必须易学易用。
+
+## 技术约束
+
+### 架构要求
+
+- **应用类型**：Web 应用，前后端分离架构
+- **前端**：响应式设计，支持 PC 和平板访问
+- **后端**：RESTful API，支持 JSON 数据格式
+- **数据库**：关系型数据库，支持事务和外键约束
+- **认证**：JWT 或 Session 方式，支持单点登录扩展
+
+### 性能基线
+
+- 列表页面加载时间 SHOULD < 2 秒
+- 单表数据量支持 100 万条记录
+- 并发用户支持 50+ 在线用户
+- 文件上传支持 100MB 单文件
+
+### 安全要求
+
+- 所有接口 MUST 进行权限校验
+- 敏感数据（密码、成本）MUST 加密存储
+- SQL 注入、XSS 等常见漏洞 MUST 防护
+- 操作日志保留周期 SHOULD ≥ 2 年
+
+## 开发工作流
+
+### 代码规范
+
+- 代码提交前 MUST 通过 lint 检查
+- 每个功能分支 MUST 对应一个 Issue 或需求
+- 合并主分支前 MUST 通过 Code Review
+- 数据库变更 MUST 使用迁移脚本
+
+### 文档要求
+
+- API 接口 MUST 有 OpenAPI/Swagger 文档
+- 数据模型变更 MUST 更新 ER 图
+- 部署流程 MUST 有操作文档
+
+### 发布流程
+
+- 测试环境验证通过后方可发布生产
+- 生产发布 MUST 有回滚方案
+- 重大变更 MUST 通知相关用户
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+本章程是项目开发的最高准则，所有设计和实现决策 MUST 符合章程规定：
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+1. **章程修订**：任何修订需记录变更原因，更新版本号，并通知全体开发成员
+2. **合规检查**：每次 Code Review MUST 验证是否符合章程原则
+3. **例外处理**：如需违反章程原则，MUST 在 Complexity Tracking 中记录理由和替代方案评估
+4. **版本规则**：
+   - MAJOR：原则删除或根本性重定义
+   - MINOR：新增原则或章节
+   - PATCH：措辞修正、格式调整
+
+**Version**: 1.0.0 | **Ratified**: 2026-01-03 | **Last Amended**: 2026-01-03

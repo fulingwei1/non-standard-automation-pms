@@ -1,0 +1,379 @@
+/**
+ * Sales Reports Page - Comprehensive sales analytics and reports for sales directors
+ * Features: Sales trends, Performance analysis, Customer analysis, Revenue forecasting
+ */
+
+import { useState, useMemo } from 'react'
+import { motion } from 'framer-motion'
+import {
+  BarChart3,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Users,
+  Target,
+  Calendar,
+  Download,
+  Filter,
+  PieChart,
+  LineChart,
+  Activity,
+  Award,
+  Building2,
+  FileText,
+  ChevronRight,
+  ArrowUpRight,
+  ArrowDownRight,
+} from 'lucide-react'
+import { PageHeader } from '../components/layout'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Button,
+  Badge,
+  Progress,
+} from '../components/ui'
+import { cn } from '../lib/utils'
+import { fadeIn, staggerContainer } from '../lib/animations'
+
+// Mock data
+const mockMonthlySales = [
+  { month: '2024-07', target: 4000000, achieved: 3200000, growth: 8.5 },
+  { month: '2024-08', target: 4200000, achieved: 3850000, growth: 12.3 },
+  { month: '2024-09', target: 4500000, achieved: 4100000, growth: 6.5 },
+  { month: '2024-10', target: 4800000, achieved: 4450000, growth: 8.5 },
+  { month: '2024-11', target: 5000000, achieved: 4650000, growth: 4.5 },
+  { month: '2024-12', target: 5200000, achieved: 5120000, growth: 10.1 },
+  { month: '2025-01', target: 5000000, achieved: 3850000, growth: -15.2 },
+]
+
+const mockCustomerAnalysis = [
+  { name: '深圳XX科技', amount: 8500000, projects: 8, growth: 25.5, rank: 1 },
+  { name: '东莞XX电子', amount: 6200000, projects: 6, growth: 18.2, rank: 2 },
+  { name: '广州XX汽车', amount: 5200000, projects: 5, growth: 12.8, rank: 3 },
+  { name: '惠州XX电池', amount: 4500000, projects: 4, growth: 8.5, rank: 4 },
+  { name: '佛山XX制造', amount: 3800000, projects: 3, growth: -5.2, rank: 5 },
+]
+
+const mockProductAnalysis = [
+  { name: 'ICT测试设备', amount: 18500000, count: 25, avgPrice: 740000, ratio: 43.5 },
+  { name: 'FCT测试设备', amount: 12000000, count: 18, avgPrice: 666667, ratio: 28.2 },
+  { name: 'EOL测试设备', amount: 8500000, count: 12, avgPrice: 708333, ratio: 20.0 },
+  { name: '烧录设备', amount: 3500000, count: 8, avgPrice: 437500, ratio: 8.2 },
+]
+
+const mockRegionalAnalysis = [
+  { region: '深圳', amount: 12500000, customers: 45, growth: 15.5 },
+  { region: '东莞', amount: 9800000, customers: 32, growth: 12.3 },
+  { region: '广州', amount: 7200000, customers: 28, growth: 8.5 },
+  { region: '惠州', amount: 5800000, customers: 22, growth: 5.2 },
+  { region: '其他', amount: 7200000, customers: 29, growth: 3.8 },
+]
+
+const formatCurrency = (value) => {
+  if (value >= 10000) {
+    return `¥${(value / 10000).toFixed(1)}万`
+  }
+  return new Intl.NumberFormat('zh-CN', {
+    style: 'currency',
+    currency: 'CNY',
+    minimumFractionDigits: 0,
+  }).format(value)
+}
+
+export default function SalesReports() {
+  const [selectedPeriod, setSelectedPeriod] = useState('month')
+  const [selectedReport, setSelectedReport] = useState('overview')
+
+  const currentMonth = mockMonthlySales[mockMonthlySales.length - 1]
+  const avgAchievement = mockMonthlySales.reduce((sum, m) => sum + (m.achieved / m.target * 100), 0) / mockMonthlySales.length
+
+  return (
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+      className="space-y-6"
+    >
+      {/* Page Header */}
+      <PageHeader
+        title="销售报表"
+        description="销售数据分析、业绩趋势、客户分析、产品分析"
+        actions={
+          <motion.div variants={fadeIn} className="flex gap-2">
+            <Button variant="outline" className="flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              筛选
+            </Button>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Download className="w-4 h-4" />
+              导出报表
+            </Button>
+          </motion.div>
+        }
+      />
+
+      {/* Summary Cards */}
+      <motion.div
+        variants={staggerContainer}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+      >
+        <Card className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 border-amber-500/20">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-slate-400">本月销售额</p>
+                <p className="text-2xl font-bold text-amber-400 mt-1">
+                  {formatCurrency(currentMonth.achieved)}
+                </p>
+                <div className="flex items-center gap-1 mt-1">
+                  {currentMonth.growth > 0 ? (
+                    <>
+                      <ArrowUpRight className="w-3 h-3 text-emerald-400" />
+                      <span className="text-xs text-emerald-400">+{currentMonth.growth}%</span>
+                    </>
+                  ) : (
+                    <>
+                      <ArrowDownRight className="w-3 h-3 text-red-400" />
+                      <span className="text-xs text-red-400">{currentMonth.growth}%</span>
+                    </>
+                  )}
+                  <span className="text-xs text-slate-500">vs 上月</span>
+                </div>
+              </div>
+              <div className="p-2 bg-amber-500/20 rounded-lg">
+                <DollarSign className="w-5 h-5 text-amber-400" />
+              </div>
+            </div>
+            <div className="mt-3">
+              <Progress value={(currentMonth.achieved / currentMonth.target * 100)} className="h-1.5" />
+              <p className="text-xs text-slate-500 mt-1">
+                目标完成率 {((currentMonth.achieved / currentMonth.target) * 100).toFixed(1)}%
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border-blue-500/20">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-slate-400">平均完成率</p>
+                <p className="text-2xl font-bold text-white mt-1">
+                  {avgAchievement.toFixed(1)}%
+                </p>
+                <p className="text-xs text-slate-500 mt-1">近7个月平均</p>
+              </div>
+              <div className="p-2 bg-blue-500/20 rounded-lg">
+                <Target className="w-5 h-5 text-blue-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-emerald-500/10 to-green-500/5 border-emerald-500/20">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-slate-400">累计销售额</p>
+                <p className="text-2xl font-bold text-white mt-1">
+                  {formatCurrency(mockMonthlySales.reduce((sum, m) => sum + m.achieved, 0))}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">近7个月累计</p>
+              </div>
+              <div className="p-2 bg-emerald-500/20 rounded-lg">
+                <BarChart3 className="w-5 h-5 text-emerald-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/5 border-purple-500/20">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-slate-400">活跃客户</p>
+                <p className="text-2xl font-bold text-white mt-1">
+                  {mockCustomerAnalysis.length}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">TOP客户数</p>
+              </div>
+              <div className="p-2 bg-purple-500/20 rounded-lg">
+                <Building2 className="w-5 h-5 text-purple-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Sales Trend Chart */}
+        <motion.div variants={fadeIn}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <LineChart className="h-5 w-5 text-blue-400" />
+                销售趋势分析
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {mockMonthlySales.map((item, index) => {
+                  const achievementRate = (item.achieved / item.target * 100)
+                  return (
+                    <div key={item.month} className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-300">{item.month}</span>
+                        <div className="flex items-center gap-4">
+                          <span className="text-slate-400">目标: {formatCurrency(item.target)}</span>
+                          <span className="text-white font-medium">完成: {formatCurrency(item.achieved)}</span>
+                          {item.growth > 0 ? (
+                            <span className="text-emerald-400 text-xs">+{item.growth}%</span>
+                          ) : (
+                            <span className="text-red-400 text-xs">{item.growth}%</span>
+                          )}
+                        </div>
+                      </div>
+                      <Progress value={achievementRate} className="h-2" />
+                    </div>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Customer Analysis */}
+        <motion.div variants={fadeIn}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-purple-400" />
+                TOP客户分析
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {mockCustomerAnalysis.map((customer, index) => (
+                  <div
+                    key={customer.name}
+                    className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className={cn(
+                          'w-6 h-6 rounded flex items-center justify-center text-xs font-bold text-white',
+                          index === 0 && 'bg-gradient-to-br from-amber-500 to-orange-500',
+                          index === 1 && 'bg-gradient-to-br from-blue-500 to-cyan-500',
+                          index === 2 && 'bg-gradient-to-br from-purple-500 to-pink-500',
+                          index >= 3 && 'bg-slate-600',
+                        )}>
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="font-medium text-white text-sm">{customer.name}</p>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            {customer.projects} 个项目
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-white">
+                          {formatCurrency(customer.amount)}
+                        </p>
+                        {customer.growth > 0 ? (
+                          <p className="text-xs text-emerald-400">+{customer.growth}%</p>
+                        ) : (
+                          <p className="text-xs text-red-400">{customer.growth}%</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Product Analysis */}
+        <motion.div variants={fadeIn}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PieChart className="h-5 w-5 text-amber-400" />
+                产品线分析
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {mockProductAnalysis.map((product, index) => (
+                  <div
+                    key={product.name}
+                    className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-white text-sm">{product.name}</span>
+                      <span className="text-white font-bold">{formatCurrency(product.amount)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs mb-2">
+                      <span className="text-slate-400">
+                        {product.count} 台 · 均价 {formatCurrency(product.avgPrice)}
+                      </span>
+                      <span className="text-slate-400">占比 {product.ratio}%</span>
+                    </div>
+                    <Progress value={product.ratio} className="h-1.5" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Regional Analysis */}
+        <motion.div variants={fadeIn}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-cyan-400" />
+                区域销售分析
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {mockRegionalAnalysis.map((region, index) => (
+                  <div
+                    key={region.region}
+                    className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="font-medium text-white text-sm">{region.region}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          {region.customers} 个客户
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-white">
+                          {formatCurrency(region.amount)}
+                        </p>
+                        <p className="text-xs text-emerald-400">+{region.growth}%</p>
+                      </div>
+                    </div>
+                    <Progress
+                      value={(region.amount / mockRegionalAnalysis.reduce((sum, r) => sum + r.amount, 0)) * 100}
+                      className="h-1.5 mt-2"
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    </motion.div>
+  )
+}
+

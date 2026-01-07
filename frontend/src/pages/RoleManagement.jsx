@@ -1,0 +1,607 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Plus,
+  Search,
+  Edit3,
+  Trash2,
+  Eye,
+  Shield,
+  Users,
+  Key,
+} from 'lucide-react';
+import { PageHeader } from '../components/layout';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Badge } from '../components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '../components/ui/dialog';
+import { Label } from '../components/ui/label';
+import { Textarea } from '../components/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { cn } from '../lib/utils';
+import { fadeIn, staggerContainer } from '../lib/animations';
+import { roleApi } from '../services/api';
+
+export default function RoleManagement() {
+  const [roles, setRoles] = useState([]);
+  const [permissions, setPermissions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [showPermissionDialog, setShowPermissionDialog] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+
+  const [newRole, setNewRole] = useState({
+    role_code: '',
+    role_name: '',
+    description: '',
+    data_scope: 'OWN',
+    permission_ids: [],
+  });
+
+  const [editRole, setEditRole] = useState(null);
+  const [selectedPermissionIds, setSelectedPermissionIds] = useState([]);
+
+  // 加载角色列表
+  const loadRoles = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        page,
+        page_size: pageSize,
+      };
+      if (searchKeyword) {
+        params.keyword = searchKeyword;
+      }
+      if (filterStatus !== 'all') {
+        params.is_active = filterStatus === 'active';
+      }
+
+      const response = await roleApi.list(params);
+      const data = response.data;
+      setRoles(data.items || []);
+      setTotal(data.total || 0);
+    } catch (error) {
+      console.error('加载角色列表失败:', error);
+      alert('加载角色列表失败: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 加载权限列表
+  const loadPermissions = async () => {
+    try {
+      const response = await roleApi.permissions();
+      setPermissions(response.data || []);
+    } catch (error) {
+      console.error('加载权限列表失败:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadRoles();
+    loadPermissions();
+  }, [page, searchKeyword, filterStatus]);
+
+  const handleCreateChange = (e) => {
+    const { name, value } = e.target;
+    setNewRole((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditRole((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCreateSubmit = async () => {
+    try {
+      await roleApi.create(newRole);
+      setShowCreateDialog(false);
+      setNewRole({
+        role_code: '',
+        role_name: '',
+        description: '',
+        data_scope: 'OWN',
+        permission_ids: [],
+      });
+      loadRoles();
+    } catch (error) {
+      alert('创建角色失败: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleEditSubmit = async () => {
+    try {
+      await roleApi.update(editRole.id, editRole);
+      setShowEditDialog(false);
+      setEditRole(null);
+      loadRoles();
+    } catch (error) {
+      alert('更新角色失败: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleViewDetail = async (id) => {
+    try {
+      const response = await roleApi.get(id);
+      setSelectedRole(response.data);
+      setShowDetailDialog(true);
+    } catch (error) {
+      alert('获取角色详情失败: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleEdit = async (id) => {
+    try {
+      const response = await roleApi.get(id);
+      setEditRole(response.data);
+      setShowEditDialog(true);
+    } catch (error) {
+      alert('获取角色信息失败: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleAssignPermissions = async (id) => {
+    try {
+      const response = await roleApi.get(id);
+      setSelectedRole(response.data);
+      setSelectedPermissionIds(
+        response.data.permissions?.map((p, idx) => {
+          // 如果permissions是字符串数组，需要找到对应的权限ID
+          const perm = permissions.find(perm => perm.permission_name === p);
+          return perm ? perm.id : null;
+        }).filter(Boolean) || []
+      );
+      setShowPermissionDialog(true);
+    } catch (error) {
+      alert('获取角色信息失败: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleSavePermissions = async () => {
+    try {
+      await roleApi.assignPermissions(selectedRole.id, selectedPermissionIds);
+      setShowPermissionDialog(false);
+      loadRoles();
+    } catch (error) {
+      alert('分配权限失败: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  // 按模块分组权限
+  const permissionsByModule = permissions.reduce((acc, perm) => {
+    const module = perm.module || '其他';
+    if (!acc[module]) {
+      acc[module] = [];
+    }
+    acc[module].push(perm);
+    return acc;
+  }, {});
+
+  return (
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+      className="space-y-6"
+    >
+      <PageHeader
+        title="角色管理"
+        description="管理系统角色，包括创建、编辑、分配权限等操作。"
+        actions={
+          <Button onClick={() => setShowCreateDialog(true)}>
+            <Plus className="mr-2 h-4 w-4" /> 新增角色
+          </Button>
+        }
+      />
+
+      <motion.div variants={fadeIn}>
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>角色列表</CardTitle>
+            <div className="flex items-center space-x-2">
+              <Input
+                placeholder="搜索角色编码/名称..."
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                className="max-w-sm"
+              />
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="筛选状态" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">所有状态</SelectItem>
+                  <SelectItem value="active">启用</SelectItem>
+                  <SelectItem value="inactive">禁用</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="p-4 text-center text-muted-foreground">加载中...</div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-border">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">角色编码</th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">角色名称</th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">描述</th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">权限数量</th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">数据权限</th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">状态</th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {roles.map((role) => (
+                        <tr key={role.id}>
+                          <td className="px-4 py-2 text-sm text-foreground font-mono">{role.role_code}</td>
+                          <td className="px-4 py-2 text-sm text-foreground">{role.role_name}</td>
+                          <td className="px-4 py-2 text-sm text-muted-foreground">
+                            {role.description || '-'}
+                          </td>
+                          <td className="px-4 py-2 text-sm text-muted-foreground">
+                            {role.permissions?.length || 0} 个权限
+                          </td>
+                          <td className="px-4 py-2 text-sm text-muted-foreground">
+                            <Badge variant="outline">
+                              {role.data_scope === 'OWN' && '本人'}
+                              {role.data_scope === 'DEPT' && '本部门'}
+                              {role.data_scope === 'ALL' && '全部'}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-2 text-sm">
+                            <Badge variant={role.is_active ? 'default' : 'secondary'}>
+                              {role.is_active ? '启用' : '禁用'}
+                            </Badge>
+                            {role.is_system && (
+                              <Badge variant="destructive" className="ml-1">
+                                <Shield className="h-3 w-3 mr-1" /> 系统
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="px-4 py-2 text-sm">
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleViewDetail(role.id)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEdit(role.id)}
+                                disabled={role.is_system}
+                              >
+                                <Edit3 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleAssignPermissions(role.id)}
+                                disabled={role.is_system}
+                              >
+                                <Key className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {roles.length === 0 && (
+                  <p className="p-4 text-center text-muted-foreground">
+                    没有找到符合条件的角色。
+                  </p>
+                )}
+                {total > pageSize && (
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground">
+                      共 {total} 条记录，第 {page} / {Math.ceil(total / pageSize)} 页
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                      >
+                        上一页
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage(p => Math.min(Math.ceil(total / pageSize), p + 1))}
+                        disabled={page >= Math.ceil(total / pageSize)}
+                      >
+                        下一页
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Create Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>新增角色</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="create-role-code" className="text-right">角色编码 *</Label>
+              <Input
+                id="create-role-code"
+                name="role_code"
+                value={newRole.role_code}
+                onChange={handleCreateChange}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="create-role-name" className="text-right">角色名称 *</Label>
+              <Input
+                id="create-role-name"
+                name="role_name"
+                value={newRole.role_name}
+                onChange={handleCreateChange}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="create-description" className="text-right">描述</Label>
+              <Textarea
+                id="create-description"
+                name="description"
+                value={newRole.description}
+                onChange={handleCreateChange}
+                className="col-span-3"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="create-data-scope" className="text-right">数据权限</Label>
+              <Select
+                value={newRole.data_scope}
+                onValueChange={(value) =>
+                  setNewRole((prev) => ({ ...prev, data_scope: value }))
+                }
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="OWN">本人</SelectItem>
+                  <SelectItem value="DEPT">本部门</SelectItem>
+                  <SelectItem value="ALL">全部</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+              取消
+            </Button>
+            <Button onClick={handleCreateSubmit}>保存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>编辑角色</DialogTitle>
+          </DialogHeader>
+          {editRole && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-role-name" className="text-right">角色名称</Label>
+                <Input
+                  id="edit-role-name"
+                  name="role_name"
+                  value={editRole.role_name || ''}
+                  onChange={handleEditChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-description" className="text-right">描述</Label>
+                <Textarea
+                  id="edit-description"
+                  name="description"
+                  value={editRole.description || ''}
+                  onChange={handleEditChange}
+                  className="col-span-3"
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-data-scope" className="text-right">数据权限</Label>
+                <Select
+                  value={editRole.data_scope || 'OWN'}
+                  onValueChange={(value) =>
+                    setEditRole((prev) => ({ ...prev, data_scope: value }))
+                  }
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="OWN">本人</SelectItem>
+                    <SelectItem value="DEPT">本部门</SelectItem>
+                    <SelectItem value="ALL">全部</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-is-active" className="text-right">状态</Label>
+                <Select
+                  value={editRole.is_active ? 'active' : 'inactive'}
+                  onValueChange={(value) =>
+                    setEditRole((prev) => ({ ...prev, is_active: value === 'active' }))
+                  }
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">启用</SelectItem>
+                    <SelectItem value="inactive">禁用</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              取消
+            </Button>
+            <Button onClick={handleEditSubmit}>保存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Permission Assignment Dialog */}
+      <Dialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
+        <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>分配权限 - {selectedRole?.role_name}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {Object.entries(permissionsByModule).map(([module, modulePermissions]) => (
+              <div key={module} className="space-y-2">
+                <h4 className="font-semibold text-sm">{module}</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {modulePermissions.map((perm) => (
+                    <label
+                      key={perm.id}
+                      className="flex items-center space-x-2 p-2 rounded border hover:bg-muted cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedPermissionIds.includes(perm.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedPermissionIds([...selectedPermissionIds, perm.id]);
+                          } else {
+                            setSelectedPermissionIds(
+                              selectedPermissionIds.filter((id) => id !== perm.id)
+                            );
+                          }
+                        }}
+                        className="rounded"
+                      />
+                      <span className="text-sm">{perm.permission_name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPermissionDialog(false)}>
+              取消
+            </Button>
+            <Button onClick={handleSavePermissions}>保存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Detail Dialog */}
+      <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>角色详情</DialogTitle>
+          </DialogHeader>
+          {selectedRole && (
+            <div className="grid gap-4 py-4 text-sm">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">角色编码</Label>
+                  <p className="font-medium font-mono">{selectedRole.role_code}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">角色名称</Label>
+                  <p className="font-medium">{selectedRole.role_name}</p>
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-muted-foreground">描述</Label>
+                  <p className="font-medium">{selectedRole.description || '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">数据权限</Label>
+                  <p className="font-medium">
+                    <Badge variant="outline">
+                      {selectedRole.data_scope === 'OWN' && '本人'}
+                      {selectedRole.data_scope === 'DEPT' && '本部门'}
+                      {selectedRole.data_scope === 'ALL' && '全部'}
+                    </Badge>
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">状态</Label>
+                  <p className="font-medium">
+                    <Badge variant={selectedRole.is_active ? 'default' : 'secondary'}>
+                      {selectedRole.is_active ? '启用' : '禁用'}
+                    </Badge>
+                  </p>
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-muted-foreground">权限列表</Label>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {selectedRole.permissions && selectedRole.permissions.length > 0 ? (
+                      selectedRole.permissions.map((perm, idx) => (
+                        <Badge key={idx} variant="secondary">
+                          {perm}
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-muted-foreground">无权限</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setShowDetailDialog(false)}>关闭</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </motion.div>
+  );
+}
+
