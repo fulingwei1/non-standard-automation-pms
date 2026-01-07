@@ -94,3 +94,35 @@ export const orgApi = {
     departments: () => api.get('/org/departments'),
     employees: () => api.get('/org/employees'),
 };
+
+// 问题管理 API
+export const issueApi = {
+    // 获取问题列表
+    list: (params) => api.get('/issues/', { params }),
+    // 获取问题详情
+    get: (id) => api.get(`/issues/${id}`),
+    // 创建问题
+    create: (data) => api.post('/issues/', data),
+    // 更新问题
+    update: (id, data) => api.put(`/issues/${id}`, data),
+    // 分配问题
+    assign: (id, data) => api.post(`/issues/${id}/assign`, data),
+    // 解决问题
+    resolve: (id, data) => api.post(`/issues/${id}/resolve`, data),
+    // 验证问题
+    verify: (id, data) => api.post(`/issues/${id}/verify`, data),
+    // 变更问题状态
+    changeStatus: (id, data) => api.post(`/issues/${id}/status`, data),
+    // 获取问题跟进记录
+    getFollowUps: (id) => api.get(`/issues/${id}/follow-ups`),
+    // 创建问题跟进记录
+    createFollowUp: (id, data) => api.post(`/issues/${id}/follow-ups`, data),
+    // 获取问题统计
+    statistics: (params) => api.get('/issues/statistics/overview', { params }),
+};
+
+// 用户 API
+export const userApi = {
+    list: (params) => api.get('/users/', { params }),
+    get: (id) => api.get(`/users/${id}`),
+};

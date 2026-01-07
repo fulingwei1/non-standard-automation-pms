@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   AlertCircle,
@@ -18,6 +18,8 @@ import {
   ArrowRight,
   ChevronDown,
   ChevronUp,
+  RefreshCw,
+  Loader2,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -38,98 +40,7 @@ import {
 } from '../components/ui/dialog'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
-
-// Mock issue data
-const mockIssues = [
-  {
-    id: 1,
-    issue_no: 'IS20260105001',
-    category: 'PROJECT',
-    project_id: 1,
-    project_code: 'PJ250108001',
-    project_name: 'BMS老化测试设备',
-    machine_id: 1,
-    machine_code: 'PN001',
-    issue_type: 'DEFECT',
-    severity: 'CRITICAL',
-    priority: 'URGENT',
-    title: '温度控制精度不达标',
-    description: '老化测试过程中，温度波动超过±2℃规格要求，影响测试结果准确性。',
-    reporter_id: 1,
-    reporter_name: '张工',
-    report_date: '2026-01-05 10:30:00',
-    assignee_id: 2,
-    assignee_name: '李工',
-    due_date: '2026-01-08',
-    status: 'PROCESSING',
-    solution: null,
-    resolved_at: null,
-    is_blocking: true,
-    impact_scope: '影响FAT验收进度',
-    impact_level: 'HIGH',
-    follow_up_count: 3,
-    last_follow_up_at: '2026-01-05 14:20:00',
-    tags: ['温度控制', 'FAT'],
-  },
-  {
-    id: 2,
-    issue_no: 'IS20260105002',
-    category: 'TASK',
-    project_id: 1,
-    project_code: 'PJ250108001',
-    task_id: 10,
-    issue_type: 'RISK',
-    severity: 'MAJOR',
-    priority: 'HIGH',
-    title: '关键物料到货延期',
-    description: '核心控制器预计到货时间延期3天，可能影响装配进度。',
-    reporter_id: 3,
-    reporter_name: '王采购',
-    report_date: '2026-01-05 09:15:00',
-    assignee_id: 4,
-    assignee_name: '赵经理',
-    due_date: '2026-01-07',
-    status: 'OPEN',
-    solution: null,
-    resolved_at: null,
-    is_blocking: false,
-    impact_scope: '影响S5阶段进度',
-    impact_level: 'MEDIUM',
-    follow_up_count: 1,
-    last_follow_up_at: '2026-01-05 09:15:00',
-    tags: ['物料', '进度'],
-  },
-  {
-    id: 3,
-    issue_no: 'IS20260104001',
-    category: 'ACCEPTANCE',
-    project_id: 2,
-    project_code: 'PJ250105002',
-    acceptance_order_id: 1,
-    issue_type: 'DEFECT',
-    severity: 'MINOR',
-    priority: 'MEDIUM',
-    title: '触摸屏响应延迟',
-    description: '部分按钮响应延迟约0.5秒，用户体验不佳。',
-    reporter_id: 5,
-    reporter_name: '刘测试',
-    report_date: '2026-01-04 16:45:00',
-    assignee_id: 6,
-    assignee_name: '陈工',
-    due_date: '2026-01-06',
-    status: 'RESOLVED',
-    solution: '优化HMI程序响应逻辑，减少延迟。',
-    resolved_at: '2026-01-05 11:00:00',
-    resolved_by: 6,
-    resolved_by_name: '陈工',
-    is_blocking: false,
-    impact_scope: '用户体验',
-    impact_level: 'LOW',
-    follow_up_count: 2,
-    last_follow_up_at: '2026-01-05 11:00:00',
-    tags: ['HMI', '用户体验'],
-  },
-]
+import { issueApi } from '../services/api'
 
 const severityColors = {
   CRITICAL: 'bg-red-500/20 text-red-400 border-red-500/30',
@@ -161,8 +72,7 @@ const statusIcons = {
 }
 
 export default function IssueManagement() {
-  const [issues, setIssues] = useState(mockIssues)
-  const [filteredIssues, setFilteredIssues] = useState(mockIssues)
+  const [issues, setIssues] = useState([])
   const [selectedIssue, setSelectedIssue] = useState(null)
   const [showDetail, setShowDetail] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
@@ -171,66 +81,96 @@ export default function IssueManagement() {
   const [filterSeverity, setFilterSeverity] = useState('all')
   const [filterCategory, setFilterCategory] = useState('all')
 
+  // 加载状态
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState(null)
+
+  // 分页
+  const [page, setPage] = useState(1)
+  const [pageSize] = useState(20)
+  const [total, setTotal] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+
+  // 统计数据
+  const [statistics, setStatistics] = useState({
+    total: 0,
+    open: 0,
+    processing: 0,
+    resolved: 0,
+    closed: 0,
+    blocking: 0,
+    overdue: 0,
+  })
+
+  // 加载问题列表
+  const loadIssues = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const params = {
+        page,
+        page_size: pageSize,
+      }
+
+      // 添加筛选条件
+      if (searchKeyword) params.keyword = searchKeyword
+      if (filterStatus !== 'all') params.status = filterStatus
+      if (filterSeverity !== 'all') params.severity = filterSeverity
+      if (filterCategory !== 'all') params.category = filterCategory
+
+      const response = await issueApi.list(params)
+      const data = response.data
+
+      setIssues(data.items || [])
+      setTotal(data.total || 0)
+      setTotalPages(data.pages || 0)
+    } catch (err) {
+      console.error('Failed to load issues:', err)
+      setError(err.response?.data?.detail || '加载问题列表失败')
+      setIssues([])
+    } finally {
+      setLoading(false)
+    }
+  }, [page, pageSize, searchKeyword, filterStatus, filterSeverity, filterCategory])
+
+  // 加载统计数据
+  const loadStatistics = useCallback(async () => {
+    try {
+      const response = await issueApi.statistics({})
+      setStatistics(response.data)
+    } catch (err) {
+      console.error('Failed to load statistics:', err)
+    }
+  }, [])
+
+  // 初始加载
   useEffect(() => {
-    let filtered = issues
+    loadIssues()
+    loadStatistics()
+  }, [loadIssues, loadStatistics])
 
-    // 搜索过滤
-    if (searchKeyword) {
-      filtered = filtered.filter(
-        (issue) =>
-          issue.title.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-          issue.issue_no.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-          issue.description.toLowerCase().includes(searchKeyword.toLowerCase())
-      )
+  // 创建问题
+  const handleCreateIssue = async (issueData) => {
+    setSubmitting(true)
+    try {
+      await issueApi.create(issueData)
+      setShowCreate(false)
+      // 重新加载数据
+      loadIssues()
+      loadStatistics()
+    } catch (err) {
+      console.error('Failed to create issue:', err)
+      alert(err.response?.data?.detail || '创建问题失败')
+    } finally {
+      setSubmitting(false)
     }
-
-    // 状态过滤
-    if (filterStatus !== 'all') {
-      filtered = filtered.filter((issue) => issue.status === filterStatus)
-    }
-
-    // 严重程度过滤
-    if (filterSeverity !== 'all') {
-      filtered = filtered.filter((issue) => issue.severity === filterSeverity)
-    }
-
-    // 分类过滤
-    if (filterCategory !== 'all') {
-      filtered = filtered.filter((issue) => issue.category === filterCategory)
-    }
-
-    setFilteredIssues(filtered)
-  }, [issues, searchKeyword, filterStatus, filterSeverity, filterCategory])
-
-  const handleCreateIssue = (issueData) => {
-    const newIssue = {
-      id: issues.length + 1,
-      ...issueData,
-      issue_no: `IS${new Date().toISOString().slice(0, 10).replace(/-/g, '')}${String(issues.length + 1).padStart(3, '0')}`,
-      reporter_id: 1,
-      reporter_name: '当前用户',
-      report_date: new Date().toISOString(),
-      status: 'OPEN',
-      follow_up_count: 0,
-      tags: issueData.tags || [],
-    }
-    setIssues([newIssue, ...issues])
-    setShowCreate(false)
   }
 
-  const statistics = {
-    total: issues.length,
-    open: issues.filter((i) => i.status === 'OPEN').length,
-    processing: issues.filter((i) => i.status === 'PROCESSING').length,
-    resolved: issues.filter((i) => i.status === 'RESOLVED').length,
-    closed: issues.filter((i) => i.status === 'CLOSED').length,
-    blocking: issues.filter((i) => i.is_blocking).length,
-    overdue: issues.filter(
-      (i) =>
-        i.due_date &&
-        new Date(i.due_date) < new Date() &&
-        ['OPEN', 'PROCESSING'].includes(i.status)
-    ).length,
+  // 刷新数据
+  const handleRefresh = () => {
+    loadIssues()
+    loadStatistics()
   }
 
   return (
@@ -340,6 +280,14 @@ export default function IssueManagement() {
                   <option value="TECHNICAL">技术问题</option>
                 </select>
                 <Button
+                  variant="outline"
+                  onClick={handleRefresh}
+                  disabled={loading}
+                  className="border-white/10"
+                >
+                  <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
+                </Button>
+                <Button
                   onClick={() => setShowCreate(true)}
                   className="bg-primary hover:bg-primary/90"
                 >
@@ -351,14 +299,38 @@ export default function IssueManagement() {
           </CardContent>
         </Card>
 
+        {/* 错误提示 */}
+        {error && (
+          <Card className="bg-red-500/10 border-red-500/30">
+            <CardContent className="p-4 flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400" />
+              <span className="text-red-400">{error}</span>
+              <Button variant="ghost" size="sm" onClick={handleRefresh}>
+                重试
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 加载状态 */}
+        {loading && (
+          <Card className="bg-surface-50 border-white/5">
+            <CardContent className="p-12 text-center">
+              <Loader2 className="w-8 h-8 text-primary mx-auto mb-4 animate-spin" />
+              <p className="text-slate-400">加载中...</p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* 问题列表 */}
+        {!loading && (
         <motion.div
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
           className="space-y-3"
         >
-          {filteredIssues.map((issue) => {
+          {issues.map((issue) => {
             const StatusIcon = statusIcons[issue.status] || AlertCircle
             const isOverdue =
               issue.due_date &&
@@ -459,12 +431,47 @@ export default function IssueManagement() {
             )
           })}
         </motion.div>
+        )}
 
-        {filteredIssues.length === 0 && (
+        {/* 空状态 */}
+        {!loading && issues.length === 0 && (
           <Card className="bg-surface-50 border-white/5">
             <CardContent className="p-12 text-center">
               <AlertCircle className="w-12 h-12 text-slate-500 mx-auto mb-4" />
               <p className="text-slate-400">暂无问题数据</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 分页 */}
+        {!loading && totalPages > 1 && (
+          <Card className="bg-surface-50 border-white/5">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-400">
+                  共 {total} 条记录，第 {page} / {totalPages} 页
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page <= 1}
+                    onClick={() => setPage(page - 1)}
+                    className="border-white/10"
+                  >
+                    上一页
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage(page + 1)}
+                    className="border-white/10"
+                  >
+                    下一页
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -489,6 +496,7 @@ export default function IssueManagement() {
           <CreateIssueDialog
             onClose={() => setShowCreate(false)}
             onSubmit={handleCreateIssue}
+            submitting={submitting}
           />
         )}
       </AnimatePresence>
@@ -595,7 +603,7 @@ function IssueDetailDialog({ issue, onClose }) {
 }
 
 // 创建问题对话框组件
-function CreateIssueDialog({ onClose, onSubmit }) {
+function CreateIssueDialog({ onClose, onSubmit, submitting }) {
   const [formData, setFormData] = useState({
     category: 'PROJECT',
     issue_type: 'DEFECT',
@@ -722,11 +730,18 @@ function CreateIssueDialog({ onClose, onSubmit }) {
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={submitting}>
             取消
           </Button>
-          <Button onClick={handleSubmit} className="bg-primary hover:bg-primary/90">
-            创建问题
+          <Button onClick={handleSubmit} disabled={submitting} className="bg-primary hover:bg-primary/90">
+            {submitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                创建中...
+              </>
+            ) : (
+              '创建问题'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
