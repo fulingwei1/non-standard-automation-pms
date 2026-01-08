@@ -787,20 +787,22 @@ export default function InstallationDispatchManagement() {
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">任务类型 *</label>
-                  <Select
-                    value={createData.task_type}
-                    onValueChange={(val) => setCreateData({ ...createData, task_type: val })}
-                  >
-                    <SelectContent>
-                      <SelectItem value="INSTALLATION">安装</SelectItem>
-                      <SelectItem value="DEBUGGING">调试</SelectItem>
-                      <SelectItem value="TRAINING">培训</SelectItem>
-                      <SelectItem value="MAINTENANCE">维护</SelectItem>
-                      <SelectItem value="REPAIR">维修</SelectItem>
-                      <SelectItem value="OTHER">其他</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Select
+                  value={createData.task_type}
+                  onValueChange={(val) => setCreateData({ ...createData, task_type: val })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择任务类型" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="INSTALLATION">安装</SelectItem>
+                    <SelectItem value="DEBUGGING">调试</SelectItem>
+                    <SelectItem value="TRAINING">培训</SelectItem>
+                    <SelectItem value="MAINTENANCE">维护</SelectItem>
+                    <SelectItem value="REPAIR">维修</SelectItem>
+                    <SelectItem value="OTHER">其他</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">任务标题 *</label>
@@ -852,6 +854,9 @@ export default function InstallationDispatchManagement() {
                   value={createData.priority}
                   onValueChange={(val) => setCreateData({ ...createData, priority: val })}
                 >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择优先级" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="LOW">低</SelectItem>
                     <SelectItem value="NORMAL">普通</SelectItem>

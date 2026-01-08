@@ -204,7 +204,7 @@ import CustomerManagement from './pages/CustomerManagement'
 import SupplierManagementData from './pages/SupplierManagementData'
 import DepartmentManagement from './pages/DepartmentManagement'
 import AlertCenter from './pages/AlertCenter'
-import AlertRuleManagement from './pages/AlertRuleManagement'
+import AlertRuleConfig from './pages/AlertRuleConfig'
 import AlertDetail from './pages/AlertDetail'
 import AlertStatistics from './pages/AlertStatistics'
 import AlertSubscription from './pages/AlertSubscription'
@@ -824,7 +824,7 @@ function App() {
           <Route path="/ecn-overdue-alerts" element={<ECNOverdueAlerts />} />
           <Route path="/ecn-statistics" element={<ECNStatistics />} />
           <Route path="/alerts/:id" element={<AlertDetail />} />
-          <Route path="/alert-rules" element={<AlertRuleManagement />} />
+          <Route path="/alert-rules" element={<AlertRuleConfig />} />
           <Route path="/alert-statistics" element={<AlertStatistics />} />
           <Route path="/alert-subscription" element={<AlertSubscription />} />
           <Route path="/alerts/subscriptions" element={<AlertSubscriptionSettings />} />

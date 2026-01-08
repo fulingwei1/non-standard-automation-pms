@@ -305,7 +305,7 @@ export default function AlertSubscriptionSettings() {
           <EmptyState
             icon={Bell}
             title="暂无订阅配置"
-            description="点击"新建订阅"按钮创建第一个订阅配置"
+            description="点击「新建订阅」按钮创建第一个订阅配置"
           />
         ) : (
           <motion.div

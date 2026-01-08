@@ -130,8 +130,6 @@ export default function SalesFunnel() {
 
   const maxCount = Math.max(...funnelData.map((d) => d.count), 1)
 
-  const maxCount = Math.max(...funnelData.map((d) => d.count), 1)
-  
   const handleStageClick = (stage) => {
     setSelectedStage(stage)
     // TODO: Navigate to detail page or show modal
