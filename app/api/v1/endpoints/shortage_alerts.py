@@ -211,7 +211,42 @@ def update_shortage_alert(
     if remark is not None:
         alert.remark = remark
     
+    # 缺料联动：如果预警级别提升到level3/level4，自动阻塞相关任务
+    old_alert_level = alert.alert_level
+    new_alert_level = alert_level if alert_level else alert.alert_level
+    
     db.add(alert)
+    db.flush()
+    
+    # 缺料联动：如果预警级别提升或影响类型变为stop/delivery，触发任务阻塞
+    try:
+        from app.models.shortage import ShortageAlert as ShortageAlertModel
+        from app.services.progress_integration_service import ProgressIntegrationService
+        
+        # 查找对应的ShortageAlert记录（如果存在）
+        shortage_alert = db.query(ShortageAlertModel).filter(
+            ShortageAlertModel.project_id == alert.project_id,
+            ShortageAlertModel.material_code == alert.material_code,
+            ShortageAlertModel.status.in_(['pending', 'handling'])
+        ).first()
+        
+        if shortage_alert:
+            # 如果预警级别提升到CRITICAL/HIGH，触发任务阻塞
+            critical_levels = ['CRITICAL', 'HIGH', 'level3', 'level4', 'L3', 'L4']
+            if (new_alert_level in critical_levels and 
+                old_alert_level not in critical_levels):
+                integration_service = ProgressIntegrationService(db)
+                blocked_tasks = integration_service.handle_shortage_alert_created(shortage_alert)
+                if blocked_tasks:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.info(f"缺料预警级别提升，已阻塞 {len(blocked_tasks)} 个任务")
+    except Exception as e:
+        # 联动失败不影响预警更新，记录日志
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"缺料联动处理失败: {str(e)}", exc_info=True)
+    
     db.commit()
     
     return ResponseModel(
@@ -348,6 +383,7 @@ def resolve_shortage_alert(
     if alert.status == "RESOLVED":
         raise HTTPException(status_code=400, detail="预警已解决")
     
+    old_status = alert.status
     alert.status = "RESOLVED"
     alert.resolved_at = datetime.now()
     alert.handler_id = current_user.id
@@ -356,6 +392,33 @@ def resolve_shortage_alert(
         alert.solution = solution
     
     db.add(alert)
+    db.flush()
+    
+    # 缺料联动：解决缺料预警，自动解除相关任务阻塞
+    try:
+        from app.models.shortage import ShortageAlert as ShortageAlertModel
+        from app.services.progress_integration_service import ProgressIntegrationService
+        
+        # 查找对应的ShortageAlert记录（如果存在）
+        shortage_alert = db.query(ShortageAlertModel).filter(
+            ShortageAlertModel.project_id == alert.project_id,
+            ShortageAlertModel.material_code == alert.material_code,
+            ShortageAlertModel.status.in_(['pending', 'handling'])
+        ).first()
+        
+        if shortage_alert:
+            integration_service = ProgressIntegrationService(db)
+            unblocked_tasks = integration_service.handle_shortage_alert_resolved(shortage_alert)
+            if unblocked_tasks:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.info(f"缺料预警解决，已解除 {len(unblocked_tasks)} 个任务阻塞")
+    except Exception as e:
+        # 联动失败不影响缺料预警解决，记录日志
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"缺料联动处理失败: {str(e)}", exc_info=True)
+    
     db.commit()
     
     return ResponseModel(

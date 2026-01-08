@@ -165,7 +165,7 @@ export default function ShortageReportList() {
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部项目</SelectItem>
+                <SelectItem value="all">全部项目</SelectItem>
                 {projects.map((proj) => (
                   <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
@@ -178,7 +178,7 @@ export default function ShortageReportList() {
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部状态</SelectItem>
+                <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(statusConfigs).map(([key, config]) => (
                   <SelectItem key={key} value={key}>
                     {config.label}
@@ -191,7 +191,7 @@ export default function ShortageReportList() {
                 <SelectValue placeholder="选择紧急程度" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部</SelectItem>
+                <SelectItem value="all">全部</SelectItem>
                 {Object.entries(urgentLevelConfigs).map(([key, config]) => (
                   <SelectItem key={key} value={key}>
                     {config.label}

@@ -9,6 +9,7 @@ from app.api.v1.endpoints import (
     organization,
     auth,
     costs,
+    budget,
     documents,
     users,
     roles,
@@ -44,6 +45,16 @@ from app.api.v1.endpoints import (
     business_support_orders,
     service,
     rd_project,
+    engineers,
+    technical_review,
+    bonus,
+    project_evaluation,
+    hourly_rate,
+    qualification,
+    scheduler,
+    assembly_kit,
+    staff_matching,
+    project_roles,
 )
 
 api_router = APIRouter()
@@ -57,6 +68,7 @@ api_router.include_router(stages.router, prefix="/stages", tags=["stages"])
 api_router.include_router(organization.router, prefix="/org", tags=["organization"])
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(costs.router, prefix="/costs", tags=["costs"])
+api_router.include_router(budget.router, prefix="/budgets", tags=["budgets"])
 api_router.include_router(documents.router, prefix="/documents", tags=["documents"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(roles.router, prefix="/roles", tags=["roles"])
@@ -91,4 +103,13 @@ api_router.include_router(business_support.router, prefix="/business-support", t
 api_router.include_router(business_support_orders.router, prefix="/business-support", tags=["business-support"])
 api_router.include_router(service.router, prefix="/service", tags=["service"])
 api_router.include_router(rd_project.router, prefix="", tags=["rd-project"])
-api_router.include_router(rd_project.router, prefix="", tags=["rd-project"])
+api_router.include_router(engineers.router, prefix="/engineers", tags=["engineers"])
+api_router.include_router(technical_review.router, prefix="", tags=["technical-review"])
+api_router.include_router(bonus.router, prefix="/bonus", tags=["bonus"])
+api_router.include_router(project_evaluation.router, prefix="/project-evaluation", tags=["project-evaluation"])
+api_router.include_router(hourly_rate.router, prefix="/hourly-rates", tags=["hourly-rates"])
+api_router.include_router(qualification.router, prefix="/qualifications", tags=["qualifications"])
+api_router.include_router(scheduler.router, prefix="/scheduler", tags=["scheduler"])
+api_router.include_router(assembly_kit.router, prefix="/assembly", tags=["assembly-kit"])
+api_router.include_router(staff_matching.router, prefix="/staff-matching", tags=["staff-matching"])
+api_router.include_router(project_roles.router, prefix="/project-roles", tags=["project-roles"])

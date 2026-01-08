@@ -30,6 +30,7 @@ from app.schemas.issue import (
     IssueVerifyRequest,
     IssueStatusChangeRequest,
     IssueStatistics,
+    EngineerIssueStatistics,
     PaginatedResponse,
     IssueTemplateCreate,
     IssueTemplateUpdate,
@@ -37,6 +38,8 @@ from app.schemas.issue import (
     IssueTemplateListResponse,
     IssueFromTemplateRequest,
 )
+from app.services.issue_cost_service import IssueCostService
+from decimal import Decimal
 from app.schemas.common import ResponseModel
 
 router = APIRouter()
@@ -63,6 +66,8 @@ def list_issues(
     status: Optional[str] = Query(None, description="状态"),
     assignee_id: Optional[int] = Query(None, description="处理人ID"),
     reporter_id: Optional[int] = Query(None, description="提出人ID"),
+    responsible_engineer_id: Optional[int] = Query(None, description="责任工程师ID"),
+    root_cause: Optional[str] = Query(None, description="问题原因"),
     is_blocking: Optional[bool] = Query(None, description="是否阻塞"),
     is_overdue: Optional[bool] = Query(None, description="是否逾期"),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
@@ -96,6 +101,10 @@ def list_issues(
         query = query.filter(Issue.assignee_id == assignee_id)
     if reporter_id:
         query = query.filter(Issue.reporter_id == reporter_id)
+    if responsible_engineer_id:
+        query = query.filter(Issue.responsible_engineer_id == responsible_engineer_id)
+    if root_cause:
+        query = query.filter(Issue.root_cause == root_cause)
     if is_blocking is not None:
         query = query.filter(Issue.is_blocking == is_blocking)
     if is_overdue:
@@ -156,8 +165,13 @@ def list_issues(
             impact_scope=issue.impact_scope,
             impact_level=issue.impact_level,
             is_blocking=issue.is_blocking,
-            attachments=issue.attachments or [],
-            tags=issue.tags or [],
+            root_cause=issue.root_cause,
+            responsible_engineer_id=issue.responsible_engineer_id,
+            responsible_engineer_name=issue.responsible_engineer_name,
+            estimated_inventory_loss=issue.estimated_inventory_loss,
+            estimated_extra_hours=issue.estimated_extra_hours,
+            attachments=json.loads(issue.attachments) if issue.attachments else [],
+            tags=json.loads(issue.tags) if issue.tags else [],
             follow_up_count=issue.follow_up_count,
             last_follow_up_at=issue.last_follow_up_at,
             created_at=issue.created_at,
@@ -226,8 +240,13 @@ def get_issue(
         impact_scope=issue.impact_scope,
         impact_level=issue.impact_level,
         is_blocking=issue.is_blocking,
-        attachments=issue.attachments or [],
-        tags=issue.tags or [],
+        root_cause=issue.root_cause,
+        responsible_engineer_id=issue.responsible_engineer_id,
+        responsible_engineer_name=issue.responsible_engineer_name,
+        estimated_inventory_loss=issue.estimated_inventory_loss,
+        estimated_extra_hours=issue.estimated_extra_hours,
+        attachments=json.loads(issue.attachments) if issue.attachments else [],
+        tags=json.loads(issue.tags) if issue.tags else [],
         follow_up_count=issue.follow_up_count,
         last_follow_up_at=issue.last_follow_up_at,
         created_at=issue.created_at,
@@ -273,6 +292,11 @@ def create_issue(
         impact_scope=issue_in.impact_scope,
         impact_level=issue_in.impact_level,
         is_blocking=issue_in.is_blocking,
+        root_cause=issue_in.root_cause,
+        responsible_engineer_id=issue_in.responsible_engineer_id,
+        responsible_engineer_name=(lambda eid: (lambda u: u.real_name or u.username if u else None)(db.query(User).filter(User.id == eid).first()) if eid else None)(issue_in.responsible_engineer_id),
+        estimated_inventory_loss=issue_in.estimated_inventory_loss,
+        estimated_extra_hours=issue_in.estimated_extra_hours,
         attachments=str(issue_in.attachments) if issue_in.attachments else None,
         tags=str(issue_in.tags) if issue_in.tags else None,
     )
@@ -306,6 +330,12 @@ def update_issue(
         assignee = db.query(User).filter(User.id == update_data['assignee_id']).first()
         if assignee:
             update_data['assignee_name'] = assignee.real_name or assignee.username
+    if 'responsible_engineer_id' in update_data and update_data['responsible_engineer_id']:
+        responsible_engineer = db.query(User).filter(User.id == update_data['responsible_engineer_id']).first()
+        if responsible_engineer:
+            update_data['responsible_engineer_name'] = responsible_engineer.real_name or responsible_engineer.username
+        elif update_data['responsible_engineer_id'] is None:
+            update_data['responsible_engineer_name'] = None
     
     for field, value in update_data.items():
         setattr(issue, field, value)
@@ -692,6 +722,139 @@ def get_issue_statistics(
         by_category=by_category,
         by_type=by_type,
     )
+
+
+@router.get("/statistics/engineer-design-issues", response_model=List[EngineerIssueStatistics])
+def get_engineer_design_issues_statistics(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+    engineer_id: Optional[int] = Query(None, description="工程师ID（可选，不提供则统计所有工程师）"),
+    start_date: Optional[date] = Query(None, description="开始日期"),
+    end_date: Optional[date] = Query(None, description="结束日期"),
+    project_id: Optional[int] = Query(None, description="项目ID"),
+) -> Any:
+    """
+    按工程师统计设计问题及其导致的损失
+    
+    统计root_cause='DESIGN_ERROR'的问题，按responsible_engineer_id分组，
+    汇总库存损失和额外工时
+    """
+    # 查询设计问题
+    query = db.query(Issue).filter(
+        Issue.root_cause == 'DESIGN_ERROR',
+        Issue.status != 'DELETED'
+    )
+    
+    # 筛选条件
+    if engineer_id:
+        query = query.filter(Issue.responsible_engineer_id == engineer_id)
+    if project_id:
+        query = query.filter(Issue.project_id == project_id)
+    if start_date:
+        query = query.filter(Issue.report_date >= datetime.combine(start_date, datetime.min.time()))
+    if end_date:
+        query = query.filter(Issue.report_date <= datetime.combine(end_date, datetime.max.time()))
+    
+    issues = query.all()
+    
+    # 按工程师分组统计
+    engineer_stats = {}
+    for issue in issues:
+        if not issue.responsible_engineer_id:
+            continue
+        
+        eng_id = issue.responsible_engineer_id
+        if eng_id not in engineer_stats:
+            engineer_stats[eng_id] = {
+                'engineer_id': eng_id,
+                'engineer_name': issue.responsible_engineer_name or '未知',
+                'total_issues': 0,
+                'design_issues': 0,
+                'total_inventory_loss': Decimal(0),
+                'total_extra_hours': Decimal(0),
+                'issues': []
+            }
+        
+        stats = engineer_stats[eng_id]
+        stats['total_issues'] += 1
+        stats['design_issues'] += 1
+        
+        # 累加预估的库存损失和额外工时
+        if issue.estimated_inventory_loss:
+            stats['total_inventory_loss'] += issue.estimated_inventory_loss or Decimal(0)
+        if issue.estimated_extra_hours:
+            stats['total_extra_hours'] += issue.estimated_extra_hours or Decimal(0)
+        
+        # 从关联的成本和工时记录中获取实际损失
+        try:
+            cost_summary = IssueCostService.get_issue_cost_summary(db, issue.issue_no)
+            if cost_summary.get('inventory_loss', 0) > 0:
+                stats['total_inventory_loss'] += cost_summary['inventory_loss']
+            if cost_summary.get('total_hours', 0) > 0:
+                stats['total_extra_hours'] += cost_summary['total_hours']
+        except Exception as e:
+            # 如果查询失败，只记录错误，不影响统计
+            import logging
+            logging.warning(f"Failed to get cost summary for issue {issue.issue_no}: {e}")
+        
+        # 构建问题响应
+        issue_response = IssueResponse(
+            id=issue.id,
+            issue_no=issue.issue_no,
+            category=issue.category,
+            project_id=issue.project_id,
+            machine_id=issue.machine_id,
+            task_id=issue.task_id,
+            acceptance_order_id=issue.acceptance_order_id,
+            related_issue_id=issue.related_issue_id,
+            issue_type=issue.issue_type,
+            severity=issue.severity,
+            priority=issue.priority,
+            title=issue.title,
+            description=issue.description,
+            reporter_id=issue.reporter_id,
+            reporter_name=issue.reporter_name,
+            report_date=issue.report_date,
+            assignee_id=issue.assignee_id,
+            assignee_name=issue.assignee_name,
+            due_date=issue.due_date,
+            status=issue.status,
+            solution=issue.solution,
+            resolved_at=issue.resolved_at,
+            resolved_by=issue.resolved_by,
+            resolved_by_name=issue.resolved_by_name,
+            verified_at=issue.verified_at,
+            verified_by=issue.verified_by,
+            verified_by_name=issue.verified_by_name,
+            verified_result=issue.verified_result,
+            follow_up_count=issue.follow_up_count,
+            last_follow_up_at=issue.last_follow_up_at,
+            impact_scope=issue.impact_scope,
+            impact_level=issue.impact_level,
+            is_blocking=issue.is_blocking,
+            attachments=json.loads(issue.attachments) if issue.attachments else [],
+            tags=json.loads(issue.tags) if issue.tags else [],
+            root_cause=issue.root_cause,
+            responsible_engineer_id=issue.responsible_engineer_id,
+            responsible_engineer_name=issue.responsible_engineer_name,
+            estimated_inventory_loss=issue.estimated_inventory_loss,
+            estimated_extra_hours=issue.estimated_extra_hours,
+            created_at=issue.created_at,
+            updated_at=issue.updated_at,
+            project_code=issue.project.project_code if issue.project else None,
+            project_name=issue.project.project_name if issue.project else None,
+            machine_code=issue.machine.machine_code if issue.machine else None,
+            machine_name=issue.machine.machine_name if issue.machine else None,
+        )
+        stats['issues'].append(issue_response)
+    
+    # 转换为响应列表
+    result = [EngineerIssueStatistics(**stats) for stats in engineer_stats.values()]
+    
+    # 按设计问题数降序排序
+    result.sort(key=lambda x: x.design_issues, reverse=True)
+    
+    return result
 
 
 @router.post("/{issue_id}/close", response_model=IssueResponse)

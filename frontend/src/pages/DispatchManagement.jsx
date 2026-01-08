@@ -170,7 +170,7 @@ export default function DispatchManagement() {
                 <SelectValue placeholder="选择车间" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部车间</SelectItem>
+                <SelectItem value="all">全部车间</SelectItem>
                 {workshops.map((ws) => (
                   <SelectItem key={ws.id} value={ws.id.toString()}>
                     {ws.workshop_name}
@@ -185,7 +185,7 @@ export default function DispatchManagement() {
               <SelectContent>
                 <SelectItem value="PENDING">待派工</SelectItem>
                 <SelectItem value="ASSIGNED">已派工</SelectItem>
-                <SelectItem value="">全部</SelectItem>
+                <SelectItem value="all">全部</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -347,7 +347,7 @@ export default function DispatchManagement() {
                     <SelectValue placeholder="选择工位" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">无</SelectItem>
+                    <SelectItem value="none">无</SelectItem>
                     {/* 这里需要根据车间获取工位列表 */}
                   </SelectContent>
                 </Select>

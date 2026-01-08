@@ -255,7 +255,7 @@ export default function DepartmentManagement() {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="show"
+      animate="visible"
       className="space-y-6"
     >
       <PageHeader
@@ -401,7 +401,7 @@ export default function DepartmentManagement() {
                   <SelectValue placeholder="选择父部门（可选）" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">无（顶级部门）</SelectItem>
+                  <SelectItem value="none">无（顶级部门）</SelectItem>
                   {flatDepartments
                     .filter(d => !editDepartment || d.id !== editDepartment.id)
                     .map((dept) => (
@@ -463,7 +463,7 @@ export default function DepartmentManagement() {
                     <SelectValue placeholder="选择父部门（可选）" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">无（顶级部门）</SelectItem>
+                    <SelectItem value="none">无（顶级部门）</SelectItem>
                     {flatDepartments
                       .filter(d => d.id !== editDepartment.id)
                       .map((dept) => (

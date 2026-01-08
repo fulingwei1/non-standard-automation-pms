@@ -40,6 +40,7 @@ import {
   User,
   Wrench,
   BookOpen,
+  Sparkles,
   Lightbulb,
   DollarSign,
   Archive,
@@ -49,6 +50,7 @@ import {
   CheckCircle2,
   MessageSquare,
   Star,
+  Layers,
 } from 'lucide-react'
 
 // Icon mapping
@@ -85,6 +87,7 @@ const iconMap = {
   Cog,
   Wrench,
   BookOpen,
+  Sparkles,
   Lightbulb,
   DollarSign,
   Archive,
@@ -94,6 +97,7 @@ const iconMap = {
   CheckCircle2,
   MessageSquare,
   Star,
+  Layers,
 }
 
 // Default navigation groups (for admin and general use)
@@ -101,7 +105,7 @@ const defaultNavGroups = [
   {
     label: '概览',
     items: [
-      { name: '仪表盘', path: '/', icon: 'LayoutDashboard' },
+      { name: '管理员工作台', path: '/admin-dashboard', icon: 'LayoutDashboard' },
       { name: '运营大屏', path: '/operation', icon: 'BarChart3' },
     ],
   },
@@ -124,9 +128,20 @@ const defaultNavGroups = [
       { name: '风险预警墙', path: '/pmo/risk-wall', icon: 'AlertTriangle' },
       { name: '项目结项', path: '/pmo/closure', icon: 'CheckCircle2' },
       { name: '项目复盘', path: '/projects/reviews', icon: 'FileText' },
+      { name: '经验教训库', path: '/projects/lessons-learned', icon: 'BookOpen' },
+      { name: '最佳实践推荐', path: '/projects/best-practices/recommend', icon: 'Sparkles' },
       { name: '资源总览', path: '/pmo/resource-overview', icon: 'Users' },
       { name: '会议管理', path: '/pmo/meetings', icon: 'Calendar' },
       { name: '项目周报', path: '/pmo/weekly-report', icon: 'BarChart3' },
+    ],
+  },
+  {
+    label: 'AI人员匹配',
+    items: [
+      { name: '标签字典', path: '/staff-matching/tags', icon: 'Target' },
+      { name: '员工档案', path: '/staff-matching/profiles', icon: 'Users' },
+      { name: '人员需求', path: '/staff-matching/staffing-needs', icon: 'ClipboardList' },
+      { name: '智能匹配', path: '/staff-matching/matching', icon: 'Sparkles' },
     ],
   },
   {
@@ -135,7 +150,7 @@ const defaultNavGroups = [
       { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
       { name: '缺料管理', path: '/shortage', icon: 'Package' },
       { name: '齐套检查', path: '/kit-check', icon: 'CheckCircle2' },
-      { name: '齐套分析', path: '/materials', icon: 'Package' },
+      { name: '齐套分析', path: '/material-analysis', icon: 'Package' },
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
@@ -162,6 +177,7 @@ const defaultNavGroups = [
     items: [
       { name: '用户管理', path: '/user-management', icon: 'Users' },
       { name: '角色管理', path: '/role-management', icon: 'Shield' },
+      { name: '项目角色类型', path: '/project-role-types', icon: 'UserCog' },
     ],
     roles: ['admin', 'super_admin'], // 仅管理员可见
   },
@@ -198,6 +214,9 @@ const engineerNavGroups = [
     label: '个人中心',
     items: [
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '5' },
+      { name: '我的绩效', path: '/personal/my-performance', icon: 'Award' },
+      { name: '我的奖金', path: '/personal/my-bonus', icon: 'DollarSign' },
+      { name: '月度总结', path: '/personal/monthly-summary', icon: 'FileText' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
   },
@@ -208,7 +227,7 @@ const pmcNavGroups = [
   {
     label: '概览',
     items: [
-      { name: '仪表盘', path: '/', icon: 'LayoutDashboard' },
+      { name: 'PMO 驾驶舱', path: '/pmo/dashboard', icon: 'LayoutDashboard' },
       { name: '运营大屏', path: '/operation', icon: 'BarChart3' },
     ],
   },
@@ -217,7 +236,7 @@ const pmcNavGroups = [
     items: [
       { name: '项目看板', path: '/board', icon: 'Kanban' },
       { name: '排期看板', path: '/schedule', icon: 'Calendar' },
-      { name: '齐套分析', path: '/materials', icon: 'Package' },
+      { name: '齐套分析', path: '/material-analysis', icon: 'Package' },
     ],
   },
   {
@@ -244,7 +263,7 @@ const buyerNavGroups = [
   {
     label: '概览',
     items: [
-      { name: '仪表盘', path: '/', icon: 'LayoutDashboard' },
+      { name: '采购工作台', path: '/procurement-dashboard', icon: 'LayoutDashboard' },
     ],
   },
   {
@@ -304,7 +323,7 @@ const generalManagerNavGroups = [
       { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
       { name: '缺料管理', path: '/shortage', icon: 'Package' },
       { name: '齐套检查', path: '/kit-check', icon: 'CheckCircle2' },
-      { name: '齐套分析', path: '/materials', icon: 'Package' },
+      { name: '齐套分析', path: '/material-analysis', icon: 'Package' },
       { name: '验收管理', path: '/acceptance', icon: 'ClipboardList' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
@@ -324,7 +343,6 @@ const chairmanNavGroups = [
     label: '战略决策',
     items: [
       { name: '董事长工作台', path: '/chairman-dashboard', icon: 'LayoutDashboard' },
-      { name: '经营报表', path: '/business-reports', icon: 'BarChart3' },
       { name: '战略分析', path: '/strategy-analysis', icon: 'Target' },
     ],
   },
@@ -352,6 +370,7 @@ const chairmanNavGroups = [
       { name: '部门管理', path: '/departments', icon: 'Building2' },
       { name: '人员管理', path: '/employees', icon: 'Users' },
       { name: '绩效管理', path: '/performance', icon: 'Award' },
+      { name: '任职资格管理', path: '/qualifications', icon: 'Award' },
     ],
   },
   {
@@ -368,7 +387,7 @@ const deptManagerNavGroups = [
   {
     label: '概览',
     items: [
-      { name: '仪表盘', path: '/', icon: 'LayoutDashboard' },
+      { name: '工作台', path: '/workstation', icon: 'LayoutDashboard' },
       { name: '运营大屏', path: '/operation', icon: 'BarChart3' },
     ],
   },
@@ -413,7 +432,8 @@ const productionManagerNavGroups = [
       { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
       { name: '缺料管理', path: '/shortage', icon: 'Package' },
       { name: '齐套检查', path: '/kit-check', icon: 'CheckCircle2' },
-      { name: '齐套分析', path: '/materials', icon: 'Package' },
+      { name: '齐套分析', path: '/material-analysis', icon: 'Package' },
+      { name: '装配齐套', path: '/assembly-kit', icon: 'Wrench' },
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
     ],
@@ -469,6 +489,8 @@ const salesNavGroups = [
       { name: '线索评估', path: '/lead-assessment', icon: 'Target' },
       { name: '报价管理', path: '/sales/quotes', icon: 'Calculator' },
       { name: '合同管理', path: '/sales/contracts', icon: 'FileCheck' },
+      { name: '模板与CPQ', path: '/sales/templates', icon: 'Layers' },
+      { name: '技术评审', path: '/technical-reviews', icon: 'FileCheck' },
       { name: '应收账款', path: '/sales/receivables', icon: 'CreditCard' },
       { name: '回款跟踪', path: '/payments', icon: 'CreditCard' },
     ],
@@ -564,7 +586,8 @@ const procurementNavGroups = [
       { name: '物料跟踪', path: '/materials', icon: 'Package' },
       { name: '收货管理', path: '/purchases/receipts', icon: 'Truck' },
       { name: '到货跟踪', path: '/arrivals', icon: 'Truck' },
-      { name: '齐套分析', path: '/bom-analysis', icon: 'Boxes' },
+      { name: '齐套分析', path: '/material-analysis', icon: 'Boxes' },
+      { name: 'BOM装配配置', path: '/bom-assembly-attrs', icon: 'Settings' },
     ],
   },
   {
@@ -596,8 +619,14 @@ const procurementManagerNavGroups = [
   {
     label: '概览',
     items: [
-      { name: '仪表盘', path: '/', icon: 'LayoutDashboard' },
-      { name: '采购工作台', path: '/procurement-manager-dashboard', icon: 'LayoutDashboard' },
+      { name: '采购经理工作台', path: '/procurement-manager-dashboard', icon: 'LayoutDashboard' },
+    ],
+  },
+  {
+    label: '项目管理',
+    items: [
+      { name: '项目看板', path: '/board', icon: 'Kanban' },
+      { name: '排期看板', path: '/schedule', icon: 'Calendar' },
     ],
   },
   {
@@ -607,6 +636,7 @@ const procurementManagerNavGroups = [
       { name: '供应商管理', path: '/suppliers', icon: 'Building2' },
       { name: '缺料管理', path: '/shortage', icon: 'Package' },
       { name: '到货跟踪', path: '/arrivals', icon: 'Truck' },
+      { name: '齐套分析', path: '/material-analysis', icon: 'Package' },
     ],
   },
   {
@@ -639,6 +669,7 @@ const presalesNavGroups = [
     items: [
       { name: '方案中心', path: '/solutions', icon: 'FileText' },
       { name: '需求调研', path: '/requirement-survey', icon: 'ClipboardList' },
+      { name: '技术评审', path: '/technical-reviews', icon: 'FileCheck' },
       { name: '投标中心', path: '/bidding', icon: 'Target' },
     ],
   },
@@ -677,7 +708,7 @@ function filterNavItemsByRole(navGroups, role, isSuperuser = false) {
   const hasAccess = hasProcurementAccess(role, isSuperuser)
   
   // Paths that require procurement access (采购订单 and 齐套分析)
-  const procurementPaths = ['/purchases', '/materials', '/bom-analysis', '/material-analysis']
+  const procurementPaths = ['/purchases', '/materials', '/material-analysis']
   
   return navGroups.map(group => {
     // Check if group has role restrictions (e.g., system management groups)
@@ -729,14 +760,18 @@ function getNavGroupsForRole(role, isSuperuser = false) {
   switch (role) {
     case 'chairman':
     case '董事长':
-      navGroups = chairmanNavGroups
+      navGroups = getNavForRole('chairman')
       break
     case 'gm':
     case '总经理':
-      navGroups = generalManagerNavGroups
+      navGroups = getNavForRole('gm')
       break
     case 'assembler':
+    case 'assembler_mechanic':
+    case 'assembler_electrician':
     case '装配技工':
+    case '装配钳工':
+    case '装配电工':
       navGroups = assemblerNavGroups
       break
     case 'sales_director':
@@ -776,16 +811,72 @@ function getNavGroupsForRole(role, isSuperuser = false) {
     case 'ee_engineer':
     case 'sw_engineer':
     case 'te_engineer':
+    case 'rd_engineer':
+    case '机械工程师':
+    case '电气工程师':
+    case '软件工程师':
+    case '测试工程师':
+    case '研发工程师':
       navGroups = engineerNavGroups
       break
+    case 'tech_dev_manager':
+    case 'me_dept_manager':
+    case 'te_dept_manager':
+    case 'ee_dept_manager':
+    case '技术开发部经理':
+    case '机械部经理':
+    case '测试部经理':
+    case '电气部经理':
+      navGroups = getNavForRole('dept_manager')
+      break
+    case 'presales_manager':
+    case '售前经理':
+      navGroups = presalesNavGroups
+      break
+    case 'finance_manager':
+    case '财务经理':
+      navGroups = [
+        {
+          label: '财务管理',
+          items: [
+            { name: '财务工作台', path: '/finance-manager-dashboard', icon: 'LayoutDashboard' },
+            { name: '成本核算', path: '/costs', icon: 'Calculator' },
+            { name: '付款审批', path: '/payment-approval', icon: 'ClipboardCheck' },
+            { name: '项目结算', path: '/settlement', icon: 'FileText' },
+            { name: '财务报表', path: '/financial-reports', icon: 'BarChart3' },
+          ],
+        },
+        {
+          label: '监控与预警',
+          items: [
+            { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
+          ],
+        },
+        {
+          label: '个人中心',
+          items: [
+            { name: '通知中心', path: '/notifications', icon: 'Bell' },
+            { name: '个人设置', path: '/settings', icon: 'Settings' },
+          ],
+        },
+      ]
+      break
+    case 'hr_manager':
+    case '人事经理':
+      navGroups = getNavForRole('hr_manager')
+      break
     case 'pmc':
+    case 'pm':
+    case 'project_dept_manager':
+    case '项目经理':
+    case '项目部经理':
       navGroups = pmcNavGroups
       break
     case 'buyer':
       navGroups = buyerNavGroups
       break
     case 'dept_manager':
-      navGroups = deptManagerNavGroups
+      navGroups = getNavForRole('dept_manager')
       break
     case 'production_manager':
     case '生产部经理':
@@ -798,14 +889,14 @@ function getNavGroupsForRole(role, isSuperuser = false) {
         {
           label: '概览',
           items: [
-            { name: '仪表盘', path: '/', icon: 'LayoutDashboard' },
+            { name: '制造总监工作台', path: '/manufacturing-director-dashboard', icon: 'LayoutDashboard' },
             { name: '运营大屏', path: '/operation', icon: 'BarChart3' },
           ],
         },
         {
           label: '生产管理',
           items: [
-            { name: '生产工作台', path: '/production-dashboard', icon: 'LayoutDashboard' },
+            { name: '生产看板', path: '/production-dashboard', icon: 'LayoutDashboard' },
             { name: '项目看板', path: '/board', icon: 'Kanban' },
             { name: '排期看板', path: '/schedule', icon: 'Calendar' },
           ],
@@ -814,7 +905,7 @@ function getNavGroupsForRole(role, isSuperuser = false) {
           label: '运营管理',
           items: [
             { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
-            { name: '齐套分析', path: '/materials', icon: 'Package' },
+            { name: '齐套分析', path: '/material-analysis', icon: 'Package' },
             { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
             { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
           ],
@@ -832,15 +923,9 @@ function getNavGroupsForRole(role, isSuperuser = false) {
     case '客服部经理':
       navGroups = [
         {
-          label: '概览',
-          items: [
-            { name: '仪表盘', path: '/', icon: 'LayoutDashboard' },
-          ],
-        },
-        {
           label: '客服管理',
           items: [
-            { name: '工作台', path: '/customer-service-dashboard', icon: 'LayoutDashboard' },
+            { name: '客服工作台', path: '/customer-service-dashboard', icon: 'LayoutDashboard' },
             { name: '项目看板', path: '/board', icon: 'Kanban' },
             { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
             { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
@@ -900,12 +985,6 @@ function getNavGroupsForRole(role, isSuperuser = false) {
     case 'me_leader':
     case 'ee_leader':
       navGroups = [
-        {
-          label: '概览',
-          items: [
-            { name: '仪表盘', path: '/', icon: 'LayoutDashboard' },
-          ],
-        },
         {
           label: '团队管理',
           items: [

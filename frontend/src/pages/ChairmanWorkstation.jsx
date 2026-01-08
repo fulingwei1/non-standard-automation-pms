@@ -447,11 +447,7 @@ export default function ChairmanWorkstation() {
         title="董事长工作台"
         description={`年度营收目标: ${formatCurrency(mockCompanyStats.yearTarget)} | 已完成: ${formatCurrency(mockCompanyStats.totalRevenue)} (${mockCompanyStats.yearProgress.toFixed(1)}%)`}
         actions={
-          <motion.div variants={fadeIn} className="flex gap-2">
-            <Button variant="outline" className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" />
-              经营报表
-            </Button>
+          <motion.div variants={fadeIn}>
             <Button className="flex items-center gap-2">
               <Eye className="w-4 h-4" />
               战略分析
@@ -524,57 +520,15 @@ export default function ChairmanWorkstation() {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Year Progress & Strategic Metrics */}
+        {/* Left Column - Strategic Target & Operating Target */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Year Progress */}
-          <motion.div variants={fadeIn}>
-            <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Activity className="h-5 w-5 text-cyan-400" />
-                  年度经营目标进度
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-400">年度营收目标</p>
-                      <p className="text-3xl font-bold text-white mt-1">
-                        {formatCurrency(mockCompanyStats.yearTarget)}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-slate-400">已完成</p>
-                      <p className="text-3xl font-bold text-emerald-400 mt-1">
-                        {formatCurrency(mockCompanyStats.totalRevenue)}
-                      </p>
-                    </div>
-                  </div>
-                  <Progress
-                    value={mockCompanyStats.yearProgress}
-                    className="h-4 bg-slate-700/50"
-                  />
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-400">
-                      完成率: {mockCompanyStats.yearProgress.toFixed(1)}%
-                    </span>
-                    <span className="text-slate-400">
-                      剩余: {formatCurrency(mockCompanyStats.yearTarget - mockCompanyStats.totalRevenue)}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Strategic Metrics */}
+          {/* Strategic Target */}
           <motion.div variants={fadeIn}>
             <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Target className="h-5 w-5 text-purple-400" />
-                  战略指标
+                  战略目标
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -606,6 +560,48 @@ export default function ChairmanWorkstation() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Operating Target */}
+          <motion.div variants={fadeIn}>
+            <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Activity className="h-5 w-5 text-cyan-400" />
+                  经营目标
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-slate-400">年度营收目标</p>
+                      <p className="text-3xl font-bold text-white mt-1">
+                        {formatCurrency(mockCompanyStats.yearTarget)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-slate-400">已完成</p>
+                      <p className="text-3xl font-bold text-emerald-400 mt-1">
+                        {formatCurrency(mockCompanyStats.totalRevenue)}
+                      </p>
+                    </div>
+                  </div>
+                  <Progress
+                    value={mockCompanyStats.yearProgress}
+                    className="h-4 bg-slate-700/50"
+                  />
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-400">
+                      完成率: {mockCompanyStats.yearProgress.toFixed(1)}%
+                    </span>
+                    <span className="text-slate-400">
+                      剩余: {formatCurrency(mockCompanyStats.yearTarget - mockCompanyStats.totalRevenue)}
+                    </span>
+                  </div>
                 </div>
               </CardContent>
             </Card>

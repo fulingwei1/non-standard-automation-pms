@@ -606,13 +606,16 @@ export default function PurchaseOrderDetail() {
       <PageHeader
         title={po.poNumber}
         description={po.projectName}
-        action={{
-          label: '编辑',
-          icon: Edit,
-          onClick: () => {
-            // TODO: Implement edit purchase order
-          },
-        }}
+        action={
+          po.status === 'DRAFT' || po.status === 'draft' ? {
+            label: '编辑',
+            icon: Edit,
+            onClick: () => {
+              // 跳转到采购订单列表页面，并打开编辑对话框
+              navigate(`/purchase-orders?action=edit&id=${po.id}`)
+            },
+          } : null
+        }
       />
 
       {/* PO Header Info */}

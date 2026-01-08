@@ -168,3 +168,13 @@ CREATE TABLE IF NOT EXISTS project_best_practices (
 SET FOREIGN_KEY_CHECKS = 1;
 
 
+
+
+
+
+
+
+
+
+
+

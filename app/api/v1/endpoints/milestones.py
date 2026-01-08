@@ -185,6 +185,25 @@ def complete_milestone(
     if not milestone:
         raise HTTPException(status_code=404, detail="里程碑不存在")
     
+    # 验收联动：检查里程碑完成条件（交付物、验收）
+    try:
+        from app.services.progress_integration_service import ProgressIntegrationService
+        integration_service = ProgressIntegrationService(db)
+        can_complete, missing_items = integration_service.check_milestone_completion_requirements(milestone)
+        
+        if not can_complete:
+            raise HTTPException(
+                status_code=400,
+                detail=f"里程碑不满足完成条件：{', '.join(missing_items)}"
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        # 检查失败时，记录日志但允许完成（向后兼容）
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"检查里程碑完成条件失败: {str(e)}", exc_info=True)
+    
     # 更新状态为已完成
     milestone.status = "COMPLETED"
     

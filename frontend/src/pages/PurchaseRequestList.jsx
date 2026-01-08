@@ -514,7 +514,7 @@ export default function PurchaseRequestList() {
               <motion.div
                 variants={staggerContainer}
                 initial="hidden"
-                animate="show"
+                animate="visible"
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
               >
                 <AnimatePresence>

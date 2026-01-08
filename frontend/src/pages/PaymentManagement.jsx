@@ -788,14 +788,14 @@ export default function PaymentManagement() {
                 <CardTitle>回款统计</CardTitle>
               </CardHeader>
               <CardContent>
-                <PaymentStats payments={mockPayments} />
+                <PaymentStats payments={payments} />
                 
                 {/* Type breakdown */}
                 <div className="mt-6 pt-6 border-t border-white/5">
                   <h4 className="text-sm font-medium text-slate-400 mb-4">按类型分布</h4>
                   <div className="space-y-3">
                     {Object.entries(paymentTypes).map(([key, conf]) => {
-                      const typePayments = mockPayments.filter(p => p.type === key && p.status !== 'paid')
+                      const typePayments = payments.filter(p => p.type === key && p.status !== 'paid')
                       const total = typePayments.reduce((sum, p) => sum + p.amount - p.paidAmount, 0)
                       
                       return (
@@ -901,7 +901,7 @@ export default function PaymentManagement() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {mockPayments
+                {payments
                   .filter(p => p.status === 'overdue' || 
                     (p.status === 'pending' && new Date(p.dueDate) < new Date()))
                   .map(payment => (
@@ -927,7 +927,7 @@ export default function PaymentManagement() {
                       </div>
                     </div>
                   ))}
-                {mockPayments.filter(p => p.status === 'overdue').length === 0 && (
+                {payments.filter(p => p.status === 'overdue').length === 0 && (
                   <div className="text-center py-8 text-slate-500 text-sm">
                     暂无逾期账款
                   </div>
@@ -962,7 +962,7 @@ export default function PaymentManagement() {
               <label className="text-sm text-slate-400">选择回款 *</label>
               <select className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white">
                 <option value="">请选择待开票回款</option>
-                {mockPayments.filter(p => !p.invoiceNo && p.status !== 'paid').map(p => (
+                {payments.filter(p => !p.invoiceNo && p.status !== 'paid').map(p => (
                   <option key={p.id} value={p.id}>
                     {p.projectName} - {paymentTypes[p.type]?.label} - ¥{(p.amount / 10000).toFixed(1)}万
                   </option>

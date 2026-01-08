@@ -19,7 +19,9 @@ from app.models.enums import (
     LeadStatusEnum, OpportunityStageEnum, GateStatusEnum,
     QuoteStatusEnum, ContractStatusEnum, InvoiceStatusEnum,
     InvoiceTypeEnum, QuoteItemTypeEnum, DisputeStatusEnum,
-    DisputeReasonCodeEnum
+    DisputeReasonCodeEnum,
+    AssessmentSourceTypeEnum, AssessmentStatusEnum, AssessmentDecisionEnum,
+    FreezeTypeEnum, OpenItemTypeEnum, OpenItemStatusEnum, ResponsiblePartyEnum
 )
 
 
@@ -40,10 +42,25 @@ class Lead(Base, TimestampMixin):
     status = Column(String(20), default=LeadStatusEnum.NEW, comment="状态")
     next_action_at = Column(DateTime, comment="下次行动时间")
 
+    # 技术评估扩展字段
+    requirement_detail_id = Column(Integer, ForeignKey("lead_requirement_details.id"), comment="需求详情ID")
+    assessment_id = Column(Integer, ForeignKey("technical_assessments.id"), comment="技术评估ID")
+    completeness = Column(Integer, default=0, comment="完整度(0-100)")
+    assignee_id = Column(Integer, ForeignKey("users.id"), comment="被指派的售前工程师ID")
+    assessment_status = Column(String(20), comment="技术评估状态")
+
     # 关系
     owner = relationship("User", foreign_keys=[owner_id])
     opportunities = relationship("Opportunity", back_populates="lead")
     follow_ups = relationship("LeadFollowUp", back_populates="lead", cascade="all, delete-orphan")
+    requirement_detail = relationship("LeadRequirementDetail", foreign_keys=[requirement_detail_id], uselist=False)
+    assessment = relationship("TechnicalAssessment", foreign_keys=[assessment_id], uselist=False)
+    assignee = relationship("User", foreign_keys=[assignee_id])
+
+    __table_args__ = (
+        Index('idx_lead_assessment', 'assessment_id'),
+        Index('idx_lead_assignee', 'assignee_id'),
+    )
 
     def __repr__(self):
         return f"<Lead {self.lead_code}>"
@@ -101,6 +118,11 @@ class Opportunity(Base, TimestampMixin):
     gate_status = Column(String(20), default=GateStatusEnum.PENDING, comment="阶段门状态")
     gate_passed_at = Column(DateTime, comment="阶段门通过时间")
 
+    # 技术评估扩展字段
+    assessment_id = Column(Integer, ForeignKey("technical_assessments.id"), comment="技术评估ID")
+    requirement_maturity = Column(Integer, comment="需求成熟度(1-5)")
+    assessment_status = Column(String(20), comment="技术评估状态")
+
     # 关系
     lead = relationship("Lead", back_populates="opportunities")
     customer = relationship("Customer", foreign_keys=[customer_id])
@@ -108,6 +130,11 @@ class Opportunity(Base, TimestampMixin):
     requirements = relationship("OpportunityRequirement", back_populates="opportunity", cascade="all, delete-orphan")
     quotes = relationship("Quote", back_populates="opportunity")
     contracts = relationship("Contract", back_populates="opportunity")
+    assessment = relationship("TechnicalAssessment", foreign_keys=[assessment_id], uselist=False)
+
+    __table_args__ = (
+        Index('idx_opportunity_assessment', 'assessment_id'),
+    )
 
     def __repr__(self):
         return f"<Opportunity {self.opp_code}>"
@@ -178,6 +205,11 @@ class QuoteVersion(Base, TimestampMixin):
     created_by = Column(Integer, ForeignKey("users.id"), comment="创建人ID")
     approved_by = Column(Integer, ForeignKey("users.id"), comment="审批人ID")
     approved_at = Column(DateTime, comment="审批时间")
+    
+    # 成本管理扩展字段
+    cost_template_id = Column(Integer, ForeignKey("quote_cost_templates.id"), comment="使用的成本模板ID")
+    cost_breakdown_complete = Column(Boolean, default=False, comment="成本拆解是否完整")
+    margin_warning = Column(Boolean, default=False, comment="毛利率预警标志")
 
     # 关系
     quote = relationship("Quote", back_populates="versions", foreign_keys=[quote_id])
@@ -185,6 +217,9 @@ class QuoteVersion(Base, TimestampMixin):
     approver = relationship("User", foreign_keys=[approved_by])
     items = relationship("QuoteItem", back_populates="quote_version", cascade="all, delete-orphan")
     contracts = relationship("Contract", back_populates="quote_version")
+    cost_template = relationship("QuoteCostTemplate", foreign_keys=[cost_template_id])
+    cost_approvals = relationship("QuoteCostApproval", back_populates="quote_version", foreign_keys="QuoteCostApproval.quote_version_id")
+    cost_histories = relationship("QuoteCostHistory", back_populates="quote_version", foreign_keys="QuoteCostHistory.quote_version_id")
 
     def __repr__(self):
         return f"<QuoteVersion {self.quote_id}-{self.version_no}>"
@@ -204,12 +239,313 @@ class QuoteItem(Base):
     cost = Column(Numeric(12, 2), comment="成本")
     lead_time_days = Column(Integer, comment="交期(天)")
     remark = Column(Text, comment="备注")
+    
+    # 成本管理扩展字段
+    cost_category = Column(String(50), comment="成本分类")
+    cost_source = Column(String(50), comment="成本来源：TEMPLATE/MANUAL/HISTORY")
+    specification = Column(Text, comment="规格型号")
+    unit = Column(String(20), comment="单位")
 
     # 关系
     quote_version = relationship("QuoteVersion", back_populates="items")
 
     def __repr__(self):
         return f"<QuoteItem {self.id}>"
+
+
+# ==================== 报价成本管理 ====================
+
+class QuoteCostTemplate(Base, TimestampMixin):
+    """报价成本模板表"""
+    
+    __tablename__ = "quote_cost_templates"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    template_code = Column(String(50), unique=True, nullable=False, comment="模板编码")
+    template_name = Column(String(200), nullable=False, comment="模板名称")
+    template_type = Column(String(50), comment="模板类型：STANDARD/CUSTOM/PROJECT")
+    equipment_type = Column(String(50), comment="适用设备类型")
+    industry = Column(String(50), comment="适用行业")
+    
+    # 模板内容（JSON格式）
+    cost_structure = Column(JSON, comment="成本结构（分类、明细项、默认值）")
+    
+    # 统计信息
+    total_cost = Column(Numeric(12, 2), comment="模板总成本")
+    cost_categories = Column(Text, comment="成本分类（逗号分隔）")
+    
+    # 元数据
+    description = Column(Text, comment="模板说明")
+    is_active = Column(Boolean, default=True, comment="是否启用")
+    usage_count = Column(Integer, default=0, comment="使用次数")
+    created_by = Column(Integer, ForeignKey("users.id"), comment="创建人ID")
+    
+    # 关系
+    creator = relationship("User", foreign_keys=[created_by])
+    
+    __table_args__ = (
+        Index("idx_template_type", "template_type"),
+        Index("idx_equipment_type", "equipment_type"),
+        Index("idx_is_active", "is_active"),
+        {"comment": "报价成本模板表"}
+    )
+    
+    def __repr__(self):
+        return f"<QuoteCostTemplate {self.template_code}>"
+
+
+class QuoteCostApproval(Base, TimestampMixin):
+    """报价成本审批表"""
+    
+    __tablename__ = "quote_cost_approvals"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False, comment="报价ID")
+    quote_version_id = Column(Integer, ForeignKey("quote_versions.id"), nullable=False, comment="报价版本ID")
+    
+    # 审批信息
+    approval_status = Column(String(20), default="PENDING", comment="审批状态：PENDING/APPROVED/REJECTED")
+    approval_level = Column(Integer, default=1, comment="审批层级（1=销售经理，2=销售总监，3=财务）")
+    current_approver_id = Column(Integer, ForeignKey("users.id"), comment="当前审批人ID")
+    
+    # 成本检查结果
+    total_price = Column(Numeric(12, 2), comment="总价")
+    total_cost = Column(Numeric(12, 2), comment="总成本")
+    gross_margin = Column(Numeric(5, 2), comment="毛利率")
+    margin_threshold = Column(Numeric(5, 2), default=20.00, comment="毛利率阈值")
+    margin_status = Column(String(20), comment="毛利率状态：PASS/WARNING/FAIL")
+    
+    # 检查项
+    cost_complete = Column(Boolean, default=False, comment="成本拆解是否完整")
+    delivery_check = Column(Boolean, default=False, comment="交期校验是否通过")
+    risk_terms_check = Column(Boolean, default=False, comment="风险条款是否检查")
+    
+    # 审批记录
+    approval_comment = Column(Text, comment="审批意见")
+    approved_by = Column(Integer, ForeignKey("users.id"), comment="审批人ID")
+    approved_at = Column(DateTime, comment="审批时间")
+    rejected_reason = Column(Text, comment="驳回原因")
+    
+    # 关系
+    quote = relationship("Quote", foreign_keys=[quote_id])
+    quote_version = relationship("QuoteVersion", foreign_keys=[quote_version_id])
+    current_approver = relationship("User", foreign_keys=[current_approver_id])
+    approver = relationship("User", foreign_keys=[approved_by])
+    
+    __table_args__ = (
+        Index("idx_quote_id", "quote_id"),
+        Index("idx_approval_status", "approval_status"),
+        {"comment": "报价成本审批表"}
+    )
+    
+    def __repr__(self):
+        return f"<QuoteCostApproval {self.quote_id}-{self.approval_level}>"
+
+
+class QuoteCostHistory(Base):
+    """报价成本历史记录表"""
+    
+    __tablename__ = "quote_cost_histories"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False, comment="报价ID")
+    quote_version_id = Column(Integer, ForeignKey("quote_versions.id"), nullable=False, comment="报价版本ID")
+    
+    # 成本快照
+    total_price = Column(Numeric(12, 2), comment="总价")
+    total_cost = Column(Numeric(12, 2), comment="总成本")
+    gross_margin = Column(Numeric(5, 2), comment="毛利率")
+    
+    # 成本明细快照（JSON）
+    cost_breakdown = Column(JSON, comment="成本拆解明细")
+    
+    # 变更信息
+    change_type = Column(String(50), comment="变更类型：CREATE/UPDATE/DELETE/APPROVE")
+    change_reason = Column(Text, comment="变更原因")
+    changed_by = Column(Integer, ForeignKey("users.id"), comment="变更人ID")
+    
+    created_at = Column(DateTime, default=datetime.now, nullable=False, comment="创建时间")
+    
+    # 关系
+    quote = relationship("Quote", foreign_keys=[quote_id])
+    quote_version = relationship("QuoteVersion", foreign_keys=[quote_version_id])
+    changer = relationship("User", foreign_keys=[changed_by])
+    
+    __table_args__ = (
+        Index("idx_quote_id", "quote_id"),
+        Index("idx_created_at", "created_at"),
+        {"comment": "报价成本历史记录表"}
+    )
+    
+    def __repr__(self):
+        return f"<QuoteCostHistory {self.quote_id}-{self.change_type}>"
+
+
+class CpqRuleSet(Base, TimestampMixin):
+    """CPQ 规则集"""
+
+    __tablename__ = "cpq_rule_sets"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    rule_code = Column(String(50), unique=True, nullable=False, comment="规则集编码")
+    rule_name = Column(String(200), nullable=False, comment="规则集名称")
+    description = Column(Text, comment="描述")
+    status = Column(String(20), default="ACTIVE", comment="状态")
+    base_price = Column(Numeric(14, 2), default=0, comment="基准价格")
+    currency = Column(String(10), default="CNY", comment="币种")
+    config_schema = Column(JSON, comment="配置项定义")
+    pricing_matrix = Column(JSON, comment="价格矩阵")
+    approval_threshold = Column(JSON, comment="审批阈值配置")
+    visibility_scope = Column(String(30), default="ALL", comment="可见范围")
+    is_default = Column(Boolean, default=False, comment="是否默认")
+    owner_role = Column(String(50), comment="负责角色")
+
+    # 关系
+    quote_template_versions = relationship("QuoteTemplateVersion", back_populates="rule_set")
+
+    __table_args__ = (
+        Index("idx_cpq_rule_set_status", "status"),
+        Index("idx_cpq_rule_set_default", "is_default"),
+    )
+
+    def __repr__(self):
+        return f"<CpqRuleSet {self.rule_code}>"
+
+
+class QuoteTemplate(Base, TimestampMixin):
+    """报价模板"""
+
+    __tablename__ = "quote_templates"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    template_code = Column(String(50), unique=True, nullable=False, comment="模板编码")
+    template_name = Column(String(200), nullable=False, comment="模板名称")
+    category = Column(String(50), comment="模板分类")
+    description = Column(Text, comment="描述")
+    status = Column(String(20), default="DRAFT", comment="状态")
+    visibility_scope = Column(String(30), default="TEAM", comment="可见范围")
+    is_default = Column(Boolean, default=False, comment="是否默认模板")
+    current_version_id = Column(Integer, ForeignKey("quote_template_versions.id"), comment="当前版本ID")
+    owner_id = Column(Integer, ForeignKey("users.id"), comment="负责人ID")
+
+    # 关系
+    versions = relationship(
+        "QuoteTemplateVersion",
+        back_populates="template",
+        cascade="all, delete-orphan",
+        foreign_keys="QuoteTemplateVersion.template_id",
+    )
+    current_version = relationship("QuoteTemplateVersion", foreign_keys=[current_version_id], post_update=True, uselist=False)
+    owner = relationship("User", foreign_keys=[owner_id])
+
+    __table_args__ = (
+        Index("idx_quote_template_status", "status"),
+        Index("idx_quote_template_scope", "visibility_scope"),
+    )
+
+    def __repr__(self):
+        return f"<QuoteTemplate {self.template_code}>"
+
+
+class QuoteTemplateVersion(Base, TimestampMixin):
+    """报价模板版本"""
+
+    __tablename__ = "quote_template_versions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    template_id = Column(Integer, ForeignKey("quote_templates.id"), nullable=False, comment="模板ID")
+    version_no = Column(String(20), nullable=False, comment="版本号")
+    status = Column(String(20), default="DRAFT", comment="状态")
+    sections = Column(JSON, comment="模板结构配置")
+    pricing_rules = Column(JSON, comment="价格规则")
+    config_schema = Column(JSON, comment="配置项定义")
+    discount_rules = Column(JSON, comment="折扣规则")
+    release_notes = Column(Text, comment="版本说明")
+    rule_set_id = Column(Integer, ForeignKey("cpq_rule_sets.id"), comment="关联规则集")
+    created_by = Column(Integer, ForeignKey("users.id"), comment="创建人")
+    published_by = Column(Integer, ForeignKey("users.id"), comment="发布人")
+    published_at = Column(DateTime, comment="发布时间")
+
+    # 关系
+    template = relationship("QuoteTemplate", back_populates="versions", foreign_keys=[template_id])
+    rule_set = relationship("CpqRuleSet", back_populates="quote_template_versions")
+    creator = relationship("User", foreign_keys=[created_by], backref="quote_template_versions_created")
+    publisher = relationship("User", foreign_keys=[published_by], backref="quote_template_versions_published")
+
+    __table_args__ = (
+        Index("idx_quote_template_version_template", "template_id"),
+        Index("idx_quote_template_version_status", "status"),
+    )
+
+    def __repr__(self):
+        return f"<QuoteTemplateVersion {self.template_id}-{self.version_no}>"
+
+
+class ContractTemplate(Base, TimestampMixin):
+    """合同模板"""
+
+    __tablename__ = "contract_templates"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    template_code = Column(String(50), unique=True, nullable=False, comment="模板编码")
+    template_name = Column(String(200), nullable=False, comment="模板名称")
+    contract_type = Column(String(50), comment="合同类型")
+    description = Column(Text, comment="描述")
+    status = Column(String(20), default="DRAFT", comment="状态")
+    visibility_scope = Column(String(30), default="TEAM", comment="可见范围")
+    is_default = Column(Boolean, default=False, comment="是否默认模板")
+    current_version_id = Column(Integer, ForeignKey("contract_template_versions.id"), comment="当前版本ID")
+    owner_id = Column(Integer, ForeignKey("users.id"), comment="负责人ID")
+
+    # 关系
+    versions = relationship(
+        "ContractTemplateVersion",
+        back_populates="template",
+        cascade="all, delete-orphan",
+        foreign_keys="ContractTemplateVersion.template_id",
+    )
+    current_version = relationship("ContractTemplateVersion", foreign_keys=[current_version_id], post_update=True, uselist=False)
+    owner = relationship("User", foreign_keys=[owner_id])
+
+    __table_args__ = (
+        Index("idx_contract_template_status", "status"),
+        Index("idx_contract_template_scope", "visibility_scope"),
+    )
+
+    def __repr__(self):
+        return f"<ContractTemplate {self.template_code}>"
+
+
+class ContractTemplateVersion(Base, TimestampMixin):
+    """合同模板版本"""
+
+    __tablename__ = "contract_template_versions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    template_id = Column(Integer, ForeignKey("contract_templates.id"), nullable=False, comment="模板ID")
+    version_no = Column(String(20), nullable=False, comment="版本号")
+    status = Column(String(20), default="DRAFT", comment="状态")
+    clause_sections = Column(JSON, comment="条款结构")
+    clause_library = Column(JSON, comment="条款库引用")
+    attachment_refs = Column(JSON, comment="附件引用")
+    approval_flow = Column(JSON, comment="审批流配置")
+    release_notes = Column(Text, comment="版本说明")
+    created_by = Column(Integer, ForeignKey("users.id"), comment="创建人")
+    published_by = Column(Integer, ForeignKey("users.id"), comment="发布人")
+    published_at = Column(DateTime, comment="发布时间")
+
+    # 关系
+    template = relationship("ContractTemplate", back_populates="versions", foreign_keys=[template_id])
+    creator = relationship("User", foreign_keys=[created_by], backref="contract_template_versions_created")
+    publisher = relationship("User", foreign_keys=[published_by], backref="contract_template_versions_published")
+
+    __table_args__ = (
+        Index("idx_contract_template_version_template", "template_id"),
+        Index("idx_contract_template_version_status", "status"),
+    )
+
+    def __repr__(self):
+        return f"<ContractTemplateVersion {self.template_id}-{self.version_no}>"
 
 
 class Contract(Base, TimestampMixin):
@@ -490,3 +826,290 @@ class InvoiceApproval(Base, TimestampMixin):
     def __repr__(self):
         return f"<InvoiceApproval {self.invoice_id}-L{self.approval_level}>"
 
+
+# ==================== 技术评估相关 ====================
+
+class TechnicalAssessment(Base, TimestampMixin):
+    """技术评估结果表"""
+    
+    __tablename__ = "technical_assessments"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    
+    # 关联来源（支持线索和商机）
+    source_type = Column(String(20), nullable=False, comment="来源类型：LEAD/OPPORTUNITY")
+    source_id = Column(Integer, nullable=False, comment="来源ID（Lead.id 或 Opportunity.id）")
+    
+    # 评估信息
+    evaluator_id = Column(Integer, ForeignKey("users.id"), comment="评估人ID（技术工程师）")
+    status = Column(String(20), default=AssessmentStatusEnum.PENDING, comment="评估状态")
+    
+    # 评分结果
+    total_score = Column(Integer, comment="总分")
+    dimension_scores = Column(Text, comment="五维分数详情(JSON)")
+    veto_triggered = Column(Boolean, default=False, comment="是否触发一票否决")
+    veto_rules = Column(Text, comment="触发的否决规则(JSON)")
+    
+    # 决策建议
+    decision = Column(String(30), comment="决策建议：推荐立项/有条件立项/暂缓/不建议立项")
+    risks = Column(Text, comment="风险列表(JSON)")
+    similar_cases = Column(Text, comment="相似失败案例(JSON)")
+    ai_analysis = Column(Text, comment="AI分析报告")
+    conditions = Column(Text, comment="立项条件(JSON)")
+    
+    # 评估时间
+    evaluated_at = Column(DateTime, comment="评估完成时间")
+    
+    # 关系
+    evaluator = relationship("User", foreign_keys=[evaluator_id])
+    
+    __table_args__ = (
+        Index('idx_assessment_source', 'source_type', 'source_id'),
+        Index('idx_assessment_status', 'status'),
+        Index('idx_assessment_evaluator', 'evaluator_id'),
+        Index('idx_assessment_decision', 'decision'),
+    )
+    
+    def __repr__(self):
+        return f"<TechnicalAssessment {self.id}>"
+
+
+class ScoringRule(Base, TimestampMixin):
+    """评分规则配置表"""
+    
+    __tablename__ = "scoring_rules"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    version = Column(String(20), unique=True, nullable=False, comment="版本号")
+    rules_json = Column(Text, nullable=False, comment="完整规则配置(JSON)")
+    is_active = Column(Boolean, default=False, comment="是否启用")
+    description = Column(Text, comment="描述")
+    created_by = Column(Integer, ForeignKey("users.id"), comment="创建人ID")
+    
+    # 关系
+    creator = relationship("User", foreign_keys=[created_by])
+    
+    __table_args__ = (
+        Index('idx_scoring_rule_active', 'is_active'),
+        Index('idx_scoring_rule_version', 'version'),
+    )
+    
+    def __repr__(self):
+        return f"<ScoringRule {self.version}>"
+
+
+class FailureCase(Base, TimestampMixin):
+    """失败案例库表"""
+    
+    __tablename__ = "failure_cases"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    case_code = Column(String(50), unique=True, nullable=False, comment="案例编号")
+    project_name = Column(String(200), nullable=False, comment="项目名称")
+    industry = Column(String(50), nullable=False, comment="行业")
+    product_types = Column(Text, comment="产品类型(JSON Array)")
+    processes = Column(Text, comment="工序/测试类型(JSON Array)")
+    takt_time_s = Column(Integer, comment="节拍时间(秒)")
+    annual_volume = Column(Integer, comment="年产量")
+    budget_status = Column(String(50), comment="预算状态")
+    customer_project_status = Column(String(50), comment="客户项目状态")
+    spec_status = Column(String(50), comment="规范状态")
+    price_sensitivity = Column(String(50), comment="价格敏感度")
+    delivery_months = Column(Integer, comment="交付周期(月)")
+    
+    failure_tags = Column(Text, nullable=False, comment="失败标签(JSON Array)")
+    core_failure_reason = Column(Text, nullable=False, comment="核心失败原因")
+    early_warning_signals = Column(Text, nullable=False, comment="预警信号(JSON Array)")
+    final_result = Column(String(100), comment="最终结果")
+    lesson_learned = Column(Text, nullable=False, comment="教训总结")
+    keywords = Column(Text, nullable=False, comment="关键词(JSON Array)")
+    
+    created_by = Column(Integer, ForeignKey("users.id"), comment="创建人ID")
+    
+    # 关系
+    creator = relationship("User", foreign_keys=[created_by])
+    
+    __table_args__ = (
+        Index('idx_failure_case_industry', 'industry'),
+        Index('idx_failure_case_code', 'case_code'),
+    )
+    
+    def __repr__(self):
+        return f"<FailureCase {self.case_code}>"
+
+
+class LeadRequirementDetail(Base, TimestampMixin):
+    """线索需求详情表"""
+    
+    __tablename__ = "lead_requirement_details"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    lead_id = Column(Integer, ForeignKey("leads.id"), nullable=False, comment="线索ID")
+    
+    # 基础信息扩展
+    customer_factory_location = Column(String(200), comment="客户工厂/地点")
+    target_object_type = Column(String(100), comment="被测对象类型")
+    application_scenario = Column(String(100), comment="应用场景")
+    delivery_mode = Column(String(100), comment="计划交付模式")
+    expected_delivery_date = Column(DateTime, comment="期望交付日期")
+    requirement_source = Column(String(100), comment="需求来源")
+    participant_ids = Column(Text, comment="参与人员(JSON Array)")
+    
+    # 需求成熟度与关键约束
+    requirement_maturity = Column(Integer, comment="需求成熟度(1-5级)")
+    has_sow = Column(Boolean, comment="是否有客户SOW/URS")
+    has_interface_doc = Column(Boolean, comment="是否有接口协议文档")
+    has_drawing_doc = Column(Boolean, comment="是否有图纸/原理/IO清单")
+    sample_availability = Column(Text, comment="样品可提供情况(JSON)")
+    customer_support_resources = Column(Text, comment="客户配合资源(JSON)")
+    key_risk_factors = Column(Text, comment="关键风险初判(JSON Array)")
+    veto_triggered = Column(Boolean, default=False, comment="一票否决触发")
+    veto_reason = Column(Text, comment="一票否决原因")
+    
+    # 产线与节拍/产能
+    target_capacity_uph = Column(Numeric(10, 2), comment="目标产能(UPH)")
+    target_capacity_daily = Column(Numeric(10, 2), comment="目标产能(日)")
+    target_capacity_shift = Column(Numeric(10, 2), comment="目标产能(班)")
+    cycle_time_seconds = Column(Numeric(10, 2), comment="节拍要求(CT秒)")
+    workstation_count = Column(Integer, comment="工位数/并行数")
+    changeover_method = Column(String(100), comment="换型方式")
+    yield_target = Column(Numeric(5, 2), comment="良率目标")
+    retest_allowed = Column(Boolean, comment="是否允许复测")
+    retest_max_count = Column(Integer, comment="复测次数")
+    traceability_type = Column(String(50), comment="追溯要求")
+    data_retention_period = Column(Integer, comment="数据保留期限(天)")
+    data_format = Column(String(100), comment="数据格式")
+    
+    # 测试范围与验收口径
+    test_scope = Column(Text, comment="测试范围(JSON Array)")
+    key_metrics_spec = Column(Text, comment="关键指标口径(JSON)")
+    coverage_boundary = Column(Text, comment="覆盖边界(JSON)")
+    exception_handling = Column(Text, comment="允许的异常处理(JSON)")
+    acceptance_method = Column(String(100), comment="验收方式")
+    acceptance_basis = Column(Text, comment="验收依据")
+    delivery_checklist = Column(Text, comment="验收交付物清单(JSON Array)")
+    
+    # 接口与I/O
+    interface_types = Column(Text, comment="被测对象接口类型(JSON Array)")
+    io_point_estimate = Column(Text, comment="IO点数估算(JSON)")
+    communication_protocols = Column(Text, comment="通讯协议(JSON Array)")
+    upper_system_integration = Column(Text, comment="与上位系统对接(JSON)")
+    data_field_list = Column(Text, comment="数据字段清单(JSON Array)")
+    it_security_restrictions = Column(Text, comment="IT安全/网络限制(JSON)")
+    
+    # 现场条件与EHS
+    power_supply = Column(Text, comment="供电(JSON)")
+    air_supply = Column(Text, comment="气源(JSON)")
+    environment = Column(Text, comment="环境(JSON)")
+    safety_requirements = Column(Text, comment="安全要求(JSON)")
+    space_and_logistics = Column(Text, comment="占地与物流(JSON)")
+    customer_site_standards = Column(Text, comment="客户现场规范(JSON)")
+    
+    # 关键物料与供应链约束
+    customer_supplied_materials = Column(Text, comment="客供物料清单(JSON Array)")
+    restricted_brands = Column(Text, comment="禁用品牌(JSON Array)")
+    specified_brands = Column(Text, comment="指定品牌(JSON Array)")
+    long_lead_items = Column(Text, comment="长周期件提示(JSON Array)")
+    spare_parts_requirement = Column(Text, comment="备品备件要求(JSON)")
+    after_sales_support = Column(Text, comment="售后支持要求(JSON)")
+    
+    # 版本与冻结
+    requirement_version = Column(String(50), comment="需求包版本号")
+    is_frozen = Column(Boolean, default=False, comment="是否冻结")
+    frozen_at = Column(DateTime, comment="冻结时间")
+    frozen_by = Column(Integer, ForeignKey("users.id"), comment="冻结人ID")
+    
+    # 关系
+    lead = relationship("Lead", foreign_keys=[lead_id])
+    frozen_by_user = relationship("User", foreign_keys=[frozen_by])
+    
+    __table_args__ = (
+        Index('idx_requirement_detail_lead', 'lead_id'),
+        Index('idx_requirement_detail_frozen', 'is_frozen'),
+    )
+    
+    def __repr__(self):
+        return f"<LeadRequirementDetail {self.id}>"
+
+
+class RequirementFreeze(Base, TimestampMixin):
+    """需求冻结记录表"""
+    
+    __tablename__ = "requirement_freezes"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    source_type = Column(String(20), nullable=False, comment="来源类型：LEAD/OPPORTUNITY")
+    source_id = Column(Integer, nullable=False, comment="来源ID")
+    freeze_type = Column(String(50), nullable=False, comment="冻结点类型")
+    freeze_time = Column(DateTime, default=datetime.now, comment="冻结时间")
+    frozen_by = Column(Integer, ForeignKey("users.id"), nullable=False, comment="冻结人ID")
+    version_number = Column(String(50), nullable=False, comment="冻结版本号")
+    requires_ecr = Column(Boolean, default=True, comment="冻结后变更是否必须走ECR/ECN")
+    description = Column(Text, comment="冻结说明")
+    
+    # 关系
+    frozen_by_user = relationship("User", foreign_keys=[frozen_by])
+    
+    __table_args__ = (
+        Index('idx_requirement_freeze_source', 'source_type', 'source_id'),
+        Index('idx_requirement_freeze_type', 'freeze_type'),
+        Index('idx_requirement_freeze_time', 'freeze_time'),
+    )
+    
+    def __repr__(self):
+        return f"<RequirementFreeze {self.id}>"
+
+
+class OpenItem(Base, TimestampMixin):
+    """未决事项表"""
+    
+    __tablename__ = "open_items"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    source_type = Column(String(20), nullable=False, comment="来源类型：LEAD/OPPORTUNITY")
+    source_id = Column(Integer, nullable=False, comment="来源ID")
+    item_code = Column(String(50), unique=True, nullable=False, comment="未决事项编号")
+    item_type = Column(String(50), nullable=False, comment="问题类型")
+    description = Column(Text, nullable=False, comment="问题描述")
+    responsible_party = Column(String(50), nullable=False, comment="责任方")
+    responsible_person_id = Column(Integer, ForeignKey("users.id"), comment="责任人ID")
+    due_date = Column(DateTime, comment="截止日期")
+    status = Column(String(20), default=OpenItemStatusEnum.PENDING, comment="当前状态")
+    close_evidence = Column(Text, comment="关闭证据(附件/链接/记录)")
+    blocks_quotation = Column(Boolean, default=False, comment="是否阻塞报价")
+    closed_at = Column(DateTime, comment="关闭时间")
+    
+    # 关系
+    responsible_person = relationship("User", foreign_keys=[responsible_person_id])
+    
+    __table_args__ = (
+        Index('idx_open_item_source', 'source_type', 'source_id'),
+        Index('idx_open_item_status', 'status'),
+        Index('idx_open_item_type', 'item_type'),
+        Index('idx_open_item_blocks', 'blocks_quotation'),
+        Index('idx_open_item_due_date', 'due_date'),
+    )
+    
+    def __repr__(self):
+        return f"<OpenItem {self.item_code}>"
+
+
+class AIClarification(Base, TimestampMixin):
+    """AI澄清记录表"""
+    
+    __tablename__ = "ai_clarifications"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    source_type = Column(String(20), nullable=False, comment="来源类型：LEAD/OPPORTUNITY")
+    source_id = Column(Integer, nullable=False, comment="来源ID")
+    round = Column(Integer, nullable=False, comment="澄清轮次")
+    questions = Column(Text, nullable=False, comment="AI生成的问题(JSON Array)")
+    answers = Column(Text, comment="用户回答(JSON Array)")
+    
+    __table_args__ = (
+        Index('idx_ai_clarification_source', 'source_type', 'source_id'),
+        Index('idx_ai_clarification_round', 'round'),
+    )
+    
+    def __repr__(self):
+        return f"<AIClarification {self.id}>"

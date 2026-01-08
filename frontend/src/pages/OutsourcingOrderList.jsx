@@ -188,7 +188,7 @@ export default function OutsourcingOrderList() {
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部项目</SelectItem>
+                <SelectItem value="all">全部项目</SelectItem>
                 {projects.map((proj) => (
                   <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
@@ -201,7 +201,7 @@ export default function OutsourcingOrderList() {
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部状态</SelectItem>
+                <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(statusConfigs).map(([key, config]) => (
                   <SelectItem key={key} value={key}>
                     {config.label}
@@ -322,7 +322,7 @@ export default function OutsourcingOrderList() {
                       <SelectValue placeholder="选择项目" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">无</SelectItem>
+                      <SelectItem value="none">无</SelectItem>
                       {projects.map((proj) => (
                         <SelectItem key={proj.id} value={proj.id.toString()}>
                           {proj.project_name}

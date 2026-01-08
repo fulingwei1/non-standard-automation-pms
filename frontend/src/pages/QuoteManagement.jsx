@@ -24,6 +24,7 @@ import {
   Copy,
   Percent,
   X,
+  Layers,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -51,9 +52,9 @@ import {
   TabsList,
   TabsTrigger,
 } from '../components/ui'
-import { cn } from '../lib/utils'
+import { cn, formatDate } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
-import { quoteApi, opportunityApi, customerApi } from '../services/api'
+import { quoteApi, opportunityApi, customerApi, salesTemplateApi } from '../services/api'
 
 // 报价状态配置
 const statusConfig = {
@@ -117,6 +118,11 @@ export default function QuoteManagement() {
     lead_time_days: '',
     remark: '',
   })
+  const [quoteTemplates, setQuoteTemplates] = useState([])
+  const [selectedTemplateId, setSelectedTemplateId] = useState('')
+  const [selectedTemplateVersionId, setSelectedTemplateVersionId] = useState('')
+  const [templatePreview, setTemplatePreview] = useState(null)
+  const [templateLoading, setTemplateLoading] = useState(false)
 
   const loadQuotes = async () => {
     setLoading(true)
@@ -161,6 +167,106 @@ export default function QuoteManagement() {
     }
   }
 
+  const loadQuoteTemplates = async () => {
+    try {
+      const response = await salesTemplateApi.listQuoteTemplates({ page: 1, page_size: 100 })
+      if (response.data && response.data.items) {
+        setQuoteTemplates(response.data.items)
+      } else if (response.items) {
+        setQuoteTemplates(response.items)
+      }
+    } catch (error) {
+      console.error('加载报价模板失败:', error)
+    }
+  }
+
+  const handleApplyTemplate = async (templateId, versionId) => {
+    if (!templateId) return
+    setTemplateLoading(true)
+    try {
+      const payload = {
+        template_version_id: versionId || undefined,
+        selections: {},
+      }
+      const response = await salesTemplateApi.applyQuoteTemplate(templateId, payload)
+      const preview = response.data || response
+      setTemplatePreview(preview)
+      setFormData(prev => ({
+        ...prev,
+        version: {
+          ...prev.version,
+          version_no: preview?.version?.version_no || prev.version.version_no,
+          risk_terms: preview?.version?.sections
+            ? JSON.stringify(preview.version.sections, null, 2)
+            : prev.version.risk_terms,
+          total_price: preview?.cpq_preview?.final_price ?? prev.version.total_price,
+        },
+      }))
+    } catch (error) {
+      console.error('应用报价模板失败:', error)
+      alert('应用模板失败: ' + (error.response?.data?.detail || error.message))
+    } finally {
+      setTemplateLoading(false)
+    }
+  }
+
+  const handleTemplateSelection = (value) => {
+    setSelectedTemplateId(value)
+    const template = quoteTemplates.find(t => String(t.id) === value)
+    const defaultVersion = template?.versions?.[0]
+    const versionId = defaultVersion ? String(defaultVersion.id) : ''
+    setSelectedTemplateVersionId(versionId)
+    if (template) {
+      handleApplyTemplate(template.id, defaultVersion?.id)
+    } else {
+      setTemplatePreview(null)
+    }
+  }
+
+  const handleTemplateVersionSelection = (value) => {
+    setSelectedTemplateVersionId(value)
+    const template = quoteTemplates.find(t => String(t.id) === selectedTemplateId)
+    const version = template?.versions?.find(v => String(v.id) === value)
+    if (template && version) {
+      handleApplyTemplate(template.id, version.id)
+    }
+  }
+
+  const renderDiffSummary = (diff) => {
+    if (!diff) {
+      return <div className="text-slate-500">无差异</div>
+    }
+    const sections = [
+      { key: 'sections', label: '结构' },
+      { key: 'pricing_rules', label: '定价' },
+    ]
+    const hasChanges = sections.some(({ key }) => {
+      const block = diff[key]
+      return block && ((block.added?.length || 0) + (block.removed?.length || 0) + (block.changed?.length || 0) > 0)
+    })
+    if (!hasChanges) {
+      return <div className="text-slate-500">与上一版本一致</div>
+    }
+    return (
+      <div className="space-y-1">
+        {sections.map(({ key, label }) => {
+          const block = diff[key]
+          if (!block) return null
+          const changes = (block.added || []).length + (block.removed || []).length + (block.changed || []).length
+          if (!changes) return null
+          return (
+            <div key={key} className="bg-slate-800 rounded px-2 py-1">
+              <div className="text-slate-300">{label}</div>
+              <div className="text-slate-400">
+                +{block.added?.length || 0} / -{block.removed?.length || 0} / Δ{block.changed?.length || 0}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
   useEffect(() => {
     loadQuotes()
   }, [page, searchTerm, statusFilter])
@@ -168,7 +274,16 @@ export default function QuoteManagement() {
   useEffect(() => {
     loadOpportunities()
     loadCustomers()
+    loadQuoteTemplates()
   }, [])
+
+  useEffect(() => {
+    if (!showCreateDialog) {
+      setTemplatePreview(null)
+      setSelectedTemplateId('')
+      setSelectedTemplateVersionId('')
+    }
+  }, [showCreateDialog])
 
   const handleCreate = async () => {
     try {
@@ -380,7 +495,7 @@ export default function QuoteManagement() {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="show"
+      animate="visible"
       className="space-y-6 p-6"
     >
       <PageHeader
@@ -684,6 +799,106 @@ export default function QuoteManagement() {
               </div>
             </TabsContent>
             <TabsContent value="version" className="space-y-4">
+              <div className="border border-slate-700 rounded-md p-4 bg-slate-900 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="font-semibold">模板驱动</Label>
+                    <p className="text-xs text-slate-400">选择模板以复制条款、同步 CPQ 预测并查看版本差异</p>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => window.open('/sales/templates', '_blank')}>
+                    <Layers className="w-4 h-4 mr-1" />
+                    模板中心
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <Label>报价模板</Label>
+                    <select
+                      value={selectedTemplateId}
+                      onChange={(e) => handleTemplateSelection(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white"
+                    >
+                      <option value="">不使用模板</option>
+                      {quoteTemplates.map((template) => (
+                        <option key={template.id} value={template.id}>
+                          {template.template_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {selectedTemplateId && (
+                    <div>
+                      <Label>模板版本</Label>
+                      <select
+                        value={selectedTemplateVersionId}
+                        onChange={(e) => handleTemplateVersionSelection(e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white"
+                      >
+                        {(quoteTemplates.find(t => String(t.id) === selectedTemplateId)?.versions || []).map(
+                          (version) => (
+                            <option key={version.id} value={version.id}>
+                              {version.version_no} · {version.status}
+                            </option>
+                          )
+                        )}
+                      </select>
+                    </div>
+                  )}
+                </div>
+                {templateLoading && (
+                  <p className="text-xs text-slate-400">模板应用中...</p>
+                )}
+                {templatePreview?.cpq_preview && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <div className="text-slate-400">基础价格</div>
+                      <div className="text-lg font-semibold text-white">
+                        {templatePreview.cpq_preview.base_price}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-slate-400">调价合计</div>
+                      <div className="text-lg font-semibold text-blue-300">
+                        {templatePreview.cpq_preview.adjustment_total}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-slate-400">预测报价</div>
+                      <div className="text-lg font-semibold text-emerald-300">
+                        {templatePreview.cpq_preview.final_price}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {templatePreview?.version_diff && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <div className="text-slate-400 mb-1">版本差异</div>
+                      {renderDiffSummary(templatePreview.version_diff)}
+                    </div>
+                    <div>
+                      <div className="text-slate-400 mb-1">审批 / 发布记录</div>
+                      <div className="space-y-1">
+                        {(templatePreview.approval_history || []).slice(0, 4).map((record) => (
+                          <div
+                            key={record.version_id}
+                            className="flex items-center justify-between bg-slate-800 rounded px-2 py-1"
+                          >
+                            <span>{record.version_no}</span>
+                            <span className="text-slate-400">
+                              {record.status}{' '}
+                              {record.published_at ? formatDate(record.published_at) : ''}
+                            </span>
+                          </div>
+                        ))}
+                        {(templatePreview.approval_history || []).length === 0 && (
+                          <div className="text-slate-500">暂无记录</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>版本号 *</Label>

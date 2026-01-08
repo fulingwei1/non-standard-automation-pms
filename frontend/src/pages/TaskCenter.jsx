@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ListTodo,
@@ -22,6 +23,9 @@ import {
   Zap,
   Wrench,
   Package,
+  DollarSign,
+  Award,
+  FileText,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -710,6 +714,8 @@ function TaskCard({ task, onStatusChange }) {
 }
 
 export default function TaskCenter() {
+  const navigate = useNavigate()
+  
   // Get current user role
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
   const role = currentUser?.role || 'admin'
@@ -933,7 +939,7 @@ export default function TaskCenter() {
       <motion.div
         variants={staggerContainer}
         initial="hidden"
-        animate="show"
+        animate="visible"
         className="space-y-6"
       >
         <PageHeader
@@ -1017,7 +1023,7 @@ export default function TaskCenter() {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="show"
+      animate="visible"
       className="space-y-6"
     >
       <PageHeader
@@ -1054,6 +1060,62 @@ export default function TaskCenter() {
             </CardContent>
           </Card>
         ))}
+      </motion.div>
+
+      {/* 个人事务 */}
+      <motion.div variants={fadeIn}>
+        <Card className="bg-surface-1/50">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <User className="w-5 h-5 text-accent" />
+              个人事务
+            </CardTitle>
+            <CardDescription>查看和管理您的个人相关信息</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button
+                variant="outline"
+                className="h-auto p-4 flex flex-col items-start gap-2 hover:bg-surface-2/50 transition-colors"
+                onClick={() => navigate('/personal/my-bonus')}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <DollarSign className="w-5 h-5 text-emerald-400" />
+                  <span className="font-medium">我的奖金</span>
+                </div>
+                <p className="text-xs text-slate-400 text-left">
+                  查看奖金计算记录、发放记录和统计信息
+                </p>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-auto p-4 flex flex-col items-start gap-2 hover:bg-surface-2/50 transition-colors"
+                onClick={() => navigate('/personal/my-performance')}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <Award className="w-5 h-5 text-blue-400" />
+                  <span className="font-medium">我的绩效</span>
+                </div>
+                <p className="text-xs text-slate-400 text-left">
+                  查看绩效评估结果和排名情况
+                </p>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-auto p-4 flex flex-col items-start gap-2 hover:bg-surface-2/50 transition-colors"
+                onClick={() => navigate('/personal/monthly-summary')}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <FileText className="w-5 h-5 text-purple-400" />
+                  <span className="font-medium">月度总结</span>
+                </div>
+                <p className="text-xs text-slate-400 text-left">
+                  查看和编辑月度工作总结
+                </p>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </motion.div>
 
       {/* Filters */}

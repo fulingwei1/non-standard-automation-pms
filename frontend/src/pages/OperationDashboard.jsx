@@ -248,7 +248,7 @@ export default function OperationDashboard() {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="show"
+      animate="visible"
       className="space-y-6"
     >
       <PageHeader

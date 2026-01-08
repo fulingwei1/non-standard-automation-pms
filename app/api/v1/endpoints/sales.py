@@ -8,8 +8,8 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import desc, or_, func
+from sqlalchemy.orm import Session, joinedload, aliased
+from sqlalchemy import desc, or_, and_, func
 
 from app.api import deps
 from app.core.config import settings
@@ -18,8 +18,13 @@ from app.models.user import User
 from app.models.project import Customer, Project, ProjectMilestone, ProjectPaymentPlan
 from app.models.sales import (
     Lead, LeadFollowUp, Opportunity, OpportunityRequirement, Quote, QuoteVersion, QuoteItem,
+    QuoteCostTemplate, QuoteCostApproval, QuoteCostHistory,
     Contract, ContractDeliverable, ContractAmendment, Invoice, ReceivableDispute,
-    QuoteApproval, ContractApproval, InvoiceApproval
+    QuoteApproval, ContractApproval, InvoiceApproval,
+    CpqRuleSet, QuoteTemplate, QuoteTemplateVersion,
+    ContractTemplate, ContractTemplateVersion,
+    TechnicalAssessment, ScoringRule, FailureCase, OpenItem, LeadRequirementDetail,
+    RequirementFreeze, AIClarification
 )
 from app.schemas.sales import (
     LeadCreate, LeadUpdate, LeadResponse, LeadFollowUpResponse, LeadFollowUpCreate,
@@ -27,6 +32,9 @@ from app.schemas.sales import (
     GateSubmitRequest,
     QuoteCreate, QuoteUpdate, QuoteResponse, QuoteVersionCreate, QuoteVersionResponse,
     QuoteItemCreate, QuoteItemResponse, QuoteApproveRequest,
+    QuoteCostTemplateCreate, QuoteCostTemplateUpdate, QuoteCostTemplateResponse,
+    QuoteCostApprovalCreate, QuoteCostApprovalResponse, QuoteCostApprovalAction,
+    CostBreakdownResponse, CostCheckResponse, CostComparisonResponse,
     ContractCreate, ContractUpdate, ContractResponse, ContractDeliverableResponse,
     ContractAmendmentCreate, ContractAmendmentResponse,
     ContractSignRequest, ContractProjectCreateRequest,
@@ -34,9 +42,31 @@ from app.schemas.sales import (
     ReceivableDisputeCreate, ReceivableDisputeUpdate, ReceivableDisputeResponse,
     QuoteApprovalResponse, QuoteApprovalCreate,
     ContractApprovalResponse, ContractApprovalCreate,
-    InvoiceApprovalResponse, InvoiceApprovalCreate
+    InvoiceApprovalResponse, InvoiceApprovalCreate,
+    QuoteTemplateCreate, QuoteTemplateUpdate, QuoteTemplateResponse,
+    QuoteTemplateVersionCreate, QuoteTemplateVersionResponse,
+    QuoteTemplateApplyResponse,
+    ContractTemplateCreate, ContractTemplateUpdate, ContractTemplateResponse,
+    ContractTemplateVersionCreate, ContractTemplateVersionResponse,
+    ContractTemplateApplyResponse,
+    CpqRuleSetCreate, CpqRuleSetUpdate, CpqRuleSetResponse,
+    CpqPricePreviewRequest, CpqPricePreviewResponse,
+    TemplateVersionDiff, TemplateApprovalHistoryRecord,
+    TechnicalAssessmentApplyRequest, TechnicalAssessmentEvaluateRequest, TechnicalAssessmentResponse,
+    ScoringRuleCreate, ScoringRuleResponse,
+    FailureCaseCreate, FailureCaseResponse,
+    OpenItemCreate, OpenItemResponse,
+    LeadRequirementDetailCreate, LeadRequirementDetailResponse,
+    RequirementFreezeCreate, RequirementFreezeResponse,
+    AIClarificationCreate, AIClarificationUpdate, AIClarificationResponse
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.services.cpq_pricing_service import CpqPricingService
+from app.services.technical_assessment_service import TechnicalAssessmentService
+from app.services.ai_assessment_service import AIAssessmentService
+from app.models.enums import (
+    AssessmentSourceTypeEnum, AssessmentStatusEnum, AssessmentDecisionEnum
+)
 
 router = APIRouter()
 
@@ -44,13 +74,16 @@ router = APIRouter()
 # ==================== 阶段门验证函数 ====================
 
 
-def validate_g1_lead_to_opportunity(lead: Lead, requirement: Optional[OpportunityRequirement] = None) -> tuple[bool, List[str]]:
+def validate_g1_lead_to_opportunity(lead: Lead, requirement: Optional[OpportunityRequirement] = None, 
+                                   db: Optional[Session] = None) -> tuple[bool, List[str]]:
     """
     G1：线索 → 商机 验证
     需求模板必填：行业/产品对象/节拍/接口/现场约束/验收依据
     客户基本信息与联系人齐全
+    可选：检查技术评估状态（如果已申请）
     """
     errors = []
+    warnings = []
     
     # 检查客户基本信息
     if not lead.customer_name:
@@ -75,7 +108,32 @@ def validate_g1_lead_to_opportunity(lead: Lead, requirement: Optional[Opportunit
     else:
         errors.append("需求信息不能为空")
     
-    return len(errors) == 0, errors
+    # 可选：检查技术评估状态（如果已申请）
+    if db and lead.assessment_id:
+        from app.models.sales import TechnicalAssessment
+        assessment = db.query(TechnicalAssessment).filter(TechnicalAssessment.id == lead.assessment_id).first()
+        if assessment:
+            if assessment.status != AssessmentStatusEnum.COMPLETED.value:
+                warnings.append(f"技术评估状态为{assessment.status}，建议等待评估完成")
+            elif assessment.decision == AssessmentDecisionEnum.NOT_RECOMMEND.value:
+                warnings.append("技术评估建议为'不建议立项'，请谨慎考虑")
+    
+    # 检查未决事项（阻塞报价的）
+    if db:
+        from app.models.sales import OpenItem
+        blocking_items = db.query(OpenItem).filter(
+            and_(
+                OpenItem.source_type == AssessmentSourceTypeEnum.LEAD.value,
+                OpenItem.source_id == lead.id,
+                OpenItem.blocks_quotation == True,
+                OpenItem.status != 'CLOSED'
+            )
+        ).count()
+        if blocking_items > 0:
+            warnings.append(f"存在{blocking_items}个阻塞报价的未决事项，建议先解决")
+    
+    # 返回验证结果（warnings不作为错误，但会记录）
+    return len(errors) == 0, errors + warnings
 
 
 def validate_g2_opportunity_to_quote(opportunity: Opportunity) -> tuple[bool, List[str]]:
@@ -569,12 +627,17 @@ def convert_lead_to_opportunity(
         requirement = OpportunityRequirement(**requirement_data)
     
     if not skip_validation:
-        is_valid, errors = validate_g1_lead_to_opportunity(lead, requirement)
-        if not is_valid:
+        is_valid, messages = validate_g1_lead_to_opportunity(lead, requirement, db)
+        # 区分错误和警告
+        errors = [msg for msg in messages if not msg.startswith("技术评估") and not msg.startswith("存在")]
+        warnings = [msg for msg in messages if msg.startswith("技术评估") or msg.startswith("存在")]
+        
+        if errors:
             raise HTTPException(
                 status_code=400,
                 detail=f"G1阶段门验证失败: {', '.join(errors)}"
             )
+        # warnings 只记录，不阻止转换
 
     # 生成商机编码
     opp_code = generate_opportunity_code(db)
@@ -3928,4 +3991,2974 @@ def get_receivables_summary(
             "partial_count": len([inv for inv in invoices if inv.payment_status == "PARTIAL"]),
             "pending_count": len([inv for inv in invoices if inv.payment_status == "PENDING"]),
         }
+    )
+
+
+# ==================== 模板 & CPQ ====================
+
+
+def _flatten_structure(data: Any, prefix: str = "") -> Dict[str, Any]:
+    """将嵌套结构展开便于比较"""
+    entries: Dict[str, Any] = {}
+    if data is None:
+        return entries
+    if isinstance(data, dict):
+        for key, value in data.items():
+            sub_prefix = f"{prefix}.{key}" if prefix else str(key)
+            entries.update(_flatten_structure(value, sub_prefix))
+    elif isinstance(data, list):
+        for index, value in enumerate(data):
+            sub_prefix = f"{prefix}[{index}]" if prefix else f"[{index}]"
+            entries.update(_flatten_structure(value, sub_prefix))
+    else:
+        entries[prefix or "value"] = data
+    return entries
+
+
+def _build_diff_section(current: Any, previous: Any) -> Dict[str, Any]:
+    current_flat = _flatten_structure(current)
+    previous_flat = _flatten_structure(previous)
+
+    added = sorted(list(set(current_flat.keys()) - set(previous_flat.keys())))
+    removed = sorted(list(set(previous_flat.keys()) - set(current_flat.keys())))
+    changed = []
+    for key in current_flat.keys() & previous_flat.keys():
+        if current_flat[key] != previous_flat[key]:
+            changed.append(
+                {
+                    "path": key,
+                    "old": previous_flat[key],
+                    "new": current_flat[key],
+                }
+            )
+    return {
+        "added": added,
+        "removed": removed,
+        "changed": changed,
+    }
+
+
+def _get_previous_version(template, current_version):
+    if not template or not template.versions:
+        return None
+    versions = sorted(
+        template.versions,
+        key=lambda v: v.created_at or datetime.min,
+        reverse=True,
+    )
+    for idx, version in enumerate(versions):
+        if version.id == current_version.id and idx + 1 < len(versions):
+            return versions[idx + 1]
+    return None
+
+
+def _build_template_version_diff(current_version, previous_version) -> TemplateVersionDiff:
+    sections_diff = _build_diff_section(
+        getattr(current_version, "sections", None),
+        getattr(previous_version, "sections", None) if previous_version else None,
+    )
+    pricing_diff = _build_diff_section(
+        getattr(current_version, "pricing_rules", None),
+        getattr(previous_version, "pricing_rules", None) if previous_version else None,
+    )
+    clause_diff = _build_diff_section(
+        getattr(current_version, "clause_sections", None),
+        getattr(previous_version, "clause_sections", None) if previous_version else None,
+    )
+    return TemplateVersionDiff(
+        sections=sections_diff,
+        pricing_rules=pricing_diff,
+        clause_sections=clause_diff,
+    )
+
+
+def _build_template_history(template) -> List[TemplateApprovalHistoryRecord]:
+    if not template or not template.versions:
+        return []
+    versions = sorted(
+        template.versions,
+        key=lambda v: v.created_at or datetime.min,
+        reverse=True,
+    )
+    history = []
+    for version in versions[:10]:
+        history.append(
+            TemplateApprovalHistoryRecord(
+                version_id=version.id,
+                version_no=version.version_no,
+                status=version.status,
+                published_by=version.published_by,
+                published_at=version.published_at,
+                release_notes=version.release_notes,
+            )
+        )
+    return history
+
+
+def _filter_template_visibility(query, model, user: User):
+    """根据可见范围过滤模板"""
+    if user.is_superuser:
+        return query
+    owner_alias = aliased(User)
+    query = query.outerjoin(owner_alias, model.owner)
+    conditions = [
+        model.visibility_scope == "ALL",
+        model.owner_id == user.id,
+    ]
+    if user.department:
+        conditions.append(
+            and_(
+                model.visibility_scope.in_(["TEAM", "DEPT"]),
+                owner_alias.department == user.department,
+            )
+        )
+    return query.filter(or_(*conditions))
+
+
+def _serialize_quote_template(template: QuoteTemplate) -> QuoteTemplateResponse:
+    versions = sorted(
+        template.versions or [],
+        key=lambda v: v.created_at or datetime.min,
+        reverse=True,
+    )
+    version_responses = [
+        QuoteTemplateVersionResponse(
+            id=v.id,
+            template_id=v.template_id,
+            version_no=v.version_no,
+            status=v.status,
+            sections=v.sections,
+            pricing_rules=v.pricing_rules,
+            config_schema=v.config_schema,
+            discount_rules=v.discount_rules,
+            release_notes=v.release_notes,
+            rule_set_id=v.rule_set_id,
+            created_by=v.created_by,
+            published_by=v.published_by,
+            published_at=v.published_at,
+            created_at=v.created_at,
+            updated_at=v.updated_at,
+        )
+        for v in versions
+    ]
+    return QuoteTemplateResponse(
+        id=template.id,
+        template_code=template.template_code,
+        template_name=template.template_name,
+        category=template.category,
+        description=template.description,
+        status=template.status,
+        visibility_scope=template.visibility_scope,
+        is_default=template.is_default,
+        current_version_id=template.current_version_id,
+        owner_id=template.owner_id,
+        versions=version_responses,
+        created_at=template.created_at,
+        updated_at=template.updated_at,
+    )
+
+
+def _serialize_contract_template(template: ContractTemplate) -> ContractTemplateResponse:
+    versions = sorted(
+        template.versions or [],
+        key=lambda v: v.created_at or datetime.min,
+        reverse=True,
+    )
+    version_responses = [
+        ContractTemplateVersionResponse(
+            id=v.id,
+            template_id=v.template_id,
+            version_no=v.version_no,
+            status=v.status,
+            clause_sections=v.clause_sections,
+            clause_library=v.clause_library,
+            attachment_refs=v.attachment_refs,
+            approval_flow=v.approval_flow,
+            release_notes=v.release_notes,
+            created_by=v.created_by,
+            published_by=v.published_by,
+            published_at=v.published_at,
+            created_at=v.created_at,
+            updated_at=v.updated_at,
+        )
+        for v in versions
+    ]
+    return ContractTemplateResponse(
+        id=template.id,
+        template_code=template.template_code,
+        template_name=template.template_name,
+        contract_type=template.contract_type,
+        description=template.description,
+        status=template.status,
+        visibility_scope=template.visibility_scope,
+        is_default=template.is_default,
+        current_version_id=template.current_version_id,
+        owner_id=template.owner_id,
+        versions=version_responses,
+        created_at=template.created_at,
+        updated_at=template.updated_at,
+    )
+
+
+def _serialize_rule_set(rule_set: CpqRuleSet) -> CpqRuleSetResponse:
+    return CpqRuleSetResponse(
+        id=rule_set.id,
+        rule_code=rule_set.rule_code,
+        rule_name=rule_set.rule_name,
+        description=rule_set.description,
+        status=rule_set.status,
+        base_price=rule_set.base_price or Decimal("0"),
+        currency=rule_set.currency or "CNY",
+        config_schema=rule_set.config_schema,
+        pricing_matrix=rule_set.pricing_matrix,
+        approval_threshold=rule_set.approval_threshold,
+        visibility_scope=rule_set.visibility_scope or "ALL",
+        is_default=rule_set.is_default or False,
+        owner_role=rule_set.owner_role,
+        created_at=rule_set.created_at,
+        updated_at=rule_set.updated_at,
+    )
+
+
+@router.get("/quote-templates", response_model=PaginatedResponse[QuoteTemplateResponse])
+def list_quote_templates(
+    *,
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
+    keyword: Optional[str] = Query(None, description="搜索关键词"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    query = db.query(QuoteTemplate).options(joinedload(QuoteTemplate.versions))
+    query = _filter_template_visibility(query, QuoteTemplate, current_user)
+
+    if keyword:
+        query = query.filter(
+            or_(
+                QuoteTemplate.template_name.contains(keyword),
+                QuoteTemplate.template_code.contains(keyword),
+            )
+        )
+    if status:
+        query = query.filter(QuoteTemplate.status == status)
+
+    total = query.count()
+    offset = (page - 1) * page_size
+    templates = (
+        query.order_by(desc(QuoteTemplate.created_at))
+        .offset(offset)
+        .limit(page_size)
+        .all()
+    )
+    items = [_serialize_quote_template(t) for t in templates]
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size,
+    )
+
+
+@router.post("/quote-templates", response_model=QuoteTemplateResponse)
+def create_quote_template(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_in: QuoteTemplateCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    existing = (
+        db.query(QuoteTemplate)
+        .filter(QuoteTemplate.template_code == template_in.template_code)
+        .first()
+    )
+    if existing:
+        raise HTTPException(status_code=400, detail="模板编码已存在")
+
+    template = QuoteTemplate(
+        template_code=template_in.template_code,
+        template_name=template_in.template_name,
+        category=template_in.category,
+        description=template_in.description,
+        visibility_scope=template_in.visibility_scope or "TEAM",
+        is_default=template_in.is_default or False,
+        owner_id=template_in.owner_id or current_user.id,
+        status="DRAFT",
+    )
+    db.add(template)
+    db.flush()
+
+    if template_in.initial_version:
+        version_data = template_in.initial_version
+        version = QuoteTemplateVersion(
+            template_id=template.id,
+            version_no=version_data.version_no,
+            sections=version_data.sections,
+            pricing_rules=version_data.pricing_rules,
+            config_schema=version_data.config_schema,
+            discount_rules=version_data.discount_rules,
+            release_notes=version_data.release_notes,
+            rule_set_id=version_data.rule_set_id,
+            status="DRAFT",
+            created_by=current_user.id,
+        )
+        db.add(version)
+        db.flush()
+        template.current_version_id = version.id
+
+    db.commit()
+    db.refresh(template)
+    template = (
+        db.query(QuoteTemplate)
+        .options(joinedload(QuoteTemplate.versions))
+        .filter(QuoteTemplate.id == template.id)
+        .first()
+    )
+    return _serialize_quote_template(template)
+
+
+@router.put("/quote-templates/{template_id}", response_model=QuoteTemplateResponse)
+def update_quote_template(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    template_in: QuoteTemplateUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    template = (
+        _filter_template_visibility(
+            db.query(QuoteTemplate).options(joinedload(QuoteTemplate.versions)),
+            QuoteTemplate,
+            current_user,
+        )
+        .filter(QuoteTemplate.id == template_id)
+        .first()
+    )
+    if not template:
+        raise HTTPException(status_code=404, detail="模板不存在或无权访问")
+
+    update_data = template_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(template, field, value)
+    db.commit()
+    db.refresh(template)
+    template = (
+        db.query(QuoteTemplate)
+        .options(joinedload(QuoteTemplate.versions))
+        .filter(QuoteTemplate.id == template_id)
+        .first()
+    )
+    return _serialize_quote_template(template)
+
+
+@router.post("/quote-templates/{template_id}/versions", response_model=QuoteTemplateVersionResponse)
+def create_quote_template_version(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    version_in: QuoteTemplateVersionCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    template = (
+        _filter_template_visibility(
+            db.query(QuoteTemplate),
+            QuoteTemplate,
+            current_user,
+        )
+        .filter(QuoteTemplate.id == template_id)
+        .first()
+    )
+    if not template:
+        raise HTTPException(status_code=404, detail="模板不存在或无权访问")
+
+    version = QuoteTemplateVersion(
+        template_id=template_id,
+        version_no=version_in.version_no,
+        sections=version_in.sections,
+        pricing_rules=version_in.pricing_rules,
+        config_schema=version_in.config_schema,
+        discount_rules=version_in.discount_rules,
+        release_notes=version_in.release_notes,
+        rule_set_id=version_in.rule_set_id,
+        status="DRAFT",
+        created_by=current_user.id,
+    )
+    db.add(version)
+    db.commit()
+    db.refresh(version)
+    return QuoteTemplateVersionResponse(
+        id=version.id,
+        template_id=version.template_id,
+        version_no=version.version_no,
+        status=version.status,
+        sections=version.sections,
+        pricing_rules=version.pricing_rules,
+        config_schema=version.config_schema,
+        discount_rules=version.discount_rules,
+        release_notes=version.release_notes,
+        rule_set_id=version.rule_set_id,
+        created_by=version.created_by,
+        published_by=version.published_by,
+        published_at=version.published_at,
+        created_at=version.created_at,
+        updated_at=version.updated_at,
+    )
+
+
+@router.post("/quote-templates/{template_id}/versions/{version_id}/publish", response_model=QuoteTemplateResponse)
+def publish_quote_template_version(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    version_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    template = (
+        db.query(QuoteTemplate)
+        .options(joinedload(QuoteTemplate.versions))
+        .filter(QuoteTemplate.id == template_id)
+        .first()
+    )
+    if not template:
+        raise HTTPException(status_code=404, detail="模板不存在")
+
+    version = next((v for v in template.versions if v.id == version_id), None)
+    if not version:
+        raise HTTPException(status_code=404, detail="模板版本不存在")
+
+    version.status = "PUBLISHED"
+    version.published_by = current_user.id
+    version.published_at = datetime.utcnow()
+    template.current_version_id = version.id
+    template.status = "ACTIVE"
+    db.query(QuoteTemplateVersion).filter(
+        QuoteTemplateVersion.template_id == template_id,
+        QuoteTemplateVersion.id != version_id,
+        QuoteTemplateVersion.status == "PUBLISHED",
+    ).update({"status": "ARCHIVED"}, synchronize_session=False)
+
+    db.commit()
+    template = (
+        db.query(QuoteTemplate)
+        .options(joinedload(QuoteTemplate.versions))
+        .filter(QuoteTemplate.id == template_id)
+        .first()
+    )
+    return _serialize_quote_template(template)
+
+
+@router.post("/quote-templates/{template_id}/apply", response_model=QuoteTemplateApplyResponse)
+def apply_quote_template(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    preview_request: Optional[CpqPricePreviewRequest] = None,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    template = (
+        _filter_template_visibility(
+            db.query(QuoteTemplate).options(joinedload(QuoteTemplate.versions)),
+            QuoteTemplate,
+            current_user,
+        )
+        .filter(QuoteTemplate.id == template_id)
+        .first()
+    )
+    if not template:
+        raise HTTPException(status_code=404, detail="模板不存在或无权访问")
+
+    version = None
+    if preview_request and preview_request.template_version_id:
+        version = next(
+            (v for v in template.versions if v.id == preview_request.template_version_id),
+            None,
+        )
+    if not version:
+        version = template.current_version or (template.versions[0] if template.versions else None)
+
+    if not version:
+        raise HTTPException(status_code=400, detail="模板尚未创建版本")
+
+    preview = preview_request or CpqPricePreviewRequest()
+    service = CpqPricingService(db)
+    preview_data = service.preview_price(
+        rule_set_id=preview.rule_set_id or version.rule_set_id,
+        template_version_id=version.id,
+        selections=preview.selections,
+        manual_discount_pct=preview.manual_discount_pct,
+        manual_markup_pct=preview.manual_markup_pct,
+    )
+
+    previous_version = _get_previous_version(template, version)
+    version_diff = _build_template_version_diff(version, previous_version)
+    history = _build_template_history(template)
+
+    return QuoteTemplateApplyResponse(
+        template=_serialize_quote_template(template),
+        version=QuoteTemplateVersionResponse(
+            id=version.id,
+            template_id=version.template_id,
+            version_no=version.version_no,
+            status=version.status,
+            sections=version.sections,
+            pricing_rules=version.pricing_rules,
+            config_schema=version.config_schema,
+            discount_rules=version.discount_rules,
+            release_notes=version.release_notes,
+            rule_set_id=version.rule_set_id,
+            created_by=version.created_by,
+            published_by=version.published_by,
+            published_at=version.published_at,
+            created_at=version.created_at,
+            updated_at=version.updated_at,
+        ),
+        cpq_preview=CpqPricePreviewResponse(**preview_data),
+        version_diff=version_diff,
+        approval_history=history,
+    )
+
+
+@router.get("/contract-templates", response_model=PaginatedResponse[ContractTemplateResponse])
+def list_contract_templates(
+    *,
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
+    keyword: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    query = db.query(ContractTemplate).options(joinedload(ContractTemplate.versions))
+    query = _filter_template_visibility(query, ContractTemplate, current_user)
+
+    if keyword:
+        query = query.filter(
+            or_(
+                ContractTemplate.template_name.contains(keyword),
+                ContractTemplate.template_code.contains(keyword),
+            )
+        )
+    if status:
+        query = query.filter(ContractTemplate.status == status)
+
+    total = query.count()
+    offset = (page - 1) * page_size
+    templates = (
+        query.order_by(desc(ContractTemplate.created_at))
+        .offset(offset)
+        .limit(page_size)
+        .all()
+    )
+    return PaginatedResponse(
+        items=[_serialize_contract_template(t) for t in templates],
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size,
+    )
+
+
+@router.post("/contract-templates", response_model=ContractTemplateResponse)
+def create_contract_template(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_in: ContractTemplateCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    existing = (
+        db.query(ContractTemplate)
+        .filter(ContractTemplate.template_code == template_in.template_code)
+        .first()
+    )
+    if existing:
+        raise HTTPException(status_code=400, detail="模板编码已存在")
+
+    template = ContractTemplate(
+        template_code=template_in.template_code,
+        template_name=template_in.template_name,
+        contract_type=template_in.contract_type,
+        description=template_in.description,
+        visibility_scope=template_in.visibility_scope or "TEAM",
+        is_default=template_in.is_default or False,
+        owner_id=template_in.owner_id or current_user.id,
+        status="DRAFT",
+    )
+    db.add(template)
+    db.flush()
+
+    if template_in.initial_version:
+        version_data = template_in.initial_version
+        version = ContractTemplateVersion(
+            template_id=template.id,
+            version_no=version_data.version_no,
+            clause_sections=version_data.clause_sections,
+            clause_library=version_data.clause_library,
+            attachment_refs=version_data.attachment_refs,
+            approval_flow=version_data.approval_flow,
+            release_notes=version_data.release_notes,
+            status="DRAFT",
+            created_by=current_user.id,
+        )
+        db.add(version)
+        db.flush()
+        template.current_version_id = version.id
+
+    db.commit()
+    template = (
+        db.query(ContractTemplate)
+        .options(joinedload(ContractTemplate.versions))
+        .filter(ContractTemplate.id == template.id)
+        .first()
+    )
+    return _serialize_contract_template(template)
+
+
+@router.put("/contract-templates/{template_id}", response_model=ContractTemplateResponse)
+def update_contract_template(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    template_in: ContractTemplateUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    template = (
+        _filter_template_visibility(
+            db.query(ContractTemplate).options(joinedload(ContractTemplate.versions)),
+            ContractTemplate,
+            current_user,
+        )
+        .filter(ContractTemplate.id == template_id)
+        .first()
+    )
+    if not template:
+        raise HTTPException(status_code=404, detail="模板不存在或无权访问")
+
+    update_data = template_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(template, field, value)
+
+    db.commit()
+    template = (
+        db.query(ContractTemplate)
+        .options(joinedload(ContractTemplate.versions))
+        .filter(ContractTemplate.id == template_id)
+        .first()
+    )
+    return _serialize_contract_template(template)
+
+
+@router.post("/contract-templates/{template_id}/versions", response_model=ContractTemplateVersionResponse)
+def create_contract_template_version(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    version_in: ContractTemplateVersionCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    template = (
+        _filter_template_visibility(
+            db.query(ContractTemplate),
+            ContractTemplate,
+            current_user,
+        )
+        .filter(ContractTemplate.id == template_id)
+        .first()
+    )
+    if not template:
+        raise HTTPException(status_code=404, detail="模板不存在或无权访问")
+
+    version = ContractTemplateVersion(
+        template_id=template_id,
+        version_no=version_in.version_no,
+        clause_sections=version_in.clause_sections,
+        clause_library=version_in.clause_library,
+        attachment_refs=version_in.attachment_refs,
+        approval_flow=version_in.approval_flow,
+        release_notes=version_in.release_notes,
+        status="DRAFT",
+        created_by=current_user.id,
+    )
+    db.add(version)
+    db.commit()
+    db.refresh(version)
+    return ContractTemplateVersionResponse(
+        id=version.id,
+        template_id=version.template_id,
+        version_no=version.version_no,
+        status=version.status,
+        clause_sections=version.clause_sections,
+        clause_library=version.clause_library,
+        attachment_refs=version.attachment_refs,
+        approval_flow=version.approval_flow,
+        release_notes=version.release_notes,
+        created_by=version.created_by,
+        published_by=version.published_by,
+        published_at=version.published_at,
+        created_at=version.created_at,
+        updated_at=version.updated_at,
+    )
+
+
+@router.post("/contract-templates/{template_id}/versions/{version_id}/publish", response_model=ContractTemplateResponse)
+def publish_contract_template_version(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    version_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    template = (
+        db.query(ContractTemplate)
+        .options(joinedload(ContractTemplate.versions))
+        .filter(ContractTemplate.id == template_id)
+        .first()
+    )
+    if not template:
+        raise HTTPException(status_code=404, detail="模板不存在")
+
+    version = next((v for v in template.versions if v.id == version_id), None)
+    if not version:
+        raise HTTPException(status_code=404, detail="模板版本不存在")
+
+    version.status = "PUBLISHED"
+    version.published_by = current_user.id
+    version.published_at = datetime.utcnow()
+    template.current_version_id = version.id
+    template.status = "ACTIVE"
+    db.query(ContractTemplateVersion).filter(
+        ContractTemplateVersion.template_id == template_id,
+        ContractTemplateVersion.id != version_id,
+        ContractTemplateVersion.status == "PUBLISHED",
+    ).update({"status": "ARCHIVED"}, synchronize_session=False)
+
+    db.commit()
+    template = (
+        db.query(ContractTemplate)
+        .options(joinedload(ContractTemplate.versions))
+        .filter(ContractTemplate.id == template_id)
+        .first()
+    )
+    return _serialize_contract_template(template)
+
+
+@router.get("/contract-templates/{template_id}/apply", response_model=ContractTemplateApplyResponse)
+def apply_contract_template(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    template_version_id: Optional[int] = Query(None, description="指定模板版本ID"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    template = (
+        _filter_template_visibility(
+            db.query(ContractTemplate).options(joinedload(ContractTemplate.versions)),
+            ContractTemplate,
+            current_user,
+        )
+        .filter(ContractTemplate.id == template_id)
+        .first()
+    )
+    if not template:
+        raise HTTPException(status_code=404, detail="模板不存在或无权访问")
+
+    version = None
+    if template_version_id:
+        version = next((v for v in template.versions if v.id == template_version_id), None)
+    if not version:
+        version = template.current_version or (template.versions[0] if template.versions else None)
+    if not version:
+        raise HTTPException(status_code=400, detail="模板尚未创建版本")
+
+    previous_version = _get_previous_version(template, version)
+    version_diff = _build_template_version_diff(version, previous_version)
+    history = _build_template_history(template)
+
+    return ContractTemplateApplyResponse(
+        template=_serialize_contract_template(template),
+        version=ContractTemplateVersionResponse(
+            id=version.id,
+            template_id=version.template_id,
+            version_no=version.version_no,
+            status=version.status,
+            clause_sections=version.clause_sections,
+            clause_library=version.clause_library,
+            attachment_refs=version.attachment_refs,
+            approval_flow=version.approval_flow,
+            release_notes=version.release_notes,
+            created_by=version.created_by,
+            published_by=version.published_by,
+            published_at=version.published_at,
+            created_at=version.created_at,
+            updated_at=version.updated_at,
+        ),
+        version_diff=version_diff,
+        approval_history=history,
+    )
+
+
+@router.get("/cpq/rule-sets", response_model=PaginatedResponse[CpqRuleSetResponse])
+def list_cpq_rule_sets(
+    *,
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
+    keyword: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    query = db.query(CpqRuleSet)
+    if keyword:
+        query = query.filter(
+            or_(
+                CpqRuleSet.rule_name.contains(keyword),
+                CpqRuleSet.rule_code.contains(keyword),
+            )
+        )
+    if status:
+        query = query.filter(CpqRuleSet.status == status)
+
+    total = query.count()
+    offset = (page - 1) * page_size
+    rule_sets = (
+        query.order_by(desc(CpqRuleSet.created_at))
+        .offset(offset)
+        .limit(page_size)
+        .all()
+    )
+    return PaginatedResponse(
+        items=[_serialize_rule_set(r) for r in rule_sets],
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size,
+    )
+
+
+@router.post("/cpq/rule-sets", response_model=CpqRuleSetResponse)
+def create_cpq_rule_set(
+    *,
+    db: Session = Depends(deps.get_db),
+    rule_set_in: CpqRuleSetCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    existing = (
+        db.query(CpqRuleSet)
+        .filter(CpqRuleSet.rule_code == rule_set_in.rule_code)
+        .first()
+    )
+    if existing:
+        raise HTTPException(status_code=400, detail="规则集编码已存在")
+
+    rule_set = CpqRuleSet(
+        rule_code=rule_set_in.rule_code,
+        rule_name=rule_set_in.rule_name,
+        description=rule_set_in.description,
+        status=rule_set_in.status or "ACTIVE",
+        base_price=rule_set_in.base_price or Decimal("0"),
+        currency=rule_set_in.currency or "CNY",
+        config_schema=rule_set_in.config_schema,
+        pricing_matrix=rule_set_in.pricing_matrix,
+        approval_threshold=rule_set_in.approval_threshold,
+        visibility_scope=rule_set_in.visibility_scope or "ALL",
+        is_default=rule_set_in.is_default or False,
+        owner_role=rule_set_in.owner_role or (current_user.department or "SALES"),
+    )
+    db.add(rule_set)
+    db.commit()
+    db.refresh(rule_set)
+    return _serialize_rule_set(rule_set)
+
+
+@router.put("/cpq/rule-sets/{rule_set_id}", response_model=CpqRuleSetResponse)
+def update_cpq_rule_set(
+    *,
+    db: Session = Depends(deps.get_db),
+    rule_set_id: int,
+    rule_set_in: CpqRuleSetUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    rule_set = db.query(CpqRuleSet).filter(CpqRuleSet.id == rule_set_id).first()
+    if not rule_set:
+        raise HTTPException(status_code=404, detail="规则集不存在")
+
+    update_data = rule_set_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(rule_set, field, value)
+    db.commit()
+    db.refresh(rule_set)
+    return _serialize_rule_set(rule_set)
+
+
+@router.post("/cpq/price-preview", response_model=CpqPricePreviewResponse)
+def preview_cpq_price(
+    *,
+    db: Session = Depends(deps.get_db),
+    preview_request: CpqPricePreviewRequest,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    service = CpqPricingService(db)
+    preview_data = service.preview_price(
+        rule_set_id=preview_request.rule_set_id,
+        template_version_id=preview_request.template_version_id,
+        selections=preview_request.selections,
+        manual_discount_pct=preview_request.manual_discount_pct,
+        manual_markup_pct=preview_request.manual_markup_pct,
+    )
+    return CpqPricePreviewResponse(**preview_data)
+
+
+# ==================== 报价成本管理 ====================
+
+
+@router.get("/cost-templates", response_model=PaginatedResponse[QuoteCostTemplateResponse])
+def get_cost_templates(
+    *,
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    template_type: Optional[str] = Query(None, description="模板类型筛选"),
+    equipment_type: Optional[str] = Query(None, description="设备类型筛选"),
+    industry: Optional[str] = Query(None, description="行业筛选"),
+    is_active: Optional[bool] = Query(None, description="是否启用"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取成本模板列表
+    """
+    query = db.query(QuoteCostTemplate)
+    
+    if template_type:
+        query = query.filter(QuoteCostTemplate.template_type == template_type)
+    if equipment_type:
+        query = query.filter(QuoteCostTemplate.equipment_type == equipment_type)
+    if industry:
+        query = query.filter(QuoteCostTemplate.industry == industry)
+    if is_active is not None:
+        query = query.filter(QuoteCostTemplate.is_active == is_active)
+    
+    total = query.count()
+    offset = (page - 1) * page_size
+    templates = query.order_by(desc(QuoteCostTemplate.created_at)).offset(offset).limit(page_size).all()
+    
+    items = []
+    for template in templates:
+        template_dict = {
+            **{c.name: getattr(template, c.name) for c in template.__table__.columns},
+            "creator_name": template.creator.real_name if template.creator else None
+        }
+        items.append(QuoteCostTemplateResponse(**template_dict))
+    
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
+    )
+
+
+@router.get("/cost-templates/{template_id}", response_model=QuoteCostTemplateResponse)
+def get_cost_template(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取成本模板详情
+    """
+    template = db.query(QuoteCostTemplate).filter(QuoteCostTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="成本模板不存在")
+    
+    template_dict = {
+        **{c.name: getattr(template, c.name) for c in template.__table__.columns},
+        "creator_name": template.creator.real_name if template.creator else None
+    }
+    return QuoteCostTemplateResponse(**template_dict)
+
+
+@router.post("/cost-templates", response_model=QuoteCostTemplateResponse, status_code=201)
+def create_cost_template(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_in: QuoteCostTemplateCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    创建成本模板
+    """
+    # 检查模板编码是否已存在
+    existing = db.query(QuoteCostTemplate).filter(QuoteCostTemplate.template_code == template_in.template_code).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="模板编码已存在")
+    
+    # 计算总成本和分类
+    total_cost = Decimal('0')
+    categories = set()
+    if template_in.cost_structure:
+        import json
+        cost_structure = template_in.cost_structure
+        for category in cost_structure.get('categories', []):
+            categories.add(category.get('category', ''))
+            for item in category.get('items', []):
+                qty = Decimal(str(item.get('default_qty', 0)))
+                cost = Decimal(str(item.get('default_cost', 0)))
+                total_cost += qty * cost
+    
+    template_data = template_in.model_dump()
+    template_data['total_cost'] = float(total_cost)
+    template_data['cost_categories'] = ','.join(categories) if categories else None
+    template_data['created_by'] = current_user.id
+    
+    template = QuoteCostTemplate(**template_data)
+    db.add(template)
+    db.commit()
+    db.refresh(template)
+    
+    template_dict = {
+        **{c.name: getattr(template, c.name) for c in template.__table__.columns},
+        "creator_name": template.creator.real_name if template.creator else None
+    }
+    return QuoteCostTemplateResponse(**template_dict)
+
+
+@router.put("/cost-templates/{template_id}", response_model=QuoteCostTemplateResponse)
+def update_cost_template(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    template_in: QuoteCostTemplateUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    更新成本模板
+    """
+    template = db.query(QuoteCostTemplate).filter(QuoteCostTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="成本模板不存在")
+    
+    update_data = template_in.model_dump(exclude_unset=True)
+    
+    # 如果更新了成本结构，重新计算总成本和分类
+    if 'cost_structure' in update_data and update_data['cost_structure']:
+        total_cost = Decimal('0')
+        categories = set()
+        cost_structure = update_data['cost_structure']
+        for category in cost_structure.get('categories', []):
+            categories.add(category.get('category', ''))
+            for item in category.get('items', []):
+                qty = Decimal(str(item.get('default_qty', 0)))
+                cost = Decimal(str(item.get('default_cost', 0)))
+                total_cost += qty * cost
+        update_data['total_cost'] = float(total_cost)
+        update_data['cost_categories'] = ','.join(categories) if categories else None
+    
+    for field, value in update_data.items():
+        if hasattr(template, field):
+            setattr(template, field, value)
+    
+    db.commit()
+    db.refresh(template)
+    
+    template_dict = {
+        **{c.name: getattr(template, c.name) for c in template.__table__.columns},
+        "creator_name": template.creator.real_name if template.creator else None
+    }
+    return QuoteCostTemplateResponse(**template_dict)
+
+
+@router.delete("/cost-templates/{template_id}", status_code=200)
+def delete_cost_template(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    删除成本模板
+    """
+    template = db.query(QuoteCostTemplate).filter(QuoteCostTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="成本模板不存在")
+    
+    db.delete(template)
+    db.commit()
+    
+    return ResponseModel(code=200, message="成本模板已删除")
+
+
+@router.post("/quotes/{quote_id}/apply-template", response_model=QuoteVersionResponse)
+def apply_cost_template_to_quote(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    template_id: int = Query(..., description="成本模板ID"),
+    version_id: Optional[int] = Query(None, description="报价版本ID，不指定则使用当前版本或创建新版本"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    应用成本模板到报价
+    """
+    quote = db.query(Quote).filter(Quote.id == quote_id).first()
+    if not quote:
+        raise HTTPException(status_code=404, detail="报价不存在")
+    
+    template = db.query(QuoteCostTemplate).filter(QuoteCostTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="成本模板不存在")
+    
+    if not template.is_active:
+        raise HTTPException(status_code=400, detail="成本模板未启用")
+    
+    # 获取或创建报价版本
+    if version_id:
+        version = db.query(QuoteVersion).filter(QuoteVersion.id == version_id).first()
+        if not version or version.quote_id != quote_id:
+            raise HTTPException(status_code=404, detail="报价版本不存在")
+    elif quote.current_version_id:
+        version = db.query(QuoteVersion).filter(QuoteVersion.id == quote.current_version_id).first()
+    else:
+        # 创建新版本
+        version_no = f"V{len(quote.versions) + 1}"
+        version = QuoteVersion(
+            quote_id=quote_id,
+            version_no=version_no,
+            created_by=current_user.id
+        )
+        db.add(version)
+        db.flush()
+        quote.current_version_id = version.id
+    
+    # 解析模板成本结构
+    import json
+    cost_structure = template.cost_structure if isinstance(template.cost_structure, dict) else json.loads(template.cost_structure) if template.cost_structure else {}
+    
+    # 解析调整项
+    adj_dict = json.loads(adjustments) if isinstance(adjustments, str) else adjustments or {}
+    
+    # 清空现有成本明细（可选，这里保留现有明细）
+    # db.query(QuoteItem).filter(QuoteItem.quote_version_id == version.id).delete()
+    
+    # 应用模板成本项
+    total_cost = Decimal('0')
+    total_price = Decimal('0')
+    
+    for category in cost_structure.get('categories', []):
+        for item_template in category.get('items', []):
+            item_name = item_template.get('item_name', '')
+            
+            # 检查是否有调整
+            if item_name in adj_dict:
+                adj = adj_dict[item_name]
+                qty = Decimal(str(adj.get('qty', item_template.get('default_qty', 0))))
+                unit_price = Decimal(str(adj.get('unit_price', item_template.get('default_unit_price', 0))))
+                cost = Decimal(str(adj.get('cost', item_template.get('default_cost', 0))))
+            else:
+                qty = Decimal(str(item_template.get('default_qty', 0)))
+                unit_price = Decimal(str(item_template.get('default_unit_price', 0)))
+                cost = Decimal(str(item_template.get('default_cost', 0)))
+            
+            # 创建报价明细
+            item = QuoteItem(
+                quote_version_id=version.id,
+                item_type=item_template.get('item_type', category.get('category', '')),
+                item_name=item_name,
+                specification=item_template.get('specification'),
+                unit=item_template.get('unit'),
+                qty=float(qty),
+                unit_price=float(unit_price),
+                cost=float(cost),
+                cost_category=category.get('category', ''),
+                cost_source='TEMPLATE',
+                lead_time_days=item_template.get('lead_time_days')
+            )
+            db.add(item)
+            
+            total_cost += cost * qty
+            total_price += unit_price * qty
+    
+    # 更新版本信息
+    version.cost_template_id = template_id
+    version.total_price = float(total_price)
+    version.cost_total = float(total_cost)
+    if total_price > 0:
+        version.gross_margin = float((total_price - total_cost) / total_price * 100)
+    
+    # 更新模板使用次数
+    template.usage_count = (template.usage_count or 0) + 1
+    
+    db.commit()
+    db.refresh(version)
+    
+    # 返回版本信息
+    items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == version.id).all()
+    version_dict = {
+        **{c.name: getattr(version, c.name) for c in version.__table__.columns},
+        "created_by_name": version.creator.real_name if version.creator else None,
+        "approved_by_name": version.approver.real_name if version.approver else None,
+        "items": [QuoteItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns}) for item in items],
+    }
+    return QuoteVersionResponse(**version_dict)
+
+
+@router.post("/quotes/{quote_id}/calculate-cost", response_model=ResponseModel)
+def calculate_quote_cost(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    version_id: Optional[int] = Query(None, description="报价版本ID，不指定则使用当前版本"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    自动计算报价成本
+    """
+    quote = db.query(Quote).filter(Quote.id == quote_id).first()
+    if not quote:
+        raise HTTPException(status_code=404, detail="报价不存在")
+    
+    target_version_id = version_id or quote.current_version_id
+    if not target_version_id:
+        raise HTTPException(status_code=400, detail="报价没有指定版本")
+    
+    version = db.query(QuoteVersion).filter(QuoteVersion.id == target_version_id).first()
+    if not version:
+        raise HTTPException(status_code=404, detail="报价版本不存在")
+    
+    items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == target_version_id).all()
+    
+    total_cost = Decimal('0')
+    total_price = Decimal(str(version.total_price or 0))
+    
+    for item in items:
+        item_cost = Decimal(str(item.cost or 0)) * Decimal(str(item.qty or 0))
+        total_cost += item_cost
+    
+    # 更新版本成本
+    version.cost_total = float(total_cost)
+    
+    # 计算毛利率
+    if total_price > 0:
+        gross_margin = ((total_price - total_cost) / total_price * 100)
+        version.gross_margin = float(gross_margin)
+    else:
+        version.gross_margin = None
+    
+    db.commit()
+    db.refresh(version)
+    
+    return ResponseModel(
+        code=200,
+        message="成本计算完成",
+        data={
+            "total_price": float(total_price),
+            "total_cost": float(total_cost),
+            "gross_margin": float(version.gross_margin) if version.gross_margin else None
+        }
+    )
+
+
+@router.get("/quotes/{quote_id}/cost-check", response_model=CostCheckResponse)
+def check_quote_cost(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    version_id: Optional[int] = Query(None, description="报价版本ID，不指定则使用当前版本"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    成本完整性检查
+    """
+    quote = db.query(Quote).filter(Quote.id == quote_id).first()
+    if not quote:
+        raise HTTPException(status_code=404, detail="报价不存在")
+    
+    target_version_id = version_id or quote.current_version_id
+    if not target_version_id:
+        raise HTTPException(status_code=400, detail="报价没有指定版本")
+    
+    version = db.query(QuoteVersion).filter(QuoteVersion.id == target_version_id).first()
+    if not version:
+        raise HTTPException(status_code=404, detail="报价版本不存在")
+    
+    items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == target_version_id).all()
+    
+    checks = []
+    
+    # 检查1：是否有成本明细
+    if not items:
+        checks.append({
+            "check_item": "成本明细",
+            "status": "FAIL",
+            "message": "未添加任何成本明细"
+        })
+    else:
+        checks.append({
+            "check_item": "成本明细",
+            "status": "PASS",
+            "message": f"已添加{len(items)}项成本明细"
+        })
+    
+    # 检查2：成本项是否完整
+    incomplete_items = []
+    for item in items:
+        if not item.cost or item.cost == 0:
+            incomplete_items.append(item.item_name or f"项目{item.id}")
+    
+    if incomplete_items:
+        checks.append({
+            "check_item": "成本项完整性",
+            "status": "FAIL",
+            "message": f"以下成本项未填写成本：{', '.join(incomplete_items[:5])}{'...' if len(incomplete_items) > 5 else ''}"
+        })
+    else:
+        checks.append({
+            "check_item": "成本项完整性",
+            "status": "PASS",
+            "message": "所有成本项已填写"
+        })
+    
+    # 检查3：毛利率检查
+    margin_threshold = Decimal('20.0')  # 默认阈值20%
+    current_margin = version.gross_margin or 0
+    
+    if current_margin < margin_threshold:
+        checks.append({
+            "check_item": "毛利率检查",
+            "status": "WARNING" if current_margin >= 15 else "FAIL",
+            "message": f"毛利率{current_margin:.2f}%，低于阈值{margin_threshold}%",
+            "current_margin": float(current_margin),
+            "threshold": float(margin_threshold)
+        })
+    else:
+        checks.append({
+            "check_item": "毛利率检查",
+            "status": "PASS",
+            "message": f"毛利率{current_margin:.2f}%，符合要求"
+        })
+    
+    # 检查4：交期检查
+    items_without_leadtime = []
+    for item in items:
+        if not item.lead_time_days and item.item_type in ['硬件', '外购件', '标准件']:
+            items_without_leadtime.append(item.item_name or f"项目{item.id}")
+    
+    if items_without_leadtime:
+        checks.append({
+            "check_item": "交期校验",
+            "status": "WARNING",
+            "message": f"以下关键物料未填写交期：{', '.join(items_without_leadtime[:5])}{'...' if len(items_without_leadtime) > 5 else ''}"
+        })
+    else:
+        checks.append({
+            "check_item": "交期校验",
+            "status": "PASS",
+            "message": "关键物料交期已填写"
+        })
+    
+    is_complete = all(check["status"] == "PASS" for check in checks)
+    
+    return CostCheckResponse(
+        is_complete=is_complete,
+        checks=checks,
+        total_price=Decimal(str(version.total_price or 0)),
+        total_cost=Decimal(str(version.cost_total or 0)),
+        gross_margin=Decimal(str(current_margin))
+    )
+
+
+@router.post("/quotes/{quote_id}/cost-approval/submit", response_model=QuoteCostApprovalResponse, status_code=201)
+def submit_cost_approval(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    approval_in: QuoteCostApprovalCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    提交成本审批
+    """
+    quote = db.query(Quote).filter(Quote.id == quote_id).first()
+    if not quote:
+        raise HTTPException(status_code=404, detail="报价不存在")
+    
+    version = db.query(QuoteVersion).filter(QuoteVersion.id == approval_in.quote_version_id).first()
+    if not version or version.quote_id != quote_id:
+        raise HTTPException(status_code=404, detail="报价版本不存在")
+    
+    # 执行成本检查
+    items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == version.id).all()
+    total_cost = sum([float(item.cost or 0) * float(item.qty or 0) for item in items])
+    total_price = float(version.total_price or 0)
+    gross_margin = float(version.gross_margin or 0) if version.gross_margin else ((total_price - total_cost) / total_price * 100 if total_price > 0 else 0)
+    
+    # 判断毛利率状态
+    margin_threshold = 20.0 if approval_in.approval_level == 1 else 15.0
+    if gross_margin >= margin_threshold:
+        margin_status = "PASS"
+    elif gross_margin >= 15.0:
+        margin_status = "WARNING"
+    else:
+        margin_status = "FAIL"
+    
+    # 创建审批记录
+    approval = QuoteCostApproval(
+        quote_id=quote_id,
+        quote_version_id=approval_in.quote_version_id,
+        approval_status="PENDING",
+        approval_level=approval_in.approval_level,
+        current_approver_id=None,  # 根据审批层级确定审批人
+        total_price=total_price,
+        total_cost=total_cost,
+        gross_margin=gross_margin,
+        margin_threshold=margin_threshold,
+        margin_status=margin_status,
+        cost_complete=len(items) > 0 and all(item.cost and item.cost > 0 for item in items),
+        delivery_check=all(item.lead_time_days for item in items if item.item_type in ['硬件', '外购件']),
+        risk_terms_check=bool(version.risk_terms),
+        approval_comment=approval_in.comment
+    )
+    db.add(approval)
+    db.commit()
+    db.refresh(approval)
+    
+    approval_dict = {
+        **{c.name: getattr(approval, c.name) for c in approval.__table__.columns},
+        "current_approver_name": approval.current_approver.real_name if approval.current_approver else None,
+        "approved_by_name": approval.approver.real_name if approval.approver else None
+    }
+    return QuoteCostApprovalResponse(**approval_dict)
+
+
+@router.post("/quotes/{quote_id}/cost-approval/{approval_id}/approve", response_model=QuoteCostApprovalResponse)
+def approve_cost(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    approval_id: int,
+    action: QuoteCostApprovalAction,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    审批通过
+    """
+    approval = db.query(QuoteCostApproval).filter(
+        QuoteCostApproval.id == approval_id,
+        QuoteCostApproval.quote_id == quote_id
+    ).first()
+    if not approval:
+        raise HTTPException(status_code=404, detail="审批记录不存在")
+    
+    if approval.approval_status != "PENDING":
+        raise HTTPException(status_code=400, detail="审批记录不是待审批状态")
+    
+    approval.approval_status = "APPROVED"
+    approval.approved_by = current_user.id
+    approval.approved_at = datetime.now()
+    approval.approval_comment = action.comment
+    
+    # 如果是最低层级审批通过，更新报价版本状态
+    if approval.approval_level == 1:
+        version = db.query(QuoteVersion).filter(QuoteVersion.id == approval.quote_version_id).first()
+        if version:
+            version.cost_breakdown_complete = approval.cost_complete
+            version.margin_warning = approval.margin_status in ["WARNING", "FAIL"]
+    
+    db.commit()
+    db.refresh(approval)
+    
+    approval_dict = {
+        **{c.name: getattr(approval, c.name) for c in approval.__table__.columns},
+        "current_approver_name": approval.current_approver.real_name if approval.current_approver else None,
+        "approved_by_name": approval.approver.real_name if approval.approver else None
+    }
+    return QuoteCostApprovalResponse(**approval_dict)
+
+
+@router.post("/quotes/{quote_id}/cost-approval/{approval_id}/reject", response_model=QuoteCostApprovalResponse)
+def reject_cost(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    approval_id: int,
+    action: QuoteCostApprovalAction,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    审批驳回
+    """
+    if not action.reason:
+        raise HTTPException(status_code=400, detail="驳回原因不能为空")
+    
+    approval = db.query(QuoteCostApproval).filter(
+        QuoteCostApproval.id == approval_id,
+        QuoteCostApproval.quote_id == quote_id
+    ).first()
+    if not approval:
+        raise HTTPException(status_code=404, detail="审批记录不存在")
+    
+    if approval.approval_status != "PENDING":
+        raise HTTPException(status_code=400, detail="审批记录不是待审批状态")
+    
+    approval.approval_status = "REJECTED"
+    approval.approved_by = current_user.id
+    approval.approved_at = datetime.now()
+    approval.rejected_reason = action.reason
+    approval.approval_comment = action.comment
+    
+    db.commit()
+    db.refresh(approval)
+    
+    approval_dict = {
+        **{c.name: getattr(approval, c.name) for c in approval.__table__.columns},
+        "current_approver_name": approval.current_approver.real_name if approval.current_approver else None,
+        "approved_by_name": approval.approver.real_name if approval.approver else None
+    }
+    return QuoteCostApprovalResponse(**approval_dict)
+
+
+@router.get("/quotes/{quote_id}/cost-approval/history", response_model=List[QuoteCostApprovalResponse])
+def get_cost_approval_history(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取成本审批历史
+    """
+    approvals = db.query(QuoteCostApproval).filter(
+        QuoteCostApproval.quote_id == quote_id
+    ).order_by(desc(QuoteCostApproval.created_at)).all()
+    
+    result = []
+    for approval in approvals:
+        approval_dict = {
+            **{c.name: getattr(approval, c.name) for c in approval.__table__.columns},
+            "current_approver_name": approval.current_approver.real_name if approval.current_approver else None,
+            "approved_by_name": approval.approver.real_name if approval.approver else None
+        }
+        result.append(QuoteCostApprovalResponse(**approval_dict))
+    
+    return result
+
+
+@router.get("/quotes/{quote_id}/cost-comparison", response_model=CostComparisonResponse)
+def compare_quote_costs(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    version_ids: Optional[str] = Query(None, description="版本ID列表（逗号分隔），对比多个版本"),
+    compare_quote_id: Optional[int] = Query(None, description="对比报价ID（与其他报价对比）"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    报价成本对比分析
+    """
+    quote = db.query(Quote).filter(Quote.id == quote_id).first()
+    if not quote:
+        raise HTTPException(status_code=404, detail="报价不存在")
+    
+    # 获取当前版本
+    current_version = db.query(QuoteVersion).filter(QuoteVersion.id == quote.current_version_id).first()
+    if not current_version:
+        raise HTTPException(status_code=400, detail="报价没有当前版本")
+    
+    current_items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == current_version.id).all()
+    current_total_price = float(current_version.total_price or 0)
+    current_total_cost = float(current_version.cost_total or 0)
+    current_margin = float(current_version.gross_margin or 0)
+    
+    current_version_data = {
+        "version_no": current_version.version_no,
+        "total_price": current_total_price,
+        "total_cost": current_total_cost,
+        "gross_margin": current_margin
+    }
+    
+    # 对比数据
+    previous_version_data = None
+    comparison = None
+    breakdown_comparison = []
+    
+    # 如果指定了版本ID列表
+    if version_ids:
+        version_id_list = [int(vid) for vid in version_ids.split(',') if vid.strip()]
+        if len(version_id_list) > 0:
+            prev_version = db.query(QuoteVersion).filter(QuoteVersion.id == version_id_list[0]).first()
+            if prev_version:
+                prev_items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == prev_version.id).all()
+                prev_total_price = float(prev_version.total_price or 0)
+                prev_total_cost = float(prev_version.cost_total or 0)
+                prev_margin = float(prev_version.gross_margin or 0)
+                
+                previous_version_data = {
+                    "version_no": prev_version.version_no,
+                    "total_price": prev_total_price,
+                    "total_cost": prev_total_cost,
+                    "gross_margin": prev_margin
+                }
+                
+                # 计算对比
+                price_change = current_total_price - prev_total_price
+                price_change_pct = (price_change / prev_total_price * 100) if prev_total_price > 0 else 0
+                cost_change = current_total_cost - prev_total_cost
+                cost_change_pct = (cost_change / prev_total_cost * 100) if prev_total_cost > 0 else 0
+                margin_change = current_margin - prev_margin
+                margin_change_pct = (margin_change / prev_margin * 100) if prev_margin > 0 else 0
+                
+                comparison = {
+                    "price_change": round(price_change, 2),
+                    "price_change_pct": round(price_change_pct, 2),
+                    "cost_change": round(cost_change, 2),
+                    "cost_change_pct": round(cost_change_pct, 2),
+                    "margin_change": round(margin_change, 2),
+                    "margin_change_pct": round(margin_change_pct, 2)
+                }
+                
+                # 按分类对比
+                current_by_category = {}
+                for item in current_items:
+                    category = item.cost_category or "其他"
+                    if category not in current_by_category:
+                        current_by_category[category] = 0
+                    current_by_category[category] += float(item.cost or 0) * float(item.qty or 0)
+                
+                prev_by_category = {}
+                for item in prev_items:
+                    category = item.cost_category or "其他"
+                    if category not in prev_by_category:
+                        prev_by_category[category] = 0
+                    prev_by_category[category] += float(item.cost or 0) * float(item.qty or 0)
+                
+                all_categories = set(list(current_by_category.keys()) + list(prev_by_category.keys()))
+                for category in all_categories:
+                    v1_amount = prev_by_category.get(category, 0)
+                    v2_amount = current_by_category.get(category, 0)
+                    change = v2_amount - v1_amount
+                    change_pct = (change / v1_amount * 100) if v1_amount > 0 else 0
+                    breakdown_comparison.append({
+                        "category": category,
+                        "v1_amount": round(v1_amount, 2),
+                        "v2_amount": round(v2_amount, 2),
+                        "change": round(change, 2),
+                        "change_pct": round(change_pct, 2)
+                    })
+    
+    return CostComparisonResponse(
+        current_version=current_version_data,
+        previous_version=previous_version_data,
+        comparison=comparison,
+        breakdown_comparison=breakdown_comparison if breakdown_comparison else None
+    )
+
+
+# ==================== 技术评估 ====================
+
+
+@router.post("/leads/{lead_id}/assessments/apply", response_model=ResponseModel, status_code=201)
+def apply_lead_assessment(
+    *,
+    db: Session = Depends(deps.get_db),
+    lead_id: int,
+    request: TechnicalAssessmentApplyRequest,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """申请技术评估（线索）"""
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="线索不存在")
+    
+    # 创建评估申请
+    assessment = TechnicalAssessment(
+        source_type=AssessmentSourceTypeEnum.LEAD.value,
+        source_id=lead_id,
+        evaluator_id=request.evaluator_id or current_user.id,
+        status=AssessmentStatusEnum.PENDING.value
+    )
+    
+    db.add(assessment)
+    db.flush()
+    
+    # 更新线索
+    lead.assessment_id = assessment.id
+    lead.assessment_status = AssessmentStatusEnum.PENDING.value
+    
+    db.commit()
+    
+    return ResponseModel(message="技术评估申请已提交", data={"assessment_id": assessment.id})
+
+
+@router.post("/opportunities/{opp_id}/assessments/apply", response_model=ResponseModel, status_code=201)
+def apply_opportunity_assessment(
+    *,
+    db: Session = Depends(deps.get_db),
+    opp_id: int,
+    request: TechnicalAssessmentApplyRequest,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """申请技术评估（商机）"""
+    opportunity = db.query(Opportunity).filter(Opportunity.id == opp_id).first()
+    if not opportunity:
+        raise HTTPException(status_code=404, detail="商机不存在")
+    
+    # 创建评估申请
+    assessment = TechnicalAssessment(
+        source_type=AssessmentSourceTypeEnum.OPPORTUNITY.value,
+        source_id=opp_id,
+        evaluator_id=request.evaluator_id or current_user.id,
+        status=AssessmentStatusEnum.PENDING.value
+    )
+    
+    db.add(assessment)
+    db.flush()
+    
+    # 更新商机
+    opportunity.assessment_id = assessment.id
+    opportunity.assessment_status = AssessmentStatusEnum.PENDING.value
+    
+    db.commit()
+    
+    return ResponseModel(message="技术评估申请已提交", data={"assessment_id": assessment.id})
+
+
+@router.post("/assessments/{assessment_id}/evaluate", response_model=TechnicalAssessmentResponse, status_code=200)
+async def evaluate_assessment(
+    *,
+    db: Session = Depends(deps.get_db),
+    assessment_id: int,
+    request: TechnicalAssessmentEvaluateRequest,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """执行技术评估"""
+    assessment = db.query(TechnicalAssessment).filter(TechnicalAssessment.id == assessment_id).first()
+    if not assessment:
+        raise HTTPException(status_code=404, detail="技术评估不存在")
+    
+    if assessment.status != AssessmentStatusEnum.PENDING.value:
+        raise HTTPException(status_code=400, detail="评估状态不正确")
+    
+    # 可选：AI分析
+    ai_analysis = None
+    if request.enable_ai:
+        ai_service = AIAssessmentService()
+        if ai_service.is_available():
+            ai_analysis = await ai_service.analyze_requirement(request.requirement_data)
+    
+    # 执行评估
+    service = TechnicalAssessmentService(db)
+    assessment = service.evaluate(
+        assessment.source_type,
+        assessment.source_id,
+        current_user.id,
+        request.requirement_data,
+        ai_analysis=ai_analysis
+    )
+    
+    db.commit()
+    
+    db.refresh(assessment)
+    
+    # 构建响应
+    evaluator_name = None
+    if assessment.evaluator_id:
+        evaluator = db.query(User).filter(User.id == assessment.evaluator_id).first()
+        evaluator_name = evaluator.real_name if evaluator else None
+    
+    return TechnicalAssessmentResponse(
+        id=assessment.id,
+        source_type=assessment.source_type,
+        source_id=assessment.source_id,
+        evaluator_id=assessment.evaluator_id,
+        status=assessment.status,
+        total_score=assessment.total_score,
+        dimension_scores=assessment.dimension_scores,
+        veto_triggered=assessment.veto_triggered,
+        veto_rules=assessment.veto_rules,
+        decision=assessment.decision,
+        risks=assessment.risks,
+        similar_cases=assessment.similar_cases,
+        ai_analysis=assessment.ai_analysis,
+        conditions=assessment.conditions,
+        evaluated_at=assessment.evaluated_at,
+        created_at=assessment.created_at,
+        updated_at=assessment.updated_at,
+        evaluator_name=evaluator_name
+    )
+
+
+@router.get("/leads/{lead_id}/assessments", response_model=List[TechnicalAssessmentResponse])
+def get_lead_assessments(
+    *,
+    db: Session = Depends(deps.get_db),
+    lead_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取线索的技术评估列表"""
+    assessments = db.query(TechnicalAssessment).filter(
+        and_(
+            TechnicalAssessment.source_type == AssessmentSourceTypeEnum.LEAD.value,
+            TechnicalAssessment.source_id == lead_id
+        )
+    ).order_by(desc(TechnicalAssessment.created_at)).all()
+    
+    result = []
+    for assessment in assessments:
+        evaluator_name = None
+        if assessment.evaluator_id:
+            evaluator = db.query(User).filter(User.id == assessment.evaluator_id).first()
+            evaluator_name = evaluator.real_name if evaluator else None
+        
+        result.append(TechnicalAssessmentResponse(
+            id=assessment.id,
+            source_type=assessment.source_type,
+            source_id=assessment.source_id,
+            evaluator_id=assessment.evaluator_id,
+            status=assessment.status,
+            total_score=assessment.total_score,
+            dimension_scores=assessment.dimension_scores,
+            veto_triggered=assessment.veto_triggered,
+            veto_rules=assessment.veto_rules,
+            decision=assessment.decision,
+            risks=assessment.risks,
+            similar_cases=assessment.similar_cases,
+            ai_analysis=assessment.ai_analysis,
+            conditions=assessment.conditions,
+            evaluated_at=assessment.evaluated_at,
+            created_at=assessment.created_at,
+            updated_at=assessment.updated_at,
+            evaluator_name=evaluator_name
+        ))
+    
+    return result
+
+
+@router.get("/opportunities/{opp_id}/assessments", response_model=List[TechnicalAssessmentResponse])
+def get_opportunity_assessments(
+    *,
+    db: Session = Depends(deps.get_db),
+    opp_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取商机的技术评估列表"""
+    assessments = db.query(TechnicalAssessment).filter(
+        and_(
+            TechnicalAssessment.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value,
+            TechnicalAssessment.source_id == opp_id
+        )
+    ).order_by(desc(TechnicalAssessment.created_at)).all()
+    
+    result = []
+    for assessment in assessments:
+        evaluator_name = None
+        if assessment.evaluator_id:
+            evaluator = db.query(User).filter(User.id == assessment.evaluator_id).first()
+            evaluator_name = evaluator.real_name if evaluator else None
+        
+        result.append(TechnicalAssessmentResponse(
+            id=assessment.id,
+            source_type=assessment.source_type,
+            source_id=assessment.source_id,
+            evaluator_id=assessment.evaluator_id,
+            status=assessment.status,
+            total_score=assessment.total_score,
+            dimension_scores=assessment.dimension_scores,
+            veto_triggered=assessment.veto_triggered,
+            veto_rules=assessment.veto_rules,
+            decision=assessment.decision,
+            risks=assessment.risks,
+            similar_cases=assessment.similar_cases,
+            ai_analysis=assessment.ai_analysis,
+            conditions=assessment.conditions,
+            evaluated_at=assessment.evaluated_at,
+            created_at=assessment.created_at,
+            updated_at=assessment.updated_at,
+            evaluator_name=evaluator_name
+        ))
+    
+    return result
+
+
+@router.get("/assessments/{assessment_id}", response_model=TechnicalAssessmentResponse)
+def get_assessment(
+    *,
+    db: Session = Depends(deps.get_db),
+    assessment_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取技术评估详情"""
+    assessment = db.query(TechnicalAssessment).filter(TechnicalAssessment.id == assessment_id).first()
+    if not assessment:
+        raise HTTPException(status_code=404, detail="技术评估不存在")
+    
+    evaluator_name = None
+    if assessment.evaluator_id:
+        evaluator = db.query(User).filter(User.id == assessment.evaluator_id).first()
+        evaluator_name = evaluator.real_name if evaluator else None
+    
+    return TechnicalAssessmentResponse(
+        id=assessment.id,
+        source_type=assessment.source_type,
+        source_id=assessment.source_id,
+        evaluator_id=assessment.evaluator_id,
+        status=assessment.status,
+        total_score=assessment.total_score,
+        dimension_scores=assessment.dimension_scores,
+        veto_triggered=assessment.veto_triggered,
+        veto_rules=assessment.veto_rules,
+        decision=assessment.decision,
+        risks=assessment.risks,
+        similar_cases=assessment.similar_cases,
+        ai_analysis=assessment.ai_analysis,
+        conditions=assessment.conditions,
+        evaluated_at=assessment.evaluated_at,
+        created_at=assessment.created_at,
+        updated_at=assessment.updated_at,
+        evaluator_name=evaluator_name
+    )
+
+
+@router.get("/failure-cases/similar", response_model=List[FailureCaseResponse])
+def find_similar_cases(
+    *,
+    db: Session = Depends(deps.get_db),
+    industry: Optional[str] = Query(None, description="行业"),
+    product_types: Optional[str] = Query(None, description="产品类型(JSON Array)"),
+    takt_time_s: Optional[int] = Query(None, description="节拍时间(秒)"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """查找相似失败案例"""
+    query = db.query(FailureCase)
+    
+    if industry:
+        query = query.filter(FailureCase.industry == industry)
+    
+    cases = query.limit(10).all()
+    
+    result = []
+    for case in cases:
+        creator_name = None
+        if case.created_by:
+            creator = db.query(User).filter(User.id == case.created_by).first()
+            creator_name = creator.real_name if creator else None
+        
+        result.append(FailureCaseResponse(
+            **{c.name: getattr(case, c.name) for c in case.__table__.columns},
+            creator_name=creator_name
+        ))
+    
+    return result
+
+
+@router.get("/open-items", response_model=PaginatedResponse[OpenItemResponse])
+def list_open_items(
+    *,
+    db: Session = Depends(deps.get_db),
+    source_type: Optional[str] = Query(None, description="来源类型"),
+    source_id: Optional[int] = Query(None, description="来源ID"),
+    status: Optional[str] = Query(None, description="状态"),
+    blocks_quotation: Optional[bool] = Query(None, description="是否阻塞报价"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取未决事项列表"""
+    query = db.query(OpenItem)
+    
+    if source_type:
+        query = query.filter(OpenItem.source_type == source_type)
+    if source_id:
+        query = query.filter(OpenItem.source_id == source_id)
+    if status:
+        query = query.filter(OpenItem.status == status)
+    if blocks_quotation is not None:
+        query = query.filter(OpenItem.blocks_quotation == blocks_quotation)
+    
+    total = query.count()
+    items = query.order_by(desc(OpenItem.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    
+    result = []
+    for item in items:
+        responsible_person_name = None
+        if item.responsible_person_id:
+            person = db.query(User).filter(User.id == item.responsible_person_id).first()
+            responsible_person_name = person.real_name if person else None
+        
+        result.append(OpenItemResponse(
+            id=item.id,
+            source_type=item.source_type,
+            source_id=item.source_id,
+            item_code=item.item_code,
+            item_type=item.item_type,
+            description=item.description,
+            responsible_party=item.responsible_party,
+            responsible_person_id=item.responsible_person_id,
+            due_date=item.due_date,
+            status=item.status,
+            close_evidence=item.close_evidence,
+            blocks_quotation=item.blocks_quotation,
+            closed_at=item.closed_at,
+            created_at=item.created_at,
+            updated_at=item.updated_at,
+            responsible_person_name=responsible_person_name
+        ))
+    
+    return PaginatedResponse(
+        items=result,
+        total=total,
+        page=page,
+        page_size=page_size
+    )
+
+
+@router.post("/leads/{lead_id}/open-items", response_model=OpenItemResponse, status_code=201)
+def create_open_item(
+    *,
+    db: Session = Depends(deps.get_db),
+    lead_id: int,
+    request: OpenItemCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """创建未决事项（线索）"""
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="线索不存在")
+    
+    # 生成编号
+    from datetime import datetime
+    item_code = f"OI-{datetime.now().strftime('%y%m%d')}-{lead_id:03d}"
+    
+    open_item = OpenItem(
+        source_type=AssessmentSourceTypeEnum.LEAD.value,
+        source_id=lead_id,
+        item_code=item_code,
+        item_type=request.item_type,
+        description=request.description,
+        responsible_party=request.responsible_party,
+        responsible_person_id=request.responsible_person_id,
+        due_date=request.due_date,
+        blocks_quotation=request.blocks_quotation
+    )
+    
+    db.add(open_item)
+    db.commit()
+    db.refresh(open_item)
+    
+    responsible_person_name = None
+    if open_item.responsible_person_id:
+        person = db.query(User).filter(User.id == open_item.responsible_person_id).first()
+        responsible_person_name = person.real_name if person else None
+    
+    return OpenItemResponse(
+        id=open_item.id,
+        source_type=open_item.source_type,
+        source_id=open_item.source_id,
+        item_code=open_item.item_code,
+        item_type=open_item.item_type,
+        description=open_item.description,
+        responsible_party=open_item.responsible_party,
+        responsible_person_id=open_item.responsible_person_id,
+        due_date=open_item.due_date,
+        status=open_item.status,
+        close_evidence=open_item.close_evidence,
+        blocks_quotation=open_item.blocks_quotation,
+        closed_at=open_item.closed_at,
+        created_at=open_item.created_at,
+        updated_at=open_item.updated_at,
+        responsible_person_name=responsible_person_name
+    )
+
+
+@router.post("/opportunities/{opp_id}/open-items", response_model=OpenItemResponse, status_code=201)
+def create_open_item_for_opportunity(
+    *,
+    db: Session = Depends(deps.get_db),
+    opp_id: int,
+    request: OpenItemCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """创建未决事项（商机）"""
+    opportunity = db.query(Opportunity).filter(Opportunity.id == opp_id).first()
+    if not opportunity:
+        raise HTTPException(status_code=404, detail="商机不存在")
+    
+    # 生成编号
+    from datetime import datetime
+    item_code = f"OI-{datetime.now().strftime('%y%m%d')}-{opp_id:03d}"
+    
+    open_item = OpenItem(
+        source_type=AssessmentSourceTypeEnum.OPPORTUNITY.value,
+        source_id=opp_id,
+        item_code=item_code,
+        item_type=request.item_type,
+        description=request.description,
+        responsible_party=request.responsible_party,
+        responsible_person_id=request.responsible_person_id,
+        due_date=request.due_date,
+        blocks_quotation=request.blocks_quotation
+    )
+    
+    db.add(open_item)
+    db.commit()
+    db.refresh(open_item)
+    
+    responsible_person_name = None
+    if open_item.responsible_person_id:
+        person = db.query(User).filter(User.id == open_item.responsible_person_id).first()
+        responsible_person_name = person.real_name if person else None
+    
+    return OpenItemResponse(
+        id=open_item.id,
+        source_type=open_item.source_type,
+        source_id=open_item.source_id,
+        item_code=open_item.item_code,
+        item_type=open_item.item_type,
+        description=open_item.description,
+        responsible_party=open_item.responsible_party,
+        responsible_person_id=open_item.responsible_person_id,
+        due_date=open_item.due_date,
+        status=open_item.status,
+        close_evidence=open_item.close_evidence,
+        blocks_quotation=open_item.blocks_quotation,
+        closed_at=open_item.closed_at,
+        created_at=open_item.created_at,
+        updated_at=open_item.updated_at,
+        responsible_person_name=responsible_person_name
+    )
+
+
+@router.put("/open-items/{item_id}", response_model=OpenItemResponse)
+def update_open_item(
+    *,
+    db: Session = Depends(deps.get_db),
+    item_id: int,
+    request: OpenItemCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """更新未决事项"""
+    open_item = db.query(OpenItem).filter(OpenItem.id == item_id).first()
+    if not open_item:
+        raise HTTPException(status_code=404, detail="未决事项不存在")
+    
+    open_item.item_type = request.item_type
+    open_item.description = request.description
+    open_item.responsible_party = request.responsible_party
+    open_item.responsible_person_id = request.responsible_person_id
+    open_item.due_date = request.due_date
+    open_item.blocks_quotation = request.blocks_quotation
+    
+    db.commit()
+    db.refresh(open_item)
+    
+    responsible_person_name = None
+    if open_item.responsible_person_id:
+        person = db.query(User).filter(User.id == open_item.responsible_person_id).first()
+        responsible_person_name = person.real_name if person else None
+    
+    return OpenItemResponse(
+        id=open_item.id,
+        source_type=open_item.source_type,
+        source_id=open_item.source_id,
+        item_code=open_item.item_code,
+        item_type=open_item.item_type,
+        description=open_item.description,
+        responsible_party=open_item.responsible_party,
+        responsible_person_id=open_item.responsible_person_id,
+        due_date=open_item.due_date,
+        status=open_item.status,
+        close_evidence=open_item.close_evidence,
+        blocks_quotation=open_item.blocks_quotation,
+        closed_at=open_item.closed_at,
+        created_at=open_item.created_at,
+        updated_at=open_item.updated_at,
+        responsible_person_name=responsible_person_name
+    )
+
+
+@router.post("/open-items/{item_id}/close", response_model=ResponseModel)
+def close_open_item(
+    *,
+    db: Session = Depends(deps.get_db),
+    item_id: int,
+    close_evidence: Optional[str] = Query(None, description="关闭证据"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """关闭未决事项"""
+    open_item = db.query(OpenItem).filter(OpenItem.id == item_id).first()
+    if not open_item:
+        raise HTTPException(status_code=404, detail="未决事项不存在")
+    
+    from app.models.enums import OpenItemStatusEnum
+    from datetime import datetime
+    
+    open_item.status = OpenItemStatusEnum.CLOSED.value
+    open_item.close_evidence = close_evidence
+    open_item.closed_at = datetime.now()
+    
+    db.commit()
+    
+    return ResponseModel(message="未决事项已关闭")
+
+
+@router.get("/scoring-rules", response_model=List[ScoringRuleResponse])
+def list_scoring_rules(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取评分规则列表"""
+    rules = db.query(ScoringRule).order_by(desc(ScoringRule.created_at)).all()
+    
+    result = []
+    for rule in rules:
+        creator_name = None
+        if rule.created_by:
+            creator = db.query(User).filter(User.id == rule.created_by).first()
+            creator_name = creator.real_name if creator else None
+        
+        result.append(ScoringRuleResponse(
+            id=rule.id,
+            version=rule.version,
+            is_active=rule.is_active,
+            description=rule.description,
+            created_by=rule.created_by,
+            created_at=rule.created_at,
+            updated_at=rule.updated_at,
+            creator_name=creator_name
+        ))
+    
+    return result
+
+
+@router.post("/scoring-rules", response_model=ScoringRuleResponse, status_code=201)
+def create_scoring_rule(
+    *,
+    db: Session = Depends(deps.get_db),
+    request: ScoringRuleCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """创建评分规则"""
+    # 检查版本号是否已存在
+    existing = db.query(ScoringRule).filter(ScoringRule.version == request.version).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="版本号已存在")
+    
+    rule = ScoringRule(
+        version=request.version,
+        rules_json=request.rules_json,
+        description=request.description,
+        created_by=current_user.id
+    )
+    
+    db.add(rule)
+    db.commit()
+    db.refresh(rule)
+    
+    return ScoringRuleResponse(
+        id=rule.id,
+        version=rule.version,
+        is_active=rule.is_active,
+        description=rule.description,
+        created_by=rule.created_by,
+        created_at=rule.created_at,
+        updated_at=rule.updated_at,
+        creator_name=current_user.real_name
+    )
+
+
+@router.put("/scoring-rules/{rule_id}/activate", response_model=ResponseModel)
+def activate_scoring_rule(
+    *,
+    db: Session = Depends(deps.get_db),
+    rule_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """激活评分规则版本"""
+    rule = db.query(ScoringRule).filter(ScoringRule.id == rule_id).first()
+    if not rule:
+        raise HTTPException(status_code=404, detail="评分规则不存在")
+    
+    # 取消其他规则的激活状态
+    db.query(ScoringRule).update({ScoringRule.is_active: False})
+    
+    # 激活当前规则
+    rule.is_active = True
+    db.commit()
+    
+    return ResponseModel(message="评分规则已激活")
+
+
+@router.get("/failure-cases", response_model=PaginatedResponse[FailureCaseResponse])
+def list_failure_cases(
+    *,
+    db: Session = Depends(deps.get_db),
+    industry: Optional[str] = Query(None, description="行业"),
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取失败案例列表"""
+    query = db.query(FailureCase)
+    
+    if industry:
+        query = query.filter(FailureCase.industry == industry)
+    
+    if keyword:
+        query = query.filter(
+            or_(
+                FailureCase.project_name.like(f"%{keyword}%"),
+                FailureCase.core_failure_reason.like(f"%{keyword}%")
+            )
+        )
+    
+    total = query.count()
+    cases = query.order_by(desc(FailureCase.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    
+    result = []
+    for case in cases:
+        creator_name = None
+        if case.created_by:
+            creator = db.query(User).filter(User.id == case.created_by).first()
+            creator_name = creator.real_name if creator else None
+        
+        result.append(FailureCaseResponse(
+            **{c.name: getattr(case, c.name) for c in case.__table__.columns},
+            creator_name=creator_name
+        ))
+    
+    return PaginatedResponse(
+        items=result,
+        total=total,
+        page=page,
+        page_size=page_size
+    )
+
+
+@router.post("/failure-cases", response_model=FailureCaseResponse, status_code=201)
+def create_failure_case(
+    *,
+    db: Session = Depends(deps.get_db),
+    request: FailureCaseCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """创建失败案例"""
+    # 检查案例编号是否已存在
+    existing = db.query(FailureCase).filter(FailureCase.case_code == request.case_code).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="案例编号已存在")
+    
+    case = FailureCase(
+        case_code=request.case_code,
+        project_name=request.project_name,
+        industry=request.industry,
+        product_types=request.product_types,
+        processes=request.processes,
+        takt_time_s=request.takt_time_s,
+        annual_volume=request.annual_volume,
+        budget_status=request.budget_status,
+        customer_project_status=request.customer_project_status,
+        spec_status=request.spec_status,
+        price_sensitivity=request.price_sensitivity,
+        delivery_months=request.delivery_months,
+        failure_tags=request.failure_tags,
+        core_failure_reason=request.core_failure_reason,
+        early_warning_signals=request.early_warning_signals,
+        final_result=request.final_result,
+        lesson_learned=request.lesson_learned,
+        keywords=request.keywords,
+        created_by=current_user.id
+    )
+    
+    db.add(case)
+    db.commit()
+    db.refresh(case)
+    
+    return FailureCaseResponse(
+        id=case.id,
+        case_code=case.case_code,
+        project_name=case.project_name,
+        industry=case.industry,
+        product_types=case.product_types,
+        processes=case.processes,
+        takt_time_s=case.takt_time_s,
+        annual_volume=case.annual_volume,
+        budget_status=case.budget_status,
+        customer_project_status=case.customer_project_status,
+        spec_status=case.spec_status,
+        price_sensitivity=case.price_sensitivity,
+        delivery_months=case.delivery_months,
+        failure_tags=case.failure_tags,
+        core_failure_reason=case.core_failure_reason,
+        early_warning_signals=case.early_warning_signals,
+        final_result=case.final_result,
+        lesson_learned=case.lesson_learned,
+        keywords=case.keywords,
+        created_by=case.created_by,
+        created_at=case.created_at,
+        updated_at=case.updated_at,
+        creator_name=current_user.real_name
+    )
+
+
+# ==================== 需求详情管理 ====================
+
+@router.get("/leads/{lead_id}/requirement-detail", response_model=LeadRequirementDetailResponse)
+def get_lead_requirement_detail(
+    *,
+    db: Session = Depends(deps.get_db),
+    lead_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取线索的需求详情"""
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="线索不存在")
+    
+    requirement_detail = db.query(LeadRequirementDetail).filter(
+        LeadRequirementDetail.lead_id == lead_id
+    ).first()
+    
+    if not requirement_detail:
+        raise HTTPException(status_code=404, detail="需求详情不存在")
+    
+    frozen_by_name = None
+    if requirement_detail.frozen_by:
+        user = db.query(User).filter(User.id == requirement_detail.frozen_by).first()
+        frozen_by_name = user.real_name if user else None
+    
+    return LeadRequirementDetailResponse(
+        id=requirement_detail.id,
+        lead_id=requirement_detail.lead_id,
+        customer_factory_location=requirement_detail.customer_factory_location,
+        target_object_type=requirement_detail.target_object_type,
+        application_scenario=requirement_detail.application_scenario,
+        delivery_mode=requirement_detail.delivery_mode,
+        expected_delivery_date=requirement_detail.expected_delivery_date,
+        requirement_source=requirement_detail.requirement_source,
+        participant_ids=requirement_detail.participant_ids,
+        requirement_maturity=requirement_detail.requirement_maturity,
+        has_sow=requirement_detail.has_sow,
+        has_interface_doc=requirement_detail.has_interface_doc,
+        has_drawing_doc=requirement_detail.has_drawing_doc,
+        sample_availability=requirement_detail.sample_availability,
+        customer_support_resources=requirement_detail.customer_support_resources,
+        key_risk_factors=requirement_detail.key_risk_factors,
+        veto_triggered=requirement_detail.veto_triggered,
+        veto_reason=requirement_detail.veto_reason,
+        target_capacity_uph=float(requirement_detail.target_capacity_uph) if requirement_detail.target_capacity_uph else None,
+        target_capacity_daily=float(requirement_detail.target_capacity_daily) if requirement_detail.target_capacity_daily else None,
+        target_capacity_shift=float(requirement_detail.target_capacity_shift) if requirement_detail.target_capacity_shift else None,
+        cycle_time_seconds=float(requirement_detail.cycle_time_seconds) if requirement_detail.cycle_time_seconds else None,
+        workstation_count=requirement_detail.workstation_count,
+        changeover_method=requirement_detail.changeover_method,
+        yield_target=float(requirement_detail.yield_target) if requirement_detail.yield_target else None,
+        retest_allowed=requirement_detail.retest_allowed,
+        retest_max_count=requirement_detail.retest_max_count,
+        traceability_type=requirement_detail.traceability_type,
+        data_retention_period=requirement_detail.data_retention_period,
+        data_format=requirement_detail.data_format,
+        test_scope=requirement_detail.test_scope,
+        key_metrics_spec=requirement_detail.key_metrics_spec,
+        coverage_boundary=requirement_detail.coverage_boundary,
+        exception_handling=requirement_detail.exception_handling,
+        acceptance_method=requirement_detail.acceptance_method,
+        acceptance_basis=requirement_detail.acceptance_basis,
+        delivery_checklist=requirement_detail.delivery_checklist,
+        interface_types=requirement_detail.interface_types,
+        io_point_estimate=requirement_detail.io_point_estimate,
+        communication_protocols=requirement_detail.communication_protocols,
+        upper_system_integration=requirement_detail.upper_system_integration,
+        data_field_list=requirement_detail.data_field_list,
+        it_security_restrictions=requirement_detail.it_security_restrictions,
+        power_supply=requirement_detail.power_supply,
+        air_supply=requirement_detail.air_supply,
+        environment=requirement_detail.environment,
+        safety_requirements=requirement_detail.safety_requirements,
+        space_and_logistics=requirement_detail.space_and_logistics,
+        customer_site_standards=requirement_detail.customer_site_standards,
+        customer_supplied_materials=requirement_detail.customer_supplied_materials,
+        restricted_brands=requirement_detail.restricted_brands,
+        specified_brands=requirement_detail.specified_brands,
+        long_lead_items=requirement_detail.long_lead_items,
+        spare_parts_requirement=requirement_detail.spare_parts_requirement,
+        after_sales_support=requirement_detail.after_sales_support,
+        requirement_version=requirement_detail.requirement_version,
+        is_frozen=requirement_detail.is_frozen,
+        frozen_at=requirement_detail.frozen_at,
+        frozen_by=requirement_detail.frozen_by,
+        frozen_by_name=frozen_by_name,
+        created_at=requirement_detail.created_at,
+        updated_at=requirement_detail.updated_at
+    )
+
+
+@router.post("/leads/{lead_id}/requirement-detail", response_model=LeadRequirementDetailResponse, status_code=201)
+def create_lead_requirement_detail(
+    *,
+    db: Session = Depends(deps.get_db),
+    lead_id: int,
+    request: LeadRequirementDetailCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """创建线索的需求详情"""
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="线索不存在")
+    
+    # 检查是否已存在
+    existing = db.query(LeadRequirementDetail).filter(
+        LeadRequirementDetail.lead_id == lead_id
+    ).first()
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="需求详情已存在，请使用PUT方法更新")
+    
+    # 创建需求详情
+    requirement_detail = LeadRequirementDetail(
+        lead_id=lead_id,
+        **request.dict(exclude_unset=True)
+    )
+    
+    db.add(requirement_detail)
+    db.commit()
+    db.refresh(requirement_detail)
+    
+    # 更新线索的requirement_detail_id
+    lead.requirement_detail_id = requirement_detail.id
+    db.commit()
+    
+    return get_lead_requirement_detail(db=db, lead_id=lead_id, current_user=current_user)
+
+
+@router.put("/leads/{lead_id}/requirement-detail", response_model=LeadRequirementDetailResponse)
+def update_lead_requirement_detail(
+    *,
+    db: Session = Depends(deps.get_db),
+    lead_id: int,
+    request: LeadRequirementDetailCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """更新线索的需求详情"""
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="线索不存在")
+    
+    requirement_detail = db.query(LeadRequirementDetail).filter(
+        LeadRequirementDetail.lead_id == lead_id
+    ).first()
+    
+    if not requirement_detail:
+        raise HTTPException(status_code=404, detail="需求详情不存在")
+    
+    # 检查是否已冻结
+    if requirement_detail.is_frozen:
+        raise HTTPException(status_code=400, detail="需求已冻结，无法修改。如需修改，请先解冻或创建ECR/ECN")
+    
+    # 更新字段
+    update_data = request.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(requirement_detail, field, value)
+    
+    db.commit()
+    db.refresh(requirement_detail)
+    
+    return get_lead_requirement_detail(db=db, lead_id=lead_id, current_user=current_user)
+
+
+# ==================== 需求冻结管理 ====================
+
+@router.get("/leads/{lead_id}/requirement-freezes", response_model=List[RequirementFreezeResponse])
+def list_lead_requirement_freezes(
+    *,
+    db: Session = Depends(deps.get_db),
+    lead_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取线索的需求冻结记录列表"""
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="线索不存在")
+    
+    freezes = db.query(RequirementFreeze).filter(
+        and_(
+            RequirementFreeze.source_type == AssessmentSourceTypeEnum.LEAD.value,
+            RequirementFreeze.source_id == lead_id
+        )
+    ).order_by(desc(RequirementFreeze.freeze_time)).all()
+    
+    result = []
+    for freeze in freezes:
+        frozen_by_name = None
+        if freeze.frozen_by:
+            user = db.query(User).filter(User.id == freeze.frozen_by).first()
+            frozen_by_name = user.real_name if user else None
+        
+        result.append(RequirementFreezeResponse(
+            id=freeze.id,
+            source_type=freeze.source_type,
+            source_id=freeze.source_id,
+            freeze_type=freeze.freeze_type,
+            freeze_time=freeze.freeze_time,
+            frozen_by=freeze.frozen_by,
+            version_number=freeze.version_number,
+            requires_ecr=freeze.requires_ecr,
+            description=freeze.description,
+            created_at=freeze.created_at,
+            updated_at=freeze.updated_at,
+            frozen_by_name=frozen_by_name
+        ))
+    
+    return result
+
+
+@router.post("/leads/{lead_id}/requirement-freezes", response_model=RequirementFreezeResponse, status_code=201)
+def create_lead_requirement_freeze(
+    *,
+    db: Session = Depends(deps.get_db),
+    lead_id: int,
+    request: RequirementFreezeCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """创建线索的需求冻结记录"""
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="线索不存在")
+    
+    # 检查需求详情是否存在
+    requirement_detail = db.query(LeadRequirementDetail).filter(
+        LeadRequirementDetail.lead_id == lead_id
+    ).first()
+    
+    if not requirement_detail:
+        raise HTTPException(status_code=400, detail="需求详情不存在，请先创建需求详情")
+    
+    # 创建冻结记录
+    freeze = RequirementFreeze(
+        source_type=AssessmentSourceTypeEnum.LEAD.value,
+        source_id=lead_id,
+        freeze_type=request.freeze_type,
+        version_number=request.version_number,
+        requires_ecr=request.requires_ecr,
+        description=request.description,
+        frozen_by=current_user.id
+    )
+    
+    db.add(freeze)
+    
+    # 更新需求详情为冻结状态
+    from datetime import datetime
+    requirement_detail.is_frozen = True
+    requirement_detail.frozen_at = datetime.now()
+    requirement_detail.frozen_by = current_user.id
+    requirement_detail.requirement_version = request.version_number
+    
+    db.commit()
+    db.refresh(freeze)
+    
+    frozen_by_name = current_user.real_name
+    
+    return RequirementFreezeResponse(
+        id=freeze.id,
+        source_type=freeze.source_type,
+        source_id=freeze.source_id,
+        freeze_type=freeze.freeze_type,
+        freeze_time=freeze.freeze_time,
+        frozen_by=freeze.frozen_by,
+        version_number=freeze.version_number,
+        requires_ecr=freeze.requires_ecr,
+        description=freeze.description,
+        created_at=freeze.created_at,
+        updated_at=freeze.updated_at,
+        frozen_by_name=frozen_by_name
+    )
+
+
+@router.get("/opportunities/{opp_id}/requirement-freezes", response_model=List[RequirementFreezeResponse])
+def list_opportunity_requirement_freezes(
+    *,
+    db: Session = Depends(deps.get_db),
+    opp_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取商机的需求冻结记录列表"""
+    opportunity = db.query(Opportunity).filter(Opportunity.id == opp_id).first()
+    if not opportunity:
+        raise HTTPException(status_code=404, detail="商机不存在")
+    
+    freezes = db.query(RequirementFreeze).filter(
+        and_(
+            RequirementFreeze.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value,
+            RequirementFreeze.source_id == opp_id
+        )
+    ).order_by(desc(RequirementFreeze.freeze_time)).all()
+    
+    result = []
+    for freeze in freezes:
+        frozen_by_name = None
+        if freeze.frozen_by:
+            user = db.query(User).filter(User.id == freeze.frozen_by).first()
+            frozen_by_name = user.real_name if user else None
+        
+        result.append(RequirementFreezeResponse(
+            id=freeze.id,
+            source_type=freeze.source_type,
+            source_id=freeze.source_id,
+            freeze_type=freeze.freeze_type,
+            freeze_time=freeze.freeze_time,
+            frozen_by=freeze.frozen_by,
+            version_number=freeze.version_number,
+            requires_ecr=freeze.requires_ecr,
+            description=freeze.description,
+            created_at=freeze.created_at,
+            updated_at=freeze.updated_at,
+            frozen_by_name=frozen_by_name
+        ))
+    
+    return result
+
+
+@router.post("/opportunities/{opp_id}/requirement-freezes", response_model=RequirementFreezeResponse, status_code=201)
+def create_opportunity_requirement_freeze(
+    *,
+    db: Session = Depends(deps.get_db),
+    opp_id: int,
+    request: RequirementFreezeCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """创建商机的需求冻结记录"""
+    opportunity = db.query(Opportunity).filter(Opportunity.id == opp_id).first()
+    if not opportunity:
+        raise HTTPException(status_code=404, detail="商机不存在")
+    
+    # 创建冻结记录
+    freeze = RequirementFreeze(
+        source_type=AssessmentSourceTypeEnum.OPPORTUNITY.value,
+        source_id=opp_id,
+        freeze_type=request.freeze_type,
+        version_number=request.version_number,
+        requires_ecr=request.requires_ecr,
+        description=request.description,
+        frozen_by=current_user.id
+    )
+    
+    db.add(freeze)
+    db.commit()
+    db.refresh(freeze)
+    
+    frozen_by_name = current_user.real_name
+    
+    return RequirementFreezeResponse(
+        id=freeze.id,
+        source_type=freeze.source_type,
+        source_id=freeze.source_id,
+        freeze_type=freeze.freeze_type,
+        freeze_time=freeze.freeze_time,
+        frozen_by=freeze.frozen_by,
+        version_number=freeze.version_number,
+        requires_ecr=freeze.requires_ecr,
+        description=freeze.description,
+        created_at=freeze.created_at,
+        updated_at=freeze.updated_at,
+        frozen_by_name=frozen_by_name
+    )
+
+
+# ==================== AI澄清管理 ====================
+
+@router.get("/ai-clarifications", response_model=PaginatedResponse[AIClarificationResponse])
+def list_ai_clarifications(
+    *,
+    db: Session = Depends(deps.get_db),
+    source_type: Optional[str] = Query(None, description="来源类型"),
+    source_id: Optional[int] = Query(None, description="来源ID"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取AI澄清记录列表"""
+    query = db.query(AIClarification)
+    
+    if source_type:
+        query = query.filter(AIClarification.source_type == source_type)
+    if source_id:
+        query = query.filter(AIClarification.source_id == source_id)
+    
+    total = query.count()
+    clarifications = query.order_by(
+        desc(AIClarification.source_type),
+        desc(AIClarification.source_id),
+        desc(AIClarification.round)
+    ).offset((page - 1) * page_size).limit(page_size).all()
+    
+    items = []
+    for clarification in clarifications:
+        items.append(AIClarificationResponse(
+            id=clarification.id,
+            source_type=clarification.source_type,
+            source_id=clarification.source_id,
+            round=clarification.round,
+            questions=clarification.questions,
+            answers=clarification.answers,
+            created_at=clarification.created_at,
+            updated_at=clarification.updated_at
+        ))
+    
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
+    )
+
+
+@router.post("/leads/{lead_id}/ai-clarifications", response_model=AIClarificationResponse, status_code=201)
+def create_ai_clarification_for_lead(
+    *,
+    db: Session = Depends(deps.get_db),
+    lead_id: int,
+    request: AIClarificationCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """创建AI澄清记录（线索）"""
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="线索不存在")
+    
+    # 获取当前最大轮次
+    max_round = db.query(func.max(AIClarification.round)).filter(
+        and_(
+            AIClarification.source_type == AssessmentSourceTypeEnum.LEAD.value,
+            AIClarification.source_id == lead_id
+        )
+    ).scalar() or 0
+    
+    clarification = AIClarification(
+        source_type=AssessmentSourceTypeEnum.LEAD.value,
+        source_id=lead_id,
+        round=max_round + 1,
+        questions=request.questions,
+        answers=request.answers
+    )
+    
+    db.add(clarification)
+    db.commit()
+    db.refresh(clarification)
+    
+    return AIClarificationResponse(
+        id=clarification.id,
+        source_type=clarification.source_type,
+        source_id=clarification.source_id,
+        round=clarification.round,
+        questions=clarification.questions,
+        answers=clarification.answers,
+        created_at=clarification.created_at,
+        updated_at=clarification.updated_at
+    )
+
+
+@router.post("/opportunities/{opp_id}/ai-clarifications", response_model=AIClarificationResponse, status_code=201)
+def create_ai_clarification_for_opportunity(
+    *,
+    db: Session = Depends(deps.get_db),
+    opp_id: int,
+    request: AIClarificationCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """创建AI澄清记录（商机）"""
+    opportunity = db.query(Opportunity).filter(Opportunity.id == opp_id).first()
+    if not opportunity:
+        raise HTTPException(status_code=404, detail="商机不存在")
+    
+    # 获取当前最大轮次
+    max_round = db.query(func.max(AIClarification.round)).filter(
+        and_(
+            AIClarification.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value,
+            AIClarification.source_id == opp_id
+        )
+    ).scalar() or 0
+    
+    clarification = AIClarification(
+        source_type=AssessmentSourceTypeEnum.OPPORTUNITY.value,
+        source_id=opp_id,
+        round=max_round + 1,
+        questions=request.questions,
+        answers=request.answers
+    )
+    
+    db.add(clarification)
+    db.commit()
+    db.refresh(clarification)
+    
+    return AIClarificationResponse(
+        id=clarification.id,
+        source_type=clarification.source_type,
+        source_id=clarification.source_id,
+        round=clarification.round,
+        questions=clarification.questions,
+        answers=clarification.answers,
+        created_at=clarification.created_at,
+        updated_at=clarification.updated_at
+    )
+
+
+@router.put("/ai-clarifications/{clarification_id}", response_model=AIClarificationResponse)
+def update_ai_clarification(
+    *,
+    db: Session = Depends(deps.get_db),
+    clarification_id: int,
+    request: AIClarificationUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """更新AI澄清记录（回答）"""
+    clarification = db.query(AIClarification).filter(
+        AIClarification.id == clarification_id
+    ).first()
+    
+    if not clarification:
+        raise HTTPException(status_code=404, detail="AI澄清记录不存在")
+    
+    clarification.answers = request.answers
+    
+    db.commit()
+    db.refresh(clarification)
+    
+    return AIClarificationResponse(
+        id=clarification.id,
+        source_type=clarification.source_type,
+        source_id=clarification.source_id,
+        round=clarification.round,
+        questions=clarification.questions,
+        answers=clarification.answers,
+        created_at=clarification.created_at,
+        updated_at=clarification.updated_at
+    )
+
+
+@router.get("/ai-clarifications/{clarification_id}", response_model=AIClarificationResponse)
+def get_ai_clarification(
+    *,
+    db: Session = Depends(deps.get_db),
+    clarification_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取AI澄清记录详情"""
+    clarification = db.query(AIClarification).filter(
+        AIClarification.id == clarification_id
+    ).first()
+    
+    if not clarification:
+        raise HTTPException(status_code=404, detail="AI澄清记录不存在")
+    
+    return AIClarificationResponse(
+        id=clarification.id,
+        source_type=clarification.source_type,
+        source_id=clarification.source_id,
+        round=clarification.round,
+        questions=clarification.questions,
+        answers=clarification.answers,
+        created_at=clarification.created_at,
+        updated_at=clarification.updated_at
     )

@@ -143,7 +143,7 @@ export default function WorkReportList() {
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部状态</SelectItem>
+                <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(statusConfigs).map(([key, config]) => (
                   <SelectItem key={key} value={key}>
                     {config.label}
@@ -156,7 +156,7 @@ export default function WorkReportList() {
                 <SelectValue placeholder="选择类型" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部类型</SelectItem>
+                <SelectItem value="all">全部类型</SelectItem>
                 {Object.entries(reportTypeConfigs).map(([key, config]) => (
                   <SelectItem key={key} value={key}>
                     {config.label}

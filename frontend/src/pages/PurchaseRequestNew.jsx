@@ -43,7 +43,7 @@ import {
 } from '../components/ui/dialog'
 import { cn } from '../lib/utils'
 import { fadeIn } from '../lib/animations'
-import { purchaseApi, projectApi, materialApi } from '../services/api'
+import { purchaseApi, projectApi, materialApi, machineApi } from '../services/api'
 import { toast } from '../components/ui/toast'
 import { LoadingCard } from '../components/common'
 import { ErrorMessage } from '../components/common'
@@ -124,8 +124,23 @@ export default function PurchaseRequestNew() {
             { id: 2, machine_code: 'PN002', machine_name: '机台2' },
           ])
         } else {
-          // TODO: Load machines for project
-          setMachines([])
+          // Load machines for project from API
+          try {
+            const response = await machineApi.list({
+              project_id: formData.project_id,
+              page: 1,
+              page_size: 100,
+            })
+            const machineList = response.data?.items || response.data || []
+            setMachines(machineList.map(m => ({
+              id: m.id,
+              machine_code: m.machine_code || m.machine_no,
+              machine_name: m.machine_name || m.machine_code || `机台${m.id}`,
+            })))
+          } catch (err) {
+            console.error('Failed to load machines:', err)
+            setMachines([])
+          }
         }
       } catch (err) {
         console.error('Failed to load machines:', err)
@@ -418,7 +433,7 @@ export default function PurchaseRequestNew() {
                         <SelectValue placeholder="选择项目（可选）" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">无</SelectItem>
+                        <SelectItem value="none">无</SelectItem>
                         {projects.map(project => (
                           <SelectItem key={project.id} value={project.id.toString()}>
                             {project.project_name}
@@ -438,7 +453,7 @@ export default function PurchaseRequestNew() {
                         <SelectValue placeholder="选择设备（可选）" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">无</SelectItem>
+                        <SelectItem value="none">无</SelectItem>
                         {machines.map(machine => (
                           <SelectItem key={machine.id} value={machine.id.toString()}>
                             {machine.machine_code} - {machine.machine_name}
@@ -697,5 +712,13 @@ export default function PurchaseRequestNew() {
     </div>
   )
 }
+
+
+
+
+
+
+
+
 
 

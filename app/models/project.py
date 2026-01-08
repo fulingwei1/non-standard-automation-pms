@@ -359,7 +359,32 @@ class ProjectMember(Base, TimestampMixin):
         Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
     )
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
-    role_code = Column(String(50), nullable=False, comment="角色编码")
+    role_code = Column(String(50), nullable=False, comment="角色编码（兼容旧版）")
+
+    # 新增：角色类型关联（支持灵活配置）
+    role_type_id = Column(
+        Integer,
+        ForeignKey("project_role_types.id"),
+        nullable=True,
+        comment="角色类型ID（关联角色字典）"
+    )
+    is_lead = Column(Boolean, default=False, comment="是否为该角色的负责人")
+
+    # 新增：设备级成员分配
+    machine_id = Column(
+        Integer,
+        ForeignKey("machines.id"),
+        nullable=True,
+        comment="设备ID（设备级成员分配）"
+    )
+
+    # 新增：团队层级关系
+    lead_member_id = Column(
+        Integer,
+        ForeignKey("project_members.id"),
+        nullable=True,
+        comment="所属负责人ID（团队成员指向其负责人）"
+    )
 
     # 分配信息
     allocation_pct = Column(Numeric(5, 2), default=100, comment="分配比例")
@@ -377,10 +402,22 @@ class ProjectMember(Base, TimestampMixin):
     # 关系
     project = relationship("Project", back_populates="members")
     user = relationship("User", foreign_keys=[user_id])
+    role_type = relationship("ProjectRoleType", foreign_keys=[role_type_id])
+    machine = relationship("Machine", foreign_keys=[machine_id])
+    lead = relationship("ProjectMember", remote_side=[id], foreign_keys=[lead_member_id])
+    team_members = relationship(
+        "ProjectMember",
+        back_populates="lead",
+        foreign_keys=[lead_member_id]
+    )
 
     __table_args__ = (
         Index("idx_project_members_project", "project_id"),
         Index("idx_project_members_user", "user_id"),
+        Index("idx_project_members_role_type", "role_type_id"),
+        Index("idx_project_members_is_lead", "is_lead"),
+        Index("idx_project_members_machine", "machine_id"),
+        Index("idx_project_members_lead", "lead_member_id"),
         UniqueConstraint("project_id", "user_id", "role_code"),
     )
 
@@ -473,6 +510,7 @@ class ProjectPaymentPlan(Base, TimestampMixin):
     contract = relationship("Contract", foreign_keys=[contract_id])
     milestone = relationship("ProjectMilestone", foreign_keys=[milestone_id])
     invoice = relationship("Invoice", foreign_keys=[invoice_id])
+    invoice_requests = relationship("InvoiceRequest", back_populates="payment_plan")
     
     __table_args__ = (
         Index("idx_payment_plans_project", "project_id"),
@@ -535,6 +573,7 @@ class ProjectDocument(Base, TimestampMixin):
         Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
     )
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID")
+    rd_project_id = Column(Integer, ForeignKey("rd_projects.id"), comment="研发项目ID")
     doc_type = Column(String(50), nullable=False, comment="文档类型")
     doc_category = Column(String(50), comment="文档分类")
     doc_name = Column(String(200), nullable=False, comment="文档名称")
@@ -558,10 +597,12 @@ class ProjectDocument(Base, TimestampMixin):
 
     # 关系
     project = relationship("Project", back_populates="documents")
+    rd_project = relationship("RdProject", foreign_keys=[rd_project_id])
     machine = relationship("Machine")
 
     __table_args__ = (
         Index("idx_project_documents_project", "project_id"),
+        Index("idx_project_documents_rd_project", "rd_project_id"),
         Index("idx_project_documents_type", "doc_type"),
     )
 
@@ -595,12 +636,50 @@ class ProjectTemplate(Base, TimestampMixin):
     # 使用统计
     usage_count = Column(Integer, default=0, comment="使用次数")
     
+    # 版本管理
+    current_version_id = Column(Integer, ForeignKey("project_template_versions.id"), comment="当前版本ID")
+    
     created_by = Column(Integer, ForeignKey("users.id"), comment="创建人")
+    
+    # 关系
+    versions = relationship("ProjectTemplateVersion", back_populates="template", foreign_keys="ProjectTemplateVersion.template_id", cascade="all, delete-orphan")
+    current_version = relationship("ProjectTemplateVersion", foreign_keys=[current_version_id], post_update=True)
     
     __table_args__ = (
         Index("idx_project_template_code", "template_code"),
         Index("idx_project_template_active", "is_active"),
+        Index("idx_project_template_current_version", "current_version_id"),
     )
 
     def __repr__(self):
         return f"<ProjectTemplate {self.template_code}>"
+
+
+class ProjectTemplateVersion(Base, TimestampMixin):
+    """项目模板版本表"""
+    
+    __tablename__ = "project_template_versions"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    template_id = Column(Integer, ForeignKey("project_templates.id"), nullable=False, comment="模板ID")
+    version_no = Column(String(20), nullable=False, comment="版本号")
+    status = Column(String(20), default="DRAFT", comment="状态：DRAFT/ACTIVE/ARCHIVED")
+    template_config = Column(Text, comment="模板配置JSON")
+    release_notes = Column(Text, comment="版本说明")
+    created_by = Column(Integer, ForeignKey("users.id"), comment="创建人ID")
+    published_by = Column(Integer, ForeignKey("users.id"), comment="发布人ID")
+    published_at = Column(DateTime, comment="发布时间")
+    
+    # 关系
+    template = relationship("ProjectTemplate", back_populates="versions", foreign_keys=[template_id])
+    creator = relationship("User", foreign_keys=[created_by], backref="project_template_versions_created")
+    publisher = relationship("User", foreign_keys=[published_by], backref="project_template_versions_published")
+    
+    __table_args__ = (
+        Index("idx_project_template_version_template", "template_id"),
+        Index("idx_project_template_version_status", "status"),
+        Index("idx_project_template_version_unique", "template_id", "version_no", unique=True),
+    )
+    
+    def __repr__(self):
+        return f"<ProjectTemplateVersion {self.template_id}-{self.version_no}>"

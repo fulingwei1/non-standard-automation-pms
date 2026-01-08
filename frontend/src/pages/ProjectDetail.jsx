@@ -25,6 +25,7 @@ import {
   UserAvatar,
   AvatarGroup,
 } from '../components/ui'
+import ProjectLeadsPanel from '../components/project/ProjectLeadsPanel'
 import {
   ArrowLeft,
   Edit2,
@@ -34,6 +35,7 @@ import {
   CheckCircle2,
   Circle,
   Users,
+  UserCog,
   DollarSign,
   FileText,
   Calendar,
@@ -51,6 +53,7 @@ const tabs = [
   { id: 'stages', name: '进度计划', icon: Clock },
   { id: 'machines', name: '设备列表', icon: Box },
   { id: 'team', name: '项目团队', icon: Users },
+  { id: 'leads', name: '负责人', icon: UserCog },
   { id: 'finance', name: '财务/成本', icon: DollarSign },
   { id: 'docs', name: '文档中心', icon: FileText },
 ]
@@ -537,6 +540,11 @@ export default function ProjectDetail() {
                 )}
               </CardContent>
             </Card>
+          )}
+
+          {/* Leads Tab - 项目负责人配置 */}
+          {activeTab === 'leads' && (
+            <ProjectLeadsPanel projectId={parseInt(id)} />
           )}
 
           {/* Finance Tab */}

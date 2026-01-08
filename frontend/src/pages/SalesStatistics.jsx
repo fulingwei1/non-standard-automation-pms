@@ -84,7 +84,7 @@ export default function SalesStatistics() {
         const totalForecast = forecast.forecast ? forecast.forecast.reduce((sum, f) => sum + (parseFloat(f.estimated_revenue) || 0), 0) : 0
         setRevenueForecast({
           forecast_amount: totalForecast,
-          confirmed_amount: 0, // TODO: Get from contracts
+          confirmed_amount: forecast.confirmed_amount || 0,
           completion_rate: 0,
           breakdown: forecast.forecast || []
         })
@@ -111,20 +111,51 @@ export default function SalesStatistics() {
         setOpportunitiesByStage(stageList)
       }
 
-      // Load summary stats - calculate from existing data
-      // TODO: Add summary endpoint if needed
-      if (funnelResponse.data && funnelResponse.data.data) {
-        const funnel = funnelResponse.data.data
-        setSummary({
-          total_leads: funnel.leads || 0,
-          converted_leads: 0, // TODO: Calculate from leads with CONVERTED status
-          total_opportunities: funnel.opportunities || 0,
-          won_opportunities: 0, // TODO: Calculate from opportunities with WON stage
-          total_contract_amount: funnel.total_contract_amount || 0,
-          paid_amount: 0, // TODO: Get from invoices
-          conversion_rate: 0,
-          win_rate: 0,
-        })
+      // Load summary stats from API
+      try {
+        const summaryResponse = await salesStatisticsApi.summary(params)
+        if (summaryResponse.data && summaryResponse.data.data) {
+          const summaryData = summaryResponse.data.data
+          setSummary({
+            total_leads: summaryData.total_leads || 0,
+            converted_leads: summaryData.converted_leads || 0,
+            total_opportunities: summaryData.total_opportunities || 0,
+            won_opportunities: summaryData.won_opportunities || 0,
+            total_contract_amount: summaryData.total_contract_amount || 0,
+            paid_amount: summaryData.paid_amount || 0,
+            conversion_rate: summaryData.conversion_rate || 0,
+            win_rate: summaryData.win_rate || 0,
+          })
+        } else if (funnelResponse.data && funnelResponse.data.data) {
+          // Fallback: calculate from funnel data if summary API not available
+          const funnel = funnelResponse.data.data
+          setSummary({
+            total_leads: funnel.leads || 0,
+            converted_leads: 0,
+            total_opportunities: funnel.opportunities || 0,
+            won_opportunities: 0,
+            total_contract_amount: funnel.total_contract_amount || 0,
+            paid_amount: 0,
+            conversion_rate: 0,
+            win_rate: 0,
+          })
+        }
+      } catch (summaryError) {
+        console.error('加载汇总统计失败:', summaryError)
+        // Fallback to funnel data
+        if (funnelResponse.data && funnelResponse.data.data) {
+          const funnel = funnelResponse.data.data
+          setSummary({
+            total_leads: funnel.leads || 0,
+            converted_leads: 0,
+            total_opportunities: funnel.opportunities || 0,
+            won_opportunities: 0,
+            total_contract_amount: funnel.total_contract_amount || 0,
+            paid_amount: 0,
+            conversion_rate: 0,
+            win_rate: 0,
+          })
+        }
       }
     } catch (error) {
       console.error('加载统计数据失败:', error)
@@ -197,7 +228,7 @@ export default function SalesStatistics() {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="show"
+      animate="visible"
       className="space-y-6 p-6"
     >
       <PageHeader

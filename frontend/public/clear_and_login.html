@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>清除缓存并重新登录</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+        .step {
+            background: #16213e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #0f3460;
+        }
+        button {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #d63447;
+        }
+        .success {
+            color: #4ecca3;
+        }
+        .error {
+            color: #e94560;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            background: #0f3460;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 跨部门进度功能 - 清除缓存工具</h1>
+    
+    <div class="step">
+        <h2>步骤1: 清除旧的登录信息</h2>
+        <button onclick="clearStorage()">清除 LocalStorage</button>
+        <div id="clearResult"></div>
+    </div>
+    
+    <div class="step">
+        <h2>步骤2: 使用真实API登录</h2>
+        <button onclick="realLogin()">登录 demo_pm_liu</button>
+        <div id="loginResult"></div>
+    </div>
+    
+    <div class="step">
+        <h2>步骤3: 测试跨部门进度API</h2>
+        <button onclick="testProgressAPI()">测试 API</button>
+        <div id="testResult"></div>
+    </div>
+    
+    <div class="step">
+        <h2>步骤4: 返回主应用</h2>
+        <button onclick="window.location.href='/'">返回首页</button>
+    </div>
+    
+    <script>
+        function clearStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            document.getElementById('clearResult').innerHTML = 
+                '<p class="success">✅ LocalStorage 已清除</p>';
+        }
+        
+        async function realLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '<p>⏳ 正在登录...</p>';
+            
+            try {
+                const formData = new FormData();
+                formData.append('username', 'demo_pm_liu');
+                formData.append('password', 'demo123');
+                
+                const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.access_token) {
+                    const token = data.access_token;
+                    localStorage.setItem('token', token);
+                    
+                    // 获取用户信息
+                    const meResponse = await fetch('http://localhost:8000/api/v1/auth/me', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const userData = await meResponse.json();
+                    
+                    localStorage.setItem('user', JSON.stringify({
+                        id: userData.id,
+                        username: userData.username,
+                        real_name: userData.real_name,
+                        department: userData.department,
+                        role: 'pm'
+                    }));
+                    
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ 登录成功！</p>
+                        <p>用户: ${userData.real_name} (${userData.username})</p>
+                        <p>Token前50字符: ${token.substring(0, 50)}...</p>
+                        <p>Token类型: ${token.startsWith('demo_token_') ? '❌ 演示token' : '✅ 真实JWT'}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p class="error">❌ 登录失败</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ 错误: ${error.message}</p>`;
+            }
+        }
+        
+        async function testProgressAPI() {
+            const resultDiv = document.getElementById('testResult');
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                resultDiv.innerHTML = '<p class="error">❌ 请先登录</p>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p>⏳ 正在测试API...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/engineers/projects/27/progress-visibility', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                
+                if (response.status === 200) {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ API调用成功！</p>
+                        <p>项目: ${data.project_name}</p>
+                        <p>整体进度: ${data.overall_progress}%</p>
+                        <p>部门数量: ${data.department_progress.length}</p>
+                        <p>延期任务: ${data.active_delays.length}个</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p class="error">❌ API调用失败 (${response.status})</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ 错误: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

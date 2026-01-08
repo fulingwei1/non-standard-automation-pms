@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>角色诊断</title>
+</head>
+<body>
+    <h2>当前登录用户角色诊断</h2>
+    <button onclick="checkRole()">检查角色</button>
+    <pre id="result"></pre>
+    
+    <script>
+    function checkRole() {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const token = localStorage.getItem('token');
+        
+        const result = {
+            'Token前缀': token?.substring(0, 20),
+            '用户名': user.username,
+            '角色代码': user.role,
+            '角色名称': user.roleName,
+            '部门': user.department,
+            '完整用户信息': user
+        };
+        
+        document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+        
+        console.log('用户信息:', result);
+    }
+    </script>
+</body>
+</html>

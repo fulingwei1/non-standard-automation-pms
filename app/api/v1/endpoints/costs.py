@@ -2,7 +2,7 @@ from typing import Any, List, Optional
 from decimal import Decimal
 from datetime import date, datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Body
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func, and_
 
@@ -14,6 +14,7 @@ from app.models.project import ProjectCost, Project, Machine
 from app.models.sales import Contract
 from app.schemas.project import ProjectCostCreate, ProjectCostResponse, ProjectCostUpdate
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.budget import ProjectCostAllocationRequest
 
 router = APIRouter()
 
@@ -449,6 +450,45 @@ def get_project_cost_analysis(
     )
 
 
+@router.get("/projects/{project_id}/revenue-detail", response_model=ResponseModel)
+def get_project_revenue_detail(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取项目收入详情
+    包含合同金额、已收款金额、已开票金额等
+    """
+    from app.services.revenue_service import RevenueService
+    
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="项目不存在")
+    
+    revenue_detail = RevenueService.get_project_revenue_detail(db, project_id)
+    
+    # 转换Decimal为float以便JSON序列化
+    result = {
+        "project_id": revenue_detail["project_id"],
+        "project_code": revenue_detail.get("project_code"),
+        "project_name": revenue_detail.get("project_name"),
+        "contract_amount": float(revenue_detail["contract_amount"]),
+        "received_amount": float(revenue_detail["received_amount"]),
+        "invoiced_amount": float(revenue_detail["invoiced_amount"]),
+        "paid_invoice_amount": float(revenue_detail["paid_invoice_amount"]),
+        "pending_amount": float(revenue_detail["pending_amount"]),
+        "receive_rate": float(revenue_detail["receive_rate"])
+    }
+    
+    return ResponseModel(
+        code=200,
+        message="success",
+        data=result
+    )
+
+
 @router.get("/projects/{project_id}/profit-analysis", response_model=ResponseModel)
 def get_project_profit_analysis(
     *,
@@ -464,20 +504,16 @@ def get_project_profit_analysis(
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
     
-    # 获取合同金额（收入）
-    contract_amount = float(project.contract_amount or 0)
+    # 使用营业收入服务获取收入数据
+    from app.services.revenue_service import RevenueService
+    
+    revenue_detail = RevenueService.get_project_revenue_detail(db, project_id)
+    contract_amount = float(revenue_detail["contract_amount"])
+    received_amount = float(revenue_detail["received_amount"])
+    invoiced_amount = float(revenue_detail["invoiced_amount"])
     
     # 获取实际成本
     actual_cost = float(project.actual_cost or 0)
-    
-    # 获取已收款金额（从合同收款计划中统计）
-    contract = db.query(Contract).filter(Contract.project_id == project_id).first()
-    received_amount = 0.0
-    if contract:
-        # 从发票中统计已收款
-        from app.models.sales import Invoice, Receivable
-        invoices = db.query(Invoice).filter(Invoice.contract_id == contract.id).all()
-        received_amount = sum([float(inv.amount or 0) for inv in invoices if inv.status == "PAID"])
     
     # 计算利润
     gross_profit = contract_amount - actual_cost
@@ -536,7 +572,9 @@ def get_project_profit_analysis(
             "revenue": {
                 "contract_amount": contract_amount,
                 "received_amount": round(received_amount, 2),
-                "pending_amount": round(contract_amount - received_amount, 2)
+                "invoiced_amount": round(invoiced_amount, 2),
+                "pending_amount": round(revenue_detail["pending_amount"], 2),
+                "receive_rate": round(float(revenue_detail["receive_rate"]), 2)
             },
             "cost": {
                 "total_cost": round(actual_cost, 2),
@@ -694,3 +732,350 @@ def get_cost_trends(
             "total_periods": len(trend_list)
         }
     )
+
+
+# ==================== 工时成本自动计算 ====================
+
+@router.post("/projects/{project_id}/calculate-labor-cost", response_model=ResponseModel)
+def calculate_project_labor_cost(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    start_date: Optional[str] = Query(None, description="开始日期（YYYY-MM-DD，可选）"),
+    end_date: Optional[str] = Query(None, description="结束日期（YYYY-MM-DD，可选）"),
+    recalculate: bool = Query(False, description="是否重新计算（删除现有记录重新计算）"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    计算项目人工成本
+    从已审批的工时记录自动计算项目人工成本
+    """
+    from app.services.labor_cost_service import LaborCostService
+    from datetime import date as date_type
+    
+    start = None
+    end = None
+    
+    if start_date:
+        try:
+            start = date_type.fromisoformat(start_date)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="开始日期格式错误，请使用YYYY-MM-DD格式")
+    
+    if end_date:
+        try:
+            end = date_type.fromisoformat(end_date)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="结束日期格式错误，请使用YYYY-MM-DD格式")
+    
+    try:
+        result = LaborCostService.calculate_project_labor_cost(
+            db, project_id, start, end, recalculate
+        )
+        return ResponseModel(
+            code=200,
+            message=result.get("message", "计算完成"),
+            data=result
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"计算失败：{str(e)}")
+
+
+@router.post("/calculate-all-labor-costs", response_model=ResponseModel)
+def calculate_all_projects_labor_cost(
+    *,
+    db: Session = Depends(deps.get_db),
+    start_date: Optional[str] = Query(None, description="开始日期（YYYY-MM-DD，可选）"),
+    end_date: Optional[str] = Query(None, description="结束日期（YYYY-MM-DD，可选）"),
+    project_ids: Optional[List[int]] = Query(None, description="项目ID列表（可选，不提供则计算所有项目）"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    批量计算所有项目的人工成本
+    """
+    from app.services.labor_cost_service import LaborCostService
+    from datetime import date as date_type
+    
+    start = None
+    end = None
+    
+    if start_date:
+        try:
+            start = date_type.fromisoformat(start_date)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="开始日期格式错误，请使用YYYY-MM-DD格式")
+    
+    if end_date:
+        try:
+            end = date_type.fromisoformat(end_date)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="结束日期格式错误，请使用YYYY-MM-DD格式")
+    
+    try:
+        result = LaborCostService.calculate_all_projects_labor_cost(
+            db, start, end, project_ids
+        )
+        return ResponseModel(
+            code=200,
+            message=result.get("message", "批量计算完成"),
+            data=result
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"批量计算失败：{str(e)}")
+
+
+@router.post("/calculate-monthly-labor-cost", response_model=ResponseModel)
+def calculate_monthly_labor_cost(
+    *,
+    db: Session = Depends(deps.get_db),
+    year: int = Query(..., description="年份"),
+    month: int = Query(..., ge=1, le=12, description="月份"),
+    project_ids: Optional[List[int]] = Query(None, description="项目ID列表（可选）"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    计算指定月份的项目人工成本
+    """
+    from app.services.labor_cost_service import LaborCostService
+    
+    if month < 1 or month > 12:
+        raise HTTPException(status_code=400, detail="月份必须在1-12之间")
+    
+    try:
+        result = LaborCostService.calculate_monthly_labor_cost(
+            db, year, month, project_ids
+        )
+        return ResponseModel(
+            code=200,
+            message=result.get("message", "月度计算完成"),
+            data=result
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"月度计算失败：{str(e)}")
+
+
+# ==================== 成本分摊 ====================
+
+@router.post("/{cost_id}/allocate", response_model=ResponseModel)
+def allocate_cost(
+    *,
+    db: Session = Depends(deps.get_db),
+    cost_id: int,
+    allocation_request: ProjectCostAllocationRequest,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    分摊成本到多个机台或项目
+    """
+    from app.services.cost_allocation_service import CostAllocationService
+    
+    try:
+        if allocation_request.rule_id:
+            # 使用规则分摊
+            allocated_costs = CostAllocationService.allocate_cost_by_rule(
+                db, cost_id, allocation_request.rule_id, created_by=current_user.id
+            )
+        elif allocation_request.allocation_targets:
+            # 手工分摊
+            # 判断是分摊到机台还是项目
+            first_target = allocation_request.allocation_targets[0]
+            if "machine_id" in first_target:
+                # 分摊到机台
+                allocated_costs = CostAllocationService.allocate_cost_to_machines(
+                    db, cost_id, allocation_request.allocation_targets, created_by=current_user.id
+                )
+            elif "project_id" in first_target:
+                # 分摊到项目
+                allocated_costs = CostAllocationService.allocate_cost_to_projects(
+                    db, cost_id, allocation_request.allocation_targets, created_by=current_user.id
+                )
+            else:
+                raise HTTPException(status_code=400, detail="allocation_targets必须包含machine_id或project_id")
+        else:
+            raise HTTPException(status_code=400, detail="必须提供rule_id或allocation_targets")
+        
+        db.commit()
+        
+        return ResponseModel(
+            code=200,
+            message=f"成功分摊成本，创建{len(allocated_costs)}条分摊记录",
+            data={
+                "allocated_count": len(allocated_costs),
+                "allocated_costs": [
+                    {
+                        "id": cost.id,
+                        "project_id": cost.project_id,
+                        "machine_id": cost.machine_id,
+                        "amount": float(cost.amount)
+                    }
+                    for cost in allocated_costs
+                ]
+            }
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"分摊失败：{str(e)}")
+
+
+# ==================== 预算执行分析 ====================
+
+@router.get("/projects/{project_id}/budget-execution", response_model=ResponseModel)
+def get_budget_execution_analysis(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取项目预算执行情况分析
+    """
+    from app.services.budget_analysis_service import BudgetAnalysisService
+    
+    try:
+        result = BudgetAnalysisService.get_budget_execution_analysis(db, project_id)
+        return ResponseModel(
+            code=200,
+            message="success",
+            data=result
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取预算执行分析失败：{str(e)}")
+
+
+@router.get("/projects/{project_id}/budget-trend", response_model=ResponseModel)
+def get_budget_trend_analysis(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    start_date: Optional[str] = Query(None, description="开始日期（YYYY-MM-DD）"),
+    end_date: Optional[str] = Query(None, description="结束日期（YYYY-MM-DD）"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取项目预算执行趋势分析（按时间维度）
+    """
+    from app.services.budget_analysis_service import BudgetAnalysisService
+    
+    try:
+        start = date.fromisoformat(start_date) if start_date else None
+        end = date.fromisoformat(end_date) if end_date else None
+        
+        result = BudgetAnalysisService.get_budget_trend_analysis(
+            db, project_id, start_date=start, end_date=end
+        )
+        return ResponseModel(
+            code=200,
+            message="success",
+            data=result
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取预算趋势分析失败：{str(e)}")
+
+
+# ==================== 成本复盘 ====================
+
+@router.post("/projects/{project_id}/generate-cost-review", response_model=ResponseModel)
+def generate_cost_review(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    手动触发生成项目成本复盘报告
+    """
+    from app.services.cost_review_service import CostReviewService
+    
+    try:
+        review = CostReviewService.generate_cost_review_report(
+            db, project_id, current_user.id
+        )
+        db.commit()
+        db.refresh(review)
+        
+        return ResponseModel(
+            code=200,
+            message="成本复盘报告生成成功",
+            data={
+                "review_id": review.id,
+                "review_no": review.review_no,
+                "project_id": project_id,
+                "budget_amount": float(review.budget_amount or 0),
+                "actual_cost": float(review.actual_cost or 0),
+                "cost_variance": float(review.cost_variance or 0)
+            }
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"生成成本复盘报告失败：{str(e)}")
+
+
+# ==================== 成本预警 ====================
+
+@router.post("/projects/{project_id}/check-budget-alert", response_model=ResponseModel)
+def check_project_budget_alert(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    手动检查项目预算执行情况并生成预警
+    """
+    from app.services.cost_alert_service import CostAlertService
+    
+    try:
+        alert = CostAlertService.check_budget_execution(db, project_id)
+        db.commit()
+        
+        if alert:
+            return ResponseModel(
+                code=200,
+                message="已生成成本预警",
+                data={
+                    "alert_id": alert.id,
+                    "alert_no": alert.alert_no,
+                    "alert_level": alert.alert_level,
+                    "alert_title": alert.alert_title,
+                    "alert_content": alert.alert_content
+                }
+            )
+        else:
+            return ResponseModel(
+                code=200,
+                message="预算执行情况正常，无需预警",
+                data=None
+            )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"检查预算预警失败：{str(e)}")
+
+
+@router.post("/check-all-projects-budget", response_model=ResponseModel)
+def check_all_projects_budget(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_ids: Optional[List[int]] = Body(None, description="项目ID列表（不提供则检查所有活跃项目）"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    批量检查项目预算执行情况
+    """
+    from app.services.cost_alert_service import CostAlertService
+    
+    try:
+        result = CostAlertService.check_all_projects_budget(db, project_ids)
+        db.commit()
+        
+        return ResponseModel(
+            code=200,
+            message=f"检查完成，共检查{result['checked_count']}个项目，生成{result['alert_count']}个预警",
+            data=result
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"批量检查预算预警失败：{str(e)}")

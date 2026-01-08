@@ -264,7 +264,7 @@ export default function SupplierManagementData() {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="show"
+      animate="visible"
       className="space-y-6"
     >
       <PageHeader

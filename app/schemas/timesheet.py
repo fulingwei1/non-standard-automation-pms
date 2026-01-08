@@ -16,6 +16,7 @@ from .common import BaseSchema, TimestampSchema, PaginatedResponse
 class TimesheetCreate(BaseModel):
     """创建工时记录"""
     project_id: Optional[int] = None
+    rd_project_id: Optional[int] = None
     task_id: Optional[int] = None
     work_date: date = Field(description="工作日期")
     work_hours: Decimal = Field(gt=0, le=24, description="工作小时数")
@@ -39,6 +40,7 @@ class TimesheetResponse(TimestampSchema):
     user_id: int
     user_name: Optional[str] = None
     project_id: Optional[int] = None
+    rd_project_id: Optional[int] = None
     project_name: Optional[str] = None
     task_id: Optional[int] = None
     task_name: Optional[str] = None

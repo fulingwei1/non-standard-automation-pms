@@ -64,8 +64,29 @@ export default function Dashboard() {
           machineApi.list({}),
         ])
 
-        const projects = projectsRes.data || []
-        const machines = machinesRes.data || []
+        // Handle different API response formats (array, {items: []}, {data: []})
+        let projects = []
+        let machines = []
+
+        if (projectsRes.data) {
+          if (Array.isArray(projectsRes.data)) {
+            projects = projectsRes.data
+          } else if (Array.isArray(projectsRes.data.items)) {
+            projects = projectsRes.data.items
+          } else if (Array.isArray(projectsRes.data.data)) {
+            projects = projectsRes.data.data
+          }
+        }
+
+        if (machinesRes.data) {
+          if (Array.isArray(machinesRes.data)) {
+            machines = machinesRes.data
+          } else if (Array.isArray(machinesRes.data.items)) {
+            machines = machinesRes.data.items
+          } else if (Array.isArray(machinesRes.data.data)) {
+            machines = machinesRes.data.data
+          }
+        }
 
         setStats({
           totalProjects: projects.length,
@@ -79,6 +100,14 @@ export default function Dashboard() {
         setRecentProjects(projects.slice(0, 5))
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err)
+        // Use empty arrays on error - don't crash the UI
+        setStats({
+          totalProjects: 0,
+          activeProjects: 0,
+          totalMachines: 0,
+          atRiskProjects: 0,
+        })
+        setRecentProjects([])
       } finally {
         setLoading(false)
       }

@@ -1,6 +1,6 @@
 /**
  * ECN Management Page - ECN管理页面
- * Features: ECN列表、详情、创建、评估、审批、执行
+ * Features: ECN列表、详情、创建、评估、审批、执行、日志
  */
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -18,6 +18,16 @@ import {
   User,
   Calendar,
   TrendingUp,
+  FileText,
+  Users,
+  CheckSquare,
+  History,
+  ArrowRight,
+  ArrowLeft,
+  Play,
+  Pause,
+  X,
+  RefreshCw,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -30,6 +40,7 @@ import {
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Badge } from '../components/ui/badge'
+import { Checkbox } from '../components/ui/checkbox'
 import {
   Select,
   SelectContent,
@@ -53,46 +64,87 @@ import {
   DialogBody,
   DialogFooter,
 } from '../components/ui/dialog'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
+import { Textarea } from '../components/ui/textarea'
 import { formatDate } from '../lib/utils'
-import { ecnApi, projectApi } from '../services/api'
+import { ecnApi, projectApi, materialApi, purchaseApi } from '../services/api'
+
 const statusConfigs = {
   DRAFT: { label: '草稿', color: 'bg-slate-500' },
   SUBMITTED: { label: '已提交', color: 'bg-blue-500' },
   EVALUATING: { label: '评估中', color: 'bg-amber-500' },
-  APPROVING: { label: '审批中', color: 'bg-purple-500' },
+  EVALUATED: { label: '评估完成', color: 'bg-amber-600' },
+  PENDING_APPROVAL: { label: '待审批', color: 'bg-purple-500' },
   APPROVED: { label: '已批准', color: 'bg-emerald-500' },
   REJECTED: { label: '已驳回', color: 'bg-red-500' },
   EXECUTING: { label: '执行中', color: 'bg-violet-500' },
+  PENDING_VERIFY: { label: '待验证', color: 'bg-indigo-500' },
   COMPLETED: { label: '已完成', color: 'bg-green-500' },
+  CLOSED: { label: '已关闭', color: 'bg-gray-500' },
   CANCELLED: { label: '已取消', color: 'bg-gray-500' },
 }
+
 const typeConfigs = {
   DESIGN: { label: '设计变更', color: 'bg-blue-500' },
   MATERIAL: { label: '物料变更', color: 'bg-amber-500' },
   PROCESS: { label: '工艺变更', color: 'bg-purple-500' },
+  SPECIFICATION: { label: '规格变更', color: 'bg-green-500' },
+  SCHEDULE: { label: '计划变更', color: 'bg-orange-500' },
   OTHER: { label: '其他', color: 'bg-slate-500' },
 }
+
 const priorityConfigs = {
   URGENT: { label: '紧急', color: 'bg-red-500' },
   HIGH: { label: '高', color: 'bg-orange-500' },
   MEDIUM: { label: '中', color: 'bg-amber-500' },
   LOW: { label: '低', color: 'bg-blue-500' },
 }
+
+const evalResultConfigs = {
+  APPROVED: { label: '通过', color: 'bg-green-500' },
+  CONDITIONAL: { label: '有条件通过', color: 'bg-yellow-500' },
+  REJECTED: { label: '不通过', color: 'bg-red-500' },
+}
+
+const taskStatusConfigs = {
+  PENDING: { label: '待开始', color: 'bg-slate-500' },
+  IN_PROGRESS: { label: '进行中', color: 'bg-blue-500' },
+  COMPLETED: { label: '已完成', color: 'bg-green-500' },
+}
+
 export default function ECNManagement() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [ecns, setEcns] = useState([])
   const [projects, setProjects] = useState([])
+  
   // Filters
   const [searchKeyword, setSearchKeyword] = useState('')
   const [filterProject, setFilterProject] = useState('')
   const [filterType, setFilterType] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterPriority, setFilterPriority] = useState('')
+  
   // Dialogs
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showDetailDialog, setShowDetailDialog] = useState(false)
   const [selectedECN, setSelectedECN] = useState(null)
+  const [activeTab, setActiveTab] = useState('info')
+  
+  // Batch operations
+  const [selectedECNIds, setSelectedECNIds] = useState(new Set())
+  const [showBatchDialog, setShowBatchDialog] = useState(false)
+  const [batchOperation, setBatchOperation] = useState('')
+  
+  // Detail data
+  const [evaluations, setEvaluations] = useState([])
+  const [approvals, setApprovals] = useState([])
+  const [tasks, setTasks] = useState([])
+  const [affectedMaterials, setAffectedMaterials] = useState([])
+  const [affectedOrders, setAffectedOrders] = useState([])
+  const [logs, setLogs] = useState([])
+  const [evaluationSummary, setEvaluationSummary] = useState(null)
+  
   // Form state
   const [newECN, setNewECN] = useState({
     ecn_title: '',
@@ -100,14 +152,92 @@ export default function ECNManagement() {
     project_id: null,
     machine_id: null,
     priority: 'MEDIUM',
+    urgency: 'NORMAL',
     change_reason: '',
     change_description: '',
-    impact_analysis: '',
+    change_scope: 'PARTIAL',
+    source_type: 'MANUAL',
   })
+  
+  // Evaluation form
+  const [showEvaluationDialog, setShowEvaluationDialog] = useState(false)
+  const [evaluationForm, setEvaluationForm] = useState({
+    eval_dept: '',
+    impact_analysis: '',
+    cost_estimate: 0,
+    schedule_estimate: 0,
+    resource_requirement: '',
+    risk_assessment: '',
+    eval_result: 'APPROVED',
+    eval_opinion: '',
+    conditions: '',
+  })
+  
+  // Task form
+  const [showTaskDialog, setShowTaskDialog] = useState(false)
+  const [showBatchTaskDialog, setShowBatchTaskDialog] = useState(false)
+  const [taskForm, setTaskForm] = useState({
+    task_name: '',
+    task_type: '',
+    task_dept: '',
+    task_description: '',
+    deliverables: '',
+    assignee_id: null,
+    planned_start: '',
+    planned_end: '',
+  })
+  const [batchTasks, setBatchTasks] = useState([{
+    task_name: '',
+    task_type: '',
+    task_dept: '',
+    task_description: '',
+    deliverables: '',
+    assignee_id: null,
+    planned_start: '',
+    planned_end: '',
+  }])
+  
+  // Affected material form
+  const [showMaterialDialog, setShowMaterialDialog] = useState(false)
+  const [editingMaterial, setEditingMaterial] = useState(null)
+  const [materialForm, setMaterialForm] = useState({
+    material_id: null,
+    bom_item_id: null,
+    material_code: '',
+    material_name: '',
+    specification: '',
+    change_type: 'UPDATE',
+    old_quantity: '',
+    old_specification: '',
+    old_supplier_id: null,
+    new_quantity: '',
+    new_specification: '',
+    new_supplier_id: null,
+    cost_impact: 0,
+    remark: '',
+  })
+  
+  // Affected order form
+  const [showOrderDialog, setShowOrderDialog] = useState(false)
+  const [editingOrder, setEditingOrder] = useState(null)
+  const [orderForm, setOrderForm] = useState({
+    order_type: 'PURCHASE',
+    order_id: null,
+    order_no: '',
+    impact_description: '',
+    action_type: '',
+    action_description: '',
+  })
+  
+  // Materials and orders for selection
+  const [materials, setMaterials] = useState([])
+  const [purchaseOrders, setPurchaseOrders] = useState([])
+
   useEffect(() => {
     fetchProjects()
     fetchECNs()
   }, [filterProject, filterType, filterStatus, filterPriority, searchKeyword])
+
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 })
@@ -116,14 +246,15 @@ export default function ECNManagement() {
       console.error('Failed to fetch projects:', error)
     }
   }
+
   const fetchECNs = async () => {
     try {
       setLoading(true)
       const params = {}
-      if (filterProject) params.project_id = filterProject
-      if (filterType) params.ecn_type = filterType
-      if (filterStatus) params.status = filterStatus
-      if (filterPriority) params.priority = filterPriority
+      if (filterProject && filterProject !== 'all') params.project_id = filterProject
+      if (filterType && filterType !== 'all') params.ecn_type = filterType
+      if (filterStatus && filterStatus !== 'all') params.status = filterStatus
+      if (filterPriority && filterPriority !== 'all') params.priority = filterPriority
       if (searchKeyword) params.keyword = searchKeyword
       const res = await ecnApi.list(params)
       const ecnList = res.data?.items || res.data || []
@@ -134,9 +265,52 @@ export default function ECNManagement() {
       setLoading(false)
     }
   }
+
+  const fetchECNDetail = async (ecnId) => {
+    try {
+      const res = await ecnApi.get(ecnId)
+      setSelectedECN(res.data || res)
+      
+      // Fetch related data
+      const [evalsRes, approvalsRes, tasksRes, materialsRes, ordersRes, logsRes, summaryRes] = await Promise.all([
+        ecnApi.getEvaluations(ecnId).catch(() => ({ data: [] })),
+        ecnApi.getApprovals(ecnId).catch(() => ({ data: [] })),
+        ecnApi.getTasks(ecnId).catch(() => ({ data: [] })),
+        ecnApi.getAffectedMaterials(ecnId).catch(() => ({ data: [] })),
+        ecnApi.getAffectedOrders(ecnId).catch(() => ({ data: [] })),
+        ecnApi.getLogs(ecnId).catch(() => ({ data: [] })),
+        ecnApi.getEvaluationSummary(ecnId).catch(() => ({ data: null })),
+      ])
+      
+      setEvaluations(evalsRes.data || [])
+      setApprovals(approvalsRes.data || [])
+      setTasks(tasksRes.data || [])
+      setAffectedMaterials(materialsRes.data || [])
+      setAffectedOrders(ordersRes.data || [])
+      setLogs(logsRes.data || [])
+      setEvaluationSummary(summaryRes.data)
+    } catch (error) {
+      console.error('Failed to fetch ECN detail:', error)
+    }
+  }
+
+  const handleViewDetail = async (ecnId) => {
+    setActiveTab('info')
+    await fetchECNDetail(ecnId)
+    setShowDetailDialog(true)
+  }
+
   const handleCreateECN = async () => {
     if (!newECN.ecn_title) {
       alert('请填写ECN标题')
+      return
+    }
+    if (!newECN.change_reason) {
+      alert('请填写变更原因')
+      return
+    }
+    if (!newECN.change_description) {
+      alert('请填写变更描述')
       return
     }
     try {
@@ -148,9 +322,11 @@ export default function ECNManagement() {
         project_id: null,
         machine_id: null,
         priority: 'MEDIUM',
+        urgency: 'NORMAL',
         change_reason: '',
         change_description: '',
-        impact_analysis: '',
+        change_scope: 'PARTIAL',
+        source_type: 'MANUAL',
       })
       fetchECNs()
     } catch (error) {
@@ -158,28 +334,132 @@ export default function ECNManagement() {
       alert('创建ECN失败: ' + (error.response?.data?.detail || error.message))
     }
   }
-  const handleViewDetail = async (ecnId) => {
-    try {
-      const res = await ecnApi.get(ecnId)
-      setSelectedECN(res.data || res)
-      setShowDetailDialog(true)
-    } catch (error) {
-      console.error('Failed to fetch ECN detail:', error)
-    }
-  }
+
   const handleSubmit = async (ecnId) => {
-    if (!confirm('确认提交此ECN？')) return
+    if (!confirm('确认提交此ECN？提交后将进入评估流程。')) return
     try {
-      await ecnApi.submit(ecnId)
+      await ecnApi.submit(ecnId, { remark: '' })
       fetchECNs()
       if (showDetailDialog) {
-        handleViewDetail(ecnId)
+        await fetchECNDetail(ecnId)
       }
     } catch (error) {
       console.error('Failed to submit ECN:', error)
       alert('提交失败: ' + (error.response?.data?.detail || error.message))
     }
   }
+
+  const handleCreateEvaluation = async () => {
+    if (!evaluationForm.eval_dept) {
+      alert('请选择评估部门')
+      return
+    }
+    if (!evaluationForm.eval_result) {
+      alert('请选择评估结论')
+      return
+    }
+    try {
+      await ecnApi.createEvaluation(selectedECN.id, evaluationForm)
+      setShowEvaluationDialog(false)
+      setEvaluationForm({
+        eval_dept: '',
+        impact_analysis: '',
+        cost_estimate: 0,
+        schedule_estimate: 0,
+        resource_requirement: '',
+        risk_assessment: '',
+        eval_result: 'APPROVED',
+        eval_opinion: '',
+        conditions: '',
+      })
+      await fetchECNDetail(selectedECN.id)
+    } catch (error) {
+      console.error('Failed to create evaluation:', error)
+      alert('创建评估失败: ' + (error.response?.data?.detail || error.message))
+    }
+  }
+
+  const handleSubmitEvaluation = async (evalId) => {
+    if (!confirm('确认提交此评估？提交后将无法修改。')) return
+    try {
+      await ecnApi.submitEvaluation(evalId)
+      await fetchECNDetail(selectedECN.id)
+    } catch (error) {
+      console.error('Failed to submit evaluation:', error)
+      alert('提交评估失败: ' + (error.response?.data?.detail || error.message))
+    }
+  }
+
+  const handleApprove = async (approvalId, comment = '') => {
+    try {
+      await ecnApi.approve(approvalId, comment)
+      await fetchECNDetail(selectedECN.id)
+    } catch (error) {
+      console.error('Failed to approve:', error)
+      alert('审批失败: ' + (error.response?.data?.detail || error.message))
+    }
+  }
+
+  const handleReject = async (approvalId, reason) => {
+    if (!reason) {
+      reason = prompt('请输入驳回原因：')
+      if (!reason) return
+    }
+    try {
+      await ecnApi.reject(approvalId, reason)
+      await fetchECNDetail(selectedECN.id)
+    } catch (error) {
+      console.error('Failed to reject:', error)
+      alert('驳回失败: ' + (error.response?.data?.detail || error.message))
+    }
+  }
+
+  const handleCreateTask = async () => {
+    if (!taskForm.task_name) {
+      alert('请填写任务名称')
+      return
+    }
+    try {
+      await ecnApi.createTask(selectedECN.id, taskForm)
+      setShowTaskDialog(false)
+      setTaskForm({
+        task_name: '',
+        task_type: '',
+        task_dept: '',
+        task_description: '',
+        deliverables: '',
+        assignee_id: null,
+        planned_start: '',
+        planned_end: '',
+      })
+      await fetchECNDetail(selectedECN.id)
+    } catch (error) {
+      console.error('Failed to create task:', error)
+      alert('创建任务失败: ' + (error.response?.data?.detail || error.message))
+    }
+  }
+
+  const handleUpdateTaskProgress = async (taskId, progress) => {
+    try {
+      await ecnApi.updateTaskProgress(taskId, { progress_pct: progress })
+      await fetchECNDetail(selectedECN.id)
+    } catch (error) {
+      console.error('Failed to update task progress:', error)
+      alert('更新任务进度失败: ' + (error.response?.data?.detail || error.message))
+    }
+  }
+
+  const handleCompleteTask = async (taskId) => {
+    if (!confirm('确认完成任务？')) return
+    try {
+      await ecnApi.completeTask(taskId, { completion_note: '任务已完成' })
+      await fetchECNDetail(selectedECN.id)
+    } catch (error) {
+      console.error('Failed to complete task:', error)
+      alert('完成任务失败: ' + (error.response?.data?.detail || error.message))
+    }
+  }
+
   const filteredECNs = useMemo(() => {
     return ecns.filter(ecn => {
       if (searchKeyword) {
@@ -192,12 +472,14 @@ export default function ECNManagement() {
       return true
     })
   }, [ecns, searchKeyword])
+
   return (
     <div className="space-y-6 p-6">
       <PageHeader
         title="ECN管理"
         description="设计变更管理，支持创建、评估、审批、执行"
       />
+      
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -216,7 +498,7 @@ export default function ECNManagement() {
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部项目</SelectItem>
+                <SelectItem value="all">全部项目</SelectItem>
                 {projects.map((proj) => (
                   <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
@@ -229,7 +511,7 @@ export default function ECNManagement() {
                 <SelectValue placeholder="选择类型" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部类型</SelectItem>
+                <SelectItem value="all">全部类型</SelectItem>
                 {Object.entries(typeConfigs).map(([key, config]) => (
                   <SelectItem key={key} value={key}>
                     {config.label}
@@ -242,7 +524,7 @@ export default function ECNManagement() {
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部状态</SelectItem>
+                <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(statusConfigs).map(([key, config]) => (
                   <SelectItem key={key} value={key}>
                     {config.label}
@@ -255,7 +537,7 @@ export default function ECNManagement() {
                 <SelectValue placeholder="选择优先级" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部优先级</SelectItem>
+                <SelectItem value="all">全部优先级</SelectItem>
                 {Object.entries(priorityConfigs).map(([key, config]) => (
                   <SelectItem key={key} value={key}>
                     {config.label}
@@ -266,6 +548,7 @@ export default function ECNManagement() {
           </div>
         </CardContent>
       </Card>
+      
       {/* Action Bar */}
       <div className="flex justify-end">
         <Button onClick={() => setShowCreateDialog(true)}>
@@ -273,6 +556,7 @@ export default function ECNManagement() {
           新建ECN
         </Button>
       </div>
+      
       {/* ECN List */}
       <Card>
         <CardHeader>
@@ -357,9 +641,10 @@ export default function ECNManagement() {
           )}
         </CardContent>
       </Card>
+      
       {/* Create ECN Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>新建ECN</DialogTitle>
           </DialogHeader>
@@ -431,29 +716,21 @@ export default function ECNManagement() {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">变更原因</label>
-                <Input
+                <label className="text-sm font-medium mb-2 block">变更原因 *</label>
+                <Textarea
                   value={newECN.change_reason}
                   onChange={(e) => setNewECN({ ...newECN, change_reason: e.target.value })}
                   placeholder="填写变更原因"
+                  rows={2}
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">变更描述</label>
-                <textarea
-                  className="w-full min-h-[100px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                <label className="text-sm font-medium mb-2 block">变更描述 *</label>
+                <Textarea
                   value={newECN.change_description}
                   onChange={(e) => setNewECN({ ...newECN, change_description: e.target.value })}
                   placeholder="详细描述变更内容..."
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">影响分析</label>
-                <textarea
-                  className="w-full min-h-[100px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={newECN.impact_analysis}
-                  onChange={(e) => setNewECN({ ...newECN, impact_analysis: e.target.value })}
-                  placeholder="分析变更影响..."
+                  rows={4}
                 />
               </div>
             </div>
@@ -466,17 +743,35 @@ export default function ECNManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
       {/* ECN Detail Dialog */}
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {selectedECN?.ecn_title} - {selectedECN?.ecn_no}
+            <DialogTitle className="flex items-center justify-between">
+              <span>{selectedECN?.ecn_title} - {selectedECN?.ecn_no}</span>
+              {selectedECN && (
+                <Badge className={statusConfigs[selectedECN.status]?.color}>
+                  {statusConfigs[selectedECN.status]?.label}
+                </Badge>
+              )}
             </DialogTitle>
           </DialogHeader>
           <DialogBody>
             {selectedECN && (
-              <div className="space-y-4">
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-7">
+                  <TabsTrigger value="info">基本信息</TabsTrigger>
+                  <TabsTrigger value="evaluations">评估</TabsTrigger>
+                  <TabsTrigger value="approvals">审批</TabsTrigger>
+                  <TabsTrigger value="tasks">执行任务</TabsTrigger>
+                  <TabsTrigger value="affected">影响分析</TabsTrigger>
+                  <TabsTrigger value="integration">模块集成</TabsTrigger>
+                  <TabsTrigger value="logs">变更日志</TabsTrigger>
+                </TabsList>
+                
+                {/* 基本信息 */}
+                <TabsContent value="info" className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-sm text-slate-500 mb-1">ECN编号</div>
@@ -512,42 +807,1018 @@ export default function ECNManagement() {
                     <div className="text-sm text-slate-500 mb-1">申请时间</div>
                     <div>{selectedECN.applied_at ? formatDate(selectedECN.applied_at) : '-'}</div>
                   </div>
+                    <div>
+                      <div className="text-sm text-slate-500 mb-1">成本影响</div>
+                      <div>¥{selectedECN.cost_impact || 0}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-slate-500 mb-1">工期影响</div>
+                      <div>{selectedECN.schedule_impact_days || 0} 天</div>
+                  </div>
                 </div>
                 {selectedECN.change_reason && (
                   <div>
                     <div className="text-sm text-slate-500 mb-1">变更原因</div>
-                    <div>{selectedECN.change_reason}</div>
+                      <div className="p-3 bg-slate-50 rounded-lg">{selectedECN.change_reason}</div>
                   </div>
                 )}
                 {selectedECN.change_description && (
                   <div>
                     <div className="text-sm text-slate-500 mb-1">变更描述</div>
-                    <div>{selectedECN.change_description}</div>
+                      <div className="p-3 bg-slate-50 rounded-lg whitespace-pre-wrap">{selectedECN.change_description}</div>
                   </div>
                 )}
-                {selectedECN.impact_analysis && (
+                  {selectedECN.approval_note && (
                   <div>
-                    <div className="text-sm text-slate-500 mb-1">影响分析</div>
-                    <div>{selectedECN.impact_analysis}</div>
+                      <div className="text-sm text-slate-500 mb-1">审批意见</div>
+                      <div className="p-3 bg-slate-50 rounded-lg">{selectedECN.approval_note}</div>
                   </div>
                 )}
+                  {selectedECN.status === 'DRAFT' && (
+                    <div className="flex justify-end gap-2 pt-4">
+                      <Button onClick={() => handleSubmit(selectedECN.id)}>
+                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                        提交ECN
+                      </Button>
               </div>
+                  )}
+                </TabsContent>
+                
+                {/* 评估管理 */}
+                <TabsContent value="evaluations" className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm text-slate-500">
+                      {evaluationSummary && (
+                        <div className="space-y-1">
+                          <div>总成本影响: ¥{evaluationSummary.total_cost_impact || 0}</div>
+                          <div>最大工期影响: {evaluationSummary.max_schedule_impact || 0} 天</div>
+                          <div>评估完成度: {evaluationSummary.completion_rate || 0}%</div>
+                        </div>
+                      )}
+                    </div>
+                    {selectedECN.status === 'SUBMITTED' || selectedECN.status === 'EVALUATING' ? (
+                      <Button onClick={() => setShowEvaluationDialog(true)}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        创建评估
+                      </Button>
+                    ) : null}
+                  </div>
+                  {evaluations.length === 0 ? (
+                    <div className="text-center py-8 text-slate-400">暂无评估记录</div>
+                  ) : (
+                    <div className="space-y-4">
+                      {evaluations.map((evaluation) => (
+                        <Card key={evaluation.id}>
+                          <CardHeader>
+                            <div className="flex justify-between items-center">
+                              <CardTitle className="text-base">{evaluation.eval_dept}</CardTitle>
+                              <div className="flex items-center gap-2">
+                                <Badge className={evalResultConfigs[evaluation.eval_result]?.color || 'bg-slate-500'}>
+                                  {evalResultConfigs[evaluation.eval_result]?.label || evaluation.eval_result}
+                                </Badge>
+                                <Badge className={evaluation.status === 'SUBMITTED' ? 'bg-green-500' : 'bg-amber-500'}>
+                                  {evaluation.status === 'SUBMITTED' ? '已提交' : '草稿'}
+                                </Badge>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-2 text-sm">
+                              <div><span className="text-slate-500">评估人:</span> {evaluation.evaluator_name || '-'}</div>
+                              {evaluation.cost_estimate > 0 && (
+                                <div><span className="text-slate-500">成本估算:</span> ¥{evaluation.cost_estimate}</div>
+                              )}
+                              {evaluation.schedule_estimate > 0 && (
+                                <div><span className="text-slate-500">工期估算:</span> {evaluation.schedule_estimate} 天</div>
+                              )}
+                              {evaluation.impact_analysis && (
+                                <div>
+                                  <div className="text-slate-500 mb-1">影响分析:</div>
+                                  <div className="p-2 bg-slate-50 rounded">{evaluation.impact_analysis}</div>
+                                </div>
+                              )}
+                              {evaluation.eval_opinion && (
+                                <div>
+                                  <div className="text-slate-500 mb-1">评估意见:</div>
+                                  <div className="p-2 bg-slate-50 rounded">{evaluation.eval_opinion}</div>
+                                </div>
+                              )}
+                              {evaluation.status === 'DRAFT' && (
+                                <div className="flex justify-end pt-2">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleSubmitEvaluation(evaluation.id)}
+                                  >
+                                    提交评估
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+                
+                {/* 审批流程可视化 */}
+                <TabsContent value="approvals" className="space-y-4">
+                  {approvals.length === 0 ? (
+                    <div className="text-center py-8 text-slate-400">暂无审批记录</div>
+                  ) : (
+                    <div className="space-y-4">
+                      {approvals.map((approval, index) => (
+                        <div key={approval.id} className="flex items-start gap-4">
+                          <div className="flex flex-col items-center">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                              approval.status === 'COMPLETED' && approval.approval_result === 'APPROVED' ? 'bg-green-500' :
+                              approval.status === 'COMPLETED' && approval.approval_result === 'REJECTED' ? 'bg-red-500' :
+                              approval.status === 'PENDING' ? 'bg-blue-500' : 'bg-slate-300'
+                            } text-white font-bold`}>
+                              {index + 1}
+                            </div>
+                            {index < approvals.length - 1 && (
+                              <div className={`w-0.5 h-12 ${
+                                approval.status === 'COMPLETED' ? 'bg-green-500' : 'bg-slate-300'
+                              }`} />
+                            )}
+                          </div>
+                          <Card className="flex-1">
+                            <CardHeader>
+                              <div className="flex justify-between items-center">
+                                <CardTitle className="text-base">
+                                  第{approval.approval_level}级审批 - {approval.approval_role}
+                                </CardTitle>
+                                <Badge className={
+                                  approval.status === 'COMPLETED' && approval.approval_result === 'APPROVED' ? 'bg-green-500' :
+                                  approval.status === 'COMPLETED' && approval.approval_result === 'REJECTED' ? 'bg-red-500' :
+                                  approval.status === 'PENDING' ? 'bg-blue-500' : 'bg-slate-500'
+                                }>
+                                  {approval.status === 'COMPLETED' && approval.approval_result === 'APPROVED' ? '已通过' :
+                                   approval.status === 'COMPLETED' && approval.approval_result === 'REJECTED' ? '已驳回' :
+                                   approval.status === 'PENDING' ? '待审批' : approval.status}
+                                </Badge>
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-2 text-sm">
+                                <div><span className="text-slate-500">审批人:</span> {approval.approver_name || '待分配'}</div>
+                                {approval.approved_at && (
+                                  <div><span className="text-slate-500">审批时间:</span> {formatDate(approval.approved_at)}</div>
+                                )}
+                                {approval.approval_opinion && (
+                                  <div>
+                                    <div className="text-slate-500 mb-1">审批意见:</div>
+                                    <div className="p-2 bg-slate-50 rounded">{approval.approval_opinion}</div>
+                                  </div>
+                                )}
+                                {approval.status === 'PENDING' && (
+                                  <div className="flex justify-end gap-2 pt-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        const reason = prompt('请输入驳回原因：')
+                                        if (reason) handleReject(approval.id, reason)
+                                      }}
+                                    >
+                                      驳回
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => {
+                                        const comment = prompt('请输入审批意见（可选）：') || ''
+                                        handleApprove(approval.id, comment)
+                                      }}
+                                    >
+                                      通过
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+                
+                {/* 执行任务看板 */}
+                <TabsContent value="tasks" className="space-y-4">
+                  <div className="flex justify-end gap-2">
+                    {selectedECN.status === 'APPROVED' || selectedECN.status === 'EXECUTING' ? (
+                      <>
+                        <Button variant="outline" onClick={() => setShowBatchTaskDialog(true)}>
+                          <Layers className="w-4 h-4 mr-2" />
+                          批量创建任务
+                        </Button>
+                        <Button onClick={() => setShowTaskDialog(true)}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          创建任务
+                        </Button>
+                      </>
+                    ) : null}
+                  </div>
+                  {tasks.length === 0 ? (
+                    <div className="text-center py-8 text-slate-400">暂无执行任务</div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-4">
+                      {['PENDING', 'IN_PROGRESS', 'COMPLETED'].map((status) => {
+                        const statusTasks = tasks.filter(t => t.status === status)
+                        return (
+                          <Card key={status}>
+                            <CardHeader>
+                              <CardTitle className="text-sm">
+                                {taskStatusConfigs[status]?.label || status}
+                                <Badge className="ml-2">{statusTasks.length}</Badge>
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                              {statusTasks.map((task) => (
+                                <Card key={task.id} className="p-3">
+                                  <div className="space-y-2">
+                                    <div className="font-medium text-sm">{task.task_name}</div>
+                                    <div className="text-xs text-slate-500">
+                                      {task.task_dept && <div>部门: {task.task_dept}</div>}
+                                      {task.assignee_name && <div>负责人: {task.assignee_name}</div>}
+                                      {task.planned_start && (
+                                        <div>计划: {formatDate(task.planned_start)} - {task.planned_end ? formatDate(task.planned_end) : ''}</div>
+                                      )}
+                                    </div>
+                                    {task.status === 'IN_PROGRESS' && (
+                                      <div className="space-y-1">
+                                        <div className="text-xs text-slate-500">进度: {task.progress_pct || 0}%</div>
+                                        <div className="flex gap-1">
+                                          <input
+                                            type="range"
+                                            min="0"
+                                            max="100"
+                                            value={task.progress_pct || 0}
+                                            onChange={(e) => handleUpdateTaskProgress(task.id, parseInt(e.target.value))}
+                                            className="flex-1"
+                                          />
+                                        </div>
+                                      </div>
+                                    )}
+                                    {task.status === 'IN_PROGRESS' && (
+                                      <Button
+                                        size="sm"
+                                        className="w-full mt-2"
+                                        onClick={() => handleCompleteTask(task.id)}
+                                      >
+                                        完成任务
+                                      </Button>
+                                    )}
+                                  </div>
+                                </Card>
+                              ))}
+                            </CardContent>
+                          </Card>
+                        )
+                      })}
+                    </div>
+                  )}
+                </TabsContent>
+                
+                {/* 影响分析 */}
+                <TabsContent value="affected" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <Card>
+                      <CardHeader>
+                        <div className="flex justify-between items-center">
+                          <CardTitle className="text-base">受影响物料</CardTitle>
+                          {(selectedECN.status === 'DRAFT' || selectedECN.status === 'SUBMITTED' || selectedECN.status === 'EVALUATING') && (
+                            <Button size="sm" onClick={handleAddMaterial}>
+                              <Plus className="w-4 h-4 mr-2" />
+                              添加物料
+                            </Button>
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        {affectedMaterials.length === 0 ? (
+                          <div className="text-center py-4 text-slate-400 text-sm">暂无受影响物料</div>
+                        ) : (
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>物料编码</TableHead>
+                                <TableHead>物料名称</TableHead>
+                                <TableHead>变更类型</TableHead>
+                                <TableHead>成本影响</TableHead>
+                                <TableHead className="text-right">操作</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {affectedMaterials.map((mat) => (
+                                <TableRow key={mat.id}>
+                                  <TableCell className="font-mono text-sm">{mat.material_code}</TableCell>
+                                  <TableCell>{mat.material_name}</TableCell>
+                                  <TableCell>
+                                    <Badge className="bg-blue-500">{mat.change_type}</Badge>
+                                  </TableCell>
+                                  <TableCell>¥{mat.cost_impact || 0}</TableCell>
+                                  <TableCell className="text-right">
+                                    <div className="flex items-center justify-end gap-2">
+                                      {(selectedECN.status === 'DRAFT' || selectedECN.status === 'SUBMITTED' || selectedECN.status === 'EVALUATING') && (
+                                        <>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleEditMaterial(mat)}
+                                          >
+                                            <FileEdit className="w-4 h-4" />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleDeleteMaterial(mat.id)}
+                                          >
+                                            <X className="w-4 h-4" />
+                                          </Button>
+                                        </>
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        )}
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader>
+                        <div className="flex justify-between items-center">
+                          <CardTitle className="text-base">受影响订单</CardTitle>
+                          {(selectedECN.status === 'DRAFT' || selectedECN.status === 'SUBMITTED' || selectedECN.status === 'EVALUATING') && (
+                            <Button size="sm" onClick={handleAddOrder}>
+                              <Plus className="w-4 h-4 mr-2" />
+                              添加订单
+                            </Button>
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        {affectedOrders.length === 0 ? (
+                          <div className="text-center py-4 text-slate-400 text-sm">暂无受影响订单</div>
+                        ) : (
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>订单类型</TableHead>
+                                <TableHead>订单号</TableHead>
+                                <TableHead>处理方式</TableHead>
+                                <TableHead>状态</TableHead>
+                                <TableHead className="text-right">操作</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {affectedOrders.map((order) => (
+                                <TableRow key={order.id}>
+                                  <TableCell>{order.order_type}</TableCell>
+                                  <TableCell className="font-mono text-sm">{order.order_no}</TableCell>
+                                  <TableCell>{order.action_type || '-'}</TableCell>
+                                  <TableCell>
+                                    <Badge className={order.status === 'PROCESSED' ? 'bg-green-500' : 'bg-amber-500'}>
+                                      {order.status === 'PROCESSED' ? '已处理' : '待处理'}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <div className="flex items-center justify-end gap-2">
+                                      {(selectedECN.status === 'DRAFT' || selectedECN.status === 'SUBMITTED' || selectedECN.status === 'EVALUATING') && (
+                                        <>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleEditOrder(order)}
+                                          >
+                                            <FileEdit className="w-4 h-4" />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleDeleteOrder(order.id)}
+                                          >
+                                            <X className="w-4 h-4" />
+                                          </Button>
+                                        </>
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </TabsContent>
+                
+                {/* 模块集成 */}
+                <TabsContent value="integration" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* BOM同步 */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">BOM同步</CardTitle>
+                        <CardDescription>将ECN变更同步到BOM</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <div className="text-sm text-slate-500">同步状态</div>
+                          <Badge className="bg-slate-500">未同步</Badge>
+                        </div>
+                        <Button
+                          className="w-full"
+                          onClick={async () => {
+                            if (!confirm('确认同步ECN变更到BOM？')) return
+                            try {
+                              await ecnApi.syncToBom(selectedECN.id)
+                              alert('BOM同步成功')
+                              await fetchECNDetail(selectedECN.id)
+                            } catch (error) {
+                              console.error('Failed to sync to BOM:', error)
+                              alert('BOM同步失败: ' + (error.response?.data?.detail || error.message))
+                            }
+                          }}
+                          disabled={selectedECN.status !== 'APPROVED' && selectedECN.status !== 'EXECUTING'}
+                        >
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          同步到BOM
+                        </Button>
+                        <div className="text-xs text-slate-400">
+                          {selectedECN.status !== 'APPROVED' && selectedECN.status !== 'EXECUTING' && 
+                            '仅已审批或执行中的ECN可以同步'}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    {/* 项目同步 */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">项目同步</CardTitle>
+                        <CardDescription>将ECN变更同步到项目</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <div className="text-sm text-slate-500">同步状态</div>
+                          <Badge className="bg-slate-500">未同步</Badge>
+                        </div>
+                        <Button
+                          className="w-full"
+                          onClick={async () => {
+                            if (!confirm('确认同步ECN变更到项目？')) return
+                            try {
+                              await ecnApi.syncToProject(selectedECN.id)
+                              alert('项目同步成功')
+                              await fetchECNDetail(selectedECN.id)
+                            } catch (error) {
+                              console.error('Failed to sync to project:', error)
+                              alert('项目同步失败: ' + (error.response?.data?.detail || error.message))
+                            }
+                          }}
+                          disabled={selectedECN.status !== 'APPROVED' && selectedECN.status !== 'EXECUTING'}
+                        >
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          同步到项目
+                        </Button>
+                        <div className="text-xs text-slate-400">
+                          {selectedECN.status !== 'APPROVED' && selectedECN.status !== 'EXECUTING' && 
+                            '仅已审批或执行中的ECN可以同步'}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    {/* 采购同步 */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">采购同步</CardTitle>
+                        <CardDescription>将ECN变更同步到采购</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <div className="text-sm text-slate-500">同步状态</div>
+                          <Badge className="bg-slate-500">未同步</Badge>
+                        </div>
+                        <Button
+                          className="w-full"
+                          onClick={async () => {
+                            if (!confirm('确认同步ECN变更到采购？')) return
+                            try {
+                              await ecnApi.syncToPurchase(selectedECN.id)
+                              alert('采购同步成功')
+                              await fetchECNDetail(selectedECN.id)
+                            } catch (error) {
+                              console.error('Failed to sync to purchase:', error)
+                              alert('采购同步失败: ' + (error.response?.data?.detail || error.message))
+                            }
+                          }}
+                          disabled={selectedECN.status !== 'APPROVED' && selectedECN.status !== 'EXECUTING'}
+                        >
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          同步到采购
+                        </Button>
+                        <div className="text-xs text-slate-400">
+                          {selectedECN.status !== 'APPROVED' && selectedECN.status !== 'EXECUTING' && 
+                            '仅已审批或执行中的ECN可以同步'}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  {/* 同步历史记录 */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">同步历史记录</CardTitle>
+                      <CardDescription>查看ECN同步到各模块的历史记录</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center py-4 text-slate-400 text-sm">
+                        暂无同步历史记录
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                {/* 变更日志 */}
+                <TabsContent value="logs" className="space-y-4">
+                  {logs.length === 0 ? (
+                    <div className="text-center py-8 text-slate-400">暂无日志记录</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {logs.map((log, index) => (
+                        <div key={log.id || index} className="flex items-start gap-4 p-3 bg-slate-50 rounded-lg">
+                          <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500 mt-2" />
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="font-medium">{log.log_action || log.action}</div>
+                                {log.old_status && log.new_status && (
+                                  <div className="text-sm text-slate-500 mt-1">
+                                    状态变更: {statusConfigs[log.old_status]?.label || log.old_status} → {statusConfigs[log.new_status]?.label || log.new_status}
+                                  </div>
+                                )}
+                                {log.log_content && (
+                                  <div className="text-sm text-slate-600 mt-1">{log.log_content}</div>
+                                )}
+                              </div>
+                              <div className="text-xs text-slate-400">
+                                {log.created_at ? formatDate(log.created_at) : '-'}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             )}
           </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
               关闭
             </Button>
-            {selectedECN && selectedECN.status === 'DRAFT' && (
-              <Button onClick={() => handleSubmit(selectedECN.id)}>
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                提交ECN
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Create Evaluation Dialog */}
+      <Dialog open={showEvaluationDialog} onOpenChange={setShowEvaluationDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>创建评估</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">评估部门 *</label>
+                <Input
+                  value={evaluationForm.eval_dept}
+                  onChange={(e) => setEvaluationForm({ ...evaluationForm, eval_dept: e.target.value })}
+                  placeholder="如：机械部、电气部、采购部等"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">成本估算</label>
+                  <Input
+                    type="number"
+                    value={evaluationForm.cost_estimate}
+                    onChange={(e) => setEvaluationForm({ ...evaluationForm, cost_estimate: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">工期估算（天）</label>
+                  <Input
+                    type="number"
+                    value={evaluationForm.schedule_estimate}
+                    onChange={(e) => setEvaluationForm({ ...evaluationForm, schedule_estimate: parseInt(e.target.value) || 0 })}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">影响分析</label>
+                <Textarea
+                  value={evaluationForm.impact_analysis}
+                  onChange={(e) => setEvaluationForm({ ...evaluationForm, impact_analysis: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">资源需求</label>
+                <Textarea
+                  value={evaluationForm.resource_requirement}
+                  onChange={(e) => setEvaluationForm({ ...evaluationForm, resource_requirement: e.target.value })}
+                  rows={2}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">风险评估</label>
+                <Textarea
+                  value={evaluationForm.risk_assessment}
+                  onChange={(e) => setEvaluationForm({ ...evaluationForm, risk_assessment: e.target.value })}
+                  rows={2}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">评估结论 *</label>
+                <Select
+                  value={evaluationForm.eval_result}
+                  onValueChange={(val) => setEvaluationForm({ ...evaluationForm, eval_result: val })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="APPROVED">通过</SelectItem>
+                    <SelectItem value="CONDITIONAL">有条件通过</SelectItem>
+                    <SelectItem value="REJECTED">不通过</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">评估意见</label>
+                <Textarea
+                  value={evaluationForm.eval_opinion}
+                  onChange={(e) => setEvaluationForm({ ...evaluationForm, eval_opinion: e.target.value })}
+                  rows={2}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">附加条件</label>
+                <Textarea
+                  value={evaluationForm.conditions}
+                  onChange={(e) => setEvaluationForm({ ...evaluationForm, conditions: e.target.value })}
+                  rows={2}
+                />
+              </div>
+            </div>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEvaluationDialog(false)}>
+              取消
               </Button>
-            )}
+            <Button onClick={handleCreateEvaluation}>创建</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Create Task Dialog */}
+      <Dialog open={showTaskDialog} onOpenChange={setShowTaskDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>创建执行任务</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">任务名称 *</label>
+                <Input
+                  value={taskForm.task_name}
+                  onChange={(e) => setTaskForm({ ...taskForm, task_name: e.target.value })}
+                  placeholder="如：更新BOM中的物料型号"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">任务类型</label>
+                  <Input
+                    value={taskForm.task_type}
+                    onChange={(e) => setTaskForm({ ...taskForm, task_type: e.target.value })}
+                    placeholder="如：BOM_UPDATE"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">责任部门</label>
+                  <Input
+                    value={taskForm.task_dept}
+                    onChange={(e) => setTaskForm({ ...taskForm, task_dept: e.target.value })}
+                    placeholder="如：机械部"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">任务描述</label>
+                <Textarea
+                  value={taskForm.task_description}
+                  onChange={(e) => setTaskForm({ ...taskForm, task_description: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">交付物要求</label>
+                <Textarea
+                  value={taskForm.deliverables}
+                  onChange={(e) => setTaskForm({ ...taskForm, deliverables: e.target.value })}
+                  rows={2}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">计划开始日期</label>
+                  <Input
+                    type="date"
+                    value={taskForm.planned_start}
+                    onChange={(e) => setTaskForm({ ...taskForm, planned_start: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">计划结束日期</label>
+                  <Input
+                    type="date"
+                    value={taskForm.planned_end}
+                    onChange={(e) => setTaskForm({ ...taskForm, planned_end: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTaskDialog(false)}>
+              取消
+            </Button>
+            <Button onClick={handleCreateTask}>创建</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add/Edit Affected Material Dialog */}
+      <Dialog open={showMaterialDialog} onOpenChange={setShowMaterialDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingMaterial ? '编辑受影响物料' : '添加受影响物料'}</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">选择物料</label>
+                <Select
+                  value={materialForm.material_id?.toString() || ''}
+                  onValueChange={(val) => handleMaterialSelect(parseInt(val))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择物料（可选）" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">手动输入</SelectItem>
+                    {materials.map((mat) => (
+                      <SelectItem key={mat.id} value={mat.id.toString()}>
+                        {mat.material_code} - {mat.material_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">物料编码 *</label>
+                  <Input
+                    value={materialForm.material_code}
+                    onChange={(e) => setMaterialForm({ ...materialForm, material_code: e.target.value })}
+                    placeholder="物料编码"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">物料名称 *</label>
+                  <Input
+                    value={materialForm.material_name}
+                    onChange={(e) => setMaterialForm({ ...materialForm, material_name: e.target.value })}
+                    placeholder="物料名称"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">规格型号</label>
+                <Input
+                  value={materialForm.specification}
+                  onChange={(e) => setMaterialForm({ ...materialForm, specification: e.target.value })}
+                  placeholder="规格型号"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">变更类型 *</label>
+                <Select
+                  value={materialForm.change_type}
+                  onValueChange={(val) => setMaterialForm({ ...materialForm, change_type: val })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ADD">新增</SelectItem>
+                    <SelectItem value="UPDATE">更新</SelectItem>
+                    <SelectItem value="DELETE">删除</SelectItem>
+                    <SelectItem value="REPLACE">替换</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {(materialForm.change_type === 'UPDATE' || materialForm.change_type === 'REPLACE') && (
+                <>
+                  <div className="border-t pt-4">
+                    <div className="text-sm font-medium mb-3">变更前信息</div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">原数量</label>
+                        <Input
+                          type="number"
+                          value={materialForm.old_quantity}
+                          onChange={(e) => setMaterialForm({ ...materialForm, old_quantity: e.target.value })}
+                          placeholder="原数量"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">原规格</label>
+                        <Input
+                          value={materialForm.old_specification}
+                          onChange={(e) => setMaterialForm({ ...materialForm, old_specification: e.target.value })}
+                          placeholder="原规格型号"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="border-t pt-4">
+                    <div className="text-sm font-medium mb-3">变更后信息</div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">新数量</label>
+                        <Input
+                          type="number"
+                          value={materialForm.new_quantity}
+                          onChange={(e) => setMaterialForm({ ...materialForm, new_quantity: e.target.value })}
+                          placeholder="新数量"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">新规格</label>
+                        <Input
+                          value={materialForm.new_specification}
+                          onChange={(e) => setMaterialForm({ ...materialForm, new_specification: e.target.value })}
+                          placeholder="新规格型号"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+              <div>
+                <label className="text-sm font-medium mb-2 block">成本影响</label>
+                <Input
+                  type="number"
+                  value={materialForm.cost_impact}
+                  onChange={(e) => setMaterialForm({ ...materialForm, cost_impact: parseFloat(e.target.value) || 0 })}
+                  placeholder="成本影响金额"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">备注</label>
+                <Textarea
+                  value={materialForm.remark}
+                  onChange={(e) => setMaterialForm({ ...materialForm, remark: e.target.value })}
+                  rows={2}
+                />
+              </div>
+            </div>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowMaterialDialog(false)}>
+              取消
+            </Button>
+            <Button onClick={handleSaveMaterial}>保存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add/Edit Affected Order Dialog */}
+      <Dialog open={showOrderDialog} onOpenChange={setShowOrderDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{editingOrder ? '编辑受影响订单' : '添加受影响订单'}</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">订单类型 *</label>
+                <Select
+                  value={orderForm.order_type}
+                  onValueChange={(val) => setOrderForm({ ...orderForm, order_type: val, order_id: null, order_no: '' })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PURCHASE">采购订单</SelectItem>
+                    <SelectItem value="OUTSOURCING">外协订单</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">选择订单</label>
+                <Select
+                  value={orderForm.order_id?.toString() || ''}
+                  onValueChange={(val) => {
+                    const order = purchaseOrders.find(o => o.id === parseInt(val))
+                    if (order) {
+                      setOrderForm({
+                        ...orderForm,
+                        order_id: order.id,
+                        order_no: order.order_no || order.po_no || '',
+                      })
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择订单（可选）" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">手动输入</SelectItem>
+                    {purchaseOrders
+                      .filter(o => orderForm.order_type === 'PURCHASE' || o.order_type === orderForm.order_type)
+                      .map((order) => (
+                        <SelectItem key={order.id} value={order.id.toString()}>
+                          {order.order_no || order.po_no} - {order.supplier_name || ''}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">订单号 *</label>
+                <Input
+                  value={orderForm.order_no}
+                  onChange={(e) => setOrderForm({ ...orderForm, order_no: e.target.value })}
+                  placeholder="订单号"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">影响描述</label>
+                <Textarea
+                  value={orderForm.impact_description}
+                  onChange={(e) => setOrderForm({ ...orderForm, impact_description: e.target.value })}
+                  rows={3}
+                  placeholder="描述ECN对此订单的影响"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">处理方式</label>
+                <Select
+                  value={orderForm.action_type}
+                  onValueChange={(val) => setOrderForm({ ...orderForm, action_type: val })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择处理方式" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">无</SelectItem>
+                    <SelectItem value="CANCEL">取消订单</SelectItem>
+                    <SelectItem value="MODIFY">修改订单</SelectItem>
+                    <SelectItem value="DELAY">延期交付</SelectItem>
+                    <SelectItem value="REPLACE">替换物料</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">处理说明</label>
+                <Textarea
+                  value={orderForm.action_description}
+                  onChange={(e) => setOrderForm({ ...orderForm, action_description: e.target.value })}
+                  rows={2}
+                  placeholder="详细说明处理方式"
+                />
+              </div>
+            </div>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowOrderDialog(false)}>
+              取消
+            </Button>
+            <Button onClick={handleSaveOrder}>保存</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   )
 }
-

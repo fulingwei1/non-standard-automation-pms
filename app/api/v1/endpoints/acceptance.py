@@ -10,7 +10,7 @@ from typing import Any, List, Optional
 from datetime import date, datetime
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Response, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Response, Request, UploadFile, File, Form
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, desc, func
@@ -425,6 +425,7 @@ def read_acceptance_orders(
             overall_result=order.overall_result,
             pass_rate=order.pass_rate or Decimal("0"),
             open_issues=open_issues,
+            is_officially_completed=order.is_officially_completed or False,
             created_at=order.created_at
         ))
     
@@ -481,6 +482,10 @@ def read_acceptance_order(
         pass_rate=order.pass_rate or Decimal("0"),
         overall_result=order.overall_result,
         conclusion=order.conclusion,
+        conditions=order.conditions,
+        customer_signed_file_path=order.customer_signed_file_path,
+        is_officially_completed=order.is_officially_completed or False,
+        officially_completed_at=order.officially_completed_at,
         created_at=order.created_at,
         updated_at=order.updated_at
     )
@@ -849,6 +854,23 @@ def complete_acceptance(
                     plan.status = "INVOICED"
                     
                     db.add(plan)
+    
+    # 如果验收通过，自动触发奖金计算
+    if complete_in.overall_result == "PASSED":
+        try:
+            from app.services.bonus_calculator import BonusCalculator
+            calculator = BonusCalculator(db)
+            
+            # 获取项目信息
+            project = db.query(Project).filter(Project.id == order.project_id).first()
+            if project:
+                # 触发项目验收后的奖金计算
+                calculator.trigger_acceptance_bonus_calculation(project, order)
+        except Exception as e:
+            # 奖金计算失败不影响验收完成，记录日志
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"验收后奖金计算失败: {str(e)}", exc_info=True)
     
     db.commit()
     db.refresh(order)
@@ -1436,3 +1458,167 @@ def download_acceptance_report(
         filename=filename,
         media_type=media_type
     )
+
+
+# ==================== 客户签署验收单上传 ====================
+
+@router.post("/acceptance-orders/{order_id}/upload-signed-document", response_model=AcceptanceOrderResponse, status_code=status.HTTP_200_OK)
+async def upload_customer_signed_document(
+    *,
+    db: Session = Depends(deps.get_db),
+    order_id: int,
+    file: UploadFile = File(..., description="客户签署的验收单文件"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    上传客户签署的验收单文件
+    
+    上传后，验收单将被标记为正式完成（is_officially_completed=True）
+    只有状态为COMPLETED且验收结果为PASSED的验收单才能上传签署文件
+    """
+    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="验收单不存在")
+    
+    # 验证验收单状态
+    if order.status != "COMPLETED":
+        raise HTTPException(status_code=400, detail="只有已完成状态的验收单才能上传客户签署文件")
+    
+    if order.overall_result != "PASSED":
+        raise HTTPException(status_code=400, detail="只有验收通过的验收单才能上传客户签署文件")
+    
+    # 验证项目关联
+    project = db.query(Project).filter(Project.id == order.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="关联的项目不存在")
+    
+    # 创建上传目录
+    upload_dir = os.path.join(settings.UPLOAD_DIR, "acceptance_signed_documents")
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    # 生成唯一文件名
+    import uuid
+    file_ext = os.path.splitext(file.filename)[1] if file.filename else ".pdf"
+    unique_filename = f"{order.order_no}_{uuid.uuid4().hex[:8]}{file_ext}"
+    file_path = os.path.join(upload_dir, unique_filename)
+    
+    # 保存文件
+    try:
+        content = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"文件保存失败: {str(e)}")
+    
+    # 计算相对路径（相对于UPLOAD_DIR）
+    relative_path = os.path.relpath(file_path, settings.UPLOAD_DIR)
+    
+    # 更新验收单
+    order.customer_signed_file_path = relative_path
+    order.is_officially_completed = True
+    order.officially_completed_at = datetime.now()
+    
+    db.add(order)
+    db.commit()
+    db.refresh(order)
+    
+    return read_acceptance_order(order_id, db, current_user)
+
+
+@router.get("/acceptance-orders/{order_id}/download-signed-document", response_class=FileResponse)
+def download_customer_signed_document(
+    order_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    下载客户签署的验收单文件
+    """
+    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="验收单不存在")
+    
+    if not order.customer_signed_file_path:
+        raise HTTPException(status_code=404, detail="客户签署文件不存在")
+    
+    file_path = os.path.join(settings.UPLOAD_DIR, order.customer_signed_file_path)
+    
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="文件不存在")
+    
+    filename = os.path.basename(file_path)
+    media_type = "application/pdf" if filename.endswith(".pdf") else "application/octet-stream"
+    
+    return FileResponse(
+        path=file_path,
+        filename=filename,
+        media_type=media_type
+    )
+
+
+# ==================== 手动触发奖金计算 ====================
+
+@router.post("/acceptance-orders/{order_id}/trigger-bonus-calculation", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def trigger_bonus_calculation(
+    *,
+    db: Session = Depends(deps.get_db),
+    order_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    手动触发验收单关联的奖金计算
+    
+    只有正式完成的验收单（已上传客户签署文件）才能触发奖金计算
+    """
+    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="验收单不存在")
+    
+    # 验证验收单状态
+    if not order.is_officially_completed:
+        raise HTTPException(status_code=400, detail="只有正式完成的验收单（已上传客户签署文件）才能触发奖金计算")
+    
+    if order.overall_result != "PASSED":
+        raise HTTPException(status_code=400, detail="只有验收通过的验收单才能触发奖金计算")
+    
+    # 获取项目信息
+    project = db.query(Project).filter(Project.id == order.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="关联的项目不存在")
+    
+    try:
+        from app.services.bonus_calculator import BonusCalculator
+        calculator = BonusCalculator(db)
+        
+        # 触发奖金计算
+        calculations = calculator.trigger_acceptance_bonus_calculation(project, order)
+        
+        db.commit()
+        
+        return ResponseModel(
+            code=200,
+            message="奖金计算触发成功",
+            data={
+                "order_id": order_id,
+                "order_no": order.order_no,
+                "project_id": project.id,
+                "project_name": project.project_name,
+                "calculations_count": len(calculations),
+                "calculations": [
+                    {
+                        "id": calc.id,
+                        "calculation_code": calc.calculation_code,
+                        "user_id": calc.user_id,
+                        "calculated_amount": float(calc.calculated_amount) if calc.calculated_amount else 0,
+                        "status": calc.status,
+                    }
+                    for calc in calculations
+                ] if calculations else []
+            }
+        )
+    except Exception as e:
+        db.rollback()
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"奖金计算失败: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"奖金计算失败: {str(e)}")

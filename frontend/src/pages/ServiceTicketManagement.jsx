@@ -18,6 +18,7 @@ import {
   Plus, Search, Filter, Eye, Edit, Send, CheckCircle2, Clock,
   AlertTriangle, User, Calendar, Phone, MapPin, Star, FileText,
   TrendingUp, Download, RefreshCw, XCircle, ChevronRight,
+  ArrowUpDown, ArrowUp, ArrowDown,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -27,6 +28,13 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Badge } from '../components/ui/badge'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select'
+import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogBody
 } from '../components/ui/dialog'
 import { Textarea } from '../components/ui/textarea'
@@ -34,80 +42,8 @@ import { LoadingCard, ErrorMessage, EmptyState } from '../components/common'
 import { toast } from '../components/ui/toast'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
-import { serviceApi } from '../services/api'
-
-// Mock data
-const mockTickets = [
-  {
-    id: 1,
-    ticket_no: 'SR-20260106-001',
-    project_code: 'PJ250106002',
-    project_name: 'EOL功能测试设备',
-    machine_no: 'PN001',
-    customer_name: '东莞XX电子',
-    problem_type: '软件问题',
-    problem_desc: '设备运行过程中出现程序崩溃，需要技术支持',
-    urgency: '紧急',
-    reported_by: '李工',
-    reported_phone: '138****5678',
-    reported_time: '2026-01-06 08:30:00',
-    assigned_to: 1,
-    assigned_name: '张工程师',
-    assigned_time: '2026-01-06 09:00:00',
-    status: '处理中',
-    response_time: '2026-01-06 09:15:00',
-    resolved_time: null,
-    solution: null,
-    satisfaction: null,
-    feedback: null,
-  },
-  {
-    id: 2,
-    ticket_no: 'SR-20260105-002',
-    project_code: 'PJ250103003',
-    project_name: 'ICT在线测试设备',
-    machine_no: 'PN002',
-    customer_name: '惠州XX电池',
-    problem_type: '机械问题',
-    problem_desc: '设备运行时有异响，需要检查',
-    urgency: '普通',
-    reported_by: '张工',
-    reported_phone: '139****9012',
-    reported_time: '2026-01-05 14:20:00',
-    assigned_to: 2,
-    assigned_name: '王工程师',
-    assigned_time: '2026-01-05 15:00:00',
-    status: '待验证',
-    response_time: '2026-01-05 15:10:00',
-    resolved_time: '2026-01-06 10:00:00',
-    solution: '已更换故障部件，设备运行正常',
-    satisfaction: 5,
-    feedback: '服务及时，问题解决迅速',
-  },
-  {
-    id: 3,
-    ticket_no: 'SR-20260104-003',
-    project_code: 'PJ250101001',
-    project_name: 'BMS老化测试设备',
-    machine_no: 'PN003',
-    customer_name: '深圳XX科技',
-    problem_type: '操作问题',
-    problem_desc: '操作人员需要培训',
-    urgency: '普通',
-    reported_by: '王工',
-    reported_phone: '137****3456',
-    reported_time: '2026-01-04 10:15:00',
-    assigned_to: 1,
-    assigned_name: '当前用户',
-    assigned_time: '2026-01-04 11:00:00',
-    status: '已关闭',
-    response_time: '2026-01-04 11:30:00',
-    resolved_time: '2026-01-05 16:00:00',
-    solution: '已完成操作培训，客户已掌握操作方法',
-    satisfaction: 4,
-    feedback: '培训内容详细，但希望有更多实操练习',
-  },
-]
+import { serviceApi, userApi } from '../services/api'
+import { formatDate } from '../lib/utils'
 
 const statusConfig = {
   '待分配': { label: '待分配', color: 'bg-slate-500', textColor: 'text-slate-400' },
@@ -137,9 +73,25 @@ export default function ServiceTicketManagement() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [urgencyFilter, setUrgencyFilter] = useState('ALL')
+  const [sortBy, setSortBy] = useState('reported_time') // reported_time, status, urgency
+  const [sortOrder, setSortOrder] = useState('desc') // asc, desc
+  const [pagination, setPagination] = useState({
+    page: 1,
+    page_size: 20,
+    total: 0,
+    pages: 0,
+  })
+  const [dateRange, setDateRange] = useState({
+    start: '',
+    end: '',
+  })
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showDetailDialog, setShowDetailDialog] = useState(false)
+  const [showBatchAssignDialog, setShowBatchAssignDialog] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [selectedTickets, setSelectedTickets] = useState(new Set())
+  const [exporting, setExporting] = useState(false)
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
@@ -153,6 +105,34 @@ export default function ServiceTicketManagement() {
     loadTickets()
     loadStatistics()
   }, [])
+
+  // 快捷键支持
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // ESC 关闭对话框
+      if (e.key === 'Escape') {
+        if (showCreateDialog) setShowCreateDialog(false)
+        if (showDetailDialog) {
+          setShowDetailDialog(false)
+          setSelectedTicket(null)
+        }
+      }
+      // Ctrl/Cmd + K 聚焦搜索框
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault()
+        // 搜索框会自动聚焦
+      }
+      // F5 刷新
+      if (e.key === 'F5') {
+        e.preventDefault()
+        loadTickets()
+        loadStatistics()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showCreateDialog, showDetailDialog, loadTickets, loadStatistics])
 
   // Map backend status to frontend status
   const mapBackendStatus = (backendStatus) => {
@@ -183,8 +163,8 @@ export default function ServiceTicketManagement() {
       setError(null)
       
       const params = {
-        page: 1,
-        page_size: 100,
+        page: pagination.page,
+        page_size: pagination.page_size,
       }
       
       if (statusFilter !== 'ALL') {
@@ -211,8 +191,35 @@ export default function ServiceTicketManagement() {
         params.keyword = searchQuery
       }
       
+      if (dateRange.start) {
+        params.date_from = dateRange.start
+      }
+      if (dateRange.end) {
+        params.date_to = dateRange.end
+      }
+      
       const response = await serviceApi.tickets.list(params)
-      const ticketsData = response.data?.items || response.data || []
+      const data = response.data || response
+      
+      // Handle PaginatedResponse format
+      let ticketsData = []
+      if (data && typeof data === 'object' && 'items' in data) {
+        ticketsData = data.items || []
+        setPagination(prev => ({
+          ...prev,
+          total: data.total || 0,
+          pages: data.pages || 0,
+          page: data.page || prev.page,
+          page_size: data.page_size || prev.page_size,
+        }))
+      } else if (Array.isArray(data)) {
+        ticketsData = data
+        setPagination(prev => ({
+          ...prev,
+          total: data.length,
+          pages: Math.ceil(data.length / prev.page_size),
+        }))
+      }
       
       // Transform backend data to frontend format
       const transformedTickets = ticketsData.map(ticket => ({
@@ -246,7 +253,7 @@ export default function ServiceTicketManagement() {
     } finally {
       setLoading(false)
     }
-  }, [statusFilter, urgencyFilter, searchQuery])
+  }, [statusFilter, urgencyFilter, searchQuery, pagination.page, pagination.page_size, dateRange])
 
   const loadStatistics = useCallback(async () => {
     try {
@@ -275,33 +282,168 @@ export default function ServiceTicketManagement() {
     }
   }, [tickets])
 
-  const filteredTickets = useMemo(() => {
-    let result = tickets
+  // 由于后端已经处理了筛选和分页，前端只需要排序
+  const sortedTickets = useMemo(() => {
+    let result = [...tickets]
 
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      result = result.filter(ticket =>
-        ticket.ticket_no.toLowerCase().includes(query) ||
-        ticket.project_name.toLowerCase().includes(query) ||
-        ticket.customer_name.toLowerCase().includes(query) ||
-        ticket.problem_desc.toLowerCase().includes(query) ||
-        ticket.reported_by.toLowerCase().includes(query)
-      )
-    }
+    // Sort
+    result.sort((a, b) => {
+      let aValue, bValue
+      
+      switch (sortBy) {
+        case 'reported_time':
+          aValue = new Date(a.reported_time || 0).getTime()
+          bValue = new Date(b.reported_time || 0).getTime()
+          break
+        case 'status':
+          const statusOrder = { '待分配': 1, '处理中': 2, '待验证': 3, '已关闭': 4 }
+          aValue = statusOrder[a.status] || 0
+          bValue = statusOrder[b.status] || 0
+          break
+        case 'urgency':
+          const urgencyOrder = { '紧急': 1, '高': 2, '中': 3, '低': 4, '普通': 5 }
+          aValue = urgencyOrder[a.urgency] || 0
+          bValue = urgencyOrder[b.urgency] || 0
+          break
+        default:
+          return 0
+      }
 
-    // Status filter
-    if (statusFilter !== 'ALL') {
-      result = result.filter(ticket => ticket.status === statusFilter)
-    }
-
-    // Urgency filter
-    if (urgencyFilter !== 'ALL') {
-      result = result.filter(ticket => ticket.urgency === urgencyFilter)
-    }
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0
+      } else {
+        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0
+      }
+    })
 
     return result
-  }, [tickets, searchQuery, statusFilter, urgencyFilter])
+  }, [tickets, sortBy, sortOrder])
+
+  // 处理选择
+  const handleSelectTicket = (ticketId) => {
+    setSelectedTickets(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(ticketId)) {
+        newSet.delete(ticketId)
+      } else {
+        newSet.add(ticketId)
+      }
+      return newSet
+    })
+  }
+
+  const handleSelectAll = () => {
+    if (selectedTickets.size === sortedTickets.length) {
+      setSelectedTickets(new Set())
+    } else {
+      setSelectedTickets(new Set(sortedTickets.map(t => t.id)))
+    }
+  }
+
+  // 导出功能
+  const handleExport = async (ticketIds = null) => {
+    if (exporting) return
+    
+    try {
+      setExporting(true)
+      
+      // 获取要导出的工单数据
+      let ticketsToExport = []
+      if (ticketIds && ticketIds.length > 0) {
+        // 导出选中的工单
+        ticketsToExport = sortedTickets.filter(t => ticketIds.includes(t.id))
+      } else {
+        // 导出当前筛选条件下的所有工单
+        const params = {
+          page: 1,
+          page_size: 1000, // 导出时获取更多数据
+        }
+        
+        if (statusFilter !== 'ALL') {
+          const statusMap = {
+            '待分配': 'PENDING',
+            '处理中': 'IN_PROGRESS',
+            '待验证': 'PENDING_VERIFY',
+            '已关闭': 'CLOSED',
+          }
+          params.status = statusMap[statusFilter] || statusFilter
+        }
+        
+        if (urgencyFilter !== 'ALL') {
+          const urgencyMap = {
+            '紧急': 'URGENT',
+            '高': 'HIGH',
+            '中': 'MEDIUM',
+            '低': 'LOW',
+          }
+          params.urgency = urgencyMap[urgencyFilter] || urgencyFilter
+        }
+        
+        if (searchQuery) {
+          params.keyword = searchQuery
+        }
+        
+        if (dateRange.start) {
+          params.date_from = dateRange.start
+        }
+        if (dateRange.end) {
+          params.date_to = dateRange.end
+        }
+        
+        const response = await serviceApi.tickets.list(params)
+        const data = response.data || response
+        ticketsToExport = data.items || data || []
+      }
+      
+      // 转换为 CSV 格式
+      const headers = ['工单号', '项目编码', '项目名称', '机台号', '客户名称', '问题类型', '问题描述', 
+                      '紧急程度', '报告人', '报告人电话', '报告时间', '负责人', '分配时间', 
+                      '状态', '响应时间', '解决时间', '解决方案', '满意度', '客户反馈']
+      
+      const csvRows = [
+        headers.join(','),
+        ...ticketsToExport.map(ticket => [
+          ticket.ticket_no || '',
+          ticket.project_code || '',
+          ticket.project_name || '',
+          ticket.machine_no || '',
+          ticket.customer_name || '',
+          ticket.problem_type || '',
+          `"${(ticket.problem_desc || '').replace(/"/g, '""')}"`,
+          ticket.urgency || '',
+          ticket.reported_by || '',
+          ticket.reported_phone || '',
+          ticket.reported_time ? formatDate(ticket.reported_time) : '',
+          ticket.assigned_name || '',
+          ticket.assigned_time ? formatDate(ticket.assigned_time) : '',
+          ticket.status || '',
+          ticket.response_time ? formatDate(ticket.response_time) : '',
+          ticket.resolved_time ? formatDate(ticket.resolved_time) : '',
+          `"${(ticket.solution || '').replace(/"/g, '""')}"`,
+          ticket.satisfaction || '',
+          `"${(ticket.feedback || '').replace(/"/g, '""')}"`,
+        ].join(','))
+      ]
+      
+      const csvContent = csvRows.join('\n')
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `服务工单_${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      
+      toast.success(`成功导出 ${ticketsToExport.length} 条工单记录`)
+    } catch (error) {
+      console.error('Failed to export tickets:', error)
+      toast.error('导出失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const handleViewDetail = (ticket) => {
     setSelectedTicket(ticket)
@@ -309,7 +451,10 @@ export default function ServiceTicketManagement() {
   }
 
   const handleCreateTicket = async (ticketData) => {
+    if (submitting) return
+    
     try {
+      setSubmitting(true)
       await serviceApi.tickets.create(ticketData)
       toast.success('服务工单创建成功')
       setShowCreateDialog(false)
@@ -318,11 +463,16 @@ export default function ServiceTicketManagement() {
     } catch (error) {
       console.error('Failed to create ticket:', error)
       toast.error('创建失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
+    } finally {
+      setSubmitting(false)
     }
   }
 
   const handleAssignTicket = async (ticketId, assignData) => {
+    if (submitting) return
+    
     try {
+      setSubmitting(true)
       await serviceApi.tickets.assign(ticketId, assignData)
       toast.success('工单分配成功')
       await loadTickets()
@@ -330,19 +480,102 @@ export default function ServiceTicketManagement() {
     } catch (error) {
       console.error('Failed to assign ticket:', error)
       toast.error('分配失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
+    } finally {
+      setSubmitting(false)
     }
   }
 
   const handleCloseTicket = async (ticketId, closeData) => {
+    if (submitting) return
+    
+    // 验证必填字段
+    if (!closeData.solution || !closeData.solution.trim()) {
+      toast.warning('请填写解决方案')
+      return
+    }
+    
+    if (!closeData.satisfaction) {
+      toast.warning('请选择客户满意度')
+      return
+    }
+    
     try {
+      setSubmitting(true)
       await serviceApi.tickets.close(ticketId, closeData)
       toast.success('工单已关闭')
       setShowDetailDialog(false)
+      setSelectedTicket(null)
       await loadTickets()
       await loadStatistics()
     } catch (error) {
       console.error('Failed to close ticket:', error)
-      toast.error('关闭失败，请稍后重试')
+      toast.error('关闭失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleBatchAssign = async (assignData) => {
+    if (submitting) return
+    
+    if (selectedTickets.size === 0) {
+      toast.warning('请选择要分配的工单')
+      return
+    }
+    
+    if (!assignData.assignee_id) {
+      toast.warning('请选择负责人')
+      return
+    }
+    
+    try {
+      setSubmitting(true)
+      const ticketIds = Array.from(selectedTickets)
+      
+      // 尝试使用批量分配API，如果不存在则循环调用单个分配
+      try {
+        await serviceApi.tickets.batchAssign({
+          ticket_ids: ticketIds,
+          assignee_id: assignData.assignee_id,
+          comment: assignData.comment || '',
+        })
+        toast.success(`成功分配 ${ticketIds.length} 个工单`)
+      } catch (batchError) {
+        // 如果批量API不存在，则循环调用单个分配
+        if (batchError.response?.status === 404) {
+          let successCount = 0
+          let failCount = 0
+          for (const ticketId of ticketIds) {
+            try {
+              await serviceApi.tickets.assign(ticketId, {
+                assignee_id: assignData.assignee_id,
+                comment: assignData.comment || '',
+              })
+              successCount++
+            } catch (err) {
+              console.error(`Failed to assign ticket ${ticketId}:`, err)
+              failCount++
+            }
+          }
+          if (failCount === 0) {
+            toast.success(`成功分配 ${successCount} 个工单`)
+          } else {
+            toast.warn(`分配完成：成功 ${successCount} 个，失败 ${failCount} 个`)
+          }
+        } else {
+          throw batchError
+        }
+      }
+      
+      setShowBatchAssignDialog(false)
+      setSelectedTickets(new Set())
+      await loadTickets()
+      await loadStatistics()
+    } catch (error) {
+      console.error('Failed to batch assign tickets:', error)
+      toast.error('批量分配失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -357,19 +590,48 @@ export default function ServiceTicketManagement() {
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={() => { loadTickets(); loadStatistics(); toast.success('数据已刷新'); }}
+              onClick={async () => { 
+                await loadTickets()
+                await loadStatistics()
+                toast.success('数据已刷新')
+              }}
               disabled={loading}
+              title="刷新数据 (F5)"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
               刷新
             </Button>
             <Button
               size="sm"
               className="gap-2"
               onClick={() => setShowCreateDialog(true)}
+              title="创建新的服务工单"
             >
               <Plus className="w-4 h-4" />
               创建工单
+            </Button>
+            {selectedTickets.size > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => handleExport(Array.from(selectedTickets))}
+                disabled={exporting}
+              >
+                <Download className={cn("w-4 h-4", exporting && "animate-spin")} />
+                {exporting ? '导出中...' : `导出选中 (${selectedTickets.size})`}
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => handleExport()}
+              disabled={exporting}
+              title="导出当前筛选条件下的所有工单"
+            >
+              <Download className={cn("w-4 h-4", exporting && "animate-spin")} />
+              {exporting ? '导出中...' : '导出全部'}
             </Button>
           </div>
         }
@@ -381,10 +643,17 @@ export default function ServiceTicketManagement() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4"
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4"
         >
           <motion.div variants={fadeIn}>
-            <Card className="bg-slate-800/30 border-slate-700">
+            <Card 
+              className="bg-slate-800/30 border-slate-700 cursor-pointer hover:bg-slate-800/50 transition-colors"
+              onClick={() => {
+                setStatusFilter('ALL')
+                setUrgencyFilter('ALL')
+                setPagination(prev => ({ ...prev, page: 1 }))
+              }}
+            >
               <CardContent className="p-4">
                 <div className="text-sm text-slate-400 mb-1">总工单数</div>
                 <div className="text-2xl font-bold text-white">{stats.total}</div>
@@ -392,7 +661,13 @@ export default function ServiceTicketManagement() {
             </Card>
           </motion.div>
           <motion.div variants={fadeIn}>
-            <Card className="bg-slate-800/30 border-slate-700">
+            <Card 
+              className="bg-slate-800/30 border-slate-700 cursor-pointer hover:bg-slate-800/50 transition-colors"
+              onClick={() => {
+                setStatusFilter('待分配')
+                setPagination(prev => ({ ...prev, page: 1 }))
+              }}
+            >
               <CardContent className="p-4">
                 <div className="text-sm text-slate-400 mb-1">待分配</div>
                 <div className="text-2xl font-bold text-slate-400">{stats.pending}</div>
@@ -400,7 +675,13 @@ export default function ServiceTicketManagement() {
             </Card>
           </motion.div>
           <motion.div variants={fadeIn}>
-            <Card className="bg-blue-500/10 border-blue-500/20">
+            <Card 
+              className="bg-blue-500/10 border-blue-500/20 cursor-pointer hover:bg-blue-500/20 transition-colors"
+              onClick={() => {
+                setStatusFilter('处理中')
+                setPagination(prev => ({ ...prev, page: 1 }))
+              }}
+            >
               <CardContent className="p-4">
                 <div className="text-sm text-slate-400 mb-1">处理中</div>
                 <div className="text-2xl font-bold text-blue-400">{stats.inProgress}</div>
@@ -408,7 +689,13 @@ export default function ServiceTicketManagement() {
             </Card>
           </motion.div>
           <motion.div variants={fadeIn}>
-            <Card className="bg-amber-500/10 border-amber-500/20">
+            <Card 
+              className="bg-amber-500/10 border-amber-500/20 cursor-pointer hover:bg-amber-500/20 transition-colors"
+              onClick={() => {
+                setStatusFilter('待验证')
+                setPagination(prev => ({ ...prev, page: 1 }))
+              }}
+            >
               <CardContent className="p-4">
                 <div className="text-sm text-slate-400 mb-1">待验证</div>
                 <div className="text-2xl font-bold text-amber-400">{stats.pendingVerify}</div>
@@ -416,7 +703,13 @@ export default function ServiceTicketManagement() {
             </Card>
           </motion.div>
           <motion.div variants={fadeIn}>
-            <Card className="bg-emerald-500/10 border-emerald-500/20">
+            <Card 
+              className="bg-emerald-500/10 border-emerald-500/20 cursor-pointer hover:bg-emerald-500/20 transition-colors"
+              onClick={() => {
+                setStatusFilter('已关闭')
+                setPagination(prev => ({ ...prev, page: 1 }))
+              }}
+            >
               <CardContent className="p-4">
                 <div className="text-sm text-slate-400 mb-1">已关闭</div>
                 <div className="text-2xl font-bold text-emerald-400">{stats.closed}</div>
@@ -424,7 +717,13 @@ export default function ServiceTicketManagement() {
             </Card>
           </motion.div>
           <motion.div variants={fadeIn}>
-            <Card className="bg-red-500/10 border-red-500/20">
+            <Card 
+              className="bg-red-500/10 border-red-500/20 cursor-pointer hover:bg-red-500/20 transition-colors"
+              onClick={() => {
+                setUrgencyFilter('紧急')
+                setPagination(prev => ({ ...prev, page: 1 }))
+              }}
+            >
               <CardContent className="p-4">
                 <div className="text-sm text-slate-400 mb-1">紧急工单</div>
                 <div className="text-2xl font-bold text-red-400">{stats.urgent}</div>
@@ -437,23 +736,31 @@ export default function ServiceTicketManagement() {
         <motion.div variants={fadeIn} initial="hidden" animate="visible">
           <Card>
             <CardContent className="p-4">
-              <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex flex-col lg:flex-row gap-4">
                 <div className="flex-1">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
-                      placeholder="搜索工单号、项目名称、客户名称..."
+                      placeholder="搜索工单号、项目名称、客户名称... (Ctrl+K)"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10 bg-slate-800/50 border-slate-700"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setSearchQuery('')
+                        }
+                      }}
                     />
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <select
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white"
+                    onChange={(e) => {
+                      setStatusFilter(e.target.value)
+                      setPagination(prev => ({ ...prev, page: 1 }))
+                    }}
+                    className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white min-w-[120px]"
                   >
                     <option value="ALL">全部状态</option>
                     <option value="待分配">待分配</option>
@@ -463,14 +770,64 @@ export default function ServiceTicketManagement() {
                   </select>
                   <select
                     value={urgencyFilter}
-                    onChange={(e) => setUrgencyFilter(e.target.value)}
-                    className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white"
+                    onChange={(e) => {
+                      setUrgencyFilter(e.target.value)
+                      setPagination(prev => ({ ...prev, page: 1 }))
+                    }}
+                    className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white min-w-[120px]"
                   >
                     <option value="ALL">全部紧急度</option>
                     <option value="紧急">紧急</option>
                     <option value="普通">普通</option>
                   </select>
-                  {(searchQuery || statusFilter !== 'ALL' || urgencyFilter !== 'ALL') && (
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-32 bg-slate-800/50 border-slate-700">
+                      <SelectValue placeholder="排序" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="reported_time">报告时间</SelectItem>
+                      <SelectItem value="status">状态</SelectItem>
+                      <SelectItem value="urgency">紧急度</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                    title={sortOrder === 'asc' ? '升序' : '降序'}
+                    className="bg-slate-800/50 border-slate-700"
+                  >
+                    {sortOrder === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+                  </Button>
+                      <div className="flex gap-2 items-center flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-slate-400" />
+                      <Input
+                        type="date"
+                        value={dateRange.start}
+                        onChange={(e) => {
+                          setDateRange(prev => ({ ...prev, start: e.target.value }))
+                          setPagination(prev => ({ ...prev, page: 1 }))
+                        }}
+                        className="w-36 bg-slate-800/50 border-slate-700 text-sm"
+                        placeholder="开始日期"
+                        title="开始日期"
+                      />
+                    </div>
+                    <span className="text-slate-400 hidden sm:inline">至</span>
+                    <Input
+                      type="date"
+                      value={dateRange.end}
+                      onChange={(e) => {
+                        setDateRange(prev => ({ ...prev, end: e.target.value }))
+                        setPagination(prev => ({ ...prev, page: 1 }))
+                      }}
+                      className="w-36 bg-slate-800/50 border-slate-700 text-sm"
+                      placeholder="结束日期"
+                      title="结束日期"
+                    />
+                  </div>
+                  {(searchQuery || statusFilter !== 'ALL' || urgencyFilter !== 'ALL' || dateRange.start || dateRange.end) && (
                     <Button
                       variant="secondary"
                       size="sm"
@@ -478,6 +835,8 @@ export default function ServiceTicketManagement() {
                         setSearchQuery('')
                         setStatusFilter('ALL')
                         setUrgencyFilter('ALL')
+                        setDateRange({ start: '', end: '' })
+                        setPagination(prev => ({ ...prev, page: 1 }))
                       }}
                       className="gap-2"
                     >
@@ -497,28 +856,116 @@ export default function ServiceTicketManagement() {
             <LoadingCard rows={5} />
           ) : error && tickets.length === 0 ? (
             <ErrorMessage error={error} onRetry={loadTickets} />
-          ) : filteredTickets.length === 0 ? (
+          ) : sortedTickets.length === 0 ? (
             <EmptyState
               icon={FileText}
               title="暂无服务工单"
               description={
-                searchQuery || statusFilter !== 'ALL' || urgencyFilter !== 'ALL'
-                  ? "当前筛选条件下没有匹配的工单，请尝试调整筛选条件"
-                  : "当前没有服务工单数据"
+                searchQuery || statusFilter !== 'ALL' || urgencyFilter !== 'ALL' || dateRange.start || dateRange.end
+                  ? "当前筛选条件下没有匹配的工单，请尝试调整筛选条件或清除筛选"
+                  : "当前没有服务工单数据，点击右上角「创建工单」按钮创建新的服务工单"
+              }
+              action={
+                (searchQuery || statusFilter !== 'ALL' || urgencyFilter !== 'ALL' || dateRange.start || dateRange.end) ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchQuery('')
+                      setStatusFilter('ALL')
+                      setUrgencyFilter('ALL')
+                      setDateRange({ start: '', end: '' })
+                      setPagination(prev => ({ ...prev, page: 1 }))
+                    }}
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
+                    清除筛选
+                  </Button>
+                ) : (
+                  <Button onClick={() => setShowCreateDialog(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    创建工单
+                  </Button>
+                )
               }
             />
           ) : (
-            filteredTickets.map((ticket) => {
-              const status = statusConfig[ticket.status] || statusConfig['待分配']
-              const urgency = urgencyConfig[ticket.urgency] || urgencyConfig['普通']
-              const problemType = problemTypeConfig[ticket.problem_type] || problemTypeConfig['其他']
+            <>
+              {/* Select All */}
+              {sortedTickets.length > 0 && (
+                <Card className="bg-slate-800/30 border-slate-700">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedTickets.size === sortedTickets.length && sortedTickets.length > 0}
+                        onChange={handleSelectAll}
+                        className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-slate-400">
+                        {selectedTickets.size === sortedTickets.length ? '取消全选' : '全选当前页'}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              {selectedTickets.size > 0 && (
+                <Card className="bg-blue-500/10 border-blue-500/20">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-blue-400">
+                        已选择 {selectedTickets.size} 个工单
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedTickets(new Set())}
+                        >
+                          取消选择
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowBatchAssignDialog(true)}
+                          disabled={submitting}
+                        >
+                          批量分配
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleExport(Array.from(selectedTickets))}
+                          disabled={exporting}
+                        >
+                          <Download className={cn("w-4 h-4 mr-1", exporting && "animate-spin")} />
+                          {exporting ? '导出中...' : '导出选中'}
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              {sortedTickets.map((ticket) => {
+                const status = statusConfig[ticket.status] || statusConfig['待分配']
+                const urgency = urgencyConfig[ticket.urgency] || urgencyConfig['普通']
+                const problemType = problemTypeConfig[ticket.problem_type] || problemTypeConfig['其他']
 
-              return (
-                <motion.div key={ticket.id} variants={fadeIn}>
-                  <Card className="hover:bg-slate-800/50 transition-colors">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 space-y-3">
+                return (
+                  <motion.div key={ticket.id} variants={fadeIn}>
+                    <Card className={cn(
+                      "hover:bg-slate-800/50 transition-colors",
+                      selectedTickets.has(ticket.id) && "ring-2 ring-blue-500"
+                    )}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start gap-3 flex-1">
+                            <input
+                              type="checkbox"
+                              checked={selectedTickets.has(ticket.id)}
+                              onChange={() => handleSelectTicket(ticket.id)}
+                              className="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500"
+                            />
+                            <div className="flex-1 space-y-3">
                           {/* Header */}
                           <div className="flex items-center gap-3">
                             <span className="font-mono text-sm text-slate-300">{ticket.ticket_no}</span>
@@ -562,18 +1009,18 @@ export default function ServiceTicketManagement() {
                           <div className="flex items-center gap-4 text-xs text-slate-500">
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
-                              报告时间: {ticket.reported_time}
+                              报告时间: {ticket.reported_time ? formatDate(ticket.reported_time) : '-'}
                             </span>
                             {ticket.response_time && (
                               <span className="flex items-center gap-1 text-blue-400">
                                 <CheckCircle2 className="w-3 h-3" />
-                                响应: {ticket.response_time}
+                                响应: {formatDate(ticket.response_time)}
                               </span>
                             )}
                             {ticket.resolved_time && (
                               <span className="flex items-center gap-1 text-emerald-400">
                                 <CheckCircle2 className="w-3 h-3" />
-                                解决: {ticket.resolved_time}
+                                解决: {formatDate(ticket.resolved_time)}
                               </span>
                             )}
                             {ticket.satisfaction && (
@@ -582,6 +1029,7 @@ export default function ServiceTicketManagement() {
                                 满意度: {ticket.satisfaction}/5
                               </span>
                             )}
+                            </div>
                           </div>
                         </div>
 
@@ -601,8 +1049,60 @@ export default function ServiceTicketManagement() {
                     </CardContent>
                   </Card>
                 </motion.div>
-              )
-            })
+                )
+              })}
+            </>
+          )}
+          
+          {/* Pagination */}
+          {!loading && pagination.total > pagination.page_size && (
+            <Card className="bg-slate-800/30 border-slate-700">
+              <CardContent className="flex items-center justify-between p-4">
+                <div className="text-sm text-slate-400">
+                  共 {pagination.total} 条记录，第 {pagination.page} / {pagination.pages} 页
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
+                    disabled={pagination.page === 1 || loading}
+                    className="bg-slate-800/50 border-slate-700"
+                  >
+                    上一页
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.pages, prev.page + 1) }))}
+                    disabled={pagination.page >= pagination.pages || loading}
+                    className="bg-slate-800/50 border-slate-700"
+                  >
+                    下一页
+                  </Button>
+                  <Select
+                    value={pagination.page_size.toString()}
+                    onValueChange={(value) => {
+                      setPagination(prev => ({
+                        ...prev,
+                        page_size: parseInt(value),
+                        page: 1, // Reset to first page when changing page size
+                      }))
+                    }}
+                  >
+                    <SelectTrigger className="w-24 bg-slate-800/50 border-slate-700">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10 条/页</SelectItem>
+                      <SelectItem value="20">20 条/页</SelectItem>
+                      <SelectItem value="50">50 条/页</SelectItem>
+                      <SelectItem value="100">100 条/页</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </motion.div>
       </div>
@@ -631,6 +1131,15 @@ export default function ServiceTicketManagement() {
           />
         )}
       </AnimatePresence>
+
+      {/* Batch Assign Dialog */}
+      {showBatchAssignDialog && (
+        <BatchAssignDialog
+          ticketCount={selectedTickets.size}
+          onClose={() => setShowBatchAssignDialog(false)}
+          onSubmit={handleBatchAssign}
+        />
+      )}
     </div>
   )
 }
@@ -650,12 +1159,37 @@ function CreateTicketDialog({ onClose, onSubmit }) {
     remark: '',
   })
 
-  const handleSubmit = () => {
-    if (!formData.problem_desc || !formData.reported_by) {
-      toast.error('请填写问题描述和报告人信息')
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleSubmit = async () => {
+    // 表单验证
+    if (!formData.problem_desc || !formData.problem_desc.trim()) {
+      toast.warning('请填写问题描述')
       return
     }
-    onSubmit(formData)
+    if (!formData.reported_by || !formData.reported_by.trim()) {
+      toast.warning('请填写报告人信息')
+      return
+    }
+    if (!formData.customer_name || !formData.customer_name.trim()) {
+      toast.warning('请填写客户名称')
+      return
+    }
+    
+    // 验证电话号码格式（如果填写了）
+    if (formData.reported_phone && !/^1[3-9]\d{9}$/.test(formData.reported_phone.replace(/\s+/g, ''))) {
+      toast.warning('请输入正确的手机号码')
+      return
+    }
+    
+    if (submitting) return
+    
+    try {
+      setSubmitting(true)
+      await onSubmit(formData)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -766,10 +1300,10 @@ function CreateTicketDialog({ onClose, onSubmit }) {
           </div>
         </DialogBody>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>取消</Button>
-          <Button onClick={handleSubmit}>
+          <Button variant="outline" onClick={onClose} disabled={submitting}>取消</Button>
+          <Button onClick={handleSubmit} disabled={submitting}>
             <Send className="w-4 h-4 mr-2" />
-            创建工单
+            {submitting ? '创建中...' : '创建工单'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -781,6 +1315,7 @@ function CreateTicketDialog({ onClose, onSubmit }) {
 function TicketDetailDialog({ ticket, onClose, onAssign, onCloseTicket }) {
   const [showAssignDialog, setShowAssignDialog] = useState(false)
   const [showCloseDialog, setShowCloseDialog] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [closeData, setCloseData] = useState({
     solution: '',
     root_cause: '',
@@ -793,12 +1328,24 @@ function TicketDetailDialog({ ticket, onClose, onAssign, onCloseTicket }) {
   const urgency = urgencyConfig[ticket.urgency] || urgencyConfig['普通']
   const problemType = problemTypeConfig[ticket.problem_type] || problemTypeConfig['其他']
 
-  const handleClose = () => {
-    if (!closeData.solution || !closeData.satisfaction) {
-      toast.error('请填写解决方案和满意度评分')
+  const handleClose = async () => {
+    if (!closeData.solution || !closeData.solution.trim()) {
+      toast.warning('请填写解决方案')
       return
     }
-    onCloseTicket(ticket.id, closeData)
+    if (!closeData.satisfaction) {
+      toast.warning('请选择客户满意度评分')
+      return
+    }
+    
+    if (submitting) return
+    
+    try {
+      setSubmitting(true)
+      await onCloseTicket(ticket.id, closeData)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -853,7 +1400,7 @@ function TicketDetailDialog({ ticket, onClose, onAssign, onCloseTicket }) {
                 </div>
                 <div>
                   <p className="text-sm text-slate-400 mb-1">报告时间</p>
-                  <p className="text-white">{ticket.reported_time}</p>
+                  <p className="text-white">{ticket.reported_time ? formatDate(ticket.reported_time) : '-'}</p>
                 </div>
                 {ticket.assigned_name && (
                   <div>
@@ -870,27 +1417,30 @@ function TicketDetailDialog({ ticket, onClose, onAssign, onCloseTicket }) {
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="w-4 h-4 text-slate-400" />
                     <span className="text-slate-400">报告时间:</span>
-                    <span className="text-white">{ticket.reported_time}</span>
+                    <span className="text-white">{ticket.reported_time ? formatDate(ticket.reported_time) : '-'}</span>
                   </div>
                   {ticket.assigned_time && (
                     <div className="flex items-center gap-2 text-sm">
                       <User className="w-4 h-4 text-blue-400" />
                       <span className="text-slate-400">分配时间:</span>
-                      <span className="text-white">{ticket.assigned_time}</span>
+                      <span className="text-white">{formatDate(ticket.assigned_time)}</span>
+                      {ticket.assigned_name && (
+                        <span className="text-slate-400">({ticket.assigned_name})</span>
+                      )}
                     </div>
                   )}
                   {ticket.response_time && (
                     <div className="flex items-center gap-2 text-sm">
                       <CheckCircle2 className="w-4 h-4 text-blue-400" />
                       <span className="text-slate-400">响应时间:</span>
-                      <span className="text-white">{ticket.response_time}</span>
+                      <span className="text-white">{formatDate(ticket.response_time)}</span>
                     </div>
                   )}
                   {ticket.resolved_time && (
                     <div className="flex items-center gap-2 text-sm">
                       <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                       <span className="text-slate-400">解决时间:</span>
-                      <span className="text-white">{ticket.resolved_time}</span>
+                      <span className="text-white">{formatDate(ticket.resolved_time)}</span>
                     </div>
                   )}
                 </div>
@@ -925,24 +1475,61 @@ function TicketDetailDialog({ ticket, onClose, onAssign, onCloseTicket }) {
                     <span className="text-white">{ticket.satisfaction}/5</span>
                   </div>
                   {ticket.feedback && (
-                    <p className="text-slate-400 text-sm mt-2">{ticket.feedback}</p>
+                    <p className="text-slate-400 text-sm mt-2 bg-slate-800/50 p-3 rounded-lg">
+                      {ticket.feedback}
+                    </p>
                   )}
                 </div>
               )}
+
+              {/* Action Buttons Info */}
+              <div className="border-t border-slate-700 pt-4">
+                <p className="text-sm text-slate-400 mb-2">操作提示</p>
+                <div className="text-xs text-slate-500 space-y-1">
+                  {ticket.status === '待分配' && (
+                    <p>• 点击"分配工单"按钮，将此工单分配给负责的工程师</p>
+                  )}
+                  {ticket.status === '待验证' && (
+                    <p>• 点击"关闭工单"按钮，填写解决方案和客户反馈后关闭工单</p>
+                  )}
+                  {ticket.status === '处理中' && (
+                    <p>• 工单正在处理中，等待工程师完成处理</p>
+                  )}
+                  {ticket.status === '已关闭' && (
+                    <p>• 工单已关闭，如需重新打开请联系管理员</p>
+                  )}
+                </div>
+              </div>
             </div>
           </DialogBody>
           <DialogFooter>
-            {ticket.status === '待分配' && (
-              <Button variant="outline" onClick={() => setShowAssignDialog(true)}>
-                分配工单
-              </Button>
-            )}
-            {ticket.status === '待验证' && (
-              <Button onClick={() => setShowCloseDialog(true)}>
-                关闭工单
-              </Button>
-            )}
-            <Button variant="outline" onClick={onClose}>关闭</Button>
+            <div className="flex items-center justify-between w-full">
+              <div className="text-xs text-slate-400">
+                提示：按 ESC 键可关闭对话框
+              </div>
+              <div className="flex gap-2">
+                {ticket.status === '待分配' && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowAssignDialog(true)}
+                    disabled={submitting}
+                  >
+                    分配工单
+                  </Button>
+                )}
+                {ticket.status === '待验证' && (
+                  <Button 
+                    onClick={() => setShowCloseDialog(true)}
+                    disabled={submitting}
+                  >
+                    关闭工单
+                  </Button>
+                )}
+                <Button variant="outline" onClick={onClose} disabled={submitting}>
+                  关闭
+                </Button>
+              </div>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -979,19 +1566,52 @@ function AssignTicketDialog({ ticket, onClose, onSubmit }) {
     assignee_id: '',
     comment: '',
   })
+  const [users, setUsers] = useState([])
+  const [loadingUsers, setLoadingUsers] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
-  const mockUsers = [
-    { id: 1, name: '张工程师', role: '软件工程师' },
-    { id: 2, name: '王工程师', role: '机械工程师' },
-    { id: 3, name: '李工程师', role: '电气工程师' },
-  ]
+  // Load users for assignment
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        setLoadingUsers(true)
+        // Get active users, preferably from service department
+        const response = await userApi.list({
+          is_active: true,
+          page_size: 100,
+          // Optionally filter by department: department: '售后服务部'
+        })
+        const userList = response.data?.items || response.data || []
+        setUsers(userList.map(u => ({
+          id: u.id,
+          name: u.real_name || u.username,
+          role: u.position || u.roles?.[0] || '工程师'
+        })))
+      } catch (err) {
+        console.error('Failed to load users:', err)
+        // Fallback to empty list or mock data if needed
+        setUsers([])
+      } finally {
+        setLoadingUsers(false)
+      }
+    }
+    loadUsers()
+  }, [])
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!assignData.assignee_id) {
-      toast.error('请选择负责人')
+      toast.warning('请选择负责人')
       return
     }
-    onSubmit(assignData)
+    
+    if (submitting) return
+    
+    try {
+      setSubmitting(true)
+      await onSubmit(ticket.id, assignData)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -1009,9 +1629,10 @@ function AssignTicketDialog({ ticket, onClose, onSubmit }) {
                 value={assignData.assignee_id}
                 onChange={(e) => setAssignData({ ...assignData, assignee_id: e.target.value })}
                 className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white"
+                disabled={loadingUsers}
               >
-                <option value="">选择负责人</option>
-                {mockUsers.map((user) => (
+                <option value="">{loadingUsers ? '加载中...' : '选择负责人'}</option>
+                {users.map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.name} ({user.role})
                   </option>
@@ -1031,8 +1652,10 @@ function AssignTicketDialog({ ticket, onClose, onSubmit }) {
           </div>
         </DialogBody>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>取消</Button>
-          <Button onClick={handleSubmit}>确认分配</Button>
+          <Button variant="outline" onClick={onClose} disabled={submitting}>取消</Button>
+          <Button onClick={handleSubmit} disabled={submitting}>
+            {submitting ? '提交中...' : '确认分配'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -1040,7 +1663,7 @@ function AssignTicketDialog({ ticket, onClose, onSubmit }) {
 }
 
 // Close Ticket Dialog
-function CloseTicketDialog({ ticket, closeData, setCloseData, onClose, onSubmit }) {
+function CloseTicketDialog({ ticket, closeData, setCloseData, submitting, onClose, onSubmit }) {
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl bg-slate-900 border-slate-700 max-h-[90vh] overflow-y-auto">
@@ -1108,11 +1731,111 @@ function CloseTicketDialog({ ticket, closeData, setCloseData, onClose, onSubmit 
           </div>
         </DialogBody>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>取消</Button>
-          <Button onClick={onSubmit}>确认关闭</Button>
+          <Button variant="outline" onClick={onClose} disabled={submitting}>取消</Button>
+          <Button onClick={onSubmit} disabled={submitting}>
+            {submitting ? '提交中...' : '确认关闭'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   )
 }
 
+// Batch Assign Dialog
+function BatchAssignDialog({ ticketCount, onClose, onSubmit }) {
+  const [assignData, setAssignData] = useState({
+    assignee_id: '',
+    comment: '',
+  })
+  const [users, setUsers] = useState([])
+  const [loadingUsers, setLoadingUsers] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+
+  // Load users for assignment
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        setLoadingUsers(true)
+        const response = await userApi.list({
+          is_active: true,
+          page_size: 100,
+        })
+        const userList = response.data?.items || response.data || []
+        setUsers(userList.map(u => ({
+          id: u.id,
+          name: u.real_name || u.username,
+          role: u.position || u.roles?.[0] || '工程师'
+        })))
+      } catch (err) {
+        console.error('Failed to load users:', err)
+        setUsers([])
+      } finally {
+        setLoadingUsers(false)
+      }
+    }
+    loadUsers()
+  }, [])
+
+  const handleSubmit = async () => {
+    if (!assignData.assignee_id) {
+      toast.warning('请选择负责人')
+      return
+    }
+    
+    if (submitting) return
+    
+    try {
+      setSubmitting(true)
+      await onSubmit(assignData)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="max-w-md bg-slate-900 border-slate-700">
+        <DialogHeader>
+          <DialogTitle>批量分配工单</DialogTitle>
+          <DialogDescription>将 {ticketCount} 个工单分配给负责人</DialogDescription>
+        </DialogHeader>
+        <DialogBody>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-slate-400 mb-1 block">负责人 *</label>
+              <select
+                value={assignData.assignee_id}
+                onChange={(e) => setAssignData({ ...assignData, assignee_id: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white"
+                disabled={loadingUsers}
+              >
+                <option value="">{loadingUsers ? '加载中...' : '选择负责人'}</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name} ({user.role})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm text-slate-400 mb-1 block">分配说明</label>
+              <Textarea
+                value={assignData.comment}
+                onChange={(e) => setAssignData({ ...assignData, comment: e.target.value })}
+                placeholder="输入分配说明（将应用于所有选中的工单）..."
+                rows={3}
+                className="bg-slate-800/50 border-slate-700"
+              />
+            </div>
+          </div>
+        </DialogBody>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={submitting}>取消</Button>
+          <Button onClick={handleSubmit} disabled={submitting}>
+            {submitting ? '分配中...' : `确认分配 ${ticketCount} 个工单`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}

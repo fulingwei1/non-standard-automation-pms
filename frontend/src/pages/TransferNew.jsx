@@ -175,7 +175,7 @@ export default function TransferNew() {
                     <SelectValue placeholder="留空表示从总库存调拨" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">总库存</SelectItem>
+                    <SelectItem value="total">总库存</SelectItem>
                     {projects.map((project) => (
                       <SelectItem key={project.id} value={String(project.id)}>
                         {project.project_name} ({project.project_code})

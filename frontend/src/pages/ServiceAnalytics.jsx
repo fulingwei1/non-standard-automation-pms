@@ -105,9 +105,10 @@ export default function ServiceAnalytics() {
       setError(null)
       
       // Load statistics from multiple APIs
-      const [ticketsStats, satisfactionStats, ticketsList, recordsList, communicationsList] = await Promise.all([
+      const [ticketsStats, satisfactionStats, satisfactionList, ticketsList, recordsList, communicationsList] = await Promise.all([
         serviceApi.tickets.getStatistics().catch(() => ({ data: {} })),
         serviceApi.satisfaction.statistics().catch(() => ({ data: {} })),
+        serviceApi.satisfaction.list({ page: 1, page_size: 1000 }).catch(() => ({ data: { items: [] } })),
         serviceApi.tickets.list({ page: 1, page_size: 1000 }).catch(() => ({ data: { items: [] } })),
         serviceApi.records.list({ page: 1, page_size: 1000 }).catch(() => ({ data: { items: [] } })),
         serviceApi.communications.list({ page: 1, page_size: 1000 }).catch(() => ({ data: { items: [] } })),
@@ -116,8 +117,12 @@ export default function ServiceAnalytics() {
       const tickets = ticketsList.data?.items || ticketsList.data || []
       const records = recordsList.data?.items || recordsList.data || []
       const communications = communicationsList.data?.items || communicationsList.data || []
+      const satisfactions = satisfactionList.data?.items || satisfactionList.data || []
       const ticketsStatsData = ticketsStats.data || {}
-      const satisfactionStatsData = satisfactionStats.data || {}
+      const satisfactionStatsData = {
+        ...(satisfactionStats.data || {}),
+        items: satisfactions
+      }
       
       // Calculate overview
       const totalTickets = ticketsStatsData.total || tickets.length
@@ -217,6 +222,96 @@ export default function ServiceAnalytics() {
         .slice(-4)
         .map(([month, data]) => ({ month, ...data }))
       
+      // Calculate satisfaction trends from satisfaction data
+      const satisfactionTrendsData = {}
+      if (satisfactionStatsData.items) {
+        satisfactionStatsData.items.forEach(s => {
+          const date = new Date(s.created_at || s.survey_date)
+          const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+          if (!satisfactionTrendsData[month]) {
+            satisfactionTrendsData[month] = { total: 0, sum: 0 }
+          }
+          satisfactionTrendsData[month].total++
+          satisfactionTrendsData[month].sum += parseFloat(s.overall_score || s.score || 0)
+        })
+      }
+      const satisfactionTrendsArray = Object.entries(satisfactionTrendsData)
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .slice(-4)
+        .map(([month, data]) => ({
+          month,
+          score: data.total > 0 ? parseFloat((data.sum / data.total).toFixed(1)) : 0
+        }))
+      
+      // Calculate top customers from tickets
+      const customerTicketCounts = {}
+      const customerSatisfaction = {}
+      tickets.forEach(t => {
+        const customerName = t.customer_name || t.customer || '未知客户'
+        customerTicketCounts[customerName] = (customerTicketCounts[customerName] || 0) + 1
+      })
+      // Get satisfaction scores for customers
+      if (satisfactionStatsData.items) {
+        satisfactionStatsData.items.forEach(s => {
+          const customerName = s.customer_name || '未知客户'
+          if (!customerSatisfaction[customerName]) {
+            customerSatisfaction[customerName] = { total: 0, sum: 0 }
+          }
+          customerSatisfaction[customerName].total++
+          customerSatisfaction[customerName].sum += parseFloat(s.overall_score || s.score || 0)
+        })
+      }
+      const topCustomersArray = Object.entries(customerTicketCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map(([customer, ticketCount]) => ({
+          customer,
+          tickets: ticketCount,
+          satisfaction: customerSatisfaction[customer]
+            ? parseFloat((customerSatisfaction[customer].sum / customerSatisfaction[customer].total).toFixed(1))
+            : 0
+        }))
+      
+      // Calculate engineer performance from tickets
+      const engineerStats = {}
+      tickets.forEach(t => {
+        const engineerName = t.engineer_name || t.assignee_name || t.assignee || '未知工程师'
+        if (!engineerStats[engineerName]) {
+          engineerStats[engineerName] = {
+            tickets: 0,
+            totalTime: 0,
+            satisfactionSum: 0,
+            satisfactionCount: 0
+          }
+        }
+        engineerStats[engineerName].tickets++
+        if (t.resolved_time && t.reported_time) {
+          const time = (new Date(t.resolved_time) - new Date(t.reported_time)) / (1000 * 60 * 60)
+          engineerStats[engineerName].totalTime += time
+        }
+      })
+      // Get satisfaction for engineers
+      if (satisfactionStatsData.items) {
+        satisfactionStatsData.items.forEach(s => {
+          const engineerName = s.engineer_name || '未知工程师'
+          if (engineerStats[engineerName]) {
+            engineerStats[engineerName].satisfactionCount++
+            engineerStats[engineerName].satisfactionSum += parseFloat(s.overall_score || s.score || 0)
+          }
+        })
+      }
+      const engineerPerformanceArray = Object.entries(engineerStats)
+        .map(([engineer, stats]) => ({
+          engineer,
+          tickets: stats.tickets,
+          avgTime: stats.tickets > 0 ? parseFloat((stats.totalTime / stats.tickets).toFixed(1)) : 0,
+          satisfaction: stats.satisfactionCount > 0
+            ? parseFloat((stats.satisfactionSum / stats.satisfactionCount).toFixed(1))
+            : 0
+        }))
+        .sort((a, b) => b.tickets - a.tickets)
+        .slice(0, 4)
+      
       // Build analytics object
       const analyticsData = {
         overview: {
@@ -232,10 +327,10 @@ export default function ServiceAnalytics() {
         ticketTrends: ticketTrendsArray.length > 0 ? ticketTrendsArray : mockAnalytics.ticketTrends,
         serviceTypeDistribution: serviceTypeDistribution.length > 0 ? serviceTypeDistribution : mockAnalytics.serviceTypeDistribution,
         problemTypeDistribution: problemTypeDistribution.length > 0 ? problemTypeDistribution : mockAnalytics.problemTypeDistribution,
-        satisfactionTrends: mockAnalytics.satisfactionTrends, // TODO: Calculate from satisfaction data
+        satisfactionTrends: satisfactionTrendsArray.length > 0 ? satisfactionTrendsArray : mockAnalytics.satisfactionTrends,
         responseTimeDistribution: responseTimeDistribution.length > 0 ? responseTimeDistribution : mockAnalytics.responseTimeDistribution,
-        topCustomers: mockAnalytics.topCustomers, // TODO: Calculate from tickets
-        engineerPerformance: mockAnalytics.engineerPerformance, // TODO: Calculate from tickets
+        topCustomers: topCustomersArray.length > 0 ? topCustomersArray : mockAnalytics.topCustomers,
+        engineerPerformance: engineerPerformanceArray.length > 0 ? engineerPerformanceArray : mockAnalytics.engineerPerformance,
       }
       
       setAnalytics(analyticsData)
@@ -253,8 +348,121 @@ export default function ServiceAnalytics() {
   }, [period])
 
   const handleExport = () => {
-    // TODO: 导出报表
-    toast.success('报表导出成功')
+    if (!analytics) {
+      toast.error('暂无数据可导出')
+      return
+    }
+
+    try {
+      // 准备导出数据
+      const exportData = {
+        统计周期: period === 'DAILY' ? '今日' : period === 'WEEKLY' ? '本周' : period === 'MONTHLY' ? '本月' : '本年',
+        导出日期: new Date().toLocaleDateString('zh-CN'),
+        概览: {
+          工单总数: analytics.overview.totalTickets,
+          服务记录数: analytics.overview.totalRecords,
+          沟通记录数: analytics.overview.totalCommunications,
+          满意度调查数: analytics.overview.totalSurveys,
+          平均响应时间: `${analytics.overview.averageResponseTime}小时`,
+          平均解决时间: `${analytics.overview.averageResolutionTime}小时`,
+          平均满意度: analytics.overview.averageSatisfaction,
+          完成率: `${analytics.overview.completionRate}%`,
+        },
+        工单趋势: analytics.ticketTrends.map(t => ({
+          月份: t.month,
+          工单数: t.count,
+          已解决: t.resolved,
+        })),
+        服务类型分布: analytics.serviceTypeDistribution.map(d => ({
+          类型: d.type,
+          数量: d.count,
+          占比: `${d.percentage}%`,
+        })),
+        问题类型分布: analytics.problemTypeDistribution.map(d => ({
+          类型: d.type,
+          数量: d.count,
+          占比: `${d.percentage}%`,
+        })),
+        响应时间分布: analytics.responseTimeDistribution.map(d => ({
+          时间范围: d.range,
+          数量: d.count,
+          占比: `${d.percentage}%`,
+        })),
+      }
+
+      // 转换为CSV格式
+      const csvRows = []
+      
+      // 概览数据
+      csvRows.push('=== 概览数据 ===')
+      csvRows.push('项目,数值')
+      Object.entries(exportData.概览).forEach(([key, value]) => {
+        csvRows.push(`"${key}","${value}"`)
+      })
+      csvRows.push('')
+
+      // 工单趋势
+      if (exportData.工单趋势.length > 0) {
+        csvRows.push('=== 工单趋势 ===')
+        csvRows.push('月份,工单数,已解决')
+        exportData.工单趋势.forEach(t => {
+          csvRows.push(`"${t.月份}",${t.工单数},${t.已解决}`)
+        })
+        csvRows.push('')
+      }
+
+      // 服务类型分布
+      if (exportData.服务类型分布.length > 0) {
+        csvRows.push('=== 服务类型分布 ===')
+        csvRows.push('类型,数量,占比')
+        exportData.服务类型分布.forEach(d => {
+          csvRows.push(`"${d.类型}",${d.数量},"${d.占比}"`)
+        })
+        csvRows.push('')
+      }
+
+      // 问题类型分布
+      if (exportData.问题类型分布.length > 0) {
+        csvRows.push('=== 问题类型分布 ===')
+        csvRows.push('类型,数量,占比')
+        exportData.问题类型分布.forEach(d => {
+          csvRows.push(`"${d.类型}",${d.数量},"${d.占比}"`)
+        })
+        csvRows.push('')
+      }
+
+      // 响应时间分布
+      if (exportData.响应时间分布.length > 0) {
+        csvRows.push('=== 响应时间分布 ===')
+        csvRows.push('时间范围,数量,占比')
+        exportData.响应时间分布.forEach(d => {
+          csvRows.push(`"${d.时间范围}",${d.数量},"${d.占比}"`)
+        })
+      }
+
+      const csvContent = csvRows.join('\n')
+      
+      // 添加BOM以支持中文
+      const BOM = '\uFEFF'
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute(
+        'download',
+        `服务数据分析报表_${period}_${new Date().toISOString().split('T')[0]}.csv`
+      )
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      
+      toast.success('报表导出成功')
+    } catch (error) {
+      console.error('导出失败:', error)
+      toast.error('导出失败: ' + (error.message || '未知错误'))
+    }
   }
 
   if (loading && !analytics) {

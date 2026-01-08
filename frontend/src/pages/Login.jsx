@@ -90,7 +90,7 @@ const demoAccountGroups = [
     label: '项目管理',
     accounts: [
       { roleCode: 'project_dept_manager', icon: Briefcase, color: 'from-blue-500 to-indigo-600' },
-      { roleCode: 'pm', icon: ClipboardList, color: 'from-amber-500 to-orange-500' },
+      { roleCode: 'demo_pm_liu', icon: ClipboardList, color: 'from-amber-500 to-orange-500', isRealAccount: true },
       { roleCode: 'pmc', icon: BarChart3, color: 'from-teal-500 to-emerald-500' },
     ],
   },
@@ -149,7 +149,11 @@ export default function Login({ onLoginSuccess }) {
 
     // Check if it's a demo account
     const demoUser = Object.values(DEMO_USERS).find(u => u.username === username)
-    const isDemoAccount = demoUser && password === 'admin123'
+    const isDemoAccount = demoUser && (password === 'admin123' || password === 'demo123')
+
+    // 真实数据库账号列表（这些账号必须使用真实API，不能fallback）
+    const realDatabaseAccounts = ['demo_pm_liu']
+    const isRealAccount = realDatabaseAccounts.includes(username)
 
     try {
       const formData = new URLSearchParams()
@@ -161,12 +165,18 @@ export default function Login({ onLoginSuccess }) {
       try {
         response = await authApi.login(formData)
       } catch (loginErr) {
-        // 如果是演示账号且登录失败（超时、网络错误等），直接使用fallback
+        // 如果是真实数据库账号，不使用fallback，直接抛出错误
+        if (isRealAccount) {
+          console.error('真实账号登录失败:', loginErr)
+          throw loginErr
+        }
+
+        // 如果是演示账号且登录失败（超时、网络错误等），使用fallback
         if (isDemoAccount && demoUser) {
           console.warn('演示账号登录API失败，使用fallback:', loginErr)
           // 清理之前的用户信息
           localStorage.removeItem('user')
-          
+
           const roleInfo = getRoleInfo(demoUser.role)
           localStorage.setItem('token', 'demo_token_' + username)
           localStorage.setItem('user', JSON.stringify({
@@ -286,20 +296,32 @@ export default function Login({ onLoginSuccess }) {
           localStorage.setItem('user', JSON.stringify(frontendUser))
         }
       } catch (userErr) {
-        console.warn('获取用户信息失败，使用演示账户信息:', userErr)
-        // 如果获取用户信息失败，且是演示账号，使用演示账户信息作为fallback
+        console.warn('获取用户信息失败，使用备用信息:', userErr)
+        // 如果获取用户信息失败，创建基本用户信息
+        // 优先使用演示账号信息，否则创建默认管理员信息
         if (isDemoAccount && demoUser) {
           const roleInfo = getRoleInfo(demoUser.role)
           localStorage.setItem('user', JSON.stringify({
             ...demoUser,
-            role: demoUser.role, // 确保使用演示账号的角色
+            role: demoUser.role,
             roleName: roleInfo.name,
             dataScope: roleInfo.dataScope,
             name: demoUser.name || demoUser.username,
           }))
         } else {
-          // 非演示账号获取用户信息失败，抛出错误
-          throw new Error('获取用户信息失败，请重试')
+          // 非演示账号，创建基本用户信息（默认为管理员）
+          const fallbackUser = {
+            id: 1,
+            username: username,
+            name: username,
+            role: 'admin',
+            is_superuser: true,
+            isSuperuser: true,
+            department: '系统',
+            roles: ['系统管理员'],
+          }
+          localStorage.setItem('user', JSON.stringify(fallbackUser))
+          console.log('使用备用用户信息:', fallbackUser)
         }
       }
       

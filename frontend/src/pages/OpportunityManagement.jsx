@@ -254,7 +254,7 @@ export default function OpportunityManagement() {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="show"
+      animate="visible"
       className="space-y-6 p-6"
     >
       <PageHeader

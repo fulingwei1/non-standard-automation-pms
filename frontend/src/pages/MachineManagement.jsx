@@ -211,7 +211,7 @@ export default function MachineManagement() {
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部状态</SelectItem>
+                <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(statusConfigs).map(([key, config]) => (
                   <SelectItem key={key} value={key}>
                     {config.label}
@@ -224,7 +224,7 @@ export default function MachineManagement() {
                 <SelectValue placeholder="选择健康度" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部健康度</SelectItem>
+                <SelectItem value="all">全部健康度</SelectItem>
                 {Object.entries(healthConfigs).map(([key, config]) => (
                   <SelectItem key={key} value={key}>
                     {config.label}

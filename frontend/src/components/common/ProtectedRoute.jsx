@@ -21,38 +21,50 @@ import { Button } from '../ui/button'
  * @param {string} props.permissionName - Name of the permission (for error message)
  * @param {string} props.redirectTo - Path to redirect if not authenticated (default: '/')
  */
-export function ProtectedRoute({ 
-  children, 
-  checkPermission, 
+export function ProtectedRoute({
+  children,
+  checkPermission,
   permissionName = '此功能',
-  redirectTo = '/' 
+  redirectTo = '/'
 }) {
   const userStr = localStorage.getItem('user')
-  
+
   if (!userStr) {
+    console.warn('ProtectedRoute: No user in localStorage, redirecting to', redirectTo)
     return <Navigate to={redirectTo} replace />
   }
-  
+
   let user = null
   let role = null
   let isSuperuser = false
-  
+
   try {
     user = JSON.parse(userStr)
     role = user.role
     isSuperuser = user.is_superuser === true || user.isSuperuser === true
+    console.log('ProtectedRoute: User role =', role, ', isSuperuser =', isSuperuser, ', permissionName =', permissionName)
   } catch (e) {
     console.warn('Invalid user data in localStorage:', e)
     localStorage.removeItem('user')
     return <Navigate to={redirectTo} replace />
   }
-  
+
   // 超级管理员绕过所有权限检查
   if (isSuperuser) {
+    console.log('ProtectedRoute: Superuser bypass, rendering children')
     return children
   }
-  
-  if (!role || !checkPermission(role)) {
+
+  // 管理员角色也应该绕过权限检查
+  if (role === 'admin' || role === 'super_admin' || role === '管理员' || role === '系统管理员') {
+    console.log('ProtectedRoute: Admin role bypass, rendering children')
+    return children
+  }
+
+  const hasPermission = checkPermission ? checkPermission(role) : true
+  console.log('ProtectedRoute: checkPermission result =', hasPermission)
+
+  if (!role || !hasPermission) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -179,4 +191,3 @@ export function ProjectReviewProtectedRoute({ children }) {
     </ProtectedRoute>
   )
 }
-

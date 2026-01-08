@@ -235,7 +235,7 @@ export default function CostAnalysis() {
         <motion.div
           variants={staggerContainer}
           initial="hidden"
-          animate="show"
+          animate="visible"
           className="grid grid-cols-1 md:grid-cols-4 gap-4"
         >
           <Card className="bg-slate-800/50 border-slate-700/50">

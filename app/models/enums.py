@@ -100,6 +100,85 @@ class SupplierLevelEnum(str, Enum):
     D = 'D'  # 淘汰供应商
 
 
+# ==================== 绩效管理相关 ====================
+
+class PerformanceLevelEnum(str, Enum):
+    """绩效等级"""
+    EXCELLENT = 'EXCELLENT'              # 优秀 (A)
+    GOOD = 'GOOD'                        # 良好 (B)
+    QUALIFIED = 'QUALIFIED'              # 合格 (C)
+    NEEDS_IMPROVEMENT = 'NEEDS_IMPROVEMENT'  # 待改进 (D)
+
+
+# ==================== 奖金激励相关 ====================
+
+class BonusTypeEnum(str, Enum):
+    """奖金类型"""
+    PERFORMANCE_BASED = 'PERFORMANCE_BASED'  # 绩效奖金
+    PROJECT_BASED = 'PROJECT_BASED'          # 项目奖金
+    MILESTONE_BASED = 'MILESTONE_BASED'      # 里程碑奖金
+    TEAM_BASED = 'TEAM_BASED'                # 团队奖金
+    SALES_BASED = 'SALES_BASED'              # 销售奖金
+    SALES_DIRECTOR_BASED = 'SALES_DIRECTOR_BASED'  # 销售总监奖金
+    PRESALE_BASED = 'PRESALE_BASED'          # 售前技术支持奖金
+
+
+class BonusCalculationStatusEnum(str, Enum):
+    """奖金计算状态"""
+    CALCULATED = 'CALCULATED'    # 已计算
+    APPROVED = 'APPROVED'        # 已审批
+    DISTRIBUTED = 'DISTRIBUTED'  # 已发放
+    CANCELLED = 'CANCELLED'      # 已取消
+
+
+class BonusDistributionStatusEnum(str, Enum):
+    """奖金发放状态"""
+    PENDING = 'PENDING'    # 待发放
+    PAID = 'PAID'          # 已发放
+    CANCELLED = 'CANCELLED'  # 已取消
+
+
+class PaymentMethodEnum(str, Enum):
+    """发放方式"""
+    CASH = 'CASH'                    # 现金
+    BANK_TRANSFER = 'BANK_TRANSFER'  # 银行转账
+    SALARY = 'SALARY'                # 工资合并
+
+
+class TeamBonusAllocationMethodEnum(str, Enum):
+    """团队奖金分配方式"""
+    EQUAL = 'EQUAL'                  # 平均分配
+    BY_CONTRIBUTION = 'BY_CONTRIBUTION'  # 按贡献分配
+    BY_ROLE = 'BY_ROLE'              # 按角色分配
+    CUSTOM = 'CUSTOM'                # 自定义
+
+
+# ==================== 项目评价相关 ====================
+
+class ProjectNoveltyLevelEnum(str, Enum):
+    """项目新旧程度"""
+    BRAND_NEW = 'BRAND_NEW'          # 全新项目（从未做过）
+    SIMILAR = 'SIMILAR'              # 类似项目（做过类似）
+    STANDARD = 'STANDARD'            # 标准项目（做过多次）
+    FULLY_STANDARD = 'FULLY_STANDARD'  # 完全标准项目
+
+
+class ProjectEvaluationLevelEnum(str, Enum):
+    """项目评价等级"""
+    S = 'S'  # S级：90-100分（战略项目/超高难度）
+    A = 'A'  # A级：80-89分（重点项目/高难度）
+    B = 'B'  # B级：70-79分（一般项目/中等难度）
+    C = 'C'  # C级：60-69分（普通项目/低难度）
+    D = 'D'  # D级：<60分（简单项目）
+
+
+class ProjectEvaluationStatusEnum(str, Enum):
+    """项目评价状态"""
+    DRAFT = 'DRAFT'          # 草稿
+    CONFIRMED = 'CONFIRMED'  # 已确认
+    ARCHIVED = 'ARCHIVED'    # 已归档
+
+
 class PaymentStatusEnum(str, Enum):
     """付款状态"""
     UNPAID = 'UNPAID'      # 未付款
@@ -214,6 +293,15 @@ class IssueStatusEnum(str, Enum):
     RESOLVED = 'RESOLVED'      # 已解决
     CLOSED = 'CLOSED'          # 已关闭
     DEFERRED = 'DEFERRED'      # 已延期
+
+
+class IssueRootCauseEnum(str, Enum):
+    """问题原因"""
+    DESIGN_ERROR = 'DESIGN_ERROR'        # 设计问题
+    MATERIAL_DEFECT = 'MATERIAL_DEFECT'   # 物料缺陷
+    PROCESS_ERROR = 'PROCESS_ERROR'       # 工艺问题
+    EXTERNAL_FACTOR = 'EXTERNAL_FACTOR'   # 外部因素
+    OTHER = 'OTHER'                       # 其他
 
 
 # ==================== 外协管理相关 ====================
@@ -466,3 +554,237 @@ class DisputeReasonCodeEnum(str, Enum):
     PERFORMANCE_DISPUTE = 'PERFORMANCE_DISPUTE'  # 性能争议
     SCOPE_DISPUTE = 'SCOPE_DISPUTE'      # 范围争议
     OTHER = 'OTHER'                      # 其他
+
+
+# ==================== 技术评审相关 ====================
+
+class ReviewTypeEnum(str, Enum):
+    """评审类型"""
+    PDR = 'PDR'  # 方案设计评审 (Preliminary Design Review)
+    DDR = 'DDR'  # 详细设计评审 (Detailed Design Review)
+    PRR = 'PRR'  # 生产准备评审 (Production Readiness Review)
+    FRR = 'FRR'  # 出厂评审 (Factory Review)
+    ARR = 'ARR'  # 现场评审 (Acceptance Review)
+
+
+class ReviewStatusEnum(str, Enum):
+    """评审状态"""
+    DRAFT = 'DRAFT'              # 草稿
+    PENDING = 'PENDING'          # 待评审
+    IN_PROGRESS = 'IN_PROGRESS'  # 评审中
+    COMPLETED = 'COMPLETED'      # 已完成
+    CANCELLED = 'CANCELLED'      # 已取消
+
+
+class MeetingTypeEnum(str, Enum):
+    """会议形式"""
+    ONSITE = 'ONSITE'    # 现场
+    ONLINE = 'ONLINE'    # 线上
+    HYBRID = 'HYBRID'    # 混合
+
+
+class ReviewConclusionEnum(str, Enum):
+    """评审结论"""
+    PASS = 'PASS'                    # 通过
+    PASS_WITH_CONDITION = 'PASS_WITH_CONDITION'  # 有条件通过
+    REJECT = 'REJECT'                # 不通过
+    ABORT = 'ABORT'                  # 中止
+
+
+class ParticipantRoleEnum(str, Enum):
+    """评审参与人角色"""
+    HOST = 'HOST'          # 主持人
+    EXPERT = 'EXPERT'      # 评审专家
+    PRESENTER = 'PRESENTER'  # 汇报人
+    RECORDER = 'RECORDER'  # 记录人
+    OBSERVER = 'OBSERVER'  # 观察者
+
+
+class AttendanceStatusEnum(str, Enum):
+    """出席状态"""
+    PENDING = 'PENDING'      # 待确认
+    CONFIRMED = 'CONFIRMED'  # 已确认
+    ABSENT = 'ABSENT'        # 缺席
+    DELEGATED = 'DELEGATED'  # 已委派
+
+
+class MaterialTypeEnumReview(str, Enum):
+    """评审材料类型"""
+    DRAWING = 'DRAWING'    # 图纸
+    BOM = 'BOM'            # BOM清单
+    REPORT = 'REPORT'      # 报告
+    DOCUMENT = 'DOCUMENT'  # 文档
+    OTHER = 'OTHER'        # 其他
+
+
+class ChecklistResultEnum(str, Enum):
+    """检查项结果"""
+    PASS = 'PASS'    # 通过
+    FAIL = 'FAIL'    # 不通过
+    NA = 'NA'        # 不适用
+
+
+class IssueLevelEnum(str, Enum):
+    """问题等级"""
+    A = 'A'  # A类问题（严重）
+    B = 'B'  # B类问题（重要）
+    C = 'C'  # C类问题（一般）
+    D = 'D'  # D类问题（轻微）
+
+
+class ReviewIssueStatusEnum(str, Enum):
+    """评审问题状态"""
+    OPEN = 'OPEN'              # 开放
+    PROCESSING = 'PROCESSING'  # 处理中
+    RESOLVED = 'RESOLVED'      # 已解决
+    VERIFIED = 'VERIFIED'      # 已验证
+    CLOSED = 'CLOSED'          # 已关闭
+
+
+class VerifyResultEnum(str, Enum):
+    """验证结果"""
+    PASS = 'PASS'    # 通过
+    FAIL = 'FAIL'    # 不通过
+
+
+# ==================== 技术评估相关 ====================
+
+class AssessmentSourceTypeEnum(str, Enum):
+    """技术评估来源类型"""
+    LEAD = 'LEAD'              # 线索
+    OPPORTUNITY = 'OPPORTUNITY'  # 商机
+
+
+class AssessmentStatusEnum(str, Enum):
+    """技术评估状态"""
+    PENDING = 'PENDING'        # 待评估
+    IN_PROGRESS = 'IN_PROGRESS'  # 评估中
+    COMPLETED = 'COMPLETED'    # 已完成
+    CANCELLED = 'CANCELLED'    # 已取消
+
+
+class AssessmentDecisionEnum(str, Enum):
+    """技术评估决策建议"""
+    RECOMMEND = 'RECOMMEND'              # 推荐立项
+    CONDITIONAL = 'CONDITIONAL'         # 有条件立项
+    DEFER = 'DEFER'                     # 暂缓
+    NOT_RECOMMEND = 'NOT_RECOMMEND'     # 不建议立项
+
+
+class FreezeTypeEnum(str, Enum):
+    """需求冻结类型"""
+    SOLUTION = 'SOLUTION'           # 方案冻结
+    INTERFACE = 'INTERFACE'         # 接口冻结
+    ACCEPTANCE = 'ACCEPTANCE'       # 验收冻结
+    KEY_SELECTION = 'KEY_SELECTION'  # 关键选型冻结
+
+
+class OpenItemTypeEnum(str, Enum):
+    """未决事项类型"""
+    INTERFACE = 'INTERFACE'         # 接口
+    TAKT = 'TAKT'                   # 节拍
+    ACCEPTANCE = 'ACCEPTANCE'       # 验收
+    SAMPLE = 'SAMPLE'               # 样品
+    SITE = 'SITE'                   # 现场
+    REGULATION = 'REGULATION'       # 法规
+    BUSINESS = 'BUSINESS'           # 商务
+    OTHER = 'OTHER'                 # 其他
+
+
+class OpenItemStatusEnum(str, Enum):
+    """未决事项状态"""
+    PENDING = 'PENDING'             # 待确认
+    REPLIED = 'REPLIED'             # 已回复
+    VERIFIED = 'VERIFIED'           # 已验证
+    CLOSED = 'CLOSED'               # 关闭
+
+
+class ResponsiblePartyEnum(str, Enum):
+    """责任方"""
+    CUSTOMER = 'CUSTOMER'           # 客户
+    SALES = 'SALES'                 # 销售
+    PRESALES = 'PRESALES'           # 售前
+    ENGINEERING = 'ENGINEERING'     # 工程
+    PROCUREMENT = 'PROCUREMENT'     # 采购
+    OTHER = 'OTHER'                 # 其他
+
+
+# ==================== 装配齐套分析相关 ====================
+
+class AssemblyStageEnum(str, Enum):
+    """装配阶段"""
+    FRAME = 'FRAME'        # 框架装配
+    MECH = 'MECH'          # 机械模组
+    ELECTRIC = 'ELECTRIC'  # 电气安装
+    WIRING = 'WIRING'      # 线路整理
+    DEBUG = 'DEBUG'        # 调试准备
+    COSMETIC = 'COSMETIC'  # 外观完善
+
+
+class ImportanceLevelEnum(str, Enum):
+    """物料重要程度"""
+    CRITICAL = 'CRITICAL'  # 关键(缺失必停工)
+    HIGH = 'HIGH'          # 高(影响进度)
+    NORMAL = 'NORMAL'      # 普通
+    LOW = 'LOW'            # 低(可后补)
+
+
+class ShortageAlertLevelEnum(str, Enum):
+    """缺料预警级别"""
+    L1 = 'L1'  # 停工预警(已到开工日期仍缺料)
+    L2 = 'L2'  # 紧急预警(3天内需要)
+    L3 = 'L3'  # 提前预警(7天内需要)
+    L4 = 'L4'  # 常规预警(14天内需要)
+
+
+class ShortageStatusEnum(str, Enum):
+    """缺料状态"""
+    OPEN = 'OPEN'              # 开放
+    ORDERING = 'ORDERING'      # 采购中
+    IN_TRANSIT = 'IN_TRANSIT'  # 在途
+    RESOLVED = 'RESOLVED'      # 已解决
+    CANCELLED = 'CANCELLED'    # 已取消
+
+
+class ReadinessStatusEnum(str, Enum):
+    """齐套分析状态"""
+    DRAFT = 'DRAFT'          # 草稿
+    CONFIRMED = 'CONFIRMED'  # 已确认
+    EXPIRED = 'EXPIRED'      # 已过期
+
+
+class ReadinessAnalysisTypeEnum(str, Enum):
+    """齐套分析类型"""
+    AUTO = 'AUTO'          # 自动分析
+    MANUAL = 'MANUAL'      # 手动分析
+    SCHEDULED = 'SCHEDULED'  # 定时分析
+
+
+class SuggestionTypeEnum(str, Enum):
+    """排产建议类型"""
+    START = 'START'          # 建议开工
+    DELAY = 'DELAY'          # 建议延期
+    EXPEDITE = 'EXPEDITE'    # 建议加急采购
+    SUBSTITUTE = 'SUBSTITUTE'  # 建议替代料
+    PARTIAL = 'PARTIAL'      # 建议部分开工
+
+
+class SuggestionStatusEnum(str, Enum):
+    """排产建议状态"""
+    PENDING = 'PENDING'      # 待处理
+    ACCEPTED = 'ACCEPTED'    # 已接受
+    REJECTED = 'REJECTED'    # 已拒绝
+    EXPIRED = 'EXPIRED'      # 已过期
+
+
+class EquipmentTypeEnum(str, Enum):
+    """设备类型(用于装配模板)"""
+    ICT = 'ICT'              # ICT测试设备
+    FCT = 'FCT'              # FCT测试设备
+    EOL = 'EOL'              # EOL测试设备
+    AGING = 'AGING'          # 老化设备
+    VISION = 'VISION'        # 视觉检测设备
+    ASSEMBLY = 'ASSEMBLY'    # 自动化组装线
+    BURN_IN = 'BURN_IN'      # 烧录设备
+    TEST = 'TEST'            # 通用测试设备
+    OTHER = 'OTHER'          # 其他

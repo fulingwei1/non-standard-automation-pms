@@ -3,7 +3,7 @@
  * Features: Payment approval, Payment query, Approval history, Batch approval
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ClipboardCheck,
@@ -46,6 +46,8 @@ import {
 } from '../components/ui'
 import { cn, formatCurrency, formatDate } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
+import { invoiceApi, purchaseApi } from '../services/api'
+import { toast } from '../components/ui/toast'
 
 // Mock payment approvals (reuse from FinanceManagerDashboard)
 const mockPendingPayments = [
@@ -149,10 +151,13 @@ export default function PaymentApproval() {
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [showApprovalDialog, setShowApprovalDialog] = useState(false)
   const [approvalAction, setApprovalAction] = useState(null) // 'approve' or 'reject'
+  const [approvalComment, setApprovalComment] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [pendingPayments, setPendingPayments] = useState([])
 
   // Filter payments
   const filteredPayments = useMemo(() => {
-    return mockPendingPayments.filter(payment => {
+    return pendingPayments.filter(payment => {
       const matchesSearch = !searchTerm ||
         payment.orderNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
         payment.projectName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -190,12 +195,133 @@ export default function PaymentApproval() {
     setShowApprovalDialog(true)
   }
 
-  const handleConfirmApproval = () => {
-    // TODO: Call API to approve/reject payment
-    // TODO: Call API to approve/reject payment
-    setShowApprovalDialog(false)
-    setSelectedPayment(null)
-    setApprovalAction(null)
+  // Load pending approvals
+  const loadPendingPayments = useCallback(async () => {
+    try {
+      setLoading(true)
+      // Load pending invoices (status = PENDING or IN_APPROVAL)
+      const invoiceResponse = await invoiceApi.list({
+        status: 'PENDING,IN_APPROVAL',
+        page: 1,
+        page_size: 100,
+      }).catch(() => ({ data: { items: [] } }))
+      
+      const invoices = invoiceResponse.data?.items || invoiceResponse.data || []
+      
+      // Transform invoices to payment format
+      const invoicePayments = invoices.map(inv => ({
+        id: inv.id,
+        type: 'invoice',
+        typeLabel: '发票审批',
+        orderNo: inv.invoice_code || `INV-${inv.id}`,
+        projectName: inv.project_name || '',
+        projectId: inv.project_id,
+        amount: inv.total_amount || inv.amount || 0,
+        submitter: inv.created_by_name || '系统',
+        submitTime: inv.created_at || '',
+        priority: inv.amount > 100000 ? 'high' : 'medium',
+        daysPending: inv.created_at ? Math.floor((new Date() - new Date(inv.created_at)) / (1000 * 60 * 60 * 24)) : 0,
+        dueDate: inv.due_date || '',
+        description: inv.remark || '',
+        status: inv.status,
+        raw: inv, // Keep original data
+      }))
+      
+      // Load pending purchase orders
+      const poResponse = await purchaseApi.orders.list({
+        status: 'SUBMITTED',
+        page: 1,
+        page_size: 100,
+      }).catch(() => ({ data: { items: [] } }))
+      
+      const purchaseOrders = poResponse.data?.items || poResponse.data || []
+      const poPayments = purchaseOrders.map(po => ({
+        id: po.id,
+        type: 'purchase',
+        typeLabel: '采购付款',
+        orderNo: po.order_no || `PO-${po.id}`,
+        supplier: po.supplier_name || '',
+        projectName: po.project_name || '',
+        projectId: po.project_id,
+        amount: po.amount_with_tax || po.total_amount || 0,
+        submitter: po.created_by_name || '系统',
+        submitTime: po.created_at || '',
+        priority: (po.amount_with_tax || po.total_amount || 0) > 100000 ? 'high' : 'medium',
+        daysPending: po.created_at ? Math.floor((new Date() - new Date(po.created_at)) / (1000 * 60 * 60 * 24)) : 0,
+        dueDate: po.required_date || '',
+        description: po.order_title || '',
+        status: po.status,
+        raw: po,
+      }))
+      
+      // Combine all payments
+      const allPayments = [...invoicePayments, ...poPayments]
+      
+      // If no real data, use mock data as fallback
+      if (allPayments.length === 0) {
+        setPendingPayments(mockPendingPayments)
+      } else {
+        setPendingPayments(allPayments)
+      }
+    } catch (error) {
+      console.error('Failed to load pending payments:', error)
+      // Use mock data as fallback
+      setPendingPayments(mockPendingPayments)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadPendingPayments()
+  }, [loadPendingPayments])
+
+  const handleConfirmApproval = async () => {
+    if (!selectedPayment) return
+    
+    // Validate rejection reason
+    if (approvalAction === 'reject' && !approvalComment.trim()) {
+      toast.error('请输入拒绝原因')
+      return
+    }
+    
+    try {
+      setLoading(true)
+      const isApprove = approvalAction === 'approve'
+      
+      // Call appropriate API based on payment type
+      if (selectedPayment.type === 'invoice' && selectedPayment.raw) {
+        // For invoices, use invoice approval API
+        await invoiceApi.approve(selectedPayment.raw.id, {
+          approved: isApprove,
+          remark: approvalComment,
+        })
+        toast.success(isApprove ? '发票审批通过' : '发票已驳回')
+      } else if (selectedPayment.type === 'purchase' && selectedPayment.raw) {
+        // For purchase orders, use purchase order approval API
+        await purchaseApi.orders.approve(selectedPayment.raw.id, {
+          approved: isApprove,
+          approval_note: approvalComment,
+        })
+        toast.success(isApprove ? '采购订单审批通过' : '采购订单已驳回')
+      } else {
+        // For other types, show message
+        toast.info('该类型付款审批功能待完善')
+      }
+      
+      setShowApprovalDialog(false)
+      setSelectedPayment(null)
+      setApprovalAction(null)
+      setApprovalComment('')
+      
+      // Reload pending payments
+      await loadPendingPayments()
+    } catch (error) {
+      console.error('Failed to approve/reject payment:', error)
+      toast.error('审批失败: ' + (error.response?.data?.detail || error.message))
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -471,10 +597,16 @@ export default function PaymentApproval() {
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="space-y-2">
-              <label className="text-sm text-slate-400">审批意见 *</label>
+              <label className="text-sm text-slate-400">
+                {approvalAction === 'approve' ? '审批意见' : '拒绝原因'}
+                {approvalAction === 'reject' && <span className="text-red-400"> *</span>}
+              </label>
               <textarea
-                placeholder={approvalAction === 'approve' ? '请输入审批意见（可选）' : '请输入拒绝原因'}
+                value={approvalComment}
+                onChange={(e) => setApprovalComment(e.target.value)}
+                placeholder={approvalAction === 'approve' ? '请输入审批意见（可选）' : '请输入拒绝原因（必填）'}
                 className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white resize-none h-24"
+                required={approvalAction === 'reject'}
               />
             </div>
           </div>

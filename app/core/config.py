@@ -50,6 +50,17 @@ class Settings(BaseSettings):
     DEFAULT_PAGE_SIZE: int = 20
     MAX_PAGE_SIZE: int = 100
 
+    # Notification channels
+    EMAIL_ENABLED: bool = False
+    EMAIL_FROM: Optional[str] = None
+    EMAIL_SMTP_SERVER: Optional[str] = None
+    EMAIL_SMTP_PORT: int = 587
+    EMAIL_USERNAME: Optional[str] = None
+    EMAIL_PASSWORD: Optional[str] = None
+
+    WECHAT_WEBHOOK_URL: Optional[str] = None
+    WECHAT_ENABLED: bool = False
+
     class Config:
         env_file = ".env"
         case_sensitive = True

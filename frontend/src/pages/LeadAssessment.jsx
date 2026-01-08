@@ -218,10 +218,21 @@ export default function LeadAssessment() {
   const [selectedLead, setSelectedLead] = useState(null)
   const [showAssessmentForm, setShowAssessmentForm] = useState(false)
   const [showDetailDialog, setShowDetailDialog] = useState(false)
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [assessmentScores, setAssessmentScores] = useState({})
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const pageSize = 20
+  const [newLead, setNewLead] = useState({
+    lead_name: '',
+    company_name: '',
+    contact_name: '',
+    contact_phone: '',
+    contact_email: '',
+    source: 'direct',
+    estimated_amount: '',
+    demand_summary: '',
+  })
 
   // 加载线索列表
   const loadLeads = async () => {
@@ -373,6 +384,53 @@ export default function LeadAssessment() {
     setShowAssessmentForm(true)
   }
 
+  // 创建新线索
+  const handleCreateLead = async () => {
+    if (!newLead.lead_name || !newLead.company_name) {
+      alert('请填写线索名称和公司名称')
+      return
+    }
+
+    try {
+      // 构建需求摘要JSON，包含线索名称和其他信息
+      const demandData = {
+        lead_name: newLead.lead_name,
+        description: newLead.demand_summary || '',
+        estimated_amount: newLead.estimated_amount ? parseFloat(newLead.estimated_amount) : null,
+        contact_email: newLead.contact_email || null,
+      }
+
+      await leadApi.create({
+        // lead_code 由后端自动生成
+        customer_name: newLead.company_name,
+        contact_name: newLead.contact_name || undefined,
+        contact_phone: newLead.contact_phone || undefined,
+        source: newLead.source || 'direct',
+        demand_summary: JSON.stringify(demandData),
+        status: 'NEW',
+      })
+
+      // 重置表单
+      setNewLead({
+        lead_name: '',
+        company_name: '',
+        contact_name: '',
+        contact_phone: '',
+        contact_email: '',
+        source: 'direct',
+        estimated_amount: '',
+        demand_summary: '',
+      })
+      setShowCreateDialog(false)
+
+      // 刷新列表
+      loadLeads()
+    } catch (err) {
+      console.error('Failed to create lead:', err)
+      alert('创建线索失败，请重试')
+    }
+  }
+
   // 提交评估
   const handleSubmitAssessment = async () => {
     if (!selectedLead || !selectedLead.raw) return
@@ -476,7 +534,7 @@ export default function LeadAssessment() {
               <Filter className="w-4 h-4" />
               筛选
             </Button>
-            <Button className="flex items-center gap-2">
+            <Button className="flex items-center gap-2" onClick={() => setShowCreateDialog(true)}>
               <Plus className="w-4 h-4" />
               新建线索
             </Button>
@@ -775,8 +833,16 @@ export default function LeadAssessment() {
                 </CardContent>
               </Card>
             </motion.div>
-            ))}
-          </AnimatePresence>
+          ))}
+        </AnimatePresence>
+      </motion.div>
+
+      {/* No results */}
+      {filteredLeads.length === 0 && (
+        <motion.div variants={fadeIn} className="text-center py-16">
+          <Search className="w-16 h-16 mx-auto text-slate-600 mb-4" />
+          <h3 className="text-lg font-medium text-slate-400">暂无线索</h3>
+          <p className="text-sm text-slate-500 mt-1">没有找到匹配的线索</p>
         </motion.div>
       )}
 
@@ -1087,6 +1153,104 @@ export default function LeadAssessment() {
                 {selectedLead.score !== null ? '重新评估' : '开始评估'}
               </Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Lead Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5 text-primary" />
+              新建线索
+            </DialogTitle>
+            <DialogDescription>
+              创建新的销售线索，填写基本信息后可进行评估
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="lead_name">线索名称 *</Label>
+                <Input
+                  id="lead_name"
+                  placeholder="如：新能源电池测试设备需求"
+                  value={newLead.lead_name}
+                  onChange={(e) => setNewLead({ ...newLead, lead_name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="company_name">公司名称 *</Label>
+                <Input
+                  id="company_name"
+                  placeholder="如：深圳新能源科技"
+                  value={newLead.company_name}
+                  onChange={(e) => setNewLead({ ...newLead, company_name: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="contact_name">联系人</Label>
+                <Input
+                  id="contact_name"
+                  placeholder="如：张总"
+                  value={newLead.contact_name}
+                  onChange={(e) => setNewLead({ ...newLead, contact_name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contact_phone">联系电话</Label>
+                <Input
+                  id="contact_phone"
+                  placeholder="如：138****1234"
+                  value={newLead.contact_phone}
+                  onChange={(e) => setNewLead({ ...newLead, contact_phone: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="contact_email">邮箱</Label>
+                <Input
+                  id="contact_email"
+                  type="email"
+                  placeholder="如：zhang@company.com"
+                  value={newLead.contact_email}
+                  onChange={(e) => setNewLead({ ...newLead, contact_email: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="estimated_amount">预期金额（万元）</Label>
+                <Input
+                  id="estimated_amount"
+                  type="number"
+                  placeholder="如：120"
+                  value={newLead.estimated_amount}
+                  onChange={(e) => setNewLead({ ...newLead, estimated_amount: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="demand_summary">需求描述</Label>
+              <Textarea
+                id="demand_summary"
+                placeholder="简要描述客户需求..."
+                value={newLead.demand_summary}
+                onChange={(e) => setNewLead({ ...newLead, demand_summary: e.target.value })}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+              取消
+            </Button>
+            <Button onClick={handleCreateLead}>
+              <Plus className="w-4 h-4 mr-2" />
+              创建线索
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -588,6 +588,19 @@ def approve_outsourcing_order(
     
     db.add(order)
     db.commit()
+    
+    # 审批通过时自动归集成本
+    if order.project_id:
+        try:
+            from app.services.cost_collection_service import CostCollectionService
+            CostCollectionService.collect_from_outsourcing_order(
+                db, order_id, created_by=current_user.id
+            )
+            db.commit()
+        except Exception as e:
+            # 成本归集失败不影响审批流程，只记录错误
+            print(f"Failed to collect cost from outsourcing order {order_id}: {e}")
+    
     db.refresh(order)
     
     return read_outsourcing_order(order_id, db, current_user)

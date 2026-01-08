@@ -56,6 +56,8 @@ import SupplierManagement from './pages/SupplierManagement'
 import ShortageManagement from './pages/ShortageManagement'
 import BOMManagement from './pages/BOMManagement'
 import KitRateBoard from './pages/KitRateBoard'
+import AssemblyKitBoard from './pages/AssemblyKitBoard'
+import BomAssemblyAttrs from './pages/BomAssemblyAttrs'
 import ArrivalManagement from './pages/ArrivalManagement'
 import ProjectTaskList from './pages/ProjectTaskList'
 import MaterialDemandSummary from './pages/MaterialDemandSummary'
@@ -64,6 +66,9 @@ import MilestoneManagement from './pages/MilestoneManagement'
 import ExceptionManagement from './pages/ExceptionManagement'
 import ShortageAlert from './pages/ShortageAlert'
 import ECNManagement from './pages/ECNManagement'
+import ECNTypeManagement from './pages/ECNTypeManagement'
+import ECNOverdueAlerts from './pages/ECNOverdueAlerts'
+import ECNStatistics from './pages/ECNStatistics'
 import WorkOrderManagement from './pages/WorkOrderManagement'
 import ProductionDashboard from './pages/ProductionDashboard'
 import WorkshopTaskBoard from './pages/WorkshopTaskBoard'
@@ -74,11 +79,16 @@ import ProductionExceptionList from './pages/ProductionExceptionList'
 import OutsourcingOrderList from './pages/OutsourcingOrderList'
 import OutsourcingOrderDetail from './pages/OutsourcingOrderDetail'
 import AcceptanceOrderList from './pages/AcceptanceOrderList'
+import AcceptanceTemplateManagement from './pages/AcceptanceTemplateManagement'
 import ShortageManagementBoard from './pages/ShortageManagementBoard'
 import WorkloadBoard from './pages/WorkloadBoard'
 import ShortageReportList from './pages/ShortageReportList'
 import ArrivalTrackingList from './pages/ArrivalTrackingList'
 import WorkOrderDetail from './pages/WorkOrderDetail'
+import WorkshopManagement from './pages/WorkshopManagement'
+import WorkerManagement from './pages/WorkerManagement'
+import WorkerWorkstation from './pages/WorkerWorkstation'
+import MaterialRequisitionDetail from './pages/MaterialRequisitionDetail'
 import BudgetManagement from './pages/BudgetManagement'
 import CostAnalysis from './pages/CostAnalysis'
 import DispatchManagement from './pages/DispatchManagement'
@@ -98,11 +108,17 @@ import OpportunityManagement from './pages/OpportunityManagement'
 import CustomerList from './pages/CustomerList'
 import OpportunityBoard from './pages/OpportunityBoard'
 import LeadAssessment from './pages/LeadAssessment'
+import TechnicalAssessment from './pages/TechnicalAssessment'
+import LeadRequirementDetail from './pages/LeadRequirementDetail'
+import OpenItemsManagement from './pages/OpenItemsManagement'
+import RequirementFreezeManagement from './pages/RequirementFreezeManagement'
+import AIClarificationChat from './pages/AIClarificationChat'
 import QuotationList from './pages/QuotationList'
 import QuoteManagement from './pages/QuoteManagement'
 import ContractManagement from './pages/ContractManagement'
 import ReceivableManagement from './pages/ReceivableManagement'
 import SalesStatistics from './pages/SalesStatistics'
+import SalesTemplateCenter from './pages/SalesTemplateCenter'
 import ProductionManagerDashboard from './pages/ProductionManagerDashboard'
 import ProcurementManagerDashboard from './pages/ProcurementManagerDashboard'
 import ManufacturingDirectorDashboard from './pages/ManufacturingDirectorDashboard'
@@ -137,6 +153,14 @@ import BiddingCenter from './pages/BiddingCenter'
 import KnowledgeBase from './pages/KnowledgeBase'
 import IssueManagement from './pages/IssueManagement'
 import TechnicalSpecManagement from './pages/TechnicalSpecManagement'
+// R&D Project Management Pages
+import RdProjectList from './pages/RdProjectList'
+import RdProjectDetail from './pages/RdProjectDetail'
+import RdCostEntry from './pages/RdCostEntry'
+import RdCostSummary from './pages/RdCostSummary'
+import RdCostReports from './pages/RdCostReports'
+import RdProjectWorklogs from './pages/RdProjectWorklogs'
+import RdProjectDocuments from './pages/RdProjectDocuments'
 import SpecMatchCheck from './pages/SpecMatchCheck'
 // PMO Pages
 import PMODashboard from './pages/PMODashboard'
@@ -146,6 +170,10 @@ import RiskManagement from './pages/RiskManagement'
 import ProjectClosureManagement from './pages/ProjectClosureManagement'
 import ProjectReviewList from './pages/ProjectReviewList'
 import ProjectReviewDetail from './pages/ProjectReviewDetail'
+import LessonsLearnedLibrary from './pages/LessonsLearnedLibrary'
+import BestPracticeRecommendations from './pages/BestPracticeRecommendations'
+import TechnicalReviewList from './pages/TechnicalReviewList'
+import TechnicalReviewDetail from './pages/TechnicalReviewDetail'
 import ResourceOverview from './pages/ResourceOverview'
 import MeetingManagement from './pages/MeetingManagement'
 import CustomerServiceDashboard from './pages/CustomerServiceDashboard'
@@ -156,10 +184,12 @@ import CustomerSatisfaction from './pages/CustomerSatisfaction'
 import ServiceAnalytics from './pages/ServiceAnalytics'
 import ServiceKnowledgeBase from './pages/ServiceKnowledgeBase'
 import AdminDashboard from './pages/AdminDashboard'
+import SchedulerMonitoringDashboard from './pages/SchedulerMonitoringDashboard'
 import UserManagement from './pages/UserManagement'
 import RiskWall from './pages/RiskWall'
 import WeeklyReport from './pages/WeeklyReport'
 import RoleManagement from './pages/RoleManagement'
+import ProjectRoleTypeManagement from './pages/ProjectRoleTypeManagement'
 import CustomerManagement from './pages/CustomerManagement'
 import SupplierManagementData from './pages/SupplierManagementData'
 import DepartmentManagement from './pages/DepartmentManagement'
@@ -169,34 +199,92 @@ import AlertDetail from './pages/AlertDetail'
 import AlertStatistics from './pages/AlertStatistics'
 import AlertSubscription from './pages/AlertSubscription'
 
+// Mobile Pages
+import MobileWorkerTaskList from './pages/mobile/MobileWorkerTaskList'
+import MobileScanStart from './pages/mobile/MobileScanStart'
+import MobileProgressReport from './pages/mobile/MobileProgressReport'
+import MobileCompleteReport from './pages/mobile/MobileCompleteReport'
+import MobileExceptionReport from './pages/mobile/MobileExceptionReport'
+import MobileMaterialRequisition from './pages/mobile/MobileMaterialRequisition'
+import MobileScanShortage from './pages/mobile/MobileScanShortage'
+import MobileShortageReport from './pages/mobile/MobileShortageReport'
+import MobileMyShortageReports from './pages/mobile/MobileMyShortageReports'
+
+// Performance Management Pages
+import PerformanceManagement from './pages/PerformanceManagement'
+import QualificationManagement from './pages/QualificationManagement'
+import QualificationLevelForm from './pages/QualificationLevelForm'
+import CompetencyModelForm from './pages/CompetencyModelForm'
+import EmployeeQualificationForm from './pages/EmployeeQualificationForm'
+import QualificationAssessmentList from './pages/QualificationAssessmentList'
+import PerformanceRanking from './pages/PerformanceRanking'
+import PerformanceIndicators from './pages/PerformanceIndicators'
+import PerformanceResults from './pages/PerformanceResults'
+import MonthlySummary from './pages/MonthlySummary'
+import MyPerformance from './pages/MyPerformance'
+import MyBonus from './pages/MyBonus'
+import EvaluationTaskList from './pages/EvaluationTaskList'
+import EvaluationScoring from './pages/EvaluationScoring'
+import EvaluationWeightConfig from './pages/EvaluationWeightConfig'
+
+// AI Staff Matching Pages
+import TagManagement from './pages/TagManagement'
+import EmployeeProfileList from './pages/EmployeeProfileList'
+import EmployeeProfileDetail from './pages/EmployeeProfileDetail'
+import ProjectStaffingNeed from './pages/ProjectStaffingNeed'
+import AIStaffMatching from './pages/AIStaffMatching'
+
 // Role-based dashboard redirect mapping
 const roleDashboardMap = {
+  // 管理层
   chairman: '/chairman-dashboard',
   gm: '/gm-dashboard',
   admin: '/admin-dashboard',
   super_admin: '/admin-dashboard',
+
+  // 销售/支持
   sales_director: '/sales-director-dashboard',
   sales_manager: '/sales-manager-dashboard',
   sales: '/sales-dashboard',
   business_support: '/business-support',
   presales: '/presales-dashboard',
   presales_manager: '/presales-manager-dashboard',
+
+  // 项目管理 - 新增
+  project_dept_manager: '/pmo/dashboard',
+  pm: '/pmo/dashboard',
+  pmc: '/pmo/dashboard',
+
+  // 工程技术中心
+  tech_dev_manager: '/workstation',
+  rd_engineer: '/workstation',
+  me_dept_manager: '/workstation',
+  te_dept_manager: '/workstation',
+  ee_dept_manager: '/workstation',
   me_engineer: '/workstation',
+  te_engineer: '/workstation',
   ee_engineer: '/workstation',
   sw_engineer: '/workstation',
-  te_engineer: '/workstation',
-  rd_engineer: '/workstation',
+
+  // 采购部
+  procurement_manager: '/procurement-manager-dashboard',
+  procurement_engineer: '/procurement-dashboard',
+
+  // 制造中心
+  manufacturing_director: '/manufacturing-director-dashboard',
+  production_manager: '/production-dashboard',
   assembler: '/assembly-tasks',
   assembler_mechanic: '/assembly-tasks',
   assembler_electrician: '/assembly-tasks',
-  procurement_engineer: '/procurement-dashboard',
-  production_manager: '/production-dashboard',
-  manufacturing_director: '/manufacturing-director-dashboard',
+
+  // 客户服务
+  customer_service_engineer: '/customer-service-dashboard',
+  customer_service_manager: '/customer-service-dashboard',
+
+  // 后台支持
   finance_manager: '/finance-manager-dashboard',
   hr_manager: '/hr-manager-dashboard',
   administrative_manager: '/administrative-dashboard',
-  customer_service_engineer: '/customer-service-dashboard',
-  customer_service_manager: '/customer-service-dashboard',
 }
 
 // Protected Route with role-based redirect
@@ -430,11 +518,16 @@ function App() {
           <Route path="/production-plans" element={<ProductionPlanList />} />
           <Route path="/work-reports" element={<WorkReportList />} />
           <Route path="/material-requisitions" element={<MaterialRequisitionList />} />
+          <Route path="/material-requisitions/:id" element={<MaterialRequisitionDetail />} />
           <Route path="/production-exceptions" element={<ProductionExceptionList />} />
+          <Route path="/workshops" element={<WorkshopManagement />} />
+          <Route path="/workers" element={<WorkerManagement />} />
+          <Route path="/worker-workstation" element={<WorkerWorkstation />} />
           <Route path="/outsourcing-orders" element={<OutsourcingOrderList />} />
           <Route path="/outsourcing-orders/:id" element={<OutsourcingOrderDetail />} />
           <Route path="/acceptance-orders" element={<AcceptanceOrderList />} />
           <Route path="/acceptance-orders/:id/execute" element={<AcceptanceExecution />} />
+          <Route path="/acceptance-templates" element={<AcceptanceTemplateManagement />} />
           <Route path="/shortage-management-board" element={<ShortageManagementBoard />} />
           <Route path="/shortage-reports" element={<ShortageReportList />} />
           <Route path="/arrival-tracking" element={<ArrivalTrackingList />} />
@@ -460,6 +553,37 @@ function App() {
 
           {/* Administrative Management */}
           <Route path="/administrative-dashboard" element={<AdministrativeManagerWorkstation />} />
+
+          {/* Performance Management */}
+          <Route path="/performance" element={<PerformanceManagement />} />
+          <Route path="/performance/ranking" element={<PerformanceRanking />} />
+          <Route path="/performance/indicators" element={<PerformanceIndicators />} />
+          <Route path="/performance/results" element={<PerformanceResults />} />
+          <Route path="/performance/results/:employeeId" element={<PerformanceResults />} />
+
+          {/* Personal Performance Pages */}
+          <Route path="/personal/monthly-summary" element={<MonthlySummary />} />
+          <Route path="/personal/my-performance" element={<MyPerformance />} />
+          <Route path="/personal/my-bonus" element={<MyBonus />} />
+
+          {/* Evaluation Pages */}
+          <Route path="/evaluation-tasks" element={<EvaluationTaskList />} />
+          <Route path="/evaluation/:taskId" element={<EvaluationScoring />} />
+          <Route path="/evaluation-weight-config" element={<EvaluationWeightConfig />} />
+
+          {/* Qualification Management */}
+          <Route path="/qualifications" element={<QualificationManagement />} />
+          <Route path="/qualifications/levels/new" element={<QualificationLevelForm />} />
+          <Route path="/qualifications/levels/:id" element={<QualificationLevelForm />} />
+          <Route path="/qualifications/levels/:id/edit" element={<QualificationLevelForm />} />
+          <Route path="/qualifications/models/new" element={<CompetencyModelForm />} />
+          <Route path="/qualifications/models/:id" element={<CompetencyModelForm />} />
+          <Route path="/qualifications/models/:id/edit" element={<CompetencyModelForm />} />
+          <Route path="/qualifications/employees/certify" element={<EmployeeQualificationForm />} />
+          <Route path="/qualifications/employees/:employeeId" element={<EmployeeQualificationForm />} />
+          <Route path="/qualifications/employees/:employeeId/view" element={<EmployeeQualificationForm />} />
+          <Route path="/qualifications/employees/:employeeId/promote" element={<EmployeeQualificationForm />} />
+          <Route path="/qualifications/assessments" element={<QualificationAssessmentList />} />
 
           {/* Sales Routes */}
           <Route path="/sales-dashboard" element={<SalesWorkstation />} />
@@ -491,10 +615,16 @@ function App() {
           {/* New Sales Module Routes */}
           <Route path="/sales/leads" element={<LeadManagement />} />
           <Route path="/sales/opportunities" element={<OpportunityManagement />} />
+          <Route path="/sales/assessments/:sourceType/:sourceId" element={<TechnicalAssessment />} />
+          <Route path="/sales/leads/:leadId/requirement" element={<LeadRequirementDetail />} />
+          <Route path="/sales/:sourceType/:sourceId/open-items" element={<OpenItemsManagement />} />
+          <Route path="/sales/:sourceType/:sourceId/requirement-freezes" element={<RequirementFreezeManagement />} />
+          <Route path="/sales/:sourceType/:sourceId/ai-clarifications" element={<AIClarificationChat />} />
           <Route path="/sales/quotes" element={<QuoteManagement />} />
           <Route path="/sales/contracts" element={<ContractManagement />} />
           <Route path="/sales/receivables" element={<ReceivableManagement />} />
           <Route path="/sales/statistics" element={<SalesStatistics />} />
+          <Route path="/sales/templates" element={<SalesTemplateCenter />} />
 
           {/* Pre-sales Routes */}
           <Route path="/presales-dashboard" element={<PresalesWorkstation />} />
@@ -598,6 +728,16 @@ function App() {
               <KitRateBoard />
             </ProcurementProtectedRoute>
           } />
+          <Route path="/assembly-kit" element={
+            <ProductionProtectedRoute>
+              <AssemblyKitBoard />
+            </ProductionProtectedRoute>
+          } />
+          <Route path="/bom-assembly-attrs" element={
+            <ProcurementProtectedRoute>
+              <BomAssemblyAttrs />
+            </ProcurementProtectedRoute>
+          } />
           <Route path="/arrivals" element={
             <ProcurementProtectedRoute>
               <ArrivalManagement />
@@ -657,6 +797,9 @@ function App() {
           <Route path="/alerts" element={<AlertCenter />} />
           <Route path="/exceptions" element={<ExceptionManagement />} />
           <Route path="/ecns" element={<ECNManagement />} />
+          <Route path="/ecn-types" element={<ECNTypeManagement />} />
+          <Route path="/ecn-overdue-alerts" element={<ECNOverdueAlerts />} />
+          <Route path="/ecn-statistics" element={<ECNStatistics />} />
           <Route path="/alerts/:id" element={<AlertDetail />} />
           <Route path="/alert-rules" element={<AlertRuleConfig />} />
           <Route path="/alert-statistics" element={<AlertStatistics />} />
@@ -669,6 +812,12 @@ function App() {
           
           {/* Technical Spec Management */}
           <Route path="/technical-spec" element={<TechnicalSpecManagement />} />
+          
+          {/* Technical Review Management */}
+          <Route path="/technical-reviews" element={<TechnicalReviewList />} />
+          <Route path="/technical-reviews/new" element={<TechnicalReviewDetail />} />
+          <Route path="/technical-reviews/:reviewId" element={<TechnicalReviewDetail />} />
+          <Route path="/technical-reviews/:reviewId/edit" element={<TechnicalReviewDetail />} />
           <Route path="/spec-match-check" element={<SpecMatchCheck />} />
 
           {/* Customer Service */}
@@ -710,10 +859,44 @@ function App() {
               <ProjectReviewDetail />
             </ProjectReviewProtectedRoute>
           } />
+          <Route path="/projects/lessons-learned" element={
+            <ProjectReviewProtectedRoute>
+              <LessonsLearnedLibrary />
+            </ProjectReviewProtectedRoute>
+          } />
+          <Route path="/projects/best-practices/recommend" element={
+            <ProjectReviewProtectedRoute>
+              <BestPracticeRecommendations />
+            </ProjectReviewProtectedRoute>
+          } />
+          <Route path="/projects/:projectId/best-practices/recommend" element={
+            <ProjectReviewProtectedRoute>
+              <BestPracticeRecommendations />
+            </ProjectReviewProtectedRoute>
+          } />
           <Route path="/pmo/resource-overview" element={<ResourceOverview />} />
           <Route path="/pmo/meetings" element={<MeetingManagement />} />
           <Route path="/pmo/risk-wall" element={<RiskWall />} />
           <Route path="/pmo/weekly-report" element={<WeeklyReport />} />
+
+          {/* R&D Project Management */}
+          <Route path="/rd-projects" element={<RdProjectList />} />
+          <Route path="/rd-projects/:id" element={<RdProjectDetail />} />
+          <Route path="/rd-projects/:id/worklogs" element={<RdProjectWorklogs />} />
+          <Route path="/rd-projects/:id/documents" element={<RdProjectDocuments />} />
+          <Route path="/rd-projects/:id/cost-entry" element={<RdCostEntry />} />
+          <Route path="/rd-projects/:id/cost-summary" element={<RdCostSummary />} />
+          <Route path="/rd-projects/:id/reports" element={<RdCostReports />} />
+          <Route path="/rd-cost-entry" element={<RdCostEntry />} />
+          <Route path="/rd-cost-summary" element={<RdCostSummary />} />
+          <Route path="/rd-cost-reports" element={<RdCostReports />} />
+
+          {/* AI Staff Matching */}
+          <Route path="/staff-matching/tags" element={<TagManagement />} />
+          <Route path="/staff-matching/profiles" element={<EmployeeProfileList />} />
+          <Route path="/staff-matching/profiles/:id" element={<EmployeeProfileDetail />} />
+          <Route path="/staff-matching/staffing-needs" element={<ProjectStaffingNeed />} />
+          <Route path="/staff-matching/matching" element={<AIStaffMatching />} />
 
           {/* Personal Center */}
           <Route path="/notifications" element={<NotificationCenter />} />
@@ -724,11 +907,24 @@ function App() {
           {/* System Management */}
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/role-management" element={<RoleManagement />} />
+          <Route path="/project-role-types" element={<ProjectRoleTypeManagement />} />
+          <Route path="/scheduler-monitoring" element={<SchedulerMonitoringDashboard />} />
           
           {/* Master Data Management */}
           <Route path="/customer-management" element={<CustomerManagement />} />
           <Route path="/supplier-management-data" element={<SupplierManagementData />} />
           <Route path="/department-management" element={<DepartmentManagement />} />
+
+          {/* Mobile Pages - 移动端页面 */}
+          <Route path="/mobile/tasks" element={<MobileWorkerTaskList />} />
+          <Route path="/mobile/scan-start" element={<MobileScanStart />} />
+          <Route path="/mobile/progress-report" element={<MobileProgressReport />} />
+          <Route path="/mobile/complete-report" element={<MobileCompleteReport />} />
+          <Route path="/mobile/exception-report" element={<MobileExceptionReport />} />
+          <Route path="/mobile/material-requisition" element={<MobileMaterialRequisition />} />
+          <Route path="/mobile/scan-shortage" element={<MobileScanShortage />} />
+          <Route path="/mobile/shortage-report" element={<MobileShortageReport />} />
+          <Route path="/mobile/my-shortage-reports" element={<MobileMyShortageReports />} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

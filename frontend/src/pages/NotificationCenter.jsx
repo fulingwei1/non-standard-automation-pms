@@ -145,6 +145,7 @@ const getNotificationColor = (type, priority) => {
 function NotificationItem({ notification, onMarkRead, onDelete }) {
   const Icon = getNotificationIcon(notification.type)
   const colorClass = getNotificationColor(notification.type, notification.priority)
+  const isCc = notification.isCc || false  // 检查是否是抄送通知
 
   return (
     <motion.div
@@ -157,7 +158,8 @@ function NotificationItem({ notification, onMarkRead, onDelete }) {
         'group relative p-4 rounded-xl border transition-all duration-200',
         notification.read
           ? 'bg-surface-1/50 border-border/50'
-          : 'bg-surface-2 border-border shadow-lg shadow-black/10'
+          : 'bg-surface-2 border-border shadow-lg shadow-black/10',
+        isCc && 'border-dashed border-slate-600/50'  // 抄送通知使用虚线边框
       )}
     >
       {/* Unread indicator */}
@@ -182,6 +184,11 @@ function NotificationItem({ notification, onMarkRead, onDelete }) {
             >
               {notification.title}
             </h4>
+            {isCc && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-slate-400 border-slate-600">
+                抄送
+              </Badge>
+            )}
             {notification.priority === 'high' && (
               <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
                 紧急
@@ -256,6 +263,9 @@ export default function NotificationCenter() {
 
   // Format notification for display
   const formatNotification = (notification) => {
+    // 检查是否是抄送通知
+    const isCc = notification.extra_data?.is_cc === true
+    
     return {
       id: notification.id,
       type: getNotificationType(notification),
@@ -266,6 +276,8 @@ export default function NotificationCenter() {
       priority: notification.priority?.toLowerCase() || 'normal',
       relatedId: notification.source_id,
       relatedType: notification.source_type?.toLowerCase(),
+      isCc: isCc,  // 标记是否为抄送通知
+      extraData: notification.extra_data || {},
     }
   }
 
@@ -364,7 +376,7 @@ export default function NotificationCenter() {
         <motion.div
           variants={staggerContainer}
           initial="hidden"
-          animate="show"
+          animate="visible"
           className="space-y-6"
         >
       <PageHeader

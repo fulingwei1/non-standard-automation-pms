@@ -11,7 +11,10 @@ from .user import User, Role, Permission, RolePermission, UserRole, PermissionAu
 from .project import (
     Project, Machine, ProjectStage, ProjectStatus,
     ProjectMember, ProjectMilestone, ProjectPaymentPlan, ProjectCost, ProjectDocument, Customer,
-    ProjectStatusLog, ProjectTemplate
+    ProjectStatusLog, ProjectTemplate, ProjectTemplateVersion
+)
+from .budget import (
+    ProjectBudget, ProjectBudgetItem, ProjectCostAllocationRule
 )
 from .material import (
     Material, MaterialCategory, Supplier, MaterialSupplier,
@@ -71,7 +74,9 @@ from .presale import (
 from .performance import (
     PerformancePeriod, PerformanceIndicator, PerformanceResult,
     PerformanceEvaluation, PerformanceAppeal, ProjectContribution,
-    PerformanceRankingSnapshot
+    PerformanceRankingSnapshot,
+    # New Performance System
+    MonthlyWorkSummary, PerformanceEvaluationRecord, EvaluationWeightConfig
 )
 from .timesheet import (
     Timesheet, TimesheetBatch, TimesheetSummary,
@@ -94,9 +99,15 @@ from .notification import (
 from .sales import (
     Lead, LeadFollowUp, Opportunity, OpportunityRequirement,
     Quote, QuoteVersion, QuoteItem,
+    QuoteCostTemplate, QuoteCostApproval, QuoteCostHistory,
+    CpqRuleSet, QuoteTemplate, QuoteTemplateVersion,
+    ContractTemplate, ContractTemplateVersion,
     Contract, ContractDeliverable, ContractAmendment,
     Invoice, ReceivableDispute,
-    QuoteApproval, ContractApproval, InvoiceApproval
+    QuoteApproval, ContractApproval, InvoiceApproval,
+    # Technical Assessment
+    TechnicalAssessment, ScoringRule, FailureCase,
+    LeadRequirementDetail, RequirementFreeze, OpenItem, AIClarification
 )
 from .business_support import (
     BiddingProject, BiddingDocument,
@@ -104,7 +115,7 @@ from .business_support import (
     PaymentReminder, DocumentArchive,
     SalesOrder, SalesOrderItem, DeliveryOrder,
     AcceptanceTracking, AcceptanceTrackingRecord,
-    Reconciliation
+    Reconciliation, InvoiceRequest, CustomerSupplierRegistration
 )
 from .service import (
     ServiceTicket, ServiceRecord, CustomerCommunication,
@@ -117,6 +128,36 @@ from .rd_project import (
 from .project_review import (
     ProjectReview, ProjectLesson, ProjectBestPractice
 )
+from .technical_review import (
+    TechnicalReview, ReviewParticipant, ReviewMaterial,
+    ReviewChecklistRecord, ReviewIssue
+)
+from .bonus import (
+    BonusRule, BonusCalculation, BonusDistribution, TeamBonusAllocation, BonusAllocationSheet
+)
+from .project_evaluation import (
+    ProjectEvaluation, ProjectEvaluationDimension
+)
+from .hourly_rate import (
+    HourlyRateConfig
+)
+from .qualification import (
+    QualificationLevel, PositionCompetencyModel,
+    EmployeeQualification, QualificationAssessment
+)
+from .assembly_kit import (
+    AssemblyStage, AssemblyTemplate, CategoryStageMapping,
+    BomItemAssemblyAttrs, MaterialReadiness, ShortageDetail,
+    ShortageAlertRule, SchedulingSuggestion
+)
+from .staff_matching import (
+    HrTagDict, HrEmployeeTagEvaluation, HrEmployeeProfile,
+    HrProjectPerformance, MesProjectStaffingNeed, HrAIMatchingLog
+)
+from .project_role import (
+    ProjectRoleType, ProjectRoleConfig,
+    RoleCategoryEnum, ProjectRoleCodeEnum
+)
 
 __all__ = [
     # Base
@@ -127,6 +168,8 @@ __all__ = [
     'Project', 'Machine', 'ProjectStage', 'ProjectStatus',
     'ProjectMember', 'ProjectMilestone', 'ProjectPaymentPlan', 'ProjectCost', 'ProjectDocument', 'Customer',
     'ProjectStatusLog', 'ProjectTemplate',
+    # Budget
+    'ProjectBudget', 'ProjectBudgetItem', 'ProjectCostAllocationRule',
     # Material
     'Material', 'MaterialCategory', 'Supplier', 'MaterialSupplier',
     'BomHeader', 'BomItem', 'MaterialShortage',
@@ -176,6 +219,8 @@ __all__ = [
     'PerformancePeriod', 'PerformanceIndicator', 'PerformanceResult',
     'PerformanceEvaluation', 'PerformanceAppeal', 'ProjectContribution',
     'PerformanceRankingSnapshot',
+    # New Performance System
+    'MonthlyWorkSummary', 'PerformanceEvaluationRecord', 'EvaluationWeightConfig',
     # Timesheet
     'Timesheet', 'TimesheetBatch', 'TimesheetSummary',
     'OvertimeApplication', 'TimesheetApprovalLog', 'TimesheetRule',
@@ -192,16 +237,22 @@ __all__ = [
     # Sales
     'Lead', 'LeadFollowUp', 'Opportunity', 'OpportunityRequirement',
     'Quote', 'QuoteVersion', 'QuoteItem',
+    'QuoteCostTemplate', 'QuoteCostApproval', 'QuoteCostHistory',
+    'CpqRuleSet', 'QuoteTemplate', 'QuoteTemplateVersion',
+    'ContractTemplate', 'ContractTemplateVersion',
     'Contract', 'ContractDeliverable', 'ContractAmendment',
     'Invoice', 'ReceivableDispute',
     'QuoteApproval', 'ContractApproval', 'InvoiceApproval',
+    # Technical Assessment
+    'TechnicalAssessment', 'ScoringRule', 'FailureCase',
+    'LeadRequirementDetail', 'RequirementFreeze', 'OpenItem', 'AIClarification',
     # Business Support
     'BiddingProject', 'BiddingDocument',
     'ContractReview', 'ContractSealRecord',
     'PaymentReminder', 'DocumentArchive',
     'SalesOrder', 'SalesOrderItem', 'DeliveryOrder',
     'AcceptanceTracking', 'AcceptanceTrackingRecord',
-    'Reconciliation',
+    'Reconciliation', 'InvoiceRequest', 'CustomerSupplierRegistration',
     # Service
     'ServiceTicket', 'ServiceRecord', 'CustomerCommunication',
     'CustomerSatisfaction', 'KnowledgeBase',
@@ -210,4 +261,26 @@ __all__ = [
     'RdCostAllocationRule', 'RdReportRecord',
     # Project Review
     'ProjectReview', 'ProjectLesson', 'ProjectBestPractice',
+    # Technical Review
+    'TechnicalReview', 'ReviewParticipant', 'ReviewMaterial',
+    'ReviewChecklistRecord', 'ReviewIssue',
+    # Bonus
+    'BonusRule', 'BonusCalculation', 'BonusDistribution', 'TeamBonusAllocation', 'BonusAllocationSheet',
+    # Project Evaluation
+    'ProjectEvaluation', 'ProjectEvaluationDimension',
+    # Hourly Rate
+    'HourlyRateConfig',
+    # Qualification
+    'QualificationLevel', 'PositionCompetencyModel',
+    'EmployeeQualification', 'QualificationAssessment',
+    # Assembly Kit Analysis
+    'AssemblyStage', 'AssemblyTemplate', 'CategoryStageMapping',
+    'BomItemAssemblyAttrs', 'MaterialReadiness', 'ShortageDetail',
+    'ShortageAlertRule', 'SchedulingSuggestion',
+    # Staff Matching
+    'HrTagDict', 'HrEmployeeTagEvaluation', 'HrEmployeeProfile',
+    'HrProjectPerformance', 'MesProjectStaffingNeed', 'HrAIMatchingLog',
+    # Project Role Config
+    'ProjectRoleType', 'ProjectRoleConfig',
+    'RoleCategoryEnum', 'ProjectRoleCodeEnum',
 ]

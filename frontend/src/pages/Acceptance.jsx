@@ -562,7 +562,7 @@ export default function Acceptance() {
       <motion.div
         variants={staggerContainer}
         initial="hidden"
-        animate="show"
+        animate="visible"
         className="container mx-auto px-4 py-6 space-y-6"
       >
       <PageHeader

@@ -192,7 +192,7 @@ export default function WBSTemplateManagement() {
                 <SelectValue placeholder="选择类型" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部类型</SelectItem>
+                <SelectItem value="all">全部类型</SelectItem>
                 {Object.entries(typeConfigs).map(([key, config]) => (
                   <SelectItem key={key} value={key}>
                     {config.label}

@@ -1,0 +1,187 @@
+/**
+ * Performance Ranking - 绩效排行榜
+ * Features: 员工排名、部门排名、历史趋势
+ */
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import {
+  Award,
+  TrendingUp,
+  TrendingDown,
+  Users,
+  Building2,
+  Calendar,
+  Medal,
+} from 'lucide-react'
+import { PageHeader } from '../components/layout'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Button } from '../components/ui/button'
+import { Badge } from '../components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
+import { cn } from '../lib/utils'
+import { fadeIn, staggerContainer } from '../lib/animations'
+
+// Mock data
+const mockEmployeeRanking = [
+  { rank: 1, name: '张工程师', department: '技术开发部', score: 95.5, change: 2 },
+  { rank: 2, name: '李经理', department: '项目部', score: 93.2, change: 0 },
+  { rank: 3, name: '王总监', department: '销售部', score: 91.8, change: -1 },
+  { rank: 4, name: '赵工程师', department: '技术开发部', score: 90.5, change: 3 },
+  { rank: 5, name: '陈经理', department: '生产部', score: 89.2, change: -2 },
+  { rank: 6, name: '刘工程师', department: '技术开发部', score: 88.5, change: 1 },
+  { rank: 7, name: '周经理', department: '采购部', score: 87.8, change: 0 },
+  { rank: 8, name: '吴工程师', department: '项目部', score: 86.5, change: -1 },
+  { rank: 9, name: '郑经理', department: '销售部', score: 85.2, change: 2 },
+  { rank: 10, name: '孙工程师', department: '生产部', score: 84.8, change: -3 },
+]
+
+const mockDepartmentRanking = [
+  { rank: 1, name: '技术开发部', avgScore: 88.5, employees: 45, excellent: 15 },
+  { rank: 2, name: '项目部', avgScore: 86.2, employees: 35, excellent: 12 },
+  { rank: 3, name: '销售部', avgScore: 85.8, employees: 28, excellent: 9 },
+  { rank: 4, name: '生产部', avgScore: 84.5, employees: 52, excellent: 14 },
+  { rank: 5, name: '采购部', avgScore: 83.2, employees: 8, excellent: 2 },
+]
+
+export default function PerformanceRanking() {
+  const [selectedPeriod, setSelectedPeriod] = useState('current')
+
+  const getRankBadge = (rank) => {
+    if (rank === 1) return <Medal className="w-6 h-6 text-amber-400" />
+    if (rank === 2) return <Medal className="w-6 h-6 text-slate-300" />
+    if (rank === 3) return <Medal className="w-6 h-6 text-orange-400" />
+    return <span className="text-slate-400 font-bold">#{rank}</span>
+  }
+
+  return (
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+      className="space-y-6"
+    >
+      <PageHeader
+        title="绩效排行榜"
+        description="员工绩效排名、部门绩效对比"
+      />
+
+      <Tabs defaultValue="employee" className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="employee">
+            <Users className="w-4 h-4 mr-2" />
+            员工排名
+          </TabsTrigger>
+          <TabsTrigger value="department">
+            <Building2 className="w-4 h-4 mr-2" />
+            部门排名
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="employee" className="space-y-4 mt-6">
+          <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5 text-amber-400" />
+                员工绩效排行榜 TOP 10
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {mockEmployeeRanking.map((employee) => (
+                  <motion.div
+                    key={employee.rank}
+                    variants={fadeIn}
+                    className={cn(
+                      'flex items-center justify-between p-4 rounded-lg border transition-all',
+                      employee.rank <= 3
+                        ? 'bg-gradient-to-r from-amber-500/10 to-transparent border-amber-500/30'
+                        : 'bg-slate-800/40 border-slate-700/50 hover:border-slate-600/80'
+                    )}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 flex items-center justify-center">
+                        {getRankBadge(employee.rank)}
+                      </div>
+                      <div>
+                        <p className="font-medium text-white">{employee.name}</p>
+                        <p className="text-xs text-slate-400">{employee.department}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-white">
+                          {employee.score}
+                        </div>
+                        <div className="text-xs text-slate-400">绩效分数</div>
+                      </div>
+                      {employee.change !== 0 && (
+                        <div className="w-16 flex items-center justify-center">
+                          {employee.change > 0 ? (
+                            <div className="flex items-center gap-1 text-emerald-400">
+                              <TrendingUp className="w-4 h-4" />
+                              <span className="text-sm">+{employee.change}</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 text-red-400">
+                              <TrendingDown className="w-4 h-4" />
+                              <span className="text-sm">{employee.change}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="department" className="space-y-4 mt-6">
+          <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-blue-400" />
+                部门绩效排行榜
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {mockDepartmentRanking.map((dept) => (
+                  <motion.div
+                    key={dept.rank}
+                    variants={fadeIn}
+                    className={cn(
+                      'flex items-center justify-between p-4 rounded-lg border transition-all',
+                      dept.rank === 1
+                        ? 'bg-gradient-to-r from-amber-500/10 to-transparent border-amber-500/30'
+                        : 'bg-slate-800/40 border-slate-700/50 hover:border-slate-600/80'
+                    )}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 flex items-center justify-center">
+                        {getRankBadge(dept.rank)}
+                      </div>
+                      <div>
+                        <p className="font-medium text-white">{dept.name}</p>
+                        <p className="text-xs text-slate-400">
+                          {dept.employees} 人 · 优秀 {dept.excellent} 人
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-white">
+                        {dept.avgScore}
+                      </div>
+                      <div className="text-xs text-slate-400">平均分数</div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </motion.div>
+  )
+}

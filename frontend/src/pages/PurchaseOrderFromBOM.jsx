@@ -374,7 +374,7 @@ export default function PurchaseOrderFromBOM() {
                       <SelectValue placeholder="选择默认供应商（可选）" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">无</SelectItem>
+                      <SelectItem value="none">无</SelectItem>
                       {suppliers.map(supplier => (
                         <SelectItem key={supplier.id} value={supplier.id.toString()}>
                           {supplier.supplier_name}

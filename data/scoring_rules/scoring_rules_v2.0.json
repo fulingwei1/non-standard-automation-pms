@@ -1,0 +1,506 @@
+{
+  "version": "2.0",
+  "model_name": "PreSales_Project_Evaluation_Scoring_v2",
+  "generated_at": "2025-01-04T00:00:00.000Z",
+  "description": "基于售前项目评估表的评分规则配置，支持灵活调整",
+  
+  "scales": {
+    "total_score_max": 100,
+    "pass_threshold": 60,
+    "score_levels": {
+      "level_1": { "points": 10, "label": "优秀" },
+      "level_2": { "points": 6, "label": "良好" },
+      "level_3": { "points": 4, "label": "一般" },
+      "level_4": { "points": 0, "label": "较差" }
+    },
+    "decision_thresholds": [
+      {
+        "min_score": 75,
+        "decision": "推荐立项",
+        "description": "项目质量优秀，强烈推荐"
+      },
+      {
+        "min_score": 60,
+        "decision": "有条件立项",
+        "description": "项目基本合格，需满足一定条件"
+      },
+      {
+        "min_score": 45,
+        "decision": "暂缓",
+        "description": "项目存在风险，建议暂缓处理"
+      },
+      {
+        "min_score": 0,
+        "decision": "不建议立项",
+        "description": "项目不符合立项标准"
+      }
+    ]
+  },
+
+  "evaluation_criteria": {
+    "customer_nature": {
+      "name": "客户性质",
+      "field": "customerType",
+      "max_points": 10,
+      "weight": 1.0,
+      "options": [
+        {
+          "value": "老客户成交",
+          "level": "level_1",
+          "points": 10,
+          "description": "老客户，有成交记录"
+        },
+        {
+          "value": "老客户接触",
+          "level": "level_1",
+          "points": 10,
+          "description": "老客户，正在接触中"
+        },
+        {
+          "value": "新客户",
+          "level": "level_2",
+          "points": 6,
+          "description": "新客户"
+        },
+        {
+          "value": "代理/经销商",
+          "level": "level_2",
+          "points": 6,
+          "description": "代理或经销商"
+        },
+        {
+          "value": "其他",
+          "level": "level_4",
+          "points": 0,
+          "description": "其他类型客户"
+        }
+      ]
+    },
+
+    "customer_potential": {
+      "name": "客户潜力",
+      "field": "customerPotential",
+      "max_points": 10,
+      "weight": 1.0,
+      "options": [
+        {
+          "value": "高",
+          "level": "level_1",
+          "points": 10,
+          "description": "有大批量需求"
+        },
+        {
+          "value": "中",
+          "level": "level_1",
+          "points": 10,
+          "description": "潜在持续订单"
+        },
+        {
+          "value": "低",
+          "level": "level_2",
+          "points": 6,
+          "description": "潜在订单很少"
+        },
+        {
+          "value": "极低",
+          "level": "level_4",
+          "points": 0,
+          "description": "几乎无潜在订单"
+        }
+      ]
+    },
+
+    "demand_clarity": {
+      "name": "客户需求",
+      "field": "demandClarity",
+      "max_points": 10,
+      "weight": 1.0,
+      "options": [
+        {
+          "value": "详细规范",
+          "level": "level_1",
+          "points": 10,
+          "description": "有技术要求、产品资料"
+        },
+        {
+          "value": "示意图纸",
+          "level": "level_2",
+          "points": 6,
+          "description": "只有技术要求"
+        },
+        {
+          "value": "口头描述",
+          "level": "level_3",
+          "points": 4,
+          "description": "需求不清晰"
+        }
+      ]
+    },
+
+    "budget_status": {
+      "name": "客户预算",
+      "field": "budgetStatus",
+      "max_points": 10,
+      "weight": 1.0,
+      "options": [
+        {
+          "value": "明确",
+          "level": "level_1",
+          "points": 10,
+          "description": "预算清晰"
+        },
+        {
+          "value": "范围",
+          "level": "level_2",
+          "points": 6,
+          "description": "需规划预算"
+        },
+        {
+          "value": "未知",
+          "level": "level_3",
+          "points": 4,
+          "description": "无预算"
+        }
+      ]
+    },
+
+    "equipment_attribute": {
+      "name": "设备属性",
+      "field": "productType",
+      "max_points": 10,
+      "weight": 1.0,
+      "match_mode": "contains",
+      "options": [
+        {
+          "value": "我司成熟设备",
+          "level": "level_1",
+          "points": 10,
+          "description": "我司成熟设备",
+          "keywords": ["成熟", "已有案例", "标准产品"]
+        },
+        {
+          "value": "属于我司产品清单",
+          "level": "level_1",
+          "points": 10,
+          "description": "属于我司产品清单",
+          "keywords": ["产品清单", "优势产品"]
+        },
+        {
+          "value": "与我司设备相似",
+          "level": "level_2",
+          "points": 6,
+          "description": "与我司设备相似",
+          "keywords": ["相似", "类似", "可复用"]
+        },
+        {
+          "value": "与我司设备无关",
+          "level": "level_4",
+          "points": 0,
+          "description": "与我司设备无关",
+          "keywords": ["无关", "首次", "新领域"]
+        }
+      ],
+      "advantage_product_bonus": {
+        "enabled": true,
+        "bonus_per_product": 2,
+        "max_bonus": 10,
+        "description": "选择优势产品可获得额外加分"
+      },
+      "custom_product_penalty": {
+        "enabled": true,
+        "penalty_per_product": 3,
+        "max_penalty": 15,
+        "similarity_threshold": 0.3,
+        "description": "选择不相似的自定义产品会扣分"
+      }
+    },
+
+    "customer_level": {
+      "name": "客户等级",
+      "field": "customerLevel",
+      "max_points": 10,
+      "weight": 1.0,
+      "options": [
+        {
+          "value": "A级",
+          "level": "level_1",
+          "points": 10,
+          "description": "A级客户"
+        },
+        {
+          "value": "B级",
+          "level": "level_1",
+          "points": 10,
+          "description": "B级客户"
+        },
+        {
+          "value": "C级",
+          "level": "level_2",
+          "points": 6,
+          "description": "C级客户"
+        },
+        {
+          "value": "D级",
+          "level": "level_3",
+          "points": 4,
+          "description": "D级客户"
+        },
+        {
+          "value": "E级",
+          "level": "level_4",
+          "points": 0,
+          "description": "E级客户"
+        }
+      ]
+    },
+
+    "industry": {
+      "name": "所属行业",
+      "field": "industry",
+      "max_points": 10,
+      "weight": 1.0,
+      "advantage_industries": {
+        "enabled": true,
+        "bonus": 0,
+        "description": "优势行业可获得满分"
+      },
+      "options": [
+        {
+          "value": "汽车电子",
+          "level": "level_1",
+          "points": 10,
+          "is_advantage": true
+        },
+        {
+          "value": "白色家电",
+          "level": "level_1",
+          "points": 10,
+          "is_advantage": true
+        },
+        {
+          "value": "新能源",
+          "level": "level_1",
+          "points": 10,
+          "is_advantage": true
+        },
+        {
+          "value": "新能源（电池/充电/电源）",
+          "level": "level_1",
+          "points": 10,
+          "is_advantage": true
+        },
+        {
+          "value": "半导体",
+          "level": "level_1",
+          "points": 10,
+          "is_advantage": true
+        },
+        {
+          "value": "军工/教育",
+          "level": "level_1",
+          "points": 10,
+          "is_advantage": false
+        },
+        {
+          "value": "其他",
+          "level": "level_3",
+          "points": 4,
+          "is_advantage": false
+        }
+      ]
+    },
+
+    "equipment_type": {
+      "name": "设备类型",
+      "field": "equipmentType",
+      "max_points": 10,
+      "weight": 1.0,
+      "options": [
+        {
+          "value": "测试类线体",
+          "level": "level_1",
+          "points": 10,
+          "description": "测试类线体"
+        },
+        {
+          "value": "组装类线体",
+          "level": "level_1",
+          "points": 10,
+          "description": "组装类线体"
+        },
+        {
+          "value": "测试单机",
+          "level": "level_1",
+          "points": 10,
+          "description": "测试单机"
+        },
+        {
+          "value": "装配单机",
+          "level": "level_2",
+          "points": 6,
+          "description": "装配单机"
+        },
+        {
+          "value": "工装治具",
+          "level": "level_3",
+          "points": 4,
+          "description": "工装治具"
+        },
+        {
+          "value": "其他类型",
+          "level": "level_4",
+          "points": 0,
+          "description": "其他类型"
+        }
+      ]
+    },
+
+    "solution_quotation_delivery": {
+      "name": "方案/报价交期",
+      "field": "solutionDeliveryDays",
+      "max_points": 10,
+      "weight": 1.0,
+      "type": "numeric_range",
+      "options": [
+        {
+          "range": { "min": 21, "max": null },
+          "level": "level_1",
+          "points": 10,
+          "description": ">21天"
+        },
+        {
+          "range": { "min": 16, "max": 21 },
+          "level": "level_2",
+          "points": 6,
+          "description": "16-21天"
+        },
+        {
+          "range": { "min": 7, "max": 16 },
+          "level": "level_3",
+          "points": 4,
+          "description": "7-16天"
+        },
+        {
+          "range": { "min": 0, "max": 7 },
+          "level": "level_4",
+          "points": 0,
+          "description": "<7天"
+        }
+      ]
+    },
+
+    "equipment_delivery": {
+      "name": "设备交期",
+      "field": "equipmentDeliveryDays",
+      "max_points": 10,
+      "weight": 1.0,
+      "type": "numeric_range",
+      "options": [
+        {
+          "range": { "min": 90, "max": null },
+          "level": "level_1",
+          "points": 10,
+          "description": ">90天"
+        },
+        {
+          "range": { "min": 76, "max": 90 },
+          "level": "level_2",
+          "points": 6,
+          "description": "76-90天"
+        },
+        {
+          "range": { "min": 60, "max": 75 },
+          "level": "level_3",
+          "points": 4,
+          "description": "60-75天"
+        },
+        {
+          "range": { "min": 0, "max": 60 },
+          "level": "level_4",
+          "points": 0,
+          "description": "<60天"
+        }
+      ]
+    }
+  },
+
+  "veto_rules": [
+    {
+      "id": "VETO-01",
+      "name": "总分低于60分",
+      "enabled": true,
+      "when": {
+        "all": [
+          {
+            "field": "total_score",
+            "op": "lt",
+            "value": 60
+          }
+        ]
+      },
+      "action": {
+        "decision": "不建议立项",
+        "status": "rejected"
+      },
+      "reason": "总分累计低于60分，售前评估不通过，项目由销售继续跟进"
+    },
+    {
+      "id": "VETO-02",
+      "name": "预算未知且客户未立项",
+      "enabled": true,
+      "when": {
+        "all": [
+          {
+            "field": "budgetStatus",
+            "op": "eq",
+            "value": "未知"
+          },
+          {
+            "field": "customerProjectStatus",
+            "op": "eq",
+            "value": "调研"
+          }
+        ]
+      },
+      "action": {
+        "decision": "暂缓",
+        "status": "deferred"
+      },
+      "reason": "预算未知且客户尚处调研阶段，属于高概率无效消耗项目"
+    },
+    {
+      "id": "VETO-03",
+      "name": "低于最低毛利红线",
+      "enabled": true,
+      "when": {
+        "any": [
+          {
+            "field": "grossMarginSafety",
+            "op": "eq",
+            "value": "低于20%"
+          }
+        ]
+      },
+      "action": {
+        "decision": "不建议立项",
+        "status": "rejected"
+      },
+      "reason": "明确低于最低毛利红线，属于结构性亏损项目"
+    }
+  ],
+
+  "calculation_rules": {
+    "total_score_formula": "sum(all_criteria_scores)",
+    "weighted_calculation": false,
+    "normalize_scores": false,
+    "round_method": "round"
+  },
+
+  "metadata": {
+    "last_updated": "2025-01-04",
+    "updated_by": "system",
+    "notes": "基于售前项目评估表Excel模板的评分规则，支持通过配置文件灵活调整各维度评分标准"
+  }
+}
+
+

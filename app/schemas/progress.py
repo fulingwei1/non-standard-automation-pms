@@ -198,8 +198,60 @@ class ProgressReportResponse(TimestampSchema):
     completed_work: Optional[str] = None
     planned_work: Optional[str] = None
     issues: Optional[str] = None
-    next_plan: Optional[str] = None
-    created_by: Optional[int] = None
+
+
+# ==================== 智能进度预测与依赖检查 ====================
+
+
+class TaskForecastItem(BaseModel):
+    """任务预测项"""
+
+    task_id: int
+    task_name: str
+    progress_percent: int
+    predicted_finish_date: date
+    plan_end: Optional[date] = None
+    delay_days: Optional[int] = None
+    status: str
+    critical: bool = False
+    rate_per_day: Optional[float] = None
+    weight: float = 1.0
+
+
+class ProgressForecastResponse(BaseModel):
+    """项目进度预测"""
+
+    project_id: int
+    project_name: str
+    current_progress: float
+    predicted_completion_date: date
+    planned_completion_date: Optional[date] = None
+    predicted_delay_days: int
+    forecast_horizon_days: int
+    confidence: str
+    expected_progress_next_7d: float
+    expected_progress_next_14d: float
+    tasks: List[TaskForecastItem]
+
+
+class DependencyIssue(BaseModel):
+    """依赖问题描述"""
+
+    issue_type: str
+    severity: str
+    task_id: Optional[int] = None
+    task_name: Optional[str] = None
+    detail: str
+
+
+class DependencyCheckResponse(BaseModel):
+    """依赖检查响应"""
+
+    project_id: int
+    project_name: str
+    has_cycle: bool
+    cycle_paths: List[List[str]]
+    issues: List[DependencyIssue]
 
 
 class ProgressReportListResponse(PaginatedResponse):
@@ -379,4 +431,3 @@ class BaselineResponse(TimestampSchema):
 class BaselineListResponse(PaginatedResponse):
     """计划基线列表响应"""
     items: List[BaselineResponse]
-

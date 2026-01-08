@@ -281,3 +281,44 @@ class ProjectBestPracticeResponse(TimestampSchema):
         from_attributes = True
 
 
+# ==================== 统计和高级查询 Schema ====================
+
+class LessonStatisticsResponse(BaseModel):
+    """经验教训统计响应"""
+    
+    total: int = Field(..., description="总数")
+    success_count: int = Field(..., description="成功经验数")
+    failure_count: int = Field(..., description="失败教训数")
+    by_category: Dict[str, int] = Field(default_factory=dict, description="按分类统计")
+    by_status: Dict[str, int] = Field(default_factory=dict, description="按状态统计")
+    by_priority: Dict[str, int] = Field(default_factory=dict, description="按优先级统计")
+    resolved_count: int = Field(..., description="已解决数")
+    unresolved_count: int = Field(..., description="未解决数")
+    overdue_count: int = Field(..., description="逾期数")
+
+
+class BestPracticeRecommendationRequest(BaseModel):
+    """最佳实践推荐请求"""
+    
+    project_id: Optional[int] = Field(None, description="项目ID")
+    project_type: Optional[str] = Field(None, description="项目类型")
+    current_stage: Optional[str] = Field(None, description="当前阶段（S1-S9）")
+    category: Optional[str] = Field(None, description="分类筛选")
+    limit: int = Field(10, ge=1, le=50, description="返回数量限制")
+
+
+class BestPracticeRecommendationResponse(BaseModel):
+    """最佳实践推荐响应"""
+    
+    practice: ProjectBestPracticeResponse
+    match_score: float = Field(..., description="匹配度分数（0-1）")
+    match_reasons: List[str] = Field(default_factory=list, description="匹配原因")
+
+
+
+
+
+
+
+
+

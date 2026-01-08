@@ -20,14 +20,25 @@ from app.models.project import Project
 from app.models.performance import (
     PerformancePeriod, PerformanceIndicator, PerformanceResult,
     PerformanceEvaluation, PerformanceAppeal, ProjectContribution,
-    PerformanceRankingSnapshot
+    PerformanceRankingSnapshot,
+    # New Performance System
+    MonthlyWorkSummary, PerformanceEvaluationRecord, EvaluationWeightConfig
 )
 from app.schemas.common import ResponseModel, PaginatedResponse
 from app.schemas.performance import (
     PersonalPerformanceResponse, PerformanceTrendResponse,
     TeamPerformanceResponse, DepartmentPerformanceResponse, PerformanceRankingResponse,
-    ProjectPerformanceResponse, ProjectProgressReportResponse, PerformanceCompareResponse
+    ProjectPerformanceResponse, ProjectProgressReportResponse, PerformanceCompareResponse,
+    # New Performance System
+    MonthlyWorkSummaryCreate, MonthlyWorkSummaryUpdate, MonthlyWorkSummaryResponse,
+    MonthlyWorkSummaryListItem, PerformanceEvaluationRecordCreate,
+    PerformanceEvaluationRecordUpdate, PerformanceEvaluationRecordResponse,
+    EvaluationTaskItem, EvaluationTaskListResponse, EvaluationDetailResponse,
+    MyPerformanceResponse, EvaluationWeightConfigCreate, EvaluationWeightConfigResponse,
+    EvaluationWeightConfigListResponse
 )
+from app.services.performance_service import PerformanceService
+from app.services.performance_integration_service import PerformanceIntegrationService
 
 router = APIRouter()
 
@@ -696,3 +707,637 @@ def compare_performance(
         period_name=period.period_name,
         comparison_data=comparison_data
     )
+
+
+# ==================== 新绩效系统 - 员工端 API ====================
+
+@router.post("/monthly-summary", response_model=MonthlyWorkSummaryResponse, status_code=status.HTTP_201_CREATED)
+def create_monthly_work_summary(
+    *,
+    db: Session = Depends(deps.get_db),
+    summary_in: MonthlyWorkSummaryCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    员工创建月度工作总结（提交）
+    """
+    # 检查是否已存在该周期的总结
+    existing = db.query(MonthlyWorkSummary).filter(
+        MonthlyWorkSummary.employee_id == current_user.id,
+        MonthlyWorkSummary.period == summary_in.period
+    ).first()
+
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"您已提交过 {summary_in.period} 的工作总结"
+        )
+
+    # 创建工作总结
+    summary = MonthlyWorkSummary(
+        employee_id=current_user.id,
+        period=summary_in.period,
+        work_content=summary_in.work_content,
+        self_evaluation=summary_in.self_evaluation,
+        highlights=summary_in.highlights,
+        problems=summary_in.problems,
+        next_month_plan=summary_in.next_month_plan,
+        status='SUBMITTED',
+        submit_date=datetime.now()
+    )
+
+    db.add(summary)
+    db.commit()
+    db.refresh(summary)
+
+    # 创建待评价任务（通知部门经理和项目经理）
+    PerformanceService.create_evaluation_tasks(db, summary)
+
+    return summary
+
+
+@router.put("/monthly-summary/draft", response_model=MonthlyWorkSummaryResponse, status_code=status.HTTP_200_OK)
+def save_monthly_summary_draft(
+    *,
+    db: Session = Depends(deps.get_db),
+    period: str = Query(..., description="评价周期 (YYYY-MM)"),
+    summary_update: MonthlyWorkSummaryUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    员工保存工作总结草稿
+    """
+    # 查找现有草稿
+    summary = db.query(MonthlyWorkSummary).filter(
+        MonthlyWorkSummary.employee_id == current_user.id,
+        MonthlyWorkSummary.period == period
+    ).first()
+
+    if not summary:
+        # 创建新草稿
+        summary = MonthlyWorkSummary(
+            employee_id=current_user.id,
+            period=period,
+            work_content=summary_update.work_content or "",
+            self_evaluation=summary_update.self_evaluation or "",
+            highlights=summary_update.highlights,
+            problems=summary_update.problems,
+            next_month_plan=summary_update.next_month_plan,
+            status='DRAFT'
+        )
+        db.add(summary)
+    else:
+        # 更新草稿（只能更新DRAFT状态的）
+        if summary.status != 'DRAFT':
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="只能更新草稿状态的工作总结"
+            )
+
+        # 更新字段
+        if summary_update.work_content is not None:
+            summary.work_content = summary_update.work_content
+        if summary_update.self_evaluation is not None:
+            summary.self_evaluation = summary_update.self_evaluation
+        if summary_update.highlights is not None:
+            summary.highlights = summary_update.highlights
+        if summary_update.problems is not None:
+            summary.problems = summary_update.problems
+        if summary_update.next_month_plan is not None:
+            summary.next_month_plan = summary_update.next_month_plan
+
+    db.commit()
+    db.refresh(summary)
+
+    return summary
+
+
+@router.get("/monthly-summary/history", response_model=List[MonthlyWorkSummaryListItem], status_code=status.HTTP_200_OK)
+def get_monthly_summary_history(
+    *,
+    db: Session = Depends(deps.get_db),
+    limit: int = Query(12, ge=1, le=24, description="获取最近N个月"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    员工查看历史工作总结
+    """
+    summaries = db.query(MonthlyWorkSummary).filter(
+        MonthlyWorkSummary.employee_id == current_user.id
+    ).order_by(desc(MonthlyWorkSummary.period)).limit(limit).all()
+
+    result = []
+    for summary in summaries:
+        # 统计评价数量
+        eval_count = db.query(PerformanceEvaluationRecord).filter(
+            PerformanceEvaluationRecord.summary_id == summary.id,
+            PerformanceEvaluationRecord.status == 'COMPLETED'
+        ).count()
+
+        result.append(MonthlyWorkSummaryListItem(
+            id=summary.id,
+            period=summary.period,
+            status=summary.status,
+            submit_date=summary.submit_date,
+            evaluation_count=eval_count,
+            created_at=summary.created_at
+        ))
+
+    return result
+
+
+@router.get("/my-performance", response_model=MyPerformanceResponse, status_code=status.HTTP_200_OK)
+def get_my_performance_new(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    员工查看我的绩效（新系统）
+    """
+    # 获取最新周期
+    current_date = date.today()
+    current_period = current_date.strftime("%Y-%m")
+
+    # 获取当前周期的工作总结
+    current_summary = db.query(MonthlyWorkSummary).filter(
+        MonthlyWorkSummary.employee_id == current_user.id,
+        MonthlyWorkSummary.period == current_period
+    ).first()
+
+    # 当前评价状态
+    if current_summary:
+        # 获取部门经理评价
+        dept_eval = db.query(PerformanceEvaluationRecord).filter(
+            PerformanceEvaluationRecord.summary_id == current_summary.id,
+            PerformanceEvaluationRecord.evaluator_type == 'DEPT_MANAGER'
+        ).first()
+
+        dept_evaluation_status = {
+            "status": dept_eval.status if dept_eval else "PENDING",
+            "evaluator": dept_eval.evaluator.real_name if dept_eval and dept_eval.evaluator else "未知",
+            "score": dept_eval.score if dept_eval and dept_eval.status == 'COMPLETED' else None
+        }
+
+        # 获取项目经理评价
+        project_evals = db.query(PerformanceEvaluationRecord).filter(
+            PerformanceEvaluationRecord.summary_id == current_summary.id,
+            PerformanceEvaluationRecord.evaluator_type == 'PROJECT_MANAGER'
+        ).all()
+
+        project_evaluations_status = []
+        for proj_eval in project_evals:
+            project_evaluations_status.append({
+                "project_name": proj_eval.project.project_name if proj_eval.project else "未知项目",
+                "status": proj_eval.status,
+                "evaluator": proj_eval.evaluator.real_name if proj_eval.evaluator else "未知",
+                "score": proj_eval.score if proj_eval.status == 'COMPLETED' else None,
+                "weight": proj_eval.project_weight
+            })
+
+        current_status = {
+            "period": current_period,
+            "summary_status": current_summary.status,
+            "dept_evaluation": dept_evaluation_status,
+            "project_evaluations": project_evaluations_status
+        }
+    else:
+        current_status = {
+            "period": current_period,
+            "summary_status": "NOT_SUBMITTED",
+            "dept_evaluation": {"status": "PENDING", "evaluator": "未知", "score": None},
+            "project_evaluations": []
+        }
+
+    # 计算最新绩效结果
+    latest_result = None
+    if current_summary and current_summary.status == 'COMPLETED':
+        score_result = PerformanceService.calculate_final_score(
+            db, current_summary.id, current_summary.period
+        )
+        if score_result:
+            latest_result = {
+                "period": current_summary.period,
+                "final_score": score_result['final_score'],
+                "level": PerformanceService.get_score_level(score_result['final_score']),
+                "dept_score": score_result['dept_score'],
+                "project_score": score_result['project_score']
+            }
+
+    # 季度趋势（最近3个月）
+    quarterly_trend = []
+    for i in range(3):
+        past_period = (date.today() - timedelta(days=30*i)).strftime("%Y-%m")
+        past_summary = db.query(MonthlyWorkSummary).filter(
+            MonthlyWorkSummary.employee_id == current_user.id,
+            MonthlyWorkSummary.period == past_period,
+            MonthlyWorkSummary.status == 'COMPLETED'
+        ).first()
+
+        if past_summary:
+            score_result = PerformanceService.calculate_final_score(
+                db, past_summary.id, past_summary.period
+            )
+            if score_result:
+                quarterly_trend.append({
+                    "period": past_summary.period,
+                    "score": score_result['final_score']
+                })
+
+    # 历史记录（最近3个月）
+    history = PerformanceService.get_historical_performance(db, current_user.id, 3)
+
+    return MyPerformanceResponse(
+        current_status=current_status,
+        latest_result=latest_result,
+        quarterly_trend=quarterly_trend,
+        history=history
+    )
+
+
+# ==================== 新绩效系统 - 经理端 API ====================
+
+@router.get("/evaluation-tasks", response_model=EvaluationTaskListResponse, status_code=status.HTTP_200_OK)
+def get_evaluation_tasks(
+    *,
+    db: Session = Depends(deps.get_db),
+    period: Optional[str] = Query(None, description="评价周期 (YYYY-MM)"),
+    status_filter: Optional[str] = Query(None, description="状态筛选: PENDING/COMPLETED"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    经理查看待评价任务列表（带权限过滤）
+    """
+    if not period:
+        period = date.today().strftime("%Y-%m")
+
+    # 获取当前用户可管理的员工列表
+    manageable_employee_ids = PerformanceService.get_manageable_employees(
+        db, current_user, period
+    )
+
+    if not manageable_employee_ids:
+        # 如果不是经理角色，返回空列表
+        return EvaluationTaskListResponse(
+            total=0,
+            pending_count=0,
+            completed_count=0,
+            tasks=[]
+        )
+
+    # 获取待评价的工作总结（只包含可管理的员工）
+    summaries = db.query(MonthlyWorkSummary).filter(
+        MonthlyWorkSummary.period == period,
+        MonthlyWorkSummary.employee_id.in_(manageable_employee_ids),
+        MonthlyWorkSummary.status.in_(['SUBMITTED', 'EVALUATING', 'COMPLETED'])
+    ).all()
+
+    # 获取当前用户的经理角色信息
+    manager_roles = PerformanceService.get_user_manager_roles(db, current_user)
+
+    tasks = []
+    total = 0
+    pending_count = 0
+    completed_count = 0
+
+    for summary in summaries:
+        # 检查当前用户是否已评价
+        my_eval = db.query(PerformanceEvaluationRecord).filter(
+            PerformanceEvaluationRecord.summary_id == summary.id,
+            PerformanceEvaluationRecord.evaluator_id == current_user.id
+        ).first()
+
+        if my_eval:
+            eval_status = my_eval.status
+            if eval_status == 'COMPLETED':
+                completed_count += 1
+            else:
+                pending_count += 1
+        else:
+            # 创建待评价记录
+            eval_status = 'PENDING'
+            pending_count += 1
+
+        # 判断是否需要筛选
+        if status_filter:
+            if status_filter == 'PENDING' and eval_status != 'PENDING':
+                continue
+            if status_filter == 'COMPLETED' and eval_status != 'COMPLETED':
+                continue
+
+        # 获取员工信息
+        employee = summary.employee
+
+        # 计算截止日期（下月5号）
+        year, month = map(int, summary.period.split('-'))
+        next_month = month + 1 if month < 12 else 1
+        next_year = year if month < 12 else year + 1
+        deadline = date(next_year, next_month, 5)
+
+        # 判断评价类型和项目信息
+        evaluation_type = "dept"
+        project_id = None
+        project_name = None
+
+        if my_eval:
+            if my_eval.evaluator_type == 'PROJECT_MANAGER':
+                evaluation_type = "project"
+                project_id = my_eval.project_id
+                if project_id:
+                    project = db.query(Project).get(project_id)
+                    project_name = project.project_name if project else None
+
+        task = EvaluationTaskItem(
+            task_id=summary.id,
+            employee_id=summary.employee_id,
+            employee_name=employee.real_name if employee else "未知",
+            employee_department=employee.department if employee else None,
+            period=summary.period,
+            evaluation_type=evaluation_type,
+            project_id=project_id,
+            project_name=project_name,
+            status=eval_status,
+            deadline=deadline,
+            submit_date=summary.submit_date
+        )
+        tasks.append(task)
+        total += 1
+
+    return EvaluationTaskListResponse(
+        total=total,
+        pending_count=pending_count,
+        completed_count=completed_count,
+        tasks=tasks
+    )
+
+
+@router.get("/evaluation/{task_id}", response_model=EvaluationDetailResponse, status_code=status.HTTP_200_OK)
+def get_evaluation_detail(
+    *,
+    db: Session = Depends(deps.get_db),
+    task_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    经理查看评价详情（工作总结+历史绩效）
+    """
+    # 获取工作总结
+    summary = db.query(MonthlyWorkSummary).filter(
+        MonthlyWorkSummary.id == task_id
+    ).first()
+
+    if not summary:
+        raise HTTPException(status_code=404, detail="工作总结不存在")
+
+    # 获取员工信息
+    employee = summary.employee
+    employee_info = {
+        "id": employee.id,
+        "name": employee.real_name or employee.username,
+        "department": employee.department if employee else None,
+        "position": employee.position if employee else None
+    }
+
+    # 获取历史绩效（最近3个月）
+    historical_performance = PerformanceService.get_historical_performance(
+        db, summary.employee_id, 3
+    )
+
+    # 获取我的评价记录
+    my_evaluation = db.query(PerformanceEvaluationRecord).filter(
+        PerformanceEvaluationRecord.summary_id == summary.id,
+        PerformanceEvaluationRecord.evaluator_id == current_user.id
+    ).first()
+
+    return EvaluationDetailResponse(
+        summary=summary,
+        employee_info=employee_info,
+        historical_performance=historical_performance,
+        my_evaluation=my_evaluation
+    )
+
+
+@router.post("/evaluation/{task_id}", response_model=PerformanceEvaluationRecordResponse, status_code=status.HTTP_201_CREATED)
+def submit_evaluation(
+    *,
+    db: Session = Depends(deps.get_db),
+    task_id: int,
+    evaluation_in: PerformanceEvaluationRecordCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    经理提交评价
+    """
+    # 获取工作总结
+    summary = db.query(MonthlyWorkSummary).filter(
+        MonthlyWorkSummary.id == task_id
+    ).first()
+
+    if not summary:
+        raise HTTPException(status_code=404, detail="工作总结不存在")
+
+    # 检查是否已评价
+    existing_eval = db.query(PerformanceEvaluationRecord).filter(
+        PerformanceEvaluationRecord.summary_id == task_id,
+        PerformanceEvaluationRecord.evaluator_id == current_user.id
+    ).first()
+
+    if existing_eval and existing_eval.status == 'COMPLETED':
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="您已完成该评价"
+        )
+
+    # TODO: 判断评价人类型（部门经理/项目经理）
+    evaluator_type = 'DEPT_MANAGER'  # TODO: 从用户角色判断
+
+    if existing_eval:
+        # 更新评价
+        existing_eval.score = evaluation_in.score
+        existing_eval.comment = evaluation_in.comment
+        existing_eval.project_id = evaluation_in.project_id
+        existing_eval.project_weight = evaluation_in.project_weight
+        existing_eval.status = 'COMPLETED'
+        existing_eval.evaluated_at = datetime.now()
+        evaluation = existing_eval
+    else:
+        # 创建新评价
+        evaluation = PerformanceEvaluationRecord(
+            summary_id=task_id,
+            evaluator_id=current_user.id,
+            evaluator_type=evaluator_type,
+            project_id=evaluation_in.project_id,
+            project_weight=evaluation_in.project_weight,
+            score=evaluation_in.score,
+            comment=evaluation_in.comment,
+            status='COMPLETED',
+            evaluated_at=datetime.now()
+        )
+        db.add(evaluation)
+
+    # 更新工作总结状态
+    if summary.status == 'SUBMITTED':
+        summary.status = 'EVALUATING'
+
+    # 检查是否所有评价都已完成
+    all_evals = db.query(PerformanceEvaluationRecord).filter(
+        PerformanceEvaluationRecord.summary_id == task_id
+    ).all()
+
+    if all([e.status == 'COMPLETED' for e in all_evals]):
+        summary.status = 'COMPLETED'
+
+    db.commit()
+    db.refresh(evaluation)
+
+    return evaluation
+
+
+# ==================== 新绩效系统 - HR端 API ====================
+
+@router.get("/weight-config", response_model=EvaluationWeightConfigListResponse, status_code=status.HTTP_200_OK)
+def get_weight_config(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("performance:manage")),
+) -> Any:
+    """
+    HR查看权重配置（当前+历史）
+    """
+    # 获取当前配置（最新的）
+    current_config = db.query(EvaluationWeightConfig).order_by(
+        desc(EvaluationWeightConfig.effective_date)
+    ).first()
+
+    if not current_config:
+        # 创建默认配置
+        current_config = EvaluationWeightConfig(
+            dept_manager_weight=50,
+            project_manager_weight=50,
+            effective_date=date.today(),
+            operator_id=current_user.id,
+            reason="系统默认配置"
+        )
+        db.add(current_config)
+        db.commit()
+        db.refresh(current_config)
+
+    # 获取历史配置
+    history = db.query(EvaluationWeightConfig).order_by(
+        desc(EvaluationWeightConfig.effective_date)
+    ).offset(1).limit(10).all()
+
+    return EvaluationWeightConfigListResponse(
+        current=current_config,
+        history=history
+    )
+
+
+@router.put("/weight-config", response_model=EvaluationWeightConfigResponse, status_code=status.HTTP_201_CREATED)
+def update_weight_config(
+    *,
+    db: Session = Depends(deps.get_db),
+    config_in: EvaluationWeightConfigCreate,
+    current_user: User = Depends(security.require_permission("performance:manage")),
+) -> Any:
+    """
+    HR更新权重配置
+    """
+    # 验证权重总和
+    if config_in.dept_manager_weight + config_in.project_manager_weight != 100:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="权重总和必须等于100%"
+        )
+
+    # 创建新配置
+    new_config = EvaluationWeightConfig(
+        dept_manager_weight=config_in.dept_manager_weight,
+        project_manager_weight=config_in.project_manager_weight,
+        effective_date=config_in.effective_date,
+        operator_id=current_user.id,
+        reason=config_in.reason
+    )
+
+    db.add(new_config)
+    db.commit()
+    db.refresh(new_config)
+
+    return new_config
+
+
+# ==================== 绩效融合 API ====================
+
+@router.get("/integrated/{user_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def get_integrated_performance(
+    *,
+    db: Session = Depends(deps.get_db),
+    user_id: int,
+    period: Optional[str] = Query(None, description="考核周期 (格式: YYYY-MM)"),
+    period_id: Optional[int] = Query(None, description="周期ID"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取融合后的绩效结果
+    融合公式: 综合得分 = 基础绩效得分 × 70% + 任职资格得分 × 30%
+    """
+    # 权限检查：只能查看自己的或下属的绩效
+    if user_id != current_user.id:
+        # 检查是否是当前用户的下属
+        manager_roles = PerformanceService.get_user_manager_roles(db, current_user)
+        if not manager_roles.get('is_dept_manager') and not manager_roles.get('is_project_manager'):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="无权查看该用户的绩效"
+            )
+
+    if period:
+        result = PerformanceIntegrationService.calculate_integrated_score(
+            db, user_id, period
+        )
+    elif period_id:
+        result = PerformanceIntegrationService.get_integrated_performance_for_period(
+            db, user_id, period_id
+        )
+    else:
+        # 获取最新周期
+        result = PerformanceIntegrationService.get_integrated_performance_for_period(
+            db, user_id, None
+        )
+
+    if not result:
+        raise HTTPException(status_code=404, detail="未找到绩效数据")
+
+    return ResponseModel(code=200, message="获取成功", data=result)
+
+
+@router.post("/calculate-integrated", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def calculate_integrated_performance(
+    *,
+    db: Session = Depends(deps.get_db),
+    user_id: int = Query(..., description="用户ID"),
+    period: str = Query(..., description="考核周期 (格式: YYYY-MM)"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    计算融合绩效
+    仅HR和管理层可调用
+    """
+    # 权限检查
+    manager_roles = PerformanceService.get_user_manager_roles(db, current_user)
+    if not (manager_roles.get('is_dept_manager') or 
+            manager_roles.get('is_project_manager') or
+            current_user.is_superuser):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权执行此操作"
+        )
+
+    result = PerformanceIntegrationService.calculate_integrated_score(
+        db, user_id, period
+    )
+
+    if not result:
+        raise HTTPException(status_code=404, detail="未找到绩效数据")
+
+    return ResponseModel(code=200, message="计算成功", data=result)

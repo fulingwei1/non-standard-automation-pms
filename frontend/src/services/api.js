@@ -27,15 +27,30 @@ api.interceptors.response.use(
     (error) => {
         if (error.response && error.response.status === 401) {
             const token = localStorage.getItem('token');
+            const requestUrl = error.config?.url || '';
+
             // 如果是演示账号的 token，不删除 token，也不重定向
             // 演示账号的 API 调用失败是预期的，因为后端不支持演示账号
             if (token && token.startsWith('demo_token_')) {
                 // 对于演示账号，静默处理 401 错误，让页面组件使用 mock 数据
                 console.log('演示账号 API 调用失败，将使用 mock 数据');
             } else {
-                // 真实账号的 401 错误，删除 token 并可能需要重定向
-                localStorage.removeItem('token');
-                // Redirect to login or handle session expiry
+                // 只有在认证相关的 API 返回 401 时才清除 token 并重定向
+                // 其他 API 的 401 错误可能是权限问题，不应该导致登出
+                const isAuthEndpoint = requestUrl.includes('/auth/');
+                if (isAuthEndpoint) {
+                    console.log('认证 API 返回 401，清除 token');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    // Redirect to login
+                    if (window.location.pathname !== '/') {
+                        window.location.href = '/';
+                    }
+                } else {
+                    // 非认证 API 的 401 错误，只记录日志，不清除 token
+                    // 页面组件会使用 mock 数据或显示错误信息
+                    console.log('数据 API 返回 401，保持登录状态，使用 mock 数据');
+                }
             }
         }
         return Promise.reject(error);
@@ -96,9 +111,19 @@ export const documentApi = {
 };
 
 export const authApi = {
-    login: (formData) => api.post('/auth/login', formData, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    }),
+    login: (formData) => {
+        // FastAPI的OAuth2PasswordRequestForm需要multipart/form-data格式
+        const formDataObj = new FormData();
+        if (formData instanceof URLSearchParams) {
+            for (const [key, value] of formData.entries()) {
+                formDataObj.append(key, value);
+            }
+        } else {
+            // 如果已经是FormData，直接使用
+            return api.post('/auth/login', formData);
+        }
+        return api.post('/auth/login', formDataObj);
+    },
     me: () => api.get('/auth/me'),
     refresh: () => api.post('/auth/refresh'),
     logout: () => api.post('/auth/logout'),
@@ -110,6 +135,7 @@ export const userApi = {
     get: (id) => api.get(`/users/${id}`),
     create: (data) => api.post('/users/', data),
     update: (id, data) => api.put(`/users/${id}`, data),
+    delete: (id) => api.delete(`/users/${id}`),
     assignRoles: (id, roleIds) => api.put(`/users/${id}/roles`, roleIds),
 };
 
@@ -129,6 +155,7 @@ export const customerApi = {
     update: (id, data) => api.put(`/customers/${id}`, data),
     delete: (id) => api.delete(`/customers/${id}`),
     getProjects: (id, params) => api.get(`/customers/${id}/projects`, { params }),
+    get360: (id) => api.get(`/customers/${id}/360`),
 };
 
 export const supplierApi = {
@@ -183,6 +210,25 @@ export const quoteApi = {
     approve: (id, data) => api.post(`/sales/quotes/${id}/approve`, data),
 };
 
+export const salesTemplateApi = {
+    listQuoteTemplates: (params) => api.get('/sales/quote-templates', { params }),
+    createQuoteTemplate: (data) => api.post('/sales/quote-templates', data),
+    updateQuoteTemplate: (id, data) => api.put(`/sales/quote-templates/${id}`, data),
+    createQuoteVersion: (id, data) => api.post(`/sales/quote-templates/${id}/versions`, data),
+    publishQuoteVersion: (templateId, versionId) => api.post(`/sales/quote-templates/${templateId}/versions/${versionId}/publish`),
+    applyQuoteTemplate: (id, data) => api.post(`/sales/quote-templates/${id}/apply`, data || {}),
+    listContractTemplates: (params) => api.get('/sales/contract-templates', { params }),
+    createContractTemplate: (data) => api.post('/sales/contract-templates', data),
+    updateContractTemplate: (id, data) => api.put(`/sales/contract-templates/${id}`, data),
+    createContractVersion: (id, data) => api.post(`/sales/contract-templates/${id}/versions`, data),
+    publishContractVersion: (templateId, versionId) => api.post(`/sales/contract-templates/${templateId}/versions/${versionId}/publish`),
+    applyContractTemplate: (id, params) => api.get(`/sales/contract-templates/${id}/apply`, { params }),
+    listRuleSets: (params) => api.get('/sales/cpq/rule-sets', { params }),
+    createRuleSet: (data) => api.post('/sales/cpq/rule-sets', data),
+    updateRuleSet: (id, data) => api.put(`/sales/cpq/rule-sets/${id}`, data),
+    previewPrice: (data) => api.post('/sales/cpq/price-preview', data),
+};
+
 export const contractApi = {
     list: (params) => api.get('/sales/contracts', { params }),
     get: (id) => api.get(`/sales/contracts/${id}`),
@@ -200,6 +246,10 @@ export const invoiceApi = {
     update: (id, data) => api.put(`/sales/invoices/${id}`, data),
     issue: (id, data) => api.post(`/sales/invoices/${id}/issue`, data),
     receivePayment: (id, data) => api.post(`/sales/invoices/${id}/receive-payment`, null, { params: data }),
+    approve: (id, params) => api.put(`/sales/invoices/${id}/approve`, null, { params }),
+    getApprovals: (id) => api.get(`/sales/invoices/${id}/approvals`),
+    approveApproval: (approvalId, params) => api.put(`/sales/invoice-approvals/${approvalId}/approve`, null, { params }),
+    rejectApproval: (approvalId, params) => api.put(`/sales/invoice-approvals/${approvalId}/reject`, null, { params }),
 };
 
 export const paymentApi = {
@@ -226,6 +276,7 @@ export const salesStatisticsApi = {
     funnel: (params) => api.get('/sales/statistics/funnel', { params }),
     opportunitiesByStage: () => api.get('/sales/statistics/opportunities-by-stage'),
     revenueForecast: (params) => api.get('/sales/statistics/revenue-forecast', { params }),
+    summary: (params) => api.get('/sales/statistics/summary', { params }),
 };
 
 // Alert Management APIs
@@ -288,7 +339,10 @@ export const progressApi = {
         getMilestoneRate: (projectId) => api.get('/reports/milestone-rate', { params: projectId ? { project_id: projectId } : {} }),
         getDelayReasons: (projectId, topN = 10) => api.get('/reports/delay-reasons', { params: { project_id: projectId, top_n: topN } }),
     },
-    
+    analytics: {
+        getForecast: (projectId) => api.get(`/progress/projects/${projectId}/progress-forecast`),
+        checkDependencies: (projectId) => api.get(`/progress/projects/${projectId}/dependency-check`),
+    },
     // WBS Templates
     wbsTemplates: {
         list: (params) => api.get('/wbs-templates', { params }),
@@ -315,6 +369,7 @@ export const serviceApi = {
         create: (data) => api.post('/service-tickets', data),
         update: (id, data) => api.put(`/service-tickets/${id}`, data),
         assign: (id, data) => api.put(`/service-tickets/${id}/assign`, data),
+        batchAssign: (data) => api.post('/service-tickets/batch-assign', data),
         close: (id, data) => api.put(`/service-tickets/${id}/close`, data),
         getStatistics: () => api.get('/service-tickets/statistics'),
     },
@@ -611,6 +666,7 @@ export const productionApi = {
         submit: (id) => api.put(`/production/production-plans/${id}/submit`),
         approve: (id) => api.put(`/production/production-plans/${id}/approve`),
         publish: (id) => api.put(`/production-plans/${id}/publish`),
+        calendar: (params) => api.get('/production-plans/calendar', { params }),
     },
     workOrders: {
         list: (params) => api.get('/work-orders', { params }),
@@ -694,15 +750,62 @@ export const ecnApi = {
     get: (id) => api.get(`/ecns/${id}`),
     create: (data) => api.post('/ecns', data),
     update: (id, data) => api.put(`/ecns/${id}`, data),
-    submit: (id) => api.put(`/ecns/${id}/submit`),
-    evaluate: (id, data) => api.post(`/ecns/${id}/evaluate`, data),
-    approve: (id, data) => api.post(`/ecns/${id}/approve`, data),
-    reject: (id, data) => api.put(`/ecns/${id}/reject`, data),
-    execute: (id, data) => api.put(`/ecns/${id}/execute`, data),
+    submit: (id, data) => api.put(`/ecns/${id}/submit`, data || {}),
+    cancel: (id) => api.put(`/ecns/${id}/cancel`),
+    // Evaluations
+    getEvaluations: (id) => api.get(`/ecns/${id}/evaluations`),
+    createEvaluation: (id, data) => api.post(`/ecns/${id}/evaluations`, data),
+    getEvaluation: (evalId) => api.get(`/ecn-evaluations/${evalId}`),
+    submitEvaluation: (evalId) => api.put(`/ecn-evaluations/${evalId}/submit`),
+    getEvaluationSummary: (id) => api.get(`/ecns/${id}/evaluation-summary`),
+    // Approvals
+    getApprovals: (id) => api.get(`/ecns/${id}/approvals`),
+    createApproval: (id, data) => api.post(`/ecns/${id}/approvals`, data),
+    getApproval: (approvalId) => api.get(`/ecn-approvals/${approvalId}`),
+    approve: (approvalId, comment) => api.put(`/ecn-approvals/${approvalId}/approve`, null, { params: { approval_comment: comment } }),
+    reject: (approvalId, reason) => api.put(`/ecn-approvals/${approvalId}/reject`, null, { params: { reason } }),
+    // Tasks
     getTasks: (id) => api.get(`/ecns/${id}/tasks`),
     createTask: (id, data) => api.post(`/ecns/${id}/tasks`, data),
+    getTask: (taskId) => api.get(`/ecn-tasks/${taskId}`),
+    updateTaskProgress: (taskId, data) => api.put(`/ecn-tasks/${taskId}/progress`, data),
+    completeTask: (taskId, data) => api.put(`/ecn-tasks/${taskId}/complete`, data || {}),
+    // Affected materials
     getAffectedMaterials: (id) => api.get(`/ecns/${id}/affected-materials`),
+    createAffectedMaterial: (id, data) => api.post(`/ecns/${id}/affected-materials`, data),
+    updateAffectedMaterial: (id, materialId, data) => api.put(`/ecns/${id}/affected-materials/${materialId}`, data),
+    deleteAffectedMaterial: (id, materialId) => api.delete(`/ecns/${id}/affected-materials/${materialId}`),
+    // Affected orders
     getAffectedOrders: (id) => api.get(`/ecns/${id}/affected-orders`),
+    createAffectedOrder: (id, data) => api.post(`/ecns/${id}/affected-orders`, data),
+    updateAffectedOrder: (id, orderId, data) => api.put(`/ecns/${id}/affected-orders/${orderId}`, data),
+    deleteAffectedOrder: (id, orderId) => api.delete(`/ecns/${id}/affected-orders/${orderId}`),
+    // Execution
+    startExecution: (id, data) => api.put(`/ecns/${id}/start-execution`, data || {}),
+    verify: (id, data) => api.put(`/ecns/${id}/verify`, data),
+    close: (id, data) => api.put(`/ecns/${id}/close`, data || {}),
+    // ECN Types
+    getEcnTypes: (params) => api.get('/ecn-types', { params }),
+    getEcnType: (typeId) => api.get(`/ecn-types/${typeId}`),
+    createEcnType: (data) => api.post('/ecn-types', data),
+    updateEcnType: (typeId, data) => api.put(`/ecn-types/${typeId}`, data),
+    deleteEcnType: (typeId) => api.delete(`/ecn-types/${typeId}`),
+    // Overdue alerts
+    getOverdueAlerts: () => api.get('/ecns/overdue-alerts'),
+    batchProcessOverdueAlerts: (alerts) => api.post('/ecns/batch-process-overdue-alerts', alerts),
+    // Module integration
+    syncToBom: (id) => api.post(`/ecns/${id}/sync-to-bom`),
+    syncToProject: (id) => api.post(`/ecns/${id}/sync-to-project`),
+    syncToPurchase: (id) => api.post(`/ecns/${id}/sync-to-purchase`),
+    // Logs
+    getLogs: (id) => api.get(`/ecns/${id}/logs`),
+    // Statistics
+    getStatistics: (params) => api.get('/ecns/statistics', { params }),
+    // Batch operations
+    batchSyncToBom: (ecnIds) => api.post('/ecns/batch-sync-to-bom', ecnIds),
+    batchSyncToProject: (ecnIds) => api.post('/ecns/batch-sync-to-project', ecnIds),
+    batchSyncToPurchase: (ecnIds) => api.post('/ecns/batch-sync-to-purchase', ecnIds),
+    batchCreateTasks: (ecnId, tasks) => api.post(`/ecns/${ecnId}/batch-create-tasks`, tasks),
 };
 
 // Presales APIs
@@ -741,7 +844,10 @@ export const presaleApi = {
         updateResult: (id, data) => api.put(`/presale/tenders/${id}/result`, data),
     },
     statistics: {
-        workload: (params) => api.get('/presale/statistics/workload', { params }),
+        workload: (params) => api.get('/presale/stats/workload', { params }),
+        responseTime: (params) => api.get('/presale/stats/response-time', { params }),
+        conversion: (params) => api.get('/presale/stats/conversion', { params }),
+        performance: (params) => api.get('/presale/stats/performance', { params }),
     },
 };
 
@@ -825,6 +931,7 @@ export const workloadApi = {
     dashboard: (params) => api.get('/workload/dashboard', { params }),
     heatmap: (params) => api.get('/workload/heatmap', { params }),
     availableResources: (params) => api.get('/workload/available-resources', { params }),
+    gantt: (params) => api.get('/workload/gantt', { params }),
 };
 
 
@@ -982,4 +1089,407 @@ export const projectReviewApi = {
     
     // 项目经验教训（从结项记录提取）
     getProjectLessons: (projectId) => api.get(`/projects/${projectId}/lessons-learned`),
+    
+    // 经验教训高级管理
+    searchLessonsLearned: (params) => api.get('/projects/lessons-learned', { params }),
+    getLessonsStatistics: (params) => api.get('/projects/lessons-learned/statistics', { params }),
+    getLessonCategories: () => api.get('/projects/lessons-learned/categories'),
+    updateLessonStatus: (lessonId, status) => api.put(`/projects/project-reviews/lessons/${lessonId}/status`, { new_status: status }),
+    batchUpdateLessons: (lessonIds, updateData) => api.post('/projects/project-reviews/lessons/batch-update', { lesson_ids: lessonIds, update_data: updateData }),
+    
+    // 最佳实践高级管理
+    recommendBestPractices: (data) => api.post('/projects/best-practices/recommend', data),
+    getProjectBestPracticeRecommendations: (projectId, limit) => api.get(`/projects/${projectId}/best-practices/recommend`, { params: { limit } }),
+    applyBestPractice: (practiceId, targetProjectId, notes) => api.post(`/projects/project-reviews/best-practices/${practiceId}/apply`, { target_project_id: targetProjectId, notes }),
+    getPopularBestPractices: (params) => api.get('/projects/best-practices/popular', { params }),
+};
+
+// Technical Review APIs (技术评审)
+export const technicalReviewApi = {
+    // 评审主表
+    list: (params) => api.get('/technical-reviews', { params }),
+    get: (id) => api.get(`/technical-reviews/${id}`),
+    create: (data) => api.post('/technical-reviews', data),
+    update: (id, data) => api.put(`/technical-reviews/${id}`, data),
+    delete: (id) => api.delete(`/technical-reviews/${id}`),
+    
+    // 评审参与人
+    getParticipants: (reviewId) => api.get(`/technical-reviews/${reviewId}/participants`),
+    addParticipant: (reviewId, data) => api.post(`/technical-reviews/${reviewId}/participants`, data),
+    updateParticipant: (participantId, data) => api.put(`/technical-reviews/participants/${participantId}`, data),
+    deleteParticipant: (participantId) => api.delete(`/technical-reviews/participants/${participantId}`),
+    
+    // 评审材料
+    getMaterials: (reviewId) => api.get(`/technical-reviews/${reviewId}/materials`),
+    addMaterial: (reviewId, data) => api.post(`/technical-reviews/${reviewId}/materials`, data),
+    deleteMaterial: (materialId) => api.delete(`/technical-reviews/materials/${materialId}`),
+    
+    // 检查项记录
+    getChecklistRecords: (reviewId) => api.get(`/technical-reviews/${reviewId}/checklist-records`),
+    createChecklistRecord: (reviewId, data) => api.post(`/technical-reviews/${reviewId}/checklist-records`, data),
+    updateChecklistRecord: (recordId, data) => api.put(`/technical-reviews/checklist-records/${recordId}`, data),
+    
+    // 评审问题
+    getIssues: (params) => api.get('/technical-reviews/issues', { params }),
+    createIssue: (reviewId, data) => api.post(`/technical-reviews/${reviewId}/issues`, data),
+    updateIssue: (issueId, data) => api.put(`/technical-reviews/issues/${issueId}`, data),
+};
+
+// Engineers Progress Visibility APIs (工程师跨部门进度可见性)
+export const engineersApi = {
+    // 获取项目的跨部门进度可见性视图
+    getProgressVisibility: (projectId) => api.get(`/engineers/projects/${projectId}/progress-visibility`),
+};
+
+// Technical Assessment APIs (技术评估)
+export const technicalAssessmentApi = {
+    // 申请技术评估
+    applyForLead: (leadId, data) => api.post(`/sales/leads/${leadId}/assessments/apply`, data),
+    applyForOpportunity: (oppId, data) => api.post(`/sales/opportunities/${oppId}/assessments/apply`, data),
+    
+    // 执行技术评估
+    evaluate: (assessmentId, data) => api.post(`/sales/assessments/${assessmentId}/evaluate`, data),
+    
+    // 获取评估列表
+    getLeadAssessments: (leadId) => api.get(`/sales/leads/${leadId}/assessments`),
+    getOpportunityAssessments: (oppId) => api.get(`/sales/opportunities/${oppId}/assessments`),
+    
+    // 获取评估详情
+    get: (assessmentId) => api.get(`/sales/assessments/${assessmentId}`),
+    
+    // 评分规则管理
+    getScoringRules: () => api.get('/sales/scoring-rules'),
+    createScoringRule: (data) => api.post('/sales/scoring-rules', data),
+    activateScoringRule: (ruleId) => api.put(`/sales/scoring-rules/${ruleId}/activate`),
+    
+    // 失败案例库
+    getFailureCases: (params) => api.get('/sales/failure-cases', { params }),
+    getFailureCase: (id) => api.get(`/sales/failure-cases/${id}`),
+    createFailureCase: (data) => api.post('/sales/failure-cases', data),
+    updateFailureCase: (id, data) => api.put(`/sales/failure-cases/${id}`, data),
+    findSimilarCases: (params) => api.get('/sales/failure-cases/similar', { params }),
+    
+    // 未决事项
+    getOpenItems: (params) => api.get('/sales/open-items', { params }),
+    createOpenItemForLead: (leadId, data) => api.post(`/sales/leads/${leadId}/open-items`, data),
+    createOpenItemForOpportunity: (oppId, data) => api.post(`/sales/opportunities/${oppId}/open-items`, data),
+    updateOpenItem: (itemId, data) => api.put(`/sales/open-items/${itemId}`, data),
+    closeOpenItem: (itemId) => api.post(`/sales/open-items/${itemId}/close`),
+    
+    // 需求详情管理
+    getRequirementDetail: (leadId) => api.get(`/sales/leads/${leadId}/requirement-detail`),
+    createRequirementDetail: (leadId, data) => api.post(`/sales/leads/${leadId}/requirement-detail`, data),
+    updateRequirementDetail: (leadId, data) => api.put(`/sales/leads/${leadId}/requirement-detail`, data),
+    
+    // 需求冻结管理
+    getRequirementFreezes: (sourceType, sourceId) => {
+        const path = sourceType === 'lead' 
+            ? `/sales/leads/${sourceId}/requirement-freezes`
+            : `/sales/opportunities/${sourceId}/requirement-freezes`;
+        return api.get(path);
+    },
+    createRequirementFreeze: (sourceType, sourceId, data) => {
+        const path = sourceType === 'lead'
+            ? `/sales/leads/${sourceId}/requirement-freezes`
+            : `/sales/opportunities/${sourceId}/requirement-freezes`;
+        return api.post(path, data);
+    },
+    
+    // AI澄清管理
+    getAIClarifications: (params) => api.get('/sales/ai-clarifications', { params }),
+    createAIClarificationForLead: (leadId, data) => api.post(`/sales/leads/${leadId}/ai-clarifications`, data),
+    createAIClarificationForOpportunity: (oppId, data) => api.post(`/sales/opportunities/${oppId}/ai-clarifications`, data),
+    updateAIClarification: (clarificationId, data) => api.put(`/sales/ai-clarifications/${clarificationId}`, data),
+    getAIClarification: (clarificationId) => api.get(`/sales/ai-clarifications/${clarificationId}`),
+};
+
+// ==================== 绩效管理 API ====================
+
+export const performanceApi = {
+    // ========== 员工端 API ==========
+
+    // 月度工作总结
+    createMonthlySummary: (data) => api.post('/performance/monthly-summary', data),
+    saveMonthlySummaryDraft: (period, data) => api.put('/performance/monthly-summary/draft', data, {
+        params: { period }
+    }),
+    getMonthlySummaryHistory: (params) => api.get('/performance/monthly-summary/history', { params }),
+
+    // 我的绩效
+    getMyPerformance: () => api.get('/performance/my-performance'),
+
+    // ========== 经理端 API ==========
+
+    // 待评价任务
+    getEvaluationTasks: (params) => api.get('/performance/evaluation-tasks', { params }),
+    getEvaluationDetail: (taskId) => api.get(`/performance/evaluation/${taskId}`),
+    submitEvaluation: (taskId, data) => api.post(`/performance/evaluation/${taskId}`, data),
+
+    // ========== HR 端 API ==========
+
+    // 权重配置
+    getWeightConfig: () => api.get('/performance/weight-config'),
+    updateWeightConfig: (data) => api.put('/performance/weight-config', data),
+    
+    // 融合绩效
+    getIntegratedPerformance: (userId, params) => api.get(`/performance/integrated/${userId}`, { params }),
+    calculateIntegratedPerformance: (params) => api.post('/performance/calculate-integrated', null, { params }),
+};
+
+// Bonus APIs (奖金激励)
+export const bonusApi = {
+    // 我的奖金
+    getMyBonus: () => api.get('/bonus/my'),
+    getMyBonusStatistics: (params) => api.get('/bonus/statistics', { params }),
+    
+    // 奖金计算记录
+    getCalculations: (params) => api.get('/bonus/calculations', { params }),
+    getCalculation: (id) => api.get(`/bonus/calculations/${id}`),
+    
+    // 奖金发放记录
+    getDistributions: (params) => api.get('/bonus/distributions', { params }),
+    getDistribution: (id) => api.get(`/bonus/distributions/${id}`),
+    
+    // 计算奖金（需要权限）
+    calculateSalesBonus: (data) => api.post('/bonus/calculate/sales', data),
+    calculateSalesDirectorBonus: (data) => api.post('/bonus/calculate/sales-director', data),
+    calculatePresaleBonus: (data) => api.post('/bonus/calculate/presale', data),
+    calculatePerformanceBonus: (data) => api.post('/bonus/calculate/performance', data),
+    calculateProjectBonus: (data) => api.post('/bonus/calculate/project', data),
+    calculateMilestoneBonus: (data) => api.post('/bonus/calculate/milestone', data),
+    calculateTeamBonus: (data) => api.post('/bonus/calculate/team', data),
+};
+
+// Qualification APIs (任职资格管理)
+export const qualificationApi = {
+    // 等级管理
+    getLevels: (params) => api.get('/qualifications/levels', { params }),
+    getLevel: (id) => api.get(`/qualifications/levels/${id}`),
+    createLevel: (data) => api.post('/qualifications/levels', data),
+    updateLevel: (id, data) => api.put(`/qualifications/levels/${id}`, data),
+    deleteLevel: (id) => api.delete(`/qualifications/levels/${id}`),
+    
+    // 能力模型管理
+    getModels: (params) => api.get('/qualifications/models', { params }),
+    getModel: (positionType, levelId, params) => api.get(`/qualifications/models/${positionType}/${levelId}`, { params }),
+    getModelById: (id) => api.get(`/qualifications/models/${id}`),
+    createModel: (data) => api.post('/qualifications/models', data),
+    updateModel: (id, data) => api.put(`/qualifications/models/${id}`, data),
+    
+    // 员工任职资格
+    getEmployeeQualification: (employeeId, params) => api.get(`/qualifications/employees/${employeeId}`, { params }),
+    getEmployeeQualifications: (params) => api.get('/qualifications/employees', { params }),
+    certifyEmployee: (employeeId, data) => api.post(`/qualifications/employees/${employeeId}/certify`, data),
+    promoteEmployee: (employeeId, data) => api.post(`/qualifications/employees/${employeeId}/promote`, data),
+    
+    // 评估记录
+    getAssessments: (employeeId, params) => api.get(`/qualifications/assessments/${employeeId}`, { params }),
+    createAssessment: (data) => api.post('/qualifications/assessments', data),
+    submitAssessment: (assessmentId, data) => api.post(`/qualifications/assessments/${assessmentId}/submit`, data),
+};
+
+// R&D Project APIs (研发项目管理)
+export const rdProjectApi = {
+    // 研发项目分类
+    getCategories: (params) => api.get('/rd-project-categories', { params }),
+    
+    // 研发项目管理
+    list: (params) => api.get('/rd-projects', { params }),
+    get: (id) => api.get(`/rd-projects/${id}`),
+    create: (data) => api.post('/rd-projects', data),
+    update: (id, data) => api.put(`/rd-projects/${id}`, data),
+    approve: (id, data) => api.put(`/rd-projects/${id}/approve`, data),
+    close: (id, data) => api.put(`/rd-projects/${id}/close`, data),
+    linkProject: (id, data) => api.put(`/rd-projects/${id}/link-project`, data),
+    
+    // 研发费用类型
+    getCostTypes: (params) => api.get('/rd-cost-types', { params }),
+    
+    // 研发费用管理
+    getCosts: (params) => api.get('/rd-costs', { params }),
+    createCost: (data) => api.post('/rd-costs', data),
+    updateCost: (id, data) => api.put(`/rd-costs/${id}`, data),
+    calculateLaborCost: (data) => api.post('/rd-costs/calc-labor', data),
+    
+    // 费用汇总
+    getCostSummary: (projectId) => api.get(`/rd-projects/${projectId}/cost-summary`),
+    getTimesheetSummary: (projectId, params) => api.get(`/rd-projects/${projectId}/timesheet-summary`, { params }),
+    
+    // 费用分摊规则
+    getAllocationRules: (params) => api.get('/rd-cost-allocation-rules', { params }),
+    applyAllocation: (ruleId, data) => api.post('/rd-costs/apply-allocation', data, { params: { rule_id: ruleId, ...data } }),
+    
+    // 研发项目工作日志
+    getWorklogs: (projectId, params) => api.get(`/rd-projects/${projectId}/worklogs`, { params }),
+    createWorklog: (projectId, data) => api.post(`/rd-projects/${projectId}/worklogs`, data),
+    
+    // 研发项目文档管理
+    getDocuments: (projectId, params) => api.get(`/rd-projects/${projectId}/documents`, { params }),
+    createDocument: (projectId, data) => api.post(`/rd-projects/${projectId}/documents`, data),
+    uploadDocument: (projectId, formData) => api.post(`/rd-projects/${projectId}/documents/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+    downloadDocument: (projectId, docId) => api.get(`/rd-projects/${projectId}/documents/${docId}/download`, {
+        responseType: 'blob'
+    }),
+};
+
+// R&D Cost Reports APIs (研发费用报表)
+export const rdReportApi = {
+    // 研发费用辅助账
+    getAuxiliaryLedger: (params) => api.get('/reports/rd-auxiliary-ledger', { params }),
+    
+    // 研发费用加计扣除明细
+    getDeductionDetail: (params) => api.get('/reports/rd-deduction-detail', { params }),
+    
+    // 高新企业研发费用表
+    getHighTechReport: (params) => api.get('/reports/rd-high-tech', { params }),
+    
+    // 研发投入强度报表
+    getIntensityReport: (params) => api.get('/reports/rd-intensity', { params }),
+    
+    // 研发人员统计
+    getPersonnelReport: (params) => api.get('/reports/rd-personnel', { params }),
+    
+    // 导出研发费用报表
+    exportReport: (params) => api.get('/reports/rd-export', { params, responseType: 'blob' }),
+};
+
+// Assembly Kit Analysis APIs (装配齐套分析)
+export const assemblyKitApi = {
+    // 看板数据
+    dashboard: (params) => api.get('/assembly/dashboard', { params }),
+
+    // 装配阶段
+    getStages: (params) => api.get('/assembly/stages', { params }),
+    updateStage: (stageCode, data) => api.put(`/assembly/stages/${stageCode}`, data),
+
+    // 物料分类映射
+    getCategoryMappings: (params) => api.get('/assembly/category-mappings', { params }),
+    createCategoryMapping: (data) => api.post('/assembly/category-mappings', data),
+    updateCategoryMapping: (id, data) => api.put(`/assembly/category-mappings/${id}`, data),
+    deleteCategoryMapping: (id) => api.delete(`/assembly/category-mappings/${id}`),
+
+    // BOM装配属性
+    getBomAssemblyAttrs: (bomId, params) => api.get(`/assembly/bom/${bomId}/assembly-attrs`, { params }),
+    batchSetAssemblyAttrs: (bomId, data) => api.post(`/assembly/bom/${bomId}/assembly-attrs/batch`, data),
+    updateAssemblyAttr: (attrId, data) => api.put(`/assembly/bom/assembly-attrs/${attrId}`, data),
+    autoAssignAttrs: (bomId, data) => api.post(`/assembly/bom/${bomId}/assembly-attrs/auto`, data),
+    applyTemplate: (bomId, data) => api.post(`/assembly/bom/${bomId}/assembly-attrs/template`, data),
+
+    // 齐套分析
+    executeAnalysis: (data) => api.post('/assembly/analysis', data),
+    getAnalysisDetail: (readinessId) => api.get(`/assembly/analysis/${readinessId}`),
+    getProjectReadiness: (projectId, params) => api.get(`/assembly/projects/${projectId}/assembly-readiness`, { params }),
+
+    // 缺料预警
+    getShortageAlerts: (params) => api.get('/assembly/shortage-alerts', { params }),
+
+    // 预警规则
+    getAlertRules: (params) => api.get('/assembly/alert-rules', { params }),
+    createAlertRule: (data) => api.post('/assembly/alert-rules', data),
+    updateAlertRule: (id, data) => api.put(`/assembly/alert-rules/${id}`, data),
+
+    // 排产建议
+    getSuggestions: (params) => api.get('/assembly/suggestions', { params }),
+    acceptSuggestion: (id, data) => api.post(`/assembly/suggestions/${id}/accept`, data),
+    rejectSuggestion: (id, data) => api.post(`/assembly/suggestions/${id}/reject`, data),
+
+    // 装配模板
+    getTemplates: (params) => api.get('/assembly/templates', { params }),
+    createTemplate: (data) => api.post('/assembly/templates', data),
+    updateTemplate: (id, data) => api.put(`/assembly/templates/${id}`, data),
+    deleteTemplate: (id) => api.delete(`/assembly/templates/${id}`),
+};
+
+// Scheduler APIs
+export const schedulerApi = {
+    status: () => api.get('/scheduler/status'),
+    jobs: () => api.get('/scheduler/jobs'),
+    metrics: () => api.get('/scheduler/metrics'),
+    metricsPrometheus: () => api.get('/scheduler/metrics/prometheus', { responseType: 'text' }),
+    triggerJob: (jobId) => api.post(`/scheduler/jobs/${jobId}/trigger`),
+    listServices: () => api.get('/scheduler/services/list'),
+};
+
+// Staff Matching APIs - AI驱动人员智能匹配
+export const staffMatchingApi = {
+    // 标签管理
+    getTags: (params) => api.get('/staff-matching/tags', { params }),
+    getTagTree: (tagType) => api.get('/staff-matching/tags/tree', { params: { tag_type: tagType } }),
+    createTag: (data) => api.post('/staff-matching/tags', data),
+    updateTag: (id, data) => api.put(`/staff-matching/tags/${id}`, data),
+    deleteTag: (id) => api.delete(`/staff-matching/tags/${id}`),
+
+    // 员工标签评估
+    getEvaluations: (params) => api.get('/staff-matching/evaluations', { params }),
+    createEvaluation: (data) => api.post('/staff-matching/evaluations', data),
+    batchCreateEvaluations: (data) => api.post('/staff-matching/evaluations/batch', data),
+    updateEvaluation: (id, data) => api.put(`/staff-matching/evaluations/${id}`, data),
+    deleteEvaluation: (id) => api.delete(`/staff-matching/evaluations/${id}`),
+
+    // 员工档案
+    getProfiles: (params) => api.get('/staff-matching/profiles', { params }),
+    getProfile: (employeeId) => api.get(`/staff-matching/profiles/${employeeId}`),
+    refreshProfile: (employeeId) => api.post(`/staff-matching/profiles/${employeeId}/refresh`),
+
+    // 项目绩效
+    getPerformance: (params) => api.get('/staff-matching/performance', { params }),
+    createPerformance: (data) => api.post('/staff-matching/performance', data),
+    getEmployeePerformanceHistory: (employeeId) => api.get(`/staff-matching/performance/employee/${employeeId}`),
+
+    // 人员需求
+    getStaffingNeeds: (params) => api.get('/staff-matching/staffing-needs', { params }),
+    getStaffingNeed: (id) => api.get(`/staff-matching/staffing-needs/${id}`),
+    createStaffingNeed: (data) => api.post('/staff-matching/staffing-needs', data),
+    updateStaffingNeed: (id, data) => api.put(`/staff-matching/staffing-needs/${id}`, data),
+    cancelStaffingNeed: (id) => api.delete(`/staff-matching/staffing-needs/${id}`),
+
+    // AI匹配
+    executeMatching: (staffingNeedId, params) => api.post(`/staff-matching/matching/execute/${staffingNeedId}`, null, { params }),
+    getMatchingResults: (staffingNeedId, requestId) => api.get(`/staff-matching/matching/results/${staffingNeedId}`, { params: { request_id: requestId } }),
+    acceptCandidate: (data) => api.post('/staff-matching/matching/accept', data),
+    rejectCandidate: (data) => api.post('/staff-matching/matching/reject', data),
+    getMatchingHistory: (params) => api.get('/staff-matching/matching/history', { params }),
+
+    // 仪表板
+    getDashboard: () => api.get('/staff-matching/dashboard'),
+};
+
+// Project Role APIs - 项目角色类型与配置
+export const projectRoleApi = {
+    // 角色类型管理
+    types: {
+        list: (params) => api.get('/project-roles/types', { params }),
+        get: (id) => api.get(`/project-roles/types/${id}`),
+        create: (data) => api.post('/project-roles/types', data),
+        update: (id, data) => api.put(`/project-roles/types/${id}`, data),
+        delete: (id) => api.delete(`/project-roles/types/${id}`),
+    },
+
+    // 项目角色配置
+    configs: {
+        get: (projectId) => api.get(`/project-roles/projects/${projectId}/configs`),
+        batchUpdate: (projectId, data) => api.put(`/project-roles/projects/${projectId}/configs`, data),
+        init: (projectId) => api.post(`/project-roles/projects/${projectId}/configs/init`),
+    },
+
+    // 项目负责人管理
+    leads: {
+        list: (projectId) => api.get(`/project-roles/projects/${projectId}/leads`),
+        get: (projectId, memberId) => api.get(`/project-roles/projects/${projectId}/leads/${memberId}`),
+        create: (projectId, data) => api.post(`/project-roles/projects/${projectId}/leads`, data),
+        update: (projectId, memberId, data) => api.put(`/project-roles/projects/${projectId}/leads/${memberId}`, data),
+        delete: (projectId, memberId) => api.delete(`/project-roles/projects/${projectId}/leads/${memberId}`),
+    },
+
+    // 团队成员管理
+    team: {
+        list: (projectId, leadMemberId) => api.get(`/project-roles/projects/${projectId}/leads/${leadMemberId}/team`),
+        add: (projectId, leadMemberId, data) => api.post(`/project-roles/projects/${projectId}/leads/${leadMemberId}/team`, data),
+        remove: (projectId, leadMemberId, memberId) => api.delete(`/project-roles/projects/${projectId}/leads/${leadMemberId}/team/${memberId}`),
+    },
+
+    // 项目角色概览
+    getOverview: (projectId) => api.get(`/project-roles/projects/${projectId}/overview`),
 };

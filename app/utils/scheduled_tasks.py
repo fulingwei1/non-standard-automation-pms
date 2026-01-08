@@ -4,6 +4,7 @@
 """
 
 from typing import List, Optional
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from datetime import datetime, date
 
@@ -18,6 +19,17 @@ from app.models.enums import AlertLevelEnum, AlertStatusEnum, AlertRuleTypeEnum
 from app.utils.spec_match_service import SpecMatchService
 from decimal import Decimal
 from datetime import timedelta
+
+from app.services.notification_dispatcher import (
+    NotificationDispatcher,
+    resolve_channels,
+    resolve_recipients,
+    resolve_channel_target,
+    channel_allowed,
+    is_quiet_hours,
+    next_quiet_resume,
+)
+from app.services.notification_queue import enqueue_notification
 
 
 def sales_reminder_scan():
@@ -2462,7 +2474,7 @@ def check_workload_overload_alerts():
             # 获取或创建预警规则
             overload_rule = db.query(AlertRule).filter(
                 AlertRule.rule_code == 'WORKLOAD_OVERLOAD',
-                AlertRule.is_active == True
+                AlertRule.is_enabled == True
             ).first()
             
             if not overload_rule:
@@ -2470,8 +2482,14 @@ def check_workload_overload_alerts():
                     rule_code='WORKLOAD_OVERLOAD',
                     rule_name='资源负荷超限预警',
                     rule_type=AlertRuleTypeEnum.RESOURCE.value,
-                    is_active=True,
-                    alert_level=AlertLevelEnum.WARNING.value
+                    target_type='USER',
+                    condition_type='THRESHOLD',
+                    condition_operator='GT',
+                    threshold_value='110',
+                    alert_level=AlertLevelEnum.WARNING.value,
+                    is_enabled=True,
+                    is_system=True,
+                    description='当用户未来30天负荷超过110%时触发预警'
                 )
                 db.add(overload_rule)
                 db.flush()
@@ -2567,18 +2585,781 @@ def check_workload_overload_alerts():
         return {'error': str(e)}
 
 
-# 注意：实际使用时需要配置任务调度器（如APScheduler、Celery等）
-# 示例配置：
-# from apscheduler.schedulers.background import BackgroundScheduler
-# scheduler = BackgroundScheduler()
-# 
-# # 每小时计算健康度
-# scheduler.add_job(calculate_project_health, 'cron', minute=0)
-# 
-# # 每天生成健康度快照
-# scheduler.add_job(daily_health_snapshot, 'cron', hour=2, minute=0)
-# 
-# # 每天规格匹配检查
-# scheduler.add_job(daily_spec_match_check, 'cron', hour=9, minute=0)
-# 
-# scheduler.start()
+def calculate_monthly_labor_cost_task():
+    """
+    月度工时成本计算任务
+    每月1号凌晨2点执行，计算上个月所有项目的人工成本
+    """
+    from app.services.labor_cost_service import LaborCostService
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    with get_db_session() as db:
+        try:
+            # 计算上个月的成本
+            today = date.today()
+            if today.month == 1:
+                # 如果是1月，计算去年12月
+                year = today.year - 1
+                month = 12
+            else:
+                year = today.year
+                month = today.month - 1
+            
+            result = LaborCostService.calculate_monthly_labor_cost(db, year, month)
+            
+            logger.info(f"[{datetime.now()}] 月度工时成本计算完成（{year}年{month}月）: {result.get('message', '')}")
+            print(f"[{datetime.now()}] 月度工时成本计算完成（{year}年{month}月）: {result.get('message', '')}")
+            
+            return result
+        except Exception as e:
+            logger.error(f"[{datetime.now()}] 月度工时成本计算失败: {str(e)}")
+            print(f"[{datetime.now()}] 月度工时成本计算失败: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return {'error': str(e)}
+
+
+# ==================== 收款提醒服务 ====================
+
+def check_payment_reminder():
+    """
+    S.8: 收款提醒服务
+    每天上午9:30执行，提醒即将到期的收款计划
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        with get_db_session() as db:
+            from app.services.sales_reminder_service import notify_payment_plan_upcoming
+            
+            # 提醒7天内到期的收款计划
+            count = notify_payment_plan_upcoming(db, days_before=7)
+            
+            logger.info(f"[{datetime.now()}] 收款提醒服务完成: 发送 {count} 条提醒")
+            print(f"[{datetime.now()}] 收款提醒服务完成: 发送 {count} 条提醒")
+            
+            return {
+                'reminder_count': count,
+                'timestamp': datetime.now().isoformat()
+            }
+    except Exception as e:
+        logger.error(f"[{datetime.now()}] 收款提醒服务失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {'error': str(e)}
+
+
+# ==================== 逾期应收预警服务 ====================
+
+def check_overdue_receivable_alerts():
+    """
+    S.9: 逾期应收预警服务
+    每天上午10:30执行，检查逾期应收款项并生成预警
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        with get_db_session() as db:
+            from app.models.sales import Invoice, Contract
+            from decimal import Decimal
+            
+            today = date.today()
+            
+            # 获取或创建预警规则
+            overdue_rule = db.query(AlertRule).filter(
+                AlertRule.rule_code == 'OVERDUE_RECEIVABLE',
+                AlertRule.is_enabled == True
+            ).first()
+            
+            if not overdue_rule:
+                overdue_rule = AlertRule(
+                    rule_code='OVERDUE_RECEIVABLE',
+                    rule_name='逾期应收预警',
+                    rule_type=AlertRuleTypeEnum.FINANCIAL.value,
+                    target_type='INVOICE',
+                    condition_type='THRESHOLD',
+                    condition_operator='GT',
+                    threshold_value='0',
+                    alert_level=AlertLevelEnum.WARNING.value,
+                    is_enabled=True,
+                    is_system=True,
+                    description='当发票已逾期且未完全收款时触发预警'
+                )
+                db.add(overdue_rule)
+                db.flush()
+            
+            # 查询逾期发票
+            overdue_invoices = db.query(Invoice).join(Contract).filter(
+                Invoice.status == "ISSUED",
+                Invoice.payment_status.in_(["PENDING", "PARTIAL"]),
+                Invoice.due_date.isnot(None),
+                Invoice.due_date < today
+            ).all()
+            
+            alert_count = 0
+            
+            for invoice in overdue_invoices:
+                # 计算未收金额
+                total_amount = invoice.total_amount or invoice.amount or Decimal("0")
+                paid_amount = invoice.paid_amount or Decimal("0")
+                unpaid_amount = total_amount - paid_amount
+                
+                if unpaid_amount <= 0:
+                    continue
+                
+                overdue_days = (today - invoice.due_date).days
+                
+                # 检查是否已有待处理预警
+                existing_alert = db.query(AlertRecord).filter(
+                    AlertRecord.target_type == 'INVOICE',
+                    AlertRecord.target_id == invoice.id,
+                    AlertRecord.rule_id == overdue_rule.id,
+                    AlertRecord.status == 'PENDING'
+                ).first()
+                
+                if existing_alert:
+                    continue
+                
+                # 根据逾期天数确定预警级别
+                if overdue_days >= 90:
+                    alert_level = AlertLevelEnum.URGENT.value
+                elif overdue_days >= 60:
+                    alert_level = AlertLevelEnum.CRITICAL.value
+                elif overdue_days >= 30:
+                    alert_level = AlertLevelEnum.WARNING.value
+                else:
+                    alert_level = AlertLevelEnum.INFO.value
+                
+                # 生成预警编号
+                alert_no = f'AR{today.strftime("%Y%m%d")}{str(alert_count + 1).zfill(4)}'
+                
+                contract = invoice.contract
+                customer_name = contract.customer.customer_name if contract and contract.customer else "未知客户"
+                
+                alert = AlertRecord(
+                    alert_no=alert_no,
+                    rule_id=overdue_rule.id,
+                    target_type='INVOICE',
+                    target_id=invoice.id,
+                    target_no=invoice.invoice_code,
+                    target_name=f"发票 {invoice.invoice_code}",
+                    project_id=contract.project_id if contract else None,
+                    alert_level=alert_level,
+                    alert_title=f'逾期应收预警：{invoice.invoice_code}',
+                    alert_content=f'发票 {invoice.invoice_code}（客户：{customer_name}）已逾期 {overdue_days} 天，未收金额：{float(unpaid_amount):,.2f} 元，请及时跟进。',
+                    status=AlertStatusEnum.PENDING.value,
+                    triggered_at=datetime.now(),
+                    trigger_value=str(overdue_days)
+                )
+                db.add(alert)
+                alert_count += 1
+            
+            db.commit()
+            
+            logger.info(f"[{datetime.now()}] 逾期应收预警检查完成: 检查 {len(overdue_invoices)} 张发票, 生成 {alert_count} 个预警")
+            print(f"[{datetime.now()}] 逾期应收预警检查完成: 检查 {len(overdue_invoices)} 张发票, 生成 {alert_count} 个预警")
+            
+            return {
+                'checked_count': len(overdue_invoices),
+                'alert_count': alert_count,
+                'timestamp': datetime.now().isoformat()
+            }
+    except Exception as e:
+        logger.error(f"[{datetime.now()}] 逾期应收预警检查失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {'error': str(e)}
+
+
+# ==================== 预警升级服务 ====================
+
+def check_alert_escalation():
+    """
+    S.10: 预警升级服务
+    每小时执行一次，检查超时未处理的预警并自动升级
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        with get_db_session() as db:
+            now = datetime.now()
+            
+            # 查询待处理且超过响应时限的预警
+            # INFO: 24小时未处理 → WARNING
+            # WARNING: 8小时未处理 → CRITICAL
+            # CRITICAL: 4小时未处理 → URGENT
+            # URGENT: 2小时未处理 → 升级通知
+            
+            escalated_count = 0
+            
+            # 检查INFO级别预警（24小时未处理）
+            info_alerts = db.query(AlertRecord).filter(
+                AlertRecord.status == 'PENDING',
+                AlertRecord.alert_level == AlertLevelEnum.INFO.value,
+                AlertRecord.triggered_at <= now - timedelta(hours=24)
+            ).all()
+            
+            for alert in info_alerts:
+                alert.alert_level = AlertLevelEnum.WARNING.value
+                escalated_count += 1
+            
+            # 检查WARNING级别预警（8小时未处理）
+            warning_alerts = db.query(AlertRecord).filter(
+                AlertRecord.status == 'PENDING',
+                AlertRecord.alert_level == AlertLevelEnum.WARNING.value,
+                AlertRecord.triggered_at <= now - timedelta(hours=8)
+            ).all()
+            
+            for alert in warning_alerts:
+                alert.alert_level = AlertLevelEnum.CRITICAL.value
+                escalated_count += 1
+            
+            # 检查CRITICAL级别预警（4小时未处理）
+            critical_alerts = db.query(AlertRecord).filter(
+                AlertRecord.status == 'PENDING',
+                AlertRecord.alert_level == AlertLevelEnum.CRITICAL.value,
+                AlertRecord.triggered_at <= now - timedelta(hours=4)
+            ).all()
+            
+            for alert in critical_alerts:
+                alert.alert_level = AlertLevelEnum.URGENT.value
+                escalated_count += 1
+            
+            # 检查URGENT级别预警（2小时未处理）- 发送升级通知
+            urgent_alerts = db.query(AlertRecord).filter(
+                AlertRecord.status == 'PENDING',
+                AlertRecord.alert_level == AlertLevelEnum.URGENT.value,
+                AlertRecord.triggered_at <= now - timedelta(hours=2)
+            ).all()
+            
+            # TODO: 发送升级通知（企微/邮件）
+            # 这里暂时只记录日志
+            for alert in urgent_alerts:
+                logger.warning(f"紧急预警超时未处理: {alert.alert_no} - {alert.alert_title}")
+                escalated_count += 1
+            
+            db.commit()
+            
+            if escalated_count > 0:
+                logger.info(f"[{datetime.now()}] 预警升级服务完成: 升级 {escalated_count} 个预警")
+                print(f"[{datetime.now()}] 预警升级服务完成: 升级 {escalated_count} 个预警")
+            
+            return {
+                'escalated_count': escalated_count,
+                'timestamp': datetime.now().isoformat()
+            }
+    except Exception as e:
+        logger.error(f"[{datetime.now()}] 预警升级服务失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {'error': str(e)}
+
+
+# ==================== 商机阶段超时提醒 ====================
+
+def check_opportunity_stage_timeout():
+    """
+    S.13: 商机阶段超时提醒
+    每天下午3:30执行，检查商机在某个阶段停留时间过长
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        with get_db_session() as db:
+            from app.models.sales import Opportunity
+            from app.models.notification import Notification
+            
+            today = date.today()
+            
+            # 查询活跃的商机
+            opportunities = db.query(Opportunity).filter(
+                Opportunity.status.in_(["ACTIVE", "NEGOTIATING", "PROPOSAL"])
+            ).all()
+            
+            reminder_count = 0
+            
+            # 各阶段的标准停留时间（天）
+            stage_timeout_days = {
+                "QUALIFICATION": 7,      # 资格确认：7天
+                "NEEDS_ANALYSIS": 14,   # 需求分析：14天
+                "PROPOSAL": 10,         # 方案设计：10天
+                "NEGOTIATION": 14,      # 商务谈判：14天
+                "CLOSING": 7            # 成交阶段：7天
+            }
+            
+            for opp in opportunities:
+                if not opp.stage or not opp.updated_at:
+                    continue
+                
+                # 计算在当前阶段停留的天数
+                days_in_stage = (today - opp.updated_at.date()).days
+                timeout_days = stage_timeout_days.get(opp.stage, 14)
+                
+                # 如果超过标准时间，发送提醒
+                if days_in_stage > timeout_days:
+                    # 检查今天是否已发送过提醒
+                    existing = db.query(Notification).filter(
+                        Notification.source_type == "opportunity",
+                        Notification.source_id == opp.id,
+                        Notification.notification_type == "OPPORTUNITY_STAGE_TIMEOUT",
+                        Notification.created_at >= datetime.combine(today, datetime.min.time())
+                    ).first()
+                    
+                    if not existing:
+                        from app.services.sales_reminder_service import create_notification
+                        
+                        create_notification(
+                            db=db,
+                            user_id=opp.owner_id,
+                            notification_type="OPPORTUNITY_STAGE_TIMEOUT",
+                            title=f"商机阶段停留超时：{opp.opportunity_name}",
+                            content=f"商机 {opp.opportunity_name} 在 {opp.stage} 阶段已停留 {days_in_stage} 天，超过标准时间 {timeout_days} 天，请及时推进。",
+                            source_type="opportunity",
+                            source_id=opp.id,
+                            link_url=f"/sales/opportunities/{opp.id}",
+                            priority="HIGH" if days_in_stage > timeout_days * 1.5 else "NORMAL",
+                            extra_data={
+                                "opportunity_name": opp.opportunity_name,
+                                "stage": opp.stage,
+                                "days_in_stage": days_in_stage,
+                                "timeout_days": timeout_days
+                            }
+                        )
+                        reminder_count += 1
+            
+            db.commit()
+            
+            logger.info(f"[{datetime.now()}] 商机阶段超时提醒完成: 检查 {len(opportunities)} 个商机, 发送 {reminder_count} 条提醒")
+            print(f"[{datetime.now()}] 商机阶段超时提醒完成: 检查 {len(opportunities)} 个商机, 发送 {reminder_count} 条提醒")
+            
+            return {
+                'checked_count': len(opportunities),
+                'reminder_count': reminder_count,
+                'timestamp': datetime.now().isoformat()
+            }
+    except Exception as e:
+        logger.error(f"[{datetime.now()}] 商机阶段超时提醒失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {'error': str(e)}
+
+
+# ==================== 售前工单超时提醒 ====================
+
+def check_presale_workorder_timeout():
+    """
+    S.22: 售前工单超时提醒
+    每天下午4:00执行，检查售前工单处理超时
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        with get_db_session() as db:
+            from app.models.presale import PresaleSupportTicket
+            from app.models.notification import Notification
+            
+            today = date.today()
+            
+            # 查询进行中的售前工单
+            tickets = db.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.status.in_(["PENDING", "ACCEPTED", "PROCESSING"])
+            ).all()
+            
+            reminder_count = 0
+            
+            for ticket in tickets:
+                if not ticket.created_at:
+                    continue
+                
+                # 计算工单创建天数
+                days_since_created = (today - ticket.created_at.date()).days
+                
+                # 根据工单类型确定超时阈值（天）
+                timeout_days = {
+                    "CONSULT": 3,          # 技术咨询：3天
+                    "QUOTATION": 5,        # 报价支持：5天
+                    "SOLUTION": 7,         # 方案设计：7天
+                    "TENDER": 10,          # 投标支持：10天
+                    "OTHER": 5             # 其他：5天
+                }
+                
+                ticket_type = ticket.ticket_type or "OTHER"
+                threshold = timeout_days.get(ticket_type, 5)
+                
+                # 如果超过阈值，发送提醒
+                if days_since_created > threshold:
+                    # 检查今天是否已发送过提醒
+                    existing = db.query(Notification).filter(
+                        Notification.source_type == "presale_ticket",
+                        Notification.source_id == ticket.id,
+                        Notification.notification_type == "PRESALE_TICKET_TIMEOUT",
+                        Notification.created_at >= datetime.combine(today, datetime.min.time())
+                    ).first()
+                    
+                    if not existing:
+                        from app.services.sales_reminder_service import create_notification
+                        
+                        # 获取负责人
+                        assignee_id = ticket.assignee_id or ticket.applicant_id
+                        if not assignee_id:
+                            continue
+                        
+                        create_notification(
+                            db=db,
+                            user_id=assignee_id,
+                            notification_type="PRESALE_TICKET_TIMEOUT",
+                            title=f"售前工单处理超时：{ticket.ticket_no}",
+                            content=f"售前工单 {ticket.ticket_no}（{ticket.title}）已创建 {days_since_created} 天，超过标准处理时间 {threshold} 天，请及时处理。",
+                            source_type="presale_ticket",
+                            source_id=ticket.id,
+                            link_url=f"/presale/tickets/{ticket.id}",
+                            priority="HIGH" if days_since_created > threshold * 1.5 else "NORMAL",
+                            extra_data={
+                                "ticket_no": ticket.ticket_no,
+                                "title": ticket.title,
+                                "ticket_type": ticket_type,
+                                "days_since_created": days_since_created,
+                                "timeout_days": threshold
+                            }
+                        )
+                        reminder_count += 1
+            
+            db.commit()
+            
+            logger.info(f"[{datetime.now()}] 售前工单超时提醒完成: 检查 {len(tickets)} 个工单, 发送 {reminder_count} 条提醒")
+            print(f"[{datetime.now()}] 售前工单超时提醒完成: 检查 {len(tickets)} 个工单, 发送 {reminder_count} 条提醒")
+            
+            return {
+                'checked_count': len(tickets),
+                'reminder_count': reminder_count,
+                'timestamp': datetime.now().isoformat()
+            }
+    except Exception as e:
+        logger.error(f"[{datetime.now()}] 售前工单超时提醒失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {'error': str(e)}
+
+
+# ==================== 问题超时升级服务 ====================
+
+def check_issue_timeout_escalation():
+    """
+    S.26: 问题超时升级服务
+    每天凌晨1:30执行，检查问题处理超时并升级
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        with get_db_session() as db:
+            from app.models.issue import Issue
+            
+            today = date.today()
+            escalated_count = 0
+            
+            # 查询进行中的问题
+            issues = db.query(Issue).filter(
+                Issue.status.in_(["OPEN", "IN_PROGRESS", "REOPENED"])
+            ).all()
+            
+            for issue in issues:
+                if not issue.created_at:
+                    continue
+                
+                # 计算问题创建天数
+                days_since_created = (today - issue.created_at.date()).days
+                
+                # 根据问题级别确定超时阈值（天）
+                timeout_days = {
+                    "LOW": 14,      # 低：14天
+                    "MEDIUM": 7,    # 中：7天
+                    "HIGH": 3,      # 高：3天
+                    "CRITICAL": 1   # 严重：1天
+                }
+                
+                issue_level = issue.priority or "MEDIUM"
+                threshold = timeout_days.get(issue_level, 7)
+                
+                # 如果超过阈值，升级问题级别
+                if days_since_created > threshold:
+                    # 升级逻辑：LOW -> MEDIUM -> HIGH -> CRITICAL
+                    level_upgrade = {
+                        "LOW": "MEDIUM",
+                        "MEDIUM": "HIGH",
+                        "HIGH": "CRITICAL",
+                        "CRITICAL": "CRITICAL"  # 已经是最高级别
+                    }
+                    
+                    new_level = level_upgrade.get(issue_level, issue_level)
+                    if new_level != issue_level:
+                        issue.priority = new_level
+                        escalated_count += 1
+                        
+                        # 记录升级日志
+                        logger.warning(f"问题 {issue.issue_no} 超时升级: {issue_level} -> {new_level} (已创建 {days_since_created} 天)")
+            
+            db.commit()
+            
+            if escalated_count > 0:
+                logger.info(f"[{datetime.now()}] 问题超时升级服务完成: 升级 {escalated_count} 个问题")
+                print(f"[{datetime.now()}] 问题超时升级服务完成: 升级 {escalated_count} 个问题")
+            
+            return {
+                'checked_count': len(issues),
+                'escalated_count': escalated_count,
+                'timestamp': datetime.now().isoformat()
+            }
+    except Exception as e:
+        logger.error(f"[{datetime.now()}] 问题超时升级服务失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {'error': str(e)}
+
+
+# ==================== 设备保养提醒服务 ====================
+
+def check_equipment_maintenance_reminder():
+    """
+    S.16: 设备保养提醒服务
+    每天上午8:30执行，检查设备保养计划并发送提醒
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        with get_db_session() as db:
+            from app.models.production import Equipment
+            from app.models.notification import Notification
+            from app.models.user import User
+            
+            today = date.today()
+            
+            # 查询有保养计划的设备（下次保养日期在未来7天内）
+            target_date = today + timedelta(days=7)
+            
+            equipment_list = db.query(Equipment).filter(
+                Equipment.is_active == True,
+                Equipment.next_maintenance_date.isnot(None),
+                Equipment.next_maintenance_date >= today,
+                Equipment.next_maintenance_date <= target_date
+            ).all()
+            
+            reminder_count = 0
+            
+            for equipment in equipment_list:
+                if not equipment.next_maintenance_date:
+                    continue
+                
+                # 计算距离保养日期的天数
+                days_until_maintenance = (equipment.next_maintenance_date - today).days
+                
+                # 检查今天是否已发送过提醒
+                existing = db.query(Notification).filter(
+                    Notification.source_type == "equipment",
+                    Notification.source_id == equipment.id,
+                    Notification.notification_type == "EQUIPMENT_MAINTENANCE_REMINDER",
+                    Notification.created_at >= datetime.combine(today, datetime.min.time())
+                ).first()
+                
+                if existing:
+                    continue
+                
+                # 根据距离天数确定优先级
+                if days_until_maintenance <= 1:
+                    priority = "URGENT"
+                elif days_until_maintenance <= 3:
+                    priority = "HIGH"
+                else:
+                    priority = "NORMAL"
+                
+                # 获取设备所属车间的负责人（这里简化处理，可以后续优化）
+                # 暂时发送给系统管理员或设备管理员
+                # TODO: 根据实际业务逻辑确定接收人
+                recipients = db.query(User).filter(
+                    User.is_active == True,
+                    # 可以添加角色筛选，例如：设备管理员
+                ).limit(5).all()
+                
+                if not recipients:
+                    # 如果没有找到接收人，跳过
+                    continue
+                
+                from app.services.sales_reminder_service import create_notification
+                
+                for recipient in recipients:
+                    create_notification(
+                        db=db,
+                        user_id=recipient.id,
+                        notification_type="EQUIPMENT_MAINTENANCE_REMINDER",
+                        title=f"设备保养提醒：{equipment.equipment_name}",
+                        content=f"设备 {equipment.equipment_code}（{equipment.equipment_name}）将在 {days_until_maintenance} 天后进行保养，保养日期：{equipment.next_maintenance_date}，请提前安排。",
+                        source_type="equipment",
+                        source_id=equipment.id,
+                        link_url=f"/production/equipment/{equipment.id}",
+                        priority=priority,
+                        extra_data={
+                            "equipment_code": equipment.equipment_code,
+                            "equipment_name": equipment.equipment_name,
+                            "next_maintenance_date": equipment.next_maintenance_date.isoformat() if equipment.next_maintenance_date else None,
+                            "days_until_maintenance": days_until_maintenance,
+                            "last_maintenance_date": equipment.last_maintenance_date.isoformat() if equipment.last_maintenance_date else None
+                        }
+                    )
+                    reminder_count += 1
+            
+            db.commit()
+            
+            logger.info(f"[{datetime.now()}] 设备保养提醒服务完成: 检查 {len(equipment_list)} 台设备, 发送 {reminder_count} 条提醒")
+            print(f"[{datetime.now()}] 设备保养提醒服务完成: 检查 {len(equipment_list)} 台设备, 发送 {reminder_count} 条提醒")
+            
+            return {
+                'checked_count': len(equipment_list),
+                'reminder_count': reminder_count,
+                'timestamp': datetime.now().isoformat()
+            }
+    except Exception as e:
+        logger.error(f"[{datetime.now()}] 设备保养提醒服务失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {'error': str(e)}
+
+
+# ==================== 消息推送服务 ====================
+
+def send_alert_notifications():
+    """
+    S.12: 消息推送服务
+    - 为新预警生成通知队列
+    - 根据通知渠道发送消息（站内信、企业微信、邮件）
+    - 失败任务支持重试策略
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        with get_db_session() as db:
+            dispatcher = NotificationDispatcher(db)
+            from app.models.alert import AlertRecord, AlertNotification
+            from app.models.user import User
+            from app.models.notification import NotificationSettings
+            
+            # 1) 生成通知队列
+            pending_alerts = db.query(AlertRecord).filter(
+                AlertRecord.status == 'PENDING'
+            ).order_by(AlertRecord.triggered_at.desc().nulls_last()).limit(50).all()
+            
+            queue_created = 0
+            current_time = datetime.now()
+            for alert in pending_alerts:
+                recipients = resolve_recipients(db, alert)
+                if not recipients:
+                    continue
+                channels = resolve_channels(alert)
+                for user_id, recipient in recipients.items():
+                    user = recipient.get("user")
+                    settings = recipient.get("settings")
+                    if not user:
+                        continue
+                    for channel in channels:
+                        if not channel_allowed(channel, settings):
+                            continue
+                        target = resolve_channel_target(channel, user)
+                        if not target:
+                            continue
+                        exists = db.query(AlertNotification).filter(
+                            AlertNotification.alert_id == alert.id,
+                            AlertNotification.notify_channel == channel,
+                            AlertNotification.notify_target == target
+                        ).first()
+                        if exists:
+                            continue
+                        new_notification = AlertNotification(
+                            alert_id=alert.id,
+                            notify_channel=channel,
+                            notify_target=target,
+                            notify_user_id=user.id,
+                            notify_title=alert.alert_title,
+                            notify_content=alert.alert_content,
+                            status='PENDING'
+                        )
+                        if is_quiet_hours(settings, current_time):
+                            new_notification.next_retry_at = next_quiet_resume(settings, current_time)
+                            new_notification.error_message = "Delayed due to quiet hours"
+                        db.add(new_notification)
+                        queue_created += 1
+            
+            db.flush()
+            
+            # 2) 发送通知（包含失败重试）
+            now = datetime.now()
+            pending_notifications = db.query(AlertNotification).filter(
+                AlertNotification.status.in_(["PENDING", "FAILED"]),
+                or_(AlertNotification.next_retry_at.is_(None), AlertNotification.next_retry_at <= now)
+            ).order_by(AlertNotification.created_at.asc()).limit(100).all()
+            
+            channel_stats = {}
+            sent_count = 0
+            queued_notifications = 0
+            for notification in pending_notifications:
+                alert = notification.alert
+                user = None
+                if notification.notify_user_id:
+                    user = db.query(User).filter(User.id == notification.notify_user_id).first()
+                settings_obj = None
+                if notification.notify_user_id:
+                    settings_obj = db.query(NotificationSettings).filter(
+                        NotificationSettings.user_id == notification.notify_user_id
+                    ).first()
+                if is_quiet_hours(settings_obj, now):
+                    notification.status = 'PENDING'
+                    notification.next_retry_at = next_quiet_resume(settings_obj, now)
+                    notification.error_message = "Delayed due to quiet hours"
+                    continue
+                enqueued = enqueue_notification({
+                    "notification_id": notification.id,
+                    "alert_id": notification.alert_id,
+                    "notify_channel": notification.notify_channel,
+                })
+                if enqueued:
+                    notification.status = 'QUEUED'
+                    notification.next_retry_at = None
+                    queued_notifications += 1
+                else:
+                    # fallback: try immediate dispatch synchronously
+                    success = dispatcher.dispatch(notification, alert, user)
+                    stats = channel_stats.setdefault(notification.notify_channel.upper(), {"success": 0, "failed": 0})
+                    if success:
+                        stats["success"] += 1
+                        sent_count += 1
+                    else:
+                        stats["failed"] += 1
+            
+            db.commit()
+            
+            logger.info(
+                f"[{datetime.now()}] 消息推送服务完成: 准备 {queue_created} 条队列, "
+                f"处理 {len(pending_notifications)} 条通知, 入队 {queued_notifications} 条, 直接发送 {sent_count} 条"
+            )
+            
+            return {
+                'queued_alerts': len(pending_alerts),
+                'queue_created': queue_created,
+                'processed_notifications': len(pending_notifications),
+                'queued_notifications': queued_notifications,
+                'sent_count': sent_count,
+                'channel_stats': channel_stats,
+                'timestamp': datetime.now().isoformat()
+            }
+    except Exception as e:
+        logger.error(f"[{datetime.now()}] 消息推送服务失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {'error': str(e)}

@@ -723,11 +723,56 @@ function CreateRecordDialog({ onClose, onSubmit }) {
     onSubmit(formData)
   }
 
-  const handlePhotoUpload = (e) => {
+  const handlePhotoUpload = async (e) => {
     const files = Array.from(e.target.files)
-    // TODO: 实际上传照片到服务器
-    setFormData({ ...formData, photos: [...formData.photos, ...files.map(f => f.name)] })
-    toast.success(`已添加 ${files.length} 张照片`)
+    if (files.length === 0) return
+
+    try {
+      const uploadedPhotos = []
+      
+      // Process each file
+      for (const file of files) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          toast.error(`${file.name} 不是有效的图片文件`)
+          continue
+        }
+        
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(`${file.name} 文件大小超过5MB限制`)
+          continue
+        }
+        
+        // Convert to base64 for now (can be replaced with actual file upload API)
+        const reader = new FileReader()
+        const photoData = await new Promise((resolve, reject) => {
+          reader.onload = () => resolve(reader.result)
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
+        
+        // Store photo info (base64 data URL or file path)
+        uploadedPhotos.push({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          data: photoData, // base64 data URL
+          uploaded_at: new Date().toISOString(),
+        })
+      }
+      
+      if (uploadedPhotos.length > 0) {
+        setFormData({ 
+          ...formData, 
+          photos: [...formData.photos, ...uploadedPhotos] 
+        })
+        toast.success(`已添加 ${uploadedPhotos.length} 张照片`)
+      }
+    } catch (error) {
+      console.error('Failed to upload photos:', error)
+      toast.error('照片上传失败: ' + error.message)
+    }
   }
 
   return (

@@ -7,17 +7,26 @@
 from typing import Any, List, Optional, Dict
 from datetime import date, datetime
 from decimal import Decimal
+from pathlib import Path
+import os
+import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Body, status, UploadFile, File, Form
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, or_, and_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
+
+# 文档上传目录
+DOCUMENT_UPLOAD_DIR = Path(settings.UPLOAD_DIR) / "documents" / "rd_projects"
+DOCUMENT_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 from app.models.user import User
 from app.models.project import Project
 from app.models.timesheet import Timesheet
+from app.models.project import ProjectDocument
 from app.models.rd_project import (
     RdProject, RdProjectCategory, RdCost, RdCostType,
     RdCostAllocationRule, RdReportRecord
@@ -31,6 +40,12 @@ from app.schemas.rd_project import (
     RdCostCalculateLaborRequest, RdCostSummaryResponse,
     RdCostAllocationRuleCreate, RdCostAllocationRuleResponse,
     RdReportRecordResponse
+)
+from app.schemas.timesheet import (
+    TimesheetCreate, TimesheetUpdate, TimesheetResponse, TimesheetListResponse
+)
+from app.schemas.project import (
+    ProjectDocumentCreate, ProjectDocumentUpdate, ProjectDocumentResponse
 )
 from app.schemas.common import ResponseModel, PaginatedResponse
 
@@ -76,7 +91,7 @@ def get_rd_project_categories(
     db: Session = Depends(deps.get_db),
     category_type: Optional[str] = Query(None, description="分类类型筛选：SELF/ENTRUST/COOPERATION"),
     is_active: Optional[bool] = Query(None, description="是否启用筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_rd_project_access),
 ) -> Any:
     """
     获取研发项目分类列表
@@ -110,7 +125,7 @@ def get_rd_projects(
     status: Optional[str] = Query(None, description="状态筛选"),
     approval_status: Optional[str] = Query(None, description="审批状态筛选"),
     project_manager_id: Optional[int] = Query(None, description="项目负责人ID筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_rd_project_access),
 ) -> Any:
     """
     获取研发项目列表（支持分页、搜索、筛选）
@@ -161,7 +176,7 @@ def create_rd_project(
     *,
     db: Session = Depends(deps.get_db),
     project_in: RdProjectCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_rd_project_access),
 ) -> Any:
     """
     创建研发项目（立项申请）
@@ -214,7 +229,7 @@ def get_rd_project(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_rd_project_access),
 ) -> Any:
     """
     获取研发项目详情
@@ -236,7 +251,7 @@ def update_rd_project(
     db: Session = Depends(deps.get_db),
     project_id: int,
     project_in: RdProjectUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_rd_project_access),
 ) -> Any:
     """
     更新研发项目
@@ -278,7 +293,7 @@ def approve_rd_project(
     db: Session = Depends(deps.get_db),
     project_id: int,
     approve_request: RdProjectApproveRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_rd_project_access),
 ) -> Any:
     """
     研发项目审批
@@ -318,7 +333,7 @@ def close_rd_project(
     db: Session = Depends(deps.get_db),
     project_id: int,
     close_request: RdProjectCloseRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_rd_project_access),
 ) -> Any:
     """
     研发项目结项
@@ -353,7 +368,7 @@ def link_rd_project(
     db: Session = Depends(deps.get_db),
     project_id: int,
     link_request: RdProjectLinkRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_rd_project_access),
 ) -> Any:
     """
     关联非标项目
@@ -387,7 +402,7 @@ def get_rd_cost_types(
     db: Session = Depends(deps.get_db),
     category: Optional[str] = Query(None, description="费用大类筛选：LABOR/MATERIAL/DEPRECIATION/OTHER"),
     is_active: Optional[bool] = Query(None, description="是否启用筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_rd_project_access),
 ) -> Any:
     """
     获取研发费用类型列表
@@ -420,7 +435,7 @@ def get_rd_costs(
     start_date: Optional[date] = Query(None, description="开始日期筛选"),
     end_date: Optional[date] = Query(None, description="结束日期筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_rd_project_access),
 ) -> Any:
     """
     获取研发费用列表（支持分页、筛选）
@@ -461,7 +476,7 @@ def create_rd_cost(
     *,
     db: Session = Depends(deps.get_db),
     cost_in: RdCostCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_rd_project_access),
 ) -> Any:
     """
     录入研发费用
@@ -526,7 +541,7 @@ def update_rd_cost(
     db: Session = Depends(deps.get_db),
     cost_id: int,
     cost_in: RdCostUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_rd_project_access),
 ) -> Any:
     """
     更新研发费用
@@ -569,7 +584,7 @@ def get_rd_project_cost_summary(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_rd_project_access),
 ) -> Any:
     """
     获取项目费用汇总
@@ -651,7 +666,7 @@ def calculate_labor_cost(
     *,
     db: Session = Depends(deps.get_db),
     calc_request: RdCostCalculateLaborRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_rd_project_access),
 ) -> Any:
     """
     人工费用自动计算（工时×时薪）
@@ -726,7 +741,7 @@ def calculate_labor_cost(
 def get_rd_cost_allocation_rules(
     db: Session = Depends(deps.get_db),
     is_active: Optional[bool] = Query(None, description="是否启用筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_rd_project_access),
 ) -> Any:
     """
     获取费用分摊规则列表
@@ -751,7 +766,7 @@ def apply_cost_allocation(
     db: Session = Depends(deps.get_db),
     rule_id: int = Query(..., description="分摊规则ID"),
     cost_ids: Optional[List[int]] = Query(None, description="费用ID列表（不提供则应用规则范围内的所有费用）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_rd_project_access),
 ) -> Any:
     """
     应用费用分摊规则
@@ -920,7 +935,7 @@ def get_rd_project_timesheet_summary(
     project_id: int,
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_rd_project_access),
 ) -> Any:
     """
     获取研发项目工时汇总
@@ -1012,5 +1027,325 @@ def get_rd_project_timesheet_summary(
             "start_date": start_date.isoformat() if start_date else None,
             "end_date": end_date.isoformat() if end_date else None,
         }
+    )
+
+
+# ==================== 研发项目工作日志 ====================
+
+@router.get("/rd-projects/{project_id}/worklogs", response_model=ResponseModel)
+def get_rd_project_worklogs(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    user_id: Optional[int] = Query(None, description="用户ID筛选"),
+    start_date: Optional[date] = Query(None, description="开始日期"),
+    end_date: Optional[date] = Query(None, description="结束日期"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    current_user: User = Depends(security.require_rd_project_access),
+) -> Any:
+    """
+    获取研发项目工作日志列表
+    """
+    project = db.query(RdProject).filter(RdProject.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="研发项目不存在")
+    
+    offset = (page - 1) * page_size
+    query = db.query(Timesheet).filter(Timesheet.rd_project_id == project_id)
+    
+    if user_id:
+        query = query.filter(Timesheet.user_id == user_id)
+    if start_date:
+        query = query.filter(Timesheet.work_date >= start_date)
+    if end_date:
+        query = query.filter(Timesheet.work_date <= end_date)
+    if status:
+        query = query.filter(Timesheet.status == status)
+    
+    total = query.count()
+    timesheets = query.order_by(desc(Timesheet.work_date), desc(Timesheet.created_at)).offset(offset).limit(page_size).all()
+    
+    items = []
+    for ts in timesheets:
+        items.append(TimesheetResponse(
+            id=ts.id,
+            user_id=ts.user_id,
+            user_name=ts.user_name,
+            project_id=ts.project_id,
+            project_name=ts.project_name,
+            task_id=ts.task_id,
+            task_name=ts.task_name,
+            work_date=ts.work_date,
+            work_hours=ts.hours or Decimal("0"),
+            work_type=ts.overtime_type or "NORMAL",
+            description=ts.work_content,
+            is_billable=True,
+            status=ts.status or "DRAFT",
+            approved_by=ts.approver_id,
+            approved_at=ts.approve_time,
+            created_at=ts.created_at,
+            updated_at=ts.updated_at
+        ))
+    
+    return ResponseModel(
+        code=200,
+        message="success",
+        data=TimesheetListResponse(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            pages=(total + page_size - 1) // page_size
+        )
+    )
+
+
+@router.post("/rd-projects/{project_id}/worklogs", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+def create_rd_project_worklog(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    worklog_in: TimesheetCreate,
+    current_user: User = Depends(security.require_rd_project_access),
+) -> Any:
+    """
+    创建研发项目工作日志
+    """
+    project = db.query(RdProject).filter(RdProject.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="研发项目不存在")
+    
+    # 检查同一天是否已有记录
+    existing = db.query(Timesheet).filter(
+        Timesheet.user_id == current_user.id,
+        Timesheet.work_date == worklog_in.work_date,
+        Timesheet.rd_project_id == project_id,
+        Timesheet.status != "REJECTED"
+    ).first()
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="该日期已有工作日志记录，请更新或删除后重试")
+    
+    timesheet = Timesheet(
+        user_id=current_user.id,
+        user_name=current_user.name,
+        rd_project_id=project_id,
+        project_id=project.linked_project_id,  # 如果有关联的非标项目，也记录
+        project_name=project.project_name,
+        work_date=worklog_in.work_date,
+        hours=worklog_in.work_hours,
+        overtime_type=worklog_in.work_type,
+        work_content=worklog_in.description,
+        status="DRAFT",
+        created_by=current_user.id
+    )
+    
+    db.add(timesheet)
+    db.commit()
+    db.refresh(timesheet)
+    
+    return ResponseModel(
+        code=201,
+        message="工作日志创建成功",
+        data=TimesheetResponse(
+            id=timesheet.id,
+            user_id=timesheet.user_id,
+            user_name=timesheet.user_name,
+            project_id=timesheet.project_id,
+            project_name=timesheet.project_name,
+            task_id=timesheet.task_id,
+            task_name=timesheet.task_name,
+            work_date=timesheet.work_date,
+            work_hours=timesheet.hours or Decimal("0"),
+            work_type=timesheet.overtime_type or "NORMAL",
+            description=timesheet.work_content,
+            is_billable=True,
+            status=timesheet.status or "DRAFT",
+            approved_by=timesheet.approver_id,
+            approved_at=timesheet.approve_time,
+            created_at=timesheet.created_at,
+            updated_at=timesheet.updated_at
+        )
+    )
+
+
+# ==================== 研发项目文档管理 ====================
+
+@router.get("/rd-projects/{project_id}/documents", response_model=ResponseModel)
+def get_rd_project_documents(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    doc_type: Optional[str] = Query(None, description="文档类型筛选"),
+    doc_category: Optional[str] = Query(None, description="文档分类筛选"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    current_user: User = Depends(security.require_rd_project_access),
+) -> Any:
+    """
+    获取研发项目文档列表
+    """
+    project = db.query(RdProject).filter(RdProject.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="研发项目不存在")
+    
+    offset = (page - 1) * page_size
+    query = db.query(ProjectDocument).filter(ProjectDocument.rd_project_id == project_id)
+    
+    if doc_type:
+        query = query.filter(ProjectDocument.doc_type == doc_type)
+    if doc_category:
+        query = query.filter(ProjectDocument.doc_category == doc_category)
+    if status:
+        query = query.filter(ProjectDocument.status == status)
+    
+    total = query.count()
+    documents = query.order_by(desc(ProjectDocument.created_at)).offset(offset).limit(page_size).all()
+    
+    return ResponseModel(
+        code=200,
+        message="success",
+        data=PaginatedResponse(
+            items=[ProjectDocumentResponse.model_validate(doc) for doc in documents],
+            total=total,
+            page=page,
+            page_size=page_size,
+            pages=(total + page_size - 1) // page_size
+        )
+    )
+
+
+@router.post("/rd-projects/{project_id}/documents", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+def create_rd_project_document(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    doc_in: ProjectDocumentCreate,
+    current_user: User = Depends(security.require_rd_project_access),
+) -> Any:
+    """
+    创建研发项目文档记录
+    """
+    project = db.query(RdProject).filter(RdProject.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="研发项目不存在")
+    
+    doc_data = doc_in.model_dump()
+    doc_data["rd_project_id"] = project_id
+    doc_data["project_id"] = project.linked_project_id  # 如果有关联的非标项目，也记录
+    doc_data["uploaded_by"] = current_user.id
+    
+    document = ProjectDocument(**doc_data)
+    db.add(document)
+    db.commit()
+    db.refresh(document)
+    
+    return ResponseModel(
+        code=201,
+        message="文档创建成功",
+        data=ProjectDocumentResponse.model_validate(document)
+    )
+
+
+@router.post("/rd-projects/{project_id}/documents/upload", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+async def upload_rd_project_document(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    file: UploadFile = File(..., description="上传的文件"),
+    doc_type: str = Form(..., description="文档类型"),
+    doc_category: Optional[str] = Form(None, description="文档分类"),
+    doc_name: Optional[str] = Form(None, description="文档名称"),
+    doc_no: Optional[str] = Form(None, description="文档编号"),
+    version: str = Form("1.0", description="版本号"),
+    description: Optional[str] = Form(None, description="描述"),
+    current_user: User = Depends(security.require_rd_project_access),
+) -> Any:
+    """
+    上传研发项目文档（包含文件上传）
+    """
+    project = db.query(RdProject).filter(RdProject.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="研发项目不存在")
+    
+    # 生成唯一文件名
+    file_ext = Path(file.filename).suffix
+    unique_filename = f"{uuid.uuid4()}{file_ext}"
+    file_path = DOCUMENT_UPLOAD_DIR / str(project_id) / unique_filename
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    # 保存文件
+    try:
+        with open(file_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"文件保存失败: {str(e)}")
+    
+    # 创建文档记录
+    doc_data = {
+        "rd_project_id": project_id,
+        "project_id": project.linked_project_id,
+        "doc_type": doc_type,
+        "doc_category": doc_category,
+        "doc_name": doc_name or file.filename,
+        "doc_no": doc_no,
+        "version": version,
+        "file_path": str(file_path.relative_to(settings.UPLOAD_DIR)),
+        "file_name": file.filename,
+        "file_size": len(content),
+        "file_type": file.content_type or file_ext[1:] if file_ext else None,
+        "description": description,
+        "uploaded_by": current_user.id,
+        "status": "DRAFT",
+    }
+    
+    document = ProjectDocument(**doc_data)
+    db.add(document)
+    db.commit()
+    db.refresh(document)
+    
+    return ResponseModel(
+        code=201,
+        message="文档上传成功",
+        data=ProjectDocumentResponse.model_validate(document)
+    )
+
+
+@router.get("/rd-projects/{project_id}/documents/{doc_id}/download")
+def download_rd_project_document(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    doc_id: int,
+    current_user: User = Depends(security.require_rd_project_access),
+) -> Any:
+    """
+    下载研发项目文档
+    """
+    project = db.query(RdProject).filter(RdProject.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="研发项目不存在")
+    
+    document = db.query(ProjectDocument).filter(
+        ProjectDocument.id == doc_id,
+        ProjectDocument.rd_project_id == project_id
+    ).first()
+    
+    if not document:
+        raise HTTPException(status_code=404, detail="文档不存在")
+    
+    file_path = Path(settings.UPLOAD_DIR) / document.file_path
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="文件不存在")
+    
+    return FileResponse(
+        path=str(file_path),
+        filename=document.file_name,
+        media_type='application/octet-stream'
     )
 

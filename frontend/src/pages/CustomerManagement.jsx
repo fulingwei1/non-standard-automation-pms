@@ -12,6 +12,7 @@ import {
   MapPin,
   Briefcase,
   FileText,
+  BarChart3,
 } from 'lucide-react';
 import { PageHeader } from '../components/layout';
 import {
@@ -29,10 +30,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '../components/ui/dialog';
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { fadeIn, staggerContainer } from '../lib/animations';
+import { formatDate, cn } from '../lib/utils';
 import { customerApi } from '../services/api';
 
 export default function CustomerManagement() {
@@ -49,6 +52,9 @@ export default function CustomerManagement() {
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [industries, setIndustries] = useState([]);
+  const [show360Dialog, setShow360Dialog] = useState(false);
+  const [customer360, setCustomer360] = useState(null);
+  const [loading360, setLoading360] = useState(false);
 
   const [newCustomer, setNewCustomer] = useState({
     customer_code: '',
@@ -63,6 +69,19 @@ export default function CustomerManagement() {
   });
 
   const [editCustomer, setEditCustomer] = useState(null);
+
+  const formatCurrency = (value) => {
+    if (value === null || value === undefined) return '-';
+    try {
+      return new Intl.NumberFormat('zh-CN', {
+        style: 'currency',
+        currency: 'CNY',
+        maximumFractionDigits: 0,
+      }).format(Number(value) || 0);
+    } catch (error) {
+      return value;
+    }
+  };
 
   // 加载客户列表
   const loadCustomers = async () => {
@@ -171,6 +190,20 @@ export default function CustomerManagement() {
     }
   };
 
+  const handleView360 = async (id) => {
+    try {
+      setLoading360(true);
+      const response = await customerApi.get360(id);
+      setCustomer360(response.data || response);
+      setShow360Dialog(true);
+    } catch (error) {
+      console.error('加载客户360失败', error);
+      alert('加载客户360失败: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setLoading360(false);
+    }
+  };
+
   const handleEdit = async (id) => {
     try {
       const response = await customerApi.get(id);
@@ -185,7 +218,7 @@ export default function CustomerManagement() {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="show"
+      animate="visible"
       className="space-y-6"
     >
       <PageHeader
@@ -272,6 +305,14 @@ export default function CustomerManagement() {
                           </td>
                           <td className="px-4 py-2 text-sm">
                             <div className="flex items-center space-x-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleView360(customer.id)}
+                                title="客户360视图"
+                              >
+                                <BarChart3 className="h-4 w-4 text-blue-600" />
+                              </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -600,9 +641,211 @@ export default function CustomerManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Customer 360 Dialog */}
+      <Dialog
+        open={show360Dialog}
+        onOpenChange={(open) => {
+          setShow360Dialog(open)
+          if (!open) {
+            setCustomer360(null)
+          }
+        }}
+      >
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>客户360视图</DialogTitle>
+            <DialogDescription>
+              {customer360?.basic_info?.customer_name || '聚合客户信息、项目、商机与财务数据'}
+            </DialogDescription>
+          </DialogHeader>
+          {loading360 ? (
+            <div className="py-10 text-center text-muted-foreground">正在加载客户画像...</div>
+          ) : customer360 ? (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="pt-4">
+                    <div className="text-xs text-muted-foreground">项目总数</div>
+                    <div className="text-2xl font-semibold">
+                      {customer360.summary?.total_projects || 0}
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4">
+                    <div className="text-xs text-muted-foreground">活跃项目</div>
+                    <div className="text-2xl font-semibold text-emerald-600">
+                      {customer360.summary?.active_projects || 0}
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4">
+                    <div className="text-xs text-muted-foreground">在途金额</div>
+                    <div className="text-xl font-semibold">
+                      {formatCurrency(customer360.summary?.pipeline_amount)}
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4">
+                    <div className="text-xs text-muted-foreground">未回款</div>
+                    <div className="text-xl font-semibold text-red-500">
+                      {formatCurrency(customer360.summary?.open_receivables)}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>项目概览</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {(customer360.projects || []).slice(0, 5).map(project => (
+                      <div key={project.project_id} className="border rounded-md p-3 bg-muted/30">
+                        <div className="flex items-center justify-between text-sm font-medium">
+                          <span>{project.project_name}</span>
+                          <Badge variant="outline">{project.status || '-'}</Badge>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1 flex justify-between">
+                          <span>进度 {project.progress_pct || 0}%</span>
+                          <span>{formatCurrency(project.contract_amount)}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {(customer360.projects || []).length === 0 && (
+                      <div className="text-sm text-muted-foreground">暂无项目记录</div>
+                    )}
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>商机与赢率</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {(customer360.opportunities || []).slice(0, 5).map(opportunity => (
+                      <div key={opportunity.opportunity_id} className="border rounded-md p-3">
+                        <div className="flex items-center justify-between text-sm font-medium">
+                          <span>{opportunity.opp_name}</span>
+                          <Badge variant="outline">{opportunity.stage}</Badge>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1 flex justify-between">
+                          <span>{opportunity.owner_name || '-'}</span>
+                          <span>{formatCurrency(opportunity.est_amount)}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {(customer360.opportunities || []).length === 0 && (
+                      <div className="text-sm text-muted-foreground">暂无商机数据</div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>报价 / 合同</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-1">最新报价</div>
+                      {(customer360.quotes || []).slice(0, 3).map(quote => (
+                        <div key={quote.quote_id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
+                          <span>{quote.quote_code}</span>
+                          <span className="text-muted-foreground">{quote.status}</span>
+                        </div>
+                      ))}
+                      {(customer360.quotes || []).length === 0 && (
+                        <div className="text-sm text-muted-foreground">暂无报价记录</div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-1">最新合同</div>
+                      {(customer360.contracts || []).slice(0, 3).map(contract => (
+                        <div key={contract.contract_id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
+                          <span>{contract.contract_code}</span>
+                          <span>{formatCurrency(contract.contract_amount)}</span>
+                        </div>
+                      ))}
+                      {(customer360.contracts || []).length === 0 && (
+                        <div className="text-sm text-muted-foreground">暂无合同记录</div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>发票 / 收款节点</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-1">发票</div>
+                      {(customer360.invoices || []).slice(0, 3).map(invoice => (
+                        <div key={invoice.invoice_id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
+                          <span>{invoice.invoice_code}</span>
+                          <span className="text-muted-foreground">{formatCurrency(invoice.total_amount)}</span>
+                        </div>
+                      ))}
+                      {(customer360.invoices || []).length === 0 && (
+                        <div className="text-sm text-muted-foreground">暂无发票记录</div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-1">收款节点</div>
+                      {(customer360.payment_plans || []).slice(0, 3).map(plan => (
+                        <div key={plan.plan_id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
+                          <span>{plan.payment_name}</span>
+                          <span className={cn(
+                            'text-xs',
+                            plan.status === 'PENDING'
+                              ? 'text-amber-600'
+                              : plan.status === 'COMPLETED'
+                              ? 'text-emerald-600'
+                              : 'text-slate-600'
+                          )}>
+                            {formatCurrency(plan.planned_amount)}
+                          </span>
+                        </div>
+                      ))}
+                      {(customer360.payment_plans || []).length === 0 && (
+                        <div className="text-sm text-muted-foreground">暂无收款计划</div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>沟通记录</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {(customer360.communications || []).slice(0, 5).map(item => (
+                    <div key={item.communication_id} className="border rounded-md p-3 bg-muted/30">
+                      <div className="flex items-center justify-between text-sm font-medium">
+                        <span>{item.topic}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {item.communication_date ? formatDate(item.communication_date) : '-'}
+                        </span>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1 flex justify-between">
+                        <span>{item.owner_name || '-'}</span>
+                        <span>{item.communication_type || '-'}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {(customer360.communications || []).length === 0 && (
+                    <div className="text-sm text-muted-foreground">暂无沟通记录</div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="py-10 text-center text-muted-foreground">请选择客户查看360视图。</div>
+          )}
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }
-
-
-

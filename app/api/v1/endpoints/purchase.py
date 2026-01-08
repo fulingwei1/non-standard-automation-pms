@@ -390,6 +390,18 @@ def approve_purchase_order(
     db.add(order)
     db.commit()
     
+    # 审批通过时自动归集成本
+    if approved and order.project_id:
+        try:
+            from app.services.cost_collection_service import CostCollectionService
+            CostCollectionService.collect_from_purchase_order(
+                db, order_id, created_by=current_user.id
+            )
+            db.commit()
+        except Exception as e:
+            # 成本归集失败不影响审批流程，只记录错误
+            print(f"Failed to collect cost from purchase order {order_id}: {e}")
+    
     return ResponseModel(
         code=200,
         message="审批成功" if approved else "已驳回"

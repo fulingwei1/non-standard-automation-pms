@@ -39,7 +39,7 @@ import { Badge } from '../components/ui/badge'
 import { Progress } from '../components/ui/progress'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
-import { presaleApi, opportunityApi } from '../services/api'
+import { presaleApi, opportunityApi, orgApi, userApi } from '../services/api'
 
 // Mock 数据 - 总体统计
 const mockOverallStats = {
@@ -349,8 +349,76 @@ export default function PresalesManagerWorkstation() {
         }))
         .sort((a, b) => b.daysWaiting - a.daysWaiting)
 
+      // Get team size - try to get from department or user API
+      let teamSize = 12 // default
+      try {
+        // Try to get users from "售前技术部" department
+        const usersResponse = await userApi.list({ 
+          department: '售前技术部', 
+          is_active: true,
+          page_size: 100 
+        }).catch(() => null)
+        if (usersResponse?.data?.total) {
+          teamSize = usersResponse.data.total
+        }
+      } catch (err) {
+        console.error('Failed to get team size:', err)
+      }
+
+      // Get response time stats (for avgSolutionTime)
+      let avgSolutionTime = 5.2 // default
+      try {
+        const responseTimeResponse = await presaleApi.statistics.responseTime({}).catch(() => null)
+        if (responseTimeResponse?.data?.data?.completion_time?.avg_completion_hours) {
+          avgSolutionTime = parseFloat(responseTimeResponse.data.data.completion_time.avg_completion_hours.toFixed(1))
+        }
+      } catch (err) {
+        console.error('Failed to get response time stats:', err)
+      }
+
+      // Calculate solution quality from solutions
+      // Quality can be based on review status, approval rate, etc.
+      let solutionQuality = 92.5 // default
+      try {
+        const allSolutionsResponse = await presaleApi.solutions.list({
+          page: 1,
+          page_size: 100,
+        }).catch(() => null)
+        const allSolutions = allSolutionsResponse?.data?.items || allSolutionsResponse?.data || []
+        if (allSolutions.length > 0) {
+          // Calculate quality based on approved/reviewed solutions
+          const approvedSolutions = allSolutions.filter(s => s.status === 'APPROVED' || s.status === 'PUBLISHED').length
+          const reviewedSolutions = allSolutions.filter(s => s.status !== 'DRAFT').length
+          if (reviewedSolutions > 0) {
+            solutionQuality = parseFloat(((approvedSolutions / reviewedSolutions) * 100).toFixed(1))
+          }
+        }
+      } catch (err) {
+        console.error('Failed to calculate solution quality:', err)
+      }
+
+      // Load team performance
+      let teamPerformanceData = []
+      try {
+        const performanceResponse = await presaleApi.statistics.performance({}).catch(() => null)
+        if (performanceResponse?.data?.data?.performance) {
+          teamPerformanceData = performanceResponse.data.data.performance.map(p => ({
+            id: p.user_id,
+            name: p.user_name,
+            role: '售前技术工程师',
+            activeSolutions: p.solutions_count || 0,
+            completedThisMonth: p.completed_tickets || 0,
+            pendingReview: 0, // Not available in API
+            avgQuality: p.avg_satisfaction ? parseFloat((p.avg_satisfaction * 20).toFixed(0)) : 0, // Convert 0-5 to 0-100
+            status: p.avg_satisfaction >= 4.5 ? 'excellent' : p.avg_satisfaction >= 4.0 ? 'good' : 'warning',
+          }))
+        }
+      } catch (err) {
+        console.error('Failed to load team performance:', err)
+      }
+
       setOverallStats({
-        teamSize: 12, // TODO: Get from user API
+        teamSize,
         activeSolutions,
         pendingReview,
         activeBids,
@@ -358,11 +426,11 @@ export default function PresalesManagerWorkstation() {
         monthlyOutput,
         monthlyTarget,
         achievementRate,
-        avgSolutionTime: 5.2, // TODO: Calculate from actual data
-        solutionQuality: 92.5, // TODO: Calculate from actual data
+        avgSolutionTime,
+        solutionQuality,
       })
       setPendingReviews(reviews)
-      setTeamPerformance([]) // TODO: Load from team performance API
+      setTeamPerformance(teamPerformanceData.length > 0 ? teamPerformanceData : [])
     } catch (err) {
       console.error('Failed to load dashboard:', err)
       setError(err.response?.data?.detail || err.message || '加载工作台数据失败')

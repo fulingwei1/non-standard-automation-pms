@@ -60,9 +60,10 @@ class Timesheet(Base, TimestampMixin):
     department_name = Column(String(100), comment='部门名称')
     
     # 项目任务关联
-    project_id = Column(Integer, ForeignKey('projects.id'), nullable=False, comment='项目ID')
+    project_id = Column(Integer, ForeignKey('projects.id'), nullable=True, comment='项目ID（非标项目）')
     project_code = Column(String(50), comment='项目编号')
     project_name = Column(String(200), comment='项目名称')
+    rd_project_id = Column(Integer, ForeignKey('rd_project.id'), nullable=True, comment='研发项目ID（可选，如果填写则直接关联研发项目）')
     task_id = Column(Integer, comment='任务ID')
     task_name = Column(String(200), comment='任务名称')
     assign_id = Column(Integer, comment='任务分配ID')
@@ -94,9 +95,13 @@ class Timesheet(Base, TimestampMixin):
     
     created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
     
+    # 关系
+    rd_project = relationship('RdProject', foreign_keys=[rd_project_id])
+    
     __table_args__ = (
         Index('idx_ts_user', 'user_id'),
         Index('idx_ts_project', 'project_id'),
+        Index('idx_ts_rd_project', 'rd_project_id'),
         Index('idx_ts_date', 'work_date'),
         Index('idx_ts_status', 'status'),
         Index('idx_ts_user_date', 'user_id', 'work_date'),

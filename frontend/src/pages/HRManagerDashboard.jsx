@@ -76,6 +76,7 @@ import {
 import { cn, formatCurrency, formatDate } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { employeeApi, departmentApi } from '../services/api'
+import { toast } from '../components/ui/toast'
 
 // Mock statistics
 const mockHRStats = {
@@ -561,6 +562,108 @@ export default function HRManagerDashboard() {
     }
   }
 
+  // Export report function
+  const handleExportReport = () => {
+    try {
+      const exportData = {
+        '统计周期': statisticsPeriod === 'month' ? '本月' : statisticsPeriod === 'quarter' ? '本季度' : '本年',
+        '员工总数': mockHRStats.totalEmployees,
+        '在职员工': mockHRStats.activeEmployees,
+        '本月新增': mockHRStats.newEmployeesThisMonth,
+        '本月离职': mockHRStats.leavingEmployeesThisMonth,
+        '部门数量': mockHRStats.departments,
+        '平均年龄': mockHRStats.avgAge,
+        '平均工龄': mockHRStats.avgTenure,
+        '待招聘': mockHRStats.pendingRecruitments,
+        '招聘中': mockHRStats.inProgressRecruitments,
+        '已完成招聘': mockHRStats.completedRecruitments,
+        '招聘成功率': `${mockHRStats.recruitmentSuccessRate}%`,
+        '待绩效评审': mockHRStats.pendingPerformanceReviews,
+        '已完成评审': mockHRStats.completedPerformanceReviews,
+        '绩效完成率': `${mockHRStats.performanceCompletionRate}%`,
+        '平均绩效分数': mockHRStats.avgPerformanceScore,
+      }
+
+      const csvContent = [
+        '项目,数值',
+        ...Object.entries(exportData).map(([key, value]) => `"${key}","${value}"`),
+      ].join('\n')
+      
+      const BOM = '\uFEFF'
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', `人事管理报表_${statisticsPeriod}_${new Date().toISOString().split('T')[0]}.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      toast.success('报表导出成功')
+    } catch (error) {
+      console.error('导出失败:', error)
+      toast.error('导出失败: ' + error.message)
+    }
+  }
+
+  // Export employee list function
+  const handleExportEmployeeList = () => {
+    if (employees.length === 0) {
+      toast.error('没有员工数据可导出')
+      return
+    }
+
+    try {
+      const csvContent = [
+        '员工编码,姓名,部门,职位,状态,入职日期,电话,邮箱',
+        ...employees.map(emp => [
+          emp.employee_code || '',
+          emp.name || '',
+          emp.department || '',
+          emp.position || '',
+          emp.is_active ? '在职' : '离职',
+          emp.hire_date || '',
+          emp.phone || '',
+          emp.email || '',
+        ].map(field => `"${field}"`).join(',')),
+      ].join('\n')
+      
+      const BOM = '\uFEFF'
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', `员工列表_${new Date().toISOString().split('T')[0]}.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      toast.success('员工列表导出成功')
+    } catch (error) {
+      console.error('导出失败:', error)
+      toast.error('导出失败: ' + error.message)
+    }
+  }
+
+  // Print function
+  const handlePrint = () => {
+    window.print()
+  }
+
+  // Share function (copy link to clipboard)
+  const handleShare = async () => {
+    try {
+      const url = window.location.href
+      await navigator.clipboard.writeText(url)
+      toast.success('链接已复制到剪贴板')
+    } catch (error) {
+      console.error('分享失败:', error)
+      toast.error('分享失败: ' + error.message)
+    }
+  }
+
   return (
     <motion.div
       variants={staggerContainer}
@@ -627,22 +730,16 @@ export default function HRManagerDashboard() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => {
-                  // TODO: Implement export report
-                }}>
+                <DropdownMenuItem onClick={handleExportReport}>
                   <FileSpreadsheet className="w-4 h-4 mr-2" />
                   导出报表
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => {
-                  // TODO: Implement print
-                }}>
+                <DropdownMenuItem onClick={handlePrint}>
                   <Printer className="w-4 h-4 mr-2" />
                   打印
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => {
-                  // TODO: Implement share
-                }}>
+                <DropdownMenuItem onClick={handleShare}>
                   <Share2 className="w-4 h-4 mr-2" />
                   分享
                 </DropdownMenuItem>
@@ -1371,9 +1468,7 @@ export default function HRManagerDashboard() {
                     size="sm"
                     className="flex items-center gap-2"
                     title="导出员工列表"
-                    onClick={() => {
-                      // TODO: Implement export employee list
-                    }}
+                    onClick={handleExportEmployeeList}
                   >
                     <FileText className="w-4 h-4" />
                     导出

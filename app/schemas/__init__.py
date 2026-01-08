@@ -50,18 +50,67 @@ from .sales import (
     GateSubmitRequest,
     QuoteCreate, QuoteUpdate, QuoteResponse, QuoteVersionCreate, QuoteVersionResponse,
     QuoteItemResponse, QuoteApproveRequest,
+    QuoteCostTemplateCreate, QuoteCostTemplateUpdate, QuoteCostTemplateResponse,
+    QuoteCostApprovalCreate, QuoteCostApprovalResponse, QuoteCostApprovalAction,
+    CostBreakdownResponse, CostCheckResponse, CostComparisonResponse,
     ContractCreate, ContractUpdate, ContractResponse, ContractDeliverableResponse,
     ContractSignRequest, ContractProjectCreateRequest,
     InvoiceCreate, InvoiceUpdate, InvoiceResponse, InvoiceIssueRequest,
     ReceivableDisputeCreate, ReceivableDisputeUpdate, ReceivableDisputeResponse,
     QuoteApprovalResponse, QuoteApprovalCreate,
     ContractApprovalResponse, ContractApprovalCreate,
-    InvoiceApprovalResponse, InvoiceApprovalCreate
+    InvoiceApprovalResponse, InvoiceApprovalCreate,
+    # Technical Assessment
+    TechnicalAssessmentApplyRequest, TechnicalAssessmentEvaluateRequest, TechnicalAssessmentResponse,
+    ScoringRuleCreate, ScoringRuleResponse,
+    FailureCaseCreate, FailureCaseResponse,
+    OpenItemCreate, OpenItemResponse,
+    LeadRequirementDetailCreate, LeadRequirementDetailResponse,
+    RequirementFreezeCreate, RequirementFreezeResponse,
+    AIClarificationCreate, AIClarificationUpdate, AIClarificationResponse
 )
 from .project_review import (
     ProjectReviewCreate, ProjectReviewUpdate, ProjectReviewResponse,
     ProjectLessonCreate, ProjectLessonUpdate, ProjectLessonResponse,
-    ProjectBestPracticeCreate, ProjectBestPracticeUpdate, ProjectBestPracticeResponse
+    ProjectBestPracticeCreate, ProjectBestPracticeUpdate, ProjectBestPracticeResponse,
+    LessonStatisticsResponse, BestPracticeRecommendationRequest, BestPracticeRecommendationResponse
+)
+from .technical_review import (
+    TechnicalReviewCreate, TechnicalReviewUpdate, TechnicalReviewResponse, TechnicalReviewDetailResponse,
+    ReviewParticipantCreate, ReviewParticipantUpdate, ReviewParticipantResponse,
+    ReviewMaterialCreate, ReviewMaterialResponse,
+    ReviewChecklistRecordCreate, ReviewChecklistRecordUpdate, ReviewChecklistRecordResponse,
+    ReviewIssueCreate, ReviewIssueUpdate, ReviewIssueResponse
+)
+from .project_role import (
+    ProjectRoleTypeBase, ProjectRoleTypeCreate, ProjectRoleTypeUpdate, ProjectRoleTypeResponse, ProjectRoleTypeListResponse,
+    ProjectRoleConfigBase, ProjectRoleConfigCreate, ProjectRoleConfigUpdate, ProjectRoleConfigBatchUpdate,
+    ProjectRoleConfigResponse, ProjectRoleConfigListResponse,
+    ProjectLeadCreate, ProjectLeadUpdate, ProjectLeadResponse, ProjectLeadListResponse,
+    TeamMemberCreate, TeamMemberResponse, TeamMemberListResponse,
+    ProjectLeadWithTeamResponse, ProjectRoleOverviewResponse, UserBrief
+)
+from .assembly_kit import (
+    # Assembly Stage
+    AssemblyStageCreate, AssemblyStageUpdate, AssemblyStageResponse,
+    # Assembly Template
+    AssemblyTemplateCreate, AssemblyTemplateUpdate, AssemblyTemplateResponse,
+    # Category Stage Mapping
+    CategoryStageMappingCreate, CategoryStageMappingUpdate, CategoryStageMappingResponse,
+    # BOM Assembly Attrs
+    BomItemAssemblyAttrsCreate, BomItemAssemblyAttrsBatchCreate, BomItemAssemblyAttrsUpdate, BomItemAssemblyAttrsResponse,
+    BomAssemblyAttrsAutoRequest, BomAssemblyAttrsTemplateRequest,
+    # Material Readiness
+    MaterialReadinessCreate, MaterialReadinessResponse, MaterialReadinessDetailResponse, StageKitRate,
+    # Shortage Detail
+    ShortageDetailResponse, ShortageAlertItem, ShortageAlertListResponse,
+    # Shortage Alert Rule
+    ShortageAlertRuleCreate, ShortageAlertRuleUpdate, ShortageAlertRuleResponse,
+    # Scheduling Suggestion
+    SchedulingSuggestionResponse, SchedulingSuggestionAccept, SchedulingSuggestionReject,
+    # Dashboard
+    AssemblyDashboardResponse, AssemblyDashboardStats, AssemblyDashboardStageStats,
+    AssemblyKitListResponse
 )
 
 __all__ = [
@@ -104,6 +153,9 @@ __all__ = [
     'GateSubmitRequest',
     'QuoteCreate', 'QuoteUpdate', 'QuoteResponse', 'QuoteVersionCreate', 'QuoteVersionResponse',
     'QuoteItemResponse', 'QuoteApproveRequest',
+    'QuoteCostTemplateCreate', 'QuoteCostTemplateUpdate', 'QuoteCostTemplateResponse',
+    'QuoteCostApprovalCreate', 'QuoteCostApprovalResponse', 'QuoteCostApprovalAction',
+    'CostBreakdownResponse', 'CostCheckResponse', 'CostComparisonResponse',
     'ContractCreate', 'ContractUpdate', 'ContractResponse', 'ContractDeliverableResponse',
     'ContractSignRequest', 'ContractProjectCreateRequest',
     'InvoiceCreate', 'InvoiceUpdate', 'InvoiceResponse', 'InvoiceIssueRequest',
@@ -111,8 +163,42 @@ __all__ = [
     'QuoteApprovalResponse', 'QuoteApprovalCreate',
     'ContractApprovalResponse', 'ContractApprovalCreate',
     'InvoiceApprovalResponse', 'InvoiceApprovalCreate',
+    # Technical Assessment
+    'TechnicalAssessmentApplyRequest', 'TechnicalAssessmentEvaluateRequest', 'TechnicalAssessmentResponse',
+    'ScoringRuleCreate', 'ScoringRuleResponse',
+    'FailureCaseCreate', 'FailureCaseResponse',
+    'OpenItemCreate', 'OpenItemResponse',
+    'LeadRequirementDetailCreate', 'LeadRequirementDetailResponse',
+    'RequirementFreezeCreate', 'RequirementFreezeResponse',
+    'AIClarificationCreate', 'AIClarificationUpdate', 'AIClarificationResponse',
     # Project Review
     'ProjectReviewCreate', 'ProjectReviewUpdate', 'ProjectReviewResponse',
     'ProjectLessonCreate', 'ProjectLessonUpdate', 'ProjectLessonResponse',
     'ProjectBestPracticeCreate', 'ProjectBestPracticeUpdate', 'ProjectBestPracticeResponse',
+    'LessonStatisticsResponse', 'BestPracticeRecommendationRequest', 'BestPracticeRecommendationResponse',
+    # Technical Review
+    'TechnicalReviewCreate', 'TechnicalReviewUpdate', 'TechnicalReviewResponse', 'TechnicalReviewDetailResponse',
+    'ReviewParticipantCreate', 'ReviewParticipantUpdate', 'ReviewParticipantResponse',
+    'ReviewMaterialCreate', 'ReviewMaterialResponse',
+    'ReviewChecklistRecordCreate', 'ReviewChecklistRecordUpdate', 'ReviewChecklistRecordResponse',
+    'ReviewIssueCreate', 'ReviewIssueUpdate', 'ReviewIssueResponse',
+    # Assembly Kit Analysis
+    'AssemblyStageCreate', 'AssemblyStageUpdate', 'AssemblyStageResponse',
+    'AssemblyTemplateCreate', 'AssemblyTemplateUpdate', 'AssemblyTemplateResponse',
+    'CategoryStageMappingCreate', 'CategoryStageMappingUpdate', 'CategoryStageMappingResponse',
+    'BomItemAssemblyAttrsCreate', 'BomItemAssemblyAttrsBatchCreate', 'BomItemAssemblyAttrsUpdate', 'BomItemAssemblyAttrsResponse',
+    'BomAssemblyAttrsAutoRequest', 'BomAssemblyAttrsTemplateRequest',
+    'MaterialReadinessCreate', 'MaterialReadinessResponse', 'MaterialReadinessDetailResponse', 'StageKitRate',
+    'ShortageDetailResponse', 'ShortageAlertItem', 'ShortageAlertListResponse',
+    'ShortageAlertRuleCreate', 'ShortageAlertRuleUpdate', 'ShortageAlertRuleResponse',
+    'SchedulingSuggestionResponse', 'SchedulingSuggestionAccept', 'SchedulingSuggestionReject',
+    'AssemblyDashboardResponse', 'AssemblyDashboardStats', 'AssemblyDashboardStageStats',
+    'AssemblyKitListResponse',
+    # Project Role Config
+    'ProjectRoleTypeBase', 'ProjectRoleTypeCreate', 'ProjectRoleTypeUpdate', 'ProjectRoleTypeResponse', 'ProjectRoleTypeListResponse',
+    'ProjectRoleConfigBase', 'ProjectRoleConfigCreate', 'ProjectRoleConfigUpdate', 'ProjectRoleConfigBatchUpdate',
+    'ProjectRoleConfigResponse', 'ProjectRoleConfigListResponse',
+    'ProjectLeadCreate', 'ProjectLeadUpdate', 'ProjectLeadResponse', 'ProjectLeadListResponse',
+    'TeamMemberCreate', 'TeamMemberResponse', 'TeamMemberListResponse',
+    'ProjectLeadWithTeamResponse', 'ProjectRoleOverviewResponse', 'UserBrief',
 ]

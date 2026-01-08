@@ -497,3 +497,13 @@ export default function GoodsReceiptDetail() {
 }
 
 
+
+
+
+
+
+
+
+
+
+

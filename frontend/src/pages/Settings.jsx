@@ -604,7 +604,7 @@ export default function Settings() {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="show"
+      animate="visible"
       className="space-y-6"
     >
       <PageHeader title="个人设置" description="管理您的账户设置和偏好" />

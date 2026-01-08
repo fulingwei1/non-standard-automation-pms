@@ -261,7 +261,7 @@ export default function BOMManagement() {
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部项目</SelectItem>
+                <SelectItem value="all">全部项目</SelectItem>
                 {projects.map((proj) => (
                   <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
@@ -274,7 +274,7 @@ export default function BOMManagement() {
                 <SelectValue placeholder="选择机台" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部机台</SelectItem>
+                <SelectItem value="all">全部机台</SelectItem>
                 {machines.map((machine) => (
                   <SelectItem key={machine.id} value={machine.id.toString()}>
                     {machine.machine_name}
@@ -287,7 +287,7 @@ export default function BOMManagement() {
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部状态</SelectItem>
+                <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(statusConfigs).map(([key, config]) => (
                   <SelectItem key={key} value={key}>
                     {config.label}

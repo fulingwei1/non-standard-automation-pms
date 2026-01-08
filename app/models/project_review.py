@@ -184,3 +184,13 @@ class ProjectBestPractice(Base, TimestampMixin):
         return f'<ProjectBestPractice {self.title}>'
 
 
+
+
+
+
+
+
+
+
+
+

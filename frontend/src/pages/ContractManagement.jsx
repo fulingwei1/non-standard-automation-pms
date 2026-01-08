@@ -22,6 +22,7 @@ import {
   FileText,
   Briefcase,
   X,
+  Layers,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -45,9 +46,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../components/ui'
-import { cn } from '../lib/utils'
+import { cn, formatDate } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
-import { contractApi, opportunityApi, customerApi } from '../services/api'
+import { contractApi, opportunityApi, customerApi, salesTemplateApi } from '../services/api'
 
 // 合同状态配置
 const statusConfig = {
@@ -105,6 +106,11 @@ export default function ContractManagement() {
     required_for_payment: true,
     template_ref: '',
   })
+  const [contractTemplates, setContractTemplates] = useState([])
+  const [contractTemplatePreview, setContractTemplatePreview] = useState(null)
+  const [selectedContractTemplateId, setSelectedContractTemplateId] = useState('')
+  const [selectedContractTemplateVersionId, setSelectedContractTemplateVersionId] = useState('')
+  const [contractTemplateLoading, setContractTemplateLoading] = useState(false)
 
   const loadContracts = async () => {
     setLoading(true)
@@ -149,6 +155,101 @@ export default function ContractManagement() {
     }
   }
 
+  const loadContractTemplates = async () => {
+    try {
+      const response = await salesTemplateApi.listContractTemplates({ page: 1, page_size: 100 })
+      if (response.data && response.data.items) {
+        setContractTemplates(response.data.items)
+      } else if (response.items) {
+        setContractTemplates(response.items)
+      }
+    } catch (error) {
+      console.error('加载合同模板失败:', error)
+    }
+  }
+
+  const handleApplyContractTemplate = async (templateId, versionId) => {
+    if (!templateId) return
+    setContractTemplateLoading(true)
+    try {
+      const params = versionId ? { template_version_id: versionId } : undefined
+      const response = await salesTemplateApi.applyContractTemplate(templateId, params)
+      const preview = response.data || response
+      setContractTemplatePreview(preview)
+      setFormData(prev => ({
+        ...prev,
+        payment_terms_summary: preview?.version?.clause_sections
+          ? JSON.stringify(preview.version.clause_sections, null, 2)
+          : prev.payment_terms_summary,
+        acceptance_summary: preview?.version?.approval_flow
+          ? JSON.stringify(preview.version.approval_flow, null, 2)
+          : prev.acceptance_summary,
+      }))
+    } catch (error) {
+      console.error('应用合同模板失败:', error)
+      alert('应用合同模板失败: ' + (error.response?.data?.detail || error.message))
+    } finally {
+      setContractTemplateLoading(false)
+    }
+  }
+
+  const handleContractTemplateSelection = (value) => {
+    setSelectedContractTemplateId(value)
+    const template = contractTemplates.find(t => String(t.id) === value)
+    const defaultVersion = template?.versions?.[0]
+    const versionId = defaultVersion ? String(defaultVersion.id) : ''
+    setSelectedContractTemplateVersionId(versionId)
+    if (template) {
+      handleApplyContractTemplate(template.id, defaultVersion?.id)
+    } else {
+      setContractTemplatePreview(null)
+    }
+  }
+
+  const handleContractTemplateVersionSelection = (value) => {
+    setSelectedContractTemplateVersionId(value)
+    const template = contractTemplates.find(t => String(t.id) === selectedContractTemplateId)
+    const version = template?.versions?.find(v => String(v.id) === value)
+    if (template && version) {
+      handleApplyContractTemplate(template.id, version.id)
+    }
+  }
+
+  const renderContractDiffSummary = (diff) => {
+    if (!diff) {
+      return <div className="text-sm text-slate-500">无差异</div>
+    }
+    const sections = [
+      { key: 'clause_sections', label: '条款结构' },
+      { key: 'sections', label: '正文' },
+    ]
+    const hasChanges = sections.some(({ key }) => {
+      const block = diff[key]
+      return block && ((block.added?.length || 0) + (block.removed?.length || 0) + (block.changed?.length || 0) > 0)
+    })
+    if (!hasChanges) {
+      return <div className="text-sm text-slate-500">与上一版本一致</div>
+    }
+    return (
+      <div className="space-y-1 text-xs">
+        {sections.map(({ key, label }) => {
+          const block = diff[key]
+          if (!block) return null
+          const changes = (block.added?.length || 0) + (block.removed?.length || 0) + (block.changed?.length || 0)
+          if (!changes) return null
+          return (
+            <div key={key} className="bg-slate-800 rounded px-2 py-1">
+              <div className="text-slate-300">{label}</div>
+              <div className="text-slate-400">
+                +{block.added?.length || 0} / -{block.removed?.length || 0} / Δ{block.changed?.length || 0}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
   useEffect(() => {
     loadContracts()
   }, [page, searchTerm, statusFilter])
@@ -156,7 +257,16 @@ export default function ContractManagement() {
   useEffect(() => {
     loadOpportunities()
     loadCustomers()
+    loadContractTemplates()
   }, [])
+
+  useEffect(() => {
+    if (!showCreateDialog) {
+      setContractTemplatePreview(null)
+      setSelectedContractTemplateId('')
+      setSelectedContractTemplateVersionId('')
+    }
+  }, [showCreateDialog])
 
   const handleCreate = async () => {
     try {
@@ -281,7 +391,7 @@ export default function ContractManagement() {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="show"
+      animate="visible"
       className="space-y-6 p-6"
     >
       <PageHeader
@@ -566,6 +676,84 @@ export default function ContractManagement() {
                   ))}
                 </select>
               </div>
+            </div>
+            <div className="border border-slate-700 rounded-md p-4 bg-slate-900 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="font-semibold">合同模板联动</Label>
+                  <p className="text-xs text-slate-400">引用模板快速补齐条款与审批信息，并查看版本差异</p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => window.open('/sales/templates', '_blank')}>
+                  <Layers className="w-4 h-4 mr-1" />
+                  模板中心
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <Label>合同模板</Label>
+                  <select
+                    value={selectedContractTemplateId}
+                    onChange={(e) => handleContractTemplateSelection(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white"
+                  >
+                    <option value="">不使用模板</option>
+                    {contractTemplates.map((template) => (
+                      <option key={template.id} value={template.id}>
+                        {template.template_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {selectedContractTemplateId && (
+                  <div>
+                    <Label>模板版本</Label>
+                    <select
+                      value={selectedContractTemplateVersionId}
+                      onChange={(e) => handleContractTemplateVersionSelection(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white"
+                    >
+                      {(contractTemplates.find(t => String(t.id) === selectedContractTemplateId)?.versions || []).map(
+                        (version) => (
+                          <option key={version.id} value={version.id}>
+                            {version.version_no} · {version.status}
+                          </option>
+                        )
+                      )}
+                    </select>
+                  </div>
+                )}
+              </div>
+              {contractTemplateLoading && (
+                <p className="text-xs text-slate-400">模板应用中...</p>
+              )}
+              {contractTemplatePreview?.version_diff && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <div className="text-slate-400 mb-1">版本差异</div>
+                    {renderContractDiffSummary(contractTemplatePreview.version_diff)}
+                  </div>
+                  <div>
+                    <div className="text-slate-400 mb-1">审批 / 发布记录</div>
+                    <div className="space-y-1">
+                      {(contractTemplatePreview.approval_history || []).slice(0, 4).map((record) => (
+                        <div
+                          key={record.version_id}
+                          className="flex items-center justify-between bg-slate-800 rounded px-2 py-1"
+                        >
+                          <span>{record.version_no}</span>
+                          <span className="text-slate-400">
+                            {record.status}{' '}
+                            {record.published_at ? formatDate(record.published_at) : ''}
+                          </span>
+                        </div>
+                      ))}
+                      {(contractTemplatePreview.approval_history || []).length === 0 && (
+                        <div className="text-slate-500">暂无记录</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <div>
               <Label>付款条款摘要</Label>

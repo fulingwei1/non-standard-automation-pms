@@ -79,14 +79,21 @@ def list_timesheets(
         if ts.project_id:
             project = db.query(Project).filter(Project.id == ts.project_id).first()
         
+        task_name = None
+        if ts.task_id:
+            from app.models.progress import Task
+            task = db.query(Task).filter(Task.id == ts.task_id).first()
+            task_name = task.task_name if task else None
+        
         items.append(TimesheetResponse(
             id=ts.id,
             user_id=ts.user_id,
             user_name=user.real_name or user.username if user else None,
             project_id=ts.project_id,
+            rd_project_id=ts.rd_project_id,
             project_name=project.project_name if project else None,
             task_id=ts.task_id,
-            task_name=None,  # TODO: 从任务表获取
+            task_name=task_name,
             work_date=ts.work_date,
             work_hours=ts.hours or Decimal("0"),
             work_type=ts.work_type or "NORMAL",
@@ -118,19 +125,33 @@ def create_timesheet(
     """
     创建单条工时
     """
-    # 验证项目
+    # 验证项目（至少需要有一个项目ID）
+    if not timesheet_in.project_id and not timesheet_in.rd_project_id:
+        raise HTTPException(status_code=400, detail="必须指定项目ID或研发项目ID")
+    
     if timesheet_in.project_id:
         project = db.query(Project).filter(Project.id == timesheet_in.project_id).first()
         if not project:
             raise HTTPException(status_code=404, detail="项目不存在")
     
+    if timesheet_in.rd_project_id:
+        from app.models.rd_project import RdProject
+        rd_project = db.query(RdProject).filter(RdProject.id == timesheet_in.rd_project_id).first()
+        if not rd_project:
+            raise HTTPException(status_code=404, detail="研发项目不存在")
+    
     # 检查同一天是否已有记录
-    existing = db.query(Timesheet).filter(
+    query_filter = [
         Timesheet.user_id == current_user.id,
         Timesheet.work_date == timesheet_in.work_date,
-        Timesheet.project_id == timesheet_in.project_id,
         Timesheet.status != "REJECTED"
-    ).first()
+    ]
+    if timesheet_in.project_id:
+        query_filter.append(Timesheet.project_id == timesheet_in.project_id)
+    if timesheet_in.rd_project_id:
+        query_filter.append(Timesheet.rd_project_id == timesheet_in.rd_project_id)
+    
+    existing = db.query(Timesheet).filter(*query_filter).first()
     
     if existing:
         raise HTTPException(status_code=400, detail="该日期已有工时记录，请更新或删除后重试")
@@ -138,6 +159,7 @@ def create_timesheet(
     timesheet = Timesheet(
         user_id=current_user.id,
         project_id=timesheet_in.project_id,
+        rd_project_id=timesheet_in.rd_project_id,
         task_id=timesheet_in.task_id,
         work_date=timesheet_in.work_date,
         hours=timesheet_in.work_hours,
@@ -241,12 +263,18 @@ def get_timesheet_detail(
     if timesheet.project_id:
         project = db.query(Project).filter(Project.id == timesheet.project_id).first()
     
+    rd_project = None
+    if timesheet.rd_project_id:
+        from app.models.rd_project import RdProject
+        rd_project = db.query(RdProject).filter(RdProject.id == timesheet.rd_project_id).first()
+    
     return TimesheetResponse(
         id=timesheet.id,
         user_id=timesheet.user_id,
         user_name=user.real_name or user.username if user else None,
         project_id=timesheet.project_id,
-        project_name=project.project_name if project else None,
+        rd_project_id=timesheet.rd_project_id,
+        project_name=project.project_name if project else (rd_project.project_name if rd_project else None),
         task_id=timesheet.task_id,
         task_name=None,
         work_date=timesheet.work_date,
@@ -554,6 +582,7 @@ def get_week_timesheet(
             user_id=ts.user_id,
             user_name=user.real_name or user.username if user else None,
             project_id=ts.project_id,
+            rd_project_id=ts.rd_project_id,
             project_name=project.project_name if project else None,
             task_id=ts.task_id,
             task_name=None,
@@ -701,6 +730,7 @@ def get_pending_approval_timesheets(
             user_id=ts.user_id,
             user_name=user.real_name or user.username if user else None,
             project_id=ts.project_id,
+            rd_project_id=ts.rd_project_id,
             project_name=project.project_name if project else None,
             task_id=ts.task_id,
             task_name=None,

@@ -3,6 +3,7 @@
 """
 from typing import Optional, List
 from datetime import datetime, date
+from decimal import Decimal
 from pydantic import BaseModel, Field
 from app.schemas.common import PaginatedResponse
 
@@ -31,6 +32,13 @@ class IssueBase(BaseModel):
     impact_level: Optional[str] = Field(None, description="影响级别")
     is_blocking: bool = Field(default=False, description="是否阻塞")
     
+    # 问题原因和责任工程师
+    root_cause: Optional[str] = Field(None, description="问题原因：DESIGN_ERROR/MATERIAL_DEFECT/PROCESS_ERROR/EXTERNAL_FACTOR/OTHER")
+    responsible_engineer_id: Optional[int] = Field(None, description="责任工程师ID")
+    responsible_engineer_name: Optional[str] = Field(None, description="责任工程师姓名")
+    estimated_inventory_loss: Optional[Decimal] = Field(None, description="预估库存损失金额")
+    estimated_extra_hours: Optional[Decimal] = Field(None, description="预估额外工时(小时)")
+    
     attachments: Optional[List[str]] = Field(default=[], description="附件列表")
     tags: Optional[List[str]] = Field(default=[], description="标签列表")
 
@@ -54,6 +62,11 @@ class IssueUpdate(BaseModel):
     impact_scope: Optional[str] = None
     impact_level: Optional[str] = None
     is_blocking: Optional[bool] = None
+    root_cause: Optional[str] = None
+    responsible_engineer_id: Optional[int] = None
+    responsible_engineer_name: Optional[str] = None
+    estimated_inventory_loss: Optional[Decimal] = None
+    estimated_extra_hours: Optional[Decimal] = None
     attachments: Optional[List[str]] = None
     tags: Optional[List[str]] = None
 
@@ -182,6 +195,17 @@ class IssueStatistics(BaseModel):
     by_severity: dict = {}
     by_category: dict = {}
     by_type: dict = {}
+
+
+class EngineerIssueStatistics(BaseModel):
+    """工程师问题统计"""
+    engineer_id: int
+    engineer_name: str
+    total_issues: int = 0  # 总问题数
+    design_issues: int = 0  # 设计问题数
+    total_inventory_loss: Decimal = Decimal(0)  # 总库存损失
+    total_extra_hours: Decimal = Decimal(0)  # 总额外工时
+    issues: List[IssueResponse] = []  # 问题列表
 
 
 # ==================== 问题模板相关 Schema ====================

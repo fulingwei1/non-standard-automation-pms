@@ -117,6 +117,10 @@ class AcceptanceOrderResponse(TimestampSchema):
     pass_rate: Decimal = 0
     overall_result: Optional[str] = None
     conclusion: Optional[str] = None
+    conditions: Optional[str] = None
+    customer_signed_file_path: Optional[str] = None
+    is_officially_completed: bool = False
+    officially_completed_at: Optional[datetime] = None
 
 
 class AcceptanceOrderListResponse(BaseSchema):
@@ -131,6 +135,7 @@ class AcceptanceOrderListResponse(BaseSchema):
     overall_result: Optional[str] = None
     pass_rate: Decimal = 0
     open_issues: int = 0
+    is_officially_completed: bool = False
 
 
 # ==================== 检查项结果 ====================

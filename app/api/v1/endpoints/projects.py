@@ -10,12 +10,13 @@ from app.api import deps
 from app.core.config import settings
 from app.core import security
 from app.models.user import User
-from app.models.project import Project, Customer, ProjectStatusLog, ProjectPaymentPlan, ProjectMilestone, ProjectTemplate, Machine, ProjectStage, ProjectMember
+from app.models.project import Project, Customer, ProjectStatusLog, ProjectPaymentPlan, ProjectMilestone, ProjectTemplate, ProjectTemplateVersion, Machine, ProjectStage, ProjectMember
 from app.models.pmo import PmoResourceAllocation, PmoProjectRisk, PmoChangeRequest
 from app.models.shortage import MaterialTransfer
 from app.models.progress import Task
 from app.models.progress import Task
 from app.models.sales import Contract, Invoice
+from app.models.business_support import InvoiceRequest
 from app.models.project_review import ProjectReview, ProjectLesson, ProjectBestPractice
 from app.schemas.project import (
     ProjectCreate,
@@ -31,6 +32,9 @@ from app.schemas.project import (
     ProjectTemplateCreate,
     ProjectTemplateUpdate,
     ProjectTemplateResponse,
+    ProjectTemplateVersionCreate,
+    ProjectTemplateVersionUpdate,
+    ProjectTemplateVersionResponse,
     ProjectCloneRequest,
     ProjectArchiveRequest,
     ResourceOptimizationResponse,
@@ -62,10 +66,39 @@ from app.schemas.project_review import (
     ProjectBestPracticeCreate,
     ProjectBestPracticeUpdate,
     ProjectBestPracticeResponse,
+    LessonStatisticsResponse,
+    BestPracticeRecommendationRequest,
+    BestPracticeRecommendationResponse
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
 
 router = APIRouter()
+
+
+def _sync_invoice_request_receipt_status(db: Session, plan: ProjectPaymentPlan) -> None:
+    """根据收款计划实收金额同步开票申请回款状态"""
+    invoice_requests = db.query(InvoiceRequest).filter(
+        InvoiceRequest.payment_plan_id == plan.id,
+        InvoiceRequest.status == "APPROVED"
+    ).all()
+    if not invoice_requests:
+        return
+
+    planned_amount = plan.planned_amount or Decimal("0")
+    actual_amount = plan.actual_amount or Decimal("0")
+
+    if planned_amount and actual_amount >= planned_amount:
+        receipt_status = "PAID"
+    elif actual_amount > 0:
+        receipt_status = "PARTIAL"
+    else:
+        receipt_status = "UNPAID"
+
+    for invoice_request in invoice_requests:
+        if invoice_request.receipt_status != receipt_status:
+            invoice_request.receipt_status = receipt_status
+            invoice_request.receipt_updated_at = datetime.utcnow()
+            db.add(invoice_request)
 
 
 @router.get("/", response_model=PaginatedResponse[ProjectListResponse])
@@ -1188,6 +1221,7 @@ def update_project_payment_plan(
         raise HTTPException(status_code=404, detail="收款计划不存在")
     
     update_data = plan_in.model_dump(exclude_unset=True)
+    sync_receipt_status = any(field in update_data for field in ("actual_amount", "status"))
     
     # 验证里程碑是否存在
     if "milestone_id" in update_data and update_data["milestone_id"]:
@@ -1199,6 +1233,9 @@ def update_project_payment_plan(
         if hasattr(plan, field):
             setattr(plan, field, value)
     
+    if sync_receipt_status:
+        _sync_invoice_request_receipt_status(db, plan)
+
     db.add(plan)
     db.commit()
     db.refresh(plan)
@@ -1522,6 +1559,177 @@ def create_project_from_template(
         progress_pct=float(project.progress_pct or 0),
         created_at=project.created_at,
         updated_at=project.updated_at,
+    )
+
+
+# ==================== 项目模板版本管理 ====================
+
+@router.get("/templates/{template_id}/versions", response_model=List[ProjectTemplateVersionResponse], status_code=status.HTTP_200_OK)
+def get_template_versions(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取项目模板版本列表
+    """
+    template = db.query(ProjectTemplate).filter(ProjectTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="模板不存在")
+    
+    versions = db.query(ProjectTemplateVersion).filter(
+        ProjectTemplateVersion.template_id == template_id
+    ).order_by(desc(ProjectTemplateVersion.created_at)).all()
+    
+    result = []
+    for version in versions:
+        created_by_name = None
+        if version.created_by:
+            creator = db.query(User).filter(User.id == version.created_by).first()
+            created_by_name = creator.real_name or creator.username if creator else None
+        
+        published_by_name = None
+        if version.published_by:
+            publisher = db.query(User).filter(User.id == version.published_by).first()
+            published_by_name = publisher.real_name or publisher.username if publisher else None
+        
+        result.append(ProjectTemplateVersionResponse(
+            id=version.id,
+            template_id=version.template_id,
+            version_no=version.version_no,
+            status=version.status,
+            template_config=version.template_config,
+            release_notes=version.release_notes,
+            created_by=version.created_by,
+            created_by_name=created_by_name,
+            published_by=version.published_by,
+            published_by_name=published_by_name,
+            published_at=version.published_at,
+            created_at=version.created_at,
+            updated_at=version.updated_at
+        ))
+    
+    return result
+
+
+@router.post("/templates/{template_id}/versions", response_model=ProjectTemplateVersionResponse, status_code=status.HTTP_201_CREATED)
+def create_template_version(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    version_in: ProjectTemplateVersionCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    创建项目模板版本
+    """
+    template = db.query(ProjectTemplate).filter(ProjectTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="模板不存在")
+    
+    # 检查版本号是否已存在
+    existing = db.query(ProjectTemplateVersion).filter(
+        ProjectTemplateVersion.template_id == template_id,
+        ProjectTemplateVersion.version_no == version_in.version_no
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="该版本号已存在")
+    
+    # 如果没有提供模板配置，使用当前模板的配置
+    template_config = version_in.template_config or template.template_config
+    
+    version = ProjectTemplateVersion(
+        template_id=template_id,
+        version_no=version_in.version_no,
+        status="DRAFT",
+        template_config=template_config,
+        release_notes=version_in.release_notes,
+        created_by=current_user.id
+    )
+    
+    db.add(version)
+    db.commit()
+    db.refresh(version)
+    
+    return ProjectTemplateVersionResponse(
+        id=version.id,
+        template_id=version.template_id,
+        version_no=version.version_no,
+        status=version.status,
+        template_config=version.template_config,
+        release_notes=version.release_notes,
+        created_by=version.created_by,
+        created_by_name=current_user.real_name or current_user.username,
+        published_by=version.published_by,
+        published_by_name=None,
+        published_at=version.published_at,
+        created_at=version.created_at,
+        updated_at=version.updated_at
+    )
+
+
+@router.put("/templates/{template_id}/versions/{version_id}/publish", response_model=ProjectTemplateVersionResponse, status_code=status.HTTP_200_OK)
+def publish_template_version(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    version_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    发布项目模板版本（设置为当前版本）
+    """
+    template = db.query(ProjectTemplate).filter(ProjectTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="模板不存在")
+    
+    version = db.query(ProjectTemplateVersion).filter(
+        ProjectTemplateVersion.id == version_id,
+        ProjectTemplateVersion.template_id == template_id
+    ).first()
+    if not version:
+        raise HTTPException(status_code=404, detail="版本不存在")
+    
+    # 将其他版本设置为ARCHIVED
+    db.query(ProjectTemplateVersion).filter(
+        ProjectTemplateVersion.template_id == template_id,
+        ProjectTemplateVersion.id != version_id
+    ).update({"status": "ARCHIVED"})
+    
+    # 设置当前版本为ACTIVE
+    version.status = "ACTIVE"
+    version.published_by = current_user.id
+    version.published_at = datetime.now()
+    
+    # 更新模板的当前版本ID
+    template.current_version_id = version.id
+    
+    # 更新模板配置为当前版本的配置
+    if version.template_config:
+        template.template_config = version.template_config
+    
+    db.add(version)
+    db.add(template)
+    db.commit()
+    db.refresh(version)
+    
+    publisher_name = current_user.real_name or current_user.username
+    
+    return ProjectTemplateVersionResponse(
+        id=version.id,
+        template_id=version.template_id,
+        version_no=version.version_no,
+        status=version.status,
+        template_config=version.template_config,
+        release_notes=version.release_notes,
+        created_by=version.created_by,
+        created_by_name=None,  # 可以后续查询
+        published_by=version.published_by,
+        published_by_name=publisher_name,
+        published_at=version.published_at,
+        created_at=version.created_at,
+        updated_at=version.updated_at
     )
 
 
@@ -2088,6 +2296,189 @@ def get_project_relations(
         'project_name': project.project_name,
         'relation_stats': relation_stats,
         'relations': relations,
+    }
+
+
+@router.post("/{project_id}/auto-discover-relations", response_model=dict, status_code=status.HTTP_200_OK)
+def auto_discover_project_relations(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    min_confidence: float = Query(0.3, ge=0.0, le=1.0, description="最小置信度阈值"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    自动发现项目关联关系
+    
+    基于多种规则自动发现项目之间的潜在关联：
+    1. 相同客户的项目
+    2. 相同项目经理的项目
+    3. 时间重叠的项目
+    4. 相似项目名称/编码
+    5. 物料转移记录
+    6. 共享资源
+    7. 关联的研发项目
+    """
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="项目不存在")
+    
+    discovered_relations = []
+    
+    # 1. 相同客户的项目（置信度：0.8）
+    if project.customer_id:
+        customer_projects = db.query(Project).filter(
+            Project.customer_id == project.customer_id,
+            Project.id != project_id,
+            Project.is_active == True
+        ).all()
+        for related_project in customer_projects:
+            discovered_relations.append({
+                'related_project_id': related_project.id,
+                'related_project_code': related_project.project_code,
+                'related_project_name': related_project.project_name,
+                'relation_type': 'SAME_CUSTOMER',
+                'confidence': 0.8,
+                'reason': f'相同客户：{project.customer_name}',
+            })
+    
+    # 2. 相同项目经理的项目（置信度：0.7）
+    if project.pm_id:
+        pm_projects = db.query(Project).filter(
+            Project.pm_id == project.pm_id,
+            Project.id != project_id,
+            Project.is_active == True
+        ).all()
+        for related_project in pm_projects:
+            discovered_relations.append({
+                'related_project_id': related_project.id,
+                'related_project_code': related_project.project_code,
+                'related_project_name': related_project.project_name,
+                'relation_type': 'SAME_PM',
+                'confidence': 0.7,
+                'reason': f'相同项目经理：{project.pm_name}',
+            })
+    
+    # 3. 时间重叠的项目（置信度：0.6）
+    if project.planned_start_date and project.planned_end_date:
+        overlapping_projects = db.query(Project).filter(
+            Project.id != project_id,
+            Project.is_active == True,
+            Project.planned_start_date <= project.planned_end_date,
+            Project.planned_end_date >= project.planned_start_date
+        ).all()
+        for related_project in overlapping_projects:
+            discovered_relations.append({
+                'related_project_id': related_project.id,
+                'related_project_code': related_project.project_code,
+                'related_project_name': related_project.project_name,
+                'relation_type': 'TIME_OVERLAP',
+                'confidence': 0.6,
+                'reason': '项目时间重叠',
+            })
+    
+    # 4. 物料转移记录（置信度：0.9）
+    material_transfers = db.query(MaterialTransfer).filter(
+        or_(
+            MaterialTransfer.from_project_id == project_id,
+            MaterialTransfer.to_project_id == project_id
+        ),
+        MaterialTransfer.status.in_(['APPROVED', 'EXECUTED'])
+    ).all()
+    for transfer in material_transfers:
+        related_project_id = transfer.to_project_id if transfer.from_project_id == project_id else transfer.from_project_id
+        if related_project_id:
+            related_project = db.query(Project).filter(Project.id == related_project_id).first()
+            if related_project:
+                discovered_relations.append({
+                    'related_project_id': related_project.id,
+                    'related_project_code': related_project.project_code,
+                    'related_project_name': related_project.project_name,
+                    'relation_type': 'MATERIAL_TRANSFER',
+                    'confidence': 0.9,
+                    'reason': f'物料转移：{transfer.material_name}',
+                })
+    
+    # 5. 共享资源（置信度：0.75）
+    project_resources = db.query(PmoResourceAllocation).filter(
+        PmoResourceAllocation.project_id == project_id,
+        PmoResourceAllocation.status != 'CANCELLED'
+    ).all()
+    resource_ids = [alloc.resource_id for alloc in project_resources]
+    if resource_ids:
+        shared_projects = (
+            db.query(PmoResourceAllocation.project_id)
+            .filter(
+                PmoResourceAllocation.resource_id.in_(resource_ids),
+                PmoResourceAllocation.project_id != project_id,
+                PmoResourceAllocation.status != 'CANCELLED'
+            )
+            .distinct()
+            .all()
+        )
+        for (related_project_id,) in shared_projects:
+            related_project = db.query(Project).filter(Project.id == related_project_id).first()
+            if related_project:
+                discovered_relations.append({
+                    'related_project_id': related_project.id,
+                    'related_project_code': related_project.project_code,
+                    'related_project_name': related_project.project_name,
+                    'relation_type': 'SHARED_RESOURCE',
+                    'confidence': 0.75,
+                    'reason': '共享资源',
+                })
+    
+    # 6. 关联的研发项目（置信度：0.85）
+    from app.models.rd_project import RdProject
+    linked_rd_projects = db.query(RdProject).filter(
+        RdProject.linked_project_id == project_id
+    ).all()
+    for rd_project in linked_rd_projects:
+        # 查找其他关联到相同研发项目的非标项目
+        other_linked_projects = db.query(RdProject).filter(
+            RdProject.id == rd_project.id,
+            RdProject.linked_project_id != project_id,
+            RdProject.linked_project_id.isnot(None)
+        ).all()
+        for other_rd in other_linked_projects:
+            if other_rd.linked_project_id:
+                related_project = db.query(Project).filter(Project.id == other_rd.linked_project_id).first()
+                if related_project:
+                    discovered_relations.append({
+                        'related_project_id': related_project.id,
+                        'related_project_code': related_project.project_code,
+                        'related_project_name': related_project.project_name,
+                        'relation_type': 'SHARED_RD_PROJECT',
+                        'confidence': 0.85,
+                        'reason': f'关联相同研发项目：{rd_project.project_name}',
+                    })
+    
+    # 去重并过滤置信度
+    unique_relations = {}
+    for relation in discovered_relations:
+        if relation['confidence'] >= min_confidence:
+            key = relation['related_project_id']
+            if key not in unique_relations or relation['confidence'] > unique_relations[key]['confidence']:
+                unique_relations[key] = relation
+    
+    # 按置信度排序
+    final_relations = sorted(unique_relations.values(), key=lambda x: x['confidence'], reverse=True)
+    
+    return {
+        'project_id': project_id,
+        'project_code': project.project_code,
+        'project_name': project.project_name,
+        'min_confidence': min_confidence,
+        'total_discovered': len(final_relations),
+        'relations': final_relations,
+        'statistics': {
+            'by_type': {},
+            'by_confidence_range': {
+                'high': len([r for r in final_relations if r['confidence'] >= 0.8]),
+                'medium': len([r for r in final_relations if 0.5 <= r['confidence'] < 0.8]),
+                'low': len([r for r in final_relations if r['confidence'] < 0.5]),
+            }
+        }
     }
 
 
@@ -3300,6 +3691,26 @@ def advance_project_stage(
         changed_at=datetime.now()
     )
     db.add(status_log)
+    
+    # 如果项目进入S9阶段或状态变为ST30，自动生成成本复盘报告
+    if advance_request.target_stage == "S9" or new_status == "ST30":
+        try:
+            from app.services.cost_review_service import CostReviewService
+            # 自动生成成本复盘报告（如果不存在）
+            existing_review = db.query(ProjectReview).filter(
+                ProjectReview.project_id == project_id,
+                ProjectReview.review_type == "POST_MORTEM"
+            ).first()
+            
+            if not existing_review:
+                CostReviewService.generate_cost_review_report(
+                    db, project_id, current_user.id
+                )
+        except Exception as e:
+            # 如果生成复盘报告失败，记录日志但不影响阶段更新
+            import logging
+            logging.warning(f"自动生成成本复盘报告失败：{str(e)}")
+    
     db.commit()
     db.refresh(project)
     
@@ -5239,3 +5650,455 @@ def get_best_practice_statistics(
         }
     )
 
+
+# ==================== 经验教训高级管理 ====================
+
+@router.get("/lessons-learned", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
+def search_lessons_learned(
+    *,
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    keyword: Optional[str] = Query(None, description="关键词搜索（标题/描述）"),
+    lesson_type: Optional[str] = Query(None, description="类型筛选：SUCCESS/FAILURE"),
+    category: Optional[str] = Query(None, description="分类筛选"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    priority: Optional[str] = Query(None, description="优先级筛选"),
+    project_id: Optional[int] = Query(None, description="项目ID筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    跨项目搜索经验教训库
+    """
+    query = db.query(ProjectLesson).join(
+        ProjectReview, ProjectLesson.review_id == ProjectReview.id
+    ).join(
+        Project, ProjectReview.project_id == Project.id
+    )
+    
+    if keyword:
+        query = query.filter(
+            or_(
+                ProjectLesson.title.like(f"%{keyword}%"),
+                ProjectLesson.description.like(f"%{keyword}%")
+            )
+        )
+    
+    if lesson_type:
+        query = query.filter(ProjectLesson.lesson_type == lesson_type)
+    
+    if category:
+        query = query.filter(ProjectLesson.category == category)
+    
+    if status:
+        query = query.filter(ProjectLesson.status == status)
+    
+    if priority:
+        query = query.filter(ProjectLesson.priority == priority)
+    
+    if project_id:
+        query = query.filter(ProjectLesson.project_id == project_id)
+    
+    total = query.count()
+    offset = (page - 1) * page_size
+    lessons = query.order_by(desc(ProjectLesson.created_at)).offset(offset).limit(page_size).all()
+    
+    items = []
+    for lesson in lessons:
+        data = ProjectLessonResponse.model_validate(lesson).model_dump()
+        # 添加项目信息
+        if lesson.review and lesson.review.project:
+            data["project_code"] = lesson.review.project_code
+            data["project_name"] = lesson.review.project.project_name
+        items.append(data)
+    
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
+    )
+
+
+@router.get("/lessons-learned/statistics", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def get_lessons_statistics(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: Optional[int] = Query(None, description="项目ID筛选（可选）"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取经验教训统计信息
+    """
+    query = db.query(ProjectLesson)
+    
+    if project_id:
+        query = query.filter(ProjectLesson.project_id == project_id)
+    
+    total = query.count()
+    success_count = query.filter(ProjectLesson.lesson_type == "SUCCESS").count()
+    failure_count = query.filter(ProjectLesson.lesson_type == "FAILURE").count()
+    
+    # 按分类统计
+    category_stats = db.query(
+        ProjectLesson.category,
+        func.count(ProjectLesson.id).label('count')
+    )
+    if project_id:
+        category_stats = category_stats.filter(ProjectLesson.project_id == project_id)
+    category_stats = category_stats.filter(
+        ProjectLesson.category.isnot(None)
+    ).group_by(ProjectLesson.category).all()
+    
+    # 按状态统计
+    status_stats = db.query(
+        ProjectLesson.status,
+        func.count(ProjectLesson.id).label('count')
+    )
+    if project_id:
+        status_stats = status_stats.filter(ProjectLesson.project_id == project_id)
+    status_stats = status_stats.group_by(ProjectLesson.status).all()
+    
+    # 按优先级统计
+    priority_stats = db.query(
+        ProjectLesson.priority,
+        func.count(ProjectLesson.id).label('count')
+    )
+    if project_id:
+        priority_stats = priority_stats.filter(ProjectLesson.project_id == project_id)
+    priority_stats = priority_stats.group_by(ProjectLesson.priority).all()
+    
+    # 已解决/未解决统计
+    resolved_count = query.filter(ProjectLesson.status.in_(["RESOLVED", "CLOSED"])).count()
+    unresolved_count = total - resolved_count
+    
+    # 逾期统计（有完成日期且已过期）
+    today = date.today()
+    overdue_count = query.filter(
+        ProjectLesson.due_date.isnot(None),
+        ProjectLesson.due_date < today,
+        ProjectLesson.status.notin_(["RESOLVED", "CLOSED"])
+    ).count()
+    
+    return ResponseModel(
+        code=200,
+        message="获取统计信息成功",
+        data={
+            "total": total,
+            "success_count": success_count,
+            "failure_count": failure_count,
+            "by_category": {cat: count for cat, count in category_stats if cat},
+            "by_status": {stat: count for stat, count in status_stats},
+            "by_priority": {pri: count for pri, count in priority_stats},
+            "resolved_count": resolved_count,
+            "unresolved_count": unresolved_count,
+            "overdue_count": overdue_count
+        }
+    )
+
+
+@router.get("/lessons-learned/categories", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def get_lesson_categories(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取经验教训分类列表
+    """
+    categories = db.query(ProjectLesson.category).filter(
+        ProjectLesson.category.isnot(None)
+    ).distinct().all()
+    
+    category_list = [cat[0] for cat in categories if cat[0]]
+    
+    return ResponseModel(
+        code=200,
+        message="获取分类列表成功",
+        data={"categories": category_list}
+    )
+
+
+@router.put("/project-reviews/lessons/{lesson_id}/status", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def update_lesson_status(
+    *,
+    db: Session = Depends(deps.get_db),
+    lesson_id: int,
+    new_status: str = Body(..., description="新状态：OPEN/IN_PROGRESS/RESOLVED/CLOSED"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    更新经验教训状态
+    """
+    lesson = db.query(ProjectLesson).filter(ProjectLesson.id == lesson_id).first()
+    
+    if not lesson:
+        raise HTTPException(status_code=404, detail="经验教训不存在")
+    
+    # 检查项目访问权限
+    from app.utils.permission_helpers import check_project_access_or_raise
+    check_project_access_or_raise(db, current_user, lesson.project_id)
+    
+    if new_status not in ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"]:
+        raise HTTPException(status_code=400, detail="无效的状态值")
+    
+    lesson.status = new_status
+    if new_status in ["RESOLVED", "CLOSED"]:
+        lesson.resolved_date = date.today()
+    
+    db.commit()
+    db.refresh(lesson)
+    
+    return ResponseModel(
+        code=200,
+        message="经验教训状态更新成功",
+        data=ProjectLessonResponse.model_validate(lesson).model_dump()
+    )
+
+
+@router.post("/project-reviews/lessons/batch-update", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def batch_update_lessons(
+    *,
+    db: Session = Depends(deps.get_db),
+    lesson_ids: List[int] = Body(..., description="经验教训ID列表"),
+    update_data: Dict[str, Any] = Body(..., description="更新数据"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    批量更新经验教训
+    """
+    lessons = db.query(ProjectLesson).filter(ProjectLesson.id.in_(lesson_ids)).all()
+    
+    if not lessons:
+        raise HTTPException(status_code=404, detail="未找到经验教训")
+    
+    # 检查所有经验教训的项目访问权限
+    from app.utils.permission_helpers import check_project_access_or_raise
+    for lesson in lessons:
+        check_project_access_or_raise(db, current_user, lesson.project_id)
+    
+    updated_count = 0
+    for lesson in lessons:
+        for key, value in update_data.items():
+            if hasattr(lesson, key):
+                setattr(lesson, key, value)
+        updated_count += 1
+    
+    db.commit()
+    
+    return ResponseModel(
+        code=200,
+        message=f"成功更新{updated_count}条经验教训",
+        data={"updated_count": updated_count}
+    )
+
+
+# ==================== 最佳实践高级管理 ====================
+
+@router.post("/best-practices/recommend", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def recommend_best_practices(
+    *,
+    db: Session = Depends(deps.get_db),
+    request: BestPracticeRecommendationRequest,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    推荐最佳实践（基于项目类型和阶段）
+    """
+    query = db.query(ProjectBestPractice).join(
+        ProjectReview, ProjectBestPractice.review_id == ProjectReview.id
+    ).join(
+        Project, ProjectReview.project_id == Project.id
+    ).filter(
+        ProjectBestPractice.is_reusable == True,
+        ProjectBestPractice.validation_status == "VALIDATED",
+        ProjectBestPractice.status == "ACTIVE"
+    )
+    
+    if request.category:
+        query = query.filter(ProjectBestPractice.category == request.category)
+    
+    practices = query.all()
+    
+    # 计算匹配度
+    recommendations = []
+    for practice in practices:
+        score = 0.0
+        reasons = []
+        
+        # 项目类型匹配
+        if request.project_type and practice.applicable_project_types:
+            if request.project_type in practice.applicable_project_types:
+                score += 0.4
+                reasons.append("项目类型匹配")
+        
+        # 阶段匹配
+        if request.current_stage and practice.applicable_stages:
+            if request.current_stage in practice.applicable_stages:
+                score += 0.4
+                reasons.append("阶段匹配")
+        
+        # 复用次数加分
+        if practice.reuse_count:
+            score += min(0.2, practice.reuse_count * 0.01)
+            if practice.reuse_count > 5:
+                reasons.append("高复用率")
+        
+        # 分类匹配
+        if request.category and practice.category == request.category:
+            score += 0.1
+            reasons.append("分类匹配")
+        
+        if score > 0:
+            recommendations.append({
+                "practice": practice,
+                "score": score,
+                "reasons": reasons
+            })
+    
+    # 按匹配度排序
+    recommendations.sort(key=lambda x: x["score"], reverse=True)
+    
+    # 限制返回数量
+    recommendations = recommendations[:request.limit]
+    
+    items = []
+    for rec in recommendations:
+        practice_data = ProjectBestPracticeResponse.model_validate(rec["practice"]).model_dump()
+        # 添加项目信息
+        if rec["practice"].review and rec["practice"].review.project:
+            practice_data["project_code"] = rec["practice"].review.project_code
+            practice_data["project_name"] = rec["practice"].review.project.project_name
+        
+        items.append({
+            "practice": practice_data,
+            "match_score": round(rec["score"], 2),
+            "match_reasons": rec["reasons"]
+        })
+    
+    return ResponseModel(
+        code=200,
+        message="推荐最佳实践成功",
+        data={"recommendations": items}
+    )
+
+
+@router.get("/projects/{project_id}/best-practices/recommend", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def get_project_best_practice_recommendations(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    limit: int = Query(10, ge=1, le=50, description="返回数量限制"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取项目推荐的最佳实践（基于项目信息自动匹配）
+    """
+    # 检查项目访问权限
+    from app.utils.permission_helpers import check_project_access_or_raise
+    project = check_project_access_or_raise(db, current_user, project_id)
+    
+    # 构建推荐请求
+    request = BestPracticeRecommendationRequest(
+        project_id=project_id,
+        project_type=project.project_type if hasattr(project, 'project_type') else None,
+        current_stage=project.stage if hasattr(project, 'stage') else None,
+        limit=limit
+    )
+    
+    # 调用推荐函数
+    return recommend_best_practices(db=db, request=request, current_user=current_user)
+
+
+@router.post("/project-reviews/best-practices/{practice_id}/apply", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def apply_best_practice(
+    *,
+    db: Session = Depends(deps.get_db),
+    practice_id: int,
+    target_project_id: int = Body(..., description="目标项目ID"),
+    notes: Optional[str] = Body(None, description="应用备注"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    应用最佳实践到项目（增加复用计数）
+    """
+    practice = db.query(ProjectBestPractice).filter(ProjectBestPractice.id == practice_id).first()
+    
+    if not practice:
+        raise HTTPException(status_code=404, detail="最佳实践不存在")
+    
+    # 检查是否可复用
+    if not practice.is_reusable:
+        raise HTTPException(status_code=400, detail="该最佳实践不可复用")
+    
+    # 检查目标项目访问权限
+    from app.utils.permission_helpers import check_project_access_or_raise
+    check_project_access_or_raise(db, current_user, target_project_id)
+    
+    # 增加复用计数
+    practice.reuse_count = (practice.reuse_count or 0) + 1
+    practice.last_reused_at = datetime.now()
+    
+    db.commit()
+    db.refresh(practice)
+    
+    return ResponseModel(
+        code=200,
+        message="最佳实践应用成功",
+        data={
+            "practice": ProjectBestPracticeResponse.model_validate(practice).model_dump(),
+            "applied_to_project_id": target_project_id,
+            "notes": notes
+        }
+    )
+
+
+@router.get("/best-practices/popular", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
+def get_popular_best_practices(
+    *,
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    category: Optional[str] = Query(None, description="分类筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取热门最佳实践（按复用次数排序）
+    """
+    query = db.query(ProjectBestPractice).join(
+        ProjectReview, ProjectBestPractice.review_id == ProjectReview.id
+    ).join(
+        Project, ProjectReview.project_id == Project.id
+    ).filter(
+        ProjectBestPractice.is_reusable == True,
+        ProjectBestPractice.validation_status == "VALIDATED",
+        ProjectBestPractice.status == "ACTIVE"
+    )
+    
+    if category:
+        query = query.filter(ProjectBestPractice.category == category)
+    
+    total = query.count()
+    offset = (page - 1) * page_size
+    practices = query.order_by(
+        desc(ProjectBestPractice.reuse_count),
+        desc(ProjectBestPractice.created_at)
+    ).offset(offset).limit(page_size).all()
+    
+    items = []
+    for bp in practices:
+        data = ProjectBestPracticeResponse.model_validate(bp).model_dump()
+        # 添加项目信息
+        if bp.review and bp.review.project:
+            data["project_code"] = bp.review.project_code
+            data["project_name"] = bp.review.project.project_name
+        items.append(data)
+    
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
+    )

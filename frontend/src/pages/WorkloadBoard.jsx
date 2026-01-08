@@ -135,7 +135,7 @@ export default function WorkloadBoard() {
                   <SelectValue placeholder="全部部门" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全部部门</SelectItem>
+                  <SelectItem value="all">全部部门</SelectItem>
                   {/* 这里可以从API获取部门列表 */}
                 </SelectContent>
               </Select>

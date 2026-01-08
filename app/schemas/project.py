@@ -83,6 +83,117 @@ class CustomerResponse(TimestampSchema):
         from_attributes = True
 
 
+class Customer360Summary(BaseModel):
+    """客户360度概要"""
+
+    total_projects: int = 0
+    active_projects: int = 0
+    pipeline_amount: Decimal = 0
+    total_contract_amount: Decimal = 0
+    open_receivables: Decimal = 0
+    win_rate: float = 0
+    avg_margin: Optional[Decimal] = None
+    last_activity: Optional[datetime] = None
+
+
+class Customer360ProjectItem(BaseModel):
+    """客户项目摘要"""
+
+    project_id: int
+    project_code: str
+    project_name: str
+    stage: Optional[str] = None
+    status: Optional[str] = None
+    progress_pct: Optional[Decimal] = None
+    contract_amount: Optional[Decimal] = None
+    planned_end_date: Optional[date] = None
+
+
+class Customer360OpportunityItem(BaseModel):
+    """客户商机摘要"""
+
+    opportunity_id: int
+    opp_code: str
+    opp_name: str
+    stage: str
+    est_amount: Optional[Decimal] = None
+    owner_name: Optional[str] = None
+    win_probability: Optional[float] = None
+    updated_at: Optional[datetime] = None
+
+
+class Customer360QuoteItem(BaseModel):
+    """客户报价摘要"""
+
+    quote_id: int
+    quote_code: str
+    status: str
+    total_price: Optional[Decimal] = None
+    gross_margin: Optional[Decimal] = None
+    owner_name: Optional[str] = None
+    valid_until: Optional[date] = None
+
+
+class Customer360ContractItem(BaseModel):
+    """客户合同摘要"""
+
+    contract_id: int
+    contract_code: str
+    status: str
+    contract_amount: Optional[Decimal] = None
+    signed_date: Optional[date] = None
+    project_code: Optional[str] = None
+
+
+class Customer360InvoiceItem(BaseModel):
+    """客户发票摘要"""
+
+    invoice_id: int
+    invoice_code: str
+    status: str
+    total_amount: Optional[Decimal] = None
+    issue_date: Optional[date] = None
+    paid_amount: Optional[Decimal] = None
+
+
+class Customer360PaymentPlanItem(BaseModel):
+    """客户收款节点"""
+
+    plan_id: int
+    project_id: Optional[int] = None
+    payment_name: str
+    status: str
+    planned_amount: Optional[Decimal] = None
+    actual_amount: Optional[Decimal] = None
+    planned_date: Optional[date] = None
+    actual_date: Optional[date] = None
+
+
+class Customer360CommunicationItem(BaseModel):
+    """客户沟通记录摘要"""
+
+    communication_id: int
+    topic: str
+    communication_type: Optional[str] = None
+    communication_date: Optional[date] = None
+    owner_name: Optional[str] = None
+    follow_up_required: Optional[bool] = None
+
+
+class Customer360Response(BaseModel):
+    """客户360度视图响应"""
+
+    basic_info: CustomerResponse
+    summary: Customer360Summary
+    projects: List[Customer360ProjectItem] = []
+    opportunities: List[Customer360OpportunityItem] = []
+    quotes: List[Customer360QuoteItem] = []
+    contracts: List[Customer360ContractItem] = []
+    invoices: List[Customer360InvoiceItem] = []
+    payment_plans: List[Customer360PaymentPlanItem] = []
+    communications: List[Customer360CommunicationItem] = []
+
+
 # ==================== 项目 ====================
 
 
@@ -570,7 +681,8 @@ class ProjectCostResponse(TimestampSchema):
 class ProjectDocumentCreate(BaseModel):
     """创建文档记录"""
 
-    project_id: int
+    project_id: Optional[int] = None
+    rd_project_id: Optional[int] = None
     machine_id: Optional[int] = None
     doc_type: str = Field(max_length=50)
     doc_category: Optional[str] = None
@@ -605,7 +717,8 @@ class ProjectDocumentResponse(TimestampSchema):
     """文档记录响应"""
 
     id: int
-    project_id: int
+    project_id: Optional[int] = None
+    rd_project_id: Optional[int] = None
     machine_id: Optional[int] = None
     doc_type: str
     doc_category: Optional[str] = None
@@ -724,6 +837,46 @@ class ProjectTemplateResponse(TimestampSchema):
     is_active: bool
     usage_count: int
     created_by: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+
+# ==================== 项目模板版本 ====================
+
+class ProjectTemplateVersionCreate(BaseModel):
+    """创建项目模板版本"""
+
+    version_no: str = Field(..., max_length=20, description="版本号")
+    status: Optional[str] = Field(default="DRAFT", description="状态：DRAFT/ACTIVE/ARCHIVED")
+    template_config: Optional[str] = Field(None, description="模板配置JSON")
+    release_notes: Optional[str] = Field(None, description="版本说明")
+
+
+class ProjectTemplateVersionUpdate(BaseModel):
+    """更新项目模板版本"""
+
+    version_no: Optional[str] = Field(None, max_length=20, description="版本号")
+    status: Optional[str] = Field(None, description="状态：DRAFT/ACTIVE/ARCHIVED")
+    template_config: Optional[str] = Field(None, description="模板配置JSON")
+    release_notes: Optional[str] = Field(None, description="版本说明")
+
+
+class ProjectTemplateVersionResponse(TimestampSchema):
+    """项目模板版本响应"""
+
+    id: int
+    template_id: int
+    version_no: str
+    status: str
+    template_config: Optional[str] = None
+    release_notes: Optional[str] = None
+    created_by: Optional[int] = None
+    published_by: Optional[int] = None
+    published_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
 
 
 class ProjectCloneRequest(BaseModel):

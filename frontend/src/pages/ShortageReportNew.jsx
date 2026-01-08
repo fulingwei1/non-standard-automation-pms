@@ -32,7 +32,7 @@ import {
   Textarea,
 } from '../components/ui'
 import { fadeIn } from '../lib/animations'
-import { shortageApi, projectApi } from '../services/api'
+import { shortageApi, projectApi, materialApi } from '../services/api'
 
 const urgentLevels = [
   { value: 'NORMAL', label: '普通' },
@@ -61,7 +61,13 @@ export default function ShortageReportNew() {
 
   useEffect(() => {
     loadProjects()
+    loadMaterials()
   }, [])
+
+  useEffect(() => {
+    // 当搜索关键词变化时，重新加载物料列表
+    loadMaterials()
+  }, [searchKeyword])
 
   const loadProjects = async () => {
     try {
@@ -69,6 +75,36 @@ export default function ShortageReportNew() {
       setProjects(res.data.items || [])
     } catch (error) {
       console.error('加载项目列表失败', error)
+    }
+  }
+
+  const loadMaterials = async () => {
+    try {
+      const params = {
+        page: 1,
+        page_size: 100,
+      }
+      if (searchKeyword) {
+        // 如果后端支持关键词搜索，可以添加keyword参数
+        // params.keyword = searchKeyword
+      }
+      const res = await materialApi.list(params)
+      const materialList = res.data?.items || res.data || []
+      
+      // 如果有搜索关键词，前端过滤
+      let filteredMaterials = materialList
+      if (searchKeyword) {
+        const keyword = searchKeyword.toLowerCase()
+        filteredMaterials = materialList.filter(m => 
+          (m.material_code && m.material_code.toLowerCase().includes(keyword)) ||
+          (m.material_name && m.material_name.toLowerCase().includes(keyword))
+        )
+      }
+      
+      setMaterials(filteredMaterials)
+    } catch (error) {
+      console.error('加载物料列表失败', error)
+      setMaterials([])
     }
   }
 
@@ -237,10 +273,18 @@ export default function ShortageReportNew() {
                   <SelectTrigger id="material_id" className={errors.material_id ? 'border-red-400' : ''}>
                     <SelectValue placeholder="请选择物料" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {/* TODO: 这里应该从物料API获取物料列表，并根据searchKeyword过滤 */}
-                    <SelectItem value="1">示例物料 - MAT-001</SelectItem>
-                    <SelectItem value="2">示例物料 - MAT-002</SelectItem>
+                  <SelectContent className="max-h-[300px]">
+                    {materials.length === 0 ? (
+                      <SelectItem value="" disabled>
+                        {searchKeyword ? '未找到匹配的物料' : '暂无物料数据'}
+                      </SelectItem>
+                    ) : (
+                      materials.map((material) => (
+                        <SelectItem key={material.id} value={material.id.toString()}>
+                          {material.material_code || 'N/A'} - {material.material_name || '未命名物料'}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
                 {errors.material_id && (

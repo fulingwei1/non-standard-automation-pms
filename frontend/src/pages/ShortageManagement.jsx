@@ -356,7 +356,7 @@ export default function ShortageManagement() {
                       <SelectValue placeholder="全部状态" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">全部状态</SelectItem>
+                      <SelectItem value="all">全部状态</SelectItem>
                       <SelectItem value="REPORTED">已上报</SelectItem>
                       <SelectItem value="CONFIRMED">已确认</SelectItem>
                       <SelectItem value="HANDLING">处理中</SelectItem>

@@ -92,6 +92,13 @@ class Issue(Base, TimestampMixin):
     follow_up_count = Column(Integer, default=0, comment='跟进次数')
     last_follow_up_at = Column(DateTime, comment='最后跟进时间')
     
+    # 问题原因和责任工程师
+    root_cause = Column(String(20), comment='问题原因：DESIGN_ERROR/MATERIAL_DEFECT/PROCESS_ERROR/EXTERNAL_FACTOR/OTHER')
+    responsible_engineer_id = Column(Integer, ForeignKey('users.id'), comment='责任工程师ID')
+    responsible_engineer_name = Column(String(50), comment='责任工程师姓名')
+    estimated_inventory_loss = Column(Numeric(14, 2), comment='预估库存损失金额')
+    estimated_extra_hours = Column(Numeric(10, 2), comment='预估额外工时(小时)')
+    
     # 关系
     project = relationship('Project', foreign_keys=[project_id])
     machine = relationship('Machine', foreign_keys=[machine_id])
@@ -99,6 +106,7 @@ class Issue(Base, TimestampMixin):
     assignee = relationship('User', foreign_keys=[assignee_id])
     resolver = relationship('User', foreign_keys=[resolved_by])
     verifier = relationship('User', foreign_keys=[verified_by])
+    responsible_engineer = relationship('User', foreign_keys=[responsible_engineer_id])
     acceptance_order = relationship('AcceptanceOrder', foreign_keys=[acceptance_order_id])
     related_issue = relationship('Issue', remote_side=[id], foreign_keys=[related_issue_id])
     follow_ups = relationship('IssueFollowUpRecord', back_populates='issue', lazy='dynamic', cascade='all, delete-orphan')

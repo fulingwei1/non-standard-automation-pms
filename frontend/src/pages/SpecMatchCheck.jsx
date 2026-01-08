@@ -102,7 +102,7 @@ export default function SpecMatchCheck() {
                   <SelectValue placeholder="匹配类型" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全部</SelectItem>
+                  <SelectItem value="all">全部</SelectItem>
                   <SelectItem value="BOM">BOM</SelectItem>
                   <SelectItem value="PURCHASE_ORDER">采购订单</SelectItem>
                 </SelectContent>
@@ -112,7 +112,7 @@ export default function SpecMatchCheck() {
                   <SelectValue placeholder="匹配状态" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全部</SelectItem>
+                  <SelectItem value="all">全部</SelectItem>
                   <SelectItem value="MATCHED">匹配</SelectItem>
                   <SelectItem value="MISMATCHED">不匹配</SelectItem>
                   <SelectItem value="UNKNOWN">未知</SelectItem>

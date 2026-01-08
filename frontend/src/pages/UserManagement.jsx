@@ -165,13 +165,12 @@ export default function UserManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('确定要删除此用户吗？')) {
+    if (!window.confirm('确定要禁用此用户吗？禁用后用户将无法登录系统。')) {
       return;
     }
     try {
-      // 注意：后端可能没有实现DELETE，这里只是示例
-      // await userApi.delete(id);
-      alert('删除功能待实现');
+      await userApi.delete(id);
+      alert('用户已成功禁用');
       loadUsers();
     } catch (error) {
       alert('删除用户失败: ' + (error.response?.data?.detail || error.message));
@@ -202,7 +201,7 @@ export default function UserManagement() {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="show"
+      animate="visible"
       className="space-y-6"
     >
       <PageHeader

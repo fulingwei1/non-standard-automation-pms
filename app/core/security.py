@@ -49,6 +49,12 @@ __all__ = [
     "has_production_access",
     "require_production_access",
     "require_project_access",
+    "has_sales_assessment_access",
+    "require_sales_assessment_access",
+    "has_hr_access",
+    "require_hr_access",
+    "has_rd_project_access",
+    "require_rd_project_access",
     "oauth2_scheme",
     "revoke_token",
     "is_token_revoked",
@@ -484,3 +490,123 @@ def require_project_access():
             )
         return current_user
     return project_access_checker
+
+
+def has_sales_assessment_access(user: User) -> bool:
+    """检查用户是否有技术评估权限"""
+    if user.is_superuser:
+        return True
+    
+    # 定义有技术评估权限的角色代码
+    assessment_roles = [
+        'sales',
+        'sales_engineer',
+        'sales_manager',
+        'sales_director',
+        'presales_engineer',
+        'presales_manager',
+        'te',  # 技术工程师
+        'technical_engineer',
+        'admin',
+        'super_admin',
+    ]
+    
+    # 检查用户角色
+    for user_role in user.roles:
+        role_code = user_role.role.role_code.lower() if user_role.role.role_code else ''
+        if role_code in assessment_roles:
+            return True
+    
+    return False
+
+
+def require_sales_assessment_access():
+    """技术评估权限检查依赖"""
+    async def assessment_checker(current_user: User = Depends(get_current_active_user)):
+        if not has_sales_assessment_access(current_user):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="您没有权限进行技术评估"
+            )
+        return current_user
+    return assessment_checker
+
+
+def has_hr_access(user: User) -> bool:
+    """检查用户是否有人力资源管理模块的访问权限（奖金规则配置等）"""
+    if user.is_superuser:
+        return True
+    
+    # 定义有人力资源权限的角色代码
+    hr_roles = [
+        'hr_manager',           # 人力资源经理
+        '人事经理',
+        'hr',                   # 人力资源专员
+        '人事',
+        'gm',                   # 总经理
+        '总经理',
+        'chairman',             # 董事长
+        '董事长',
+        'admin',                # 系统管理员
+        'super_admin',          # 超级管理员
+    ]
+    
+    # 检查用户角色
+    for user_role in user.roles:
+        role_code = user_role.role.role_code.lower() if user_role.role.role_code else ''
+        role_name = user_role.role.role_name.lower() if user_role.role.role_name else ''
+        if role_code in hr_roles or role_name in hr_roles:
+            return True
+    
+    return False
+
+
+def require_hr_access():
+    """人力资源权限检查依赖"""
+    async def hr_checker(current_user: User = Depends(get_current_active_user)):
+        if not has_hr_access(current_user):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="您没有权限访问人力资源配置功能，仅人力资源经理可以配置"
+            )
+        return current_user
+    return hr_checker
+
+
+# 研发项目角色列表
+RD_PROJECT_ROLES = [
+    "admin", "super_admin", "管理员", "系统管理员",
+    "tech_dev_manager", "技术开发部经理",
+    "rd_engineer", "研发工程师",
+    "me_engineer", "机械工程师",
+    "ee_engineer", "电气工程师",
+    "sw_engineer", "软件工程师",
+    "te_engineer", "测试工程师",
+    "me_dept_manager", "机械部经理",
+    "ee_dept_manager", "电气部经理",
+    "te_dept_manager", "测试部经理",
+    "project_dept_manager", "项目部经理",
+    "pm", "pmc", "项目经理",
+    "gm", "总经理",
+    "chairman", "董事长",
+]
+
+def has_rd_project_access(user: User) -> bool:
+    """检查用户是否有研发项目访问权限"""
+    if user.is_superuser:
+        return True
+    role = user.role
+    if role in RD_PROJECT_ROLES:
+        return True
+    return False
+
+def require_rd_project_access():
+    """研发项目权限检查依赖"""
+    async def rd_project_checker(current_user: User = Depends(get_current_active_user)):
+        if not has_rd_project_access(current_user):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="您没有权限访问研发项目管理功能"
+            )
+        return current_user
+    return rd_project_checker

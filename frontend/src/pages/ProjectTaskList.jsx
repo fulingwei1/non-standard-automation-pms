@@ -270,7 +270,7 @@ export default function ProjectTaskList() {
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部状态</SelectItem>
+                <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(statusConfigs).map(([key, config]) => (
                   <SelectItem key={key} value={key}>
                     {config.label}
@@ -283,7 +283,7 @@ export default function ProjectTaskList() {
                 <SelectValue placeholder="选择阶段" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部阶段</SelectItem>
+                <SelectItem value="all">全部阶段</SelectItem>
                 <SelectItem value="S1">S1-立项</SelectItem>
                 <SelectItem value="S2">S2-设计</SelectItem>
                 <SelectItem value="S3">S3-采购</SelectItem>

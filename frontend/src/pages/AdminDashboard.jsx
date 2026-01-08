@@ -489,11 +489,11 @@ export default function AdminDashboard() {
     <motion.div
       variants={staggerContainer}
       initial="hidden"
-      animate="show"
+      animate="visible"
       className="space-y-6 p-6"
     >
       <PageHeader
-        title="系统管理员工作台"
+        title="管理员工作台"
         subtitle="系统配置、用户管理、权限分配、系统维护"
       />
 

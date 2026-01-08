@@ -3,7 +3,7 @@
 变更管理(ECN) Schema
 """
 
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 from pydantic import BaseModel, Field
 from datetime import date, datetime
 from decimal import Decimal
@@ -50,6 +50,11 @@ class EcnUpdate(BaseModel):
 class EcnSubmit(BaseModel):
     """提交ECN"""
     remark: Optional[str] = None
+    # 手动指定评估人员（可选，如果提供则优先使用，否则自动分配）
+    preferred_evaluators: Optional[Dict[str, int]] = Field(
+        default=None, 
+        description="手动指定评估人员，格式：{'部门名': 用户ID}"
+    )
 
 
 class EcnResponse(TimestampSchema):
@@ -204,3 +209,150 @@ class EcnTaskResponse(TimestampSchema):
     actual_end: Optional[date] = None
     progress_pct: int = 0
     status: str = "PENDING"
+
+
+# ==================== ECN受影响物料 ====================
+
+class EcnAffectedMaterialCreate(BaseModel):
+    """创建ECN受影响物料"""
+    ecn_id: int
+    material_id: Optional[int] = None
+    bom_item_id: Optional[int] = None
+    material_code: str = Field(description="物料编码")
+    material_name: str = Field(description="物料名称")
+    specification: Optional[str] = None
+    change_type: str = Field(description="变更类型: ADD/UPDATE/DELETE/REPLACE")
+    old_quantity: Optional[Decimal] = None
+    old_specification: Optional[str] = None
+    old_supplier_id: Optional[int] = None
+    new_quantity: Optional[Decimal] = None
+    new_specification: Optional[str] = None
+    new_supplier_id: Optional[int] = None
+    cost_impact: Optional[Decimal] = Field(default=0)
+    remark: Optional[str] = None
+
+
+class EcnAffectedMaterialUpdate(BaseModel):
+    """更新ECN受影响物料"""
+    change_type: Optional[str] = None
+    old_quantity: Optional[Decimal] = None
+    old_specification: Optional[str] = None
+    old_supplier_id: Optional[int] = None
+    new_quantity: Optional[Decimal] = None
+    new_specification: Optional[str] = None
+    new_supplier_id: Optional[int] = None
+    cost_impact: Optional[Decimal] = None
+    status: Optional[str] = None
+    remark: Optional[str] = None
+
+
+class EcnAffectedMaterialResponse(TimestampSchema):
+    """ECN受影响物料响应"""
+    id: int
+    ecn_id: int
+    material_id: Optional[int] = None
+    bom_item_id: Optional[int] = None
+    material_code: str
+    material_name: str
+    specification: Optional[str] = None
+    change_type: str
+    old_quantity: Optional[Decimal] = None
+    old_specification: Optional[str] = None
+    old_supplier_id: Optional[int] = None
+    new_quantity: Optional[Decimal] = None
+    new_specification: Optional[str] = None
+    new_supplier_id: Optional[int] = None
+    cost_impact: Decimal = 0
+    status: str = "PENDING"
+    processed_at: Optional[datetime] = None
+    remark: Optional[str] = None
+
+
+# ==================== ECN受影响订单 ====================
+
+class EcnAffectedOrderCreate(BaseModel):
+    """创建ECN受影响订单"""
+    ecn_id: int
+    order_type: str = Field(description="订单类型: PURCHASE/OUTSOURCING")
+    order_id: int = Field(description="订单ID")
+    order_no: str = Field(description="订单号")
+    impact_description: Optional[str] = None
+    action_type: Optional[str] = None
+    action_description: Optional[str] = None
+
+
+class EcnAffectedOrderUpdate(BaseModel):
+    """更新ECN受影响订单"""
+    impact_description: Optional[str] = None
+    action_type: Optional[str] = None
+    action_description: Optional[str] = None
+    status: Optional[str] = None
+
+
+class EcnAffectedOrderResponse(TimestampSchema):
+    """ECN受影响订单响应"""
+    id: int
+    ecn_id: int
+    order_type: str
+    order_id: int
+    order_no: str
+    impact_description: Optional[str] = None
+    action_type: Optional[str] = None
+    action_description: Optional[str] = None
+    status: str = "PENDING"
+    processed_by: Optional[int] = None
+    processed_at: Optional[datetime] = None
+
+
+# ==================== ECN类型配置 ====================
+
+class EcnTypeCreate(BaseModel):
+    """创建ECN类型配置"""
+    type_code: str = Field(max_length=20, description="类型编码")
+    type_name: str = Field(max_length=50, description="类型名称")
+    description: Optional[str] = None
+    required_depts: Optional[List[str]] = None
+    optional_depts: Optional[List[str]] = None
+    approval_matrix: Optional[dict] = None
+    is_active: bool = True
+
+
+class EcnTypeUpdate(BaseModel):
+    """更新ECN类型配置"""
+    type_name: Optional[str] = None
+    description: Optional[str] = None
+    required_depts: Optional[List[str]] = None
+    optional_depts: Optional[List[str]] = None
+    approval_matrix: Optional[dict] = None
+    is_active: Optional[bool] = None
+
+
+class EcnTypeResponse(TimestampSchema):
+    """ECN类型配置响应"""
+    id: int
+    type_code: str
+    type_name: str
+    description: Optional[str] = None
+    required_depts: Optional[List[str]] = None
+    optional_depts: Optional[List[str]] = None
+    approval_matrix: Optional[dict] = None
+    is_active: bool = True
+
+
+# ==================== ECN执行操作 ====================
+
+class EcnStartExecution(BaseModel):
+    """开始执行ECN"""
+    remark: Optional[str] = None
+
+
+class EcnVerify(BaseModel):
+    """验证ECN执行结果"""
+    verify_result: str = Field(description="验证结果: PASS/FAIL")
+    verify_note: Optional[str] = None
+    attachments: Optional[List[Any]] = None
+
+
+class EcnClose(BaseModel):
+    """关闭ECN"""
+    close_note: Optional[str] = None

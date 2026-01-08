@@ -529,7 +529,7 @@ export default function AcceptanceExecution() {
                     <SelectValue placeholder="选择检查项" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">无</SelectItem>
+                    <SelectItem value="none">无</SelectItem>
                     {items.map((item) => (
                       <SelectItem key={item.id} value={item.id.toString()}>
                         {item.item_name}

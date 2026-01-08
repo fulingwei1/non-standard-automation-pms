@@ -145,7 +145,27 @@ class TaskUnified(Base, TimestampMixin):
     # 提醒设置
     reminder_enabled = Column(Boolean, default=True, comment='是否开启提醒')
     reminder_before_hours = Column(Integer, default=24, comment='提前提醒小时数')
-    
+
+    # 任务审批工作流
+    approval_required = Column(Boolean, default=False, comment='是否需要审批')
+    approval_status = Column(String(20), comment='审批状态：PENDING_APPROVAL/APPROVED/REJECTED')
+    approved_by = Column(Integer, ForeignKey('users.id'), comment='审批人ID')
+    approved_at = Column(DateTime, comment='审批时间')
+    approval_note = Column(Text, comment='审批意见')
+    task_importance = Column(String(20), default='GENERAL', comment='任务重要性：IMPORTANT/GENERAL')
+
+    # 完成证明
+    completion_note = Column(Text, comment='完成说明')
+
+    # 延期管理
+    is_delayed = Column(Boolean, default=False, comment='是否延期')
+    delay_reason = Column(Text, comment='延期原因')
+    delay_responsibility = Column(String(100), comment='延期责任归属')
+    delay_impact_scope = Column(String(50), comment='延期影响范围：LOCAL/PROJECT/MULTI_PROJECT')
+    new_completion_date = Column(Date, comment='新的预计完成日期')
+    delay_reported_at = Column(DateTime, comment='延期上报时间')
+    delay_reported_by = Column(Integer, ForeignKey('users.id'), comment='延期上报人')
+
     # 审计字段
     created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
     updated_by = Column(Integer, ForeignKey('users.id'), comment='更新人ID')
@@ -262,22 +282,88 @@ class TaskComment(Base):
 class TaskReminder(Base, TimestampMixin):
     """任务提醒"""
     __tablename__ = 'task_reminder'
-    
+
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
     task_id = Column(Integer, ForeignKey('task_unified.id'), nullable=False, comment='任务ID')
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False, comment='用户ID')
-    
+
     reminder_type = Column(String(20), nullable=False, comment='提醒类型:DEADLINE/OVERDUE/CUSTOM')
     remind_at = Column(DateTime, nullable=False, comment='提醒时间')
     is_sent = Column(Boolean, default=False, comment='是否已发送')
     sent_at = Column(DateTime, comment='发送时间')
-    
+
     channel = Column(String(20), default='SYSTEM', comment='通知渠道:SYSTEM/EMAIL/WECHAT')
-    
+
     __table_args__ = (
         Index('idx_reminder_task', 'task_id'),
         Index('idx_reminder_user', 'user_id'),
         Index('idx_reminder_time', 'remind_at'),
         {'comment': '任务提醒表'}
+    )
+
+
+# ==================== 任务审批工作流 ====================
+
+class TaskApprovalWorkflow(Base, TimestampMixin):
+    """任务审批工作流"""
+    __tablename__ = 'task_approval_workflows'
+
+    id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
+    task_id = Column(Integer, ForeignKey('task_unified.id'), nullable=False, comment='任务ID')
+    submitted_by = Column(Integer, ForeignKey('users.id'), nullable=False, comment='提交人ID')
+    submitted_at = Column(DateTime, nullable=False, default=datetime.now, comment='提交时间')
+    submit_note = Column(Text, comment='提交说明（任务必要性）')
+
+    approver_id = Column(Integer, ForeignKey('users.id'), comment='审批人ID')
+    approval_status = Column(String(20), default='PENDING', comment='审批状态：PENDING/APPROVED/REJECTED')
+    approved_at = Column(DateTime, comment='审批时间')
+    approval_note = Column(Text, comment='审批意见')
+    rejection_reason = Column(Text, comment='拒绝原因')
+
+    task_details = Column(JSON, comment='任务详情快照')
+
+    # 关系
+    task = relationship('TaskUnified', backref='approval_workflows')
+
+    __table_args__ = (
+        Index('idx_taw_task_id', 'task_id'),
+        Index('idx_taw_approver_id', 'approver_id'),
+        Index('idx_taw_status', 'approval_status'),
+        Index('idx_taw_submitted_by', 'submitted_by'),
+        {'comment': '任务审批工作流表'}
+    )
+
+
+# ==================== 任务完成证明 ====================
+
+class TaskCompletionProof(Base, TimestampMixin):
+    """任务完成证明材料"""
+    __tablename__ = 'task_completion_proofs'
+
+    id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
+    task_id = Column(Integer, ForeignKey('task_unified.id'), nullable=False, comment='任务ID')
+
+    proof_type = Column(String(50), nullable=False,
+                       comment='证明类型：DOCUMENT/PHOTO/VIDEO/TEST_REPORT/DATA')
+    file_category = Column(String(50),
+                          comment='文件分类：DRAWING/SPEC/CALCULATION/SITE_PHOTO/TEST_VIDEO等')
+
+    file_path = Column(String(500), nullable=False, comment='文件路径')
+    file_name = Column(String(200), nullable=False, comment='文件名')
+    file_size = Column(Integer, comment='文件大小(字节)')
+    file_type = Column(String(50), comment='文件类型(扩展名)')
+    description = Column(Text, comment='文件说明')
+
+    uploaded_by = Column(Integer, ForeignKey('users.id'), nullable=False, comment='上传人ID')
+    uploaded_at = Column(DateTime, default=datetime.now, comment='上传时间')
+
+    # 关系
+    task = relationship('TaskUnified', backref='completion_proofs')
+
+    __table_args__ = (
+        Index('idx_tcp_task_id', 'task_id'),
+        Index('idx_tcp_proof_type', 'proof_type'),
+        Index('idx_tcp_uploaded_by', 'uploaded_by'),
+        {'comment': '任务完成证明材料表'}
     )
 

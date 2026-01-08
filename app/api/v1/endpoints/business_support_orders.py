@@ -3,25 +3,26 @@
 商务支持模块 - 销售订单和发货管理 API endpoints
 """
 
+import json
 from typing import Any, List, Optional
 from datetime import date, datetime
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_
+from sqlalchemy import desc, or_, func
 
 from app.api import deps
 from app.models.user import User
-from app.models.project import Customer, Project
-from app.models.sales import Contract
+from app.models.project import Customer, Project, ProjectPaymentPlan
 from app.models.business_support import (
-    SalesOrder, SalesOrderItem, DeliveryOrder, 
+    SalesOrder, SalesOrderItem, DeliveryOrder,
     AcceptanceTracking, AcceptanceTrackingRecord, Reconciliation,
-    BiddingProject
+    BiddingProject, InvoiceRequest, CustomerSupplierRegistration
 )
 from app.models.acceptance import AcceptanceOrder
 from app.models.sales import Invoice, Contract
+from app.models.enums import InvoiceStatusEnum
 from app.schemas.business_support import (
     SalesOrderCreate, SalesOrderUpdate, SalesOrderResponse,
     SalesOrderItemCreate, SalesOrderItemResponse,
@@ -31,7 +32,11 @@ from app.schemas.business_support import (
     AcceptanceTrackingCreate, AcceptanceTrackingUpdate, AcceptanceTrackingResponse,
     ConditionCheckRequest, ReminderRequest, AcceptanceTrackingRecordResponse,
     ReconciliationCreate, ReconciliationUpdate, ReconciliationResponse,
-    SalesReportResponse, PaymentReportResponse, ContractReportResponse, InvoiceReportResponse
+    SalesReportResponse, PaymentReportResponse, ContractReportResponse, InvoiceReportResponse,
+    InvoiceRequestCreate, InvoiceRequestUpdate, InvoiceRequestResponse,
+    InvoiceRequestApproveRequest, InvoiceRequestRejectRequest,
+    CustomerSupplierRegistrationCreate, CustomerSupplierRegistrationUpdate,
+    CustomerSupplierRegistrationResponse, SupplierRegistrationReviewRequest
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
 
@@ -87,6 +92,167 @@ def generate_delivery_no(db: Session) -> str:
         seq = 1
     
     return f"{prefix}{seq:03d}"
+
+
+def generate_invoice_request_no(db: Session) -> str:
+    """生成开票申请编号：IR250101-001"""
+    today = datetime.now()
+    prefix = f"IR{today.strftime('%y%m%d')}-"
+
+    latest = (
+        db.query(InvoiceRequest)
+        .filter(InvoiceRequest.request_no.like(f"{prefix}%"))
+        .order_by(desc(InvoiceRequest.request_no))
+        .first()
+    )
+    if latest:
+        try:
+            seq = int(latest.request_no.split("-")[-1]) + 1
+        except Exception:
+            seq = 1
+    else:
+        seq = 1
+    return f"{prefix}{seq:03d}"
+
+
+def generate_registration_no(db: Session) -> str:
+    """生成客户供应商入驻编号：CR250101-001"""
+    today = datetime.now()
+    prefix = f"CR{today.strftime('%y%m%d')}-"
+
+    latest = (
+        db.query(CustomerSupplierRegistration)
+        .filter(CustomerSupplierRegistration.registration_no.like(f"{prefix}%"))
+        .order_by(desc(CustomerSupplierRegistration.registration_no))
+        .first()
+    )
+    if latest:
+        try:
+            seq = int(latest.registration_no.split("-")[-1]) + 1
+        except Exception:
+            seq = 1
+    else:
+        seq = 1
+    return f"{prefix}{seq:03d}"
+
+
+def generate_invoice_code(db: Session) -> str:
+    """生成发票编码：INV-250101-001"""
+    today = datetime.now().strftime("%y%m%d")
+    prefix = f"INV-{today}-"
+
+    latest = (
+        db.query(Invoice)
+        .filter(Invoice.invoice_code.like(f"{prefix}%"))
+        .order_by(desc(Invoice.invoice_code))
+        .first()
+    )
+    if latest:
+        try:
+            seq = int(latest.invoice_code.split("-")[-1]) + 1
+        except Exception:
+            seq = 1
+    else:
+        seq = 1
+    return f"{prefix}{seq:03d}"
+
+
+def _serialize_attachments(items: Optional[List[str]]) -> Optional[str]:
+    if not items:
+        return None
+    try:
+        return json.dumps(items, ensure_ascii=False)
+    except Exception:
+        return json.dumps([str(item) for item in items], ensure_ascii=False)
+
+
+def _deserialize_attachments(payload: Optional[str]) -> Optional[List[str]]:
+    if not payload:
+        return None
+    try:
+        data = json.loads(payload)
+        if isinstance(data, list):
+            return data
+    except Exception:
+        return [payload]
+    return None
+
+
+def _to_invoice_request_response(invoice_request: InvoiceRequest) -> InvoiceRequestResponse:
+    contract_code = invoice_request.contract.contract_code if invoice_request.contract else None
+    project_name = invoice_request.project.project_name if invoice_request.project else invoice_request.project_name
+    customer_name = invoice_request.customer.customer_name if invoice_request.customer else invoice_request.customer_name
+    approved_by_name = None
+    if invoice_request.approver:
+        approved_by_name = invoice_request.approver.real_name or invoice_request.approver.username
+    invoice_code = invoice_request.invoice.invoice_code if invoice_request.invoice else None
+
+    return InvoiceRequestResponse(
+        id=invoice_request.id,
+        request_no=invoice_request.request_no,
+        contract_id=invoice_request.contract_id,
+        contract_code=contract_code,
+        project_id=invoice_request.project_id,
+        project_name=project_name,
+        customer_id=invoice_request.customer_id,
+        customer_name=customer_name,
+        payment_plan_id=invoice_request.payment_plan_id,
+        invoice_type=invoice_request.invoice_type,
+        invoice_title=invoice_request.invoice_title,
+        tax_rate=invoice_request.tax_rate,
+        amount=invoice_request.amount,
+        tax_amount=invoice_request.tax_amount,
+        total_amount=invoice_request.total_amount,
+        currency=invoice_request.currency,
+        expected_issue_date=invoice_request.expected_issue_date,
+        expected_payment_date=invoice_request.expected_payment_date,
+        reason=invoice_request.reason,
+        attachments=_deserialize_attachments(invoice_request.attachments),
+        remark=invoice_request.remark,
+        status=invoice_request.status,
+        approval_comment=invoice_request.approval_comment,
+        requested_by=invoice_request.requested_by,
+        requested_by_name=invoice_request.requested_by_name,
+        approved_by=invoice_request.approved_by,
+        approved_by_name=approved_by_name,
+        approved_at=invoice_request.approved_at,
+        invoice_id=invoice_request.invoice_id,
+        invoice_code=invoice_code,
+        receipt_status=invoice_request.receipt_status,
+        receipt_updated_at=invoice_request.receipt_updated_at,
+        created_at=invoice_request.created_at,
+        updated_at=invoice_request.updated_at,
+    )
+
+
+def _to_registration_response(record: CustomerSupplierRegistration) -> CustomerSupplierRegistrationResponse:
+    reviewer_name = None
+    if record.reviewer:
+        reviewer_name = record.reviewer.real_name or record.reviewer.username
+    return CustomerSupplierRegistrationResponse(
+        id=record.id,
+        registration_no=record.registration_no,
+        customer_id=record.customer_id,
+        customer_name=record.customer_name,
+        platform_name=record.platform_name,
+        platform_url=record.platform_url,
+        registration_status=record.registration_status,
+        application_date=record.application_date,
+        approved_date=record.approved_date,
+        expire_date=record.expire_date,
+        contact_person=record.contact_person,
+        contact_phone=record.contact_phone,
+        contact_email=record.contact_email,
+        required_docs=_deserialize_attachments(record.required_docs),
+        reviewer_id=record.reviewer_id,
+        reviewer_name=reviewer_name,
+        review_comment=record.review_comment,
+        external_sync_status=record.external_sync_status,
+        last_sync_at=record.last_sync_at,
+        remark=record.remark,
+        created_at=record.created_at,
+        updated_at=record.updated_at,
+    )
 
 
 # ==================== 销售订单管理 ====================
@@ -2032,6 +2198,569 @@ async def send_reconciliation(
         raise HTTPException(status_code=500, detail=f"发送对账单失败: {str(e)}")
 
 
+# ==================== 开票申请管理 ====================
+
+
+@router.get("/invoice-requests", response_model=ResponseModel[PaginatedResponse[InvoiceRequestResponse]], summary="获取开票申请列表")
+async def get_invoice_requests(
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(20, ge=1, le=100, description="每页条数"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    contract_id: Optional[int] = Query(None, description="合同ID"),
+    customer_id: Optional[int] = Query(None, description="客户ID"),
+    keyword: Optional[str] = Query(None, description="搜索申请号/项目"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """分页获取开票申请列表"""
+    try:
+        query = db.query(InvoiceRequest)
+        if status:
+            query = query.filter(InvoiceRequest.status == status)
+        if contract_id:
+            query = query.filter(InvoiceRequest.contract_id == contract_id)
+        if customer_id:
+            query = query.filter(InvoiceRequest.customer_id == customer_id)
+        if keyword:
+            query = query.filter(
+                or_(
+                    InvoiceRequest.request_no.like(f"%{keyword}%"),
+                    InvoiceRequest.project_name.like(f"%{keyword}%"),
+                    InvoiceRequest.customer_name.like(f"%{keyword}%")
+                )
+            )
+
+        total = query.count()
+        items = (
+            query.order_by(desc(InvoiceRequest.created_at))
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+            .all()
+        )
+
+        responses = [_to_invoice_request_response(item) for item in items]
+
+        return ResponseModel(
+            code=200,
+            message="获取开票申请列表成功",
+            data=PaginatedResponse(
+                items=responses,
+                total=total,
+                page=page,
+                page_size=page_size,
+                pages=(total + page_size - 1) // page_size
+            )
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"获取开票申请列表失败: {str(exc)}")
+
+
+@router.post("/invoice-requests", response_model=ResponseModel[InvoiceRequestResponse], summary="创建开票申请")
+async def create_invoice_request(
+    invoice_request_data: InvoiceRequestCreate,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """创建开票申请"""
+    try:
+        contract = db.query(Contract).filter(Contract.id == invoice_request_data.contract_id).first()
+        if not contract:
+            raise HTTPException(status_code=404, detail="合同不存在")
+
+        payment_plan = None
+        if invoice_request_data.payment_plan_id:
+            payment_plan = db.query(ProjectPaymentPlan).filter(
+                ProjectPaymentPlan.id == invoice_request_data.payment_plan_id
+            ).first()
+            if not payment_plan:
+                raise HTTPException(status_code=404, detail="收款计划不存在")
+            if payment_plan.contract_id and payment_plan.contract_id != contract.id:
+                raise HTTPException(status_code=400, detail="收款计划与合同不匹配")
+
+        project_id = (
+            invoice_request_data.project_id
+            or (payment_plan.project_id if payment_plan else None)
+            or contract.project_id
+        )
+        project = None
+        if project_id:
+            project = db.query(Project).filter(Project.id == project_id).first()
+
+        customer_id = (
+            invoice_request_data.customer_id
+            or (contract.customer_id if contract else None)
+            or (project.customer_id if project and project.customer_id else None)
+        )
+        if not customer_id:
+            raise HTTPException(status_code=400, detail="缺少客户信息")
+        customer = db.query(Customer).filter(Customer.id == customer_id).first()
+        if not customer:
+            raise HTTPException(status_code=404, detail="客户不存在")
+
+        tax_amount = invoice_request_data.tax_amount
+        if tax_amount is None and invoice_request_data.tax_rate is not None:
+            tax_amount = (invoice_request_data.amount * invoice_request_data.tax_rate) / Decimal("100")
+
+        total_amount = invoice_request_data.total_amount
+        if total_amount is None:
+            if tax_amount is not None:
+                total_amount = invoice_request_data.amount + tax_amount
+            else:
+                total_amount = invoice_request_data.amount
+
+        invoice_request = InvoiceRequest(
+            request_no=generate_invoice_request_no(db),
+            contract_id=contract.id,
+            project_id=project.id if project else None,
+            project_name=project.project_name if project else None,
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            payment_plan_id=payment_plan.id if payment_plan else None,
+            invoice_type=invoice_request_data.invoice_type,
+            invoice_title=invoice_request_data.invoice_title,
+            tax_rate=invoice_request_data.tax_rate,
+            amount=invoice_request_data.amount,
+            tax_amount=tax_amount,
+            total_amount=total_amount,
+            currency=invoice_request_data.currency,
+            expected_issue_date=invoice_request_data.expected_issue_date,
+            expected_payment_date=invoice_request_data.expected_payment_date,
+            reason=invoice_request_data.reason,
+            attachments=_serialize_attachments(invoice_request_data.attachments),
+            remark=invoice_request_data.remark,
+            status="PENDING",
+            requested_by=current_user.id,
+            requested_by_name=current_user.real_name or current_user.username,
+            receipt_status="UNPAID"
+        )
+        db.add(invoice_request)
+        db.commit()
+        db.refresh(invoice_request)
+
+        return ResponseModel(
+            code=200,
+            message="创建开票申请成功",
+            data=_to_invoice_request_response(invoice_request)
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"创建开票申请失败: {str(exc)}")
+
+
+@router.get("/invoice-requests/{request_id}", response_model=ResponseModel[InvoiceRequestResponse], summary="获取开票申请详情")
+async def get_invoice_request(
+    request_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """获取开票申请详情"""
+    invoice_request = db.query(InvoiceRequest).filter(InvoiceRequest.id == request_id).first()
+    if not invoice_request:
+        raise HTTPException(status_code=404, detail="开票申请不存在")
+    return ResponseModel(
+        code=200,
+        message="获取开票申请详情成功",
+        data=_to_invoice_request_response(invoice_request)
+    )
+
+
+@router.put("/invoice-requests/{request_id}", response_model=ResponseModel[InvoiceRequestResponse], summary="更新开票申请")
+async def update_invoice_request(
+    request_id: int,
+    request_in: InvoiceRequestUpdate,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """更新开票申请"""
+    try:
+        invoice_request = db.query(InvoiceRequest).filter(InvoiceRequest.id == request_id).first()
+        if not invoice_request:
+            raise HTTPException(status_code=404, detail="开票申请不存在")
+        if invoice_request.status not in ("PENDING", "REJECTED"):
+            raise HTTPException(status_code=400, detail="当前状态下不可编辑开票申请")
+
+        if request_in.payment_plan_id:
+            payment_plan = db.query(ProjectPaymentPlan).filter(
+                ProjectPaymentPlan.id == request_in.payment_plan_id
+            ).first()
+            if not payment_plan:
+                raise HTTPException(status_code=404, detail="收款计划不存在")
+            if payment_plan.contract_id and payment_plan.contract_id != invoice_request.contract_id:
+                raise HTTPException(status_code=400, detail="收款计划与合同不匹配")
+            invoice_request.payment_plan_id = payment_plan.id
+            invoice_request.project_id = payment_plan.project_id
+            invoice_request.project_name = payment_plan.project.project_name if payment_plan.project else invoice_request.project_name
+
+        update_data = request_in.model_dump(exclude_unset=True)
+        if "attachments" in update_data:
+            invoice_request.attachments = _serialize_attachments(update_data.pop("attachments"))
+        for field, value in update_data.items():
+            setattr(invoice_request, field, value)
+
+        db.add(invoice_request)
+        db.commit()
+        db.refresh(invoice_request)
+
+        return ResponseModel(
+            code=200,
+            message="更新开票申请成功",
+            data=_to_invoice_request_response(invoice_request)
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"更新开票申请失败: {str(exc)}")
+
+
+@router.post("/invoice-requests/{request_id}/approve", response_model=ResponseModel[InvoiceRequestResponse], summary="审批开票申请")
+async def approve_invoice_request(
+    request_id: int,
+    approve_in: InvoiceRequestApproveRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """审批通过开票申请并生成发票"""
+    try:
+        invoice_request = db.query(InvoiceRequest).filter(InvoiceRequest.id == request_id).first()
+        if not invoice_request:
+            raise HTTPException(status_code=404, detail="开票申请不存在")
+        if invoice_request.status != "PENDING":
+            raise HTTPException(status_code=400, detail="当前状态不可审批")
+
+        issue_date = approve_in.issue_date or invoice_request.expected_issue_date or date.today()
+        invoice_code = approve_in.invoice_code or generate_invoice_code(db)
+        total_amount = approve_in.total_amount or invoice_request.total_amount or invoice_request.amount
+
+        invoice = Invoice(
+            invoice_code=invoice_code,
+            contract_id=invoice_request.contract_id,
+            project_id=invoice_request.project_id,
+            invoice_type=invoice_request.invoice_type,
+            amount=invoice_request.amount,
+            tax_rate=invoice_request.tax_rate,
+            tax_amount=invoice_request.tax_amount,
+            total_amount=total_amount,
+            status=InvoiceStatusEnum.ISSUED,
+            payment_status="PENDING",
+            issue_date=issue_date,
+            buyer_name=invoice_request.invoice_title or invoice_request.customer_name,
+            remark=invoice_request.reason
+        )
+        db.add(invoice)
+        db.flush()
+
+        invoice_request.status = "APPROVED"
+        invoice_request.approval_comment = approve_in.approval_comment
+        invoice_request.approved_by = current_user.id
+        invoice_request.approved_at = datetime.utcnow()
+        invoice_request.invoice_id = invoice.id
+        invoice_request.receipt_status = "UNPAID"
+        invoice_request.receipt_updated_at = datetime.utcnow()
+
+        if invoice_request.payment_plan_id:
+            payment_plan = db.query(ProjectPaymentPlan).filter(
+                ProjectPaymentPlan.id == invoice_request.payment_plan_id
+            ).first()
+            if payment_plan:
+                payment_plan.invoice_id = invoice.id
+                payment_plan.invoice_no = invoice.invoice_code
+                payment_plan.invoice_date = issue_date
+                payment_plan.invoice_amount = total_amount
+                if payment_plan.status == "PENDING":
+                    payment_plan.status = "INVOICED"
+                db.add(payment_plan)
+
+        db.add(invoice_request)
+        db.commit()
+        db.refresh(invoice_request)
+
+        return ResponseModel(
+            code=200,
+            message="审批开票申请成功",
+            data=_to_invoice_request_response(invoice_request)
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"审批开票申请失败: {str(exc)}")
+
+
+@router.post("/invoice-requests/{request_id}/reject", response_model=ResponseModel[InvoiceRequestResponse], summary="驳回开票申请")
+async def reject_invoice_request(
+    request_id: int,
+    reject_in: InvoiceRequestRejectRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """驳回开票申请"""
+    try:
+        invoice_request = db.query(InvoiceRequest).filter(InvoiceRequest.id == request_id).first()
+        if not invoice_request:
+            raise HTTPException(status_code=404, detail="开票申请不存在")
+        if invoice_request.status != "PENDING":
+            raise HTTPException(status_code=400, detail="当前状态不可驳回")
+
+        invoice_request.status = "REJECTED"
+        invoice_request.approval_comment = reject_in.approval_comment
+        invoice_request.approved_by = current_user.id
+        invoice_request.approved_at = datetime.utcnow()
+
+        db.add(invoice_request)
+        db.commit()
+        db.refresh(invoice_request)
+
+        return ResponseModel(
+            code=200,
+            message="驳回开票申请成功",
+            data=_to_invoice_request_response(invoice_request)
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"驳回开票申请失败: {str(exc)}")
+
+
+# ==================== 客户供应商入驻 ====================
+
+
+@router.get("/customer-registrations", response_model=ResponseModel[PaginatedResponse[CustomerSupplierRegistrationResponse]], summary="获取客户供应商入驻列表")
+async def get_customer_registrations(
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(20, ge=1, le=100, description="每页条数"),
+    customer_id: Optional[int] = Query(None, description="客户ID"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    platform_name: Optional[str] = Query(None, description="平台名称筛选"),
+    keyword: Optional[str] = Query(None, description="搜索入驻编号/客户"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """分页获取客户供应商入驻记录"""
+    try:
+        query = db.query(CustomerSupplierRegistration)
+        if customer_id:
+            query = query.filter(CustomerSupplierRegistration.customer_id == customer_id)
+        if status:
+            query = query.filter(CustomerSupplierRegistration.registration_status == status)
+        if platform_name:
+            query = query.filter(CustomerSupplierRegistration.platform_name == platform_name)
+        if keyword:
+            query = query.filter(
+                or_(
+                    CustomerSupplierRegistration.registration_no.like(f"%{keyword}%"),
+                    CustomerSupplierRegistration.customer_name.like(f"%{keyword}%")
+                )
+            )
+
+        total = query.count()
+        items = (
+            query.order_by(desc(CustomerSupplierRegistration.created_at))
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+            .all()
+        )
+
+        responses = [_to_registration_response(item) for item in items]
+
+        return ResponseModel(
+            code=200,
+            message="获取客户供应商入驻列表成功",
+            data=PaginatedResponse(
+                items=responses,
+                total=total,
+                page=page,
+                page_size=page_size,
+                pages=(total + page_size - 1) // page_size
+            )
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"获取客户供应商入驻列表失败: {str(exc)}")
+
+
+@router.post("/customer-registrations", response_model=ResponseModel[CustomerSupplierRegistrationResponse], summary="创建客户供应商入驻申请")
+async def create_customer_registration(
+    registration_in: CustomerSupplierRegistrationCreate,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """创建客户供应商入驻申请"""
+    try:
+        customer = db.query(Customer).filter(Customer.id == registration_in.customer_id).first()
+        if not customer:
+            raise HTTPException(status_code=404, detail="客户不存在")
+
+        registration = CustomerSupplierRegistration(
+            registration_no=generate_registration_no(db),
+            customer_id=customer.id,
+            customer_name=registration_in.customer_name or customer.customer_name,
+            platform_name=registration_in.platform_name,
+            platform_url=registration_in.platform_url,
+            registration_status="PENDING",
+            application_date=registration_in.application_date or date.today(),
+            contact_person=registration_in.contact_person,
+            contact_phone=registration_in.contact_phone,
+            contact_email=registration_in.contact_email,
+            required_docs=_serialize_attachments(registration_in.required_docs),
+            remark=registration_in.remark,
+            external_sync_status="pending"
+        )
+        db.add(registration)
+        db.commit()
+        db.refresh(registration)
+
+        return ResponseModel(
+            code=200,
+            message="创建客户供应商入驻申请成功",
+            data=_to_registration_response(registration)
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"创建客户供应商入驻申请失败: {str(exc)}")
+
+
+@router.get("/customer-registrations/{registration_id}", response_model=ResponseModel[CustomerSupplierRegistrationResponse], summary="获取入驻详情")
+async def get_customer_registration(
+    registration_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """获取客户供应商入驻详情"""
+    record = db.query(CustomerSupplierRegistration).filter(
+        CustomerSupplierRegistration.id == registration_id
+    ).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="入驻记录不存在")
+    return ResponseModel(
+        code=200,
+        message="获取客户供应商入驻详情成功",
+        data=_to_registration_response(record)
+    )
+
+
+@router.put("/customer-registrations/{registration_id}", response_model=ResponseModel[CustomerSupplierRegistrationResponse], summary="更新入驻记录")
+async def update_customer_registration(
+    registration_id: int,
+    registration_in: CustomerSupplierRegistrationUpdate,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """更新客户供应商入驻记录"""
+    try:
+        record = db.query(CustomerSupplierRegistration).filter(
+            CustomerSupplierRegistration.id == registration_id
+        ).first()
+        if not record:
+            raise HTTPException(status_code=404, detail="入驻记录不存在")
+
+        update_data = registration_in.model_dump(exclude_unset=True)
+        if "required_docs" in update_data:
+            record.required_docs = _serialize_attachments(update_data.pop("required_docs"))
+        for field, value in update_data.items():
+            setattr(record, field, value)
+
+        db.add(record)
+        db.commit()
+        db.refresh(record)
+
+        return ResponseModel(
+            code=200,
+            message="更新入驻记录成功",
+            data=_to_registration_response(record)
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"更新入驻记录失败: {str(exc)}")
+
+
+@router.post("/customer-registrations/{registration_id}/approve", response_model=ResponseModel[CustomerSupplierRegistrationResponse], summary="审批客户入驻申请")
+async def approve_customer_registration(
+    registration_id: int,
+    review_in: SupplierRegistrationReviewRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """审批通过客户供应商入驻申请"""
+    try:
+        record = db.query(CustomerSupplierRegistration).filter(
+            CustomerSupplierRegistration.id == registration_id
+        ).first()
+        if not record:
+            raise HTTPException(status_code=404, detail="入驻记录不存在")
+        if record.registration_status == "APPROVED":
+            raise HTTPException(status_code=400, detail="申请已审批通过")
+
+        record.registration_status = "APPROVED"
+        record.approved_date = date.today()
+        record.reviewer_id = current_user.id
+        record.review_comment = review_in.review_comment
+        record.external_sync_status = "pending"
+
+        db.add(record)
+        db.commit()
+        db.refresh(record)
+
+        return ResponseModel(
+            code=200,
+            message="审批客户供应商入驻成功",
+            data=_to_registration_response(record)
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"审批客户供应商入驻失败: {str(exc)}")
+
+
+@router.post("/customer-registrations/{registration_id}/reject", response_model=ResponseModel[CustomerSupplierRegistrationResponse], summary="驳回客户入驻申请")
+async def reject_customer_registration(
+    registration_id: int,
+    review_in: SupplierRegistrationReviewRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """驳回客户供应商入驻申请"""
+    try:
+        record = db.query(CustomerSupplierRegistration).filter(
+            CustomerSupplierRegistration.id == registration_id
+        ).first()
+        if not record:
+            raise HTTPException(status_code=404, detail="入驻记录不存在")
+        if record.registration_status == "APPROVED":
+            raise HTTPException(status_code=400, detail="审批通过的申请不可驳回")
+
+        record.registration_status = "REJECTED"
+        record.reviewer_id = current_user.id
+        record.review_comment = review_in.review_comment
+        record.approved_date = None
+
+        db.add(record)
+        db.commit()
+        db.refresh(record)
+
+        return ResponseModel(
+            code=200,
+            message="驳回客户供应商入驻成功",
+            data=_to_registration_response(record)
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"驳回客户供应商入驻失败: {str(exc)}")
+
+
 # ==================== 销售报表 ====================
 
 
@@ -2863,4 +3592,3 @@ async def get_invoice_report(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取开票统计报表失败: {str(e)}")
-
