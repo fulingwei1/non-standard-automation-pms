@@ -97,6 +97,34 @@ class MaterialResponse(TimestampSchema):
     is_active: bool = True
 
 
+class WarehouseStatistics(BaseModel):
+    """仓储统计（给生产总监看）"""
+    total_items: int = 0
+    in_stock_items: int = 0
+    low_stock_items: int = 0
+    out_of_stock_items: int = 0
+    inventory_turnover: float = 0.0
+    warehouse_utilization: float = 0.0
+    pending_inbound: int = 0
+    pending_outbound: int = 0
+
+
+class MaterialSearchResponse(BaseModel):
+    """物料查找响应"""
+    material_id: int
+    material_code: str
+    material_name: str
+    specification: Optional[str] = None
+    category: Optional[str] = None
+    current_stock: float = 0.0
+    safety_stock: float = 0.0
+    in_transit_qty: float = 0.0
+    available_qty: float = 0.0
+    unit: str = "件"
+    unit_price: float = 0.0
+    supplier_name: Optional[str] = None
+
+
 # ==================== 供应商 ====================
 
 class SupplierCreate(BaseModel):

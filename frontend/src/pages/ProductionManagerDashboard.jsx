@@ -53,7 +53,7 @@ import {
   TabsTrigger,
 } from '../components/ui'
 import { cn } from '../lib/utils'
-import { productionApi, shortageApi } from '../services/api'
+import { productionApi, shortageApi, projectApi, materialApi } from '../services/api'
 
 // Mock data
 const mockProductionStats = {
@@ -285,6 +285,14 @@ export default function ProductionManagerDashboard() {
   const [productionDaily, setProductionDaily] = useState(null)
   const [shortageDaily, setShortageDaily] = useState(null)
   const [dailyError, setDailyError] = useState(null)
+  const [workerRankings, setWorkerRankings] = useState([])
+  const [rankingType, setRankingType] = useState('efficiency')
+  const [rankingLoading, setRankingLoading] = useState(false)
+  const [inProductionProjects, setInProductionProjects] = useState([])
+  const [projectsLoading, setProjectsLoading] = useState(false)
+  const [materialSearchResults, setMaterialSearchResults] = useState([])
+  const [materialSearchKeyword, setMaterialSearchKeyword] = useState('')
+  const [materialSearchLoading, setMaterialSearchLoading] = useState(false)
 
   // Map backend status to frontend status
   const mapBackendStatus = (backendStatus) => {
@@ -486,6 +494,68 @@ export default function ProductionManagerDashboard() {
     }
   }, [filterStatus])
 
+  // Load worker rankings
+  const loadWorkerRankings = useCallback(async () => {
+    try {
+      setRankingLoading(true)
+      const today = new Date()
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
+      const params = {
+        ranking_type: rankingType,
+        period_start: monthStart.toISOString().split('T')[0],
+        period_end: today.toISOString().split('T')[0],
+        limit: 20,
+      }
+      const response = await productionApi.reports.workerRanking(params)
+      const rankings = response.data || response
+      setWorkerRankings(Array.isArray(rankings) ? rankings : [])
+    } catch (err) {
+      console.error('Failed to load worker rankings:', err)
+      setWorkerRankings([])
+    } finally {
+      setRankingLoading(false)
+    }
+  }, [rankingType])
+
+  // Load in-production projects
+  const loadInProductionProjects = useCallback(async () => {
+    try {
+      setProjectsLoading(true)
+      const response = await projectApi.getInProductionSummary({})
+      const projects = response.data || response
+      setInProductionProjects(Array.isArray(projects) ? projects : [])
+    } catch (err) {
+      console.error('Failed to load in-production projects:', err)
+      setInProductionProjects([])
+    } finally {
+      setProjectsLoading(false)
+    }
+  }, [])
+
+  // Load material search
+  const loadMaterialSearch = useCallback(async (keyword) => {
+    if (!keyword || keyword.trim().length < 2) {
+      setMaterialSearchResults([])
+      return
+    }
+    try {
+      setMaterialSearchLoading(true)
+      const response = await materialApi.search({
+        keyword: keyword.trim(),
+        page: 1,
+        page_size: 20,
+      })
+      const data = response.data || response
+      const items = data.items || data
+      setMaterialSearchResults(Array.isArray(items) ? items : [])
+    } catch (err) {
+      console.error('Failed to search materials:', err)
+      setMaterialSearchResults([])
+    } finally {
+      setMaterialSearchLoading(false)
+    }
+  }, [])
+
   // Load data when component mounts or tab changes
   useEffect(() => {
     if (selectedTab === 'overview') {
@@ -498,17 +568,36 @@ export default function ProductionManagerDashboard() {
       loadProductionPlans()
     } else if (selectedTab === 'orders') {
       loadWorkOrders()
+    } else if (selectedTab === 'performance') {
+      loadWorkerRankings()
+    } else if (selectedTab === 'projects') {
+      loadInProductionProjects()
     }
   }, [
     selectedTab,
     filterStatus,
     selectedDate,
+    rankingType,
     loadDashboard,
     loadWorkshops,
     loadProductionPlans,
     loadWorkOrders,
     loadDailySnapshots,
+    loadWorkerRankings,
+    loadInProductionProjects,
   ])
+
+  // Material search with debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (materialSearchKeyword) {
+        loadMaterialSearch(materialSearchKeyword)
+      } else {
+        setMaterialSearchResults([])
+      }
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [materialSearchKeyword, loadMaterialSearch])
 
   const filteredPlans = useMemo(() => {
     return productionPlans.filter(plan => {
@@ -832,6 +921,8 @@ export default function ProductionManagerDashboard() {
             <TabsTrigger value="plans">生产计划</TabsTrigger>
             <TabsTrigger value="orders">工单管理</TabsTrigger>
             <TabsTrigger value="team">团队管理</TabsTrigger>
+            <TabsTrigger value="performance">人员绩效</TabsTrigger>
+            <TabsTrigger value="projects">项目进展</TabsTrigger>
             <TabsTrigger value="alerts">异常预警</TabsTrigger>
           </TabsList>
 
@@ -1342,8 +1433,271 @@ export default function ProductionManagerDashboard() {
             </div>
           </TabsContent>
 
+          {/* 人员绩效 */}
+          <TabsContent value="performance" className="space-y-6">
+            <Card className="bg-surface-50 border-white/10">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5 text-primary" />
+                    人员绩效排名
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={rankingType}
+                      onChange={(e) => setRankingType(e.target.value)}
+                      className="px-3 py-1.5 rounded-lg bg-surface-100 border border-white/10 text-white text-sm"
+                    >
+                      <option value="efficiency">效率排名</option>
+                      <option value="output">产出排名</option>
+                      <option value="quality">质量排名</option>
+                    </select>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {rankingLoading ? (
+                  <div className="text-center py-8 text-slate-400">加载中...</div>
+                ) : workerRankings.length === 0 ? (
+                  <div className="text-center py-8 text-slate-400">暂无数据</div>
+                ) : (
+                  <div className="space-y-3">
+                    {workerRankings.map((worker, index) => (
+                      <motion.div
+                        key={worker.worker_id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="p-4 rounded-lg bg-surface-100 border border-white/5 hover:bg-white/[0.03] transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className={cn(
+                              'w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg',
+                              worker.rank <= 3 ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-700 text-slate-300'
+                            )}>
+                              {worker.rank}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-white">{worker.worker_name}</p>
+                              <p className="text-xs text-slate-400">{worker.workshop_name || '未分配车间'}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-6 text-sm">
+                            <div className="text-center">
+                              <p className="text-slate-400">效率</p>
+                              <p className="text-white font-semibold">{worker.efficiency.toFixed(1)}%</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-slate-400">产出</p>
+                              <p className="text-white font-semibold">{worker.output}</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-slate-400">质量率</p>
+                              <p className="text-white font-semibold">{worker.quality_rate.toFixed(1)}%</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-slate-400">工时</p>
+                              <p className="text-white font-semibold">{worker.total_hours.toFixed(1)}h</p>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* 项目进展 */}
+          <TabsContent value="projects" className="space-y-6">
+            <Card className="bg-surface-50 border-white/10">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Factory className="w-5 h-5 text-primary" />
+                  在产项目进度
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {projectsLoading ? (
+                  <div className="text-center py-8 text-slate-400">加载中...</div>
+                ) : inProductionProjects.length === 0 ? (
+                  <div className="text-center py-8 text-slate-400">暂无在产项目</div>
+                ) : (
+                  <div className="space-y-3">
+                    {inProductionProjects.map((project, index) => (
+                      <motion.div
+                        key={project.project_id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="p-4 rounded-lg bg-surface-100 border border-white/5 hover:bg-white/[0.03] transition-colors"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <Badge className={cn(
+                                'text-xs',
+                                project.health === 'H1' ? 'bg-emerald-500/20 text-emerald-400' :
+                                project.health === 'H2' ? 'bg-amber-500/20 text-amber-400' :
+                                project.health === 'H3' ? 'bg-red-500/20 text-red-400' :
+                                'bg-slate-500/20 text-slate-400'
+                              )}>
+                                {project.health === 'H1' ? '正常' :
+                                 project.health === 'H2' ? '有风险' :
+                                 project.health === 'H3' ? '阻塞' : '已完结'}
+                              </Badge>
+                              <span className="text-sm font-semibold text-white">{project.project_name}</span>
+                              <span className="text-xs text-slate-400">{project.project_code}</span>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-slate-400 mb-2">
+                              <span>阶段: {project.stage}</span>
+                              <span>进度: {project.progress.toFixed(1)}%</span>
+                              {project.next_milestone && (
+                                <span>下个里程碑: {project.next_milestone}</span>
+                              )}
+                            </div>
+                            {project.overdue_milestones_count > 0 && (
+                              <div className="flex items-center gap-2 text-xs text-red-400">
+                                <AlertTriangle className="w-4 h-4" />
+                                <span>有 {project.overdue_milestones_count} 个里程碑已逾期</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-slate-400 mb-1">计划完成</p>
+                            <p className="text-sm text-white">
+                              {project.planned_end_date || '未设置'}
+                            </p>
+                          </div>
+                        </div>
+                        <Progress value={project.progress} className="h-2" />
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* 异常预警 */}
           <TabsContent value="alerts" className="space-y-6">
+            {/* 缺料预警统计 */}
+            {shortageDaily && (
+              <Card className="bg-surface-50 border-white/10">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-amber-400" />
+                    缺料预警统计
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <p className="text-sm text-slate-400 mb-1">新增预警</p>
+                      <p className="text-2xl font-bold text-amber-400">
+                        {shortageDaily.alerts?.new ?? 0}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-400 mb-1">待处理</p>
+                      <p className="text-2xl font-bold text-red-400">
+                        {shortageDaily.alerts?.pending ?? 0}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-400 mb-1">逾期预警</p>
+                      <p className="text-2xl font-bold text-red-500">
+                        {shortageDaily.alerts?.overdue ?? 0}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-400 mb-1">齐套率</p>
+                      <p className="text-2xl font-bold text-emerald-400">
+                        {shortageDaily.kit?.kit_rate ?? 0}%
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 物料查找 */}
+            <Card className="bg-surface-50 border-white/10">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Search className="w-5 h-5 text-primary" />
+                  物料查找
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <Input
+                    placeholder="搜索物料编码/名称/规格..."
+                    value={materialSearchKeyword}
+                    onChange={(e) => setMaterialSearchKeyword(e.target.value)}
+                    className="bg-surface-100 border-white/10"
+                  />
+                  {materialSearchLoading && (
+                    <div className="text-center py-4 text-slate-400">搜索中...</div>
+                  )}
+                  {materialSearchResults.length > 0 && (
+                    <div className="space-y-2">
+                      {materialSearchResults.map((material) => (
+                        <div
+                          key={material.material_id}
+                          className="p-3 rounded-lg bg-surface-100 border border-white/5"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <p className="font-semibold text-white">{material.material_name}</p>
+                              <p className="text-xs text-slate-400">{material.material_code}</p>
+                              {material.specification && (
+                                <p className="text-xs text-slate-500 mt-1">{material.specification}</p>
+                              )}
+                            </div>
+                            <div className="text-right text-sm">
+                              <div className="mb-1">
+                                <span className="text-slate-400">库存: </span>
+                                <span className={cn(
+                                  'font-semibold',
+                                  material.current_stock > 0 ? 'text-emerald-400' : 'text-red-400'
+                                )}>
+                                  {material.current_stock} {material.unit}
+                                </span>
+                              </div>
+                              {material.in_transit_qty > 0 && (
+                                <div className="mb-1">
+                                  <span className="text-slate-400">在途: </span>
+                                  <span className="text-amber-400 font-semibold">
+                                    {material.in_transit_qty} {material.unit}
+                                  </span>
+                                </div>
+                              )}
+                              <div>
+                                <span className="text-slate-400">可用: </span>
+                                <span className="text-white font-semibold">
+                                  {material.available_qty} {material.unit}
+                                </span>
+                              </div>
+                              {material.supplier_name && (
+                                <p className="text-xs text-slate-500 mt-1">供应商: {material.supplier_name}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {materialSearchKeyword && !materialSearchLoading && materialSearchResults.length === 0 && (
+                    <div className="text-center py-8 text-slate-400">未找到匹配的物料</div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 异常预警列表 */}
             <Card className="bg-surface-50 border-white/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -1353,7 +1707,7 @@ export default function ProductionManagerDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {alerts.map((alert, index) => (
+                  {mockAlerts.map((alert, index) => (
                     <motion.div
                       key={alert.id}
                       initial={{ opacity: 0, x: -20 }}

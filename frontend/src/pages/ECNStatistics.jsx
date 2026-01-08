@@ -10,6 +10,7 @@ import {
   FileText,
   BarChart3,
   PieChart,
+  Download,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -20,6 +21,7 @@ import {
   CardDescription,
 } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
+import { Button } from '../components/ui/button'
 import {
   Select,
   SelectContent,
@@ -51,11 +53,49 @@ const statusConfigs = {
 }
 
 const typeConfigs = {
+  // 客户相关（3种）
+  CUSTOMER_REQUIREMENT: { label: '客户需求变更', color: 'bg-blue-500' },
+  CUSTOMER_SPEC: { label: '客户规格调整', color: 'bg-blue-400' },
+  CUSTOMER_FEEDBACK: { label: '客户现场反馈', color: 'bg-blue-600' },
+  
+  // 设计变更（5种）
+  MECHANICAL_STRUCTURE: { label: '机械结构变更', color: 'bg-cyan-500' },
+  ELECTRICAL_SCHEME: { label: '电气方案变更', color: 'bg-cyan-400' },
+  SOFTWARE_FUNCTION: { label: '软件功能变更', color: 'bg-cyan-600' },
+  TECH_OPTIMIZATION: { label: '技术方案优化', color: 'bg-teal-500' },
+  DESIGN_FIX: { label: '设计缺陷修复', color: 'bg-teal-600' },
+  
+  // 测试相关（4种）
+  TEST_STANDARD: { label: '测试标准变更', color: 'bg-purple-500' },
+  TEST_FIXTURE: { label: '测试工装变更', color: 'bg-purple-400' },
+  CALIBRATION_SCHEME: { label: '校准方案变更', color: 'bg-purple-600' },
+  TEST_PROGRAM: { label: '测试程序变更', color: 'bg-violet-500' },
+  
+  // 生产制造（4种）
+  PROCESS_IMPROVEMENT: { label: '工艺改进', color: 'bg-orange-500' },
+  MATERIAL_SUBSTITUTE: { label: '物料替代', color: 'bg-orange-400' },
+  SUPPLIER_CHANGE: { label: '供应商变更', color: 'bg-orange-600' },
+  COST_OPTIMIZATION: { label: '成本优化', color: 'bg-amber-500' },
+  
+  // 质量安全（3种）
+  QUALITY_ISSUE: { label: '质量问题整改', color: 'bg-red-500' },
+  SAFETY_COMPLIANCE: { label: '安全合规变更', color: 'bg-red-600' },
+  RELIABILITY_IMPROVEMENT: { label: '可靠性改进', color: 'bg-rose-500' },
+  
+  // 项目管理（3种）
+  SCHEDULE_ADJUSTMENT: { label: '进度调整', color: 'bg-green-500' },
+  DOCUMENT_UPDATE: { label: '文档更新', color: 'bg-green-400' },
+  DRAWING_CHANGE: { label: '图纸变更', color: 'bg-emerald-500' },
+  
+  // 兼容旧版本
   DESIGN: { label: '设计变更', color: 'bg-blue-500' },
   REQUIREMENT: { label: '需求变更', color: 'bg-green-500' },
   MATERIAL: { label: '物料替代', color: 'bg-amber-500' },
   PROCESS: { label: '工艺变更', color: 'bg-purple-500' },
   DOCUMENT: { label: '文档变更', color: 'bg-slate-500' },
+  SPECIFICATION: { label: '规格变更', color: 'bg-green-500' },
+  SCHEDULE: { label: '计划变更', color: 'bg-orange-500' },
+  OTHER: { label: '其他', color: 'bg-slate-500' },
 }
 
 export default function ECNStatistics() {
@@ -139,12 +179,89 @@ export default function ECNStatistics() {
     value: t.days || 0,
   }))
 
+  // 导出统计报表
+  const handleExport = () => {
+    try {
+      const timeRangeLabels = {
+        week: '最近一周',
+        month: '最近一月',
+        quarter: '最近一季',
+        year: '最近一年',
+        all: '全部',
+      }
+
+      // 构建导出数据
+      const exportData = [
+        ['ECN统计报表'],
+        ['统计周期', timeRangeLabels[timeRange] || timeRange],
+        ['导出日期', new Date().toLocaleDateString('zh-CN')],
+        [''],
+        ['=== 统计概览 ==='],
+        ['ECN总数', totalCount],
+        ['总成本影响', `¥${costImpact.total?.toLocaleString() || 0}`],
+        ['平均成本影响', `¥${costImpact.average?.toLocaleString() || 0}`],
+        ['总工期影响', `${scheduleImpact.total || 0} 天`],
+        ['平均工期影响', `${scheduleImpact.average?.toFixed(1) || 0} 天`],
+        [''],
+        ['=== 状态分布 ==='],
+        ['状态', '数量'],
+        ...Object.entries(statusDistribution).map(([status, count]) => [
+          statusConfigs[status]?.label || status,
+          count,
+        ]),
+        [''],
+        ['=== 类型分布 ==='],
+        ['类型', '数量'],
+        ...Object.entries(typeDistribution).map(([type, count]) => [
+          typeConfigs[type]?.label || type,
+          count,
+        ]),
+        [''],
+        ['=== 详细统计 ==='],
+        ['已完成', statusDistribution.COMPLETED || 0],
+        ['已关闭', statusDistribution.CLOSED || 0],
+        ['已驳回', statusDistribution.REJECTED || 0],
+        ['已取消', statusDistribution.CANCELLED || 0],
+      ]
+
+      // 转换为CSV格式
+      const csvContent = exportData
+        .map(row => row.map(cell => `"${cell}"`).join(','))
+        .join('\n')
+
+      // 添加BOM以支持中文
+      const BOM = '\uFEFF'
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute(
+        'download',
+        `ECN统计报表_${timeRange}_${new Date().toISOString().split('T')[0]}.csv`
+      )
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('导出失败:', error)
+      alert('导出失败: ' + error.message)
+    }
+  }
+
   return (
     <div className="space-y-6 p-6">
-      <PageHeader
-        title="ECN统计报表"
-        description="ECN变更管理统计分析，包括数量、成本、工期、类型分布等"
-      />
+      <div className="flex items-center justify-between">
+        <PageHeader
+          title="ECN统计报表"
+          description="ECN变更管理统计分析，包括数量、成本、工期、类型分布等"
+        />
+        <Button onClick={handleExport} variant="outline">
+          <Download className="w-4 h-4 mr-2" />
+          导出报表
+        </Button>
+      </div>
       
       {/* 时间范围选择 */}
       <Card>

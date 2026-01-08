@@ -615,3 +615,16 @@ class WorkerPerformanceReportResponse(BaseModel):
     total_qualified_qty: int = 0
     average_efficiency: float = 0.0
 
+
+class WorkerRankingResponse(BaseModel):
+    """人员绩效排名响应"""
+    rank: int
+    worker_id: int
+    worker_name: str
+    workshop_name: Optional[str] = None
+    efficiency: float = 0.0
+    output: int = 0
+    quality_rate: float = 0.0
+    total_hours: float = 0.0
+    score: float = 0.0
+

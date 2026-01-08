@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   User,
@@ -17,6 +18,7 @@ import {
   Sun,
   Monitor,
   Check,
+  BookOpen,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -39,6 +41,7 @@ const settingsSections = [
   { id: 'security', label: '安全设置', icon: Shield },
   { id: 'appearance', label: '外观主题', icon: Palette },
   { id: 'language', label: '语言区域', icon: Globe },
+  { id: 'knowledge', label: '知识管理', icon: BookOpen },
 ]
 
 // Mock user data
@@ -578,8 +581,100 @@ function LanguageSection() {
   )
 }
 
+function KnowledgeSection() {
+  const navigate = useNavigate()
+
+  const knowledgeActions = [
+    {
+      title: '知识库',
+      description: '浏览历史方案、产品知识、工艺知识等',
+      path: '/knowledge-base',
+      icon: BookOpen,
+      color: 'text-blue-400',
+      bgColor: 'bg-blue-500/10',
+    },
+    {
+      title: '我的收藏',
+      description: '查看我收藏的知识文章',
+      path: '/knowledge-base?category=starred',
+      icon: BookOpen,
+      color: 'text-amber-400',
+      bgColor: 'bg-amber-500/10',
+    },
+    {
+      title: '最近浏览',
+      description: '查看最近浏览的知识内容',
+      path: '/knowledge-base?category=recent',
+      icon: BookOpen,
+      color: 'text-purple-400',
+      bgColor: 'bg-purple-500/10',
+    },
+  ]
+
+  return (
+    <div className="space-y-6">
+      <Card className="bg-surface-1/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-accent" />
+            知识管理
+          </CardTitle>
+          <CardDescription>管理和访问您的知识库内容</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {knowledgeActions.map((action, index) => {
+              const Icon = action.icon
+              return (
+                <button
+                  key={index}
+                  onClick={() => navigate(action.path)}
+                  className={cn(
+                    'p-4 rounded-lg border transition-all text-left hover:border-accent/50',
+                    'border-border bg-surface-2/50 hover:bg-surface-2'
+                  )}
+                >
+                  <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center mb-3', action.bgColor)}>
+                    <Icon className={cn('w-5 h-5', action.color)} />
+                  </div>
+                  <h3 className="font-medium text-white mb-1">{action.title}</h3>
+                  <p className="text-xs text-slate-400">{action.description}</p>
+                </button>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
 export default function Settings() {
-  const [activeSection, setActiveSection] = useState('profile')
+  // Get section from URL query parameter
+  const urlParams = new URLSearchParams(window.location.search)
+  const sectionFromUrl = urlParams.get('section')
+  const [activeSection, setActiveSection] = useState(sectionFromUrl || 'profile')
+  
+  // Update active section when URL changes
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const urlParams = new URLSearchParams(window.location.search)
+      const sectionFromUrl = urlParams.get('section')
+      if (sectionFromUrl && sectionFromUrl !== activeSection) {
+        setActiveSection(sectionFromUrl)
+      }
+    }
+    
+    // Check on mount and when location changes
+    handleLocationChange()
+    
+    // Listen for popstate events (back/forward navigation)
+    window.addEventListener('popstate', handleLocationChange)
+    
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange)
+    }
+  }, [activeSection])
 
   const renderSection = () => {
     switch (activeSection) {
@@ -593,6 +688,8 @@ export default function Settings() {
         return <AppearanceSection />
       case 'language':
         return <LanguageSection />
+      case 'knowledge':
+        return <KnowledgeSection />
       default:
         return <ProfileSection />
     }

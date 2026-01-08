@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     
     # Redis配置
     REDIS_URL: Optional[str] = None  # Redis连接URL，格式: redis://localhost:6379/0
+    REDIS_CACHE_ENABLED: bool = True  # 是否启用Redis缓存
+    REDIS_CACHE_DEFAULT_TTL: int = 300  # 默认缓存过期时间（秒），5分钟
+    REDIS_CACHE_PROJECT_DETAIL_TTL: int = 600  # 项目详情缓存过期时间（秒），10分钟
+    REDIS_CACHE_PROJECT_LIST_TTL: int = 300  # 项目列表缓存过期时间（秒），5分钟
 
     # JWT配置
     SECRET_KEY: str = "dev-temp-secret-key-for-testing-only-change-in-production"  # TODO: 生产环境必须从环境变量读取
@@ -60,6 +64,17 @@ class Settings(BaseSettings):
 
     WECHAT_WEBHOOK_URL: Optional[str] = None
     WECHAT_ENABLED: bool = False
+
+    # 销售模块配置
+    SALES_GROSS_MARGIN_THRESHOLD: float = 15.0  # 毛利率阈值（%），低于此值需要审批
+    SALES_GROSS_MARGIN_WARNING: float = 20.0  # 毛利率警告阈值（%），低于此值发出警告
+    SALES_MIN_LEAD_TIME_DAYS: int = 30  # 最小交期（天），低于此值发出警告
+    
+    # 销售模块提醒配置
+    SALES_GATE_TIMEOUT_DAYS: int = 3  # 阶段门超时提醒阈值（天），默认3天
+    SALES_QUOTE_EXPIRE_REMINDER_DAYS: List[int] = [7, 3, 1]  # 报价过期提醒时间点（天）
+    SALES_CONTRACT_EXPIRE_REMINDER_DAYS: List[int] = [30, 15, 7]  # 合同到期提醒时间点（天）
+    SALES_APPROVAL_TIMEOUT_HOURS: int = 24  # 审批超时提醒阈值（小时），默认24小时
 
     class Config:
         env_file = ".env"

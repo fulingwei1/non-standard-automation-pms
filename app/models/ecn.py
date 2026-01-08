@@ -97,6 +97,17 @@ class Ecn(Base, TimestampMixin):
     execution_start = Column(DateTime, comment='执行开始')
     execution_end = Column(DateTime, comment='执行结束')
     execution_note = Column(Text, comment='执行说明')
+    
+    # RCA分析（根本原因分析）
+    root_cause = Column(String(20), comment='根本原因类型')
+    root_cause_analysis = Column(Text, comment='RCA分析内容')
+    root_cause_category = Column(String(50), comment='原因分类')
+    
+    # 解决方案
+    solution = Column(Text, comment='解决方案')
+    solution_template_id = Column(Integer, comment='使用的解决方案模板ID')
+    similar_ecn_ids = Column(JSON, comment='相似ECN ID列表')
+    solution_source = Column(String(20), comment='解决方案来源：MANUAL/AUTO_EXTRACT/KNOWLEDGE_BASE')
 
     # 关闭
     closed_at = Column(DateTime, comment='关闭时间')
@@ -116,6 +127,9 @@ class Ecn(Base, TimestampMixin):
     tasks = relationship('EcnTask', back_populates='ecn', lazy='dynamic')
     affected_materials = relationship('EcnAffectedMaterial', back_populates='ecn', lazy='dynamic')
     affected_orders = relationship('EcnAffectedOrder', back_populates='ecn', lazy='dynamic')
+    bom_impacts = relationship('EcnBomImpact', back_populates='ecn', lazy='dynamic')
+    responsibilities = relationship('EcnResponsibility', back_populates='ecn', lazy='dynamic')
+    solution_template = relationship('EcnSolutionTemplate', foreign_keys='EcnSolutionTemplate.source_ecn_id', uselist=False)
     logs = relationship('EcnLog', back_populates='ecn', lazy='dynamic')
 
     __table_args__ = (
@@ -282,6 +296,17 @@ class EcnAffectedMaterial(Base, TimestampMixin):
 
     # 影响
     cost_impact = Column(Numeric(12, 2), default=0, comment='成本影响')
+    
+    # BOM影响范围（JSON格式）
+    bom_impact_scope = Column(JSON, comment='BOM影响范围，包含受影响的BOM项和设备')
+    # 例如: {"affected_bom_items": [1, 2, 3], "affected_machines": [10, 11], "affected_projects": [5]}
+    
+    # 呆滞料风险
+    is_obsolete_risk = Column(Boolean, default=False, comment='是否呆滞料风险')
+    obsolete_risk_level = Column(String(20), comment='呆滞料风险级别：LOW/MEDIUM/HIGH/CRITICAL')
+    obsolete_quantity = Column(Numeric(10, 4), comment='呆滞料数量')
+    obsolete_cost = Column(Numeric(14, 2), comment='呆滞料成本')
+    obsolete_analysis = Column(Text, comment='呆滞料分析说明')
 
     # 处理状态
     status = Column(String(20), default='PENDING', comment='处理状态')
@@ -326,6 +351,142 @@ class EcnAffectedOrder(Base, TimestampMixin):
 
     __table_args__ = (
         Index('idx_affected_order_ecn', 'ecn_id'),
+    )
+
+
+class EcnBomImpact(Base, TimestampMixin):
+    """ECN BOM影响分析表"""
+    __tablename__ = 'ecn_bom_impacts'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ecn_id = Column(Integer, ForeignKey('ecn.id'), nullable=False, comment='ECN ID')
+    
+    # 关联信息
+    bom_version_id = Column(Integer, ForeignKey('bom_headers.id'), comment='BOM版本ID')
+    machine_id = Column(Integer, ForeignKey('machines.id'), comment='设备ID')
+    project_id = Column(Integer, ForeignKey('projects.id'), comment='项目ID')
+    
+    # 影响统计
+    affected_item_count = Column(Integer, default=0, comment='受影响物料项数')
+    total_cost_impact = Column(Numeric(14, 2), default=0, comment='总成本影响')
+    schedule_impact_days = Column(Integer, default=0, comment='交期影响天数')
+    
+    # 影响分析详情（JSON格式）
+    impact_analysis = Column(JSON, comment='影响分析详情')
+    # 例如: {
+    #   "direct_impact": [{"bom_item_id": 1, "material_code": "M001", "impact": "DELETE"}],
+    #   "cascade_impact": [{"bom_item_id": 2, "material_code": "M002", "impact": "UPDATE"}],
+    #   "affected_orders": [{"order_type": "PURCHASE", "order_id": 10}]
+    # }
+    
+    # 分析状态
+    analysis_status = Column(String(20), default='PENDING', comment='分析状态：PENDING/ANALYZING/COMPLETED/FAILED')
+    analyzed_at = Column(DateTime, comment='分析时间')
+    analyzed_by = Column(Integer, ForeignKey('users.id'), comment='分析人ID')
+    
+    remark = Column(Text, comment='备注')
+    
+    # 关系
+    ecn = relationship('Ecn', back_populates='bom_impacts')
+    bom_version = relationship('BomHeader')
+    machine = relationship('Machine')
+    project = relationship('Project')
+    analyzer = relationship('User')
+    
+    __table_args__ = (
+        Index('idx_bom_impact_ecn', 'ecn_id'),
+        Index('idx_bom_impact_bom', 'bom_version_id'),
+        Index('idx_bom_impact_machine', 'machine_id'),
+    )
+
+
+class EcnResponsibility(Base, TimestampMixin):
+    """ECN责任分摊表"""
+    __tablename__ = 'ecn_responsibilities'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ecn_id = Column(Integer, ForeignKey('ecn.id'), nullable=False, comment='ECN ID')
+    
+    # 责任部门
+    dept = Column(String(50), nullable=False, comment='责任部门')
+    responsibility_ratio = Column(Numeric(5, 2), default=0, comment='责任比例(0-100)')
+    responsibility_type = Column(String(20), default='PRIMARY', comment='责任类型：PRIMARY/SECONDARY/SUPPORT')
+    
+    # 成本分摊
+    cost_allocation = Column(Numeric(14, 2), default=0, comment='成本分摊金额')
+    
+    # 影响描述
+    impact_description = Column(Text, comment='影响描述')
+    responsibility_scope = Column(Text, comment='责任范围')
+    
+    # 确认信息
+    confirmed = Column(Boolean, default=False, comment='是否已确认')
+    confirmed_by = Column(Integer, ForeignKey('users.id'), comment='确认人ID')
+    confirmed_at = Column(DateTime, comment='确认时间')
+    
+    remark = Column(Text, comment='备注')
+    
+    # 关系
+    ecn = relationship('Ecn', back_populates='responsibilities')
+    confirmer = relationship('User')
+    
+    __table_args__ = (
+        Index('idx_resp_ecn', 'ecn_id'),
+        Index('idx_resp_dept', 'dept'),
+    )
+
+
+class EcnSolutionTemplate(Base, TimestampMixin):
+    """ECN解决方案模板表"""
+    __tablename__ = 'ecn_solution_templates'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    # 模板基本信息
+    template_code = Column(String(50), unique=True, nullable=False, comment='模板编码')
+    template_name = Column(String(200), nullable=False, comment='模板名称')
+    template_category = Column(String(50), comment='模板分类')
+    
+    # 适用场景
+    ecn_type = Column(String(20), comment='适用的ECN类型')
+    root_cause_category = Column(String(50), comment='适用的根本原因分类')
+    keywords = Column(JSON, comment='关键词列表（用于匹配）')
+    
+    # 解决方案内容
+    solution_description = Column(Text, nullable=False, comment='解决方案描述')
+    solution_steps = Column(JSON, comment='解决步骤（JSON数组）')
+    required_resources = Column(JSON, comment='所需资源（JSON数组）')
+    estimated_cost = Column(Numeric(14, 2), comment='预估成本')
+    estimated_days = Column(Integer, comment='预估天数')
+    
+    # 效果评估
+    success_rate = Column(Numeric(5, 2), default=0, comment='成功率（0-100）')
+    usage_count = Column(Integer, default=0, comment='使用次数')
+    avg_cost_saving = Column(Numeric(14, 2), comment='平均成本节省')
+    avg_time_saving = Column(Integer, comment='平均时间节省（天）')
+    
+    # 来源信息
+    source_ecn_id = Column(Integer, ForeignKey('ecn.id'), comment='来源ECN ID')
+    created_from = Column(String(20), default='MANUAL', comment='创建来源：MANUAL/AUTO_EXTRACT')
+    
+    # 状态
+    is_active = Column(Boolean, default=True, comment='是否启用')
+    is_verified = Column(Boolean, default=False, comment='是否已验证')
+    verified_by = Column(Integer, ForeignKey('users.id'), comment='验证人ID')
+    verified_at = Column(DateTime, comment='验证时间')
+    
+    remark = Column(Text, comment='备注')
+    created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
+    
+    # 关系
+    source_ecn = relationship('Ecn', foreign_keys=[source_ecn_id])
+    verifier = relationship('User', foreign_keys=[verified_by])
+    creator = relationship('User', foreign_keys=[created_by])
+    
+    __table_args__ = (
+        Index('idx_solution_template_type', 'ecn_type'),
+        Index('idx_solution_template_category', 'template_category'),
+        Index('idx_solution_template_active', 'is_active'),
     )
 
 

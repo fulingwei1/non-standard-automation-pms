@@ -1,15 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
   Settings,
   Plus,
   Edit,
   Trash2,
-  ToggleLeft,
-  ToggleRight,
+  Power,
+  PowerOff,
   AlertTriangle,
   Search,
-  Filter,
+  RefreshCw,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -17,6 +19,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -27,76 +30,191 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogBody,
+  DialogDescription,
 } from '../components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select'
+import { Label } from '../components/ui/label'
+import { Textarea } from '../components/ui/textarea'
+import { Checkbox } from '../components/ui/checkbox'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { alertApi } from '../services/api'
 import { LoadingCard, ErrorMessage, EmptyState } from '../components/common'
 import { toast } from '../components/ui/toast'
+import { cn } from '../lib/utils'
 
-const alertCategories = [
-  { value: 'PROJECT', label: '项目类' },
-  { value: 'TASK', label: '任务类' },
-  { value: 'PURCHASE', label: '采购类' },
-  { value: 'OUTSOURCING', label: '外协类' },
-  { value: 'COST', label: '成本类' },
-  { value: 'QUALITY', label: '质量类' },
+// 规则类型选项
+const ruleTypeOptions = [
+  { value: 'SCHEDULE_DELAY', label: '进度延期' },
+  { value: 'COST_OVERRUN', label: '成本超支' },
+  { value: 'MILESTONE_DUE', label: '里程碑到期' },
+  { value: 'DELIVERY_DUE', label: '交期预警' },
+  { value: 'MATERIAL_SHORTAGE', label: '物料短缺' },
+  { value: 'QUALITY_ISSUE', label: '质量问题' },
+  { value: 'PAYMENT_DUE', label: '付款到期' },
+  { value: 'SPECIFICATION_MISMATCH', label: '规格不匹配' },
+  { value: 'CUSTOM', label: '自定义' },
 ]
 
-const checkIntervals = [
-  { value: 'realtime', label: '实时' },
-  { value: 'hourly', label: '每小时' },
-  { value: 'daily', label: '每日' },
+// 监控对象类型选项
+const targetTypeOptions = [
+  { value: 'PROJECT', label: '项目' },
+  { value: 'MACHINE', label: '设备' },
+  { value: 'TASK', label: '任务' },
+  { value: 'PURCHASE_ORDER', label: '采购订单' },
+  { value: 'OUTSOURCING_ORDER', label: '外协订单' },
+  { value: 'MATERIAL', label: '物料' },
+  { value: 'MILESTONE', label: '里程碑' },
+  { value: 'ACCEPTANCE', label: '验收' },
+]
+
+// 条件类型选项
+const conditionTypeOptions = [
+  { value: 'THRESHOLD', label: '阈值' },
+  { value: 'DEVIATION', label: '偏差' },
+  { value: 'OVERDUE', label: '逾期' },
+  { value: 'CUSTOM', label: '自定义表达式' },
+]
+
+// 条件运算符选项
+const operatorOptions = [
+  { value: 'GT', label: '大于 (>)' },
+  { value: 'GTE', label: '大于等于 (>=)' },
+  { value: 'LT', label: '小于 (<)' },
+  { value: 'LTE', label: '小于等于 (<=)' },
+  { value: 'EQ', label: '等于 (=)' },
+  { value: 'BETWEEN', label: '区间' },
+]
+
+// 预警级别选项
+const alertLevelOptions = [
+  { value: 'INFO', label: '提示', color: 'blue' },
+  { value: 'WARNING', label: '注意', color: 'amber' },
+  { value: 'CRITICAL', label: '严重', color: 'orange' },
+  { value: 'URGENT', label: '紧急', color: 'red' },
+]
+
+// 检查频率选项
+const frequencyOptions = [
+  { value: 'REALTIME', label: '实时' },
+  { value: 'HOURLY', label: '每小时' },
+  { value: 'DAILY', label: '每天' },
+  { value: 'WEEKLY', label: '每周' },
+]
+
+// 通知渠道选项
+const channelOptions = [
+  { value: 'SYSTEM', label: '站内消息' },
+  { value: 'EMAIL', label: '邮件' },
+  { value: 'WECHAT', label: '企业微信' },
+  { value: 'SMS', label: '短信' },
 ]
 
 export default function AlertRuleConfig() {
   const [rules, setRules] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [pageSize] = useState(20)
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('ALL')
+  const [selectedType, setSelectedType] = useState('ALL')
+  const [selectedTarget, setSelectedTarget] = useState('ALL')
+  const [showEnabled, setShowEnabled] = useState(null) // null=全部, true=启用, false=禁用
   const [showDialog, setShowDialog] = useState(false)
   const [editingRule, setEditingRule] = useState(null)
+  const [templates, setTemplates] = useState([])
+  const [selectedTemplate, setSelectedTemplate] = useState(null)
+
+  // 表单状态
   const [formData, setFormData] = useState({
     rule_code: '',
     rule_name: '',
     rule_type: '',
-    category: '',
+    target_type: '',
+    target_field: '',
+    condition_type: 'THRESHOLD',
+    condition_operator: 'GT',
+    threshold_value: '',
+    threshold_min: '',
+    threshold_max: '',
+    condition_expr: '',
+    alert_level: 'WARNING',
+    advance_days: 0,
+    notify_channels: ['SYSTEM'],
+    notify_roles: [],
+    notify_users: [],
+    check_frequency: 'DAILY',
+    is_enabled: true,
     description: '',
-    threshold_warning: '',
-    threshold_critical: '',
-    threshold_urgent: '',
-    check_interval: 'daily',
-    is_active: true,
+    solution_guide: '',
   })
 
-  useEffect(() => {
-    loadRules()
-  }, [selectedCategory])
-
-  const loadRules = async () => {
+  const loadRules = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await alertApi.rules.list({
-        category: selectedCategory !== 'ALL' ? selectedCategory : undefined,
-      })
-      setRules(res.data.items || res.data || [])
       setError(null)
-    } catch (err) {
-      console.error('Failed to load rules:', err)
-      const errorMessage = err.response?.data?.detail || err.message || '加载规则失败'
-      setError(errorMessage)
-      // 如果是演示账号，使用空数组
-      const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-      if (isDemoAccount) {
-        setRules([])
-        setError(null) // Clear error for demo accounts
+      const params = {
+        page,
+        page_size: pageSize,
+      }
+      if (searchQuery) {
+        params.keyword = searchQuery
+      }
+      if (selectedType !== 'ALL') {
+        params.rule_type = selectedType
+      }
+      if (selectedTarget !== 'ALL') {
+        params.target_type = selectedTarget
+      }
+      if (showEnabled !== null) {
+        params.is_enabled = showEnabled
+      }
+      const response = await alertApi.rules.list(params)
+      const data = response.data?.data || response.data || response
+      if (data && typeof data === 'object' && 'items' in data) {
+        setRules(data.items || [])
+        setTotal(data.total || 0)
+      } else if (Array.isArray(data)) {
+        setRules(data)
+        setTotal(data.length)
       } else {
         setRules([])
+        setTotal(0)
       }
+    } catch (err) {
+      console.error('Failed to load rules:', err)
+      setError(err.response?.data?.detail || err.message || '加载规则列表失败')
+      setRules([])
+      setTotal(0)
     } finally {
       setLoading(false)
     }
-  }
+  }, [page, pageSize, searchQuery, selectedType, selectedTarget, showEnabled])
+
+  const loadTemplates = useCallback(async () => {
+    try {
+      const response = await alertApi.templates()
+      const data = response.data || response
+      setTemplates(Array.isArray(data) ? data : [])
+    } catch (err) {
+      console.error('Failed to load templates:', err)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadRules()
+  }, [loadRules])
+
+  useEffect(() => {
+    loadTemplates()
+  }, [loadTemplates])
 
   const handleCreate = () => {
     setEditingRule(null)
@@ -104,14 +222,25 @@ export default function AlertRuleConfig() {
       rule_code: '',
       rule_name: '',
       rule_type: '',
-      category: '',
+      target_type: '',
+      target_field: '',
+      condition_type: 'THRESHOLD',
+      condition_operator: 'GT',
+      threshold_value: '',
+      threshold_min: '',
+      threshold_max: '',
+      condition_expr: '',
+      alert_level: 'WARNING',
+      advance_days: 0,
+      notify_channels: ['SYSTEM'],
+      notify_roles: [],
+      notify_users: [],
+      check_frequency: 'DAILY',
+      is_enabled: true,
       description: '',
-      threshold_warning: '',
-      threshold_critical: '',
-      threshold_urgent: '',
-      check_interval: 'daily',
-      is_active: true,
+      solution_guide: '',
     })
+    setSelectedTemplate(null)
     setShowDialog(true)
   }
 
@@ -121,71 +250,144 @@ export default function AlertRuleConfig() {
       rule_code: rule.rule_code,
       rule_name: rule.rule_name,
       rule_type: rule.rule_type,
-      category: rule.category,
+      target_type: rule.target_type,
+      target_field: rule.target_field || '',
+      condition_type: rule.condition_type,
+      condition_operator: rule.condition_operator || 'GT',
+      threshold_value: rule.threshold_value || '',
+      threshold_min: rule.threshold_min || '',
+      threshold_max: rule.threshold_max || '',
+      condition_expr: rule.condition_expr || '',
+      alert_level: rule.alert_level,
+      advance_days: rule.advance_days || 0,
+      notify_channels: rule.notify_channels || ['SYSTEM'],
+      notify_roles: rule.notify_roles || [],
+      notify_users: rule.notify_users || [],
+      check_frequency: rule.check_frequency || 'DAILY',
+      is_enabled: rule.is_enabled !== false,
       description: rule.description || '',
-      threshold_warning: rule.threshold_warning || '',
-      threshold_critical: rule.threshold_critical || '',
-      threshold_urgent: rule.threshold_urgent || '',
-      check_interval: rule.check_interval || 'daily',
-      is_active: rule.is_active !== false,
+      solution_guide: rule.solution_guide || '',
     })
     setShowDialog(true)
   }
 
+  const handleDelete = async (rule) => {
+    if (!confirm(`确定要删除规则 "${rule.rule_name}" 吗？`)) {
+      return
+    }
+    try {
+      await alertApi.rules.delete(rule.id)
+      toast.success('规则已删除')
+      loadRules()
+    } catch (err) {
+      toast.error(err.response?.data?.detail || '删除失败')
+    }
+  }
+
+  const handleToggle = async (rule) => {
+    try {
+      await alertApi.rules.toggle(rule.id)
+      toast.success(rule.is_enabled ? '规则已禁用' : '规则已启用')
+      loadRules()
+    } catch (err) {
+      toast.error(err.response?.data?.detail || '操作失败')
+    }
+  }
+
   const handleSave = async () => {
     try {
-      if (editingRule) {
-        await alertApi.rules.update(editingRule.id, formData)
-        toast.success('规则更新成功')
-      } else {
-        await alertApi.rules.create(formData)
-        toast.success('规则创建成功')
+      // 表单验证
+      if (!formData.rule_code.trim()) {
+        toast.error('请输入规则编码')
+        return
       }
-      await loadRules()
+      if (!formData.rule_name.trim()) {
+        toast.error('请输入规则名称')
+        return
+      }
+      if (!formData.rule_type) {
+        toast.error('请选择规则类型')
+        return
+      }
+      if (!formData.target_type) {
+        toast.error('请选择监控对象类型')
+        return
+      }
+      if (formData.condition_type === 'THRESHOLD' && !formData.threshold_value && formData.condition_operator !== 'BETWEEN') {
+        toast.error('请输入阈值')
+        return
+      }
+      if (formData.condition_operator === 'BETWEEN' && (!formData.threshold_min || !formData.threshold_max)) {
+        toast.error('请输入阈值范围')
+        return
+      }
+
+      if (editingRule) {
+        // 更新
+        await alertApi.rules.update(editingRule.id, formData)
+        toast.success('规则已更新')
+      } else {
+        // 创建
+        await alertApi.rules.create(formData)
+        toast.success('规则已创建')
+      }
       setShowDialog(false)
-    } catch (error) {
-      console.error('Failed to save rule:', error)
-      const errorMessage = error.response?.data?.detail || error.message || '保存失败，请稍后重试'
-      toast.error(errorMessage)
+      loadRules()
+    } catch (err) {
+      toast.error(err.response?.data?.detail || '保存失败')
     }
   }
 
-  const handleToggle = async (ruleId, enabled) => {
-    try {
-      await alertApi.rules.toggle(ruleId, enabled)
-      await loadRules()
-    } catch (error) {
-      console.error('Failed to toggle rule:', error)
-      const errorMessage = error.response?.data?.detail || error.message || '操作失败，请稍后重试'
-      toast.error(errorMessage)
+  const handleTemplateSelect = (templateId) => {
+    const template = templates.find(t => t.id === templateId)
+    if (template && template.rule_config) {
+      setSelectedTemplate(template)
+      // 从模板填充表单
+      const config = template.rule_config
+      setFormData(prev => ({
+        ...prev,
+        rule_type: config.rule_type || prev.rule_type,
+        target_type: config.target_type || prev.target_type,
+        condition_type: config.condition_type || prev.condition_type,
+        alert_level: config.alert_level || prev.alert_level,
+        check_frequency: config.check_frequency || prev.check_frequency,
+        notify_channels: config.notify_channels || prev.notify_channels,
+        description: template.description || prev.description,
+      }))
     }
   }
 
-  const handleDelete = async (ruleId) => {
-    if (!confirm('确定要删除此规则吗？')) return
-    try {
-      await alertApi.rules.delete(ruleId)
-      await loadRules()
-      toast.success('规则已删除')
-    } catch (error) {
-      console.error('Failed to delete rule:', error)
-      const errorMessage = error.response?.data?.detail || error.message || '删除失败，请稍后重试'
-      toast.error(errorMessage)
-    }
+  const handleChannelToggle = (channel) => {
+    setFormData(prev => {
+      const channels = prev.notify_channels || []
+      if (channels.includes(channel)) {
+        return { ...prev, notify_channels: channels.filter(c => c !== channel) }
+      } else {
+        return { ...prev, notify_channels: [...channels, channel] }
+      }
+    })
   }
 
-  const filteredRules = rules.filter((rule) => {
-    const matchesSearch =
-      !searchQuery ||
-      rule.rule_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      rule.rule_code.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesSearch
-  })
+  const formatFrequency = (freq) => {
+    const option = frequencyOptions.find(o => o.value === freq)
+    return option?.label || freq
+  }
+
+  const formatLevel = (level) => {
+    const option = alertLevelOptions.find(o => o.value === level)
+    return option?.label || level
+  }
+
+  const getLevelColor = (level) => {
+    const option = alertLevelOptions.find(o => o.value === level)
+    return option?.color || 'slate'
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <PageHeader
         title="预警规则配置"
+        description="管理预警规则，配置触发条件和通知方式"
         actions={
           <Button onClick={handleCreate} className="gap-2">
             <Plus className="w-4 h-4" />
@@ -195,232 +397,578 @@ export default function AlertRuleConfig() {
       />
 
       <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Filters */}
-        <Card>
+        {/* 筛选栏 */}
+        <Card className="bg-surface-1/50">
           <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input
-                    placeholder="搜索规则..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-slate-800/50 border-slate-700"
-                  />
-                </div>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex-1 min-w-[200px]">
+                <Input
+                  placeholder="搜索规则编码或名称..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-surface-2"
+                />
               </div>
-              <div className="flex gap-2">
-                {['ALL', ...alertCategories.map((c) => c.value)].map((cat) => (
-                  <Button
-                    key={cat}
-                    variant={selectedCategory === cat ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setSelectedCategory(cat)}
-                  >
-                    {cat === 'ALL' ? '全部' : alertCategories.find((c) => c.value === cat)?.label}
-                  </Button>
-                ))}
-              </div>
+              <Select value={selectedType} onValueChange={setSelectedType}>
+                <SelectTrigger className="w-[150px] bg-surface-2">
+                  <SelectValue placeholder="规则类型" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">全部类型</SelectItem>
+                  {ruleTypeOptions.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={selectedTarget} onValueChange={setSelectedTarget}>
+                <SelectTrigger className="w-[150px] bg-surface-2">
+                  <SelectValue placeholder="监控对象" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">全部对象</SelectItem>
+                  {targetTypeOptions.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select 
+                value={showEnabled === null ? 'ALL' : showEnabled ? 'ENABLED' : 'DISABLED'}
+                onValueChange={(val) => {
+                  if (val === 'ALL') setShowEnabled(null)
+                  else setShowEnabled(val === 'ENABLED')
+                }}
+              >
+                <SelectTrigger className="w-[120px] bg-surface-2">
+                  <SelectValue placeholder="状态" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">全部状态</SelectItem>
+                  <SelectItem value="ENABLED">已启用</SelectItem>
+                  <SelectItem value="DISABLED">已禁用</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadRules}
+                className="gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                刷新
+              </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Rules List */}
+        {/* 规则列表 */}
         {loading ? (
-          <LoadingSpinner text="加载规则配置..." />
+          <LoadingCard />
         ) : error ? (
-          <ErrorMessage
-            error={error}
-            onRetry={loadRules}
-            title="加载规则失败"
+          <ErrorMessage message={error} />
+        ) : rules.length === 0 ? (
+          <EmptyState
+            icon={Settings}
+            title="暂无预警规则"
+            description="点击"新建规则"按钮创建第一个预警规则"
           />
         ) : (
           <motion.div
             variants={staggerContainer}
             initial="hidden"
             animate="visible"
-            className="space-y-3"
+            className="space-y-4"
           >
-            {filteredRules.length === 0 ? (
-              <EmptyState
-                icon={AlertTriangle}
-                title="暂无规则"
-                description="还没有配置任何预警规则"
-              />
-            ) : (
-              filteredRules.map((rule) => (
-                <motion.div key={rule.id} variants={fadeIn}>
-                  <Card className="hover:bg-slate-800/50 transition-colors">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-center gap-3">
-                            <h3 className="text-white font-medium">{rule.rule_name}</h3>
-                            <Badge variant="outline">{rule.rule_code}</Badge>
-                            <Badge variant="secondary">
-                              {alertCategories.find((c) => c.value === rule.category)?.label || rule.category}
+            {rules.map((rule) => (
+              <motion.div key={rule.id} variants={fadeIn}>
+                <Card className="bg-surface-1/50 hover:bg-surface-1 transition-colors">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-lg font-semibold text-white">
+                            {rule.rule_name}
+                          </h3>
+                          {rule.is_system && (
+                            <Badge variant="outline" className="text-xs">
+                              系统预置
                             </Badge>
-                          </div>
-                          {rule.description && (
-                            <p className="text-sm text-slate-400">{rule.description}</p>
                           )}
-                          <div className="flex items-center gap-4 text-xs text-slate-500">
-                            <span>检查频率: {checkIntervals.find((i) => i.value === rule.check_interval)?.label || rule.check_interval}</span>
-                            <span>
-                              阈值: 黄色≥{rule.threshold_warning} 橙色≥{rule.threshold_critical} 红色≥{rule.threshold_urgent}
+                          <Badge
+                            variant={rule.is_enabled ? 'default' : 'secondary'}
+                            className={cn(
+                              rule.is_enabled
+                                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                : 'bg-slate-500/20 text-slate-400 border-slate-500/30'
+                            )}
+                          >
+                            {rule.is_enabled ? (
+                              <>
+                                <CheckCircle2 className="w-3 h-3 mr-1" />
+                                已启用
+                              </>
+                            ) : (
+                              <>
+                                <XCircle className="w-3 h-3 mr-1" />
+                                已禁用
+                              </>
+                            )}
+                          </Badge>
+                          <Badge
+                            className={`bg-${getLevelColor(rule.alert_level)}-500/20 text-${getLevelColor(rule.alert_level)}-400 border-${getLevelColor(rule.alert_level)}-500/30`}
+                          >
+                            {formatLevel(rule.alert_level)}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-slate-400 mb-3">
+                          <div>
+                            <span className="text-slate-500">规则编码:</span>{' '}
+                            <span className="text-white">{rule.rule_code}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500">规则类型:</span>{' '}
+                            <span className="text-white">
+                              {ruleTypeOptions.find(o => o.value === rule.rule_type)?.label || rule.rule_type}
                             </span>
                           </div>
+                          <div>
+                            <span className="text-slate-500">监控对象:</span>{' '}
+                            <span className="text-white">
+                              {targetTypeOptions.find(o => o.value === rule.target_type)?.label || rule.target_type}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500">检查频率:</span>{' '}
+                            <span className="text-white">{formatFrequency(rule.check_frequency)}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleToggle(rule.id, !rule.is_active)}
-                            className="gap-1"
-                          >
-                            {rule.is_active ? (
-                              <ToggleRight className="w-4 h-4 text-emerald-400" />
-                            ) : (
-                              <ToggleLeft className="w-4 h-4 text-slate-500" />
+                        {rule.description && (
+                          <p className="text-sm text-slate-400 mb-2">{rule.description}</p>
+                        )}
+                        {rule.threshold_value && (
+                          <div className="text-sm text-slate-400">
+                            <span className="text-slate-500">阈值:</span>{' '}
+                            <span className="text-white">{rule.threshold_value}</span>
+                            {rule.condition_operator && (
+                              <>
+                                {' '}
+                                <span className="text-slate-500">运算符:</span>{' '}
+                                <span className="text-white">
+                                  {operatorOptions.find(o => o.value === rule.condition_operator)?.label || rule.condition_operator}
+                                </span>
+                              </>
                             )}
-                            {rule.is_active ? '启用' : '禁用'}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(rule)}
-                            className="gap-1"
-                          >
-                            <Edit className="w-3 h-3" />
-                            编辑
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDelete(rule.id)}
-                            className="gap-1 text-red-400 hover:text-red-300"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </div>
+                          </div>
+                        )}
                       </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))
-            )}
+                      <div className="flex items-center gap-2 ml-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleToggle(rule)}
+                          className="gap-2"
+                          title={rule.is_enabled ? '禁用规则' : '启用规则'}
+                        >
+                          {rule.is_enabled ? (
+                            <PowerOff className="w-4 h-4" />
+                          ) : (
+                            <Power className="w-4 h-4" />
+                          )}
+                        </Button>
+                        {!rule.is_system && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(rule)}
+                              className="gap-2"
+                            >
+                              <Edit className="w-4 h-4" />
+                              编辑
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDelete(rule)}
+                              className="gap-2 text-red-400 hover:text-red-300"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              删除
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
           </motion.div>
+        )}
+
+        {/* 分页 */}
+        {total > pageSize && (
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              上一页
+            </Button>
+            <span className="text-sm text-slate-400">
+              第 {page} 页，共 {Math.ceil(total / pageSize)} 页
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.min(Math.ceil(total / pageSize), p + 1))}
+              disabled={page >= Math.ceil(total / pageSize)}
+            >
+              下一页
+            </Button>
+          </div>
         )}
       </div>
 
-      {/* Create/Edit Dialog */}
+      {/* 创建/编辑对话框 */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingRule ? '编辑规则' : '新建规则'}</DialogTitle>
+            <DialogTitle>
+              {editingRule ? '编辑预警规则' : '新建预警规则'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingRule
+                ? '修改预警规则的配置信息'
+                : '创建新的预警规则，配置触发条件和通知方式'}
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm text-slate-400 mb-1 block">规则编码</label>
-              <Input
-                value={formData.rule_code}
-                onChange={(e) => setFormData({ ...formData, rule_code: e.target.value })}
-                placeholder="PROJ_DELAY"
-                className="bg-slate-800/50 border-slate-700"
+          <DialogBody className="space-y-6">
+            {/* 从模板创建 */}
+            {!editingRule && templates.length > 0 && (
+              <div className="space-y-2">
+                <Label>从模板创建（可选）</Label>
+                <Select value={selectedTemplate?.id?.toString() || ''} onValueChange={(val) => handleTemplateSelect(parseInt(val))}>
+                  <SelectTrigger className="bg-surface-2">
+                    <SelectValue placeholder="选择模板..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.map(template => (
+                      <SelectItem key={template.id} value={template.id.toString()}>
+                        {template.template_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* 基本信息 */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-white">基本信息</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="rule_code">
+                    规则编码 <span className="text-red-400">*</span>
+                  </Label>
+                  <Input
+                    id="rule_code"
+                    value={formData.rule_code}
+                    onChange={(e) => setFormData(prev => ({ ...prev, rule_code: e.target.value.toUpperCase() }))}
+                    placeholder="例如: PROJ_DELAY"
+                    disabled={!!editingRule}
+                    className="bg-surface-2"
+                  />
+                  <p className="text-xs text-slate-500">只能包含字母、数字和下划线</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="rule_name">
+                    规则名称 <span className="text-red-400">*</span>
+                  </Label>
+                  <Input
+                    id="rule_name"
+                    value={formData.rule_name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, rule_name: e.target.value }))}
+                    placeholder="例如: 项目进度延期预警"
+                    className="bg-surface-2"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="rule_type">
+                    规则类型 <span className="text-red-400">*</span>
+                  </Label>
+                  <Select
+                    value={formData.rule_type}
+                    onValueChange={(val) => setFormData(prev => ({ ...prev, rule_type: val }))}
+                  >
+                    <SelectTrigger className="bg-surface-2">
+                      <SelectValue placeholder="选择规则类型" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ruleTypeOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="target_type">
+                    监控对象类型 <span className="text-red-400">*</span>
+                  </Label>
+                  <Select
+                    value={formData.target_type}
+                    onValueChange={(val) => setFormData(prev => ({ ...prev, target_type: val }))}
+                  >
+                    <SelectTrigger className="bg-surface-2">
+                      <SelectValue placeholder="选择监控对象" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {targetTypeOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="description">规则描述</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="描述规则的用途和触发条件"
+                    className="bg-surface-2"
+                    rows={2}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 触发条件配置 */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-white">触发条件配置</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="condition_type">条件类型</Label>
+                  <Select
+                    value={formData.condition_type}
+                    onValueChange={(val) => setFormData(prev => ({ ...prev, condition_type: val }))}
+                  >
+                    <SelectTrigger className="bg-surface-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {conditionTypeOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {formData.condition_type === 'THRESHOLD' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="condition_operator">条件运算符</Label>
+                      <Select
+                        value={formData.condition_operator}
+                        onValueChange={(val) => setFormData(prev => ({ ...prev, condition_operator: val }))}
+                      >
+                        <SelectTrigger className="bg-surface-2">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {operatorOptions.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {formData.condition_operator === 'BETWEEN' ? (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="threshold_min">阈值下限</Label>
+                          <Input
+                            id="threshold_min"
+                            type="number"
+                            value={formData.threshold_min}
+                            onChange={(e) => setFormData(prev => ({ ...prev, threshold_min: e.target.value }))}
+                            placeholder="最小值"
+                            className="bg-surface-2"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="threshold_max">阈值上限</Label>
+                          <Input
+                            id="threshold_max"
+                            type="number"
+                            value={formData.threshold_max}
+                            onChange={(e) => setFormData(prev => ({ ...prev, threshold_max: e.target.value }))}
+                            placeholder="最大值"
+                            className="bg-surface-2"
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label htmlFor="threshold_value">阈值</Label>
+                        <Input
+                          id="threshold_value"
+                          type="number"
+                          value={formData.threshold_value}
+                          onChange={(e) => setFormData(prev => ({ ...prev, threshold_value: e.target.value }))}
+                          placeholder="例如: 3 (天) 或 0.1 (比例)"
+                          className="bg-surface-2"
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+                {formData.condition_type === 'CUSTOM' && (
+                  <div className="space-y-2 col-span-2">
+                    <Label htmlFor="condition_expr">自定义表达式</Label>
+                    <Textarea
+                      id="condition_expr"
+                      value={formData.condition_expr}
+                      onChange={(e) => setFormData(prev => ({ ...prev, condition_expr: e.target.value }))}
+                      placeholder="例如: progress < 80 AND days_left < 7"
+                      className="bg-surface-2"
+                      rows={3}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 预警级别和检查频率 */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-white">预警级别和检查频率</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="alert_level">预警级别</Label>
+                  <Select
+                    value={formData.alert_level}
+                    onValueChange={(val) => setFormData(prev => ({ ...prev, alert_level: val }))}
+                  >
+                    <SelectTrigger className="bg-surface-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {alertLevelOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="check_frequency">检查频率</Label>
+                  <Select
+                    value={formData.check_frequency}
+                    onValueChange={(val) => setFormData(prev => ({ ...prev, check_frequency: val }))}
+                  >
+                    <SelectTrigger className="bg-surface-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {frequencyOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="advance_days">提前预警天数</Label>
+                  <Input
+                    id="advance_days"
+                    type="number"
+                    min="0"
+                    value={formData.advance_days}
+                    onChange={(e) => setFormData(prev => ({ ...prev, advance_days: parseInt(e.target.value) || 0 }))}
+                    placeholder="0"
+                    className="bg-surface-2"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 通知配置 */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-white">通知配置</h3>
+              <div className="space-y-3">
+                <div>
+                  <Label>通知渠道</Label>
+                  <div className="flex flex-wrap gap-3 mt-2">
+                    {channelOptions.map(channel => (
+                      <div key={channel.value} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`channel-${channel.value}`}
+                          checked={formData.notify_channels?.includes(channel.value)}
+                          onCheckedChange={() => handleChannelToggle(channel.value)}
+                        />
+                        <Label
+                          htmlFor={`channel-${channel.value}`}
+                          className="text-sm font-normal cursor-pointer"
+                        >
+                          {channel.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 处理指南 */}
+            <div className="space-y-2">
+              <Label htmlFor="solution_guide">处理指南</Label>
+              <Textarea
+                id="solution_guide"
+                value={formData.solution_guide}
+                onChange={(e) => setFormData(prev => ({ ...prev, solution_guide: e.target.value }))}
+                placeholder="提供预警触发后的处理建议和步骤"
+                className="bg-surface-2"
+                rows={3}
               />
             </div>
-            <div>
-              <label className="text-sm text-slate-400 mb-1 block">规则名称</label>
-              <Input
-                value={formData.rule_name}
-                onChange={(e) => setFormData({ ...formData, rule_name: e.target.value })}
-                placeholder="项目进度延期预警"
-                className="bg-slate-800/50 border-slate-700"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm text-slate-400 mb-1 block">规则分类</label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white"
-                >
-                  <option value="">请选择</option>
-                  {alertCategories.map((cat) => (
-                    <option key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-sm text-slate-400 mb-1 block">检查频率</label>
-                <select
-                  value={formData.check_interval}
-                  onChange={(e) => setFormData({ ...formData, check_interval: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white"
-                >
-                  {checkIntervals.map((interval) => (
-                    <option key={interval.value} value={interval.value}>
-                      {interval.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="text-sm text-slate-400 mb-1 block">规则描述</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="项目实际进度落后于计划进度时触发"
-                className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white min-h-[80px]"
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="text-sm text-slate-400 mb-1 block">🟡 黄色预警阈值</label>
-                <Input
-                  type="number"
-                  value={formData.threshold_warning}
-                  onChange={(e) => setFormData({ ...formData, threshold_warning: e.target.value })}
-                  placeholder="3"
-                  className="bg-slate-800/50 border-slate-700"
+
+            {/* 启用状态 */}
+            {editingRule && (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="is_enabled"
+                  checked={formData.is_enabled}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_enabled: checked }))}
                 />
+                <Label htmlFor="is_enabled" className="cursor-pointer">
+                  启用此规则
+                </Label>
               </div>
-              <div>
-                <label className="text-sm text-slate-400 mb-1 block">🟠 橙色预警阈值</label>
-                <Input
-                  type="number"
-                  value={formData.threshold_critical}
-                  onChange={(e) => setFormData({ ...formData, threshold_critical: e.target.value })}
-                  placeholder="7"
-                  className="bg-slate-800/50 border-slate-700"
-                />
-              </div>
-              <div>
-                <label className="text-sm text-slate-400 mb-1 block">🔴 红色预警阈值</label>
-                <Input
-                  type="number"
-                  value={formData.threshold_urgent}
-                  onChange={(e) => setFormData({ ...formData, threshold_urgent: e.target.value })}
-                  placeholder="14"
-                  className="bg-slate-800/50 border-slate-700"
-                />
-              </div>
-            </div>
-          </div>
+            )}
+          </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDialog(false)}>
               取消
             </Button>
-            <Button onClick={handleSave}>保存</Button>
+            <Button onClick={handleSave}>
+              {editingRule ? '保存' : '创建'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   )
 }
-

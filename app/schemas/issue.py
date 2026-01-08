@@ -270,11 +270,11 @@ class IssueTemplateListResponse(PaginatedResponse[IssueTemplateResponse]):
 
 
 class IssueFromTemplateRequest(BaseModel):
-    """从模板创建问题请求"""
-    template_id: int = Field(..., description="模板ID")
+    """从模板创建问题请求（template_id在路径参数中）"""
     project_id: Optional[int] = Field(None, description="关联项目ID")
     machine_id: Optional[int] = Field(None, description="关联机台ID")
     task_id: Optional[int] = Field(None, description="关联任务ID")
+    acceptance_order_id: Optional[int] = Field(None, description="关联验收单ID")
     assignee_id: Optional[int] = Field(None, description="处理负责人ID")
     due_date: Optional[date] = Field(None, description="要求完成日期")
     # 可以覆盖模板的默认值
@@ -282,4 +282,55 @@ class IssueFromTemplateRequest(BaseModel):
     priority: Optional[str] = Field(None, description="优先级（覆盖模板默认值）")
     title: Optional[str] = Field(None, description="标题（覆盖模板默认值）")
     description: Optional[str] = Field(None, description="描述（覆盖模板默认值）")
+
+
+# ==================== 问题统计快照相关 Schema ====================
+
+class IssueStatisticsSnapshotResponse(BaseModel):
+    """问题统计快照响应模型"""
+    id: int
+    snapshot_date: date
+    total_issues: int
+    open_issues: int
+    processing_issues: int
+    resolved_issues: int
+    closed_issues: int
+    cancelled_issues: int
+    deferred_issues: int
+    critical_issues: int
+    major_issues: int
+    minor_issues: int
+    urgent_issues: int
+    high_priority_issues: int
+    medium_priority_issues: int
+    low_priority_issues: int
+    defect_issues: int
+    risk_issues: int
+    blocker_issues: int
+    blocking_issues: int
+    overdue_issues: int
+    project_issues: int
+    task_issues: int
+    acceptance_issues: int
+    avg_response_time: Optional[Decimal] = None
+    avg_resolve_time: Optional[Decimal] = None
+    avg_verify_time: Optional[Decimal] = None
+    status_distribution: Optional[dict] = None
+    severity_distribution: Optional[dict] = None
+    priority_distribution: Optional[dict] = None
+    category_distribution: Optional[dict] = None
+    project_distribution: Optional[dict] = None
+    new_issues_today: int = 0
+    resolved_today: int = 0
+    closed_today: int = 0
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class IssueStatisticsSnapshotListResponse(PaginatedResponse[IssueStatisticsSnapshotResponse]):
+    """问题统计快照列表响应"""
+    pass
 

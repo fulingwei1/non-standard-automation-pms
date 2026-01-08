@@ -347,6 +347,29 @@ export default function OpportunityBoard() {
   useEffect(() => {
     loadOpportunities()
   }, [])
+  
+  // Issue 5.4: 处理商机阶段变更（拖拽）
+  const handleStageChange = async (opportunityId, newStageKey) => {
+    const opportunity = opportunities.find(opp => opp.id === opportunityId)
+    if (!opportunity) return
+    
+    const newStage = stages.find(s => s.frontendKey === newStageKey)
+    if (!newStage) return
+    
+    try {
+      // Update opportunity stage via API
+      await opportunityApi.update(opportunityId, {
+        stage: newStage.key
+      })
+      
+      // Reload opportunities
+      await loadOpportunities()
+    } catch (err) {
+      console.error('Failed to update opportunity stage:', err)
+      // Show error toast
+      alert('更新商机阶段失败：' + (err.response?.data?.detail || err.message))
+    }
+  }
 
   // Filter opportunities
   const filteredOpportunities = useMemo(() => {
@@ -622,7 +645,7 @@ export default function OpportunityBoard() {
                     </span>
                   </div>
 
-                  {/* Column Content */}
+                  {/* Column Content - Issue 5.4: 支持拖拽改变商机阶段 */}
                   <div className="space-y-3 min-h-[200px]">
                     {stageOpps.map((opportunity) => (
                       <OpportunityCard
@@ -630,6 +653,10 @@ export default function OpportunityBoard() {
                         opportunity={opportunity}
                         onClick={handleOpportunityClick}
                         draggable
+                        onDragEnd={(newStage) => {
+                          // Handle drag end to change stage
+                          handleStageChange(opportunity.id, newStage)
+                        }}
                       />
                     ))}
                     {stageOpps.length === 0 && (

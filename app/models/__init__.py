@@ -10,7 +10,7 @@ from .enums import *
 from .user import User, Role, Permission, RolePermission, UserRole, PermissionAudit
 from .project import (
     Project, Machine, ProjectStage, ProjectStatus,
-    ProjectMember, ProjectMilestone, ProjectPaymentPlan, ProjectCost, ProjectDocument, Customer,
+    ProjectMember, ProjectMilestone, ProjectPaymentPlan, ProjectCost, FinancialProjectCost, ProjectDocument, Customer,
     ProjectStatusLog, ProjectTemplate, ProjectTemplateVersion
 )
 from .budget import (
@@ -33,7 +33,8 @@ from .purchase import (
 from .ecn import (
     Ecn, EcnEvaluation, EcnApproval, EcnTask,
     EcnAffectedMaterial, EcnAffectedOrder, EcnLog,
-    EcnType, EcnApprovalMatrix
+    EcnType, EcnApprovalMatrix, EcnBomImpact, EcnResponsibility,
+    EcnSolutionTemplate
 )
 from .acceptance import (
     AcceptanceTemplate, TemplateCategory, TemplateCheckItem,
@@ -49,7 +50,8 @@ from .outsourcing import (
 from .alert import (
     AlertRule, AlertRecord, AlertNotification,
     ExceptionEvent, ExceptionAction, ExceptionEscalation,
-    AlertStatistics, ProjectHealthSnapshot, AlertRuleTemplate
+    AlertStatistics, ProjectHealthSnapshot, AlertRuleTemplate,
+    AlertSubscription
 )
 from .production import (
     Workshop, Workstation, Worker, WorkerSkill, ProcessDict,
@@ -100,6 +102,7 @@ from .sales import (
     Lead, LeadFollowUp, Opportunity, OpportunityRequirement,
     Quote, QuoteVersion, QuoteItem,
     QuoteCostTemplate, QuoteCostApproval, QuoteCostHistory,
+    PurchaseMaterialCost,
     CpqRuleSet, QuoteTemplate, QuoteTemplateVersion,
     ContractTemplate, ContractTemplateVersion,
     Contract, ContractDeliverable, ContractAmendment,
@@ -107,7 +110,9 @@ from .sales import (
     QuoteApproval, ContractApproval, InvoiceApproval,
     # Technical Assessment
     TechnicalAssessment, ScoringRule, FailureCase,
-    LeadRequirementDetail, RequirementFreeze, OpenItem, AIClarification
+    LeadRequirementDetail, RequirementFreeze, OpenItem, AIClarification,
+    # Approval Workflow
+    ApprovalWorkflow, ApprovalWorkflowStep, ApprovalRecord, ApprovalHistory
 )
 from .business_support import (
     BiddingProject, BiddingDocument,
@@ -120,6 +125,12 @@ from .business_support import (
 from .service import (
     ServiceTicket, ServiceRecord, CustomerCommunication,
     CustomerSatisfaction, KnowledgeBase
+)
+from .installation_dispatch import (
+    InstallationDispatchOrder,
+    InstallationDispatchTaskTypeEnum,
+    InstallationDispatchStatusEnum,
+    InstallationDispatchPriorityEnum
 )
 from .rd_project import (
     RdProjectCategory, RdProject, RdCostType, RdCost,
@@ -166,7 +177,7 @@ __all__ = [
     'User', 'Role', 'Permission', 'RolePermission', 'UserRole', 'PermissionAudit',
     # Project
     'Project', 'Machine', 'ProjectStage', 'ProjectStatus',
-    'ProjectMember', 'ProjectMilestone', 'ProjectPaymentPlan', 'ProjectCost', 'ProjectDocument', 'Customer',
+    'ProjectMember', 'ProjectMilestone', 'ProjectPaymentPlan', 'ProjectCost', 'FinancialProjectCost', 'ProjectDocument', 'Customer',
     'ProjectStatusLog', 'ProjectTemplate',
     # Budget
     'ProjectBudget', 'ProjectBudgetItem', 'ProjectCostAllocationRule',
@@ -199,6 +210,7 @@ __all__ = [
     'AlertRule', 'AlertRecord', 'AlertNotification',
     'ExceptionEvent', 'ExceptionAction', 'ExceptionEscalation',
     'AlertStatistics', 'ProjectHealthSnapshot', 'AlertRuleTemplate',
+    'AlertSubscription',
     # Production
     'Workshop', 'Workstation', 'Worker', 'WorkerSkill', 'ProcessDict',
     'Equipment', 'EquipmentMaintenance', 'ProductionPlan',
@@ -238,6 +250,7 @@ __all__ = [
     'Lead', 'LeadFollowUp', 'Opportunity', 'OpportunityRequirement',
     'Quote', 'QuoteVersion', 'QuoteItem',
     'QuoteCostTemplate', 'QuoteCostApproval', 'QuoteCostHistory',
+    'PurchaseMaterialCost', 'MaterialCostUpdateReminder',
     'CpqRuleSet', 'QuoteTemplate', 'QuoteTemplateVersion',
     'ContractTemplate', 'ContractTemplateVersion',
     'Contract', 'ContractDeliverable', 'ContractAmendment',
@@ -246,6 +259,8 @@ __all__ = [
     # Technical Assessment
     'TechnicalAssessment', 'ScoringRule', 'FailureCase',
     'LeadRequirementDetail', 'RequirementFreeze', 'OpenItem', 'AIClarification',
+    # Approval Workflow
+    'ApprovalWorkflow', 'ApprovalWorkflowStep', 'ApprovalRecord', 'ApprovalHistory',
     # Business Support
     'BiddingProject', 'BiddingDocument',
     'ContractReview', 'ContractSealRecord',
@@ -256,6 +271,11 @@ __all__ = [
     # Service
     'ServiceTicket', 'ServiceRecord', 'CustomerCommunication',
     'CustomerSatisfaction', 'KnowledgeBase',
+    # Installation Dispatch
+    'InstallationDispatchOrder',
+    'InstallationDispatchTaskTypeEnum',
+    'InstallationDispatchStatusEnum',
+    'InstallationDispatchPriorityEnum',
     # RD Project
     'RdProjectCategory', 'RdProject', 'RdCostType', 'RdCost',
     'RdCostAllocationRule', 'RdReportRecord',

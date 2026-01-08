@@ -26,6 +26,9 @@ import {
   AvatarGroup,
 } from '../components/ui'
 import ProjectLeadsPanel from '../components/project/ProjectLeadsPanel'
+import GateCheckPanel from '../components/project/GateCheckPanel'
+import ProjectTimeline from '../components/project/ProjectTimeline'
+import QuickActionPanel from '../components/project/QuickActionPanel'
 import {
   ArrowLeft,
   Edit2,
@@ -56,6 +59,7 @@ const tabs = [
   { id: 'leads', name: '负责人', icon: UserCog },
   { id: 'finance', name: '财务/成本', icon: DollarSign },
   { id: 'docs', name: '文档中心', icon: FileText },
+  { id: 'timeline', name: '时间线', icon: Calendar }, // Sprint 3.3: 新增时间线标签
 ]
 
 // Animation variants
@@ -77,6 +81,7 @@ export default function ProjectDetail() {
   const [milestones, setMilestones] = useState([])
   const [costs, setCosts] = useState([])
   const [documents, setDocuments] = useState([])
+  const [statusLogs, setStatusLogs] = useState([]) // Sprint 3.3: 状态变更日志
   const [activeTab, setActiveTab] = useState('overview')
 
   useEffect(() => {
@@ -91,6 +96,7 @@ export default function ProjectDetail() {
           milestonesRes,
           costsRes,
           docsRes,
+          logsRes,
         ] = await Promise.all([
           projectApi.get(id),
           stageApi.list(id),
@@ -99,6 +105,7 @@ export default function ProjectDetail() {
           milestoneApi.list(id),
           costApi.list(id),
           documentApi.list(id),
+          projectApi.getStatusLogs(id, { limit: 50 }), // Sprint 3.3: 加载状态日志
         ])
 
         setProject(projRes.data)
@@ -108,6 +115,7 @@ export default function ProjectDetail() {
         setMilestones(milestonesRes.data || [])
         setCosts(costsRes.data || [])
         setDocuments(docsRes.data || [])
+        setStatusLogs(logsRes.data?.items || logsRes.data || []) // Sprint 3.3
       } catch (err) {
         console.error('Failed to fetch project details:', err)
       } finally {
@@ -214,6 +222,14 @@ export default function ProjectDetail() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Sprint 3.3: 快速操作面板 */}
+          <QuickActionPanel
+            project={project}
+            onRefresh={() => {
+              // 重新加载数据
+              projectApi.get(id).then((res) => setProject(res.data))
+            }}
+          />
           <Button variant="secondary" size="icon">
             <Edit2 className="h-4 w-4" />
           </Button>
@@ -358,6 +374,16 @@ export default function ProjectDetail() {
 
               {/* Sidebar */}
               <div className="space-y-6">
+                {/* Sprint 3.3: 阶段门校验面板 */}
+                <GateCheckPanel
+                  projectId={parseInt(id)}
+                  currentStage={project.stage}
+                  onAdvance={() => {
+                    // 重新加载项目数据
+                    projectApi.get(id).then((res) => setProject(res.data))
+                  }}
+                />
+
                 {/* Project Info */}
                 <Card>
                   <CardContent>
@@ -601,6 +627,16 @@ export default function ProjectDetail() {
                 )}
               </CardContent>
             </Card>
+          )}
+
+          {/* Sprint 3.3: Timeline Tab */}
+          {activeTab === 'timeline' && (
+            <ProjectTimeline
+              projectId={parseInt(id)}
+              statusLogs={statusLogs}
+              milestones={milestones}
+              documents={documents}
+            />
           )}
         </motion.div>
       </AnimatePresence>

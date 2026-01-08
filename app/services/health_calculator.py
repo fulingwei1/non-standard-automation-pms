@@ -338,17 +338,18 @@ class HealthCalculator:
         
         return result
     
-    def batch_calculate(self, project_ids: Optional[list] = None) -> Dict[str, Any]:
+    def batch_calculate(self, project_ids: Optional[list] = None, batch_size: int = 100) -> Dict[str, Any]:
         """
-        批量计算项目健康度
+        Issue 5.2: 批量计算项目健康度（性能优化）
         
         Args:
             project_ids: 项目ID列表，如果为None则计算所有活跃项目
+            batch_size: 批处理大小（默认100，避免一次性加载过多数据）
             
         Returns:
             dict: 批量计算结果
         """
-        # 查询项目
+        # 查询项目（Sprint 5.2: 性能优化 - 只查询必要字段）
         query = self.db.query(Project).filter(
             Project.is_active == True,
             Project.is_archived == False
@@ -357,23 +358,36 @@ class HealthCalculator:
         if project_ids:
             query = query.filter(Project.id.in_(project_ids))
         
-        projects = query.all()
-        
+        # Sprint 5.2: 性能优化 - 分批处理，避免一次性加载过多数据
+        total_count = query.count()
         results = {
-            'total': len(projects),
+            'total': total_count,
             'updated': 0,
             'unchanged': 0,
             'details': []
         }
         
-        for project in projects:
-            result = self.calculate_and_update(project, auto_save=True)
-            results['details'].append(result)
+        # 分批处理
+        for offset in range(0, total_count, batch_size):
+            projects = query.offset(offset).limit(batch_size).all()
             
-            if result['changed']:
-                results['updated'] += 1
-            else:
-                results['unchanged'] += 1
+            for project in projects:
+                result = self.calculate_and_update(project, auto_save=False)  # 先不保存，批量提交
+                results['details'].append(result)
+                
+                if result['changed']:
+                    results['updated'] += 1
+                else:
+                    results['unchanged'] += 1
+            
+            # 每批处理完后提交一次，减少数据库事务开销
+            try:
+                self.db.commit()
+            except Exception as e:
+                self.db.rollback()
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"批量计算健康度提交失败：{str(e)}", exc_info=True)
         
         return results
     

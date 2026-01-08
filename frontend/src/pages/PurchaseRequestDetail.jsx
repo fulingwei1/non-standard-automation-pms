@@ -16,6 +16,8 @@ import {
   Package,
   User,
   MessageSquare,
+  Loader2,
+  ShoppingCart,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -69,6 +71,7 @@ export default function PurchaseRequestDetail() {
   const [request, setRequest] = useState(null)
   const [showApproveDialog, setShowApproveDialog] = useState(false)
   const [approveData, setApproveData] = useState({ approved: true, note: '' })
+  const [generating, setGenerating] = useState(false)
 
   // Check if demo account
   const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
@@ -199,6 +202,26 @@ export default function PurchaseRequestDetail() {
     }
   }
 
+  const handleGenerateOrders = async () => {
+    if (!id) return
+    try {
+      setGenerating(true)
+      if (isDemoAccount) {
+        toast.success('已生成采购订单')
+      } else {
+        await purchaseApi.requests.generateOrders(id)
+        toast.success('已生成采购订单')
+        const res = await purchaseApi.requests.get(id)
+        setRequest(res.data?.data || res.data)
+      }
+    } catch (err) {
+      console.error('Failed to generate orders:', err)
+      toast.error(err.response?.data?.detail || '生成采购订单失败')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
   const handleApprove = async (approved, note) => {
     if (request.status !== 'SUBMITTED') {
       toast.error('只有待审批状态的申请才能审批')
@@ -298,6 +321,21 @@ export default function PurchaseRequestDetail() {
                   审批
                 </Button>
               )}
+              {request.status === 'APPROVED' && !request.auto_po_created && (
+                <Button
+                  variant="outline"
+                  onClick={handleGenerateOrders}
+                  disabled={generating}
+                  className="border-amber-400/40 text-amber-300 hover:bg-amber-500/10"
+                >
+                  {generating ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                  )}
+                  {generating ? '生成中...' : '生成采购订单'}
+                </Button>
+              )}
             </div>
           }
         />
@@ -310,10 +348,17 @@ export default function PurchaseRequestDetail() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-slate-200">基本信息</CardTitle>
-                  <Badge className={cn(statusConfig.color)}>
-                    <StatusIcon className="w-3 h-3 mr-1" />
-                    {statusConfig.label}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge className={cn(statusConfig.color)}>
+                      <StatusIcon className="w-3 h-3 mr-1" />
+                      {statusConfig.label}
+                    </Badge>
+                    {request.auto_po_created && (
+                      <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
+                        已生成采购订单
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -339,6 +384,10 @@ export default function PurchaseRequestDetail() {
                   <div>
                     <Label className="text-slate-400">设备</Label>
                     <p className="text-slate-200">{request.machine_name || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-slate-400">供应商</Label>
+                    <p className="text-slate-200">{request.supplier_name || '未指定'}</p>
                   </div>
                   <div>
                     <Label className="text-slate-400">需求日期</Label>
@@ -473,23 +522,47 @@ export default function PurchaseRequestDetail() {
               </CardContent>
             </Card>
 
-            {/* Actions */}
-            {request.status === 'APPROVED' && (
-              <Card className="bg-slate-800/50 border-slate-700/50">
-                <CardHeader>
-                  <CardTitle className="text-slate-200">后续操作</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    className="w-full bg-blue-600 hover:bg-blue-700"
-                    onClick={() => navigate('/purchases/new', { state: { requestId: request.id } })}
-                  >
-                    <Package className="w-4 h-4 mr-2" />
-                    创建采购订单
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+            {/* Order Generation */}
+            <Card className="bg-slate-800/50 border-slate-700/50">
+              <CardHeader>
+                <CardTitle className="text-slate-200">采购订单生成</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400 text-sm">自动下单状态</span>
+                  <Badge className={request.auto_po_created ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-700/60 text-slate-200'}>
+                    {request.auto_po_created ? '已生成' : '待生成'}
+                  </Badge>
+                </div>
+                {request.generated_orders && request.generated_orders.length > 0 ? (
+                  <div className="space-y-3">
+                    {request.generated_orders.map((order) => (
+                      <div key={order.id} className="p-3 rounded-lg border border-slate-700 bg-slate-900/40">
+                        <div className="flex items-center justify-between">
+                          <p className="text-slate-100 font-mono text-sm">{order.order_no}</p>
+                          <Badge className="bg-slate-700/60 text-slate-200 text-[10px]">{order.status}</Badge>
+                        </div>
+                        <p className="text-sm text-slate-400 mt-2">
+                          含税金额 ¥{parseFloat(order.amount_with_tax || order.total_amount || 0).toFixed(2)}
+                        </p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full mt-3"
+                          onClick={() => navigate(`/purchase-orders/${order.id}`)}
+                        >
+                          查看采购订单
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center text-slate-500 text-sm">
+                    暂无生成的采购订单
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </motion.div>
 
@@ -542,12 +615,6 @@ export default function PurchaseRequestDetail() {
     </div>
   )
 }
-
-
-
-
-
-
 
 
 

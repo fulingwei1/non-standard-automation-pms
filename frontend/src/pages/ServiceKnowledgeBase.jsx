@@ -639,14 +639,50 @@ function CreateArticleDialog({ onClose, onSubmit }) {
             </div>
 
             <div>
-              <label className="text-sm text-slate-400 mb-1 block">文章内容 *</label>
-              <Textarea
-                value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                placeholder="输入文章详细内容..."
-                rows={10}
-                className="bg-slate-800/50 border-slate-700"
-              />
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-sm text-slate-400 block">文章内容 *</label>
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <span>支持 Markdown 格式</span>
+                  <Badge variant="outline" className="text-xs">Markdown</Badge>
+                </div>
+              </div>
+              <div className="relative">
+                <Textarea
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  placeholder="输入文章详细内容...&#10;&#10;支持 Markdown 格式：&#10;- 使用 **粗体** 和 *斜体*&#10;- 使用 # 标题&#10;- 使用 - 或 * 创建列表&#10;- 使用 ```代码块```"
+                  rows={12}
+                  className="bg-slate-800/50 border-slate-700 font-mono text-sm"
+                />
+                <div className="absolute bottom-2 right-2 text-xs text-slate-500">
+                  {formData.content.length} 字符
+                </div>
+              </div>
+              {/* Markdown Preview Toggle */}
+              {formData.content && (
+                <div className="mt-2">
+                  <details className="group">
+                    <summary className="cursor-pointer text-xs text-slate-400 hover:text-slate-300">
+                      预览 Markdown 渲染效果
+                    </summary>
+                    <div className="mt-2 p-3 bg-slate-900/50 border border-slate-700 rounded-lg prose prose-invert prose-sm max-w-none">
+                      <div 
+                        className="text-slate-200 whitespace-pre-wrap"
+                        dangerouslySetInnerHTML={{ 
+                          __html: formData.content
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                            .replace(/^- (.*$)/gim, '<li>$1</li>')
+                            .replace(/\n/g, '<br/>')
+                        }}
+                      />
+                    </div>
+                  </details>
+                </div>
+              )}
             </div>
 
             <div>
@@ -772,13 +808,22 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
                 />
               </div>
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">文章内容</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-sm text-slate-400 block">文章内容</label>
+                  <Badge variant="outline" className="text-xs">Markdown</Badge>
+                </div>
                 <Textarea
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                   rows={15}
-                  className="bg-slate-800/50 border-slate-700"
+                  className="bg-slate-800/50 border-slate-700 font-mono text-sm"
+                  placeholder="支持 Markdown 格式..."
                 />
+                {formData.content && (
+                  <div className="mt-2 text-xs text-slate-500">
+                    {formData.content.length} 字符
+                  </div>
+                )}
               </div>
             </div>
           ) : (

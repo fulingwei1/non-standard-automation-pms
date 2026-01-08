@@ -2,7 +2,7 @@
  * Performance Indicators - 绩效指标配置
  * Features: 指标模板管理、指标分类、权重配置、计算规则
  */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Target,
@@ -20,6 +20,7 @@ import {
   TrendingUp,
   Percent,
   Settings,
+  Loader2,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
@@ -28,6 +29,7 @@ import { Badge } from '../components/ui/badge'
 import { Input } from '../components/ui/input'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
+import { performanceApi } from '../services/api'
 
 // Mock data
 const mockIndicators = [
@@ -127,8 +129,28 @@ export default function PerformanceIndicators() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingIndicator, setEditingIndicator] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [indicators, setIndicators] = useState(mockIndicators)
 
-  const filteredIndicators = mockIndicators.filter((indicator) => {
+  // Fetch indicators from API
+  useEffect(() => {
+    const fetchIndicators = async () => {
+      setLoading(true)
+      try {
+        // Try to fetch weight config which contains indicator settings
+        const weightRes = await performanceApi.getWeightConfig()
+        if (weightRes.data?.indicators?.length > 0) {
+          setIndicators(weightRes.data.indicators)
+        }
+      } catch (err) {
+        console.log('Weight config API unavailable, using mock data')
+      }
+      setLoading(false)
+    }
+    fetchIndicators()
+  }, [])
+
+  const filteredIndicators = indicators.filter((indicator) => {
     const matchesCategory = selectedCategory === 'ALL' || indicator.category === selectedCategory
     const matchesSearch =
       indicator.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -136,7 +158,7 @@ export default function PerformanceIndicators() {
     return matchesCategory && matchesSearch
   })
 
-  const totalWeight = mockIndicators
+  const totalWeight = indicators
     .filter((ind) => ind.status === 'ACTIVE')
     .reduce((sum, ind) => sum + ind.weight, 0)
 
@@ -185,7 +207,11 @@ export default function PerformanceIndicators() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400 mb-1">指标总数</p>
-                <p className="text-3xl font-bold text-white">{mockIndicators.length}</p>
+                {loading ? (
+                  <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+                ) : (
+                  <p className="text-3xl font-bold text-white">{indicators.length}</p>
+                )}
               </div>
               <Target className="h-8 w-8 text-blue-400" />
             </div>
@@ -197,9 +223,13 @@ export default function PerformanceIndicators() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400 mb-1">启用中</p>
-                <p className="text-3xl font-bold text-emerald-400">
-                  {mockIndicators.filter((i) => i.status === 'ACTIVE').length}
-                </p>
+                {loading ? (
+                  <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+                ) : (
+                  <p className="text-3xl font-bold text-emerald-400">
+                    {indicators.filter((i) => i.status === 'ACTIVE').length}
+                  </p>
+                )}
               </div>
               <TrendingUp className="h-8 w-8 text-emerald-400" />
             </div>

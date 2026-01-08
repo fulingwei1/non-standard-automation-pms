@@ -408,3 +408,40 @@ class ProjectHealthSnapshot(Base, TimestampMixin):
         Index('idx_health_project', 'project_id'),
         Index('idx_health_date', 'snapshot_date'),
     )
+
+
+class AlertSubscription(Base, TimestampMixin):
+    """预警订阅配置表"""
+    __tablename__ = 'alert_subscriptions'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, comment='用户ID')
+    
+    # 订阅范围
+    alert_type = Column(String(50), comment='预警类型（空表示全部）')
+    project_id = Column(Integer, ForeignKey('projects.id'), comment='项目ID（空表示全部）')
+    
+    # 订阅配置
+    min_level = Column(String(20), default='WARNING', comment='最低接收级别')
+    notify_channels = Column(JSON, comment='通知渠道（JSON数组）')
+    
+    # 免打扰时段
+    quiet_start = Column(String(10), comment='免打扰开始时间（HH:mm格式）')
+    quiet_end = Column(String(10), comment='免打扰结束时间（HH:mm格式）')
+    
+    # 状态
+    is_active = Column(Boolean, default=True, comment='是否启用')
+    
+    # 关系
+    user = relationship('User')
+    project = relationship('Project')
+    
+    __table_args__ = (
+        Index('idx_alert_subscriptions_user', 'user_id'),
+        Index('idx_alert_subscriptions_type', 'alert_type'),
+        Index('idx_alert_subscriptions_project', 'project_id'),
+        Index('idx_alert_subscriptions_active', 'is_active'),
+    )
+    
+    def __repr__(self):
+        return f'<AlertSubscription user_id={self.user_id} alert_type={self.alert_type}>'

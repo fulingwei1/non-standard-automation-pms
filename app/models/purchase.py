@@ -20,6 +20,7 @@ class PurchaseOrder(Base, TimestampMixin):
     order_no = Column(String(50), unique=True, nullable=False, comment='订单编号')
     supplier_id = Column(Integer, ForeignKey('suppliers.id'), nullable=False, comment='供应商ID')
     project_id = Column(Integer, ForeignKey('projects.id'), comment='项目ID')
+    source_request_id = Column(Integer, ForeignKey('purchase_requests.id'), comment='来源采购申请ID')
 
     # 订单信息
     order_type = Column(String(20), default='NORMAL', comment='订单类型')
@@ -64,6 +65,7 @@ class PurchaseOrder(Base, TimestampMixin):
     # 关系
     supplier = relationship('Supplier', back_populates='purchase_orders')
     project = relationship('Project')
+    source_request = relationship('PurchaseRequest', back_populates='orders')
     items = relationship('PurchaseOrderItem', back_populates='order', lazy='dynamic')
     receipts = relationship('GoodsReceipt', back_populates='order', lazy='dynamic')
 
@@ -71,6 +73,7 @@ class PurchaseOrder(Base, TimestampMixin):
         Index('idx_po_supplier', 'supplier_id'),
         Index('idx_po_project', 'project_id'),
         Index('idx_po_status', 'status'),
+        Index('idx_po_source_request', 'source_request_id'),
     )
 
     def __repr__(self):
@@ -221,9 +224,12 @@ class PurchaseRequest(Base, TimestampMixin):
     request_no = Column(String(50), unique=True, nullable=False, comment='申请单号')
     project_id = Column(Integer, ForeignKey('projects.id'), comment='项目ID')
     machine_id = Column(Integer, ForeignKey('machines.id'), comment='设备ID')
+    supplier_id = Column(Integer, ForeignKey('suppliers.id'), comment='供应商ID')
 
     # 申请信息
     request_type = Column(String(20), default='NORMAL', comment='申请类型')
+    source_type = Column(String(20), default='MANUAL', comment='来源类型（BOM/SHORTAGE/MANUAL）')
+    source_id = Column(Integer, comment='来源业务ID')
     request_reason = Column(Text, comment='申请原因')
     required_date = Column(Date, comment='需求日期')
 
@@ -238,6 +244,9 @@ class PurchaseRequest(Base, TimestampMixin):
     approved_by = Column(Integer, ForeignKey('users.id'), comment='审批人')
     approved_at = Column(DateTime, comment='审批时间')
     approval_note = Column(Text, comment='审批意见')
+    auto_po_created = Column(Boolean, default=False, comment='是否已自动生成采购订单')
+    auto_po_created_at = Column(DateTime, comment='自动下单时间')
+    auto_po_created_by = Column(Integer, ForeignKey('users.id'), comment='自动下单人')
 
     # 申请人
     requested_by = Column(Integer, ForeignKey('users.id'), comment='申请人')
@@ -249,15 +258,20 @@ class PurchaseRequest(Base, TimestampMixin):
     # 关系
     project = relationship('Project')
     machine = relationship('Machine')
+    supplier = relationship('Supplier')
     items = relationship('PurchaseRequestItem', back_populates='request', lazy='dynamic', cascade='all, delete-orphan')
     approver = relationship('User', foreign_keys=[approved_by])
     requester = relationship('User', foreign_keys=[requested_by])
     creator = relationship('User', foreign_keys=[created_by])
+    auto_po_creator = relationship('User', foreign_keys=[auto_po_created_by])
+    orders = relationship('PurchaseOrder', back_populates='source_request', lazy='dynamic')
 
     __table_args__ = (
         Index('idx_pr_no', 'request_no'),
         Index('idx_pr_project', 'project_id'),
         Index('idx_pr_status', 'status'),
+        Index('idx_pr_supplier', 'supplier_id'),
+        Index('idx_pr_source', 'source_type'),
     )
 
     def __repr__(self):

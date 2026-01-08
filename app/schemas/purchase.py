@@ -81,6 +81,8 @@ class PurchaseOrderResponse(TimestampSchema):
     supplier_name: str
     project_id: Optional[int] = None
     project_name: Optional[str] = None
+    source_request_id: Optional[int] = None
+    source_request_no: Optional[str] = None
     order_type: str
     order_title: Optional[str] = None
     total_amount: Decimal = 0
@@ -105,6 +107,7 @@ class PurchaseOrderListResponse(BaseSchema):
     required_date: Optional[date] = None
     status: str
     payment_status: str
+    source_request_no: Optional[str] = None
     created_at: datetime
 
 
@@ -177,6 +180,7 @@ class PurchaseRequestCreate(BaseModel):
     """创建采购申请"""
     project_id: Optional[int] = None
     machine_id: Optional[int] = None
+    supplier_id: Optional[int] = None
     request_type: str = Field(default="NORMAL")
     request_reason: Optional[str] = None
     required_date: Optional[date] = None
@@ -189,11 +193,13 @@ class PurchaseRequestUpdate(BaseModel):
     request_reason: Optional[str] = None
     required_date: Optional[date] = None
     remark: Optional[str] = None
+    supplier_id: Optional[int] = None
 
 
 class PurchaseRequestItemResponse(BaseSchema):
     """采购申请明细响应"""
     id: int
+    bom_item_id: Optional[int] = None
     material_code: str
     material_name: str
     specification: Optional[str] = None
@@ -214,7 +220,11 @@ class PurchaseRequestResponse(TimestampSchema):
     project_name: Optional[str] = None
     machine_id: Optional[int] = None
     machine_name: Optional[str] = None
+    supplier_id: Optional[int] = None
+    supplier_name: Optional[str] = None
     request_type: str
+    source_type: str = "MANUAL"
+    source_id: Optional[int] = None
     request_reason: Optional[str] = None
     required_date: Optional[date] = None
     total_amount: Decimal = 0
@@ -227,6 +237,9 @@ class PurchaseRequestResponse(TimestampSchema):
     requested_at: Optional[datetime] = None
     requester_name: Optional[str] = None
     approver_name: Optional[str] = None
+    auto_po_created: bool = False
+    auto_po_created_at: Optional[datetime] = None
+    generated_orders: List["PurchaseRequestGeneratedOrder"] = []
     items: List[PurchaseRequestItemResponse] = []
     remark: Optional[str] = None
 
@@ -237,8 +250,24 @@ class PurchaseRequestListResponse(BaseSchema):
     request_no: str
     project_name: Optional[str] = None
     machine_name: Optional[str] = None
+    supplier_name: Optional[str] = None
     total_amount: Decimal
     required_date: Optional[date] = None
     status: str
     requester_name: Optional[str] = None
+    auto_po_created: bool = False
     created_at: datetime
+
+
+class PurchaseRequestGeneratedOrder(BaseSchema):
+    """采购申请已生成订单"""
+    id: int
+    order_no: str
+    status: str
+    total_amount: Decimal
+    amount_with_tax: Decimal
+
+
+PurchaseRequestResponse.update_forward_refs(
+    PurchaseRequestGeneratedOrder=PurchaseRequestGeneratedOrder
+)

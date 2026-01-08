@@ -66,6 +66,7 @@ import MilestoneManagement from './pages/MilestoneManagement'
 import ExceptionManagement from './pages/ExceptionManagement'
 import ShortageAlert from './pages/ShortageAlert'
 import ECNManagement from './pages/ECNManagement'
+import ECNDetail from './pages/ECNDetail'
 import ECNTypeManagement from './pages/ECNTypeManagement'
 import ECNOverdueAlerts from './pages/ECNOverdueAlerts'
 import ECNStatistics from './pages/ECNStatistics'
@@ -92,6 +93,7 @@ import MaterialRequisitionDetail from './pages/MaterialRequisitionDetail'
 import BudgetManagement from './pages/BudgetManagement'
 import CostAnalysis from './pages/CostAnalysis'
 import DispatchManagement from './pages/DispatchManagement'
+import InstallationDispatchManagement from './pages/InstallationDispatchManagement'
 import AcceptanceExecution from './pages/AcceptanceExecution'
 import ShortageReportDetail from './pages/ShortageReportDetail'
 import ShortageReportNew from './pages/ShortageReportNew'
@@ -115,6 +117,11 @@ import RequirementFreezeManagement from './pages/RequirementFreezeManagement'
 import AIClarificationChat from './pages/AIClarificationChat'
 import QuotationList from './pages/QuotationList'
 import QuoteManagement from './pages/QuoteManagement'
+import QuoteCostManagement from './pages/QuoteCostManagement'
+import QuoteCostAnalysis from './pages/QuoteCostAnalysis'
+import CostTemplateManagement from './pages/CostTemplateManagement'
+import PurchaseMaterialCostManagement from './pages/PurchaseMaterialCostManagement'
+import FinancialCostUpload from './pages/FinancialCostUpload'
 import ContractManagement from './pages/ContractManagement'
 import ReceivableManagement from './pages/ReceivableManagement'
 import SalesStatistics from './pages/SalesStatistics'
@@ -138,6 +145,7 @@ import SalesFunnel from './pages/SalesFunnel'
 import StrategyAnalysis from './pages/StrategyAnalysis'
 import KeyDecisions from './pages/KeyDecisions'
 import Shipments from './pages/Shipments'
+import DeliveryManagement from './pages/DeliveryManagement'
 import Documents from './pages/Documents'
 import BiddingDetail from './pages/BiddingDetail'
 import PunchIn from './pages/PunchIn'
@@ -152,6 +160,8 @@ import RequirementSurvey from './pages/RequirementSurvey'
 import BiddingCenter from './pages/BiddingCenter'
 import KnowledgeBase from './pages/KnowledgeBase'
 import IssueManagement from './pages/IssueManagement'
+import IssueTemplateManagement from './pages/IssueTemplateManagement'
+import IssueStatisticsSnapshot from './pages/IssueStatisticsSnapshot'
 import TechnicalSpecManagement from './pages/TechnicalSpecManagement'
 // R&D Project Management Pages
 import RdProjectList from './pages/RdProjectList'
@@ -194,10 +204,11 @@ import CustomerManagement from './pages/CustomerManagement'
 import SupplierManagementData from './pages/SupplierManagementData'
 import DepartmentManagement from './pages/DepartmentManagement'
 import AlertCenter from './pages/AlertCenter'
-import AlertRuleConfig from './pages/AlertRuleConfig'
+import AlertRuleManagement from './pages/AlertRuleManagement'
 import AlertDetail from './pages/AlertDetail'
 import AlertStatistics from './pages/AlertStatistics'
 import AlertSubscription from './pages/AlertSubscription'
+import AlertSubscriptionSettings from './pages/AlertSubscriptionSettings'
 
 // Mobile Pages
 import MobileWorkerTaskList from './pages/mobile/MobileWorkerTaskList'
@@ -486,6 +497,11 @@ function App() {
           <Route path="/strategy-analysis" element={<StrategyAnalysis />} />
           <Route path="/key-decisions" element={<KeyDecisions />} />
           <Route path="/shipments" element={<Shipments />} />
+          <Route path="/pmc/delivery-plan" element={<DeliveryManagement />} />
+          <Route path="/pmc/delivery-orders" element={<DeliveryManagement />} />
+          <Route path="/pmc/delivery-orders/:id" element={<DeliveryManagement />} />
+          <Route path="/pmc/delivery-orders/:id/edit" element={<DeliveryManagement />} />
+          <Route path="/pmc/delivery-orders/new" element={<DeliveryManagement />} />
           <Route path="/documents" element={<Documents />} />
 
           {/* Project Management */}
@@ -515,6 +531,7 @@ function App() {
           <Route path="/work-orders" element={<WorkOrderManagement />} />
           <Route path="/work-orders/:id" element={<WorkOrderDetail />} />
           <Route path="/dispatch-management" element={<DispatchManagement />} />
+          <Route path="/installation-dispatch" element={<InstallationDispatchManagement />} />
           <Route path="/production-plans" element={<ProductionPlanList />} />
           <Route path="/work-reports" element={<WorkReportList />} />
           <Route path="/material-requisitions" element={<MaterialRequisitionList />} />
@@ -621,6 +638,11 @@ function App() {
           <Route path="/sales/:sourceType/:sourceId/requirement-freezes" element={<RequirementFreezeManagement />} />
           <Route path="/sales/:sourceType/:sourceId/ai-clarifications" element={<AIClarificationChat />} />
           <Route path="/sales/quotes" element={<QuoteManagement />} />
+          <Route path="/sales/quotes/:id/cost" element={<QuoteCostManagement />} />
+          <Route path="/sales/quotes/:id/cost-analysis" element={<QuoteCostAnalysis />} />
+          <Route path="/sales/cost-templates" element={<CostTemplateManagement />} />
+          <Route path="/sales/purchase-material-costs" element={<PurchaseMaterialCostManagement />} />
+          <Route path="/financial-costs" element={<FinancialCostUpload />} />
           <Route path="/sales/contracts" element={<ContractManagement />} />
           <Route path="/sales/receivables" element={<ReceivableManagement />} />
           <Route path="/sales/statistics" element={<SalesStatistics />} />
@@ -797,18 +819,23 @@ function App() {
           <Route path="/alerts" element={<AlertCenter />} />
           <Route path="/exceptions" element={<ExceptionManagement />} />
           <Route path="/ecns" element={<ECNManagement />} />
+          <Route path="/ecns/:id" element={<ECNDetail />} />
           <Route path="/ecn-types" element={<ECNTypeManagement />} />
           <Route path="/ecn-overdue-alerts" element={<ECNOverdueAlerts />} />
           <Route path="/ecn-statistics" element={<ECNStatistics />} />
           <Route path="/alerts/:id" element={<AlertDetail />} />
-          <Route path="/alert-rules" element={<AlertRuleConfig />} />
+          <Route path="/alert-rules" element={<AlertRuleManagement />} />
           <Route path="/alert-statistics" element={<AlertStatistics />} />
           <Route path="/alert-subscription" element={<AlertSubscription />} />
+          <Route path="/alerts/subscriptions" element={<AlertSubscriptionSettings />} />
+          <Route path="/settings/alert-subscriptions" element={<AlertSubscriptionSettings />} />
 
           {/* Quality & Acceptance */}
           <Route path="/acceptance" element={<Acceptance />} />
           <Route path="/approvals" element={<ApprovalCenter />} />
           <Route path="/issues" element={<IssueManagement />} />
+          <Route path="/issue-templates" element={<IssueTemplateManagement />} />
+          <Route path="/issue-statistics-snapshot" element={<IssueStatisticsSnapshot />} />
           
           {/* Technical Spec Management */}
           <Route path="/technical-spec" element={<TechnicalSpecManagement />} />

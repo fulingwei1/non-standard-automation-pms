@@ -148,19 +148,23 @@ const defaultNavGroups = [
     label: '运营管理',
     items: [
       { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
+      { name: '物料成本管理', path: '/sales/purchase-material-costs', icon: 'DollarSign' },
       { name: '缺料管理', path: '/shortage', icon: 'Package' },
       { name: '齐套检查', path: '/kit-check', icon: 'CheckCircle2' },
       { name: '齐套分析', path: '/material-analysis', icon: 'Package' },
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
     label: '质量验收',
     items: [
       { name: '验收管理', path: '/acceptance', icon: 'ClipboardList' },
+      { name: '安装调试派工', path: '/installation-dispatch', icon: 'Settings' },
       { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck', badge: '2' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
@@ -169,8 +173,16 @@ const defaultNavGroups = [
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '5' },
       { name: '岗位打卡', path: '/punch-in', icon: 'Clock' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
+  },
+  {
+    label: '财务管理',
+    items: [
+      { name: '财务成本上传', path: '/financial-costs', icon: 'DollarSign' },
+    ],
+    roles: ['finance', 'accounting', '财务', '会计', 'admin', 'super_admin'], // 财务部可见
   },
   {
     label: '系统管理',
@@ -200,6 +212,7 @@ const engineerNavGroups = [
       { name: '工作台', path: '/workstation', icon: 'LayoutDashboard' },
       { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
     ],
   },
@@ -208,6 +221,7 @@ const engineerNavGroups = [
     items: [
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
@@ -217,6 +231,7 @@ const engineerNavGroups = [
       { name: '我的绩效', path: '/personal/my-performance', icon: 'Award' },
       { name: '我的奖金', path: '/personal/my-bonus', icon: 'DollarSign' },
       { name: '月度总结', path: '/personal/monthly-summary', icon: 'FileText' },
+      { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
   },
@@ -249,10 +264,20 @@ const pmcNavGroups = [
     ],
   },
   {
+    label: '发货管理',
+    items: [
+      { name: '发货计划', path: '/pmc/delivery-plan', icon: 'Calendar' },
+      { name: '发货订单', path: '/pmc/delivery-orders', icon: 'Truck' },
+      { name: '待发货', path: '/pmc/delivery-orders?status=pending', icon: 'Package' },
+      { name: '在途订单', path: '/pmc/delivery-orders?status=in_transit', icon: 'Truck' },
+    ],
+  },
+  {
     label: '个人中心',
     items: [
       { name: '通知中心', path: '/notifications', icon: 'Bell' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
   },
@@ -270,6 +295,7 @@ const buyerNavGroups = [
     label: '采购管理',
     items: [
       { name: '采购订单', path: '/purchases', icon: 'ShoppingCart' },
+      { name: '物料成本管理', path: '/sales/purchase-material-costs', icon: 'DollarSign' },
       { name: '供应商管理', path: '/suppliers', icon: 'Building2' },
       { name: '缺料管理', path: '/shortage', icon: 'Package' },
       { name: '到货跟踪', path: '/arrivals', icon: 'Truck' },
@@ -286,6 +312,7 @@ const buyerNavGroups = [
     items: [
       { name: '通知中心', path: '/notifications', icon: 'Bell' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
   },
@@ -315,6 +342,7 @@ const generalManagerNavGroups = [
       { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck', badge: '8' },
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
@@ -326,12 +354,14 @@ const generalManagerNavGroups = [
       { name: '齐套分析', path: '/material-analysis', icon: 'Package' },
       { name: '验收管理', path: '/acceptance', icon: 'ClipboardList' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
     label: '个人中心',
     items: [
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '5' },
+      { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
   },
@@ -361,6 +391,7 @@ const chairmanNavGroups = [
       { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck', badge: '5' },
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
       { name: '决策事项', path: '/key-decisions', icon: 'Crown' },
     ],
   },
@@ -377,6 +408,7 @@ const chairmanNavGroups = [
     label: '个人中心',
     items: [
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '8' },
+      { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
   },
@@ -405,6 +437,7 @@ const deptManagerNavGroups = [
             { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck', badge: '2' },
             { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
             { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
           ],
         },
   {
@@ -436,6 +469,7 @@ const productionManagerNavGroups = [
       { name: '装配齐套', path: '/assembly-kit', icon: 'Wrench' },
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
@@ -443,6 +477,7 @@ const productionManagerNavGroups = [
     items: [
       { name: '通知中心', path: '/notifications', icon: 'Bell' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
   },
@@ -462,12 +497,14 @@ const assemblerNavGroups = [
     items: [
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
     label: '个人中心',
     items: [
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '5' },
+      { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
   },
@@ -507,6 +544,7 @@ const salesNavGroups = [
     items: [
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
@@ -514,6 +552,7 @@ const salesNavGroups = [
     items: [
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '3' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
   },
@@ -557,6 +596,7 @@ const businessSupportNavGroups = [
     items: [
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
@@ -593,6 +633,7 @@ const procurementNavGroups = [
   {
     label: '成本控制',
     items: [
+      { name: '物料成本管理', path: '/sales/purchase-material-costs', icon: 'DollarSign' },
       { name: '预算管理', path: '/budgets', icon: 'CreditCard' },
       { name: '成本分析', path: '/cost-analysis', icon: 'BarChart3' },
     ],
@@ -609,6 +650,7 @@ const procurementNavGroups = [
     items: [
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '2' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
   },
@@ -644,6 +686,7 @@ const procurementManagerNavGroups = [
     items: [
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
@@ -684,6 +727,7 @@ const presalesNavGroups = [
     items: [
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
@@ -691,6 +735,7 @@ const presalesNavGroups = [
     items: [
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '2' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
   },
@@ -840,6 +885,7 @@ function getNavGroupsForRole(role, isSuperuser = false) {
           label: '财务管理',
           items: [
             { name: '财务工作台', path: '/finance-manager-dashboard', icon: 'LayoutDashboard' },
+            { name: '财务成本上传', path: '/financial-costs', icon: 'DollarSign' },
             { name: '成本核算', path: '/costs', icon: 'Calculator' },
             { name: '付款审批', path: '/payment-approval', icon: 'ClipboardCheck' },
             { name: '项目结算', path: '/settlement', icon: 'FileText' },
@@ -856,6 +902,7 @@ function getNavGroupsForRole(role, isSuperuser = false) {
           label: '个人中心',
           items: [
             { name: '通知中心', path: '/notifications', icon: 'Bell' },
+            { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
             { name: '个人设置', path: '/settings', icon: 'Settings' },
           ],
         },
@@ -908,12 +955,14 @@ function getNavGroupsForRole(role, isSuperuser = false) {
             { name: '齐套分析', path: '/material-analysis', icon: 'Package' },
             { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
             { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
           ],
         },
         {
           label: '个人中心',
           items: [
             { name: '通知中心', path: '/notifications', icon: 'Bell' },
+            { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
             { name: '个人设置', path: '/settings', icon: 'Settings' },
           ],
         },
@@ -929,6 +978,7 @@ function getNavGroupsForRole(role, isSuperuser = false) {
             { name: '项目看板', path: '/board', icon: 'Kanban' },
             { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
             { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
           ],
         },
         {
@@ -936,12 +986,14 @@ function getNavGroupsForRole(role, isSuperuser = false) {
           items: [
             { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
             { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
           ],
         },
         {
           label: '个人中心',
           items: [
             { name: '通知中心', path: '/notifications', icon: 'Bell' },
+            { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
             { name: '个人设置', path: '/settings', icon: 'Settings' },
           ],
         },
@@ -962,6 +1014,7 @@ function getNavGroupsForRole(role, isSuperuser = false) {
             { name: '知识库', path: '/service-knowledge-base', icon: 'BookOpen' },
             { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
             { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
             { name: '工时填报', path: '/timesheet', icon: 'Clock' },
           ],
         },
@@ -970,12 +1023,14 @@ function getNavGroupsForRole(role, isSuperuser = false) {
           items: [
             { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
             { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
           ],
         },
         {
           label: '个人中心',
           items: [
             { name: '通知中心', path: '/notifications', icon: 'Bell' },
+            { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
             { name: '个人设置', path: '/settings', icon: 'Settings' },
           ],
         },
@@ -991,6 +1046,7 @@ function getNavGroupsForRole(role, isSuperuser = false) {
             { name: '项目看板', path: '/board', icon: 'Kanban' },
             { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
             { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
           ],
         },
         {
@@ -998,6 +1054,7 @@ function getNavGroupsForRole(role, isSuperuser = false) {
           items: [
             { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
             { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
           ],
         },
         {

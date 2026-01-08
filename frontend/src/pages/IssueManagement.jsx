@@ -1,6 +1,23 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDraggable,
+  useDroppable,
+  DragOverlay,
+} from '@dnd-kit/core'
+import {
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable'
+import {
+  CSS,
+} from '@dnd-kit/utilities'
+import {
   AlertCircle,
   AlertTriangle,
   CheckCircle2,
@@ -44,6 +61,7 @@ import {
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { issueApi, issueTemplateApi } from '../services/api'
+import { SimpleBarChart, SimpleLineChart, SimplePieChart } from '../components/administrative/StatisticsCharts'
 
 // Mock issue data
 const mockIssues = [
@@ -933,7 +951,9 @@ export default function IssueManagement() {
             onIssueClick={(issue) => {
               setSelectedIssue(issue)
               setShowDetail(true)
-            }} 
+            }}
+            onStatusChange={handleStatusChange}
+            onRefresh={loadIssues}
           />
         )}
 
@@ -1351,8 +1371,16 @@ function CreateIssueDialog({ onClose, onSubmit }) {
   )
 }
 
-// 看板视图组件
-function IssueBoardView({ issues, onIssueClick }) {
+// 看板视图组件（支持拖拽）
+function IssueBoardView({ issues, onIssueClick, onStatusChange, onRefresh }) {
+  const [activeId, setActiveId] = useState(null)
+  const [localIssues, setLocalIssues] = useState(issues)
+  
+  // 同步外部issues变化
+  useEffect(() => {
+    setLocalIssues(issues)
+  }, [issues])
+
   const columns = [
     { key: 'OPEN', label: '待处理', color: 'bg-blue-500/20 border-blue-500/30' },
     { key: 'PROCESSING', label: '处理中', color: 'bg-yellow-500/20 border-yellow-500/30' },
@@ -1363,61 +1391,190 @@ function IssueBoardView({ issues, onIssueClick }) {
   ]
 
   const getIssuesByStatus = (status) => {
-    return issues.filter(issue => issue.status === status)
+    return localIssues.filter(issue => issue.status === status)
+  }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  const handleDragStart = (event) => {
+    setActiveId(event.active.id)
+  }
+
+  const handleDragEnd = async (event) => {
+    const { active, over } = event
+    setActiveId(null)
+
+    if (!over) return
+
+    const issueId = parseInt(active.id.toString().replace('issue-', ''))
+    const newStatus = over.id.toString().replace('column-', '')
+
+    // 找到问题
+    const issue = localIssues.find(i => i.id === issueId)
+    if (!issue || issue.status === newStatus) return
+
+    // 乐观更新UI
+    setLocalIssues(prev => 
+      prev.map(i => 
+        i.id === issueId ? { ...i, status: newStatus } : i
+      )
+    )
+
+    // 调用API更新状态
+    try {
+      await onStatusChange(issueId, newStatus)
+      // 刷新数据
+      if (onRefresh) {
+        await onRefresh()
+      }
+    } catch (error) {
+      console.error('Failed to update issue status:', error)
+      // 恢复原状态
+      setLocalIssues(issues)
+      alert('更新问题状态失败: ' + (error.response?.data?.detail || error.message))
+    }
+  }
+
+  const draggedIssue = activeId ? localIssues.find(i => `issue-${i.id}` === activeId) : null
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {columns.map((column) => {
+          const columnIssues = getIssuesByStatus(column.key)
+          return (
+            <DroppableColumn
+              key={column.key}
+              column={column}
+              issues={columnIssues}
+              onIssueClick={onIssueClick}
+              activeId={activeId}
+            />
+          )
+        })}
+      </div>
+      <DragOverlay>
+        {draggedIssue ? (
+          <Card className="bg-surface-50/90 border-primary/50 shadow-xl w-64">
+            <CardContent className="p-3">
+              <div className="text-sm font-medium text-white mb-1 line-clamp-2">
+                {draggedIssue.title}
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge className={cn('text-xs', severityColors[draggedIssue.severity])}>
+                  {draggedIssue.severity}
+                </Badge>
+                <Badge className={cn('text-xs', priorityColors[draggedIssue.priority])}>
+                  {draggedIssue.priority}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
+  )
+}
+
+// 可拖拽的列组件
+function DroppableColumn({ column, issues, onIssueClick, activeId }) {
+  const { setNodeRef } = useDroppable({
+    id: `column-${column.key}`,
+  })
+
+  return (
+    <Card ref={setNodeRef} className={`${column.color} border`}>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-semibold text-white flex items-center justify-between">
+          <span>{column.label}</span>
+          <Badge variant="outline" className="text-xs">
+            {issues.length}
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2 max-h-[70vh] overflow-y-auto">
+        {issues.length === 0 ? (
+          <div className="text-slate-400 text-sm text-center py-4">暂无问题</div>
+        ) : (
+          issues.map((issue) => (
+            <DraggableIssueCard
+              key={issue.id}
+              issue={issue}
+              onIssueClick={onIssueClick}
+              isActive={activeId === `issue-${issue.id}`}
+            />
+          ))
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// 可拖拽的问题卡片组件
+function DraggableIssueCard({ issue, onIssueClick, isActive }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useDraggable({
+    id: `issue-${issue.id}`,
+  })
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-      {columns.map((column) => {
-        const columnIssues = getIssuesByStatus(column.key)
-        return (
-          <Card key={column.key} className={`${column.color} border`}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold text-white flex items-center justify-between">
-                <span>{column.label}</span>
-                <Badge variant="outline" className="text-xs">
-                  {columnIssues.length}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 max-h-[70vh] overflow-y-auto">
-              {columnIssues.length === 0 ? (
-                <div className="text-slate-400 text-sm text-center py-4">暂无问题</div>
-              ) : (
-                columnIssues.map((issue) => (
-                  <Card
-                    key={issue.id}
-                    className="bg-surface-50/50 border-white/10 cursor-pointer hover:border-primary/50 transition-all"
-                    onClick={() => onIssueClick(issue)}
-                  >
-                    <CardContent className="p-3">
-                      <div className="text-sm font-medium text-white mb-1 line-clamp-2">
-                        {issue.title}
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge className={cn('text-xs', severityColors[issue.severity])}>
-                          {issue.severity}
-                        </Badge>
-                        <Badge className={cn('text-xs', priorityColors[issue.priority])}>
-                          {issue.priority}
-                        </Badge>
-                        {issue.is_blocking && (
-                          <Badge className="text-xs bg-red-500/20 text-red-400">
-                            阻塞
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="text-xs text-slate-400 mt-2">
-                        {issue.assignee_name || '未分配'}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </CardContent>
-          </Card>
-        )
-      })}
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
+      <Card
+        className={cn(
+          "bg-surface-50/50 border-white/10 cursor-grab active:cursor-grabbing transition-all",
+          isActive && "ring-2 ring-primary/50",
+          isDragging && "shadow-lg scale-105"
+        )}
+        onClick={() => onIssueClick(issue)}
+      >
+        <CardContent className="p-3">
+          <div className="text-sm font-medium text-white mb-1 line-clamp-2">
+            {issue.title}
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge className={cn('text-xs', severityColors[issue.severity])}>
+              {issue.severity}
+            </Badge>
+            <Badge className={cn('text-xs', priorityColors[issue.priority])}>
+              {issue.priority}
+            </Badge>
+            {issue.is_blocking && (
+              <Badge className="text-xs bg-red-500/20 text-red-400">
+                阻塞
+              </Badge>
+            )}
+          </div>
+          <div className="text-xs text-slate-400 mt-2">
+            {issue.assignee_name || '未分配'}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
@@ -1426,19 +1583,33 @@ function IssueBoardView({ issues, onIssueClick }) {
 function IssueStatisticsView() {
   const [trendData, setTrendData] = useState([])
   const [causeData, setCauseData] = useState(null)
+  const [statistics, setStatistics] = useState(null)
+  const [engineerStats, setEngineerStats] = useState([])
   const [loading, setLoading] = useState(true)
   const [groupBy, setGroupBy] = useState('day')
   const [startDate, setStartDate] = useState(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0])
 
   useEffect(() => {
-    loadTrendData()
-    loadCauseAnalysis()
+    loadAllData()
   }, [groupBy, startDate, endDate])
+
+  const loadAllData = async () => {
+    setLoading(true)
+    try {
+      await Promise.all([
+        loadTrendData(),
+        loadCauseAnalysis(),
+        loadStatistics(),
+        loadEngineerStatistics(),
+      ])
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const loadTrendData = async () => {
     try {
-      setLoading(true)
       const response = await issueApi.getTrend({
         group_by: groupBy,
         start_date: startDate,
@@ -1447,8 +1618,6 @@ function IssueStatisticsView() {
       setTrendData(response.data?.trend || response.trend || [])
     } catch (err) {
       console.error('Failed to load trend data:', err)
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -1462,6 +1631,27 @@ function IssueStatisticsView() {
       setCauseData(response.data || response)
     } catch (err) {
       console.error('Failed to load cause analysis:', err)
+    }
+  }
+
+  const loadStatistics = async () => {
+    try {
+      const response = await issueApi.getStatistics({})
+      setStatistics(response.data?.data || response.data || response)
+    } catch (err) {
+      console.error('Failed to load statistics:', err)
+    }
+  }
+
+  const loadEngineerStatistics = async () => {
+    try {
+      const response = await issueApi.getEngineerStatistics({
+        start_date: startDate,
+        end_date: endDate,
+      })
+      setEngineerStats(response.data?.engineers || response.engineers || [])
+    } catch (err) {
+      console.error('Failed to load engineer statistics:', err)
     }
   }
 
@@ -1505,6 +1695,76 @@ function IssueStatisticsView() {
         </CardContent>
       </Card>
 
+      {/* 总体统计卡片 */}
+      {statistics && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="bg-surface-50 border-white/5">
+            <CardContent className="p-4">
+              <div className="text-sm text-slate-400 mb-1">总问题数</div>
+              <div className="text-2xl font-bold text-white">{statistics.total || 0}</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-surface-50 border-white/5">
+            <CardContent className="p-4">
+              <div className="text-sm text-slate-400 mb-1">待处理</div>
+              <div className="text-2xl font-bold text-blue-400">{statistics.open || 0}</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-surface-50 border-white/5">
+            <CardContent className="p-4">
+              <div className="text-sm text-slate-400 mb-1">处理中</div>
+              <div className="text-2xl font-bold text-yellow-400">{statistics.processing || 0}</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-surface-50 border-white/5">
+            <CardContent className="p-4">
+              <div className="text-sm text-slate-400 mb-1">已解决</div>
+              <div className="text-2xl font-bold text-green-400">{statistics.resolved || 0}</div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* 状态分布饼图 */}
+      {statistics && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="bg-surface-50 border-white/5">
+            <CardHeader>
+              <CardTitle>问题状态分布</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SimplePieChart
+                data={[
+                  { label: '待处理', value: statistics.open || 0, color: '#3b82f6' },
+                  { label: '处理中', value: statistics.processing || 0, color: '#eab308' },
+                  { label: '已解决', value: statistics.resolved || 0, color: '#22c55e' },
+                  { label: '已关闭', value: statistics.closed || 0, color: '#6b7280' },
+                  { label: '已取消', value: statistics.cancelled || 0, color: '#ef4444' },
+                ].filter(item => item.value > 0)}
+                size={250}
+              />
+            </CardContent>
+          </Card>
+
+          {/* 严重程度分布 */}
+          <Card className="bg-surface-50 border-white/5">
+            <CardHeader>
+              <CardTitle>严重程度分布</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SimplePieChart
+                data={[
+                  { label: '严重', value: statistics.critical || 0, color: '#ef4444' },
+                  { label: '重要', value: statistics.major || 0, color: '#f59e0b' },
+                  { label: '一般', value: statistics.minor || 0, color: '#3b82f6' },
+                ].filter(item => item.value > 0)}
+                size={250}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* 趋势图表 */}
       <Card className="bg-surface-50 border-white/5">
         <CardHeader>
@@ -1516,49 +1776,147 @@ function IssueStatisticsView() {
           ) : trendData.length === 0 ? (
             <div className="text-slate-400 text-center py-8">暂无数据</div>
           ) : (
-            <div className="space-y-2">
-              {trendData.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-4">
-                  <div className="w-24 text-sm text-slate-400">{item.date}</div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <div className="text-sm text-blue-400 w-20">创建: {item.created || 0}</div>
-                      <div className="text-sm text-green-400 w-20">解决: {item.resolved || 0}</div>
-                      <div className="text-sm text-gray-400 w-20">关闭: {item.closed || 0}</div>
-                    </div>
+            <div className="space-y-6">
+              {/* 创建趋势 */}
+              <div>
+                <div className="text-sm text-slate-400 mb-2">创建数量趋势</div>
+                <SimpleLineChart
+                  data={trendData.map(item => ({
+                    label: item.date,
+                    value: item.created || 0,
+                  }))}
+                  height={200}
+                  color="text-blue-400"
+                />
+              </div>
+              {/* 解决趋势 */}
+              <div>
+                <div className="text-sm text-slate-400 mb-2">解决数量趋势</div>
+                <SimpleLineChart
+                  data={trendData.map(item => ({
+                    label: item.date,
+                    value: item.resolved || 0,
+                  }))}
+                  height={200}
+                  color="text-green-400"
+                />
+              </div>
+              {/* 对比柱状图 */}
+              <div>
+                <div className="text-sm text-slate-400 mb-2">创建 vs 解决对比</div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-xs text-blue-400 mb-1">创建</div>
+                    <SimpleBarChart
+                      data={trendData.map(item => ({
+                        label: item.date,
+                        value: item.created || 0,
+                      }))}
+                      height={150}
+                      color="bg-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <div className="text-xs text-green-400 mb-1">解决</div>
+                    <SimpleBarChart
+                      data={trendData.map(item => ({
+                        label: item.date,
+                        value: item.resolved || 0,
+                      }))}
+                      height={150}
+                      color="bg-green-500"
+                    />
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* 原因分析 */}
-      {causeData && (
+      {/* 工程师问题统计 */}
+      {engineerStats.length > 0 && (
         <Card className="bg-surface-50 border-white/5">
           <CardHeader>
-            <CardTitle>问题原因分析 (Top {causeData.top_causes?.length || 0})</CardTitle>
+            <CardTitle>工程师问题统计</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {causeData.top_causes?.map((cause, idx) => (
-                <div key={idx} className="flex items-center gap-4">
-                  <div className="w-32 text-sm text-white">{cause.cause}</div>
-                  <div className="flex-1 bg-surface-100 rounded-full h-6 relative">
-                    <div
-                      className="bg-primary h-6 rounded-full flex items-center justify-end pr-2"
-                      style={{ width: `${cause.percentage}%` }}
-                    >
-                      <span className="text-xs text-white">{cause.percentage}%</span>
-                    </div>
-                  </div>
-                  <div className="w-16 text-sm text-slate-400 text-right">{cause.count}个</div>
-                </div>
-              ))}
-            </div>
+            <SimpleBarChart
+              data={engineerStats.slice(0, 10).map(eng => ({
+                label: eng.engineer_name || '未知',
+                value: eng.total_issues || 0,
+              }))}
+              height={200}
+              color="bg-purple-500"
+            />
           </CardContent>
         </Card>
+      )}
+
+      {/* 原因分析 - 增强可视化 */}
+      {causeData && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="bg-surface-50 border-white/5">
+            <CardHeader>
+              <CardTitle>问题原因分布</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SimplePieChart
+                data={causeData.top_causes?.slice(0, 10).map((cause, idx) => ({
+                  label: cause.cause || '未知',
+                  value: cause.count || 0,
+                  color: `hsl(${idx * 36}, 70%, 50%)`,
+                })) || []}
+                size={250}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="bg-surface-50 border-white/5">
+            <CardHeader>
+              <CardTitle>Top {causeData.top_causes?.length || 0} 问题原因</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {causeData.top_causes?.map((cause, idx) => (
+                  <div key={idx} className="flex items-center gap-4">
+                    <div className="w-32 text-sm text-white truncate" title={cause.cause}>
+                      {cause.cause || '未知'}
+                    </div>
+                    <div className="flex-1 bg-surface-100 rounded-full h-6 relative">
+                      <div
+                        className="bg-primary h-6 rounded-full flex items-center justify-end pr-2 transition-all"
+                        style={{ width: `${cause.percentage}%` }}
+                      >
+                        <span className="text-xs text-white">{cause.percentage}%</span>
+                      </div>
+                    </div>
+                    <div className="w-16 text-sm text-slate-400 text-right">{cause.count}个</div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 原因趋势（如果有历史数据） */}
+          {causeData.trend && causeData.trend.length > 0 && (
+            <Card className="bg-surface-50 border-white/5 md:col-span-2">
+              <CardHeader>
+                <CardTitle>问题原因趋势</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SimpleBarChart
+                  data={causeData.trend.map((item, idx) => ({
+                    label: item.date || `第${idx + 1}期`,
+                    value: item.count || 0,
+                  }))}
+                  height={200}
+                  color="bg-purple-500"
+                />
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
     </div>
   )

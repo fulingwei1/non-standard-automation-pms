@@ -25,6 +25,13 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Badge } from '../components/ui/badge'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select'
+import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogBody
 } from '../components/ui/dialog'
 import { Textarea } from '../components/ui/textarea'
@@ -335,6 +342,59 @@ export default function CustomerSatisfaction() {
     }
   }
 
+  const handleExportSurveys = () => {
+    try {
+      const surveysToExport = filteredSurveys
+      if (surveysToExport.length === 0) {
+        toast.warning('没有可导出的数据')
+        return
+      }
+
+      const headers = ['调查号', '调查类型', '客户名称', '客户联系人', '客户邮箱', '客户电话',
+                      '项目编号', '项目名称', '调查日期', '发送日期', '发送方式', '截止日期',
+                      '状态', '回复日期', '总体评分', '客户反馈', '改进建议']
+      
+      const csvRows = [
+        headers.join(','),
+        ...surveysToExport.map(survey => [
+          survey.survey_no || '',
+          survey.survey_type || '',
+          survey.customer_name || '',
+          survey.customer_contact || '',
+          survey.customer_email || '',
+          survey.customer_phone || '',
+          survey.project_code || '',
+          survey.project_name || '',
+          survey.survey_date || '',
+          survey.send_date || '',
+          survey.send_method || '',
+          survey.deadline || '',
+          survey.status || '',
+          survey.response_date || '',
+          survey.overall_score || '',
+          `"${(survey.feedback || '').replace(/"/g, '""')}"`,
+          `"${(survey.suggestions || '').replace(/"/g, '""')}"`,
+        ].join(','))
+      ]
+      
+      const csvContent = csvRows.join('\n')
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `客户满意度调查_${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      
+      toast.success(`成功导出 ${surveysToExport.length} 条调查记录`)
+    } catch (error) {
+      console.error('Failed to export surveys:', error)
+      toast.error('导出失败: ' + (error.message || '请稍后重试'))
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <PageHeader
@@ -351,6 +411,16 @@ export default function CustomerSatisfaction() {
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               刷新
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={handleExportSurveys}
+              disabled={loading}
+            >
+              <Download className={cn("w-4 h-4", loading && "animate-spin")} />
+              导出数据
             </Button>
             <Button
               size="sm"
@@ -685,7 +755,59 @@ function CreateSurveyDialog({ onClose, onSubmit }) {
     send_method: '邮件',
     deadline: '',
     notes: '',
+    template_id: '',
   })
+  const [templates, setTemplates] = useState([])
+  const [loadingTemplates, setLoadingTemplates] = useState(false)
+  const [selectedTemplate, setSelectedTemplate] = useState(null)
+
+  useEffect(() => {
+    loadTemplates()
+  }, [formData.survey_type])
+
+  const loadTemplates = async () => {
+    try {
+      setLoadingTemplates(true)
+      const response = await serviceApi.satisfaction.templates.list({
+        survey_type: formData.survey_type,
+        is_active: true,
+        page_size: 50,
+      })
+      const templatesData = response.data?.items || response.data || []
+      setTemplates(templatesData)
+    } catch (error) {
+      console.error('Failed to load templates:', error)
+      setTemplates([])
+    } finally {
+      setLoadingTemplates(false)
+    }
+  }
+
+  const handleTemplateSelect = async (templateId) => {
+    if (!templateId) {
+      setSelectedTemplate(null)
+      setFormData(prev => ({ ...prev, template_id: '' }))
+      return
+    }
+
+    try {
+      const response = await serviceApi.satisfaction.templates.get(templateId)
+      const template = response.data || response
+      setSelectedTemplate(template)
+      setFormData(prev => ({
+        ...prev,
+        template_id: templateId,
+        send_method: template.default_send_method || prev.send_method,
+        deadline: template.default_deadline_days 
+          ? new Date(Date.now() + template.default_deadline_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          : prev.deadline,
+      }))
+      toast.success(`已应用模板: ${template.template_name}`)
+    } catch (error) {
+      console.error('Failed to load template:', error)
+      toast.error('加载模板失败')
+    }
+  }
 
   const handleSubmit = () => {
     if (!formData.customer_name || !formData.survey_date) {
@@ -704,12 +826,58 @@ function CreateSurveyDialog({ onClose, onSubmit }) {
         </DialogHeader>
         <DialogBody>
           <div className="space-y-4">
+            {/* Template Selection */}
+            <div>
+              <label className="text-sm text-slate-400 mb-1 block">使用模板（可选）</label>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={formData.template_id}
+                  onValueChange={handleTemplateSelect}
+                  disabled={loadingTemplates}
+                >
+                  <SelectTrigger className="flex-1 bg-slate-800/50 border-slate-700">
+                    <SelectValue placeholder={loadingTemplates ? "加载模板中..." : "选择调查模板"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">不使用模板</SelectItem>
+                    {templates.map((template) => (
+                      <SelectItem key={template.id} value={template.id.toString()}>
+                        {template.template_name} ({template.survey_type})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedTemplate && (
+                  <Badge variant="outline" className="text-xs text-emerald-400 border-emerald-500/30">
+                    ✓ 已应用模板
+                  </Badge>
+                )}
+              </div>
+              {selectedTemplate && selectedTemplate.questions && (
+                <div className="mt-2 p-3 bg-slate-800/30 border border-slate-700 rounded-lg">
+                  <p className="text-xs text-slate-400 mb-1">模板包含 {selectedTemplate.questions.length} 个问题</p>
+                  <div className="text-xs text-slate-500 space-y-1">
+                    {selectedTemplate.questions.slice(0, 3).map((q, idx) => (
+                      <div key={idx}>• {q.question || q.text}</div>
+                    ))}
+                    {selectedTemplate.questions.length > 3 && (
+                      <div>... 还有 {selectedTemplate.questions.length - 3} 个问题</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-slate-400 mb-1 block">调查类型 *</label>
                 <select
                   value={formData.survey_type}
-                  onChange={(e) => setFormData({ ...formData, survey_type: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, survey_type: e.target.value, template_id: '' })
+                    setSelectedTemplate(null)
+                    loadTemplates()
+                  }}
                   className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white"
                 >
                   <option value="项目满意度">项目满意度</option>

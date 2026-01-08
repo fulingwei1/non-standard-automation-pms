@@ -654,6 +654,76 @@ class ProjectPaymentPlanResponse(TimestampSchema):
         from_attributes = True
 
 
+class FinancialProjectCostCreate(BaseModel):
+    """创建财务项目成本"""
+    
+    project_id: int = Field(description="项目ID")
+    project_code: Optional[str] = Field(default=None, max_length=50, description="项目编号")
+    project_name: Optional[str] = Field(default=None, max_length=200, description="项目名称")
+    machine_id: Optional[int] = Field(default=None, description="设备ID")
+    cost_type: str = Field(max_length=50, description="成本类型：LABOR/TRAVEL/ENTERTAINMENT/OTHER")
+    cost_category: str = Field(max_length=50, description="成本分类")
+    cost_item: Optional[str] = Field(default=None, max_length=200, description="成本项名称")
+    amount: Decimal = Field(description="金额")
+    tax_amount: Optional[Decimal] = Field(default=0, description="税额")
+    currency: Optional[str] = Field(default="CNY", max_length=10, description="币种")
+    cost_date: date = Field(description="发生日期")
+    cost_month: Optional[str] = Field(default=None, max_length=7, description="成本月份(YYYY-MM)")
+    description: Optional[str] = Field(default=None, description="费用说明")
+    location: Optional[str] = Field(default=None, max_length=200, description="地点")
+    participants: Optional[str] = Field(default=None, max_length=500, description="参与人员")
+    purpose: Optional[str] = Field(default=None, max_length=500, description="用途/目的")
+    user_id: Optional[int] = Field(default=None, description="人员ID（人工费用）")
+    user_name: Optional[str] = Field(default=None, max_length=50, description="人员姓名")
+    hours: Optional[Decimal] = Field(default=None, description="工时")
+    hourly_rate: Optional[Decimal] = Field(default=None, description="时薪")
+    source_no: Optional[str] = Field(default=None, max_length=100, description="来源单号")
+    invoice_no: Optional[str] = Field(default=None, max_length=100, description="发票号")
+
+
+class FinancialProjectCostResponse(TimestampSchema):
+    """财务项目成本响应"""
+    
+    id: int
+    project_id: int
+    project_code: Optional[str] = None
+    project_name: Optional[str] = None
+    machine_id: Optional[int] = None
+    cost_type: str
+    cost_category: str
+    cost_item: Optional[str] = None
+    amount: Decimal
+    tax_amount: Decimal = 0
+    currency: str = "CNY"
+    cost_date: date
+    cost_month: Optional[str] = None
+    description: Optional[str] = None
+    location: Optional[str] = None
+    participants: Optional[str] = None
+    purpose: Optional[str] = None
+    user_id: Optional[int] = None
+    user_name: Optional[str] = None
+    hours: Optional[Decimal] = None
+    hourly_rate: Optional[Decimal] = None
+    source_type: str = "FINANCIAL_UPLOAD"
+    source_no: Optional[str] = None
+    invoice_no: Optional[str] = None
+    upload_batch_no: Optional[str] = None
+    uploaded_by: int
+    uploaded_by_name: Optional[str] = None
+    is_verified: bool = False
+    verified_by: Optional[int] = None
+    verified_by_name: Optional[str] = None
+    verified_at: Optional[datetime] = None
+
+
+class FinancialProjectCostUploadRequest(BaseModel):
+    """财务成本批量上传请求"""
+    
+    costs: List[FinancialProjectCostCreate] = Field(description="成本列表")
+    upload_batch_no: Optional[str] = Field(default=None, description="上传批次号")
+
+
 class ProjectCostResponse(TimestampSchema):
     """成本记录响应"""
 
@@ -1029,6 +1099,34 @@ class StageAdvanceRequest(BaseModel):
     skip_gate_check: bool = Field(False, description="是否跳过阶段门校验（仅管理员）")
 
 
+class GateCheckCondition(BaseModel):
+    """阶段门校验条件项"""
+    
+    condition_name: str = Field(..., description="条件名称")
+    condition_desc: str = Field(..., description="条件描述")
+    status: str = Field(..., description="检查状态：PASSED/FAILED/PENDING")
+    message: Optional[str] = Field(None, description="检查结果消息")
+    action_url: Optional[str] = Field(None, description="处理链接（如需要）")
+    action_text: Optional[str] = Field(None, description="处理按钮文本")
+
+
+class GateCheckResult(BaseModel):
+    """阶段门校验结果（Issue 1.4: 详细反馈）"""
+    
+    gate_code: str = Field(..., description="阶段门编码（G1-G8）")
+    gate_name: str = Field(..., description="阶段门名称")
+    from_stage: str = Field(..., description="源阶段")
+    to_stage: str = Field(..., description="目标阶段")
+    passed: bool = Field(..., description="是否通过")
+    total_conditions: int = Field(..., description="总条件数")
+    passed_conditions: int = Field(..., description="通过条件数")
+    failed_conditions: int = Field(..., description="失败条件数")
+    conditions: List[GateCheckCondition] = Field(default_factory=list, description="条件检查详情")
+    missing_items: List[str] = Field(default_factory=list, description="缺失项列表（兼容旧格式）")
+    suggestions: List[str] = Field(default_factory=list, description="建议操作")
+    progress_pct: float = Field(..., description="完成进度百分比")
+
+
 class StageAdvanceResponse(BaseModel):
     """阶段推进响应"""
     
@@ -1039,7 +1137,7 @@ class StageAdvanceResponse(BaseModel):
     new_stage: str
     new_status: Optional[str] = None
     gate_passed: bool
-    gate_check_result: Optional[dict] = None
+    gate_check_result: Optional[GateCheckResult] = None
     missing_items: List[str] = []
 
 
@@ -1133,3 +1231,18 @@ class ProjectDashboardResponse(BaseModel):
     
     # 关键指标
     key_metrics: dict
+
+
+class InProductionProjectSummary(BaseModel):
+    """在产项目进度汇总（给生产总监/经理看）"""
+    project_id: int
+    project_code: str
+    project_name: str
+    stage: str
+    health: Optional[str] = None
+    progress: float = 0.0
+    planned_end_date: Optional[date] = None
+    actual_end_date: Optional[date] = None
+    overdue_milestones_count: int = 0
+    next_milestone: Optional[str] = None
+    next_milestone_date: Optional[date] = None

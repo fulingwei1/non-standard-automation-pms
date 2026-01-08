@@ -521,6 +521,17 @@ class DeliveryApprovalRequest(BaseModel):
     approval_comment: Optional[str] = Field(default=None, description="审批意见")
 
 
+class DeliveryStatistics(BaseModel):
+    """发货统计（给生产总监看）"""
+    pending_shipments: int = 0
+    shipped_today: int = 0
+    in_transit: int = 0
+    delivered_this_week: int = 0
+    on_time_shipping_rate: float = 0.0
+    avg_shipping_time: float = 0.0
+    total_orders: int = 0
+
+
 # ==================== 验收单跟踪 ====================
 
 

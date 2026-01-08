@@ -2,7 +2,7 @@
  * Performance Ranking - 绩效排行榜
  * Features: 员工排名、部门排名、历史趋势
  */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Award,
@@ -12,6 +12,7 @@ import {
   Building2,
   Calendar,
   Medal,
+  Loader2,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
@@ -20,6 +21,7 @@ import { Badge } from '../components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
+import { performanceApi, pmoApi } from '../services/api'
 
 // Mock data
 const mockEmployeeRanking = [
@@ -45,6 +47,31 @@ const mockDepartmentRanking = [
 
 export default function PerformanceRanking() {
   const [selectedPeriod, setSelectedPeriod] = useState('current')
+  const [loading, setLoading] = useState(true)
+  const [employeeRanking, setEmployeeRanking] = useState(mockEmployeeRanking)
+  const [departmentRanking, setDepartmentRanking] = useState(mockDepartmentRanking)
+
+  // Fetch ranking data
+  useEffect(() => {
+    const fetchRankings = async () => {
+      setLoading(true)
+      try {
+        const myPerfRes = await performanceApi.getMyPerformance()
+        if (myPerfRes.data) {
+          if (myPerfRes.data.employee_ranking?.length > 0) {
+            setEmployeeRanking(myPerfRes.data.employee_ranking)
+          }
+          if (myPerfRes.data.department_ranking?.length > 0) {
+            setDepartmentRanking(myPerfRes.data.department_ranking)
+          }
+        }
+      } catch (err) {
+        console.log('Performance ranking API unavailable, using mock data')
+      }
+      setLoading(false)
+    }
+    fetchRankings()
+  }, [])
 
   const getRankBadge = (rank) => {
     if (rank === 1) return <Medal className="w-6 h-6 text-amber-400" />
@@ -86,8 +113,13 @@ export default function PerformanceRanking() {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+                </div>
+              ) : (
               <div className="space-y-3">
-                {mockEmployeeRanking.map((employee) => (
+                {employeeRanking.map((employee) => (
                   <motion.div
                     key={employee.rank}
                     variants={fadeIn}
@@ -133,6 +165,7 @@ export default function PerformanceRanking() {
                   </motion.div>
                 ))}
               </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -146,8 +179,13 @@ export default function PerformanceRanking() {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+                </div>
+              ) : (
               <div className="space-y-3">
-                {mockDepartmentRanking.map((dept) => (
+                {departmentRanking.map((dept) => (
                   <motion.div
                     key={dept.rank}
                     variants={fadeIn}
@@ -178,6 +216,7 @@ export default function PerformanceRanking() {
                   </motion.div>
                 ))}
               </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

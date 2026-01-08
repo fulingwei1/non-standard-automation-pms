@@ -597,6 +597,65 @@ export default function AlertCenter() {
     }
   }, [selectedAlerts, loadAlerts, loadStatistics])
 
+  const handleExportExcel = async () => {
+    try {
+      const params = {
+        project_id: filters.project_id || undefined,
+        alert_level: filters.alert_level || undefined,
+        status: filters.status || undefined,
+        rule_type: filters.rule_type || undefined,
+        start_date: filters.start_date || undefined,
+        end_date: filters.end_date || undefined,
+        group_by: 'none', // 可选: 'none', 'level', 'type'
+      }
+      
+      const response = await alertApi.exportExcel(params)
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `预警报表_${new Date().toISOString().split('T')[0]}.xlsx`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      toast.success('Excel导出成功')
+    } catch (error) {
+      console.error('Failed to export Excel:', error)
+      toast.error('导出失败，请稍后重试')
+    }
+  }
+
+  const handleExportPdf = async () => {
+    try {
+      const params = {
+        project_id: filters.project_id || undefined,
+        alert_level: filters.alert_level || undefined,
+        status: filters.status || undefined,
+        rule_type: filters.rule_type || undefined,
+        start_date: filters.start_date || undefined,
+        end_date: filters.end_date || undefined,
+      }
+      
+      const response = await alertApi.exportPdf(params)
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `预警报表_${new Date().toISOString().split('T')[0]}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      toast.success('PDF导出成功')
+    } catch (error) {
+      console.error('Failed to export PDF:', error)
+      toast.error('导出失败，请稍后重试')
+    }
+  }
+
   const handleExport = () => {
     try {
       const csvContent = [

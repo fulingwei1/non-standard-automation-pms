@@ -44,6 +44,7 @@ from app.api.v1.endpoints import (
     business_support,
     business_support_orders,
     service,
+    installation_dispatch,
     rd_project,
     engineers,
     technical_review,
@@ -74,6 +75,7 @@ api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(roles.router, prefix="/roles", tags=["roles"])
 api_router.include_router(audits.router, prefix="/audits", tags=["audits"])
 api_router.include_router(issues.router, prefix="/issues", tags=["issues"])
+api_router.include_router(issues.template_router, prefix="/issue-templates", tags=["issue-templates"])
 api_router.include_router(technical_spec.router, prefix="/technical-spec", tags=["technical-spec"])
 api_router.include_router(materials.router, prefix="/materials", tags=["materials"])
 api_router.include_router(purchase.router, prefix="/purchase-orders", tags=["purchase"])
@@ -101,6 +103,7 @@ api_router.include_router(report_center.router, prefix="/reports", tags=["report
 api_router.include_router(data_import_export.router, prefix="/import", tags=["data-import-export"])
 api_router.include_router(business_support.router, prefix="/business-support", tags=["business-support"])
 api_router.include_router(business_support_orders.router, prefix="/business-support", tags=["business-support"])
+api_router.include_router(installation_dispatch.router, prefix="/installation-dispatch", tags=["installation-dispatch"])
 api_router.include_router(service.router, prefix="/service", tags=["service"])
 api_router.include_router(rd_project.router, prefix="", tags=["rd-project"])
 api_router.include_router(engineers.router, prefix="/engineers", tags=["engineers"])

@@ -259,3 +259,41 @@ class AlertStatisticsResponse(BaseSchema):
     open_exceptions: int = 0
     avg_response_time: Decimal = 0
     avg_resolve_time: Decimal = 0
+
+
+# ==================== 预警订阅 ====================
+
+class AlertSubscriptionCreate(BaseModel):
+    """创建预警订阅"""
+    alert_type: Optional[str] = Field(None, description="预警类型（空表示全部）")
+    project_id: Optional[int] = Field(None, description="项目ID（空表示全部）")
+    min_level: str = Field(default="WARNING", description="最低接收级别")
+    notify_channels: Optional[List[str]] = Field(default=["SYSTEM"], description="通知渠道")
+    quiet_start: Optional[str] = Field(None, description="免打扰开始时间（HH:mm格式）")
+    quiet_end: Optional[str] = Field(None, description="免打扰结束时间（HH:mm格式）")
+    is_active: bool = Field(default=True, description="是否启用")
+
+
+class AlertSubscriptionUpdate(BaseModel):
+    """更新预警订阅"""
+    alert_type: Optional[str] = None
+    project_id: Optional[int] = None
+    min_level: Optional[str] = None
+    notify_channels: Optional[List[str]] = None
+    quiet_start: Optional[str] = None
+    quiet_end: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class AlertSubscriptionResponse(TimestampSchema):
+    """预警订阅响应"""
+    id: int
+    user_id: int
+    alert_type: Optional[str] = None
+    project_id: Optional[int] = None
+    project_name: Optional[str] = None
+    min_level: str = "WARNING"
+    notify_channels: Optional[List[str]] = None
+    quiet_start: Optional[str] = None
+    quiet_end: Optional[str] = None
+    is_active: bool = True

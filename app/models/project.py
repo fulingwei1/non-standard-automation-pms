@@ -123,6 +123,10 @@ class Project(Base, TimestampMixin):
     is_active = Column(Boolean, default=True, comment="是否激活")
     is_archived = Column(Boolean, default=False, comment="是否归档")
 
+    # 模板关联（Sprint 4.1: 项目模板使用统计）
+    template_id = Column(Integer, ForeignKey("project_templates.id"), comment="创建时使用的模板ID")
+    template_version_id = Column(Integer, ForeignKey("project_template_versions.id"), comment="创建时使用的模板版本ID")
+
     created_by = Column(Integer, ForeignKey("users.id"), comment="创建人")
 
     # 关系
@@ -141,6 +145,7 @@ class Project(Base, TimestampMixin):
     )
     members = relationship("ProjectMember", back_populates="project", lazy="dynamic")
     costs = relationship("ProjectCost", back_populates="project", lazy="dynamic")
+    financial_costs = relationship("FinancialProjectCost", back_populates="project", lazy="dynamic")
     documents = relationship(
         "ProjectDocument", back_populates="project", lazy="dynamic"
     )
@@ -152,6 +157,12 @@ class Project(Base, TimestampMixin):
         Index("idx_projects_stage", "stage"),
         Index("idx_projects_health", "health"),
         Index("idx_projects_active", "is_active"),
+        # Sprint 5.1: 性能优化 - 添加复合索引
+        Index("idx_projects_stage_status", "stage", "status"),
+        Index("idx_projects_stage_health", "stage", "health"),
+        Index("idx_projects_active_archived", "is_active", "is_archived"),
+        Index("idx_projects_created_at", "created_at"),  # 用于排序
+        Index("idx_projects_type_category", "project_type", "product_category"),  # 用于筛选
     )
 
     def __repr__(self):
@@ -561,6 +572,80 @@ class ProjectCost(Base, TimestampMixin):
         Index("idx_project_costs_type", "cost_type"),
         Index("idx_project_costs_date", "cost_date"),
     )
+
+
+class FinancialProjectCost(Base, TimestampMixin):
+    """财务历史项目成本表（财务部维护的非物料成本）"""
+    
+    __tablename__ = "financial_project_costs"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    
+    # 项目关联
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
+    project_code = Column(String(50), comment="项目编号（冗余字段，便于查询）")
+    project_name = Column(String(200), comment="项目名称（冗余字段，便于查询）")
+    machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID")
+    
+    # 成本类型和分类
+    cost_type = Column(String(50), nullable=False, comment="成本类型：LABOR/TRAVEL/ENTERTAINMENT/OTHER")
+    cost_category = Column(String(50), nullable=False, comment="成本分类：出差费/人工费/招待费/其他")
+    cost_item = Column(String(200), comment="成本项名称")
+    
+    # 金额信息
+    amount = Column(Numeric(14, 2), nullable=False, comment="金额")
+    tax_amount = Column(Numeric(12, 2), default=0, comment="税额")
+    currency = Column(String(10), default="CNY", comment="币种")
+    
+    # 时间信息
+    cost_date = Column(Date, nullable=False, comment="发生日期")
+    cost_month = Column(String(7), comment="成本月份(YYYY-MM)")
+    
+    # 详细信息
+    description = Column(Text, comment="费用说明")
+    location = Column(String(200), comment="地点（出差费用）")
+    participants = Column(String(500), comment="参与人员（逗号分隔）")
+    purpose = Column(String(500), comment="用途/目的")
+    
+    # 人工费用相关
+    user_id = Column(Integer, ForeignKey("users.id"), comment="人员ID（人工费用）")
+    user_name = Column(String(50), comment="人员姓名（冗余）")
+    hours = Column(Numeric(10, 2), comment="工时（人工费用）")
+    hourly_rate = Column(Numeric(10, 2), comment="时薪（人工费用）")
+    
+    # 来源信息
+    source_type = Column(String(50), default="FINANCIAL_UPLOAD", comment="来源类型：FINANCIAL_UPLOAD（财务上传）")
+    source_no = Column(String(100), comment="来源单号（如报销单号、发票号等）")
+    invoice_no = Column(String(100), comment="发票号")
+    
+    # 上传信息
+    upload_batch_no = Column(String(50), comment="上传批次号")
+    uploaded_by = Column(Integer, ForeignKey("users.id"), nullable=False, comment="上传人ID（财务部）")
+    
+    # 状态
+    is_verified = Column(Boolean, default=False, comment="是否已核实")
+    verified_by = Column(Integer, ForeignKey("users.id"), comment="核实人ID")
+    verified_at = Column(DateTime, comment="核实时间")
+    
+    # 关系
+    project = relationship("Project", back_populates="financial_costs")
+    machine = relationship("Machine")
+    user = relationship("User", foreign_keys=[user_id])
+    uploader = relationship("User", foreign_keys=[uploaded_by])
+    verifier = relationship("User", foreign_keys=[verified_by])
+    
+    __table_args__ = (
+        Index("idx_financial_cost_project", "project_id"),
+        Index("idx_financial_cost_type", "cost_type"),
+        Index("idx_financial_cost_category", "cost_category"),
+        Index("idx_financial_cost_date", "cost_date"),
+        Index("idx_financial_cost_month", "cost_month"),
+        Index("idx_financial_cost_upload_batch", "upload_batch_no"),
+        {"comment": "财务历史项目成本表"}
+    )
+    
+    def __repr__(self):
+        return f"<FinancialProjectCost {self.project_code}-{self.cost_type}>"
 
 
 class ProjectDocument(Base, TimestampMixin):

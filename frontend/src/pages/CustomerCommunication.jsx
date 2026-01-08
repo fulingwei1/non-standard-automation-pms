@@ -390,6 +390,66 @@ export default function CustomerCommunication() {
     }
   }
 
+  const handleExportCommunications = () => {
+    try {
+      const commsToExport = filteredCommunications
+      if (commsToExport.length === 0) {
+        toast.warning('没有可导出的数据')
+        return
+      }
+
+      const headers = ['沟通号', '沟通方式', '客户名称', '客户联系人', '客户电话', '客户邮箱',
+                      '项目编号', '项目名称', '沟通日期', '沟通时间', '沟通时长(分钟)', '沟通地点',
+                      '沟通主题', '沟通内容', '是否需要跟进', '跟进任务', '跟进截止日期', '跟进状态',
+                      '重要性', '标签', '创建人', '创建时间']
+      
+      const csvRows = [
+        headers.join(','),
+        ...commsToExport.map(comm => [
+          comm.communication_no || '',
+          comm.communication_type || '',
+          comm.customer_name || '',
+          comm.customer_contact || '',
+          comm.customer_phone || '',
+          comm.customer_email || '',
+          comm.project_code || '',
+          comm.project_name || '',
+          comm.communication_date || '',
+          comm.communication_time || '',
+          comm.duration || '',
+          comm.location || '',
+          comm.topic || '',
+          `"${(comm.subject || '').replace(/"/g, '""')}"`,
+          `"${(comm.content || '').replace(/"/g, '""')}"`,
+          comm.follow_up_required ? '是' : '否',
+          `"${(comm.follow_up_task || '').replace(/"/g, '""')}"`,
+          comm.follow_up_due_date || '',
+          comm.follow_up_status || '',
+          comm.importance || '',
+          Array.isArray(comm.tags) ? comm.tags.join(';') : (comm.tags || ''),
+          comm.created_by || '',
+          comm.created_at || '',
+        ].join(','))
+      ]
+      
+      const csvContent = csvRows.join('\n')
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `客户沟通记录_${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      
+      toast.success(`成功导出 ${commsToExport.length} 条沟通记录`)
+    } catch (error) {
+      console.error('Failed to export communications:', error)
+      toast.error('导出失败: ' + (error.message || '请稍后重试'))
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <PageHeader
@@ -406,6 +466,16 @@ export default function CustomerCommunication() {
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               刷新
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={handleExportCommunications}
+              disabled={loading}
+            >
+              <Download className={cn("w-4 h-4", loading && "animate-spin")} />
+              导出数据
             </Button>
             <Button
               size="sm"

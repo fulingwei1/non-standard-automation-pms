@@ -17,6 +17,16 @@ import {
   CheckCircle2,
   Clock,
   Settings,
+  FileText,
+  Upload,
+  Download,
+  History,
+  Layers,
+  Zap,
+  Code,
+  FileCode,
+  FileCheck,
+  FileX,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -53,6 +63,12 @@ import {
   DialogBody,
   DialogFooter,
 } from '../components/ui/dialog'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '../components/ui/tabs'
 import { cn, formatDate } from '../lib/utils'
 import { machineApi, projectApi } from '../services/api'
 const statusConfigs = {
@@ -83,6 +99,19 @@ export default function MachineManagement() {
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showDetailDialog, setShowDetailDialog] = useState(false)
   const [selectedMachine, setSelectedMachine] = useState(null)
+  const [detailTab, setDetailTab] = useState('info')
+  const [machineDocuments, setMachineDocuments] = useState(null)
+  const [loadingDocuments, setLoadingDocuments] = useState(false)
+  const [showUploadDialog, setShowUploadDialog] = useState(false)
+  const [uploadFile, setUploadFile] = useState(null)
+  const [uploadForm, setUploadForm] = useState({
+    doc_type: 'OTHER',
+    doc_name: '',
+    doc_no: '',
+    version: '1.0',
+    description: '',
+    machine_stage: '',
+  })
   // Form state
   const [newMachine, setNewMachine] = useState({
     machine_code: '',
@@ -154,9 +183,109 @@ export default function MachineManagement() {
       const res = await machineApi.get(machineId)
       setSelectedMachine(res.data || res)
       setShowDetailDialog(true)
+      setDetailTab('info')
+      // 加载文档
+      fetchMachineDocuments(machineId)
     } catch (error) {
       console.error('Failed to fetch machine detail:', error)
     }
+  }
+
+  const fetchMachineDocuments = async (machineId) => {
+    try {
+      setLoadingDocuments(true)
+      const res = await machineApi.getDocuments(machineId, { group_by_type: true })
+      const data = res.data?.data || res.data || {}
+      setMachineDocuments(data)
+    } catch (error) {
+      console.error('Failed to fetch machine documents:', error)
+      setMachineDocuments(null)
+    } finally {
+      setLoadingDocuments(false)
+    }
+  }
+
+  const handleUploadDocument = async () => {
+    if (!uploadFile) {
+      alert('请选择要上传的文件')
+      return
+    }
+    if (!selectedMachine) {
+      alert('请先选择机台')
+      return
+    }
+
+    try {
+      const formData = new FormData()
+      formData.append('file', uploadFile)
+      formData.append('doc_type', uploadForm.doc_type)
+      formData.append('doc_name', uploadForm.doc_name || uploadFile.name)
+      formData.append('doc_no', uploadForm.doc_no || '')
+      formData.append('version', uploadForm.version || '1.0')
+      if (uploadForm.description) {
+        formData.append('description', uploadForm.description)
+      }
+      if (uploadForm.machine_stage) {
+        formData.append('machine_stage', uploadForm.machine_stage)
+      }
+
+      await machineApi.uploadDocument(selectedMachine.id, formData)
+      alert('文档上传成功')
+      setShowUploadDialog(false)
+      setUploadFile(null)
+      setUploadForm({
+        doc_type: 'OTHER',
+        doc_name: '',
+        doc_no: '',
+        version: '1.0',
+        description: '',
+        machine_stage: '',
+      })
+      // 重新加载文档
+      fetchMachineDocuments(selectedMachine.id)
+    } catch (error) {
+      console.error('Failed to upload document:', error)
+      const errorMessage = error.response?.data?.detail || error.message || '上传失败'
+      // 如果是权限错误，提供更友好的提示
+      if (error.response?.status === 403) {
+        alert(`上传失败：${errorMessage}\n\n如需上传此类型文档，请联系管理员分配相应角色权限。`)
+      } else {
+        alert(`上传失败：${errorMessage}`)
+      }
+    }
+  }
+
+  const handleDownloadDocument = async (doc) => {
+    try {
+      const response = await machineApi.downloadDocument(selectedMachine.id, doc.id)
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', doc.file_name)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Failed to download document:', error)
+      const errorMessage = error.response?.data?.detail || error.message || '下载失败'
+      // 如果是权限错误，提供更友好的提示
+      if (error.response?.status === 403) {
+        alert(`下载失败：${errorMessage}\n\n如需下载此文档，请联系管理员分配相应角色权限。`)
+      } else {
+        alert(`下载失败：${errorMessage}`)
+      }
+    }
+  }
+
+  const docTypeConfigs = {
+    CIRCUIT_DIAGRAM: { label: '电路图', icon: Zap, color: 'text-yellow-500' },
+    PLC_PROGRAM: { label: 'PLC程序', icon: Code, color: 'text-blue-500' },
+    LABELWORK_PROGRAM: { label: 'Labelwork程序', icon: FileCode, color: 'text-purple-500' },
+    BOM_DOCUMENT: { label: 'BOM文档', icon: Layers, color: 'text-green-500' },
+    FAT_DOCUMENT: { label: 'FAT文档', icon: FileCheck, color: 'text-emerald-500' },
+    SAT_DOCUMENT: { label: 'SAT文档', icon: FileCheck, color: 'text-teal-500' },
+    OTHER: { label: '其他文档', icon: FileText, color: 'text-slate-500' },
   }
   const filteredMachines = useMemo(() => {
     return machines.filter(machine => {
@@ -406,63 +535,291 @@ export default function MachineManagement() {
       </Dialog>
       {/* Machine Detail Dialog */}
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>机台详情</DialogTitle>
+            <DialogTitle>机台详情 - {selectedMachine?.machine_code}</DialogTitle>
           </DialogHeader>
           <DialogBody>
             {selectedMachine && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-sm text-slate-500 mb-1">机台编码</div>
-                    <div className="font-mono">{selectedMachine.machine_code}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-slate-500 mb-1">机台名称</div>
-                    <div>{selectedMachine.machine_name}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-slate-500 mb-1">机台类型</div>
-                    <div>{selectedMachine.machine_type || '-'}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-slate-500 mb-1">状态</div>
-                    <Badge className={statusConfigs[selectedMachine.status]?.color}>
-                      {statusConfigs[selectedMachine.status]?.label}
-                    </Badge>
-                  </div>
-                  <div>
-                    <div className="text-sm text-slate-500 mb-1">健康度</div>
-                    <Badge className={healthConfigs[selectedMachine.health]?.color}>
-                      {healthConfigs[selectedMachine.health]?.label}
-                    </Badge>
-                  </div>
-                  <div>
-                    <div className="text-sm text-slate-500 mb-1">进度</div>
-                    <div className="space-y-1">
-                      <div className="text-lg font-bold">{selectedMachine.progress || 0}%</div>
-                      <Progress value={selectedMachine.progress || 0} className="h-2" />
+              <Tabs value={detailTab} onValueChange={setDetailTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="info">基本信息</TabsTrigger>
+                  <TabsTrigger value="documents">文档档案</TabsTrigger>
+                  <TabsTrigger value="bom">BOM清单</TabsTrigger>
+                  <TabsTrigger value="service">服务历史</TabsTrigger>
+                </TabsList>
+
+                {/* 基本信息标签页 */}
+                <TabsContent value="info" className="space-y-4 mt-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-sm text-slate-500 mb-1">机台编码</div>
+                      <div className="font-mono">{selectedMachine.machine_code}</div>
                     </div>
+                    <div>
+                      <div className="text-sm text-slate-500 mb-1">机台名称</div>
+                      <div>{selectedMachine.machine_name}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-slate-500 mb-1">机台类型</div>
+                      <div>{selectedMachine.machine_type || '-'}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-slate-500 mb-1">状态</div>
+                      <Badge className={statusConfigs[selectedMachine.status]?.color}>
+                        {statusConfigs[selectedMachine.status]?.label}
+                      </Badge>
+                    </div>
+                    <div>
+                      <div className="text-sm text-slate-500 mb-1">健康度</div>
+                      <Badge className={healthConfigs[selectedMachine.health]?.color}>
+                        {healthConfigs[selectedMachine.health]?.label}
+                      </Badge>
+                    </div>
+                    <div>
+                      <div className="text-sm text-slate-500 mb-1">进度</div>
+                      <div className="space-y-1">
+                        <div className="text-lg font-bold">{selectedMachine.progress || 0}%</div>
+                        <Progress value={selectedMachine.progress || 0} className="h-2" />
+                      </div>
+                    </div>
+                    {selectedMachine.stage && (
+                      <div>
+                        <div className="text-sm text-slate-500 mb-1">生命周期阶段</div>
+                        <div>{selectedMachine.stage}</div>
+                      </div>
+                    )}
                   </div>
-                </div>
-                {selectedMachine.description && (
-                  <div>
-                    <div className="text-sm text-slate-500 mb-1">描述</div>
-                    <div>{selectedMachine.description}</div>
+                  {selectedMachine.description && (
+                    <div>
+                      <div className="text-sm text-slate-500 mb-1">描述</div>
+                      <div>{selectedMachine.description}</div>
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* 文档档案标签页 */}
+                <TabsContent value="documents" className="space-y-4 mt-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">设备文档档案</h3>
+                    <Button onClick={() => setShowUploadDialog(true)} size="sm">
+                      <Upload className="w-4 h-4 mr-2" />
+                      上传文档
+                    </Button>
                   </div>
-                )}
-              </div>
+
+                  {loadingDocuments ? (
+                    <div className="text-center py-8 text-slate-400">加载中...</div>
+                  ) : machineDocuments?.documents_by_type ? (
+                    <div className="space-y-6">
+                      {Object.entries(machineDocuments.documents_by_type).map(([docType, docs]) => {
+                        const config = docTypeConfigs[docType] || docTypeConfigs.OTHER
+                        const Icon = config.icon
+                        return (
+                          <Card key={docType}>
+                            <CardHeader>
+                              <CardTitle className="flex items-center gap-2">
+                                <Icon className={cn("w-5 h-5", config.color)} />
+                                {config.label}
+                                <Badge variant="outline" className="ml-2">
+                                  {docs.length} 个文档
+                                </Badge>
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-2">
+                                {docs.map((doc) => (
+                                  <div
+                                    key={doc.id}
+                                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50"
+                                  >
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2">
+                                        <FileText className="w-4 h-4 text-slate-500" />
+                                        <span className="font-medium">{doc.doc_name}</span>
+                                        {doc.version && (
+                                          <Badge variant="outline" className="text-xs">
+                                            v{doc.version}
+                                          </Badge>
+                                        )}
+                                        {doc.doc_no && (
+                                          <span className="text-xs text-slate-500 font-mono">
+                                            {doc.doc_no}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {doc.description && (
+                                        <div className="text-sm text-slate-500 mt-1">
+                                          {doc.description}
+                                        </div>
+                                      )}
+                                      <div className="text-xs text-slate-400 mt-1">
+                                        {formatDate(doc.created_at)}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleDownloadDocument(doc)}
+                                      >
+                                        <Download className="w-4 h-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={async () => {
+                                          try {
+                                            const versions = await machineApi.getDocumentVersions(
+                                              selectedMachine.id,
+                                              doc.id
+                                            )
+                                            alert(`该文档共有 ${versions.data?.length || versions.length} 个版本`)
+                                          } catch (error) {
+                                            console.error('Failed to fetch versions:', error)
+                                          }
+                                        }}
+                                      >
+                                        <History className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-slate-400">
+                      暂无文档，点击"上传文档"按钮添加文档
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* BOM清单标签页 */}
+                <TabsContent value="bom" className="space-y-4 mt-4">
+                  <div className="text-center py-8">
+                    <Button onClick={() => navigate(`/bom?machine_id=${selectedMachine.id}`)}>
+                      <Box className="w-4 h-4 mr-2" />
+                      查看BOM清单
+                    </Button>
+                  </div>
+                </TabsContent>
+
+                {/* 服务历史标签页 */}
+                <TabsContent value="service" className="space-y-4 mt-4">
+                  <div className="text-center py-8 text-slate-400">
+                    服务历史记录功能开发中...
+                  </div>
+                </TabsContent>
+              </Tabs>
             )}
           </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
               关闭
             </Button>
-            <Button onClick={() => navigate(`/bom?machine_id=${selectedMachine?.id}`)}>
-              <Box className="w-4 h-4 mr-2" />
-              查看BOM
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Upload Document Dialog */}
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>上传设备文档</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">选择文件 *</label>
+                <Input
+                  type="file"
+                  onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">文档类型 *</label>
+                <Select
+                  value={uploadForm.doc_type}
+                  onValueChange={(val) => setUploadForm({ ...uploadForm, doc_type: val })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(docTypeConfigs).map(([key, config]) => (
+                      <SelectItem key={key} value={key}>
+                        {config.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">文档名称</label>
+                <Input
+                  value={uploadForm.doc_name}
+                  onChange={(e) => setUploadForm({ ...uploadForm, doc_name: e.target.value })}
+                  placeholder="留空则使用文件名"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">文档编号</label>
+                <Input
+                  value={uploadForm.doc_no}
+                  onChange={(e) => setUploadForm({ ...uploadForm, doc_no: e.target.value })}
+                  placeholder="用于版本管理"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">版本号</label>
+                <Input
+                  value={uploadForm.version}
+                  onChange={(e) => setUploadForm({ ...uploadForm, version: e.target.value })}
+                  placeholder="1.0"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">关联生命周期阶段</label>
+                <Select
+                  value={uploadForm.machine_stage}
+                  onValueChange={(val) => setUploadForm({ ...uploadForm, machine_stage: val })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择阶段（可选）" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">不关联</SelectItem>
+                    <SelectItem value="S1">S1 - 需求进入</SelectItem>
+                    <SelectItem value="S2">S2 - 方案设计</SelectItem>
+                    <SelectItem value="S3">S3 - 采购备料</SelectItem>
+                    <SelectItem value="S4">S4 - 加工制造</SelectItem>
+                    <SelectItem value="S5">S5 - 装配调试</SelectItem>
+                    <SelectItem value="S6">S6 - 出厂验收(FAT)</SelectItem>
+                    <SelectItem value="S7">S7 - 包装发运</SelectItem>
+                    <SelectItem value="S8">S8 - 现场安装(SAT)</SelectItem>
+                    <SelectItem value="S9">S9 - 质保结项</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">描述</label>
+                <Input
+                  value={uploadForm.description}
+                  onChange={(e) => setUploadForm({ ...uploadForm, description: e.target.value })}
+                  placeholder="文档描述"
+                />
+              </div>
+            </div>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
+              取消
             </Button>
+            <Button onClick={handleUploadDocument}>上传</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

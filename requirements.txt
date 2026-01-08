@@ -26,6 +26,7 @@ apscheduler==3.10.4
 # 文档处理
 python-docx==1.1.2
 PyPDF2==3.0.1
+reportlab==4.2.5
 
 # Redis支持
 redis==5.2.0

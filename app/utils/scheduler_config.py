@@ -537,6 +537,23 @@ SCHEDULER_TASKS = [
         },
     },
     {
+        "id": "calculate_response_metrics",
+        "name": "计算响应时效指标",
+        "module": "app.utils.scheduled_tasks",
+        "callable": "calculate_response_metrics",
+        "cron": {"hour": 1, "minute": 0},
+        "owner": "Backend Platform",
+        "category": "Alert Statistics",
+        "description": "每天凌晨1点计算预警响应时效指标并更新统计表。",
+        "enabled": True,
+        "dependencies_tables": ["alert_records", "alert_statistics"],
+        "risk_level": "MEDIUM",
+        "sla": {
+            "max_execution_time_seconds": 300,
+            "retry_on_failure": False,
+        },
+    },
+    {
         "id": "send_alert_notifications",
         "name": "消息推送服务",
         "module": "app.utils.scheduled_tasks",
@@ -551,6 +568,23 @@ SCHEDULER_TASKS = [
         "sla": {
             "max_execution_time_seconds": 300,
             "retry_on_failure": True,
+        },
+    },
+    {
+        "id": "retry_failed_notifications",
+        "name": "通知重试机制",
+        "module": "app.utils.scheduled_tasks",
+        "callable": "retry_failed_notifications",
+        "cron": {"minute": 30},
+        "owner": "PMO",
+        "category": "Alerting",
+        "description": "每小时 +30 分重试发送失败的通知。",
+        "enabled": True,
+        "dependencies_tables": ["alert_notifications", "alert_records", "users"],
+        "risk_level": "MEDIUM",
+        "sla": {
+            "max_execution_time_seconds": 300,
+            "retry_on_failure": False,
         },
     },
     {

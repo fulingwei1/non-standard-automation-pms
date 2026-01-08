@@ -59,12 +59,41 @@ api.interceptors.response.use(
 
 export default api;
 
+export const financialCostApi = {
+    downloadTemplate: () => api.get('/projects/financial-costs/template', { responseType: 'blob' }),
+    uploadCosts: (file) => {
+        const formData = new FormData()
+        formData.append('file', file)
+        return api.post('/projects/financial-costs/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        })
+    },
+    listCosts: (params) => api.get('/projects/financial-costs', { params }),
+    deleteCost: (id) => api.delete(`/projects/financial-costs/${id}`),
+};
+
 export const projectApi = {
     list: (params) => api.get('/projects/', { params }),
     get: (id) => api.get(`/projects/${id}`),
     create: (data) => api.post('/projects/', data),
     update: (id, data) => api.put(`/projects/${id}`, data),
     getMachines: (id) => api.get(`/projects/${id}/machines`),
+    getInProductionSummary: (params) => api.get('/projects/in-production/summary', { params }),
+    // Sprint 3 & 4: 模板和阶段门校验相关API
+    recommendTemplates: (params) => api.get('/projects/templates/recommend', { params }),
+    createFromTemplate: (templateId, data) => api.post(`/projects/templates/${templateId}/create-project`, data),
+    checkAutoTransition: (id, autoAdvance = false) => api.post(`/projects/${id}/check-auto-transition`, { auto_advance: autoAdvance }),
+    getGateCheckResult: (id, targetStage) => api.get(`/projects/${id}/gate-check/${targetStage}`),
+    advanceStage: (id, data) => api.post(`/projects/${id}/advance-stage`, data),
+    // Sprint 5.3: 缓存管理API
+    getCacheStats: () => api.get('/projects/cache/stats'),
+    clearCache: (pattern) => api.post('/projects/cache/clear', null, { params: pattern ? { pattern } : {} }),
+    resetCacheStats: () => api.post('/projects/cache/reset-stats'),
+    // Sprint 3.3: 项目详情页增强
+    getStatusLogs: (id, params) => api.get(`/projects/${id}/status-logs`, { params }),
+    getHealthDetails: (id) => api.get(`/projects/${id}/health-details`),
+    // Sprint 3.2: 项目经理统计
+    getStats: (params) => api.get('/projects/stats', { params }),
 };
 
 export const machineApi = {
@@ -73,6 +102,17 @@ export const machineApi = {
     create: (data) => api.post('/machines/', data),
     update: (id, data) => api.put(`/machines/${id}`, data),
     delete: (id) => api.delete(`/machines/${id}`),
+    getBom: (id) => api.get(`/machines/${id}/bom`),
+    getServiceHistory: (id, params) => api.get(`/machines/${id}/service-history`, { params }),
+    // 文档管理
+    uploadDocument: (machineId, formData) => api.post(`/machines/${machineId}/documents/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+    getDocuments: (machineId, params) => api.get(`/machines/${machineId}/documents`, { params }),
+    downloadDocument: (machineId, docId) => api.get(`/machines/${machineId}/documents/${docId}/download`, {
+        responseType: 'blob',
+    }),
+    getDocumentVersions: (machineId, docId) => api.get(`/machines/${machineId}/documents/${docId}/versions`),
 };
 
 export const stageApi = {
@@ -208,6 +248,31 @@ export const quoteApi = {
     createVersion: (id, data) => api.post(`/sales/quotes/${id}/versions`, data),
     getVersions: (id) => api.get(`/sales/quotes/${id}/versions`),
     approve: (id, data) => api.post(`/sales/quotes/${id}/approve`, data),
+    // Approval Workflow APIs (Sprint 2)
+    startApproval: (id) => api.post(`/sales/quotes/${id}/approval/start`),
+    getApprovalStatus: (id) => api.get(`/sales/quotes/${id}/approval-status`),
+    approvalAction: (id, data) => api.post(`/sales/quotes/${id}/approval/action`, data),
+    getApprovalHistory: (id) => api.get(`/sales/quotes/${id}/approval-history`),
+    // Quote Items APIs
+    getItems: (id, versionId) => api.get(`/sales/quotes/${id}/items`, { params: { version_id: versionId } }),
+    createItem: (id, data, versionId) => api.post(`/sales/quotes/${id}/items`, data, { params: { version_id: versionId } }),
+    updateItem: (id, itemId, data) => api.put(`/sales/quotes/${id}/items/${itemId}`, data),
+    deleteItem: (id, itemId) => api.delete(`/sales/quotes/${id}/items/${itemId}`),
+    batchUpdateItems: (id, data, versionId) => api.put(`/sales/quotes/${id}/items/batch`, data, { params: { version_id: versionId } }),
+    // Cost Management APIs
+    getCostBreakdown: (id) => api.get(`/sales/quotes/${id}/cost-breakdown`),
+    applyCostTemplate: (id, templateId, versionId, adjustments) => api.post(`/sales/quotes/${id}/apply-template`, adjustments || {}, { params: { template_id: templateId, version_id: versionId } }),
+    calculateCost: (id, versionId) => api.post(`/sales/quotes/${id}/calculate-cost`, null, { params: { version_id: versionId } }),
+    checkCost: (id, versionId) => api.get(`/sales/quotes/${id}/cost-check`, { params: { version_id: versionId } }),
+    submitCostApproval: (id, data) => api.post(`/sales/quotes/${id}/cost-approval/submit`, data),
+    approveCost: (id, approvalId, data) => api.post(`/sales/quotes/${id}/cost-approval/${approvalId}/approve`, data),
+    rejectCost: (id, approvalId, data) => api.post(`/sales/quotes/${id}/cost-approval/${approvalId}/reject`, data),
+    getCostApprovalHistory: (id) => api.get(`/sales/quotes/${id}/cost-approval/history`),
+    compareCosts: (id, params) => api.get(`/sales/quotes/${id}/cost-comparison`, { params }),
+    getCostTrend: (id, params) => api.get(`/sales/quotes/${id}/cost-trend`, { params }),
+    getCostStructure: (id, versionId) => api.get(`/sales/quotes/${id}/cost-structure`, { params: { version_id: versionId } }),
+    getCostMatchSuggestions: (id, versionId) => api.post(`/sales/quotes/${id}/items/auto-match-cost-suggestions`, null, { params: { version_id: versionId } }),
+    applyCostSuggestions: (id, versionId, data) => api.post(`/sales/quotes/${id}/items/apply-cost-suggestions`, data, { params: { version_id: versionId } }),
 };
 
 export const salesTemplateApi = {
@@ -227,6 +292,22 @@ export const salesTemplateApi = {
     createRuleSet: (data) => api.post('/sales/cpq/rule-sets', data),
     updateRuleSet: (id, data) => api.put(`/sales/cpq/rule-sets/${id}`, data),
     previewPrice: (data) => api.post('/sales/cpq/price-preview', data),
+    // Cost Template APIs
+    listCostTemplates: (params) => api.get('/sales/cost-templates', { params }),
+    getCostTemplate: (id) => api.get(`/sales/cost-templates/${id}`),
+    createCostTemplate: (data) => api.post('/sales/cost-templates', data),
+    updateCostTemplate: (id, data) => api.put(`/sales/cost-templates/${id}`, data),
+    deleteCostTemplate: (id) => api.delete(`/sales/cost-templates/${id}`),
+    // Purchase Material Cost APIs
+    listPurchaseMaterialCosts: (params) => api.get('/sales/purchase-material-costs', { params }),
+    getPurchaseMaterialCost: (id) => api.get(`/sales/purchase-material-costs/${id}`),
+    createPurchaseMaterialCost: (data) => api.post('/sales/purchase-material-costs', data),
+    updatePurchaseMaterialCost: (id, data) => api.put(`/sales/purchase-material-costs/${id}`, data),
+    deletePurchaseMaterialCost: (id) => api.delete(`/sales/purchase-material-costs/${id}`),
+    matchMaterialCost: (data) => api.post('/sales/purchase-material-costs/match', data),
+    getCostUpdateReminder: () => api.get('/sales/purchase-material-costs/reminder'),
+    updateCostUpdateReminder: (data) => api.put('/sales/purchase-material-costs/reminder', data),
+    acknowledgeCostUpdateReminder: () => api.post('/sales/purchase-material-costs/reminder/acknowledge'),
 };
 
 export const contractApi = {
@@ -237,6 +318,11 @@ export const contractApi = {
     sign: (id, data) => api.post(`/sales/contracts/${id}/sign`, data),
     createProject: (id, data) => api.post(`/sales/contracts/${id}/project`, data),
     getDeliverables: (id) => api.get(`/sales/contracts/${id}/deliverables`),
+    // Approval Workflow APIs (Sprint 2)
+    startApproval: (id) => api.post(`/sales/contracts/${id}/approval/start`),
+    getApprovalStatus: (id) => api.get(`/sales/contracts/${id}/approval-status`),
+    approvalAction: (id, data) => api.post(`/sales/contracts/${id}/approval/action`, data),
+    getApprovalHistory: (id) => api.get(`/sales/contracts/${id}/approval-history`),
 };
 
 export const invoiceApi = {
@@ -250,6 +336,11 @@ export const invoiceApi = {
     getApprovals: (id) => api.get(`/sales/invoices/${id}/approvals`),
     approveApproval: (approvalId, params) => api.put(`/sales/invoice-approvals/${approvalId}/approve`, null, { params }),
     rejectApproval: (approvalId, params) => api.put(`/sales/invoice-approvals/${approvalId}/reject`, null, { params }),
+    // Approval Workflow APIs (Sprint 2)
+    startApproval: (id) => api.post(`/sales/invoices/${id}/approval/start`),
+    getApprovalStatus: (id) => api.get(`/sales/invoices/${id}/approval-status`),
+    approvalAction: (id, data) => api.post(`/sales/invoices/${id}/approval/action`, data),
+    getApprovalHistory: (id) => api.get(`/sales/invoices/${id}/approval-history`),
 };
 
 export const paymentApi = {
@@ -296,7 +387,7 @@ export const alertApi = {
         create: (data) => api.post('/alert-rules', data),
         update: (id, data) => api.put(`/alert-rules/${id}`, data),
         delete: (id) => api.delete(`/alert-rules/${id}`),
-        toggle: (id, enabled) => api.put(`/alert-rules/${id}/toggle`, null, { params: { enabled } }),
+        toggle: (id) => api.put(`/alert-rules/${id}/toggle`),
     },
     
     // Alert Rule Templates
@@ -305,6 +396,21 @@ export const alertApi = {
     // Alert Statistics
     statistics: (params) => api.get('/alerts/statistics', { params }),
     dashboard: () => api.get('/alerts/statistics/dashboard'),
+    trends: (params) => api.get('/alerts/statistics/trends', { params }),
+    responseMetrics: (params) => api.get('/alerts/statistics/response-metrics', { params }),
+    efficiencyMetrics: (params) => api.get('/alerts/statistics/efficiency-metrics', { params }),
+    exportExcel: (params) => api.get('/alerts/export/excel', { params, responseType: 'blob' }),
+    exportPdf: (params) => api.get('/alerts/export/pdf', { params, responseType: 'blob' }),
+    
+    // Alert Subscriptions
+    subscriptions: {
+        list: (params) => api.get('/alerts/subscriptions', { params }),
+        get: (id) => api.get(`/alerts/subscriptions/${id}`),
+        create: (data) => api.post('/alerts/subscriptions', data),
+        update: (id, data) => api.put(`/alerts/subscriptions/${id}`, data),
+        delete: (id) => api.delete(`/alerts/subscriptions/${id}`),
+        toggle: (id) => api.put(`/alerts/subscriptions/${id}/toggle`),
+    },
 };
 
 // Progress & Task Management APIs
@@ -378,6 +484,16 @@ export const serviceApi = {
         get: (id) => api.get(`/service-records/${id}`),
         create: (data) => api.post('/service-records', data),
         update: (id, data) => api.put(`/service-records/${id}`, data),
+        uploadPhoto: (recordId, file, description) => {
+            const formData = new FormData();
+            formData.append('file', file);
+            if (description) formData.append('description', description);
+            return api.post(`/service-records/${recordId}/photos`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+        },
+        deletePhoto: (recordId, photoIndex) => api.delete(`/service-records/${recordId}/photos/${photoIndex}`),
+        getStatistics: () => api.get('/service-records/statistics'),
     },
     communications: {
         list: (params) => api.get('/customer-communications', { params }),
@@ -393,7 +509,12 @@ export const serviceApi = {
         send: (id, data) => api.post(`/customer-satisfactions/${id}/send`, data),
         submit: (id, data) => api.post(`/customer-satisfactions/${id}/submit`, data),
         statistics: () => api.get('/customer-satisfactions/statistics'),
+        templates: {
+            list: (params) => api.get('/satisfaction-templates', { params }),
+            get: (id) => api.get(`/satisfaction-templates/${id}`),
+        },
     },
+    dashboardStatistics: () => api.get('/service/dashboard-statistics'),
     knowledgeBase: {
         list: (params) => api.get('/knowledge-base', { params }),
         get: (id) => api.get(`/knowledge-base/${id}`),
@@ -404,6 +525,23 @@ export const serviceApi = {
         archive: (id) => api.put(`/knowledge-base/${id}/archive`),
         statistics: () => api.get('/knowledge-base/statistics'),
     },
+};
+
+// Installation Dispatch APIs
+export const installationDispatchApi = {
+    orders: {
+        list: (params) => api.get('/installation-dispatch/orders', { params }),
+        get: (id) => api.get(`/installation-dispatch/orders/${id}`),
+        create: (data) => api.post('/installation-dispatch/orders', data),
+        update: (id, data) => api.put(`/installation-dispatch/orders/${id}`, data),
+        assign: (id, data) => api.put(`/installation-dispatch/orders/${id}/assign`, data),
+        batchAssign: (data) => api.post('/installation-dispatch/orders/batch-assign', data),
+        start: (id, data) => api.put(`/installation-dispatch/orders/${id}/start`, data),
+        progress: (id, data) => api.put(`/installation-dispatch/orders/${id}/progress`, data),
+        complete: (id, data) => api.put(`/installation-dispatch/orders/${id}/complete`, data),
+        cancel: (id) => api.put(`/installation-dispatch/orders/${id}/cancel`),
+    },
+    statistics: () => api.get('/installation-dispatch/statistics'),
 };
 
 // Issue Management APIs
@@ -421,7 +559,10 @@ export const issueApi = {
     changeStatus: (id, data) => api.post(`/issues/${id}/status`, data),
     getStatistics: (params) => api.get('/issues/statistics/overview', { params }),
     getTrend: (params) => api.get('/issues/statistics/trend', { params }),
+    getEngineerStatistics: (params) => api.get('/issues/statistics/engineer', { params }),
     getCauseAnalysis: (params) => api.get('/issues/statistics/cause-analysis', { params }),
+    getSnapshots: (params) => api.get('/issues/statistics/snapshots', { params }),
+    getSnapshot: (id) => api.get(`/issues/statistics/snapshots/${id}`),
     getFollowUps: (id) => api.get(`/issues/${id}/follow-ups`),
     addFollowUp: (id, data) => api.post(`/issues/${id}/follow-ups`, data),
     getRelated: (id) => api.get(`/issues/${id}/related`),
@@ -504,6 +645,7 @@ export const purchaseApi = {
         update: (id, data) => api.put(`/purchase-orders/requests/${id}`, data),
         submit: (id) => api.put(`/purchase-orders/requests/${id}/submit`),
         approve: (id, data) => api.put(`/purchase-orders/requests/${id}/approve`, { params: data }),
+        generateOrders: (id, params) => api.post(`/purchase-orders/requests/${id}/generate-orders`, null, { params }),
         delete: (id) => api.delete(`/purchase-orders/requests/${id}`),
     },
     
@@ -712,6 +854,10 @@ export const productionApi = {
         close: (id) => api.put(`/production-exceptions/${id}/close`),
     },
     taskBoard: (workshopId) => api.get(`/workshops/${workshopId}/task-board`),
+    reports: {
+        workerPerformance: (params) => api.get('/production/reports/worker-performance', { params }),
+        workerRanking: (params) => api.get('/production/reports/worker-ranking', { params }),
+    },
 };
 
 // Material Management APIs
@@ -720,8 +866,16 @@ export const materialApi = {
     get: (id) => api.get(`/materials/${id}`),
     create: (data) => api.post('/materials/', data),
     update: (id, data) => api.put(`/materials/${id}`, data),
+    search: (params) => api.get('/materials/search', { params }),
+    warehouse: {
+        statistics: () => api.get('/materials/warehouse/statistics'),
+    },
     categories: {
         list: (params) => api.get('/materials/categories/', { params }),
+    },
+    search: (params) => api.get('/materials/search', { params }),
+    warehouse: {
+        statistics: () => api.get('/materials/warehouse/statistics'),
     },
 };
 
@@ -768,8 +922,8 @@ export const ecnApi = {
     getTasks: (id) => api.get(`/ecns/${id}/tasks`),
     createTask: (id, data) => api.post(`/ecns/${id}/tasks`, data),
     getTask: (taskId) => api.get(`/ecn-tasks/${taskId}`),
-    updateTaskProgress: (taskId, data) => api.put(`/ecn-tasks/${taskId}/progress`, data),
-    completeTask: (taskId, data) => api.put(`/ecn-tasks/${taskId}/complete`, data || {}),
+    updateTaskProgress: (taskId, progress) => api.put(`/ecn-tasks/${taskId}/progress`, null, { params: { progress } }),
+    completeTask: (taskId) => api.put(`/ecn-tasks/${taskId}/complete`),
     // Affected materials
     getAffectedMaterials: (id) => api.get(`/ecns/${id}/affected-materials`),
     createAffectedMaterial: (id, data) => api.post(`/ecns/${id}/affected-materials`, data),
@@ -784,6 +938,25 @@ export const ecnApi = {
     startExecution: (id, data) => api.put(`/ecns/${id}/start-execution`, data || {}),
     verify: (id, data) => api.put(`/ecns/${id}/verify`, data),
     close: (id, data) => api.put(`/ecns/${id}/close`, data || {}),
+    // BOM Analysis
+    analyzeBomImpact: (id, params) => api.post(`/ecns/${id}/analyze-bom-impact`, null, { params }),
+    getBomImpactSummary: (id) => api.get(`/ecns/${id}/bom-impact-summary`),
+    checkObsoleteRisk: (id) => api.post(`/ecns/${id}/check-obsolete-risk`),
+    getObsoleteAlerts: (id) => api.get(`/ecns/${id}/obsolete-material-alerts`),
+    // Responsibility Allocation
+    createResponsibilityAnalysis: (id, data) => api.post(`/ecns/${id}/responsibility-analysis`, data),
+    getResponsibilitySummary: (id) => api.get(`/ecns/${id}/responsibility-summary`),
+    // RCA Analysis
+    updateRcaAnalysis: (id, data) => api.put(`/ecns/${id}/rca-analysis`, data),
+    getRcaAnalysis: (id) => api.get(`/ecns/${id}/rca-analysis`),
+    // Knowledge Base
+    extractSolution: (id, autoExtract = true) => api.post(`/ecns/${id}/extract-solution`, { auto_extract: autoExtract }),
+    getSimilarEcns: (id, params) => api.get(`/ecns/${id}/similar-ecns`, { params }),
+    recommendSolutions: (id, params) => api.get(`/ecns/${id}/recommend-solutions`, { params }),
+    createSolutionTemplate: (id, data) => api.post(`/ecns/${id}/create-solution-template`, data),
+    applySolutionTemplate: (id, templateId) => api.post(`/ecns/${id}/apply-solution-template`, { template_id: templateId }),
+    listSolutionTemplates: (params) => api.get('/ecn-solution-templates', { params }),
+    getSolutionTemplate: (templateId) => api.get(`/ecn-solution-templates/${templateId}`),
     // ECN Types
     getEcnTypes: (params) => api.get('/ecn-types', { params }),
     getEcnType: (typeId) => api.get(`/ecn-types/${typeId}`),
@@ -891,7 +1064,7 @@ export const bomApi = {
     },
     export: (bomId) => api.get(`/bom/${bomId}/export`, { responseType: 'blob' }),
     // Generate Purchase Requirements
-    generatePR: (bomId, data) => api.post(`/bom/${bomId}/generate-pr`, data),
+    generatePR: (bomId, params) => api.post(`/bom/${bomId}/generate-pr`, null, { params }),
 };
 
 // Notification Management APIs
@@ -1003,6 +1176,17 @@ export const businessSupportApi = {
         create: (data) => api.post('/business-support/payment-reminder', data),
         update: (id, data) => api.put(`/business-support/payment-reminder/${id}`, data),
     },
+    deliveryOrders: {
+        list: (params) => api.get('/business-support/delivery-orders', { params }),
+        get: (id) => api.get(`/business-support/delivery-orders/${id}`),
+        create: (data) => api.post('/business-support/delivery-orders', data),
+        update: (id, data) => api.put(`/business-support/delivery-orders/${id}`, data),
+        statistics: () => api.get('/business-support/delivery-orders/statistics'),
+    },
+    salesOrders: {
+        list: (params) => api.get('/business-support/sales-orders', { params }),
+        get: (id) => api.get(`/business-support/sales-orders/${id}`),
+    },
 };
 
 // Exception Management APIs
@@ -1052,6 +1236,7 @@ export const issueTemplateApi = {
     create: (data) => api.post('/issue-templates', data),
     update: (id, data) => api.put(`/issue-templates/${id}`, data),
     delete: (id) => api.delete(`/issue-templates/${id}`),
+    createIssue: (templateId, data) => api.post(`/issue-templates/${templateId}/create-issue`, data),
 };
 
 // Project Review APIs (项目复盘)

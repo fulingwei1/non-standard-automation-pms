@@ -18,7 +18,7 @@ from app.models.purchase import (
     PurchaseOrder, PurchaseOrderItem, GoodsReceipt, GoodsReceiptItem,
     PurchaseRequest, PurchaseRequestItem
 )
-from app.models.material import Material, Supplier
+from app.models.material import Material, Supplier, BomHeader, BomItem
 from app.models.project import Project, Machine
 from app.schemas.purchase import (
     PurchaseOrderCreate,
@@ -34,6 +34,7 @@ from app.schemas.purchase import (
     PurchaseRequestResponse,
     PurchaseRequestListResponse,
     PurchaseRequestItemResponse,
+    PurchaseRequestGeneratedOrder,
 )
 from app.schemas.common import ResponseModel, PaginatedResponse
 
@@ -58,6 +59,122 @@ def generate_order_no(db: Session) -> str:
         seq = 1
     
     return f"PO-{today}-{seq:03d}"
+
+
+def auto_create_purchase_orders_from_request(
+    db: Session,
+    request: PurchaseRequest,
+    current_user: User,
+    *,
+    force: bool = False,
+) -> List[dict]:
+    """
+    根据采购申请自动生成采购订单
+    """
+    if request.auto_po_created and not force:
+        raise HTTPException(status_code=400, detail="采购申请已自动生成采购订单")
+    
+    if not request.supplier_id:
+        raise HTTPException(status_code=400, detail="请先为采购申请指定供应商")
+
+    request_items = request.items.order_by(PurchaseRequestItem.id).all()
+    if not request_items:
+        raise HTTPException(status_code=400, detail="采购申请没有物料明细，无法创建采购订单")
+
+    pending_items = []
+    total_amount = Decimal(0)
+    total_tax_amount = Decimal(0)
+    total_amount_with_tax = Decimal(0)
+
+    for idx, item in enumerate(request_items, start=1):
+        ordered_qty = item.ordered_qty or Decimal(0)
+        remaining_qty = (item.quantity or Decimal(0)) - ordered_qty
+        if remaining_qty <= 0:
+            continue
+
+        unit_price = item.unit_price or Decimal(0)
+        tax_rate = Decimal(13)
+        amount = remaining_qty * unit_price
+        tax_amount = amount * tax_rate / 100
+        amount_with_tax = amount + tax_amount
+
+        total_amount += amount
+        total_tax_amount += tax_amount
+        total_amount_with_tax += amount_with_tax
+
+        pending_items.append({
+            "idx": len(pending_items) + 1,
+            "item": item,
+            "quantity": remaining_qty,
+            "unit_price": unit_price,
+            "tax_rate": tax_rate,
+            "amount": amount,
+            "tax_amount": tax_amount,
+            "amount_with_tax": amount_with_tax,
+        })
+
+    if not pending_items:
+        raise HTTPException(status_code=400, detail="采购申请中的物料已全部生成采购订单")
+
+    order_no = generate_order_no(db)
+    order = PurchaseOrder(
+        order_no=order_no,
+        supplier_id=request.supplier_id,
+        project_id=request.project_id,
+        source_request_id=request.id,
+        order_type="NORMAL",
+        order_title=request.request_reason or f"{request.request_no} - 自动下单",
+        required_date=request.required_date,
+        order_date=date.today(),
+        status="DRAFT",
+        total_amount=total_amount,
+        tax_amount=total_tax_amount,
+        amount_with_tax=total_amount_with_tax,
+        created_by=current_user.id,
+    )
+    db.add(order)
+    db.flush()
+
+    for payload in pending_items:
+        pr_item = payload["item"]
+        order_item = PurchaseOrderItem(
+            order_id=order.id,
+            item_no=payload["idx"],
+            material_id=pr_item.material_id,
+            bom_item_id=pr_item.bom_item_id,
+            material_code=pr_item.material_code,
+            material_name=pr_item.material_name,
+            specification=pr_item.specification,
+            unit=pr_item.unit,
+            quantity=payload["quantity"],
+            unit_price=payload["unit_price"],
+            amount=payload["amount"],
+            tax_rate=payload["tax_rate"],
+            tax_amount=payload["tax_amount"],
+            amount_with_tax=payload["amount_with_tax"],
+            required_date=pr_item.required_date,
+            status="PENDING",
+        )
+        db.add(order_item)
+
+        pr_item.ordered_qty = (pr_item.ordered_qty or Decimal(0)) + payload["quantity"]
+
+        if pr_item.bom_item_id:
+            bom_item = db.query(BomItem).filter(BomItem.id == pr_item.bom_item_id).first()
+            if bom_item:
+                bom_item.purchased_qty = (bom_item.purchased_qty or Decimal(0)) + payload["quantity"]
+
+    request.auto_po_created = True
+    request.auto_po_created_at = datetime.now()
+    request.auto_po_created_by = current_user.id
+
+    return [{
+        "order_id": order.id,
+        "order_no": order.order_no,
+        "total_amount": float(order.total_amount or 0),
+        "amount_with_tax": float(order.amount_with_tax or 0),
+        "status": order.status,
+    }]
 
 
 @router.get("/", response_model=PaginatedResponse[PurchaseOrderListResponse])
@@ -118,10 +235,11 @@ def read_purchase_orders(
             supplier_name=order.supplier.supplier_name if order.supplier else "",
             project_name=order.project.project_name if order.project else None,
             total_amount=order.total_amount or 0,
-            amount_with_tax=order.amount_with_tax or 0,
+            amount_with_tax=order.amount_with_tax or order.total_amount or 0,
             required_date=order.required_date,
             status=order.status,
             payment_status=order.payment_status,
+            source_request_no=order.source_request.request_no if order.source_request else None,
             created_at=order.created_at,
         )
         items.append(item)
@@ -178,6 +296,8 @@ def read_purchase_order(
         supplier_name=order.supplier.supplier_name if order.supplier else "",
         project_id=order.project_id,
         project_name=order.project.project_name if order.project else None,
+        source_request_id=order.source_request_id,
+        source_request_no=order.source_request.request_no if order.source_request else None,
         order_type=order.order_type,
         order_title=order.order_title,
         total_amount=order.total_amount or 0,
@@ -952,10 +1072,12 @@ def read_purchase_requests(
             request_no=req.request_no,
             project_name=req.project.project_name if req.project else None,
             machine_name=req.machine.machine_code if req.machine else None,
+            supplier_name=req.supplier.supplier_name if req.supplier else None,
             total_amount=req.total_amount or 0,
             required_date=req.required_date,
             status=req.status,
             requester_name=req.requester.username if req.requester else None,
+            auto_po_created=bool(req.auto_po_created),
             created_at=req.created_at,
         )
         items.append(item)
@@ -988,6 +1110,7 @@ def read_purchase_request(
     for item in request.items.all():
         items.append(PurchaseRequestItemResponse(
             id=item.id,
+            bom_item_id=item.bom_item_id,
             material_code=item.material_code,
             material_name=item.material_name,
             specification=item.specification,
@@ -999,6 +1122,16 @@ def read_purchase_request(
             ordered_qty=item.ordered_qty,
             remark=item.remark,
         ))
+
+    generated_orders = []
+    for order in request.orders.order_by(PurchaseOrder.created_at).all():
+        generated_orders.append(PurchaseRequestGeneratedOrder(
+            id=order.id,
+            order_no=order.order_no,
+            status=order.status,
+            total_amount=order.total_amount or 0,
+            amount_with_tax=order.amount_with_tax or order.total_amount or 0,
+        ))
     
     return PurchaseRequestResponse(
         id=request.id,
@@ -1007,7 +1140,11 @@ def read_purchase_request(
         project_name=request.project.project_name if request.project else None,
         machine_id=request.machine_id,
         machine_name=request.machine.machine_code if request.machine else None,
+        supplier_id=request.supplier_id,
+        supplier_name=request.supplier.supplier_name if request.supplier else None,
         request_type=request.request_type,
+        source_type=request.source_type,
+        source_id=request.source_id,
         request_reason=request.request_reason,
         required_date=request.required_date,
         total_amount=request.total_amount or 0,
@@ -1020,6 +1157,9 @@ def read_purchase_request(
         requested_at=request.requested_at,
         requester_name=request.requester.username if request.requester else None,
         approver_name=request.approver.username if request.approver else None,
+        auto_po_created=bool(request.auto_po_created),
+        auto_po_created_at=request.auto_po_created_at,
+        generated_orders=generated_orders,
         items=items,
         remark=request.remark,
         created_at=request.created_at,
@@ -1048,6 +1188,12 @@ def create_purchase_request(
         machine = db.query(Machine).filter(Machine.id == request_in.machine_id).first()
         if not machine:
             raise HTTPException(status_code=404, detail="设备不存在")
+
+    # 检查供应商
+    if request_in.supplier_id:
+        supplier = db.query(Supplier).filter(Supplier.id == request_in.supplier_id).first()
+        if not supplier:
+            raise HTTPException(status_code=404, detail="供应商不存在")
     
     # 生成申请单号
     request_no = generate_request_no(db)
@@ -1057,6 +1203,7 @@ def create_purchase_request(
         request_no=request_no,
         project_id=request_in.project_id,
         machine_id=request_in.machine_id,
+        supplier_id=request_in.supplier_id,
         request_type=request_in.request_type,
         request_reason=request_in.request_reason,
         required_date=request_in.required_date,
@@ -1134,6 +1281,14 @@ def update_purchase_request(
         request.required_date = request_in.required_date
     if request_in.remark is not None:
         request.remark = request_in.remark
+    if request_in.supplier_id is not None:
+        if request_in.supplier_id == 0:
+            request.supplier_id = None
+        else:
+            supplier = db.query(Supplier).filter(Supplier.id == request_in.supplier_id).first()
+            if not supplier:
+                raise HTTPException(status_code=404, detail="供应商不存在")
+            request.supplier_id = request_in.supplier_id
     
     db.commit()
     db.refresh(request)
@@ -1208,11 +1363,46 @@ def approve_purchase_request(
     request.approved_at = datetime.now()
     request.approval_note = approval_note
     
+    created_orders = None
+    message = "审批驳回"
+    if approved:
+        created_orders = auto_create_purchase_orders_from_request(db, request, current_user)
+        message = "审批通过并已生成采购订单"
+    
     db.commit()
     
     return ResponseModel(
         code=200,
-        message="审批通过" if approved else "审批驳回"
+        message=message,
+        data={"created_orders": created_orders} if created_orders else None,
+    )
+
+
+@router.post("/requests/{request_id}/generate-orders", response_model=ResponseModel)
+def generate_purchase_orders_from_request(
+    *,
+    db: Session = Depends(deps.get_db),
+    request_id: int,
+    force: bool = Query(False, description="是否强制重新生成（忽略已生成标记）"),
+    current_user: User = Depends(security.require_procurement_access()),
+) -> Any:
+    """
+    手动从采购申请生成采购订单
+    """
+    request = db.query(PurchaseRequest).filter(PurchaseRequest.id == request_id).first()
+    if not request:
+        raise HTTPException(status_code=404, detail="采购申请不存在")
+
+    if request.status not in ("APPROVED", "SUBMITTED") and not force:
+        raise HTTPException(status_code=400, detail="仅已提交或已审批的采购申请可生成订单")
+
+    created_orders = auto_create_purchase_orders_from_request(db, request, current_user, force=force)
+    db.commit()
+
+    return ResponseModel(
+        code=200,
+        message="已生成采购订单",
+        data={"created_orders": created_orders},
     )
 
 
@@ -1440,4 +1630,3 @@ def create_purchase_orders_from_bom(
             }
         }
     )
-

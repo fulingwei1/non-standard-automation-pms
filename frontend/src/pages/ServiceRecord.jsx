@@ -20,7 +20,7 @@ import {
   Plus, Search, Filter, Eye, Edit, FileText, Calendar, MapPin,
   User, Clock, Camera, CheckCircle2, XCircle, Download, RefreshCw,
   Wrench, Users, Settings, AlertTriangle, Star, Phone, Mail,
-  ChevronRight, Upload, Image as ImageIcon, FileCheck,
+  ChevronRight, Upload, Image as ImageIcon, FileCheck, X,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -291,40 +291,83 @@ export default function ServiceRecord() {
     })
   }, [records, searchQuery, typeFilter, statusFilter, dateFilter])
 
-  const handleViewDetail = (record) => {
-    setSelectedRecord(record)
+  const handleViewDetail = async (record) => {
+    // Reload record to get latest data including photos
+    try {
+      const response = await serviceApi.records.get(record.id)
+      const updatedRecord = response.data || response
+      setSelectedRecord({
+        ...record,
+        ...updatedRecord,
+        photos: updatedRecord.photos || [],
+      })
+    } catch (error) {
+      console.error('Failed to load record details:', error)
+      setSelectedRecord(record)
+    }
     setShowDetailDialog(true)
   }
 
   const handleCreateRecord = async (recordData) => {
     try {
+      // Separate photos that need to be uploaded
+      const photosToUpload = recordData.photos?.filter(p => p.isPending && p.file) || []
+      const existingPhotos = recordData.photos?.filter(p => !p.isPending) || []
+      
       // Transform frontend data to backend format
       const backendData = {
         service_type: recordData.service_type,
         project_id: recordData.project_id,
-        machine_id: recordData.machine_id,
+        machine_no: recordData.machine_no,
         customer_id: recordData.customer_id,
-        service_location: recordData.service_location,
+        location: recordData.service_location,
         service_date: recordData.service_date,
-        service_start_time: recordData.service_start_time,
-        service_end_time: recordData.service_end_time,
-        service_duration: recordData.service_duration,
-        service_engineer: recordData.service_engineer,
-        service_engineer_phone: recordData.service_engineer_phone,
+        start_time: recordData.service_start_time,
+        end_time: recordData.service_end_time,
+        duration_hours: recordData.service_duration,
+        service_engineer_id: recordData.service_engineer_id,
         customer_contact: recordData.customer_contact,
         customer_phone: recordData.customer_phone,
         service_content: recordData.service_content,
         service_result: recordData.service_result,
         issues_found: recordData.issues_found,
-        solutions: recordData.solutions,
+        solution_provided: recordData.solutions,
         customer_satisfaction: recordData.customer_satisfaction,
         customer_feedback: recordData.customer_feedback,
-        customer_signature: recordData.customer_signature,
-        photos: recordData.photos || [],
-        status: recordData.status || 'IN_PROGRESS',
+        customer_signed: recordData.customer_signature,
+        photos: existingPhotos, // Only include already uploaded photos
+        status: recordData.status || 'SCHEDULED',
       }
       
-      await serviceApi.records.create(backendData)
+      // Create the record first
+      const response = await serviceApi.records.create(backendData)
+      const createdRecord = response.data || response
+      const recordId = createdRecord.id
+      
+      // Upload photos if any
+      if (photosToUpload.length > 0) {
+        toast.info(`正在上传 ${photosToUpload.length} 张照片...`)
+        let successCount = 0
+        let failCount = 0
+        
+        for (const photo of photosToUpload) {
+          try {
+            await serviceApi.records.uploadPhoto(recordId, photo.file, photo.description)
+            successCount++
+          } catch (error) {
+            console.error(`Failed to upload photo ${photo.name}:`, error)
+            failCount++
+          }
+        }
+        
+        if (successCount > 0) {
+          toast.success(`成功上传 ${successCount} 张照片`)
+        }
+        if (failCount > 0) {
+          toast.warning(`${failCount} 张照片上传失败，可在记录详情中重新上传`)
+        }
+      }
+      
       toast.success('现场服务记录创建成功')
       setShowCreateDialog(false)
       await loadRecords()
@@ -386,6 +429,64 @@ export default function ServiceRecord() {
     }
   }
 
+  const handleExportRecords = () => {
+    try {
+      const recordsToExport = filteredRecords
+      if (recordsToExport.length === 0) {
+        toast.warning('没有可导出的数据')
+        return
+      }
+
+      const headers = ['记录号', '服务类型', '项目编号', '项目名称', '机台号', '客户名称',
+                      '服务地点', '服务日期', '开始时间', '结束时间', '服务时长', '服务工程师',
+                      '客户联系人', '客户电话', '服务内容', '服务结果', '发现问题', '解决方案',
+                      '客户满意度', '客户反馈', '状态']
+      
+      const csvRows = [
+        headers.join(','),
+        ...recordsToExport.map(record => [
+          record.record_no || '',
+          record.service_type || '',
+          record.project_code || '',
+          record.project_name || '',
+          record.machine_no || '',
+          record.customer_name || '',
+          record.service_location || '',
+          record.service_date || '',
+          record.service_start_time || '',
+          record.service_end_time || '',
+          record.service_duration || '',
+          record.service_engineer || '',
+          record.customer_contact || '',
+          record.customer_phone || '',
+          `"${(record.service_content || '').replace(/"/g, '""')}"`,
+          `"${(record.service_result || '').replace(/"/g, '""')}"`,
+          `"${(record.issues_found || '').replace(/"/g, '""')}"`,
+          `"${(record.solutions || '').replace(/"/g, '""')}"`,
+          record.customer_satisfaction || '',
+          `"${(record.customer_feedback || '').replace(/"/g, '""')}"`,
+          record.status || '',
+        ].join(','))
+      ]
+      
+      const csvContent = csvRows.join('\n')
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `现场服务记录_${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      
+      toast.success(`成功导出 ${recordsToExport.length} 条服务记录`)
+    } catch (error) {
+      console.error('Failed to export records:', error)
+      toast.error('导出失败: ' + (error.message || '请稍后重试'))
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <PageHeader
@@ -402,6 +503,16 @@ export default function ServiceRecord() {
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               刷新
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={handleExportRecords}
+              disabled={loading}
+            >
+              <Download className={cn("w-4 h-4", loading && "animate-spin")} />
+              导出数据
             </Button>
             <Button
               size="sm"
@@ -744,7 +855,8 @@ function CreateRecordDialog({ onClose, onSubmit }) {
           continue
         }
         
-        // Convert to base64 for now (can be replaced with actual file upload API)
+        // For new records (not yet created), store as base64 for preview
+        // Photos will be uploaded after record is created
         const reader = new FileReader()
         const photoData = await new Promise((resolve, reject) => {
           reader.onload = () => resolve(reader.result)
@@ -752,13 +864,15 @@ function CreateRecordDialog({ onClose, onSubmit }) {
           reader.readAsDataURL(file)
         })
         
-        // Store photo info (base64 data URL or file path)
+        // Store photo info with file reference for later upload
         uploadedPhotos.push({
           name: file.name,
           size: file.size,
           type: file.type,
-          data: photoData, // base64 data URL
+          data: photoData, // base64 data URL for preview
+          file: file, // Keep file reference for upload
           uploaded_at: new Date().toISOString(),
+          isPending: true, // Mark as pending upload
         })
       }
       
@@ -767,11 +881,11 @@ function CreateRecordDialog({ onClose, onSubmit }) {
           ...formData, 
           photos: [...formData.photos, ...uploadedPhotos] 
         })
-        toast.success(`已添加 ${uploadedPhotos.length} 张照片`)
+        toast.success(`已添加 ${uploadedPhotos.length} 张照片（将在创建记录后上传）`)
       }
     } catch (error) {
-      console.error('Failed to upload photos:', error)
-      toast.error('照片上传失败: ' + error.message)
+      console.error('Failed to process photos:', error)
+      toast.error('照片处理失败: ' + error.message)
     }
   }
 
@@ -1022,6 +1136,7 @@ function CreateRecordDialog({ onClose, onSubmit }) {
 function RecordDetailDialog({ record, onClose, onUpdate, onGenerateReport }) {
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState(record)
+  const [uploadingPhotos, setUploadingPhotos] = useState(false)
 
   useEffect(() => {
     setFormData(record)
@@ -1030,6 +1145,83 @@ function RecordDetailDialog({ record, onClose, onUpdate, onGenerateReport }) {
   const handleSave = () => {
     onUpdate(record.id, formData)
     setIsEditing(false)
+  }
+
+  const handlePhotoUploadInDetail = async (recordId, e) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+
+    try {
+      setUploadingPhotos(true)
+      let successCount = 0
+      let failCount = 0
+
+      for (const file of files) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          toast.error(`${file.name} 不是有效的图片文件`)
+          failCount++
+          continue
+        }
+        
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(`${file.name} 文件大小超过5MB限制`)
+          failCount++
+          continue
+        }
+
+        try {
+          await serviceApi.records.uploadPhoto(recordId, file)
+          successCount++
+        } catch (error) {
+          console.error(`Failed to upload photo ${file.name}:`, error)
+          failCount++
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`成功上传 ${successCount} 张照片`)
+        // Reload record to get updated photos
+        const response = await serviceApi.records.get(recordId)
+        const updatedRecord = response.data || response
+        setFormData({
+          ...formData,
+          photos: updatedRecord.photos || [],
+        })
+      }
+      if (failCount > 0) {
+        toast.warning(`${failCount} 张照片上传失败`)
+      }
+    } catch (error) {
+      console.error('Failed to upload photos:', error)
+      toast.error('照片上传失败: ' + error.message)
+    } finally {
+      setUploadingPhotos(false)
+      // Reset file input
+      e.target.value = ''
+    }
+  }
+
+  const handleDeletePhoto = async (recordId, photoIndex) => {
+    if (!confirm('确定要删除这张照片吗？')) {
+      return
+    }
+
+    try {
+      await serviceApi.records.deletePhoto(recordId, photoIndex)
+      toast.success('照片删除成功')
+      // Reload record to get updated photos
+      const response = await serviceApi.records.get(recordId)
+      const updatedRecord = response.data || response
+      setFormData({
+        ...formData,
+        photos: updatedRecord.photos || [],
+      })
+    } catch (error) {
+      console.error('Failed to delete photo:', error)
+      toast.error('照片删除失败: ' + (error.response?.data?.detail || error.message))
+    }
   }
 
   const typeConfig = serviceTypeConfig[record.service_type] || serviceTypeConfig['安装调试']
@@ -1159,21 +1351,99 @@ function RecordDetailDialog({ record, onClose, onUpdate, onGenerateReport }) {
             )}
 
             {/* Photos */}
-            {record.photos && record.photos.length > 0 && (
-              <div>
-                <p className="text-sm text-slate-400 mb-2">服务照片</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {record.photos.map((photo, index) => (
-                    <div
-                      key={index}
-                      className="aspect-video bg-slate-800/50 rounded-lg flex items-center justify-center cursor-pointer hover:bg-slate-800/70 transition-colors"
-                    >
-                      <ImageIcon className="w-8 h-8 text-slate-400" />
-                    </div>
-                  ))}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-slate-400 font-medium">
+                  服务照片 {record.photos && record.photos.length > 0 && `(${record.photos.length}张)`}
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => handlePhotoUploadInDetail(record.id, e)}
+                    className="hidden"
+                    id={`photo-upload-detail-${record.id}`}
+                    disabled={uploadingPhotos}
+                  />
+                  <label
+                    htmlFor={`photo-upload-detail-${record.id}`}
+                    className={cn(
+                      "flex items-center gap-1 px-3 py-1 text-xs bg-slate-800/50 border border-slate-700 rounded-lg transition-colors",
+                      uploadingPhotos ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-slate-800/70"
+                    )}
+                  >
+                    <Upload className={cn("w-3 h-3", uploadingPhotos && "animate-pulse")} />
+                    {uploadingPhotos ? '上传中...' : '上传照片'}
+                  </label>
                 </div>
               </div>
-            )}
+              {record.photos && record.photos.length > 0 ? (
+                <div className="grid grid-cols-3 gap-2">
+                  {record.photos.map((photo, index) => {
+                    // Get photo URL - could be from backend or base64
+                    const photoUrl = typeof photo === 'string' 
+                      ? photo
+                      : photo.url 
+                        ? `${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'}/uploads/${photo.url}`
+                        : photo.data || (typeof photo === 'object' && photo.filename ? null : photo)
+                    
+                    return (
+                      <div
+                        key={index}
+                        className="relative aspect-video bg-slate-800/50 rounded-lg overflow-hidden group cursor-pointer"
+                        onClick={() => {
+                          // Open photo in new window for full view
+                          if (photoUrl) {
+                            window.open(photoUrl, '_blank')
+                          }
+                        }}
+                      >
+                        {photoUrl ? (
+                          <img
+                            src={photoUrl}
+                            alt={`服务照片 ${index + 1}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback to placeholder if image fails to load
+                              e.target.style.display = 'none'
+                              const placeholder = e.target.parentElement.querySelector('.photo-placeholder')
+                              if (placeholder) placeholder.style.display = 'flex'
+                            }}
+                          />
+                        ) : null}
+                        <div className="photo-placeholder hidden w-full h-full items-center justify-center">
+                          <ImageIcon className="w-8 h-8 text-slate-400" />
+                        </div>
+                        {/* Delete button on hover */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeletePhoto(record.id, index)
+                          }}
+                          className="absolute top-1 right-1 p-1 bg-red-500/80 hover:bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          title="删除照片"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                        {/* Photo info overlay */}
+                        {photo && typeof photo === 'object' && photo.description && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 truncate">
+                            {photo.description}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-slate-500 text-sm border border-dashed border-slate-700 rounded-lg">
+                  <ImageIcon className="w-12 h-12 mx-auto mb-2 text-slate-600" />
+                  <p>暂无照片</p>
+                  <p className="text-xs mt-1">点击"上传照片"添加服务照片</p>
+                </div>
+              )}
+            </div>
 
             {/* Signature */}
             {record.customer_signature && (

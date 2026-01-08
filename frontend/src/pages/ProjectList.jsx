@@ -35,6 +35,8 @@ import {
   Users,
   ChevronDown,
 } from 'lucide-react'
+// Sprint 3: 使用优化的分步骤表单组件
+import ProjectFormStepper from '../components/project/ProjectFormStepper'
 
 // Stagger animation
 const staggerContainer = {
@@ -142,112 +144,6 @@ function ProjectCard({ project, onClick }) {
   )
 }
 
-// Simple Project Form Component
-function ProjectFormDialog({ open, onOpenChange, onSubmit }) {
-  const [formData, setFormData] = useState({
-    project_code: '',
-    project_name: '',
-    customer_name: '',
-    planned_end_date: '',
-  })
-  const [loading, setLoading] = useState(false)
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    try {
-      await onSubmit(formData)
-      setFormData({
-        project_code: '',
-        project_name: '',
-        customer_name: '',
-        planned_end_date: '',
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>新建项目</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <DialogBody className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                项目编码 *
-              </label>
-              <Input
-                value={formData.project_code}
-                onChange={(e) =>
-                  setFormData({ ...formData, project_code: e.target.value })
-                }
-                placeholder="例如: PJ260104001"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                项目名称 *
-              </label>
-              <Input
-                value={formData.project_name}
-                onChange={(e) =>
-                  setFormData({ ...formData, project_name: e.target.value })
-                }
-                placeholder="请输入项目名称"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                客户名称
-              </label>
-              <Input
-                value={formData.customer_name}
-                onChange={(e) =>
-                  setFormData({ ...formData, customer_name: e.target.value })
-                }
-                placeholder="请输入客户名称"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                计划交付日期
-              </label>
-              <Input
-                type="date"
-                value={formData.planned_end_date}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    planned_end_date: e.target.value,
-                  })
-                }
-              />
-            </div>
-          </DialogBody>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => onOpenChange(false)}
-            >
-              取消
-            </Button>
-            <Button type="submit" loading={loading}>
-              创建项目
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
 export default function ProjectList() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
@@ -255,6 +151,7 @@ export default function ProjectList() {
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState('grid') // grid | list
   const [formOpen, setFormOpen] = useState(false)
+  const [recommendedTemplates, setRecommendedTemplates] = useState([])
 
   const fetchProjects = async () => {
     try {
@@ -274,6 +171,24 @@ export default function ProjectList() {
   useEffect(() => {
     fetchProjects()
   }, [])
+  
+  // Sprint 3.2: 加载模板推荐
+  useEffect(() => {
+    if (formOpen) {
+      const loadRecommendedTemplates = async () => {
+        try {
+          const response = await projectApi.recommendTemplates({
+            limit: 5,
+          })
+          setRecommendedTemplates(response.data?.recommendations || [])
+        } catch (err) {
+          console.error('Failed to load recommended templates:', err)
+          setRecommendedTemplates([])
+        }
+      }
+      loadRecommendedTemplates()
+    }
+  }, [formOpen])
 
   const handleCreateProject = async (data) => {
     try {
@@ -418,10 +333,11 @@ export default function ProjectList() {
       )}
 
       {/* Create Project Dialog */}
-      <ProjectFormDialog
+      <ProjectFormStepper
         open={formOpen}
         onOpenChange={setFormOpen}
         onSubmit={handleCreateProject}
+        recommendedTemplates={recommendedTemplates}
       />
     </motion.div>
   )

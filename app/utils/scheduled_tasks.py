@@ -4,7 +4,7 @@
 """
 
 from typing import List, Optional
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from sqlalchemy.orm import Session
 from datetime import datetime, date
 
@@ -14,7 +14,7 @@ from app.models.technical_spec import TechnicalSpecRequirement, SpecMatchRecord
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.models.material import BomHeader, BomItem
 from app.models.issue import Issue, IssueStatisticsSnapshot
-from app.models.alert import AlertRecord, AlertRule, AlertNotification
+from app.models.alert import AlertRecord, AlertRule, AlertNotification, AlertStatistics
 from app.models.enums import AlertLevelEnum, AlertStatusEnum, AlertRuleTypeEnum
 from app.utils.spec_match_service import SpecMatchService
 from decimal import Decimal
@@ -30,6 +30,45 @@ from app.services.notification_dispatcher import (
     next_quiet_resume,
 )
 from app.services.notification_queue import enqueue_notification
+from app.services.notification_service import AlertNotificationService, send_alert_notification
+
+
+# ==================== 预警通知集成辅助函数 ====================
+
+def send_notification_for_alert(db: Session, alert: AlertRecord, logger_instance=None):
+    """
+    为预警发送通知的辅助函数
+    通知发送失败不影响预警记录创建
+    
+    Args:
+        db: 数据库会话
+        alert: 预警记录
+        logger_instance: 日志记录器（可选）
+    """
+    if logger_instance is None:
+        import logging
+        logger_instance = logging.getLogger(__name__)
+    
+    try:
+        notification_service = AlertNotificationService(db)
+        notification_result = notification_service.send_alert_notification(alert)
+        if notification_result.get('success'):
+            logger_instance.debug(
+                f"Notification sent for alert {alert.alert_no}: "
+                f"created={notification_result.get('notifications_created', 0)}, "
+                f"sent={notification_result.get('notifications_sent', 0)}"
+            )
+        else:
+            logger_instance.warning(
+                f"Failed to send notification for alert {alert.alert_no}: "
+                f"{notification_result.get('message')}"
+            )
+    except Exception as notif_err:
+        # 通知发送失败不影响预警记录创建
+        logger_instance.error(
+            f"Error sending notification for alert {alert.alert_no}: {str(notif_err)}",
+            exc_info=True
+        )
 
 
 def sales_reminder_scan():
@@ -1081,6 +1120,11 @@ def generate_shortage_alerts():
                         threshold_value='0'
                     )
                     db.add(alert)
+                    db.flush()  # 确保 alert 有 ID
+                    
+                    # 发送通知
+                    send_notification_for_alert(db, alert, logger)
+                    
                     alert_count += 1
             
             db.commit()
@@ -1183,6 +1227,11 @@ def check_task_delay_alerts():
                         threshold_value='0'
                     )
                     db.add(alert)
+                    db.flush()  # 确保 alert 有 ID
+                    
+                    # 发送通知
+                    send_notification_for_alert(db, alert, logger)
+                    
                     alert_count += 1
             
             db.commit()
@@ -1278,6 +1327,11 @@ def check_production_plan_alerts():
                             threshold_value='80'
                         )
                         db.add(alert)
+                        db.flush()  # 确保 alert 有 ID
+                        
+                        # 发送通知
+                        send_notification_for_alert(db, alert, logger)
+                        
                         alert_count += 1
             
             db.commit()
@@ -1390,6 +1444,11 @@ def check_work_report_timeout():
                         threshold_value='24'
                     )
                     db.add(alert)
+                    db.flush()  # 确保 alert 有 ID
+                    
+                    # 发送通知
+                    send_notification_for_alert(db, alert, logger)
+                    
                     alert_count += 1
             
             db.commit()
@@ -1550,6 +1609,11 @@ def daily_kit_check():
                             threshold_value='80'
                         )
                         db.add(alert)
+                        db.flush()  # 确保 alert 有 ID
+                        
+                        # 发送通知
+                        send_notification_for_alert(db, alert, logger)
+                        
                         alert_count += 1
             
             db.commit()
@@ -1852,6 +1916,11 @@ def check_outsourcing_delivery_alerts():
                             threshold_value='3'
                         )
                         db.add(alert)
+                        db.flush()  # 确保 alert 有 ID
+                        
+                        # 发送通知
+                        send_notification_for_alert(db, alert, logger)
+                        
                         alert_count += 1
             
             db.commit()
@@ -1963,6 +2032,11 @@ def check_milestone_risk_alerts():
                             threshold_value='80'
                         )
                         db.add(alert)
+                        db.flush()  # 确保 alert 有 ID
+                        
+                        # 发送通知
+                        send_notification_for_alert(db, alert, logger)
+                        
                         alert_count += 1
             
             db.commit()
@@ -2779,85 +2853,13 @@ def check_overdue_receivable_alerts():
 
 def check_alert_escalation():
     """
-    S.10: 预警升级服务
+    S.10: 预警升级服务（已重构，使用新的升级任务）
     每小时执行一次，检查超时未处理的预警并自动升级
-    """
-    import logging
-    logger = logging.getLogger(__name__)
     
-    try:
-        with get_db_session() as db:
-            now = datetime.now()
-            
-            # 查询待处理且超过响应时限的预警
-            # INFO: 24小时未处理 → WARNING
-            # WARNING: 8小时未处理 → CRITICAL
-            # CRITICAL: 4小时未处理 → URGENT
-            # URGENT: 2小时未处理 → 升级通知
-            
-            escalated_count = 0
-            
-            # 检查INFO级别预警（24小时未处理）
-            info_alerts = db.query(AlertRecord).filter(
-                AlertRecord.status == 'PENDING',
-                AlertRecord.alert_level == AlertLevelEnum.INFO.value,
-                AlertRecord.triggered_at <= now - timedelta(hours=24)
-            ).all()
-            
-            for alert in info_alerts:
-                alert.alert_level = AlertLevelEnum.WARNING.value
-                escalated_count += 1
-            
-            # 检查WARNING级别预警（8小时未处理）
-            warning_alerts = db.query(AlertRecord).filter(
-                AlertRecord.status == 'PENDING',
-                AlertRecord.alert_level == AlertLevelEnum.WARNING.value,
-                AlertRecord.triggered_at <= now - timedelta(hours=8)
-            ).all()
-            
-            for alert in warning_alerts:
-                alert.alert_level = AlertLevelEnum.CRITICAL.value
-                escalated_count += 1
-            
-            # 检查CRITICAL级别预警（4小时未处理）
-            critical_alerts = db.query(AlertRecord).filter(
-                AlertRecord.status == 'PENDING',
-                AlertRecord.alert_level == AlertLevelEnum.CRITICAL.value,
-                AlertRecord.triggered_at <= now - timedelta(hours=4)
-            ).all()
-            
-            for alert in critical_alerts:
-                alert.alert_level = AlertLevelEnum.URGENT.value
-                escalated_count += 1
-            
-            # 检查URGENT级别预警（2小时未处理）- 发送升级通知
-            urgent_alerts = db.query(AlertRecord).filter(
-                AlertRecord.status == 'PENDING',
-                AlertRecord.alert_level == AlertLevelEnum.URGENT.value,
-                AlertRecord.triggered_at <= now - timedelta(hours=2)
-            ).all()
-            
-            # TODO: 发送升级通知（企微/邮件）
-            # 这里暂时只记录日志
-            for alert in urgent_alerts:
-                logger.warning(f"紧急预警超时未处理: {alert.alert_no} - {alert.alert_title}")
-                escalated_count += 1
-            
-            db.commit()
-            
-            if escalated_count > 0:
-                logger.info(f"[{datetime.now()}] 预警升级服务完成: 升级 {escalated_count} 个预警")
-                print(f"[{datetime.now()}] 预警升级服务完成: 升级 {escalated_count} 个预警")
-            
-            return {
-                'escalated_count': escalated_count,
-                'timestamp': datetime.now().isoformat()
-            }
-    except Exception as e:
-        logger.error(f"[{datetime.now()}] 预警升级服务失败: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return {'error': str(e)}
+    注意：此函数已重构，实际逻辑在 alert_escalation_task.py 中
+    """
+    from app.utils.alert_escalation_task import check_alert_timeout_escalation
+    return check_alert_timeout_escalation()
 
 
 # ==================== 商机阶段超时提醒 ====================
@@ -3227,6 +3229,111 @@ def check_equipment_maintenance_reminder():
             }
     except Exception as e:
         logger.error(f"[{datetime.now()}] 设备保养提醒服务失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {'error': str(e)}
+
+
+# ==================== 通知重试机制 ====================
+
+def retry_failed_notifications():
+    """
+    Issue 1.3: 通知重试机制
+    每小时执行一次，重试发送失败的通知
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        with get_db_session() as db:
+            from app.models.user import User
+            from app.models.notification import NotificationSettings
+            
+            current_time = datetime.now()
+            max_retries = 3
+            
+            # 查询需要重试的通知
+            failed_notifications = db.query(AlertNotification).filter(
+                AlertNotification.status == 'FAILED',
+                AlertNotification.retry_count < max_retries,
+                or_(
+                    AlertNotification.next_retry_at.is_(None),
+                    AlertNotification.next_retry_at <= current_time
+                )
+            ).all()
+            
+            retry_count = 0
+            success_count = 0
+            failed_count = 0
+            abandoned_count = 0
+            
+            dispatcher = NotificationDispatcher(db)
+            
+            for notification in failed_notifications:
+                # 检查是否在免打扰时段
+                settings = None
+                if notification.notify_user_id:
+                    settings = db.query(NotificationSettings).filter(
+                        NotificationSettings.user_id == notification.notify_user_id
+                    ).first()
+                
+                if is_quiet_hours(settings, current_time):
+                    notification.next_retry_at = next_quiet_resume(settings, current_time)
+                    notification.error_message = "Delayed due to quiet hours"
+                    continue
+                
+                # 获取预警和用户信息
+                alert = notification.alert
+                user = None
+                if notification.notify_user_id:
+                    user = db.query(User).filter(User.id == notification.notify_user_id).first()
+                
+                if not alert or not user:
+                    # 如果预警或用户不存在，标记为放弃
+                    notification.status = 'ABANDONED'
+                    notification.error_message = "Alert or user not found"
+                    abandoned_count += 1
+                    continue
+                
+                # 尝试重新发送
+                retry_count += 1
+                success = dispatcher.dispatch(notification, alert, user)
+                
+                if success:
+                    success_count += 1
+                    logger.info(f"Retry successful for notification {notification.id}")
+                else:
+                    failed_count += 1
+                    # 如果超过最大重试次数，标记为放弃
+                    if notification.retry_count >= max_retries:
+                        notification.status = 'ABANDONED'
+                        notification.error_message = f"Max retries ({max_retries}) exceeded"
+                        abandoned_count += 1
+                    logger.warning(f"Retry failed for notification {notification.id}: {notification.error_message}")
+            
+            db.commit()
+            
+            logger.info(
+                f"[{datetime.now()}] 通知重试完成: "
+                f"重试 {retry_count} 个, 成功 {success_count} 个, "
+                f"失败 {failed_count} 个, 放弃 {abandoned_count} 个"
+            )
+            print(
+                f"[{datetime.now()}] 通知重试完成: "
+                f"重试 {retry_count} 个, 成功 {success_count} 个, "
+                f"失败 {failed_count} 个, 放弃 {abandoned_count} 个"
+            )
+            
+            return {
+                'retry_count': retry_count,
+                'success_count': success_count,
+                'failed_count': failed_count,
+                'abandoned_count': abandoned_count,
+                'timestamp': datetime.now().isoformat()
+            }
+            
+    except Exception as e:
+        logger.error(f"[{datetime.now()}] 通知重试失败: {str(e)}", exc_info=True)
         import traceback
         traceback.print_exc()
         return {'error': str(e)}

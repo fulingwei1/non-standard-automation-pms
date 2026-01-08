@@ -43,7 +43,9 @@ import { fadeIn, staggerContainer } from '../lib/animations'
 import { 
   ecnApi, 
   purchaseApi, 
-  quoteApi, 
+  quoteApi,
+  contractApi,
+  invoiceApi,
   pmoApi
 } from '../services/api'
 import { toast } from '../components/ui/toast'
@@ -307,13 +309,59 @@ function ApprovalCard({ approval, onView, onApprove, onReject }) {
 }
 
 function ApprovalDetailDialog({ approval, open, onOpenChange, onApprove, onReject, comment, setComment }) {
+  const [approvalHistory, setApprovalHistory] = useState([])
+  const [approvalStatus, setApprovalStatus] = useState(null)
+  const [loadingHistory, setLoadingHistory] = useState(false)
+  
+  useEffect(() => {
+    if (open && approval) {
+      loadApprovalDetails()
+    }
+  }, [open, approval])
+  
+  const loadApprovalDetails = async () => {
+    if (!approval?.originalData) return
+    
+    try {
+      setLoadingHistory(true)
+      const { approvalType, originalData } = approval
+      
+      // Load approval status and history based on type
+      if (approvalType === 'quote_workflow') {
+        const statusRes = await quoteApi.getApprovalStatus(originalData.id)
+        const historyRes = await quoteApi.getApprovalHistory(originalData.id)
+        setApprovalStatus(statusRes.data || statusRes)
+        setApprovalHistory(historyRes.data || historyRes || [])
+      } else if (approvalType === 'contract_workflow') {
+        const statusRes = await contractApi.getApprovalStatus(originalData.id)
+        const historyRes = await contractApi.getApprovalHistory(originalData.id)
+        setApprovalStatus(statusRes.data || statusRes)
+        setApprovalHistory(historyRes.data || historyRes || [])
+      } else if (approvalType === 'invoice_workflow') {
+        const statusRes = await invoiceApi.getApprovalStatus(originalData.id)
+        const historyRes = await invoiceApi.getApprovalHistory(originalData.id)
+        setApprovalStatus(statusRes.data || statusRes)
+        setApprovalHistory(historyRes.data || historyRes || [])
+      }
+    } catch (err) {
+      console.error('Failed to load approval details:', err)
+    } finally {
+      setLoadingHistory(false)
+    }
+  }
+  
   if (!approval) return null
 
-  const type = typeConfigs[approval.type]
+  const type = typeConfigs[approval.type] || typeConfigs['ecn']
+  const canApprove = approval.status === 'pending' && (
+    approval.approvalType === 'quote_workflow' ||
+    approval.approvalType === 'contract_workflow' ||
+    approval.approvalType === 'invoice_workflow'
+  )
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <type.icon className={cn('w-5 h-5', type.color)} />
@@ -344,6 +392,12 @@ function ApprovalDetailDialog({ approval, open, onOpenChange, onApprove, onRejec
                 </div>
               </>
             )}
+            {approval.amount && (
+              <div>
+                <label className="text-xs text-slate-500">金额</label>
+                <p className="text-white">¥{(approval.amount / 10000).toFixed(0)}万</p>
+              </div>
+            )}
           </div>
 
           {/* Description */}
@@ -351,6 +405,70 @@ function ApprovalDetailDialog({ approval, open, onOpenChange, onApprove, onRejec
             <label className="text-xs text-slate-500">申请说明</label>
             <p className="text-white mt-1">{approval.description}</p>
           </div>
+
+          {/* Approval Flow Progress - Issue 5.2: 审批流程进度可视化 */}
+          {approval.approvalFlow && approval.approvalFlow.length > 0 && (
+            <div>
+              <label className="text-xs text-slate-500 mb-2 block">审批流程进度</label>
+              <div className="space-y-2">
+                {approval.approvalFlow.map((step, index) => {
+                  const isCurrent = step.step_order === approval.currentStep?.step_order
+                  const isCompleted = step.status === 'APPROVED'
+                  const isRejected = step.status === 'REJECTED'
+                  
+                  return (
+                    <div key={step.id || index} className="flex items-center gap-3 p-2 rounded-lg bg-surface-50">
+                      <div className={cn(
+                        'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold',
+                        isCompleted ? 'bg-emerald-500 text-white' :
+                        isRejected ? 'bg-red-500 text-white' :
+                        isCurrent ? 'bg-amber-500 text-white' :
+                        'bg-slate-600 text-slate-300'
+                      )}>
+                        {isCompleted ? '✓' : isRejected ? '✗' : index + 1}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-white">{step.step_name || `审批步骤 ${index + 1}`}</span>
+                          <Badge variant={isCompleted ? 'default' : isRejected ? 'destructive' : isCurrent ? 'secondary' : 'outline'}>
+                            {isCompleted ? '已通过' : isRejected ? '已驳回' : isCurrent ? '待审批' : '待处理'}
+                          </Badge>
+                        </div>
+                        {step.approver_name && (
+                          <span className="text-xs text-slate-400">审批人: {step.approver_name}</span>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Approval History - Issue 5.2: 审批历史记录 */}
+          {approvalHistory.length > 0 && (
+            <div>
+              <label className="text-xs text-slate-500 mb-2 block">审批历史</label>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {approvalHistory.map((history, index) => (
+                  <div key={history.id || index} className="p-2 rounded-lg bg-surface-50 text-sm">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-white">{history.action || history.status}</span>
+                      <span className="text-xs text-slate-400">
+                        {history.created_at ? formatDate(history.created_at) : ''}
+                      </span>
+                    </div>
+                    {history.approver_name && (
+                      <span className="text-xs text-slate-400">审批人: {history.approver_name}</span>
+                    )}
+                    {history.comment && (
+                      <p className="text-xs text-slate-300 mt-1">{history.comment}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Impact */}
           {approval.impact && (
@@ -573,34 +691,128 @@ export default function ApprovalCenter() {
         console.error('Failed to load purchase order approvals:', err)
       }
       
-      // Load Quote approvals
+      // Load Quote approvals (Sprint 2: New Approval Workflow)
       try {
         const quoteRes = await quoteApi.list({ status: 'SUBMITTED', page_size: 100 })
         const quoteData = quoteRes.data || quoteRes
         const quotes = quoteData.items || quoteData || []
-        quotes.forEach(quote => {
+        for (const quote of quotes) {
+          // Check approval status
+          let approvalStatus = null
+          try {
+            approvalStatus = await quoteApi.getApprovalStatus(quote.id)
+          } catch (err) {
+            console.warn(`Failed to get approval status for quote ${quote.id}:`, err)
+          }
+          
+          const status = approvalStatus?.status || 'PENDING'
+          const currentStep = approvalStatus?.current_step
+          
           allApprovals.push({
             id: `quote-${quote.id}`,
-            type: 'purchase',
-            title: `报价审批 - ${quote.quote_no || quote.id}`,
-            applicant: quote.created_by_name || '未知',
-            applicantDept: quote.department || '未知部门',
+            type: 'sales',
+            title: `报价审批 - ${quote.quote_code || quote.id}`,
+            applicant: quote.owner?.real_name || quote.owner_name || '未知',
+            applicantDept: quote.department || '销售部',
             submitTime: formatDate(quote.created_at) || '',
-            status: quote.status === 'SUBMITTED' ? 'pending' : 
-                    quote.status === 'APPROVED' ? 'approved' : 
-                    quote.status === 'REJECTED' ? 'rejected' : 'waiting',
-            priority: 'normal',
-            projectId: quote.project_code,
-            projectName: quote.project_name || '',
+            status: status === 'PENDING' ? 'pending' : 
+                    status === 'APPROVED' ? 'approved' : 
+                    status === 'REJECTED' ? 'rejected' : 'waiting',
+            priority: parseFloat(quote.total_price || 0) > 1000000 ? 'urgent' : 'normal',
+            projectId: quote.opportunity?.opp_code,
+            projectName: quote.opportunity?.opp_name || quote.customer?.customer_name || '',
             description: quote.remark || '',
-            amount: parseFloat(quote.total_amount || 0),
-            approvalFlow: [],
+            amount: parseFloat(quote.total_price || 0),
+            approvalFlow: approvalStatus?.steps || [],
+            currentStep: currentStep,
             originalData: quote,
-            approvalType: 'quote',
+            approvalType: 'quote_workflow',
           })
-        })
+        }
       } catch (err) {
         console.error('Failed to load quote approvals:', err)
+      }
+      
+      // Load Contract approvals (Sprint 2: New Approval Workflow)
+      try {
+        const contractRes = await contractApi.list({ status: 'SUBMITTED', page_size: 100 })
+        const contractData = contractRes.data || contractRes
+        const contracts = contractData.items || contractData || []
+        for (const contract of contracts) {
+          let approvalStatus = null
+          try {
+            approvalStatus = await contractApi.getApprovalStatus(contract.id)
+          } catch (err) {
+            console.warn(`Failed to get approval status for contract ${contract.id}:`, err)
+          }
+          
+          const status = approvalStatus?.status || 'PENDING'
+          const currentStep = approvalStatus?.current_step
+          
+          allApprovals.push({
+            id: `contract-${contract.id}`,
+            type: 'sales',
+            title: `合同审批 - ${contract.contract_code || contract.id}`,
+            applicant: contract.owner?.real_name || contract.owner_name || '未知',
+            applicantDept: contract.department || '销售部',
+            submitTime: formatDate(contract.created_at) || '',
+            status: status === 'PENDING' ? 'pending' : 
+                    status === 'APPROVED' ? 'approved' : 
+                    status === 'REJECTED' ? 'rejected' : 'waiting',
+            priority: parseFloat(contract.contract_amount || 0) > 5000000 ? 'urgent' : 'normal',
+            projectId: contract.project?.project_code,
+            projectName: contract.project?.project_name || contract.customer?.customer_name || '',
+            description: contract.contract_name || '',
+            amount: parseFloat(contract.contract_amount || 0),
+            approvalFlow: approvalStatus?.steps || [],
+            currentStep: currentStep,
+            originalData: contract,
+            approvalType: 'contract_workflow',
+          })
+        }
+      } catch (err) {
+        console.error('Failed to load contract approvals:', err)
+      }
+      
+      // Load Invoice approvals (Sprint 2: New Approval Workflow)
+      try {
+        const invoiceRes = await invoiceApi.list({ status: 'APPLIED', page_size: 100 })
+        const invoiceData = invoiceRes.data || invoiceRes
+        const invoices = invoiceData.items || invoiceData || []
+        for (const invoice of invoices) {
+          let approvalStatus = null
+          try {
+            approvalStatus = await invoiceApi.getApprovalStatus(invoice.id)
+          } catch (err) {
+            console.warn(`Failed to get approval status for invoice ${invoice.id}:`, err)
+          }
+          
+          const status = approvalStatus?.status || 'PENDING'
+          const currentStep = approvalStatus?.current_step
+          
+          allApprovals.push({
+            id: `invoice-${invoice.id}`,
+            type: 'sales',
+            title: `发票审批 - ${invoice.invoice_code || invoice.id}`,
+            applicant: invoice.created_by_name || '未知',
+            applicantDept: invoice.department || '财务部',
+            submitTime: formatDate(invoice.created_at) || '',
+            status: status === 'PENDING' ? 'pending' : 
+                    status === 'APPROVED' ? 'approved' : 
+                    status === 'REJECTED' ? 'rejected' : 'waiting',
+            priority: parseFloat(invoice.amount || invoice.total_amount || 0) > 500000 ? 'urgent' : 'normal',
+            projectId: invoice.contract?.contract_code,
+            projectName: invoice.contract?.customer?.customer_name || '',
+            description: invoice.invoice_type || '',
+            amount: parseFloat(invoice.amount || invoice.total_amount || 0),
+            approvalFlow: approvalStatus?.steps || [],
+            currentStep: currentStep,
+            originalData: invoice,
+            approvalType: 'invoice_workflow',
+          })
+        }
+      } catch (err) {
+        console.error('Failed to load invoice approvals:', err)
       }
       
       // Load Project Initiation approvals
@@ -696,6 +908,15 @@ export default function ApprovalCenter() {
         case 'quote':
           await quoteApi.approve(originalData.id, approvalData)
           break
+        case 'quote_workflow':
+          await quoteApi.approvalAction(originalData.id, { action: 'APPROVE', comment: approvalComment })
+          break
+        case 'contract_workflow':
+          await contractApi.approvalAction(originalData.id, { action: 'APPROVE', comment: approvalComment })
+          break
+        case 'invoice_workflow':
+          await invoiceApi.approvalAction(originalData.id, { action: 'APPROVE', comment: approvalComment })
+          break
         case 'initiation':
           await pmoApi.initiations.approve(originalData.id, approvalData)
           break
@@ -741,6 +962,15 @@ export default function ApprovalCenter() {
         case 'quote':
           // Quote might not have reject, use approve with false
           await quoteApi.approve(originalData.id, { ...rejectData, approved: false })
+          break
+        case 'quote_workflow':
+          await quoteApi.approvalAction(originalData.id, { action: 'REJECT', comment: approvalComment })
+          break
+        case 'contract_workflow':
+          await contractApi.approvalAction(originalData.id, { action: 'REJECT', comment: approvalComment })
+          break
+        case 'invoice_workflow':
+          await invoiceApi.approvalAction(originalData.id, { action: 'REJECT', comment: approvalComment })
           break
         case 'initiation':
           await pmoApi.initiations.reject(originalData.id, rejectData)

@@ -62,6 +62,7 @@ from app.schemas.production import (
     ProductionEfficiencyReportResponse,
     CapacityUtilizationResponse,
     WorkerPerformanceReportResponse,
+    WorkerRankingResponse,
 )
 from app.schemas.common import ResponseModel, PaginatedResponse
 
@@ -4854,6 +4855,108 @@ def get_worker_performance_report(
         ))
     
     return result
+
+
+@router.get("/reports/worker-ranking", response_model=List[WorkerRankingResponse])
+def get_worker_ranking(
+    db: Session = Depends(deps.get_db),
+    ranking_type: str = Query("efficiency", description="排名类型：efficiency/output/quality"),
+    workshop_id: Optional[int] = Query(None, description="车间ID筛选"),
+    period_start: date = Query(None, description="统计开始日期（默认本月）"),
+    period_end: date = Query(None, description="统计结束日期（默认今天）"),
+    limit: int = Query(10, ge=1, le=100, description="返回前N名"),
+    current_user: User = Depends(security.require_production_access()),
+) -> Any:
+    """
+    人员绩效排名
+    ranking_type: efficiency(效率) / output(产出) / quality(质量)
+    """
+    from datetime import timedelta
+    
+    # 默认日期范围：本月
+    if not period_start:
+        today = date.today()
+        period_start = date(today.year, today.month, 1)
+    if not period_end:
+        period_end = date.today()
+    
+    # 获取工人列表
+    query_workers = db.query(Worker).filter(Worker.status == "ACTIVE")
+    if workshop_id:
+        query_workers = query_workers.filter(Worker.workshop_id == workshop_id)
+    workers = query_workers.all()
+    
+    rankings = []
+    for worker in workers:
+        # 查询报工记录
+        reports = db.query(WorkReport).filter(
+            WorkReport.worker_id == worker.id,
+            WorkReport.report_time >= datetime.combine(period_start, datetime.min.time()),
+            WorkReport.report_time <= datetime.combine(period_end, datetime.max.time())
+        ).all()
+        
+        # 统计工时
+        total_hours = sum(float(r.work_hours) if r.work_hours else 0 for r in reports)
+        
+        # 统计完成数量和合格数量
+        total_completed_qty = sum(r.completed_qty or 0 for r in reports)
+        total_qualified_qty = sum(r.qualified_qty or 0 for r in reports)
+        
+        # 计算质量率
+        quality_rate = (total_qualified_qty / total_completed_qty * 100) if total_completed_qty > 0 else 0.0
+        
+        # 计算平均效率（从工单中获取）
+        work_orders = db.query(WorkOrder).filter(
+            WorkOrder.assigned_to == worker.id,
+            WorkOrder.status == "COMPLETED",
+            WorkOrder.actual_end_time >= datetime.combine(period_start, datetime.min.time()),
+            WorkOrder.actual_end_time <= datetime.combine(period_end, datetime.max.time())
+        ).all()
+        
+        efficiencies = []
+        for wo in work_orders:
+            if wo.standard_hours and wo.actual_hours and wo.actual_hours > 0:
+                eff = float((wo.standard_hours / wo.actual_hours) * 100)
+                efficiencies.append(eff)
+        
+        average_efficiency = sum(efficiencies) / len(efficiencies) if efficiencies else 0.0
+        
+        # 获取车间名称
+        workshop_name = None
+        if worker.workshop_id:
+            workshop = db.query(Workshop).filter(Workshop.id == worker.workshop_id).first()
+            workshop_name = workshop.workshop_name if workshop else None
+        
+        # 根据排名类型选择排序指标
+        if ranking_type == "efficiency":
+            score = average_efficiency
+        elif ranking_type == "output":
+            score = float(total_completed_qty)
+        elif ranking_type == "quality":
+            score = quality_rate
+        else:
+            score = average_efficiency
+        
+        rankings.append({
+            "rank": 0,  # 稍后排序后赋值
+            "worker_id": worker.id,
+            "worker_name": worker.worker_name,
+            "workshop_name": workshop_name,
+            "efficiency": average_efficiency,
+            "output": total_completed_qty,
+            "quality_rate": quality_rate,
+            "total_hours": total_hours,
+            "score": score
+        })
+    
+    # 排序
+    rankings.sort(key=lambda x: x["score"], reverse=True)
+    
+    # 添加排名
+    for idx, ranking in enumerate(rankings[:limit], 1):
+        ranking["rank"] = idx
+    
+    return rankings[:limit]
 
 
 # ==================== 报工系统扩展功能 ====================

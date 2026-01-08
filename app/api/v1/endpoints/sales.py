@@ -16,25 +16,32 @@ from app.core.config import settings
 from app.core import security
 from app.models.user import User
 from app.models.project import Customer, Project, ProjectMilestone, ProjectPaymentPlan
+from app.schemas.project import ProjectPaymentPlanResponse
 from app.models.sales import (
     Lead, LeadFollowUp, Opportunity, OpportunityRequirement, Quote, QuoteVersion, QuoteItem,
-    QuoteCostTemplate, QuoteCostApproval, QuoteCostHistory,
+    QuoteCostTemplate, QuoteCostApproval, QuoteCostHistory, PurchaseMaterialCost,
+    MaterialCostUpdateReminder,
     Contract, ContractDeliverable, ContractAmendment, Invoice, ReceivableDispute,
     QuoteApproval, ContractApproval, InvoiceApproval,
     CpqRuleSet, QuoteTemplate, QuoteTemplateVersion,
     ContractTemplate, ContractTemplateVersion,
     TechnicalAssessment, ScoringRule, FailureCase, OpenItem, LeadRequirementDetail,
-    RequirementFreeze, AIClarification
+    RequirementFreeze, AIClarification,
+    ApprovalWorkflow, ApprovalWorkflowStep, ApprovalRecord, ApprovalHistory
 )
 from app.schemas.sales import (
     LeadCreate, LeadUpdate, LeadResponse, LeadFollowUpResponse, LeadFollowUpCreate,
     OpportunityCreate, OpportunityUpdate, OpportunityResponse, OpportunityRequirementResponse,
     GateSubmitRequest,
     QuoteCreate, QuoteUpdate, QuoteResponse, QuoteVersionCreate, QuoteVersionResponse,
-    QuoteItemCreate, QuoteItemResponse, QuoteApproveRequest,
+    QuoteItemCreate, QuoteItemUpdate, QuoteItemBatchUpdate, QuoteItemResponse, QuoteApproveRequest,
     QuoteCostTemplateCreate, QuoteCostTemplateUpdate, QuoteCostTemplateResponse,
     QuoteCostApprovalCreate, QuoteCostApprovalResponse, QuoteCostApprovalAction,
     CostBreakdownResponse, CostCheckResponse, CostComparisonResponse,
+    PurchaseMaterialCostCreate, PurchaseMaterialCostUpdate, PurchaseMaterialCostResponse,
+    MaterialCostMatchRequest, MaterialCostMatchResponse,
+    CostMatchSuggestion, CostMatchSuggestionsResponse, ApplyCostSuggestionsRequest,
+    MaterialCostUpdateReminderResponse, MaterialCostUpdateReminderUpdate,
     ContractCreate, ContractUpdate, ContractResponse, ContractDeliverableResponse,
     ContractAmendmentCreate, ContractAmendmentResponse,
     ContractSignRequest, ContractProjectCreateRequest,
@@ -58,14 +65,21 @@ from app.schemas.sales import (
     OpenItemCreate, OpenItemResponse,
     LeadRequirementDetailCreate, LeadRequirementDetailResponse,
     RequirementFreezeCreate, RequirementFreezeResponse,
-    AIClarificationCreate, AIClarificationUpdate, AIClarificationResponse
+    AIClarificationCreate, AIClarificationUpdate, AIClarificationResponse,
+    ApprovalWorkflowCreate, ApprovalWorkflowUpdate, ApprovalWorkflowResponse,
+    ApprovalWorkflowStepCreate, ApprovalWorkflowStepResponse,
+    ApprovalRecordResponse, ApprovalHistoryResponse,
+    ApprovalStartRequest, ApprovalActionRequest, ApprovalStatusResponse
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.services.cpq_pricing_service import CpqPricingService
 from app.services.technical_assessment_service import TechnicalAssessmentService
 from app.services.ai_assessment_service import AIAssessmentService
+from app.services.approval_workflow_service import ApprovalWorkflowService
 from app.models.enums import (
-    AssessmentSourceTypeEnum, AssessmentStatusEnum, AssessmentDecisionEnum
+    AssessmentSourceTypeEnum, AssessmentStatusEnum, AssessmentDecisionEnum,
+    WorkflowTypeEnum, ApprovalRecordStatusEnum, ApprovalActionEnum,
+    QuoteStatusEnum, ContractStatusEnum, InvoiceStatusEnum, InvoiceStatusEnum as InvoiceStatus
 )
 
 router = APIRouter()
@@ -160,13 +174,16 @@ def validate_g2_opportunity_to_quote(opportunity: Opportunity) -> tuple[bool, Li
     return len(errors) == 0, errors
 
 
-def validate_g3_quote_to_contract(quote: Quote, version: QuoteVersion, items: List[QuoteItem]) -> tuple[bool, List[str], Optional[str]]:
+def validate_g3_quote_to_contract(quote: Quote, version: QuoteVersion, items: List[QuoteItem], 
+                                   db: Optional[Session] = None) -> tuple[bool, List[str], Optional[str]]:
     """
     G3：报价 → 合同 验证
     成本拆解齐备，毛利率低于阈值自动预警
     交期校验通过（关键物料交期 + 设计/装配/调试周期）
     风险条款与边界条款已补充
     """
+    from app.core.config import settings
+    
     errors = []
     warnings = []
     
@@ -174,25 +191,41 @@ def validate_g3_quote_to_contract(quote: Quote, version: QuoteVersion, items: Li
     if not items or len(items) == 0:
         errors.append("报价明细不能为空")
     else:
+        # 检查每个明细项是否有成本
+        items_without_cost = [item for item in items if not item.cost or float(item.cost or 0) == 0]
+        if items_without_cost:
+            errors.append(f"有{len(items_without_cost)}个报价明细项未填写成本")
+        
         total_cost = sum(float(item.cost or 0) * float(item.qty or 0) for item in items)
         if total_cost == 0:
             errors.append("成本拆解不完整，总成本不能为0")
     
-    # 检查毛利率
+    # 检查毛利率（使用配置的阈值）
     total_price = float(version.total_price or 0)
     total_cost = float(version.cost_total or 0)
     if total_price > 0:
         gross_margin = (total_price - total_cost) / total_price * 100
-        if gross_margin < 10:
-            errors.append(f"毛利率过低（{gross_margin:.2f}%），低于最低阈值10%")
-        elif gross_margin < 20:
-            warnings.append(f"毛利率较低（{gross_margin:.2f}%），建议重新评估")
+        margin_threshold = settings.SALES_GROSS_MARGIN_THRESHOLD
+        margin_warning = settings.SALES_GROSS_MARGIN_WARNING
+        
+        if gross_margin < margin_threshold:
+            errors.append(f"毛利率过低（{gross_margin:.2f}%），低于最低阈值{margin_threshold}%，需要审批")
+        elif gross_margin < margin_warning:
+            warnings.append(f"毛利率较低（{gross_margin:.2f}%），低于警告阈值{margin_warning}%，建议重新评估")
     
-    # 检查交期
+    # 检查交期（使用配置的最小交期）
     if not version.lead_time_days or version.lead_time_days <= 0:
         errors.append("交期不能为空或必须大于0")
-    elif version.lead_time_days < 30:
-        warnings.append(f"交期较短（{version.lead_time_days}天），请确认关键物料交期和设计/装配/调试周期")
+    else:
+        min_lead_time = settings.SALES_MIN_LEAD_TIME_DAYS
+        if version.lead_time_days < min_lead_time:
+            warnings.append(f"交期较短（{version.lead_time_days}天），低于建议最小交期{min_lead_time}天，请确认关键物料交期和设计/装配/调试周期")
+        
+        # TODO: 交期校验 - 需要集成物料交期查询和项目周期估算
+        # 这里可以添加更详细的交期校验逻辑
+        # 1. 查询关键物料的交期
+        # 2. 估算设计/装配/调试周期
+        # 3. 对比报价交期是否合理
     
     # 检查风险条款
     if not version.risk_terms:
@@ -202,7 +235,8 @@ def validate_g3_quote_to_contract(quote: Quote, version: QuoteVersion, items: Li
     return len(errors) == 0, errors, warning_msg
 
 
-def validate_g4_contract_to_project(contract: Contract, deliverables: List[ContractDeliverable]) -> tuple[bool, List[str]]:
+def validate_g4_contract_to_project(contract: Contract, deliverables: List[ContractDeliverable], 
+                                     db: Optional[Session] = None) -> tuple[bool, List[str]]:
     """
     G4：合同 → 项目 验证
     付款节点与可交付物绑定
@@ -215,10 +249,14 @@ def validate_g4_contract_to_project(contract: Contract, deliverables: List[Contr
         errors.append("合同交付物不能为空")
     else:
         # 检查交付物是否必需（required_for_payment字段）
-        # 注意：ContractDeliverable模型中没有payment_node字段，简化验证
         required_deliverables = [d for d in deliverables if d.required_for_payment]
         if len(required_deliverables) == 0:
             errors.append("至少需要一个付款必需的交付物")
+        
+        # 检查交付物名称是否完整
+        incomplete_deliverables = [d for d in deliverables if not d.deliverable_name or len(d.deliverable_name.strip()) == 0]
+        if incomplete_deliverables:
+            errors.append(f"有{len(incomplete_deliverables)}个交付物名称不完整")
     
     # 检查合同关键信息
     if not contract.contract_amount or contract.contract_amount <= 0:
@@ -226,11 +264,26 @@ def validate_g4_contract_to_project(contract: Contract, deliverables: List[Contr
     
     # 检查验收标准（简化：检查是否有验收摘要）
     if not contract.acceptance_summary:
-        errors.append("验收摘要不能为空")
+        errors.append("验收摘要不能为空，请补充验收标准")
+    
+    # 检查付款条款摘要
+    if not contract.payment_terms_summary:
+        errors.append("付款条款摘要不能为空，请补充付款节点信息")
     
     # 检查合同是否已签订
     if contract.status != "SIGNED":
         errors.append("只有已签订的合同才能生成项目")
+    
+    # 检查合同是否已关联项目（避免重复生成）
+    if contract.project_id:
+        errors.append("合同已关联项目，不能重复生成")
+    
+    # TODO: 检查 SOW/验收标准/BOM初版/里程碑基线是否已冻结
+    # 这里可以添加更详细的检查逻辑
+    # 1. 检查是否有 SOW 文档
+    # 2. 检查验收标准是否已确认
+    # 3. 检查 BOM 初版是否已冻结
+    # 4. 检查里程碑基线是否已确定
     
     return len(errors) == 0, errors
 
@@ -1392,7 +1445,7 @@ def create_contract(
         
         # G3验证
         if not skip_g3_validation and version:
-            is_valid, errors, warning = validate_g3_quote_to_contract(quote, version, items)
+            is_valid, errors, warning = validate_g3_quote_to_contract(quote, version, items, db)
             if not is_valid:
                 raise HTTPException(
                     status_code=400,
@@ -1466,6 +1519,42 @@ def sign_contract(
     contract.signed_date = sign_request.signed_date
     contract.status = "SIGNED"
     
+    # Sprint 2.1 + Issue 1.2: 合同签订自动创建项目并触发阶段流转
+    auto_create_project = getattr(sign_request, 'auto_create_project', True) if hasattr(sign_request, 'auto_create_project') else True
+    created_project = None
+    
+    if auto_create_project:
+        try:
+            from app.services.status_transition_service import StatusTransitionService
+            transition_service = StatusTransitionService(db)
+            created_project = transition_service.handle_contract_signed(contract_id, auto_create_project=True)
+            
+            if created_project:
+                # 更新合同关联的项目ID（如果之前没有）
+                if not contract.project_id:
+                    contract.project_id = created_project.id
+                
+                # Issue 1.2: 合同签订后自动触发阶段流转检查（S3→S4）
+                try:
+                    auto_transition_result = transition_service.check_auto_stage_transition(
+                        created_project.id,
+                        auto_advance=True  # 自动推进
+                    )
+                    if auto_transition_result.get("auto_advanced"):
+                        import logging
+                        logger = logging.getLogger(__name__)
+                        logger.info(f"合同签订后自动推进项目 {created_project.id} 至 {auto_transition_result.get('target_stage')} 阶段")
+                except Exception as e:
+                    # 自动流转失败不影响合同签订，记录日志
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.warning(f"合同签订后自动阶段流转失败：{str(e)}", exc_info=True)
+        except Exception as e:
+            # 自动创建项目失败不影响合同签订，记录日志
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"合同签订自动创建项目失败：{str(e)}", exc_info=True)
+    
     # 自动生成收款计划
     if auto_generate_payment_plans and contract.project_id:
         _generate_payment_plans_from_contract(db, contract)
@@ -1481,7 +1570,13 @@ def sign_contract(
         # 通知失败不影响主流程
         pass
 
-    return ResponseModel(code=200, message="合同签订成功")
+    response_data = {"contract_id": contract.id}
+    if created_project:
+        response_data["project_id"] = created_project.id
+        response_data["project_code"] = created_project.project_code
+        return ResponseModel(code=200, message="合同签订成功，项目已自动创建", data=response_data)
+    
+    return ResponseModel(code=200, message="合同签订成功", data=response_data)
 
 
 def _generate_payment_plans_from_contract(db: Session, contract: Contract) -> List[ProjectPaymentPlan]:
@@ -1574,6 +1669,37 @@ def _generate_payment_plans_from_contract(db: Session, contract: Contract) -> Li
             if project.planned_end_date:
                 planned_date = project.planned_end_date + timedelta(days=365)
         
+        # 尝试查找关联的里程碑
+        milestone_id = None
+        if config["payment_no"] == 2:  # 发货款
+            # 查找发货相关的里程碑
+            milestone = db.query(ProjectMilestone).filter(
+                and_(
+                    ProjectMilestone.project_id == contract.project_id,
+                    or_(
+                        ProjectMilestone.milestone_name.like("%发货%"),
+                        ProjectMilestone.milestone_name.like("%发运%"),
+                        ProjectMilestone.milestone_type == "DELIVERY"
+                    )
+                )
+            ).first()
+            if milestone:
+                milestone_id = milestone.id
+        elif config["payment_no"] == 3:  # 验收款
+            # 查找验收相关的里程碑
+            milestone = db.query(ProjectMilestone).filter(
+                and_(
+                    ProjectMilestone.project_id == contract.project_id,
+                    or_(
+                        ProjectMilestone.milestone_name.like("%验收%"),
+                        ProjectMilestone.milestone_name.like("%终验%"),
+                        ProjectMilestone.milestone_type == "GATE"
+                    )
+                )
+            ).first()
+            if milestone:
+                milestone_id = milestone.id
+        
         plan = ProjectPaymentPlan(
             project_id=contract.project_id,
             contract_id=contract.id,
@@ -1583,6 +1709,7 @@ def _generate_payment_plans_from_contract(db: Session, contract: Contract) -> Li
             payment_ratio=config["payment_ratio"],
             planned_amount=planned_amount,
             planned_date=planned_date,
+            milestone_id=milestone_id,  # 关联里程碑
             trigger_milestone=config["trigger_milestone"],
             trigger_condition=config["trigger_condition"],
             status="PENDING"
@@ -1590,6 +1717,7 @@ def _generate_payment_plans_from_contract(db: Session, contract: Contract) -> Li
         db.add(plan)
         plans.append(plan)
     
+    db.flush()
     return plans
 
 
@@ -1614,7 +1742,7 @@ def create_contract_project(
     
     # G4验证
     if not skip_g4_validation:
-        is_valid, errors = validate_g4_contract_to_project(contract, deliverables)
+        is_valid, errors = validate_g4_contract_to_project(contract, deliverables, db)
         if not is_valid:
             raise HTTPException(
                 status_code=400,
@@ -1654,6 +1782,691 @@ def create_contract_project(
     db.commit()
 
     return ResponseModel(code=200, message="项目创建成功", data={"project_id": project.id})
+
+
+@router.get("/contracts/{contract_id}/payment-plans", response_model=List[ProjectPaymentPlanResponse])
+def get_contract_payment_plans(
+    *,
+    db: Session = Depends(deps.get_db),
+    contract_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取合同的收款计划列表
+    """
+    
+    contract = db.query(Contract).filter(Contract.id == contract_id).first()
+    if not contract:
+        raise HTTPException(status_code=404, detail="合同不存在")
+    
+    # 查询收款计划
+    payment_plans = db.query(ProjectPaymentPlan).filter(
+        ProjectPaymentPlan.contract_id == contract_id
+    ).options(
+        joinedload(ProjectPaymentPlan.milestone),
+        joinedload(ProjectPaymentPlan.project)
+    ).order_by(ProjectPaymentPlan.payment_no).all()
+    
+    result = []
+    for plan in payment_plans:
+        plan_dict = {
+            **{c.name: getattr(plan, c.name) for c in plan.__table__.columns},
+            "project_code": plan.project.project_code if plan.project else None,
+            "project_name": plan.project.project_name if plan.project else None,
+            "contract_code": contract.contract_code,
+            "milestone_code": plan.milestone.milestone_code if plan.milestone else None,
+            "milestone_name": plan.milestone.milestone_name if plan.milestone else None,
+        }
+        result.append(ProjectPaymentPlanResponse(**plan_dict))
+    
+    return result
+
+
+# ==================== 审批工作流 ====================
+
+
+@router.post("/quotes/{quote_id}/approval/start", response_model=ResponseModel)
+def start_quote_approval(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    approval_request: ApprovalStartRequest,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    启动报价审批流程
+    """
+    quote = db.query(Quote).filter(Quote.id == quote_id).first()
+    if not quote:
+        raise HTTPException(status_code=404, detail="报价不存在")
+    
+    if quote.status != QuoteStatusEnum.IN_REVIEW:
+        raise HTTPException(status_code=400, detail="只有待审批状态的报价才能启动审批流程")
+    
+    # 获取报价金额用于路由
+    version = db.query(QuoteVersion).filter(QuoteVersion.id == quote.current_version_id).first()
+    routing_params = {
+        "amount": float(version.total_price or 0) if version else 0
+    }
+    
+    # 启动审批流程
+    workflow_service = ApprovalWorkflowService(db)
+    try:
+        record = workflow_service.start_approval(
+            entity_type=WorkflowTypeEnum.QUOTE,
+            entity_id=quote_id,
+            initiator_id=current_user.id,
+            workflow_id=approval_request.workflow_id,
+            routing_params=routing_params,
+            comment=approval_request.comment
+        )
+        
+        # 更新报价状态
+        quote.status = QuoteStatusEnum.IN_REVIEW
+        
+        db.commit()
+        
+        return ResponseModel(
+            code=200,
+            message="审批流程已启动",
+            data={"approval_record_id": record.id}
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/quotes/{quote_id}/approval-status", response_model=ApprovalStatusResponse)
+def get_quote_approval_status(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取报价审批状态
+    """
+    workflow_service = ApprovalWorkflowService(db)
+    record = workflow_service.get_approval_record(
+        entity_type=WorkflowTypeEnum.QUOTE,
+        entity_id=quote_id
+    )
+    
+    if not record:
+        return ApprovalStatusResponse(
+            record=None,
+            current_step_info=None,
+            can_approve=False,
+            can_reject=False,
+            can_delegate=False,
+            can_withdraw=False
+        )
+    
+    # 获取当前步骤信息
+    current_step_info = workflow_service.get_current_step(record.id)
+    
+    # 判断当前用户的操作权限
+    can_approve = False
+    can_reject = False
+    can_delegate = False
+    can_withdraw = False
+    
+    if record.status == ApprovalRecordStatusEnum.PENDING:
+        if current_step_info:
+            # 检查是否是当前审批人
+            if current_step_info.get("approver_id") == current_user.id:
+                can_approve = True
+                can_reject = True
+                if current_step_info.get("can_delegate"):
+                    can_delegate = True
+        
+        # 检查是否可以撤回（只有发起人可以撤回）
+        if record.initiator_id == current_user.id:
+            can_withdraw = True
+    
+    # 构建响应
+    record_dict = {
+        **{c.name: getattr(record, c.name) for c in record.__table__.columns},
+        "workflow_name": record.workflow.workflow_name if record.workflow else None,
+        "initiator_name": record.initiator.real_name if record.initiator else None,
+        "history": []
+    }
+    
+    # 获取审批历史
+    history_list = workflow_service.get_approval_history(record.id)
+    for h in history_list:
+        history_dict = {
+            **{c.name: getattr(h, c.name) for c in h.__table__.columns},
+            "approver_name": h.approver.real_name if h.approver else None,
+            "delegate_to_name": h.delegate_to.real_name if h.delegate_to else None
+        }
+        record_dict["history"].append(ApprovalHistoryResponse(**history_dict))
+    
+    return ApprovalStatusResponse(
+        record=ApprovalRecordResponse(**record_dict),
+        current_step_info=current_step_info,
+        can_approve=can_approve,
+        can_reject=can_reject,
+        can_delegate=can_delegate,
+        can_withdraw=can_withdraw
+    )
+
+
+@router.post("/quotes/{quote_id}/approval/action", response_model=ResponseModel)
+def quote_approval_action(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    action_request: ApprovalActionRequest,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    报价审批操作（通过/驳回/委托/撤回）
+    """
+    workflow_service = ApprovalWorkflowService(db)
+    record = workflow_service.get_approval_record(
+        entity_type=WorkflowTypeEnum.QUOTE,
+        entity_id=quote_id
+    )
+    
+    if not record:
+        raise HTTPException(status_code=404, detail="审批记录不存在")
+    
+    quote = db.query(Quote).filter(Quote.id == quote_id).first()
+    if not quote:
+        raise HTTPException(status_code=404, detail="报价不存在")
+    
+    try:
+        if action_request.action == ApprovalActionEnum.APPROVE:
+            record = workflow_service.approve_step(
+                record_id=record.id,
+                approver_id=current_user.id,
+                comment=action_request.comment
+            )
+            
+            # 如果审批完成，更新报价状态
+            if record.status == ApprovalRecordStatusEnum.APPROVED:
+                quote.status = QuoteStatusEnum.APPROVED
+                version = db.query(QuoteVersion).filter(QuoteVersion.id == quote.current_version_id).first()
+                if version:
+                    version.approved_by = current_user.id
+                    version.approved_at = datetime.now()
+            
+            message = "审批通过"
+            
+        elif action_request.action == ApprovalActionEnum.REJECT:
+            record = workflow_service.reject_step(
+                record_id=record.id,
+                approver_id=current_user.id,
+                comment=action_request.comment or "审批驳回"
+            )
+            
+            # 驳回后更新报价状态
+            quote.status = QuoteStatusEnum.REJECTED
+            message = "审批已驳回"
+            
+        elif action_request.action == ApprovalActionEnum.DELEGATE:
+            if not action_request.delegate_to_id:
+                raise HTTPException(status_code=400, detail="委托操作需要指定委托给的用户ID")
+            
+            record = workflow_service.delegate_step(
+                record_id=record.id,
+                approver_id=current_user.id,
+                delegate_to_id=action_request.delegate_to_id,
+                comment=action_request.comment
+            )
+            message = "审批已委托"
+            
+        elif action_request.action == ApprovalActionEnum.WITHDRAW:
+            record = workflow_service.withdraw_approval(
+                record_id=record.id,
+                initiator_id=current_user.id,
+                comment=action_request.comment
+            )
+            
+            # 撤回后恢复报价状态
+            quote.status = QuoteStatusEnum.DRAFT
+            message = "审批已撤回"
+            
+        else:
+            raise HTTPException(status_code=400, detail=f"不支持的审批操作: {action_request.action}")
+        
+        db.commit()
+        
+        return ResponseModel(
+            code=200,
+            message=message,
+            data={"approval_record_id": record.id, "status": record.status}
+        )
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/quotes/{quote_id}/approval-history", response_model=List[ApprovalHistoryResponse])
+def get_quote_approval_history(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取报价审批历史
+    """
+    workflow_service = ApprovalWorkflowService(db)
+    record = workflow_service.get_approval_record(
+        entity_type=WorkflowTypeEnum.QUOTE,
+        entity_id=quote_id
+    )
+    
+    if not record:
+        return []
+    
+    history_list = workflow_service.get_approval_history(record.id)
+    result = []
+    for h in history_list:
+        history_dict = {
+            **{c.name: getattr(h, c.name) for c in h.__table__.columns},
+            "approver_name": h.approver.real_name if h.approver else None,
+            "delegate_to_name": h.delegate_to.real_name if h.delegate_to else None
+        }
+        result.append(ApprovalHistoryResponse(**history_dict))
+    
+    return result
+
+
+# ==================== 审批工作流管理 ====================
+
+
+@router.get("/approval-workflows", response_model=PaginatedResponse[ApprovalWorkflowResponse])
+def list_approval_workflows(
+    *,
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    workflow_type: Optional[str] = Query(None, description="工作流类型筛选"),
+    is_active: Optional[bool] = Query(None, description="是否启用筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取审批工作流列表
+    """
+    query = db.query(ApprovalWorkflow).options(
+        joinedload(ApprovalWorkflow.steps)
+    )
+    
+    if workflow_type:
+        query = query.filter(ApprovalWorkflow.workflow_type == workflow_type)
+    
+    if is_active is not None:
+        query = query.filter(ApprovalWorkflow.is_active == is_active)
+    
+    total = query.count()
+    offset = (page - 1) * page_size
+    workflows = query.order_by(ApprovalWorkflow.created_at.desc()).offset(offset).limit(page_size).all()
+    
+    result = []
+    for workflow in workflows:
+        workflow_dict = {
+            **{c.name: getattr(workflow, c.name) for c in workflow.__table__.columns},
+            "steps": [
+                ApprovalWorkflowStepResponse(
+                    **{c.name: getattr(step, c.name) for c in step.__table__.columns},
+                    approver_name=step.approver.real_name if step.approver else None
+                )
+                for step in sorted(workflow.steps, key=lambda x: x.step_order)
+            ]
+        }
+        result.append(ApprovalWorkflowResponse(**workflow_dict))
+    
+    return PaginatedResponse(
+        items=result,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
+    )
+
+
+@router.post("/approval-workflows", response_model=ApprovalWorkflowResponse, status_code=201)
+def create_approval_workflow(
+    *,
+    db: Session = Depends(deps.get_db),
+    workflow_in: ApprovalWorkflowCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    创建审批工作流
+    """
+    workflow_data = workflow_in.model_dump(exclude={"steps"})
+    workflow = ApprovalWorkflow(**workflow_data)
+    db.add(workflow)
+    db.flush()
+    
+    # 创建审批步骤
+    for step_data in workflow_in.steps:
+        step = ApprovalWorkflowStep(
+            workflow_id=workflow.id,
+            **step_data.model_dump()
+        )
+        db.add(step)
+    
+    db.commit()
+    db.refresh(workflow)
+    
+    # 加载步骤
+    workflow_dict = {
+        **{c.name: getattr(workflow, c.name) for c in workflow.__table__.columns},
+        "steps": [
+            ApprovalWorkflowStepResponse(
+                **{c.name: getattr(step, c.name) for c in step.__table__.columns},
+                approver_name=step.approver.real_name if step.approver else None
+            )
+            for step in sorted(workflow.steps, key=lambda x: x.step_order)
+        ]
+    }
+    
+    return ApprovalWorkflowResponse(**workflow_dict)
+
+
+@router.get("/approval-workflows/{workflow_id}", response_model=ApprovalWorkflowResponse)
+def get_approval_workflow(
+    *,
+    db: Session = Depends(deps.get_db),
+    workflow_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取审批工作流详情
+    """
+    workflow = db.query(ApprovalWorkflow).options(
+        joinedload(ApprovalWorkflow.steps)
+    ).filter(ApprovalWorkflow.id == workflow_id).first()
+    
+    if not workflow:
+        raise HTTPException(status_code=404, detail="审批工作流不存在")
+    
+    workflow_dict = {
+        **{c.name: getattr(workflow, c.name) for c in workflow.__table__.columns},
+        "steps": [
+            ApprovalWorkflowStepResponse(
+                **{c.name: getattr(step, c.name) for c in step.__table__.columns},
+                approver_name=step.approver.real_name if step.approver else None
+            )
+            for step in sorted(workflow.steps, key=lambda x: x.step_order)
+        ]
+    }
+    
+    return ApprovalWorkflowResponse(**workflow_dict)
+
+
+@router.put("/approval-workflows/{workflow_id}", response_model=ApprovalWorkflowResponse)
+def update_approval_workflow(
+    *,
+    db: Session = Depends(deps.get_db),
+    workflow_id: int,
+    workflow_in: ApprovalWorkflowUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    更新审批工作流
+    """
+    workflow = db.query(ApprovalWorkflow).filter(ApprovalWorkflow.id == workflow_id).first()
+    if not workflow:
+        raise HTTPException(status_code=404, detail="审批工作流不存在")
+    
+    update_data = workflow_in.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(workflow, key, value)
+    
+    db.commit()
+    db.refresh(workflow)
+    
+    # 加载步骤
+    workflow_dict = {
+        **{c.name: getattr(workflow, c.name) for c in workflow.__table__.columns},
+        "steps": [
+            ApprovalWorkflowStepResponse(
+                **{c.name: getattr(step, c.name) for c in step.__table__.columns},
+                approver_name=step.approver.real_name if step.approver else None
+            )
+            for step in sorted(workflow.steps, key=lambda x: x.step_order)
+        ]
+    }
+    
+    return ApprovalWorkflowResponse(**workflow_dict)
+
+
+@router.post("/contracts/{contract_id}/approval/start", response_model=ResponseModel)
+def start_contract_approval(
+    *,
+    db: Session = Depends(deps.get_db),
+    contract_id: int,
+    approval_request: ApprovalStartRequest,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    启动合同审批流程
+    """
+    contract = db.query(Contract).filter(Contract.id == contract_id).first()
+    if not contract:
+        raise HTTPException(status_code=404, detail="合同不存在")
+    
+    if contract.status != ContractStatusEnum.DRAFT and contract.status != ContractStatusEnum.IN_REVIEW:
+        raise HTTPException(status_code=400, detail="只有草稿或待审批状态的合同才能启动审批流程")
+    
+    # 获取合同金额用于路由
+    routing_params = {
+        "amount": float(contract.contract_amount or 0)
+    }
+    
+    # 启动审批流程
+    workflow_service = ApprovalWorkflowService(db)
+    try:
+        record = workflow_service.start_approval(
+            entity_type=WorkflowTypeEnum.CONTRACT,
+            entity_id=contract_id,
+            initiator_id=current_user.id,
+            workflow_id=approval_request.workflow_id,
+            routing_params=routing_params,
+            comment=approval_request.comment
+        )
+        
+        # 更新合同状态
+        contract.status = ContractStatusEnum.IN_REVIEW
+        
+        db.commit()
+        
+        return ResponseModel(
+            code=200,
+            message="审批流程已启动",
+            data={"approval_record_id": record.id}
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/contracts/{contract_id}/approval-status", response_model=ApprovalStatusResponse)
+def get_contract_approval_status(
+    *,
+    db: Session = Depends(deps.get_db),
+    contract_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取合同审批状态
+    """
+    workflow_service = ApprovalWorkflowService(db)
+    record = workflow_service.get_approval_record(
+        entity_type=WorkflowTypeEnum.CONTRACT,
+        entity_id=contract_id
+    )
+    
+    if not record:
+        return ApprovalStatusResponse(
+            record=None,
+            current_step_info=None,
+            can_approve=False,
+            can_reject=False,
+            can_delegate=False,
+            can_withdraw=False
+        )
+    
+    current_step_info = workflow_service.get_current_step(record.id)
+    
+    can_approve = False
+    can_reject = False
+    can_delegate = False
+    can_withdraw = False
+    
+    if record.status == ApprovalRecordStatusEnum.PENDING:
+        if current_step_info:
+            if current_step_info.get("approver_id") == current_user.id:
+                can_approve = True
+                can_reject = True
+                if current_step_info.get("can_delegate"):
+                    can_delegate = True
+        
+        if record.initiator_id == current_user.id:
+            can_withdraw = True
+    
+    record_dict = {
+        **{c.name: getattr(record, c.name) for c in record.__table__.columns},
+        "workflow_name": record.workflow.workflow_name if record.workflow else None,
+        "initiator_name": record.initiator.real_name if record.initiator else None,
+        "history": []
+    }
+    
+    history_list = workflow_service.get_approval_history(record.id)
+    for h in history_list:
+        history_dict = {
+            **{c.name: getattr(h, c.name) for c in h.__table__.columns},
+            "approver_name": h.approver.real_name if h.approver else None,
+            "delegate_to_name": h.delegate_to.real_name if h.delegate_to else None
+        }
+        record_dict["history"].append(ApprovalHistoryResponse(**history_dict))
+    
+    return ApprovalStatusResponse(
+        record=ApprovalRecordResponse(**record_dict),
+        current_step_info=current_step_info,
+        can_approve=can_approve,
+        can_reject=can_reject,
+        can_delegate=can_delegate,
+        can_withdraw=can_withdraw
+    )
+
+
+@router.post("/contracts/{contract_id}/approval/action", response_model=ResponseModel)
+def contract_approval_action(
+    *,
+    db: Session = Depends(deps.get_db),
+    contract_id: int,
+    action_request: ApprovalActionRequest,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    合同审批操作（通过/驳回/委托/撤回）
+    """
+    workflow_service = ApprovalWorkflowService(db)
+    record = workflow_service.get_approval_record(
+        entity_type=WorkflowTypeEnum.CONTRACT,
+        entity_id=contract_id
+    )
+    
+    if not record:
+        raise HTTPException(status_code=404, detail="审批记录不存在")
+    
+    contract = db.query(Contract).filter(Contract.id == contract_id).first()
+    if not contract:
+        raise HTTPException(status_code=404, detail="合同不存在")
+    
+    try:
+        if action_request.action == ApprovalActionEnum.APPROVE:
+            record = workflow_service.approve_step(
+                record_id=record.id,
+                approver_id=current_user.id,
+                comment=action_request.comment
+            )
+            
+            if record.status == ApprovalRecordStatusEnum.APPROVED:
+                # 审批完成，允许合同签订
+                contract.status = ContractStatusEnum.IN_REVIEW  # 保持待审批状态，等待签订
+            message = "审批通过"
+            
+        elif action_request.action == ApprovalActionEnum.REJECT:
+            record = workflow_service.reject_step(
+                record_id=record.id,
+                approver_id=current_user.id,
+                comment=action_request.comment or "审批驳回"
+            )
+            contract.status = ContractStatusEnum.CANCELLED
+            message = "审批已驳回"
+            
+        elif action_request.action == ApprovalActionEnum.DELEGATE:
+            if not action_request.delegate_to_id:
+                raise HTTPException(status_code=400, detail="委托操作需要指定委托给的用户ID")
+            
+            record = workflow_service.delegate_step(
+                record_id=record.id,
+                approver_id=current_user.id,
+                delegate_to_id=action_request.delegate_to_id,
+                comment=action_request.comment
+            )
+            message = "审批已委托"
+            
+        elif action_request.action == ApprovalActionEnum.WITHDRAW:
+            record = workflow_service.withdraw_approval(
+                record_id=record.id,
+                initiator_id=current_user.id,
+                comment=action_request.comment
+            )
+            contract.status = ContractStatusEnum.DRAFT
+            message = "审批已撤回"
+            
+        else:
+            raise HTTPException(status_code=400, detail=f"不支持的审批操作: {action_request.action}")
+        
+        db.commit()
+        
+        return ResponseModel(
+            code=200,
+            message=message,
+            data={"approval_record_id": record.id, "status": record.status}
+        )
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/contracts/{contract_id}/approval-history", response_model=List[ApprovalHistoryResponse])
+def get_contract_approval_history(
+    *,
+    db: Session = Depends(deps.get_db),
+    contract_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取合同审批历史
+    """
+    workflow_service = ApprovalWorkflowService(db)
+    record = workflow_service.get_approval_record(
+        entity_type=WorkflowTypeEnum.CONTRACT,
+        entity_id=contract_id
+    )
+    
+    if not record:
+        return []
+    
+    history_list = workflow_service.get_approval_history(record.id)
+    result = []
+    for h in history_list:
+        history_dict = {
+            **{c.name: getattr(h, c.name) for c in h.__table__.columns},
+            "approver_name": h.approver.real_name if h.approver else None,
+            "delegate_to_name": h.delegate_to.real_name if h.delegate_to else None
+        }
+        result.append(ApprovalHistoryResponse(**history_dict))
+    
+    return result
 
 
 # ==================== 发票 ====================
@@ -1739,6 +2552,27 @@ def create_invoice(
 
     invoice = Invoice(**invoice_data)
     db.add(invoice)
+    db.flush()
+    
+    # 如果发票状态是 APPLIED，自动启动审批流程
+    if invoice.status == InvoiceStatus.APPLIED:
+        try:
+            workflow_service = ApprovalWorkflowService(db)
+            routing_params = {"amount": float(invoice.amount or 0)}
+            record = workflow_service.start_approval(
+                entity_type=WorkflowTypeEnum.INVOICE,
+                entity_id=invoice.id,
+                initiator_id=current_user.id,
+                workflow_id=None,  # 自动选择
+                routing_params=routing_params,
+                comment="发票申请"
+            )
+            invoice.status = InvoiceStatus.IN_REVIEW
+        except Exception as e:
+            # 如果启动审批失败，记录日志但不阻止发票创建
+            # TODO: 添加日志记录
+            pass
+    
     db.commit()
     db.refresh(invoice)
 
@@ -1769,8 +2603,18 @@ def issue_invoice(
     if not invoice:
         raise HTTPException(status_code=404, detail="发票不存在")
 
+    # 检查是否已通过审批（如果启用了审批工作流）
+    workflow_service = ApprovalWorkflowService(db)
+    record = workflow_service.get_approval_record(
+        entity_type=WorkflowTypeEnum.INVOICE,
+        entity_id=invoice_id
+    )
+    
+    if record and record.status != ApprovalRecordStatusEnum.APPROVED:
+        raise HTTPException(status_code=400, detail="发票尚未通过审批，无法开票")
+    
     invoice.issue_date = issue_request.issue_date
-    invoice.status = "ISSUED"
+    invoice.status = InvoiceStatus.ISSUED
     invoice.payment_status = "PENDING"
     
     # 如果没有设置到期日期，默认设置为开票日期后30天
@@ -1861,6 +2705,239 @@ def receive_payment(
         "paid_amount": float(new_paid),
         "payment_status": invoice.payment_status
     })
+
+
+@router.post("/invoices/{invoice_id}/approval/start", response_model=ResponseModel)
+def start_invoice_approval(
+    *,
+    db: Session = Depends(deps.get_db),
+    invoice_id: int,
+    approval_request: ApprovalStartRequest,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    启动发票审批流程
+    """
+    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+    if not invoice:
+        raise HTTPException(status_code=404, detail="发票不存在")
+    
+    if invoice.status != InvoiceStatus.APPLIED:
+        raise HTTPException(status_code=400, detail="只有已申请状态的发票才能启动审批流程")
+    
+    # 获取发票金额用于路由
+    routing_params = {
+        "amount": float(invoice.amount or 0)
+    }
+    
+    # 启动审批流程
+    workflow_service = ApprovalWorkflowService(db)
+    try:
+        record = workflow_service.start_approval(
+            entity_type=WorkflowTypeEnum.INVOICE,
+            entity_id=invoice_id,
+            initiator_id=current_user.id,
+            workflow_id=approval_request.workflow_id,
+            routing_params=routing_params,
+            comment=approval_request.comment
+        )
+        
+        # 更新发票状态
+        invoice.status = InvoiceStatus.IN_REVIEW
+        
+        db.commit()
+        
+        return ResponseModel(
+            code=200,
+            message="审批流程已启动",
+            data={"approval_record_id": record.id}
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/invoices/{invoice_id}/approval-status", response_model=ApprovalStatusResponse)
+def get_invoice_approval_status(
+    *,
+    db: Session = Depends(deps.get_db),
+    invoice_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取发票审批状态
+    """
+    workflow_service = ApprovalWorkflowService(db)
+    record = workflow_service.get_approval_record(
+        entity_type=WorkflowTypeEnum.INVOICE,
+        entity_id=invoice_id
+    )
+    
+    if not record:
+        return ApprovalStatusResponse(
+            record=None,
+            current_step_info=None,
+            can_approve=False,
+            can_reject=False,
+            can_delegate=False,
+            can_withdraw=False
+        )
+    
+    current_step_info = workflow_service.get_current_step(record.id)
+    
+    can_approve = False
+    can_reject = False
+    can_delegate = False
+    can_withdraw = False
+    
+    if record.status == ApprovalRecordStatusEnum.PENDING:
+        if current_step_info:
+            if current_step_info.get("approver_id") == current_user.id:
+                can_approve = True
+                can_reject = True
+                if current_step_info.get("can_delegate"):
+                    can_delegate = True
+        
+        if record.initiator_id == current_user.id:
+            can_withdraw = True
+    
+    record_dict = {
+        **{c.name: getattr(record, c.name) for c in record.__table__.columns},
+        "workflow_name": record.workflow.workflow_name if record.workflow else None,
+        "initiator_name": record.initiator.real_name if record.initiator else None,
+        "history": []
+    }
+    
+    history_list = workflow_service.get_approval_history(record.id)
+    for h in history_list:
+        history_dict = {
+            **{c.name: getattr(h, c.name) for c in h.__table__.columns},
+            "approver_name": h.approver.real_name if h.approver else None,
+            "delegate_to_name": h.delegate_to.real_name if h.delegate_to else None
+        }
+        record_dict["history"].append(ApprovalHistoryResponse(**history_dict))
+    
+    return ApprovalStatusResponse(
+        record=ApprovalRecordResponse(**record_dict),
+        current_step_info=current_step_info,
+        can_approve=can_approve,
+        can_reject=can_reject,
+        can_delegate=can_delegate,
+        can_withdraw=can_withdraw
+    )
+
+
+@router.post("/invoices/{invoice_id}/approval/action", response_model=ResponseModel)
+def invoice_approval_action(
+    *,
+    db: Session = Depends(deps.get_db),
+    invoice_id: int,
+    action_request: ApprovalActionRequest,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    发票审批操作（通过/驳回/委托/撤回）
+    """
+    workflow_service = ApprovalWorkflowService(db)
+    record = workflow_service.get_approval_record(
+        entity_type=WorkflowTypeEnum.INVOICE,
+        entity_id=invoice_id
+    )
+    
+    if not record:
+        raise HTTPException(status_code=404, detail="审批记录不存在")
+    
+    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+    if not invoice:
+        raise HTTPException(status_code=404, detail="发票不存在")
+    
+    try:
+        if action_request.action == ApprovalActionEnum.APPROVE:
+            record = workflow_service.approve_step(
+                record_id=record.id,
+                approver_id=current_user.id,
+                comment=action_request.comment
+            )
+            
+            if record.status == ApprovalRecordStatusEnum.APPROVED:
+                # 审批完成，允许开票
+                invoice.status = InvoiceStatus.APPROVED
+            message = "审批通过"
+            
+        elif action_request.action == ApprovalActionEnum.REJECT:
+            record = workflow_service.reject_step(
+                record_id=record.id,
+                approver_id=current_user.id,
+                comment=action_request.comment or "审批驳回"
+            )
+            invoice.status = InvoiceStatus.REJECTED
+            message = "审批已驳回"
+            
+        elif action_request.action == ApprovalActionEnum.DELEGATE:
+            if not action_request.delegate_to_id:
+                raise HTTPException(status_code=400, detail="委托操作需要指定委托给的用户ID")
+            
+            record = workflow_service.delegate_step(
+                record_id=record.id,
+                approver_id=current_user.id,
+                delegate_to_id=action_request.delegate_to_id,
+                comment=action_request.comment
+            )
+            message = "审批已委托"
+            
+        elif action_request.action == ApprovalActionEnum.WITHDRAW:
+            record = workflow_service.withdraw_approval(
+                record_id=record.id,
+                initiator_id=current_user.id,
+                comment=action_request.comment
+            )
+            invoice.status = InvoiceStatus.APPLIED
+            message = "审批已撤回"
+            
+        else:
+            raise HTTPException(status_code=400, detail=f"不支持的审批操作: {action_request.action}")
+        
+        db.commit()
+        
+        return ResponseModel(
+            code=200,
+            message=message,
+            data={"approval_record_id": record.id, "status": record.status}
+        )
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/invoices/{invoice_id}/approval-history", response_model=List[ApprovalHistoryResponse])
+def get_invoice_approval_history(
+    *,
+    db: Session = Depends(deps.get_db),
+    invoice_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取发票审批历史
+    """
+    workflow_service = ApprovalWorkflowService(db)
+    record = workflow_service.get_approval_record(
+        entity_type=WorkflowTypeEnum.INVOICE,
+        entity_id=invoice_id
+    )
+    
+    if not record:
+        return []
+    
+    history_list = workflow_service.get_approval_history(record.id)
+    result = []
+    for h in history_list:
+        history_dict = {
+            **{c.name: getattr(h, c.name) for c in h.__table__.columns},
+            "approver_name": h.approver.real_name if h.approver else None,
+            "delegate_to_name": h.delegate_to.real_name if h.delegate_to else None
+        }
+        result.append(ApprovalHistoryResponse(**history_dict))
+    
+    return result
 
 
 # ==================== 回款争议 ====================
@@ -2687,6 +3764,149 @@ def create_quote_item(
     return QuoteItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
 
 
+@router.put("/quotes/{quote_id}/items/{item_id}", response_model=QuoteItemResponse)
+def update_quote_item(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    item_id: int,
+    item_in: QuoteItemUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    更新报价明细
+    """
+    quote = db.query(Quote).filter(Quote.id == quote_id).first()
+    if not quote:
+        raise HTTPException(status_code=404, detail="报价不存在")
+    
+    item = db.query(QuoteItem).filter(
+        QuoteItem.id == item_id,
+        QuoteItem.quote_version_id.in_([v.id for v in quote.versions])
+    ).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="报价明细不存在")
+    
+    # 更新字段
+    update_data = item_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        if hasattr(item, field):
+            setattr(item, field, value)
+    
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    
+    return QuoteItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
+
+
+@router.delete("/quotes/{quote_id}/items/{item_id}", status_code=200)
+def delete_quote_item(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    item_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    删除报价明细
+    """
+    quote = db.query(Quote).filter(Quote.id == quote_id).first()
+    if not quote:
+        raise HTTPException(status_code=404, detail="报价不存在")
+    
+    item = db.query(QuoteItem).filter(
+        QuoteItem.id == item_id,
+        QuoteItem.quote_version_id.in_([v.id for v in quote.versions])
+    ).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="报价明细不存在")
+    
+    db.delete(item)
+    db.commit()
+    
+    return ResponseModel(code=200, message="删除成功")
+
+
+@router.put("/quotes/{quote_id}/items/batch", response_model=ResponseModel)
+def batch_update_quote_items(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    batch_data: QuoteItemBatchUpdate,
+    version_id: Optional[int] = Query(None, description="版本ID，不指定则使用当前版本"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    批量更新报价明细
+    支持更新、新增、删除操作
+    """
+    quote = db.query(Quote).filter(Quote.id == quote_id).first()
+    if not quote:
+        raise HTTPException(status_code=404, detail="报价不存在")
+    
+    target_version_id = version_id or quote.current_version_id
+    if not target_version_id:
+        raise HTTPException(status_code=400, detail="报价没有指定版本")
+    
+    version = db.query(QuoteVersion).filter(QuoteVersion.id == target_version_id).first()
+    if not version:
+        raise HTTPException(status_code=404, detail="报价版本不存在")
+    
+    updated_count = 0
+    created_count = 0
+    
+    # 处理批量更新
+    for item_data in batch_data.items:
+        item_dict = item_data.model_dump(exclude_unset=True)
+        item_id = item_dict.pop('id', None)
+        
+        if item_id:
+            # 更新现有明细
+            item = db.query(QuoteItem).filter(
+                QuoteItem.id == item_id,
+                QuoteItem.quote_version_id == target_version_id
+            ).first()
+            
+            if item:
+                for field, value in item_dict.items():
+                    if hasattr(item, field) and field != 'id':
+                        setattr(item, field, value)
+                db.add(item)
+                updated_count += 1
+        else:
+            # 创建新明细
+            item = QuoteItem(quote_version_id=target_version_id, **item_dict)
+            db.add(item)
+            created_count += 1
+    
+    db.commit()
+    
+    # 重新计算成本和毛利率
+    items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == target_version_id).all()
+    total_price = sum([float(item.qty or 0) * float(item.unit_price or 0) for item in items])
+    total_cost = sum([float(item.cost or 0) * float(item.qty or 0) for item in items])
+    gross_margin = ((total_price - total_cost) / total_price * 100) if total_price > 0 else 0
+    
+    version.total_price = total_price
+    version.cost_total = total_cost
+    version.gross_margin = gross_margin
+    db.add(version)
+    db.commit()
+    
+    return ResponseModel(
+        code=200,
+        message=f"批量更新完成，新增 {created_count} 条，更新 {updated_count} 条",
+        data={
+            "created": created_count,
+            "updated": updated_count,
+            "total_price": total_price,
+            "total_cost": total_cost,
+            "gross_margin": gross_margin
+        }
+    )
+
+
 @router.get("/quotes/{quote_id}/cost-breakdown", response_model=ResponseModel)
 def get_quote_cost_breakdown(
     *,
@@ -2878,9 +4098,29 @@ def update_contract(
         raise HTTPException(status_code=404, detail="合同不存在")
 
     update_data = contract_in.model_dump(exclude_unset=True)
+    
+    # 记录需要同步的字段
+    need_sync = any(field in update_data for field in ["contract_amount", "signed_date", "delivery_deadline"])
+    
     for field, value in update_data.items():
         setattr(contract, field, value)
 
+    # Sprint 2.4: 合同变更时自动同步到项目
+    if need_sync and contract.project_id:
+        try:
+            from app.services.data_sync_service import DataSyncService
+            sync_service = DataSyncService(db)
+            sync_result = sync_service.sync_contract_to_project(contract_id)
+            if sync_result.get("success"):
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.info(f"合同变更已同步到项目：{sync_result.get('message')}")
+        except Exception as e:
+            # 同步失败不影响合同更新，记录日志
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"合同变更同步到项目失败：{str(e)}", exc_info=True)
+    
     db.commit()
     db.refresh(contract)
 
@@ -5654,6 +6894,668 @@ def compare_quote_costs(
     )
 
 
+# ==================== 采购物料成本清单管理 ====================
+
+
+@router.get("/purchase-material-costs", response_model=PaginatedResponse[PurchaseMaterialCostResponse])
+def get_purchase_material_costs(
+    *,
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    material_name: Optional[str] = Query(None, description="物料名称搜索"),
+    material_type: Optional[str] = Query(None, description="物料类型筛选"),
+    is_standard_part: Optional[bool] = Query(None, description="是否标准件"),
+    is_active: Optional[bool] = Query(None, description="是否启用"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取采购物料成本清单列表（采购部维护的标准件成本信息）
+    """
+    query = db.query(PurchaseMaterialCost)
+    
+    if material_name:
+        query = query.filter(PurchaseMaterialCost.material_name.like(f"%{material_name}%"))
+    if material_type:
+        query = query.filter(PurchaseMaterialCost.material_type == material_type)
+    if is_standard_part is not None:
+        query = query.filter(PurchaseMaterialCost.is_standard_part == is_standard_part)
+    if is_active is not None:
+        query = query.filter(PurchaseMaterialCost.is_active == is_active)
+    
+    total = query.count()
+    offset = (page - 1) * page_size
+    costs = query.order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.created_at)).offset(offset).limit(page_size).all()
+    
+    items = []
+    for cost in costs:
+        cost_dict = {
+            **{c.name: getattr(cost, c.name) for c in cost.__table__.columns},
+            "submitter_name": cost.submitter.real_name if cost.submitter else None
+        }
+        items.append(PurchaseMaterialCostResponse(**cost_dict))
+    
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
+    )
+
+
+@router.get("/purchase-material-costs/{cost_id}", response_model=PurchaseMaterialCostResponse)
+def get_purchase_material_cost(
+    *,
+    db: Session = Depends(deps.get_db),
+    cost_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取采购物料成本详情
+    """
+    cost = db.query(PurchaseMaterialCost).filter(PurchaseMaterialCost.id == cost_id).first()
+    if not cost:
+        raise HTTPException(status_code=404, detail="采购物料成本不存在")
+    
+    cost_dict = {
+        **{c.name: getattr(cost, c.name) for c in cost.__table__.columns},
+        "submitter_name": cost.submitter.real_name if cost.submitter else None
+    }
+    return PurchaseMaterialCostResponse(**cost_dict)
+
+
+@router.post("/purchase-material-costs", response_model=PurchaseMaterialCostResponse, status_code=201)
+def create_purchase_material_cost(
+    *,
+    db: Session = Depends(deps.get_db),
+    cost_in: PurchaseMaterialCostCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    创建采购物料成本（采购部提交）
+    """
+    cost = PurchaseMaterialCost(
+        **cost_in.model_dump(),
+        submitted_by=current_user.id
+    )
+    db.add(cost)
+    db.commit()
+    db.refresh(cost)
+    
+    cost_dict = {
+        **{c.name: getattr(cost, c.name) for c in cost.__table__.columns},
+        "submitter_name": cost.submitter.real_name if cost.submitter else None
+    }
+    return PurchaseMaterialCostResponse(**cost_dict)
+
+
+@router.put("/purchase-material-costs/{cost_id}", response_model=PurchaseMaterialCostResponse)
+def update_purchase_material_cost(
+    *,
+    db: Session = Depends(deps.get_db),
+    cost_id: int,
+    cost_in: PurchaseMaterialCostUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    更新采购物料成本
+    """
+    cost = db.query(PurchaseMaterialCost).filter(PurchaseMaterialCost.id == cost_id).first()
+    if not cost:
+        raise HTTPException(status_code=404, detail="采购物料成本不存在")
+    
+    update_data = cost_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        if hasattr(cost, field):
+            setattr(cost, field, value)
+    
+    db.add(cost)
+    db.commit()
+    db.refresh(cost)
+    
+    cost_dict = {
+        **{c.name: getattr(cost, c.name) for c in cost.__table__.columns},
+        "submitter_name": cost.submitter.real_name if cost.submitter else None
+    }
+    return PurchaseMaterialCostResponse(**cost_dict)
+
+
+@router.delete("/purchase-material-costs/{cost_id}", status_code=200)
+def delete_purchase_material_cost(
+    *,
+    db: Session = Depends(deps.get_db),
+    cost_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    删除采购物料成本
+    """
+    cost = db.query(PurchaseMaterialCost).filter(PurchaseMaterialCost.id == cost_id).first()
+    if not cost:
+        raise HTTPException(status_code=404, detail="采购物料成本不存在")
+    
+    db.delete(cost)
+    db.commit()
+    
+    return ResponseModel(code=200, message="删除成功")
+
+
+@router.post("/purchase-material-costs/match", response_model=MaterialCostMatchResponse)
+def match_material_cost(
+    *,
+    db: Session = Depends(deps.get_db),
+    match_request: MaterialCostMatchRequest,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    自动匹配物料成本（根据物料名称、规格等匹配历史采购价格）
+    """
+    # 查询启用的标准件成本清单
+    query = db.query(PurchaseMaterialCost).filter(
+        PurchaseMaterialCost.is_active == True,
+        PurchaseMaterialCost.is_standard_part == True
+    )
+    
+    # 匹配逻辑：优先精确匹配，其次模糊匹配
+    matched_cost = None
+    suggestions = []
+    match_score = 0
+    
+    # 1. 精确匹配物料名称
+    exact_match = query.filter(
+        PurchaseMaterialCost.material_name == match_request.item_name
+    ).order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.purchase_date)).first()
+    
+    if exact_match:
+        matched_cost = exact_match
+        match_score = 100
+    else:
+        # 2. 模糊匹配物料名称
+        name_matches = query.filter(
+            PurchaseMaterialCost.material_name.like(f"%{match_request.item_name}%")
+        ).order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.purchase_date)).limit(5).all()
+        
+        if name_matches:
+            matched_cost = name_matches[0]
+            match_score = 80
+            suggestions = name_matches[1:5] if len(name_matches) > 1 else []
+        else:
+            # 3. 关键词匹配
+            if match_request.item_name:
+                keywords = match_request.item_name.split()
+                for keyword in keywords:
+                    if len(keyword) > 2:  # 只匹配长度大于2的关键词
+                        keyword_matches = query.filter(
+                            or_(
+                                PurchaseMaterialCost.material_name.like(f"%{keyword}%"),
+                                PurchaseMaterialCost.match_keywords.like(f"%{keyword}%")
+                            )
+                        ).order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.usage_count)).limit(5).all()
+                        
+                        if keyword_matches:
+                            matched_cost = keyword_matches[0]
+                            match_score = 60
+                            suggestions = keyword_matches[1:5] if len(keyword_matches) > 1 else []
+                            break
+    
+    # 如果匹配成功，更新使用次数
+    if matched_cost:
+        matched_cost.usage_count = (matched_cost.usage_count or 0) + 1
+        matched_cost.last_used_at = datetime.now()
+        db.add(matched_cost)
+        db.commit()
+        db.refresh(matched_cost)
+    
+    # 构建响应
+    matched_cost_dict = None
+    if matched_cost:
+        matched_cost_dict = {
+            **{c.name: getattr(matched_cost, c.name) for c in matched_cost.__table__.columns},
+            "submitter_name": matched_cost.submitter.real_name if matched_cost.submitter else None
+        }
+        matched_cost_dict = PurchaseMaterialCostResponse(**matched_cost_dict)
+    
+    suggestions_list = []
+    for sug in suggestions:
+        sug_dict = {
+            **{c.name: getattr(sug, c.name) for c in sug.__table__.columns},
+            "submitter_name": sug.submitter.real_name if sug.submitter else None
+        }
+        suggestions_list.append(PurchaseMaterialCostResponse(**sug_dict))
+    
+    return MaterialCostMatchResponse(
+        matched=matched_cost is not None,
+        match_score=match_score if matched_cost else None,
+        matched_cost=matched_cost_dict,
+        suggestions=suggestions_list
+    )
+
+
+@router.post("/quotes/{quote_id}/items/auto-match-cost-suggestions", response_model=CostMatchSuggestionsResponse)
+def get_cost_match_suggestions(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    version_id: Optional[int] = Query(None, description="版本ID，不指定则使用当前版本"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取成本匹配建议（AI生成建议，不直接更新）
+    根据物料名称和规格，从采购物料成本清单中生成匹配建议，包含异常检查
+    """
+    quote = db.query(Quote).filter(Quote.id == quote_id).first()
+    if not quote:
+        raise HTTPException(status_code=404, detail="报价不存在")
+    
+    target_version_id = version_id or quote.current_version_id
+    if not target_version_id:
+        raise HTTPException(status_code=400, detail="报价没有指定版本")
+    
+    version = db.query(QuoteVersion).filter(QuoteVersion.id == target_version_id).first()
+    if not version:
+        raise HTTPException(status_code=404, detail="报价版本不存在")
+    
+    items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == target_version_id).all()
+    
+    suggestions = []
+    matched_count = 0
+    unmatched_count = 0
+    warnings = []
+    
+    # 获取成本清单查询
+    cost_query = db.query(PurchaseMaterialCost).filter(
+        PurchaseMaterialCost.is_active == True,
+        PurchaseMaterialCost.is_standard_part == True
+    )
+    
+    # 计算当前总成本（用于异常检查）
+    current_total_cost = sum([float(item.cost or 0) * float(item.qty or 0) for item in items])
+    current_total_price = float(version.total_price or 0)
+    
+    for item in items:
+        current_cost = float(item.cost or 0)
+        item_warnings = []
+        matched_cost = None
+        match_score = None
+        reason = None
+        
+        # 如果已有成本，检查异常
+        if current_cost > 0:
+            # 检查成本是否过高或过低（相对于历史采购价）
+            if item.item_name:
+                historical_costs = cost_query.filter(
+                    PurchaseMaterialCost.material_name.like(f"%{item.item_name}%")
+                ).all()
+                
+                if historical_costs:
+                    avg_cost = sum([float(c.unit_cost or 0) for c in historical_costs]) / len(historical_costs)
+                    max_cost = max([float(c.unit_cost or 0) for c in historical_costs])
+                    min_cost = min([float(c.unit_cost or 0) for c in historical_costs])
+                    
+                    if current_cost > max_cost * 1.5:
+                        item_warnings.append(f"成本异常偏高：当前{current_cost}，历史最高{max_cost}，超出50%")
+                    elif current_cost < min_cost * 0.5:
+                        item_warnings.append(f"成本异常偏低：当前{current_cost}，历史最低{min_cost}，低于50%")
+                    elif abs(current_cost - avg_cost) / avg_cost > 0.3:
+                        item_warnings.append(f"成本偏差较大：当前{current_cost}，历史平均{avg_cost:.2f}，偏差超过30%")
+        else:
+            # 尝试匹配成本
+            if item.item_name:
+                # 1. 精确匹配
+                exact_match = cost_query.filter(
+                    PurchaseMaterialCost.material_name == item.item_name
+                ).order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.purchase_date)).first()
+                
+                if exact_match:
+                    matched_cost = exact_match
+                    match_score = 100
+                    reason = "精确匹配物料名称"
+                else:
+                    # 2. 模糊匹配
+                    fuzzy_matches = cost_query.filter(
+                        PurchaseMaterialCost.material_name.like(f"%{item.item_name}%")
+                    ).order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.purchase_date)).limit(1).all()
+                    
+                    if fuzzy_matches:
+                        matched_cost = fuzzy_matches[0]
+                        match_score = 80
+                        reason = "模糊匹配物料名称"
+                    else:
+                        # 3. 关键词匹配
+                        keywords = item.item_name.split()
+                        for keyword in keywords:
+                            if len(keyword) > 2:
+                                keyword_matches = cost_query.filter(
+                                    or_(
+                                        PurchaseMaterialCost.material_name.like(f"%{keyword}%"),
+                                        PurchaseMaterialCost.match_keywords.like(f"%{keyword}%")
+                                    )
+                                ).order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.usage_count)).limit(1).all()
+                                
+                                if keyword_matches:
+                                    matched_cost = keyword_matches[0]
+                                    match_score = 60
+                                    reason = f"关键词匹配：{keyword}"
+                                    break
+        
+        # 构建建议
+        suggestion = CostMatchSuggestion(
+            item_id=item.id,
+            item_name=item.item_name or "",
+            current_cost=Decimal(str(current_cost)) if current_cost > 0 else None,
+            suggested_cost=Decimal(str(matched_cost.unit_cost)) if matched_cost else None,
+            match_score=match_score,
+            suggested_specification=matched_cost.specification if matched_cost else None,
+            suggested_unit=matched_cost.unit if matched_cost else None,
+            suggested_lead_time_days=matched_cost.lead_time_days if matched_cost else None,
+            suggested_cost_category=matched_cost.material_type if matched_cost else None,
+            reason=reason,
+            warnings=item_warnings
+        )
+        
+        # 添加匹配到的成本记录信息
+        if matched_cost:
+            matched_cost_dict = {
+                **{c.name: getattr(matched_cost, c.name) for c in matched_cost.__table__.columns},
+                "submitter_name": matched_cost.submitter.real_name if matched_cost.submitter else None
+            }
+            suggestion.matched_cost_record = PurchaseMaterialCostResponse(**matched_cost_dict)
+            matched_count += 1
+        else:
+            unmatched_count += 1
+            if not item.cost or item.cost == 0:
+                suggestion.warnings.append("未找到匹配的成本记录，请手动填写")
+        
+        suggestions.append(suggestion)
+    
+    # 整体异常检查
+    if current_total_price > 0:
+        suggested_total_cost = sum([
+            float(s.suggested_cost or s.current_cost or 0) * 
+            float(next((item.qty for item in items if item.id == s.item_id), 0) or 0)
+            for s in suggestions
+        ])
+        
+        if suggested_total_cost > 0:
+            suggested_margin = ((current_total_price - suggested_total_cost) / current_total_price * 100)
+            current_margin = ((current_total_price - current_total_cost) / current_total_price * 100) if current_total_cost > 0 else None
+            
+            if suggested_margin < 10:
+                warnings.append(f"建议成本计算后毛利率仅{suggested_margin:.2f}%，低于10%，存在风险")
+            elif current_margin and abs(suggested_margin - current_margin) > 10:
+                warnings.append(f"建议成本与当前成本差异较大：当前毛利率{current_margin:.2f}%，建议毛利率{suggested_margin:.2f}%")
+    
+    summary = {
+        "current_total_cost": current_total_cost,
+        "suggested_total_cost": sum([
+            float(s.suggested_cost or s.current_cost or 0) * 
+            float(next((item.qty for item in items if item.id == s.item_id), 0) or 0)
+            for s in suggestions
+        ]),
+        "current_total_price": current_total_price,
+        "current_margin": ((current_total_price - current_total_cost) / current_total_price * 100) if current_total_price > 0 and current_total_cost > 0 else None,
+        "suggested_margin": None
+    }
+    
+    if summary["suggested_total_cost"] > 0 and current_total_price > 0:
+        summary["suggested_margin"] = ((current_total_price - summary["suggested_total_cost"]) / current_total_price * 100)
+    
+    return CostMatchSuggestionsResponse(
+        suggestions=suggestions,
+        total_items=len(items),
+        matched_count=matched_count,
+        unmatched_count=unmatched_count,
+        warnings=warnings if warnings else None,
+        summary=summary
+    )
+
+
+@router.post("/quotes/{quote_id}/items/apply-cost-suggestions", response_model=ResponseModel)
+def apply_cost_suggestions(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    version_id: Optional[int] = Query(None, description="版本ID，不指定则使用当前版本"),
+    request: ApplyCostSuggestionsRequest,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    应用成本匹配建议（人工确认后应用）
+    将用户确认（可能修改过）的建议应用到报价明细中
+    """
+    quote = db.query(Quote).filter(Quote.id == quote_id).first()
+    if not quote:
+        raise HTTPException(status_code=404, detail="报价不存在")
+    
+    target_version_id = version_id or quote.current_version_id
+    if not target_version_id:
+        raise HTTPException(status_code=400, detail="报价没有指定版本")
+    
+    items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == target_version_id).all()
+    item_dict = {item.id: item for item in items}
+    
+    applied_count = 0
+    updated_cost_records = set()  # 记录已更新的成本记录，避免重复更新使用次数
+    
+    for suggestion_data in request.suggestions:
+        item_id = suggestion_data.get("item_id")
+        if not item_id:
+            continue
+        
+        item = item_dict.get(item_id)
+        if not item:
+            continue
+        
+        # 应用建议（用户可能已修改）
+        if "cost" in suggestion_data:
+            item.cost = Decimal(str(suggestion_data["cost"]))
+            item.cost_source = "HISTORY"
+        
+        if "specification" in suggestion_data:
+            item.specification = suggestion_data["specification"]
+        
+        if "unit" in suggestion_data:
+            item.unit = suggestion_data["unit"]
+        
+        if "lead_time_days" in suggestion_data:
+            item.lead_time_days = suggestion_data["lead_time_days"]
+        
+        if "cost_category" in suggestion_data:
+            item.cost_category = suggestion_data["cost_category"]
+        
+        db.add(item)
+        applied_count += 1
+        
+        # 如果应用了成本建议，更新对应的成本记录使用次数
+        # 注意：这里需要根据item_name匹配，因为suggestion_data中可能没有cost_record_id
+        if "cost" in suggestion_data and item.item_name:
+            matched_cost = db.query(PurchaseMaterialCost).filter(
+                PurchaseMaterialCost.is_active == True,
+                PurchaseMaterialCost.material_name.like(f"%{item.item_name}%")
+            ).order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.purchase_date)).first()
+            
+            if matched_cost and matched_cost.id not in updated_cost_records:
+                matched_cost.usage_count = (matched_cost.usage_count or 0) + 1
+                matched_cost.last_used_at = datetime.now()
+                db.add(matched_cost)
+                updated_cost_records.add(matched_cost.id)
+    
+    db.commit()
+    
+    # 重新计算总成本
+    items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == target_version_id).all()
+    total_cost = sum([float(item.cost or 0) * float(item.qty or 0) for item in items])
+    version = db.query(QuoteVersion).filter(QuoteVersion.id == target_version_id).first()
+    if version:
+        version.cost_total = total_cost
+        total_price = float(version.total_price or 0)
+        if total_price > 0:
+            version.gross_margin = ((total_price - total_cost) / total_price * 100)
+        db.add(version)
+        db.commit()
+    
+    return ResponseModel(
+        code=200,
+        message=f"已应用 {applied_count} 项成本建议",
+        data={
+            "applied_count": applied_count,
+            "total_cost": total_cost
+        }
+    )
+
+
+# ==================== 物料成本更新提醒 ====================
+
+
+@router.get("/purchase-material-costs/reminder", response_model=MaterialCostUpdateReminderResponse)
+def get_cost_update_reminder(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取物料成本更新提醒配置和状态
+    """
+    reminder = db.query(MaterialCostUpdateReminder).filter(
+        MaterialCostUpdateReminder.is_enabled == True
+    ).order_by(desc(MaterialCostUpdateReminder.created_at)).first()
+    
+    if not reminder:
+        # 创建默认提醒配置
+        from datetime import date, timedelta
+        reminder = MaterialCostUpdateReminder(
+            reminder_type="PERIODIC",
+            reminder_interval_days=30,
+            next_reminder_date=date.today() + timedelta(days=30),
+            is_enabled=True,
+            include_standard=True,
+            include_non_standard=True,
+            notify_roles=["procurement", "procurement_manager", "采购工程师", "采购专员", "采购部经理"],
+            reminder_count=0
+        )
+        db.add(reminder)
+        db.commit()
+        db.refresh(reminder)
+    
+    # 计算距离下次提醒的天数
+    from datetime import date
+    days_until_next = None
+    is_due = False
+    
+    if reminder.next_reminder_date:
+        today = date.today()
+        delta = (reminder.next_reminder_date - today).days
+        days_until_next = delta
+        is_due = delta <= 0
+    
+    reminder_dict = {
+        **{c.name: getattr(reminder, c.name) for c in reminder.__table__.columns},
+        "days_until_next": days_until_next,
+        "is_due": is_due
+    }
+    
+    return MaterialCostUpdateReminderResponse(**reminder_dict)
+
+
+@router.put("/purchase-material-costs/reminder", response_model=MaterialCostUpdateReminderResponse)
+def update_cost_update_reminder(
+    *,
+    db: Session = Depends(deps.get_db),
+    reminder_in: MaterialCostUpdateReminderUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    更新物料成本更新提醒配置
+    """
+    reminder = db.query(MaterialCostUpdateReminder).filter(
+        MaterialCostUpdateReminder.is_enabled == True
+    ).order_by(desc(MaterialCostUpdateReminder.created_at)).first()
+    
+    if not reminder:
+        from datetime import date, timedelta
+        reminder = MaterialCostUpdateReminder(
+            reminder_type="PERIODIC",
+            reminder_interval_days=30,
+            next_reminder_date=date.today() + timedelta(days=30),
+            is_enabled=True,
+            include_standard=True,
+            include_non_standard=True,
+            notify_roles=["procurement", "procurement_manager", "采购工程师", "采购专员", "采购部经理"],
+            reminder_count=0
+        )
+        db.add(reminder)
+    
+    update_data = reminder_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        if hasattr(reminder, field):
+            setattr(reminder, field, value)
+    
+    reminder.last_updated_by = current_user.id
+    reminder.last_updated_at = datetime.now()
+    
+    db.add(reminder)
+    db.commit()
+    db.refresh(reminder)
+    
+    # 计算距离下次提醒的天数
+    from datetime import date
+    days_until_next = None
+    is_due = False
+    
+    if reminder.next_reminder_date:
+        today = date.today()
+        delta = (reminder.next_reminder_date - today).days
+        days_until_next = delta
+        is_due = delta <= 0
+    
+    reminder_dict = {
+        **{c.name: getattr(reminder, c.name) for c in reminder.__table__.columns},
+        "days_until_next": days_until_next,
+        "is_due": is_due
+    }
+    
+    return MaterialCostUpdateReminderResponse(**reminder_dict)
+
+
+@router.post("/purchase-material-costs/reminder/acknowledge", response_model=ResponseModel)
+def acknowledge_cost_update_reminder(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    确认物料成本更新提醒（标记为已处理，更新下次提醒日期）
+    """
+    reminder = db.query(MaterialCostUpdateReminder).filter(
+        MaterialCostUpdateReminder.is_enabled == True
+    ).order_by(desc(MaterialCostUpdateReminder.created_at)).first()
+    
+    if not reminder:
+        raise HTTPException(status_code=404, detail="提醒配置不存在")
+    
+    from datetime import date, timedelta
+    
+    # 更新提醒日期
+    reminder.last_reminder_date = date.today()
+    reminder.next_reminder_date = date.today() + timedelta(days=reminder.reminder_interval_days)
+    reminder.reminder_count = (reminder.reminder_count or 0) + 1
+    reminder.last_updated_by = current_user.id
+    reminder.last_updated_at = datetime.now()
+    
+    db.add(reminder)
+    db.commit()
+    
+    return ResponseModel(
+        code=200,
+        message="提醒已确认",
+        data={
+            "next_reminder_date": reminder.next_reminder_date.isoformat(),
+            "reminder_count": reminder.reminder_count
+        }
+    )
+
+
 # ==================== 技术评估 ====================
 
 
@@ -6962,3 +8864,605 @@ def get_ai_clarification(
         created_at=clarification.created_at,
         updated_at=clarification.updated_at
     )
+
+# ==================== 数据导出 ====================
+
+
+# ==================== 数据导出 ====================
+
+
+@router.get("/leads/export")
+def export_leads(
+    *,
+    db: Session = Depends(deps.get_db),
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    owner_id: Optional[int] = Query(None, description="负责人ID筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 4.2: 导出线索列表（Excel）
+    """
+    from app.services.excel_export_service import ExcelExportService, create_excel_response
+    
+    query = db.query(Lead)
+    if keyword:
+        query = query.filter(or_(Lead.lead_code.contains(keyword), Lead.customer_name.contains(keyword), Lead.contact_name.contains(keyword)))
+    if status:
+        query = query.filter(Lead.status == status)
+    if owner_id:
+        query = query.filter(Lead.owner_id == owner_id)
+    
+    leads = query.order_by(Lead.created_at.desc()).all()
+    export_service = ExcelExportService()
+    columns = [
+        {"key": "lead_code", "label": "线索编码", "width": 15},
+        {"key": "source", "label": "来源", "width": 15},
+        {"key": "customer_name", "label": "客户名称", "width": 25},
+        {"key": "industry", "label": "行业", "width": 15},
+        {"key": "contact_name", "label": "联系人", "width": 15},
+        {"key": "contact_phone", "label": "联系电话", "width": 15},
+        {"key": "status", "label": "状态", "width": 12},
+        {"key": "owner_name", "label": "负责人", "width": 12},
+        {"key": "next_action_at", "label": "下次行动时间", "width": 18, "format": export_service.format_date},
+        {"key": "created_at", "label": "创建时间", "width": 18, "format": export_service.format_date},
+    ]
+    
+    data = [{
+        "lead_code": lead.lead_code,
+        "source": lead.source or '',
+        "customer_name": lead.customer_name or '',
+        "industry": lead.industry or '',
+        "contact_name": lead.contact_name or '',
+        "contact_phone": lead.contact_phone or '',
+        "status": lead.status,
+        "owner_name": lead.owner.real_name if lead.owner else '',
+        "next_action_at": lead.next_action_at,
+        "created_at": lead.created_at,
+    } for lead in leads]
+    
+    excel_data = export_service.export_to_excel(data=data, columns=columns, sheet_name="线索列表", title="线索列表")
+    filename = f"线索列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    return create_excel_response(excel_data, filename)
+
+
+@router.get("/opportunities/export")
+def export_opportunities(
+    *,
+    db: Session = Depends(deps.get_db),
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
+    stage: Optional[str] = Query(None, description="阶段筛选"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    owner_id: Optional[int] = Query(None, description="负责人ID筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 4.2: 导出商机列表（Excel）
+    """
+    from app.services.excel_export_service import ExcelExportService, create_excel_response
+    
+    query = db.query(Opportunity)
+    if keyword:
+        query = query.filter(or_(Opportunity.opp_code.contains(keyword), Opportunity.opp_name.contains(keyword), Opportunity.customer.has(Customer.customer_name.contains(keyword))))
+    if stage:
+        query = query.filter(Opportunity.stage == stage)
+    if status:
+        query = query.filter(Opportunity.status == status)
+    if owner_id:
+        query = query.filter(Opportunity.owner_id == owner_id)
+    
+    opportunities = query.order_by(Opportunity.created_at.desc()).all()
+    export_service = ExcelExportService()
+    columns = [
+        {"key": "opp_code", "label": "商机编码", "width": 15},
+        {"key": "opp_name", "label": "商机名称", "width": 30},
+        {"key": "customer_name", "label": "客户名称", "width": 25},
+        {"key": "stage", "label": "阶段", "width": 15},
+        {"key": "est_amount", "label": "预估金额", "width": 15, "format": export_service.format_currency},
+        {"key": "est_margin", "label": "预估毛利率", "width": 12, "format": export_service.format_percentage},
+        {"key": "score", "label": "评分", "width": 8},
+        {"key": "risk_level", "label": "风险等级", "width": 10},
+        {"key": "owner_name", "label": "负责人", "width": 12},
+        {"key": "gate_status", "label": "阶段门状态", "width": 15},
+        {"key": "created_at", "label": "创建时间", "width": 18, "format": export_service.format_date},
+    ]
+    
+    data = [{
+        "opp_code": opp.opp_code,
+        "opp_name": opp.opp_name,
+        "customer_name": opp.customer.customer_name if opp.customer else '',
+        "stage": opp.stage,
+        "est_amount": float(opp.est_amount) if opp.est_amount else 0,
+        "est_margin": float(opp.est_margin) if opp.est_margin else 0,
+        "score": opp.score or 0,
+        "risk_level": opp.risk_level or '',
+        "owner_name": opp.owner.real_name if opp.owner else '',
+        "gate_status": opp.gate_status,
+        "created_at": opp.created_at,
+    } for opp in opportunities]
+    
+    excel_data = export_service.export_to_excel(data=data, columns=columns, sheet_name="商机列表", title="商机列表")
+    filename = f"商机列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    return create_excel_response(excel_data, filename)
+
+
+@router.get("/quotes/export")
+def export_quotes(
+    *,
+    db: Session = Depends(deps.get_db),
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    customer_id: Optional[int] = Query(None, description="客户ID筛选"),
+    owner_id: Optional[int] = Query(None, description="负责人ID筛选"),
+    include_items: bool = Query(False, description="是否包含明细"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 4.3: 导出报价列表（Excel）
+    支持导出报价主表和明细（多 Sheet）
+    """
+    from app.services.excel_export_service import ExcelExportService, create_excel_response
+    
+    query = db.query(Quote)
+    if keyword:
+        query = query.filter(or_(Quote.quote_code.contains(keyword), Quote.opportunity.has(Opportunity.opp_name.contains(keyword))))
+    if status:
+        query = query.filter(Quote.status == status)
+    if customer_id:
+        query = query.filter(Quote.customer_id == customer_id)
+    if owner_id:
+        query = query.filter(Quote.owner_id == owner_id)
+    
+    quotes = query.order_by(Quote.created_at.desc()).all()
+    export_service = ExcelExportService()
+    
+    if include_items:
+        sheets = []
+        quote_data = []
+        for quote in quotes:
+            version = db.query(QuoteVersion).filter(QuoteVersion.id == quote.current_version_id).first()
+            quote_data.append({
+                "quote_code": quote.quote_code,
+                "opp_code": quote.opportunity.opp_code if quote.opportunity else '',
+                "customer_name": quote.customer.customer_name if quote.customer else '',
+                "status": quote.status,
+                "total_price": float(version.total_price) if version and version.total_price else 0,
+                "total_cost": float(version.total_cost) if version and version.total_cost else 0,
+                "gross_margin": float(version.gross_margin) if version and version.gross_margin else 0,
+                "valid_until": version.valid_until if version and version.valid_until else None,
+                "owner_name": quote.owner.real_name if quote.owner else '',
+                "created_at": quote.created_at,
+            })
+        sheets.append({
+            "name": "报价列表",
+            "data": quote_data,
+            "columns": [
+                {"key": "quote_code", "label": "报价编码", "width": 15},
+                {"key": "opp_code", "label": "商机编码", "width": 15},
+                {"key": "customer_name", "label": "客户名称", "width": 25},
+                {"key": "status", "label": "状态", "width": 12},
+                {"key": "total_price", "label": "报价金额", "width": 15, "format": export_service.format_currency},
+                {"key": "total_cost", "label": "成本金额", "width": 15, "format": export_service.format_currency},
+                {"key": "gross_margin", "label": "毛利率", "width": 12, "format": export_service.format_percentage},
+                {"key": "valid_until", "label": "有效期至", "width": 12, "format": export_service.format_date},
+                {"key": "owner_name", "label": "负责人", "width": 12},
+                {"key": "created_at", "label": "创建时间", "width": 18, "format": export_service.format_date},
+            ],
+            "title": "报价列表"
+        })
+        item_data = []
+        for quote in quotes:
+            version = db.query(QuoteVersion).filter(QuoteVersion.id == quote.current_version_id).first()
+            if version:
+                items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == version.id).all()
+                for item in items:
+                    item_data.append({
+                        "quote_code": quote.quote_code,
+                        "item_name": item.item_name or '',
+                        "specification": item.specification or '',
+                        "qty": float(item.qty) if item.qty else 0,
+                        "unit": item.unit or '',
+                        "unit_price": float(item.unit_price) if item.unit_price else 0,
+                        "total_price": float(item.total_price) if item.total_price else 0,
+                        "cost": float(item.cost) if item.cost else 0,
+                        "item_type": item.item_type or '',
+                    })
+        sheets.append({
+            "name": "报价明细",
+            "data": item_data,
+            "columns": [
+                {"key": "quote_code", "label": "报价编码", "width": 15},
+                {"key": "item_name", "label": "物料名称", "width": 30},
+                {"key": "specification", "label": "规格型号", "width": 25},
+                {"key": "qty", "label": "数量", "width": 10},
+                {"key": "unit", "label": "单位", "width": 8},
+                {"key": "unit_price", "label": "单价", "width": 12, "format": export_service.format_currency},
+                {"key": "total_price", "label": "总价", "width": 12, "format": export_service.format_currency},
+                {"key": "cost", "label": "成本", "width": 12, "format": export_service.format_currency},
+                {"key": "item_type", "label": "类型", "width": 12},
+            ],
+            "title": "报价明细"
+        })
+        excel_data = export_service.export_multisheet(sheets)
+    else:
+        quote_data = []
+        for quote in quotes:
+            version = db.query(QuoteVersion).filter(QuoteVersion.id == quote.current_version_id).first()
+            quote_data.append({
+                "quote_code": quote.quote_code,
+                "opp_code": quote.opportunity.opp_code if quote.opportunity else '',
+                "customer_name": quote.customer.customer_name if quote.customer else '',
+                "status": quote.status,
+                "total_price": float(version.total_price) if version and version.total_price else 0,
+                "total_cost": float(version.total_cost) if version and version.total_cost else 0,
+                "gross_margin": float(version.gross_margin) if version and version.gross_margin else 0,
+                "valid_until": version.valid_until if version and version.valid_until else None,
+                "owner_name": quote.owner.real_name if quote.owner else '',
+                "created_at": quote.created_at,
+            })
+        columns = [
+            {"key": "quote_code", "label": "报价编码", "width": 15},
+            {"key": "opp_code", "label": "商机编码", "width": 15},
+            {"key": "customer_name", "label": "客户名称", "width": 25},
+            {"key": "status", "label": "状态", "width": 12},
+            {"key": "total_price", "label": "报价金额", "width": 15, "format": export_service.format_currency},
+            {"key": "total_cost", "label": "成本金额", "width": 15, "format": export_service.format_currency},
+            {"key": "gross_margin", "label": "毛利率", "width": 12, "format": export_service.format_percentage},
+            {"key": "valid_until", "label": "有效期至", "width": 12, "format": export_service.format_date},
+            {"key": "owner_name", "label": "负责人", "width": 12},
+            {"key": "created_at", "label": "创建时间", "width": 18, "format": export_service.format_date},
+        ]
+        excel_data = export_service.export_to_excel(data=quote_data, columns=columns, sheet_name="报价列表", title="报价列表")
+    
+    filename = f"报价列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    return create_excel_response(excel_data, filename)
+
+
+@router.get("/contracts/export")
+def export_contracts(
+    *,
+    db: Session = Depends(deps.get_db),
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    customer_id: Optional[int] = Query(None, description="客户ID筛选"),
+    owner_id: Optional[int] = Query(None, description="负责人ID筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 4.3: 导出合同列表（Excel）
+    """
+    from app.services.excel_export_service import ExcelExportService, create_excel_response
+    
+    query = db.query(Contract)
+    if keyword:
+        query = query.filter(or_(Contract.contract_code.contains(keyword), Contract.contract_name.contains(keyword), Contract.opportunity.has(Opportunity.opp_name.contains(keyword))))
+    if status:
+        query = query.filter(Contract.status == status)
+    if customer_id:
+        query = query.filter(Contract.customer_id == customer_id)
+    if owner_id:
+        query = query.filter(Contract.owner_id == owner_id)
+    
+    contracts = query.order_by(Contract.created_at.desc()).all()
+    export_service = ExcelExportService()
+    columns = [
+        {"key": "contract_code", "label": "合同编码", "width": 15},
+        {"key": "contract_name", "label": "合同名称", "width": 30},
+        {"key": "customer_name", "label": "客户名称", "width": 25},
+        {"key": "contract_amount", "label": "合同金额", "width": 15, "format": export_service.format_currency},
+        {"key": "signed_date", "label": "签订日期", "width": 12, "format": export_service.format_date},
+        {"key": "delivery_deadline", "label": "交期", "width": 12, "format": export_service.format_date},
+        {"key": "status", "label": "状态", "width": 12},
+        {"key": "project_code", "label": "项目编码", "width": 15},
+        {"key": "owner_name", "label": "负责人", "width": 12},
+        {"key": "created_at", "label": "创建时间", "width": 18, "format": export_service.format_date},
+    ]
+    
+    data = [{
+        "contract_code": contract.contract_code,
+        "contract_name": contract.contract_name or '',
+        "customer_name": contract.customer.customer_name if contract.customer else '',
+        "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
+        "signed_date": contract.signed_date,
+        "delivery_deadline": contract.delivery_deadline,
+        "status": contract.status,
+        "project_code": contract.project.project_code if contract.project else '',
+        "owner_name": contract.owner.real_name if contract.owner else '',
+        "created_at": contract.created_at,
+    } for contract in contracts]
+    
+    excel_data = export_service.export_to_excel(data=data, columns=columns, sheet_name="合同列表", title="合同列表")
+    filename = f"合同列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    return create_excel_response(excel_data, filename)
+
+
+@router.get("/invoices/export")
+def export_invoices(
+    *,
+    db: Session = Depends(deps.get_db),
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    customer_id: Optional[int] = Query(None, description="客户ID筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 4.4: 导出发票列表（Excel）
+    """
+    from app.services.excel_export_service import ExcelExportService, create_excel_response
+    
+    query = db.query(Invoice)
+    if keyword:
+        query = query.filter(or_(Invoice.invoice_code.contains(keyword), Invoice.contract.has(Contract.contract_code.contains(keyword))))
+    if status:
+        query = query.filter(Invoice.status == status)
+    if customer_id:
+        query = query.filter(Invoice.contract.has(Contract.customer_id == customer_id))
+    
+    invoices = query.order_by(Invoice.created_at.desc()).all()
+    export_service = ExcelExportService()
+    columns = [
+        {"key": "invoice_code", "label": "发票编码", "width": 15},
+        {"key": "contract_code", "label": "合同编码", "width": 15},
+        {"key": "customer_name", "label": "客户名称", "width": 25},
+        {"key": "invoice_type", "label": "发票类型", "width": 12},
+        {"key": "amount", "label": "发票金额", "width": 15, "format": export_service.format_currency},
+        {"key": "paid_amount", "label": "已收金额", "width": 15, "format": export_service.format_currency},
+        {"key": "unpaid_amount", "label": "未收金额", "width": 15, "format": export_service.format_currency},
+        {"key": "issue_date", "label": "开票日期", "width": 12, "format": export_service.format_date},
+        {"key": "due_date", "label": "到期日期", "width": 12, "format": export_service.format_date},
+        {"key": "payment_status", "label": "收款状态", "width": 12},
+        {"key": "status", "label": "发票状态", "width": 12},
+        {"key": "created_at", "label": "创建时间", "width": 18, "format": export_service.format_date},
+    ]
+    
+    data = []
+    for invoice in invoices:
+        total_amount = float(invoice.total_amount or invoice.amount or 0)
+        paid_amount = float(invoice.paid_amount or 0)
+        unpaid_amount = total_amount - paid_amount
+        data.append({
+            "invoice_code": invoice.invoice_code,
+            "contract_code": invoice.contract.contract_code if invoice.contract else '',
+            "customer_name": invoice.contract.customer.customer_name if invoice.contract and invoice.contract.customer else '',
+            "invoice_type": invoice.invoice_type or '',
+            "amount": total_amount,
+            "paid_amount": paid_amount,
+            "unpaid_amount": unpaid_amount,
+            "issue_date": invoice.issue_date,
+            "due_date": invoice.due_date,
+            "payment_status": invoice.payment_status or '',
+            "status": invoice.status,
+            "created_at": invoice.created_at,
+        })
+    
+    excel_data = export_service.export_to_excel(data=data, columns=columns, sheet_name="发票列表", title="发票列表")
+    filename = f"发票列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    return create_excel_response(excel_data, filename)
+
+
+@router.get("/payments/export")
+def export_payments(
+    *,
+    db: Session = Depends(deps.get_db),
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    customer_id: Optional[int] = Query(None, description="客户ID筛选"),
+    include_aging: bool = Query(True, description="是否包含账龄分析"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 4.4: 导出应收账款列表（Excel）
+    包含账龄分析
+    """
+    from app.services.excel_export_service import ExcelExportService, create_excel_response
+    from app.models.project import ProjectPaymentPlan
+    
+    query = db.query(ProjectPaymentPlan).join(Contract).filter(ProjectPaymentPlan.status.in_(["PENDING", "INVOICED", "PARTIAL"]))
+    if keyword:
+        query = query.filter(or_(ProjectPaymentPlan.payment_name.contains(keyword), ProjectPaymentPlan.contract.has(Contract.contract_code.contains(keyword))))
+    if status:
+        query = query.filter(ProjectPaymentPlan.status == status)
+    if customer_id:
+        query = query.filter(ProjectPaymentPlan.contract.has(Contract.customer_id == customer_id))
+    
+    payment_plans = query.order_by(ProjectPaymentPlan.planned_date).all()
+    export_service = ExcelExportService()
+    today = date.today()
+    
+    columns = [
+        {"key": "payment_name", "label": "收款计划名称", "width": 25},
+        {"key": "contract_code", "label": "合同编码", "width": 15},
+        {"key": "customer_name", "label": "客户名称", "width": 25},
+        {"key": "project_code", "label": "项目编码", "width": 15},
+        {"key": "planned_amount", "label": "计划金额", "width": 15, "format": export_service.format_currency},
+        {"key": "actual_amount", "label": "已收金额", "width": 15, "format": export_service.format_currency},
+        {"key": "unpaid_amount", "label": "未收金额", "width": 15, "format": export_service.format_currency},
+        {"key": "planned_date", "label": "计划日期", "width": 12, "format": export_service.format_date},
+        {"key": "status", "label": "状态", "width": 12},
+        {"key": "overdue_days", "label": "逾期天数", "width": 10},
+    ]
+    
+    if include_aging:
+        columns.extend([
+            {"key": "aging_0_30", "label": "0-30天", "width": 12, "format": export_service.format_currency},
+            {"key": "aging_31_60", "label": "31-60天", "width": 12, "format": export_service.format_currency},
+            {"key": "aging_61_90", "label": "61-90天", "width": 12, "format": export_service.format_currency},
+            {"key": "aging_over_90", "label": "90天以上", "width": 12, "format": export_service.format_currency},
+        ])
+    
+    data = []
+    for plan in payment_plans:
+        planned_amount = float(plan.planned_amount or 0)
+        actual_amount = float(plan.actual_amount or 0)
+        unpaid_amount = planned_amount - actual_amount
+        overdue_days = 0
+        if plan.planned_date and plan.planned_date < today:
+            overdue_days = (today - plan.planned_date).days
+        
+        row_data = {
+            "payment_name": plan.payment_name or '',
+            "contract_code": plan.contract.contract_code if plan.contract else '',
+            "customer_name": plan.contract.customer.customer_name if plan.contract and plan.contract.customer else '',
+            "project_code": plan.project.project_code if plan.project else '',
+            "planned_amount": planned_amount,
+            "actual_amount": actual_amount,
+            "unpaid_amount": unpaid_amount,
+            "planned_date": plan.planned_date,
+            "status": plan.status or '',
+            "overdue_days": overdue_days,
+        }
+        
+        if include_aging:
+            aging_0_30 = aging_31_60 = aging_61_90 = aging_over_90 = 0
+            if unpaid_amount > 0 and plan.planned_date:
+                if overdue_days <= 30:
+                    aging_0_30 = unpaid_amount
+                elif overdue_days <= 60:
+                    aging_31_60 = unpaid_amount
+                elif overdue_days <= 90:
+                    aging_61_90 = unpaid_amount
+                else:
+                    aging_over_90 = unpaid_amount
+            row_data.update({"aging_0_30": aging_0_30, "aging_31_60": aging_31_60, "aging_61_90": aging_61_90, "aging_over_90": aging_over_90})
+        
+        data.append(row_data)
+    
+    excel_data = export_service.export_to_excel(data=data, columns=columns, sheet_name="应收账款列表", title="应收账款列表（含账龄分析）" if include_aging else "应收账款列表")
+    filename = f"应收账款列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    return create_excel_response(excel_data, filename)
+
+
+# ==================== PDF 导出 ====================
+
+
+@router.get("/quotes/{quote_id}/pdf")
+def export_quote_pdf(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 4.5: 导出报价单 PDF
+    """
+    from app.services.pdf_export_service import PDFExportService, create_pdf_response
+    
+    quote = db.query(Quote).filter(Quote.id == quote_id).first()
+    if not quote:
+        raise HTTPException(status_code=404, detail="报价不存在")
+    
+    version = db.query(QuoteVersion).filter(QuoteVersion.id == quote.current_version_id).first()
+    if not version:
+        raise HTTPException(status_code=400, detail="报价没有当前版本")
+    
+    items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == version.id).all()
+    
+    # 准备数据
+    quote_data = {
+        "quote_code": quote.quote_code,
+        "customer_name": quote.customer.customer_name if quote.customer else '',
+        "created_at": quote.created_at,
+        "valid_until": version.valid_until,
+        "total_price": float(version.total_price) if version.total_price else 0,
+        "status": quote.status,
+    }
+    
+    quote_items = [{
+        "item_name": item.item_name or '',
+        "specification": item.specification or '',
+        "qty": float(item.qty) if item.qty else 0,
+        "unit": item.unit or '',
+        "unit_price": float(item.unit_price) if item.unit_price else 0,
+        "total_price": float(item.total_price) if item.total_price else 0,
+        "remark": item.remark or '',
+    } for item in items]
+    
+    pdf_service = PDFExportService()
+    pdf_data = pdf_service.export_quote_to_pdf(quote_data, quote_items)
+    
+    filename = f"报价单_{quote.quote_code}_{datetime.now().strftime('%Y%m%d')}.pdf"
+    return create_pdf_response(pdf_data, filename)
+
+
+@router.get("/contracts/{contract_id}/pdf")
+def export_contract_pdf(
+    *,
+    db: Session = Depends(deps.get_db),
+    contract_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 4.5: 导出合同 PDF
+    """
+    from app.services.pdf_export_service import PDFExportService, create_pdf_response
+    
+    contract = db.query(Contract).filter(Contract.id == contract_id).first()
+    if not contract:
+        raise HTTPException(status_code=404, detail="合同不存在")
+    
+    deliverables = db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract_id).all()
+    
+    # 准备数据
+    contract_data = {
+        "contract_code": contract.contract_code,
+        "contract_name": contract.contract_name or '',
+        "customer_name": contract.customer.customer_name if contract.customer else '',
+        "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
+        "signed_date": contract.signed_date,
+        "delivery_deadline": contract.delivery_deadline,
+        "status": contract.status,
+    }
+    
+    deliverable_list = [{
+        "deliverable_name": d.deliverable_name or '',
+        "quantity": float(d.quantity) if d.quantity else 0,
+        "unit": d.unit or '',
+        "remark": d.remark or '',
+    } for d in deliverables]
+    
+    pdf_service = PDFExportService()
+    pdf_data = pdf_service.export_contract_to_pdf(contract_data, deliverable_list)
+    
+    filename = f"合同_{contract.contract_code}_{datetime.now().strftime('%Y%m%d')}.pdf"
+    return create_pdf_response(pdf_data, filename)
+
+
+@router.get("/invoices/{invoice_id}/pdf")
+def export_invoice_pdf(
+    *,
+    db: Session = Depends(deps.get_db),
+    invoice_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 4.5: 导出发票 PDF
+    """
+    from app.services.pdf_export_service import PDFExportService, create_pdf_response
+    
+    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+    if not invoice:
+        raise HTTPException(status_code=404, detail="发票不存在")
+    
+    # 准备数据
+    total_amount = float(invoice.total_amount or invoice.amount or 0)
+    paid_amount = float(invoice.paid_amount or 0)
+    
+    invoice_data = {
+        "invoice_code": invoice.invoice_code,
+        "contract_code": invoice.contract.contract_code if invoice.contract else '',
+        "customer_name": invoice.contract.customer.customer_name if invoice.contract and invoice.contract.customer else '',
+        "invoice_type": invoice.invoice_type or '',
+        "total_amount": total_amount,
+        "amount": total_amount,
+        "paid_amount": paid_amount,
+        "issue_date": invoice.issue_date,
+        "due_date": invoice.due_date,
+        "payment_status": invoice.payment_status or '',
+        "status": invoice.status,
+    }
+    
+    pdf_service = PDFExportService()
+    pdf_data = pdf_service.export_invoice_to_pdf(invoice_data)
+    
+    filename = f"发票_{invoice.invoice_code}_{datetime.now().strftime('%Y%m%d')}.pdf"
+    return create_pdf_response(pdf_data, filename)

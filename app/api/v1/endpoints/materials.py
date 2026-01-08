@@ -3,10 +3,11 @@
 物料管理 API endpoints
 """
 from typing import Any, List, Optional
+from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_
+from sqlalchemy import desc, or_, func
 
 from app.api import deps
 from app.core.config import settings
@@ -21,6 +22,8 @@ from app.schemas.material import (
     MaterialResponse,
     MaterialCategoryCreate,
     MaterialCategoryResponse,
+    WarehouseStatistics,
+    MaterialSearchResponse,
 )
 from app.schemas.common import ResponseModel, PaginatedResponse
 
@@ -429,3 +432,168 @@ def get_material_alternatives(
         "can_substitute_for": can_substitute_for,  # 该物料可以替代的物料
         "can_be_substituted_by": can_be_substituted_by,  # 可以替代该物料的物料
     }
+
+
+# ==================== 仓储统计 ====================
+
+@router.get("/warehouse/statistics", response_model=WarehouseStatistics)
+def get_warehouse_statistics(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    仓储统计（给生产总监看）
+    """
+    from app.models.purchase import PurchaseOrder, PurchaseOrderItem, GoodsReceiptItem
+    from app.models.production import WorkOrder
+    
+    # 库存SKU统计
+    total_items = db.query(Material).count()
+    in_stock_items = db.query(Material).filter(
+        Material.current_stock > 0
+    ).count()
+    
+    # 低库存预警（当前库存 < 安全库存）
+    low_stock_items = db.query(Material).filter(
+        Material.current_stock < Material.safety_stock,
+        Material.current_stock > 0
+    ).count()
+    
+    # 缺货
+    out_of_stock_items = db.query(Material).filter(
+        Material.current_stock <= 0
+    ).count()
+    
+    # 库存周转率（简化计算：本月入库金额 / 平均库存金额）
+    today = date.today()
+    month_start = date(today.year, today.month, 1)
+    
+    # 本月入库金额（从入库单计算）
+    inbound_amount = db.query(func.sum(GoodsReceiptItem.amount)).filter(
+        GoodsReceiptItem.created_at >= datetime.combine(month_start, datetime.min.time())
+    ).scalar() or 0
+    
+    # 平均库存金额（简化：当前库存金额）
+    avg_inventory_amount = db.query(func.sum(
+        Material.current_stock * Material.standard_price
+    )).scalar() or 0
+    
+    inventory_turnover = 0.0
+    if avg_inventory_amount and avg_inventory_amount > 0:
+        inventory_turnover = float(inbound_amount) / float(avg_inventory_amount)
+    
+    # 仓储利用率（简化：假设有仓储容量字段，这里用Mock数据）
+    warehouse_utilization = 82.3  # TODO: 从仓储容量表计算
+    
+    # 待入库（已采购但未完全到货的订单）
+    pending_inbound = db.query(PurchaseOrder).filter(
+        PurchaseOrder.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"])
+    ).count()
+    
+    # 待出库（从工单领料需求计算）
+    pending_outbound = db.query(WorkOrder).filter(
+        WorkOrder.status.in_(["ASSIGNED", "STARTED"]),
+        # 假设有领料状态字段
+    ).count()
+    
+    return WarehouseStatistics(
+        total_items=total_items,
+        in_stock_items=in_stock_items,
+        low_stock_items=low_stock_items,
+        out_of_stock_items=out_of_stock_items,
+        inventory_turnover=inventory_turnover,
+        warehouse_utilization=warehouse_utilization,
+        pending_inbound=pending_inbound,
+        pending_outbound=pending_outbound,
+    )
+
+
+# ==================== 物料查找 ====================
+
+@router.get("/search", response_model=PaginatedResponse[MaterialSearchResponse])
+def search_materials(
+    db: Session = Depends(deps.get_db),
+    keyword: str = Query(..., description="搜索关键词（物料编码/名称/规格）"),
+    has_stock: Optional[bool] = Query(None, description="是否有库存"),
+    category: Optional[str] = Query(None, description="物料类别"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    物料查找（支持编码/名称/规格搜索）
+    """
+    from app.models.purchase import PurchaseOrderItem, PurchaseOrder
+    
+    query = db.query(Material)
+    
+    # 关键词搜索
+    if keyword:
+        query = query.filter(
+            or_(
+                Material.material_code.like(f"%{keyword}%"),
+                Material.material_name.like(f"%{keyword}%"),
+                Material.specification.like(f"%{keyword}%")
+            )
+        )
+    
+    # 库存筛选
+    if has_stock is not None:
+        if has_stock:
+            query = query.filter(Material.current_stock > 0)
+        else:
+            query = query.filter(Material.current_stock <= 0)
+    
+    # 类别筛选
+    if category:
+        query = query.join(MaterialCategory).filter(
+            MaterialCategory.category_name == category
+        )
+    
+    # 分页
+    total = query.count()
+    materials = query.offset((page - 1) * page_size).limit(page_size).all()
+    
+    items = []
+    for material in materials:
+        # 计算在途数量
+        in_transit_qty = db.query(func.sum(
+            PurchaseOrderItem.quantity - PurchaseOrderItem.received_qty
+        )).join(
+            PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id
+        ).filter(
+            PurchaseOrderItem.material_id == material.id,
+            PurchaseOrder.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"])
+        ).scalar() or 0
+        
+        # 可用数量 = 当前库存 + 在途数量
+        available_qty = (material.current_stock or 0) + in_transit_qty
+        
+        # 获取供应商名称
+        supplier_name = None
+        if material.default_supplier_id:
+            supplier = db.query(Supplier).filter(Supplier.id == material.default_supplier_id).first()
+            supplier_name = supplier.supplier_name if supplier else None
+        
+        items.append(MaterialSearchResponse(
+            material_id=material.id,
+            material_code=material.material_code,
+            material_name=material.material_name,
+            specification=material.specification,
+            category=material.category.category_name if material.category else None,
+            current_stock=float(material.current_stock or 0),
+            safety_stock=float(material.safety_stock or 0),
+            in_transit_qty=float(in_transit_qty),
+            available_qty=float(available_qty),
+            unit=material.unit or "件",
+            unit_price=float(material.standard_price or 0),
+            supplier_name=supplier_name,
+        ))
+    
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
+    )

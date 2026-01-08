@@ -41,6 +41,11 @@
 - ✅ 缺料预警页面（ShortageAlert.jsx）
 - ✅ 缺料管理页面（ShortageManagement.jsx）
 
+### 6. 自动下单联动
+- ✅ BOM一键生成采购申请（`POST /api/v1/bom/{bom_id}/generate-pr?create_requests=true`）
+- ✅ 采购申请审批通过后自动创建采购订单（`PUT /purchase-orders/requests/{id}/approve`）
+- ✅ 采购申请详情展示已生成的采购订单，并支持手动重新触发（`POST /purchase-orders/requests/{id}/generate-orders`）
+
 ---
 
 ## 二、待开发功能 ⏳
@@ -48,24 +53,24 @@
 ### 1. 采购申请与审批流程 🔴 高优先级
 
 #### 1.1 采购申请（Purchase Request）
-- ⏳ **前端页面**：采购申请列表页面
-- ⏳ **前端页面**：创建采购申请页面
-- ⏳ **前端页面**：采购申请详情页面
-- ⏳ **后端API**：采购申请CRUD接口
+- ✅ **前端页面**：采购申请列表页面（API联通 + 供应商显示）
+- ✅ **前端页面**：创建采购申请页面（选择供应商、物料明细）
+- ✅ **前端页面**：采购申请详情页面（审批、自动下单状态、生成的采购订单）
+- ✅ **后端API**：采购申请CRUD接口
   - `GET /api/v1/purchase-requests` - 列表
   - `POST /api/v1/purchase-requests` - 创建
   - `GET /api/v1/purchase-requests/{id}` - 详情
   - `PUT /api/v1/purchase-requests/{id}` - 更新
   - `DELETE /api/v1/purchase-requests/{id}` - 删除
-- ⏳ **后端API**：采购申请提交接口
+- ✅ **后端API**：采购申请提交接口
   - `PUT /api/v1/purchase-requests/{id}/submit` - 提交审批
-- ⏳ **后端API**：采购申请审批接口
+- ✅ **后端API**：采购申请审批接口（通过后自动生成采购订单）
   - `PUT /api/v1/purchase-requests/{id}/approve` - 审批（通过/驳回）
-- ⏳ **数据模型**：PurchaseRequest 模型
-- ⏳ **业务规则**：
-  - 从BOM或物料需求生成采购申请
-  - 采购申请审批通过后自动创建采购订单
-  - 支持批量创建采购订单
+- ✅ **数据模型**：PurchaseRequest 模型（新增来源、供应商、自动下单状态）
+- ✅ **业务规则**：
+  - 从BOM生成采购申请（自动写入来源、供应商、BOM行）
+  - 采购申请审批通过后自动创建采购订单并回写已购数量
+  - 支持手动重新触发订单生成（`/generate-orders`）
 
 #### 1.2 采购申请审批流程
 - ⏳ 审批流程配置
@@ -75,15 +80,16 @@
 ### 2. 从BOM生成采购订单 🔴 高优先级
 
 #### 2.1 前端功能
-- ⏳ **前端页面**：从BOM生成采购订单页面
+- ⏳ **前端页面**：从BOM生成采购订单页面（当前仅支持生成采购申请数据，待联动PR流转）
 - ⏳ **前端功能**：选择BOM版本
 - ⏳ **前端功能**：选择供应商
 - ⏳ **前端功能**：物料选择和编辑
-- ⏳ **前端功能**：批量创建采购订单
+- ⏳ **前端功能**：批量创建采购订单 / 批量生成采购申请并自动下单
 - ⏳ **前端功能**：预览采购订单
 
 #### 2.2 后端功能
-- ⏳ **后端API**：`POST /api/v1/purchase-orders/from-bom` - 从BOM批量创建订单
+- ✅ **后端API**：`POST /api/v1/bom/{bom_id}/generate-pr?create_requests=true` - 从BOM按供应商批量创建采购申请
+- ⏳ **后端API**：`POST /api/v1/purchase-orders/from-bom` - 直接从BOM批量创建订单（可选）
 - ⏳ **业务规则**：
   - 按供应商分组物料
   - 自动填充物料信息
@@ -352,7 +358,6 @@
 - `app/api/v1/endpoints/purchase.py` - 采购API实现
 - `app/models/purchase.py` - 采购数据模型
 - `app/schemas/purchase.py` - 采购Schema定义
-
 
 
 

@@ -189,13 +189,48 @@ class PaymentStatusEnum(str, Enum):
 # ==================== 变更管理相关 ====================
 
 class EcnTypeEnum(str, Enum):
-    """ECN类型"""
-    DESIGN = 'DESIGN'              # 设计变更
-    MATERIAL = 'MATERIAL'          # 物料变更
-    PROCESS = 'PROCESS'            # 工艺变更
-    SPECIFICATION = 'SPECIFICATION'  # 规格变更
-    SCHEDULE = 'SCHEDULE'          # 计划变更
-    OTHER = 'OTHER'                # 其他变更
+    """ECN类型 - 22种变更类型"""
+    # 客户相关（3种）
+    CUSTOMER_REQUIREMENT = 'CUSTOMER_REQUIREMENT'  # 客户需求变更
+    CUSTOMER_SPEC = 'CUSTOMER_SPEC'                # 客户规格调整
+    CUSTOMER_FEEDBACK = 'CUSTOMER_FEEDBACK'        # 客户现场反馈
+    
+    # 设计变更（5种）
+    MECHANICAL_STRUCTURE = 'MECHANICAL_STRUCTURE'  # 机械结构变更
+    ELECTRICAL_SCHEME = 'ELECTRICAL_SCHEME'        # 电气方案变更
+    SOFTWARE_FUNCTION = 'SOFTWARE_FUNCTION'        # 软件功能变更
+    TECH_OPTIMIZATION = 'TECH_OPTIMIZATION'        # 技术方案优化
+    DESIGN_FIX = 'DESIGN_FIX'                      # 设计缺陷修复
+    
+    # 测试相关（4种）
+    TEST_STANDARD = 'TEST_STANDARD'                # 测试标准变更
+    TEST_FIXTURE = 'TEST_FIXTURE'                  # 测试工装变更
+    CALIBRATION_SCHEME = 'CALIBRATION_SCHEME'      # 校准方案变更
+    TEST_PROGRAM = 'TEST_PROGRAM'                  # 测试程序变更
+    
+    # 生产制造（4种）
+    PROCESS_IMPROVEMENT = 'PROCESS_IMPROVEMENT'   # 工艺改进
+    MATERIAL_SUBSTITUTE = 'MATERIAL_SUBSTITUTE'    # 物料替代
+    SUPPLIER_CHANGE = 'SUPPLIER_CHANGE'            # 供应商变更
+    COST_OPTIMIZATION = 'COST_OPTIMIZATION'        # 成本优化
+    
+    # 质量安全（3种）
+    QUALITY_ISSUE = 'QUALITY_ISSUE'                # 质量问题整改
+    SAFETY_COMPLIANCE = 'SAFETY_COMPLIANCE'        # 安全合规变更
+    RELIABILITY_IMPROVEMENT = 'RELIABILITY_IMPROVEMENT'  # 可靠性改进
+    
+    # 项目管理（3种）
+    SCHEDULE_ADJUSTMENT = 'SCHEDULE_ADJUSTMENT'     # 进度调整
+    DOCUMENT_UPDATE = 'DOCUMENT_UPDATE'            # 文档更新
+    DRAWING_CHANGE = 'DRAWING_CHANGE'              # 图纸变更
+    
+    # 兼容旧版本（保留）
+    DESIGN = 'DESIGN'                              # 设计变更（兼容）
+    MATERIAL = 'MATERIAL'                          # 物料变更（兼容）
+    PROCESS = 'PROCESS'                            # 工艺变更（兼容）
+    SPECIFICATION = 'SPECIFICATION'                # 规格变更（兼容）
+    SCHEDULE = 'SCHEDULE'                          # 计划变更（兼容）
+    OTHER = 'OTHER'                                # 其他变更（兼容）
 
 
 class EcnSourceTypeEnum(str, Enum):
@@ -425,6 +460,29 @@ class ApprovalResultEnum(str, Enum):
     APPROVED = 'APPROVED'    # 批准
     REJECTED = 'REJECTED'    # 驳回
     RETURNED = 'RETURNED'    # 退回
+
+
+class WorkflowTypeEnum(str, Enum):
+    """审批工作流类型"""
+    QUOTE = 'QUOTE'          # 报价审批
+    CONTRACT = 'CONTRACT'    # 合同审批
+    INVOICE = 'INVOICE'      # 发票审批
+
+
+class ApprovalRecordStatusEnum(str, Enum):
+    """审批记录状态"""
+    PENDING = 'PENDING'      # 待审批
+    APPROVED = 'APPROVED'    # 已批准
+    REJECTED = 'REJECTED'    # 已驳回
+    CANCELLED = 'CANCELLED'  # 已取消
+
+
+class ApprovalActionEnum(str, Enum):
+    """审批操作"""
+    APPROVE = 'APPROVE'      # 审批通过
+    REJECT = 'REJECT'        # 审批驳回
+    DELEGATE = 'DELEGATE'    # 审批委托
+    WITHDRAW = 'WITHDRAW'    # 审批撤回
 
 
 class NotifyChannelEnum(str, Enum):

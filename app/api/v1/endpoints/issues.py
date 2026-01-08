@@ -12,11 +12,13 @@ import pandas as pd
 import json
 
 from app.api import deps
-from app.models.issue import Issue, IssueFollowUpRecord, IssueTemplate
+from app.models.issue import Issue, IssueFollowUpRecord, IssueTemplate, IssueStatisticsSnapshot
 from app.models.user import User
 from app.models.project import Project, Machine
 from app.models.progress import Task
 from app.models.acceptance import AcceptanceOrder
+from app.models.alert import AlertRule, AlertRecord
+from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
 from app.services.sales_reminder_service import create_notification
 from app.schemas.issue import (
     IssueCreate,
@@ -37,12 +39,144 @@ from app.schemas.issue import (
     IssueTemplateResponse,
     IssueTemplateListResponse,
     IssueFromTemplateRequest,
+    IssueStatisticsSnapshotResponse,
+    IssueStatisticsSnapshotListResponse,
 )
 from app.services.issue_cost_service import IssueCostService
 from decimal import Decimal
 from app.schemas.common import ResponseModel
 
 router = APIRouter()
+template_router = APIRouter()  # 问题模板管理专用router
+
+
+def create_blocking_issue_alert(db: Session, issue: Issue) -> Optional[AlertRecord]:
+    """
+    为阻塞问题创建预警记录
+    
+    Args:
+        db: 数据库会话
+        issue: 问题对象
+    
+    Returns:
+        AlertRecord: 创建的预警记录，如果已存在则返回None
+    """
+    if not issue.is_blocking or issue.status == 'DELETED':
+        return None
+    
+    # 检查是否已有预警记录
+    existing_alert = db.query(AlertRecord).filter(
+        AlertRecord.target_type == 'ISSUE',
+        AlertRecord.target_id == issue.id,
+        AlertRecord.status.in_(['PENDING', 'ACKNOWLEDGED', 'PROCESSING'])
+    ).first()
+    
+    if existing_alert:
+        return None  # 已存在预警，不重复创建
+    
+    # 获取或创建预警规则
+    rule = db.query(AlertRule).filter(
+        AlertRule.rule_code == 'BLOCKING_ISSUE',
+        AlertRule.is_enabled == True
+    ).first()
+    
+    if not rule:
+        # 创建默认规则
+        rule = AlertRule(
+            rule_code='BLOCKING_ISSUE',
+            rule_name='阻塞问题预警',
+            rule_type=AlertRuleTypeEnum.QUALITY_ISSUE.value,
+            target_type='ISSUE',
+            condition_type='THRESHOLD',
+            condition_operator='EQ',
+            threshold_value='1',
+            alert_level=AlertLevelEnum.WARNING.value,
+            is_enabled=True,
+            is_system=True,
+            description='当问题被标记为阻塞时触发预警'
+        )
+        db.add(rule)
+        db.flush()
+    
+    # 根据问题严重程度设置预警级别
+    alert_level = AlertLevelEnum.WARNING.value
+    if issue.severity == 'CRITICAL':
+        alert_level = AlertLevelEnum.URGENT.value
+    elif issue.severity == 'MAJOR':
+        alert_level = AlertLevelEnum.CRITICAL.value
+    elif issue.severity == 'MINOR':
+        alert_level = AlertLevelEnum.WARNING.value
+    
+    # 生成预警编号
+    today = datetime.now().strftime('%Y%m%d')
+    count = db.query(AlertRecord).filter(
+        AlertRecord.alert_no.like(f'AL{today}%')
+    ).count()
+    alert_no = f'AL{today}{str(count + 1).zfill(4)}'
+    
+    # 构建预警内容
+    alert_content = f'问题 {issue.issue_no} 标记为阻塞问题'
+    if issue.impact_scope:
+        alert_content += f'，影响范围：{issue.impact_scope}'
+    if issue.description:
+        alert_content += f'。问题描述：{issue.description[:100]}'
+    
+    # 创建预警记录
+    alert = AlertRecord(
+        alert_no=alert_no,
+        rule_id=rule.id,
+        target_type='ISSUE',
+        target_id=issue.id,
+        target_no=issue.issue_no,
+        target_name=issue.title,
+        project_id=issue.project_id,
+        machine_id=issue.machine_id,
+        alert_level=alert_level,
+        alert_title=f'阻塞问题：{issue.title}',
+        alert_content=alert_content,
+        alert_data={
+            'issue_no': issue.issue_no,
+            'severity': issue.severity,
+            'priority': issue.priority,
+            'impact_scope': issue.impact_scope,
+            'impact_level': issue.impact_level,
+        },
+        status=AlertStatusEnum.PENDING.value,
+        triggered_at=datetime.now()
+    )
+    
+    db.add(alert)
+    db.flush()
+    
+    return alert
+
+
+def close_blocking_issue_alerts(db: Session, issue: Issue) -> int:
+    """
+    关闭阻塞问题的相关预警记录
+    
+    Args:
+        db: 数据库会话
+        issue: 问题对象
+    
+    Returns:
+        int: 关闭的预警数量
+    """
+    # 查找所有待处理/已确认/处理中的预警
+    alerts = db.query(AlertRecord).filter(
+        AlertRecord.target_type == 'ISSUE',
+        AlertRecord.target_id == issue.id,
+        AlertRecord.status.in_(['PENDING', 'ACKNOWLEDGED', 'PROCESSING'])
+    ).all()
+    
+    closed_count = 0
+    for alert in alerts:
+        alert.status = AlertStatusEnum.RESOLVED.value
+        alert.handle_end_at = datetime.now()
+        alert.handle_result = f'问题 {issue.issue_no} 已解决，自动关闭预警'
+        closed_count += 1
+    
+    return closed_count
 
 
 def generate_issue_no(db: Session) -> str:
@@ -320,6 +454,9 @@ def update_issue(
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
     
+    # 记录阻塞状态变化
+    old_is_blocking = issue.is_blocking
+    
     # 更新字段
     update_data = issue_in.dict(exclude_unset=True)
     if 'attachments' in update_data:
@@ -339,6 +476,27 @@ def update_issue(
     
     for field, value in update_data.items():
         setattr(issue, field, value)
+    
+    db.flush()
+    
+    # 处理阻塞状态变化
+    try:
+        new_is_blocking = issue.is_blocking
+        if not old_is_blocking and new_is_blocking:
+            # 从非阻塞变为阻塞，创建预警
+            create_blocking_issue_alert(db, issue)
+        elif old_is_blocking and not new_is_blocking:
+            # 从阻塞变为非阻塞，关闭预警
+            close_blocking_issue_alerts(db, issue)
+        elif old_is_blocking and new_is_blocking:
+            # 保持阻塞状态，但可能更新了严重程度等信息，更新预警
+            # 这里可以选择更新现有预警或创建新预警
+            # 为了简化，我们只确保有预警记录存在
+            create_blocking_issue_alert(db, issue)
+    except Exception as e:
+        # 预警处理失败不影响问题更新
+        import logging
+        logging.error(f"处理阻塞问题预警失败: {str(e)}")
     
     db.commit()
     db.refresh(issue)
@@ -477,6 +635,17 @@ def resolve_issue(
         except Exception as e:
             import logging
             logging.error(f"发送解决通知失败: {str(e)}")
+    
+    # 如果是阻塞问题，关闭相关预警
+    if issue.is_blocking:
+        try:
+            closed_count = close_blocking_issue_alerts(db, issue)
+            if closed_count > 0:
+                import logging
+                logging.info(f"问题 {issue.issue_no} 已解决，自动关闭 {closed_count} 个预警")
+        except Exception as e:
+            import logging
+            logging.error(f"关闭阻塞问题预警失败: {str(e)}")
     
     # 如果问题阻塞项目，触发项目健康度更新
     if issue.is_blocking and issue.project_id:
@@ -1834,3 +2003,300 @@ def get_issue_cause_analysis(
             "end_date": end_date.isoformat() if end_date else None,
         }
     }
+
+
+# ==================== 问题模板管理 ====================
+
+@template_router.get("/", response_model=IssueTemplateListResponse)
+def list_issue_templates(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    keyword: Optional[str] = Query(None, description="关键词搜索（模板编码/名称）"),
+    category: Optional[str] = Query(None, description="问题分类筛选"),
+    is_active: Optional[bool] = Query(None, description="是否启用"),
+) -> Any:
+    """获取问题模板列表"""
+    query = db.query(IssueTemplate)
+    
+    # 关键词搜索
+    if keyword:
+        query = query.filter(
+            or_(
+                IssueTemplate.template_code.like(f'%{keyword}%'),
+                IssueTemplate.template_name.like(f'%{keyword}%')
+            )
+        )
+    
+    # 分类筛选
+    if category:
+        query = query.filter(IssueTemplate.category == category)
+    
+    # 状态筛选
+    if is_active is not None:
+        query = query.filter(IssueTemplate.is_active == is_active)
+    
+    # 总数
+    total = query.count()
+    
+    # 分页
+    templates = query.order_by(desc(IssueTemplate.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    
+    # 构建响应
+    items = []
+    for template in templates:
+        item = IssueTemplateResponse(
+            id=template.id,
+            template_name=template.template_name,
+            template_code=template.template_code,
+            category=template.category,
+            issue_type=template.issue_type,
+            default_severity=template.default_severity,
+            default_priority=template.default_priority,
+            default_impact_level=template.default_impact_level,
+            title_template=template.title_template,
+            description_template=template.description_template,
+            solution_template=template.solution_template,
+            default_tags=json.loads(template.default_tags) if template.default_tags else [],
+            default_impact_scope=template.default_impact_scope,
+            default_is_blocking=template.default_is_blocking,
+            is_active=template.is_active,
+            remark=template.remark,
+            usage_count=template.usage_count,
+            last_used_at=template.last_used_at,
+            created_at=template.created_at,
+            updated_at=template.updated_at,
+        )
+        items.append(item)
+    
+    return IssueTemplateListResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
+    )
+
+
+@template_router.get("/{template_id}", response_model=IssueTemplateResponse)
+def get_issue_template(
+    template_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> Any:
+    """获取问题模板详情"""
+    template = db.query(IssueTemplate).filter(IssueTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="问题模板不存在")
+    
+    return IssueTemplateResponse(
+        id=template.id,
+        template_name=template.template_name,
+        template_code=template.template_code,
+        category=template.category,
+        issue_type=template.issue_type,
+        default_severity=template.default_severity,
+        default_priority=template.default_priority,
+        default_impact_level=template.default_impact_level,
+        title_template=template.title_template,
+        description_template=template.description_template,
+        solution_template=template.solution_template,
+        default_tags=json.loads(template.default_tags) if template.default_tags else [],
+        default_impact_scope=template.default_impact_scope,
+        default_is_blocking=template.default_is_blocking,
+        is_active=template.is_active,
+        remark=template.remark,
+        usage_count=template.usage_count,
+        last_used_at=template.last_used_at,
+        created_at=template.created_at,
+        updated_at=template.updated_at,
+    )
+
+
+@template_router.post("/", response_model=IssueTemplateResponse, status_code=status.HTTP_201_CREATED)
+def create_issue_template(
+    template_in: IssueTemplateCreate,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> Any:
+    """创建问题模板"""
+    # 验证模板编码唯一性
+    existing = db.query(IssueTemplate).filter(IssueTemplate.template_code == template_in.template_code).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="模板编码已存在")
+    
+    # 创建模板
+    template = IssueTemplate(
+        template_name=template_in.template_name,
+        template_code=template_in.template_code,
+        category=template_in.category,
+        issue_type=template_in.issue_type,
+        default_severity=template_in.default_severity,
+        default_priority=template_in.default_priority,
+        default_impact_level=template_in.default_impact_level,
+        title_template=template_in.title_template,
+        description_template=template_in.description_template,
+        solution_template=template_in.solution_template,
+        default_tags=str(template_in.default_tags) if template_in.default_tags else None,
+        default_impact_scope=template_in.default_impact_scope,
+        default_is_blocking=template_in.default_is_blocking,
+        is_active=template_in.is_active if template_in.is_active is not None else True,
+        remark=template_in.remark,
+    )
+    
+    db.add(template)
+    db.commit()
+    db.refresh(template)
+    
+    return get_issue_template(template.id, db, current_user)
+
+
+@template_router.put("/{template_id}", response_model=IssueTemplateResponse)
+def update_issue_template(
+    template_id: int,
+    template_in: IssueTemplateUpdate,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> Any:
+    """更新问题模板"""
+    template = db.query(IssueTemplate).filter(IssueTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="问题模板不存在")
+    
+    # 如果更新模板编码，验证唯一性
+    update_data = template_in.dict(exclude_unset=True)
+    if 'template_code' in update_data:
+        existing = db.query(IssueTemplate).filter(
+            IssueTemplate.template_code == update_data['template_code'],
+            IssueTemplate.id != template_id
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="模板编码已存在")
+    
+    # 处理JSON字段
+    if 'default_tags' in update_data:
+        update_data['default_tags'] = str(update_data['default_tags'])
+    
+    # 更新字段
+    for field, value in update_data.items():
+        setattr(template, field, value)
+    
+    db.commit()
+    db.refresh(template)
+    
+    return get_issue_template(template.id, db, current_user)
+
+
+@template_router.delete("/{template_id}", response_model=ResponseModel)
+def delete_issue_template(
+    template_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> Any:
+    """删除问题模板（软删除）"""
+    template = db.query(IssueTemplate).filter(IssueTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="问题模板不存在")
+    
+    # 软删除：设置is_active=False
+    template.is_active = False
+    
+    db.commit()
+    
+    return ResponseModel(
+        code=200,
+        message="问题模板已删除"
+    )
+
+
+@template_router.post("/{template_id}/create-issue", response_model=IssueResponse, status_code=status.HTTP_201_CREATED)
+def create_issue_from_template(
+    template_id: int,
+    issue_in: IssueFromTemplateRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> Any:
+    """从模板创建问题"""
+    # 获取模板
+    template = db.query(IssueTemplate).filter(IssueTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="问题模板不存在")
+    
+    if not template.is_active:
+        raise HTTPException(status_code=400, detail="问题模板未启用")
+    
+    # 从模板获取默认值
+    category = template.category
+    issue_type = template.issue_type
+    severity = issue_in.severity or template.default_severity or 'MINOR'
+    priority = issue_in.priority or template.default_priority or 'MEDIUM'
+    impact_level = template.default_impact_level
+    is_blocking = template.default_is_blocking
+    
+    # 处理模板变量替换
+    title = issue_in.title or template.title_template
+    description = issue_in.description or template.description_template or ''
+    
+    # 如果有关联对象，获取变量值进行替换
+    if issue_in.project_id:
+        project = db.query(Project).filter(Project.id == issue_in.project_id).first()
+        if project:
+            title = title.replace('{project_name}', project.project_name or '')
+            title = title.replace('{project_code}', project.project_code or '')
+            description = description.replace('{project_name}', project.project_name or '')
+            description = description.replace('{project_code}', project.project_code or '')
+    
+    if issue_in.machine_id:
+        machine = db.query(Machine).filter(Machine.id == issue_in.machine_id).first()
+        if machine:
+            title = title.replace('{machine_name}', machine.machine_name or '')
+            title = title.replace('{machine_code}', machine.machine_code or '')
+            description = description.replace('{machine_name}', machine.machine_name or '')
+            description = description.replace('{machine_code}', machine.machine_code or '')
+    
+    # 替换其他常见变量
+    title = title.replace('{date}', datetime.now().strftime('%Y-%m-%d'))
+    description = description.replace('{date}', datetime.now().strftime('%Y-%m-%d'))
+    
+    # 生成问题编号
+    issue_no = generate_issue_no(db)
+    
+    # 创建问题
+    issue = Issue(
+        issue_no=issue_no,
+        category=category,
+        project_id=issue_in.project_id,
+        machine_id=issue_in.machine_id,
+        task_id=issue_in.task_id,
+        acceptance_order_id=issue_in.acceptance_order_id,
+        related_issue_id=None,
+        issue_type=issue_type,
+        severity=severity,
+        priority=priority,
+        title=title,
+        description=description,
+        reporter_id=current_user.id,
+        reporter_name=current_user.real_name or current_user.username,
+        report_date=datetime.now(),
+        assignee_id=issue_in.assignee_id,
+        assignee_name=(lambda aid: (lambda u: u.real_name or u.username if u else None)(db.query(User).filter(User.id == aid).first()) if aid else None)(issue_in.assignee_id),
+        due_date=issue_in.due_date,
+        status='OPEN',
+        impact_scope=template.default_impact_scope,
+        impact_level=impact_level,
+        is_blocking=is_blocking,
+        attachments=None,
+        tags=str(template.default_tags) if template.default_tags else None,
+    )
+    
+    db.add(issue)
+    
+    # 更新模板使用统计
+    template.usage_count = (template.usage_count or 0) + 1
+    template.last_used_at = datetime.now()
+    
+    db.commit()
+    db.refresh(issue)
+    
+    return get_issue(issue.id, db, current_user)

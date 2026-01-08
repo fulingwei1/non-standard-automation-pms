@@ -7,8 +7,11 @@
 from typing import Any, List, Optional
 from datetime import datetime, date, timedelta
 from decimal import Decimal
+import os
+import uuid
+from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Body
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Body, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, or_, func
 
@@ -19,7 +22,7 @@ from app.models.user import User
 from app.models.project import Project, Customer
 from app.models.service import (
     ServiceTicket, ServiceRecord, CustomerCommunication,
-    CustomerSatisfaction, KnowledgeBase
+    CustomerSatisfaction, KnowledgeBase, SatisfactionSurveyTemplate
 )
 from app.schemas.service import (
     ServiceTicketCreate, ServiceTicketUpdate, ServiceTicketAssign, ServiceTicketClose,
@@ -28,6 +31,7 @@ from app.schemas.service import (
     CustomerCommunicationCreate, CustomerCommunicationUpdate, CustomerCommunicationResponse,
     CustomerSatisfactionCreate, CustomerSatisfactionUpdate, CustomerSatisfactionResponse,
     KnowledgeBaseCreate, KnowledgeBaseUpdate, KnowledgeBaseResponse,
+    ServiceDashboardStatistics,
 )
 from app.schemas.common import ResponseModel, PaginatedResponse
 
@@ -114,6 +118,102 @@ def generate_article_no(db: Session) -> str:
     else:
         seq = 1
     return f"KB-{today}-{seq:03d}"
+
+
+# ==================== 客服统计（给生产总监看） ====================
+
+@router.get("/dashboard-statistics", response_model=ServiceDashboardStatistics, status_code=status.HTTP_200_OK)
+def get_service_dashboard_statistics(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    客服部统计（给生产总监看）
+    """
+    today = date.today()
+    today_start = datetime.combine(today, datetime.min.time())
+    
+    # 服务案例统计
+    active_cases = db.query(ServiceTicket).filter(
+        ServiceTicket.status.in_(["PENDING", "IN_PROGRESS"])
+    ).count()
+    
+    resolved_today = db.query(ServiceTicket).filter(
+        ServiceTicket.status == "RESOLVED",
+        ServiceTicket.resolved_time >= today_start
+    ).count()
+    
+    pending_cases = db.query(ServiceTicket).filter(
+        ServiceTicket.status == "PENDING"
+    ).count()
+    
+    # 平均响应时间（从服务工单中计算：响应时间 - 报告时间）
+    tickets_with_response = db.query(ServiceTicket).filter(
+        ServiceTicket.response_time.isnot(None),
+        ServiceTicket.reported_time.isnot(None)
+    ).all()
+    
+    avg_response_time = 0.0
+    if tickets_with_response:
+        total_hours = 0
+        for ticket in tickets_with_response:
+            if ticket.response_time and ticket.reported_time:
+                delta = ticket.response_time - ticket.reported_time
+                total_hours += delta.total_seconds() / 3600.0
+        avg_response_time = total_hours / len(tickets_with_response) if tickets_with_response else 0.0
+    
+    # 客户满意度（转换为百分制）
+    completed_surveys = db.query(CustomerSatisfaction).filter(
+        CustomerSatisfaction.status == "COMPLETED",
+        CustomerSatisfaction.overall_score.isnot(None)
+    ).all()
+    
+    customer_satisfaction = 0.0
+    if completed_surveys:
+        total_score = sum(float(s.overall_score) for s in completed_surveys)
+        customer_satisfaction = (total_score / len(completed_surveys)) * 20  # 5分制转百分制
+    
+    # 现场服务（从服务记录中统计，使用INSTALLATION类型作为现场服务）
+    on_site_services = db.query(ServiceRecord).filter(
+        ServiceRecord.service_type.in_(["INSTALLATION", "REPAIR", "MAINTENANCE"]),
+        ServiceRecord.status.in_(["SCHEDULED", "IN_PROGRESS"])
+    ).count()
+    
+    # 在岗工程师（简化处理：查询有客服工程师角色的用户）
+    from app.models.organization import UserRole, Role
+    engineer_role = db.query(Role).filter(
+        or_(
+            Role.role_code == "customer_service_engineer",
+            Role.role_code == "客服工程师",
+            Role.role_name.like("%客服%")
+        )
+    ).first()
+    
+    total_engineers = 0
+    active_engineers = 0
+    if engineer_role:
+        total_engineers = db.query(User).join(UserRole).filter(
+            UserRole.role_id == engineer_role.id,
+            User.is_active == True
+        ).count()
+        # 简化处理：假设所有工程师都在岗
+        active_engineers = total_engineers
+    else:
+        # 如果没有找到角色，尝试从服务记录中统计
+        engineers = db.query(ServiceRecord.service_engineer_id).distinct().all()
+        total_engineers = len(engineers)
+        active_engineers = total_engineers
+    
+    return ServiceDashboardStatistics(
+        active_cases=active_cases,
+        resolved_today=resolved_today,
+        pending_cases=pending_cases,
+        avg_response_time=avg_response_time,
+        customer_satisfaction=customer_satisfaction,
+        on_site_services=on_site_services,
+        total_engineers=total_engineers,
+        active_engineers=active_engineers,
+    )
 
 
 # ==================== 服务工单 ====================
@@ -573,6 +673,127 @@ def create_service_record(
     return record
 
 
+@router.post("/service-records/{record_id}/photos", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+async def upload_service_record_photo(
+    *,
+    db: Session = Depends(deps.get_db),
+    record_id: int,
+    file: UploadFile = File(..., description="照片文件"),
+    description: Optional[str] = Form(None, description="照片描述"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    上传服务记录照片
+    """
+    # 验证服务记录是否存在
+    record = db.query(ServiceRecord).filter(ServiceRecord.id == record_id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="服务记录不存在")
+    
+    # 验证文件类型
+    if not file.content_type or not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="只支持图片文件")
+    
+    # 验证文件大小（最大5MB）
+    file_content = await file.read()
+    if len(file_content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="文件大小不能超过5MB")
+    
+    # 创建上传目录
+    upload_dir = Path(settings.UPLOAD_DIR) / "service_records" / str(record_id)
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    
+    # 生成唯一文件名
+    file_ext = Path(file.filename).suffix
+    unique_filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}{file_ext}"
+    file_path = upload_dir / unique_filename
+    
+    # 保存文件
+    try:
+        with open(file_path, "wb") as f:
+            f.write(file_content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"文件保存失败: {str(e)}")
+    
+    # 生成文件URL（相对路径）
+    relative_path = f"service_records/{record_id}/{unique_filename}"
+    
+    # 更新服务记录的照片列表
+    photos = record.photos or []
+    photos.append({
+        "url": relative_path,
+        "filename": file.filename,
+        "size": len(file_content),
+        "type": file.content_type,
+        "description": description,
+        "uploaded_at": datetime.now().isoformat(),
+        "uploaded_by": current_user.real_name or current_user.username,
+    })
+    record.photos = photos
+    
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    
+    return ResponseModel(
+        code=201,
+        message="照片上传成功",
+        data={
+            "record_id": record_id,
+            "photo": photos[-1],
+            "total_photos": len(photos),
+        }
+    )
+
+
+@router.delete("/service-records/{record_id}/photos/{photo_index}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def delete_service_record_photo(
+    *,
+    db: Session = Depends(deps.get_db),
+    record_id: int,
+    photo_index: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    删除服务记录照片
+    """
+    # 验证服务记录是否存在
+    record = db.query(ServiceRecord).filter(ServiceRecord.id == record_id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="服务记录不存在")
+    
+    photos = record.photos or []
+    if photo_index < 0 or photo_index >= len(photos):
+        raise HTTPException(status_code=400, detail="照片索引无效")
+    
+    # 删除文件
+    photo = photos[photo_index]
+    if "url" in photo:
+        file_path = Path(settings.UPLOAD_DIR) / photo["url"]
+        if file_path.exists():
+            try:
+                file_path.unlink()
+            except Exception as e:
+                import logging
+                logging.warning(f"删除照片文件失败: {str(e)}")
+    
+    # 从列表中移除
+    photos.pop(photo_index)
+    record.photos = photos
+    
+    db.add(record)
+    db.commit()
+    
+    return ResponseModel(
+        code=200,
+        message="照片删除成功",
+        data={
+            "record_id": record_id,
+            "total_photos": len(photos),
+        }
+    )
+
+
 # ==================== 客户沟通 ====================
 
 @router.get("/customer-communications/statistics", response_model=dict, status_code=status.HTTP_200_OK)
@@ -971,6 +1192,72 @@ def send_customer_satisfaction(
     db.refresh(survey)
     
     return survey
+
+
+# ==================== 满意度调查模板 ====================
+
+@router.get("/satisfaction-templates", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
+def list_satisfaction_templates(
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    survey_type: Optional[str] = Query(None, description="调查类型筛选"),
+    is_active: Optional[bool] = Query(True, description="是否启用"),
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取满意度调查模板列表
+    """
+    query = db.query(SatisfactionSurveyTemplate)
+    
+    if survey_type:
+        query = query.filter(SatisfactionSurveyTemplate.survey_type == survey_type)
+    if is_active is not None:
+        query = query.filter(SatisfactionSurveyTemplate.is_active == is_active)
+    if keyword:
+        query = query.filter(
+            or_(
+                SatisfactionSurveyTemplate.template_name.like(f"%{keyword}%"),
+                SatisfactionSurveyTemplate.template_code.like(f"%{keyword}%"),
+            )
+        )
+    
+    total = query.count()
+    items = query.order_by(desc(SatisfactionSurveyTemplate.usage_count), desc(SatisfactionSurveyTemplate.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "pages": (total + page_size - 1) // page_size,
+    }
+
+
+@router.get("/satisfaction-templates/{template_id}", response_model=dict, status_code=status.HTTP_200_OK)
+def get_satisfaction_template(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取满意度调查模板详情
+    """
+    template = db.query(SatisfactionSurveyTemplate).filter(SatisfactionSurveyTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="调查模板不存在")
+    
+    return {
+        "id": template.id,
+        "template_name": template.template_name,
+        "template_code": template.template_code,
+        "survey_type": template.survey_type,
+        "questions": template.questions or [],
+        "default_send_method": template.default_send_method,
+        "default_deadline_days": template.default_deadline_days,
+    }
 
 
 # ==================== 知识库 ====================

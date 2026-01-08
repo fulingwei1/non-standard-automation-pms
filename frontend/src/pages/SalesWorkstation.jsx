@@ -43,7 +43,7 @@ import {
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { cn } from '../lib/utils'
 import { SalesFunnel, CustomerCard, OpportunityCard, PaymentTimeline, PaymentStats } from '../components/sales'
-import { salesStatisticsApi, opportunityApi, customerApi, contractApi, invoiceApi, projectApi } from '../services/api'
+import { salesStatisticsApi, opportunityApi, customerApi, contractApi, invoiceApi, projectApi, quoteApi } from '../services/api'
 
 // Mock data
 const mockStats = {
@@ -65,6 +65,8 @@ const todoTypeConfig = {
   payment: { icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
   visit: { icon: Building2, color: 'text-purple-400', bg: 'bg-purple-500/20' },
   acceptance: { icon: CheckCircle2, color: 'text-pink-400', bg: 'bg-pink-500/20' },
+  approval: { icon: CheckCircle2, color: 'text-orange-400', bg: 'bg-orange-500/20' },
+  reminder: { icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-500/20' },
 }
 
 const healthColors = {
@@ -79,6 +81,9 @@ export default function SalesWorkstation() {
   const [customers, setCustomers] = useState([])
   const [projects, setProjects] = useState([])
   const [payments, setPayments] = useState([])
+  const [opportunities, setOpportunities] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   // Load sales statistics
   const loadStatistics = useCallback(async () => {
@@ -122,7 +127,6 @@ export default function SalesWorkstation() {
       const customersData = customersResponse.data?.items || customersResponse.data || []
       setCustomers(customersData.slice(0, 3))
 
-
       // Load projects (from contracts)
       const contractsResponse = await contractApi.list({ page: 1, page_size: 10, status: 'SIGNED' })
       const contractsData = contractsResponse.data?.items || contractsResponse.data || []
@@ -161,6 +165,43 @@ export default function SalesWorkstation() {
       const overduePayment = paymentsData
         .filter(p => p.status === 'overdue' || (p.dueDate && new Date(p.dueDate) < new Date() && p.status !== 'paid'))
         .reduce((sum, p) => sum + p.amount, 0)
+
+      // Load todos (Sprint 3: Reminders)
+      // TODO: Load from notifications API
+      const todosData = []
+      
+      // Load pending approvals
+      try {
+        const approvalStatuses = []
+        // Check quotes with pending approvals
+        const quotesResponse = await quoteApi.list({ status: 'SUBMITTED', page_size: 10 })
+        const quotes = quotesResponse.data?.items || quotesResponse.data || []
+        for (const quote of quotes) {
+          try {
+            const approvalStatus = await quoteApi.getApprovalStatus(quote.id)
+            if (approvalStatus?.status === 'PENDING') {
+              todosData.push({
+                id: `approval-quote-${quote.id}`,
+                type: 'approval',
+                title: `报价审批 - ${quote.quote_code}`,
+                target: quote.customer?.customer_name || '',
+                time: '待审批',
+                priority: 'high',
+                done: false,
+              })
+            }
+          } catch (err) {
+            // Ignore errors
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load approval todos:', err)
+      }
+
+      // Load overdue reminders
+      // TODO: Load from reminders API
+
+      setTodos(todosData)
 
       setStats({
         monthlyTarget,
@@ -343,7 +384,7 @@ export default function SalesWorkstation() {
             </CardContent>
           </Card>
 
-          {/* Today's Todos */}
+          {/* Today's Todos - Issue 5.3: 待办事项卡片 */}
           <Card>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
@@ -352,44 +393,50 @@ export default function SalesWorkstation() {
               </div>
             </CardHeader>
             <CardContent className="space-y-2">
-              {todos.map((todo) => {
-                const config = todoTypeConfig[todo.type]
-                const Icon = config?.icon || Clock
-                return (
-                  <motion.div
-                    key={todo.id}
-                    variants={fadeIn}
-                    onClick={() => toggleTodo(todo.id)}
-                    className={cn(
-                      'flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all',
-                      'hover:bg-surface-100',
-                      todo.done && 'opacity-50'
-                    )}
-                  >
-                    <div className={cn(
-                      'w-8 h-8 rounded-lg flex items-center justify-center',
-                      config?.bg || 'bg-slate-500/20'
-                    )}>
-                      <Icon className={cn('w-4 h-4', config?.color || 'text-slate-400')} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className={cn(
-                          'font-medium text-sm',
-                          todo.done ? 'line-through text-slate-500' : 'text-white'
-                        )}>
-                          {todo.title}
-                        </span>
-                        {todo.priority === 'high' && !todo.done && (
-                          <AlertTriangle className="w-3 h-3 text-red-400" />
-                        )}
+              {todos.length === 0 ? (
+                <div className="text-center py-8 text-slate-500 text-sm">
+                  暂无待办事项
+                </div>
+              ) : (
+                todos.map((todo) => {
+                  const config = todoTypeConfig[todo.type] || { icon: Clock, color: 'text-slate-400', bg: 'bg-slate-500/20' }
+                  const Icon = config.icon
+                  return (
+                    <motion.div
+                      key={todo.id}
+                      variants={fadeIn}
+                      onClick={() => toggleTodo(todo.id)}
+                      className={cn(
+                        'flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all',
+                        'hover:bg-surface-100',
+                        todo.done && 'opacity-50'
+                      )}
+                    >
+                      <div className={cn(
+                        'w-8 h-8 rounded-lg flex items-center justify-center',
+                        config.bg
+                      )}>
+                        <Icon className={cn('w-4 h-4', config.color)} />
                       </div>
-                      <span className="text-xs text-slate-400">{todo.target}</span>
-                    </div>
-                    <span className="text-xs text-slate-500">{todo.time}</span>
-                  </motion.div>
-                )
-              })}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className={cn(
+                            'font-medium text-sm',
+                            todo.done ? 'line-through text-slate-500' : 'text-white'
+                          )}>
+                            {todo.title}
+                          </span>
+                          {todo.priority === 'high' && !todo.done && (
+                            <AlertTriangle className="w-3 h-3 text-red-400" />
+                          )}
+                        </div>
+                        <span className="text-xs text-slate-400">{todo.target}</span>
+                      </div>
+                      <span className="text-xs text-slate-500">{todo.time}</span>
+                    </motion.div>
+                  )
+                })
+              )}
             </CardContent>
           </Card>
         </motion.div>

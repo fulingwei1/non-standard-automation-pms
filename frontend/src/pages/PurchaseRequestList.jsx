@@ -136,11 +136,19 @@ function RequestCard({ request, onView, onEdit, onDelete, onSubmit, onApprove })
                 紧急
               </Badge>
             )}
+            {request.auto_po_created && (
+              <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs">
+                已生成采购订单
+              </Badge>
+            )}
           </div>
           <p className="text-xs text-slate-400">
             {request.project_name}
             {request.machine_name && ` / ${request.machine_name}`}
           </p>
+          {request.supplier_name && (
+            <p className="text-xs text-slate-500 mt-1">供应商：{request.supplier_name}</p>
+          )}
         </div>
       </div>
 
@@ -590,4 +598,3 @@ export default function PurchaseRequestList() {
     </div>
   )
 }
-

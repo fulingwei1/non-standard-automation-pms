@@ -43,7 +43,7 @@ import {
 } from '../components/ui/dialog'
 import { cn } from '../lib/utils'
 import { fadeIn } from '../lib/animations'
-import { purchaseApi, projectApi, materialApi, machineApi } from '../services/api'
+import { purchaseApi, projectApi, materialApi, machineApi, supplierApi } from '../services/api'
 import { toast } from '../components/ui/toast'
 import { LoadingCard } from '../components/common'
 import { ErrorMessage } from '../components/common'
@@ -61,6 +61,12 @@ const mockMaterials = [
   { id: 4, material_code: 'ME-03-02-0012', material_name: '滑块 HSR25R', unit: '个', standard_price: 850 },
 ]
 
+const mockSuppliers = [
+  { id: 1, supplier_name: '欧姆龙(上海)代理' },
+  { id: 2, supplier_name: 'THK(深圳)销售' },
+  { id: 3, supplier_name: '西门子官方授权' },
+]
+
 export default function PurchaseRequestNew() {
   const navigate = useNavigate()
   const { id } = useParams()
@@ -74,6 +80,7 @@ export default function PurchaseRequestNew() {
   const [formData, setFormData] = useState({
     project_id: null,
     machine_id: null,
+    supplier_id: null,
     request_type: 'NORMAL',
     request_reason: '',
     required_date: '',
@@ -85,6 +92,7 @@ export default function PurchaseRequestNew() {
   const [projects, setProjects] = useState([])
   const [machines, setMachines] = useState([])
   const [materials, setMaterials] = useState([])
+  const [suppliers, setSuppliers] = useState([])
   const [materialSearchQuery, setMaterialSearchQuery] = useState('')
   const [showMaterialDialog, setShowMaterialDialog] = useState(false)
   const [selectedItemIndex, setSelectedItemIndex] = useState(null)
@@ -166,6 +174,23 @@ export default function PurchaseRequestNew() {
     loadMaterials()
   }, [isDemoAccount])
 
+  // Load suppliers
+  useEffect(() => {
+    const loadSuppliers = async () => {
+      try {
+        if (isDemoAccount) {
+          setSuppliers(mockSuppliers)
+        } else {
+          const res = await supplierApi.list({ page: 1, page_size: 1000 })
+          setSuppliers(res.data?.items || res.data || [])
+        }
+      } catch (err) {
+        console.error('Failed to load suppliers:', err)
+      }
+    }
+    loadSuppliers()
+  }, [isDemoAccount])
+
   // Load request data if editing
   useEffect(() => {
     if (isEdit && id) {
@@ -201,6 +226,7 @@ export default function PurchaseRequestNew() {
             setFormData({
               project_id: data.project_id,
               machine_id: data.machine_id,
+              supplier_id: data.supplier_id || null,
               request_type: data.request_type || 'NORMAL',
               request_reason: data.request_reason || '',
               required_date: data.required_date || '',
@@ -310,11 +336,17 @@ export default function PurchaseRequestNew() {
       }
     }
 
+    if (!formData.supplier_id) {
+      toast.error('请选择供应商')
+      return
+    }
+
     try {
       setSaving(true)
       const requestData = {
         project_id: formData.project_id || null,
         machine_id: formData.machine_id || null,
+        supplier_id: formData.supplier_id || null,
         request_type: formData.request_type,
         request_reason: formData.request_reason || null,
         required_date: formData.required_date || null,
@@ -457,6 +489,31 @@ export default function PurchaseRequestNew() {
                         {machines.map(machine => (
                           <SelectItem key={machine.id} value={machine.id.toString()}>
                             {machine.machine_code} - {machine.machine_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-slate-400">指定供应商 *</Label>
+                    <Select
+                      value={formData.supplier_id?.toString() || ''}
+                      onValueChange={(val) => {
+                        if (val === 'none') {
+                          setFormData({ ...formData, supplier_id: null })
+                        } else {
+                          setFormData({ ...formData, supplier_id: parseInt(val) })
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="bg-slate-900/50 border-slate-700">
+                        <SelectValue placeholder="选择供应商" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">未指定</SelectItem>
+                        {suppliers.map(supplier => (
+                          <SelectItem key={supplier.id} value={supplier.id.toString()}>
+                            {supplier.supplier_name || supplier.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -712,13 +769,5 @@ export default function PurchaseRequestNew() {
     </div>
   )
 }
-
-
-
-
-
-
-
-
 
 

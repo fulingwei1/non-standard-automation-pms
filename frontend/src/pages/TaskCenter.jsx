@@ -26,6 +26,7 @@ import {
   DollarSign,
   Award,
   FileText,
+  BookOpen,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -1111,6 +1112,19 @@ export default function TaskCenter() {
                 </div>
                 <p className="text-xs text-slate-400 text-left">
                   查看和编辑月度工作总结
+                </p>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-auto p-4 flex flex-col items-start gap-2 hover:bg-surface-2/50 transition-colors"
+                onClick={() => navigate('/settings?section=knowledge')}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <BookOpen className="w-5 h-5 text-amber-400" />
+                  <span className="font-medium">知识管理</span>
+                </div>
+                <p className="text-xs text-slate-400 text-left">
+                  浏览知识库、我的收藏、最近浏览
                 </p>
               </Button>
             </div>

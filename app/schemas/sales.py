@@ -211,6 +211,30 @@ class QuoteItemCreate(BaseModel):
     unit: Optional[str] = Field(default=None, max_length=20, description="单位")
 
 
+class QuoteItemUpdate(BaseModel):
+    """更新报价明细"""
+
+    id: Optional[int] = Field(default=None, description="明细ID（更新时必填）")
+    item_type: Optional[str] = None
+    item_name: Optional[str] = None
+    qty: Optional[Decimal] = None
+    unit_price: Optional[Decimal] = None
+    cost: Optional[Decimal] = None
+    lead_time_days: Optional[int] = None
+    remark: Optional[str] = None
+    # 成本管理扩展字段
+    cost_category: Optional[str] = None
+    cost_source: Optional[str] = None
+    specification: Optional[str] = None
+    unit: Optional[str] = None
+
+
+class QuoteItemBatchUpdate(BaseModel):
+    """批量更新报价明细"""
+
+    items: List[QuoteItemUpdate] = Field(description="报价明细列表（包含id的为更新，不包含id的为新增）")
+
+
 class QuoteItemResponse(BaseSchema):
     """报价明细响应"""
 
@@ -740,10 +764,286 @@ class CostCheckResponse(BaseModel):
 class CostComparisonResponse(BaseModel):
     """成本对比响应"""
     
+    current_version: Optional[Dict[str, Any]] = None
+    previous_version: Optional[Dict[str, Any]] = None
+    comparison: Optional[Dict[str, Any]] = None
+    breakdown_comparison: Optional[List[Dict[str, Any]]] = None
+
+
+# ==================== 采购物料成本清单 ====================
+
+
+class PurchaseMaterialCostCreate(BaseModel):
+    """创建采购物料成本"""
+    
+    material_code: Optional[str] = Field(default=None, max_length=50, description="物料编码")
+    material_name: str = Field(max_length=200, description="物料名称")
+    specification: Optional[str] = Field(default=None, max_length=500, description="规格型号")
+    brand: Optional[str] = Field(default=None, max_length=100, description="品牌")
+    unit: Optional[str] = Field(default="件", max_length=20, description="单位")
+    material_type: Optional[str] = Field(default=None, max_length=50, description="物料类型")
+    is_standard_part: bool = Field(default=True, description="是否标准件")
+    unit_cost: Decimal = Field(description="单位成本")
+    currency: Optional[str] = Field(default="CNY", max_length=10, description="币种")
+    supplier_id: Optional[int] = Field(default=None, description="供应商ID")
+    supplier_name: Optional[str] = Field(default=None, max_length=200, description="供应商名称")
+    purchase_date: Optional[date] = Field(default=None, description="采购日期")
+    purchase_order_no: Optional[str] = Field(default=None, max_length=50, description="采购订单号")
+    purchase_quantity: Optional[Decimal] = Field(default=None, description="采购数量")
+    lead_time_days: Optional[int] = Field(default=None, description="交期(天)")
+    is_active: bool = Field(default=True, description="是否启用")
+    match_priority: Optional[int] = Field(default=0, description="匹配优先级")
+    match_keywords: Optional[str] = Field(default=None, description="匹配关键词（逗号分隔）")
+    remark: Optional[str] = Field(default=None, description="备注")
+
+
+class PurchaseMaterialCostUpdate(BaseModel):
+    """更新采购物料成本"""
+    
+    material_code: Optional[str] = None
+    material_name: Optional[str] = None
+    specification: Optional[str] = None
+    brand: Optional[str] = None
+    unit: Optional[str] = None
+    material_type: Optional[str] = None
+    is_standard_part: Optional[bool] = None
+    unit_cost: Optional[Decimal] = None
+    currency: Optional[str] = None
+    supplier_id: Optional[int] = None
+    supplier_name: Optional[str] = None
+    purchase_date: Optional[date] = None
+    purchase_order_no: Optional[str] = None
+    purchase_quantity: Optional[Decimal] = None
+    lead_time_days: Optional[int] = None
+    is_active: Optional[bool] = None
+    match_priority: Optional[int] = None
+    match_keywords: Optional[str] = None
+    remark: Optional[str] = None
+
+
+class PurchaseMaterialCostResponse(TimestampSchema):
+    """采购物料成本响应"""
+    
+    id: int
+    material_code: Optional[str] = None
+    material_name: str
+    specification: Optional[str] = None
+    brand: Optional[str] = None
+    unit: str = "件"
+    material_type: Optional[str] = None
+    is_standard_part: bool = True
+    unit_cost: Decimal
+    currency: str = "CNY"
+    supplier_id: Optional[int] = None
+    supplier_name: Optional[str] = None
+    purchase_date: Optional[date] = None
+    purchase_order_no: Optional[str] = None
+    purchase_quantity: Optional[Decimal] = None
+    lead_time_days: Optional[int] = None
+    is_active: bool = True
+    match_priority: int = 0
+    match_keywords: Optional[str] = None
+    usage_count: int = 0
+    last_used_at: Optional[datetime] = None
+    remark: Optional[str] = None
+    submitted_by: Optional[int] = None
+    submitter_name: Optional[str] = None
+
+
+class MaterialCostMatchRequest(BaseModel):
+    """物料成本匹配请求"""
+    
+    item_name: str = Field(description="物料名称")
+    specification: Optional[str] = Field(default=None, description="规格型号")
+    material_type: Optional[str] = Field(default=None, description="物料类型")
+
+
+class MaterialCostMatchResponse(BaseModel):
+    """物料成本匹配响应"""
+    
+    matched: bool = Field(description="是否匹配成功")
+    match_score: Optional[float] = Field(default=None, description="匹配度（0-100）")
+    matched_cost: Optional[PurchaseMaterialCostResponse] = Field(default=None, description="匹配到的成本信息")
+    suggestions: Optional[List[PurchaseMaterialCostResponse]] = Field(default=[], description="推荐的成本选项")
+
+
+class CostComparisonResponse(BaseModel):
+    """成本对比响应"""
+    
     current_version: dict
     previous_version: Optional[dict] = None
     comparison: Optional[dict] = None
     breakdown_comparison: Optional[List[dict]] = None
+
+
+# ==================== 采购物料成本清单 ====================
+
+
+class PurchaseMaterialCostCreate(BaseModel):
+    """创建采购物料成本"""
+    
+    material_code: Optional[str] = Field(default=None, max_length=50, description="物料编码")
+    material_name: str = Field(max_length=200, description="物料名称")
+    specification: Optional[str] = Field(default=None, max_length=500, description="规格型号")
+    brand: Optional[str] = Field(default=None, max_length=100, description="品牌")
+    unit: Optional[str] = Field(default="件", max_length=20, description="单位")
+    material_type: Optional[str] = Field(default=None, max_length=50, description="物料类型")
+    is_standard_part: bool = Field(default=True, description="是否标准件")
+    unit_cost: Decimal = Field(description="单位成本")
+    currency: Optional[str] = Field(default="CNY", max_length=10, description="币种")
+    supplier_id: Optional[int] = Field(default=None, description="供应商ID")
+    supplier_name: Optional[str] = Field(default=None, max_length=200, description="供应商名称")
+    purchase_date: Optional[date] = Field(default=None, description="采购日期")
+    purchase_order_no: Optional[str] = Field(default=None, max_length=50, description="采购订单号")
+    purchase_quantity: Optional[Decimal] = Field(default=None, description="采购数量")
+    lead_time_days: Optional[int] = Field(default=None, description="交期(天)")
+    is_active: bool = Field(default=True, description="是否启用")
+    match_priority: Optional[int] = Field(default=0, description="匹配优先级")
+    match_keywords: Optional[str] = Field(default=None, description="匹配关键词（逗号分隔）")
+    remark: Optional[str] = Field(default=None, description="备注")
+
+
+class PurchaseMaterialCostUpdate(BaseModel):
+    """更新采购物料成本"""
+    
+    material_code: Optional[str] = None
+    material_name: Optional[str] = None
+    specification: Optional[str] = None
+    brand: Optional[str] = None
+    unit: Optional[str] = None
+    material_type: Optional[str] = None
+    is_standard_part: Optional[bool] = None
+    unit_cost: Optional[Decimal] = None
+    currency: Optional[str] = None
+    supplier_id: Optional[int] = None
+    supplier_name: Optional[str] = None
+    purchase_date: Optional[date] = None
+    purchase_order_no: Optional[str] = None
+    purchase_quantity: Optional[Decimal] = None
+    lead_time_days: Optional[int] = None
+    is_active: Optional[bool] = None
+    match_priority: Optional[int] = None
+    match_keywords: Optional[str] = None
+    remark: Optional[str] = None
+
+
+class PurchaseMaterialCostResponse(TimestampSchema):
+    """采购物料成本响应"""
+    
+    id: int
+    material_code: Optional[str] = None
+    material_name: str
+    specification: Optional[str] = None
+    brand: Optional[str] = None
+    unit: str = "件"
+    material_type: Optional[str] = None
+    is_standard_part: bool = True
+    unit_cost: Decimal
+    currency: str = "CNY"
+    supplier_id: Optional[int] = None
+    supplier_name: Optional[str] = None
+    purchase_date: Optional[date] = None
+    purchase_order_no: Optional[str] = None
+    purchase_quantity: Optional[Decimal] = None
+    lead_time_days: Optional[int] = None
+    is_active: bool = True
+    match_priority: int = 0
+    match_keywords: Optional[str] = None
+    usage_count: int = 0
+    last_used_at: Optional[datetime] = None
+    remark: Optional[str] = None
+    submitted_by: Optional[int] = None
+    submitter_name: Optional[str] = None
+
+
+class MaterialCostMatchRequest(BaseModel):
+    """物料成本匹配请求"""
+    
+    item_name: str = Field(description="物料名称")
+    specification: Optional[str] = Field(default=None, description="规格型号")
+    material_type: Optional[str] = Field(default=None, description="物料类型")
+
+
+class MaterialCostMatchResponse(BaseModel):
+    """物料成本匹配响应"""
+    
+    matched: bool = Field(description="是否匹配成功")
+    match_score: Optional[float] = Field(default=None, description="匹配度（0-100）")
+    matched_cost: Optional[PurchaseMaterialCostResponse] = Field(default=None, description="匹配到的成本信息")
+    suggestions: Optional[List[PurchaseMaterialCostResponse]] = Field(default=[], description="推荐的成本选项")
+
+
+class CostMatchSuggestion(BaseModel):
+    """成本匹配建议"""
+    
+    item_id: int = Field(description="报价明细项ID")
+    item_name: str = Field(description="物料名称")
+    current_cost: Optional[Decimal] = Field(default=None, description="当前成本")
+    suggested_cost: Optional[Decimal] = Field(default=None, description="建议成本")
+    match_score: Optional[float] = Field(default=None, description="匹配度（0-100）")
+    suggested_specification: Optional[str] = Field(default=None, description="建议规格")
+    suggested_unit: Optional[str] = Field(default=None, description="建议单位")
+    suggested_lead_time_days: Optional[int] = Field(default=None, description="建议交期（天）")
+    suggested_cost_category: Optional[str] = Field(default=None, description="建议成本类别")
+    reason: Optional[str] = Field(default=None, description="匹配原因")
+    warnings: Optional[List[str]] = Field(default_factory=list, description="警告信息")
+    matched_cost_id: Optional[int] = Field(default=None, description="匹配到的成本记录ID")
+    matched_cost_record: Optional[PurchaseMaterialCostResponse] = Field(default=None, description="匹配到的成本记录详情")
+
+
+class CostMatchSuggestionsResponse(BaseModel):
+    """成本匹配建议响应"""
+    
+    suggestions: List[CostMatchSuggestion] = Field(default_factory=list, description="匹配建议列表")
+    total_items: int = Field(default=0, description="总项目数")
+    matched_count: int = Field(default=0, description="匹配成功数量")
+    unmatched_count: int = Field(default=0, description="未匹配数量")
+    warnings: Optional[List[str]] = Field(default=None, description="全局警告信息")
+    summary: Optional[Dict[str, Any]] = Field(default=None, description="汇总信息（总成本、毛利率等）")
+
+
+class ApplyCostSuggestionsRequest(BaseModel):
+    """应用成本建议请求"""
+    
+    suggestions: List[Dict[str, Any]] = Field(description="要应用的建议列表，每个建议包含 item_id 和要更新的字段")
+
+
+class MaterialCostUpdateReminderUpdate(BaseModel):
+    """更新物料成本更新提醒配置"""
+    
+    reminder_type: Optional[str] = Field(None, description="提醒类型：PERIODIC（定期）/MANUAL（手动）")
+    reminder_interval_days: Optional[int] = Field(None, description="提醒间隔（天）")
+    next_reminder_date: Optional[date] = Field(None, description="下次提醒日期")
+    is_enabled: Optional[bool] = Field(None, description="是否启用提醒")
+    material_type_filter: Optional[str] = Field(None, description="物料类型筛选")
+    include_standard: Optional[bool] = Field(None, description="包含标准件")
+    include_non_standard: Optional[bool] = Field(None, description="包含非标准件")
+    notify_roles: Optional[List[str]] = Field(None, description="通知角色列表")
+    notify_users: Optional[List[int]] = Field(None, description="通知用户ID列表")
+
+
+class MaterialCostUpdateReminderResponse(TimestampSchema):
+    """物料成本更新提醒响应"""
+    
+    id: int
+    reminder_type: str
+    reminder_interval_days: int
+    last_reminder_date: Optional[date] = None
+    next_reminder_date: Optional[date] = None
+    is_enabled: bool
+    material_type_filter: Optional[str] = None
+    include_standard: bool
+    include_non_standard: bool
+    notify_roles: Optional[List[str]] = None
+    notify_users: Optional[List[int]] = None
+    reminder_count: int
+    last_updated_by: Optional[int] = None
+    last_updated_at: Optional[datetime] = None
+    days_until_next: Optional[int] = None  # 距离下次提醒的天数
+    is_due: bool = False  # 是否到期
+    
+    class Config:
+        from_attributes = True
 
 
 # ==================== 报价/合同模板 & CPQ ====================
@@ -1329,3 +1629,135 @@ class AIClarificationResponse(TimestampSchema):
     round: int
     questions: str
     answers: Optional[str] = None
+
+
+# ==================== 审批工作流 ====================
+
+
+class ApprovalWorkflowStepCreate(BaseModel):
+    """创建审批工作流步骤"""
+    
+    step_order: int = Field(..., description="步骤顺序")
+    step_name: str = Field(..., max_length=100, description="步骤名称")
+    approver_role: Optional[str] = Field(None, max_length=50, description="审批角色")
+    approver_id: Optional[int] = Field(None, description="指定审批人ID")
+    is_required: bool = Field(True, description="是否必需")
+    can_delegate: bool = Field(True, description="是否允许委托")
+    can_withdraw: bool = Field(True, description="是否允许撤回")
+    due_hours: Optional[int] = Field(None, description="审批期限（小时）")
+
+
+class ApprovalWorkflowStepResponse(TimestampSchema):
+    """审批工作流步骤响应"""
+    
+    id: int
+    workflow_id: int
+    step_order: int
+    step_name: str
+    approver_role: Optional[str] = None
+    approver_id: Optional[int] = None
+    approver_name: Optional[str] = None
+    is_required: bool
+    can_delegate: bool
+    can_withdraw: bool
+    due_hours: Optional[int] = None
+    
+    class Config:
+        from_attributes = True
+
+
+class ApprovalWorkflowCreate(BaseModel):
+    """创建审批工作流"""
+    
+    workflow_type: str = Field(..., description="工作流类型：QUOTE/CONTRACT/INVOICE")
+    workflow_name: str = Field(..., max_length=100, description="工作流名称")
+    description: Optional[str] = Field(None, description="工作流描述")
+    routing_rules: Optional[Dict[str, Any]] = Field(None, description="审批路由规则（JSON）")
+    is_active: bool = Field(True, description="是否启用")
+    steps: List[ApprovalWorkflowStepCreate] = Field(default_factory=list, description="审批步骤")
+
+
+class ApprovalWorkflowUpdate(BaseModel):
+    """更新审批工作流"""
+    
+    workflow_name: Optional[str] = None
+    description: Optional[str] = None
+    routing_rules: Optional[Dict[str, Any]] = None
+    is_active: Optional[bool] = None
+
+
+class ApprovalWorkflowResponse(TimestampSchema):
+    """审批工作流响应"""
+    
+    id: int
+    workflow_type: str
+    workflow_name: str
+    description: Optional[str] = None
+    routing_rules: Optional[Dict[str, Any]] = None
+    is_active: bool
+    steps: List[ApprovalWorkflowStepResponse] = Field(default_factory=list)
+    
+    class Config:
+        from_attributes = True
+
+
+class ApprovalHistoryResponse(TimestampSchema):
+    """审批历史响应"""
+    
+    id: int
+    approval_record_id: int
+    step_order: int
+    approver_id: int
+    approver_name: Optional[str] = None
+    action: str
+    comment: Optional[str] = None
+    delegate_to_id: Optional[int] = None
+    delegate_to_name: Optional[str] = None
+    action_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class ApprovalRecordResponse(TimestampSchema):
+    """审批记录响应"""
+    
+    id: int
+    entity_type: str
+    entity_id: int
+    workflow_id: int
+    workflow_name: Optional[str] = None
+    current_step: int
+    status: str
+    initiator_id: int
+    initiator_name: Optional[str] = None
+    history: List[ApprovalHistoryResponse] = Field(default_factory=list)
+    
+    class Config:
+        from_attributes = True
+
+
+class ApprovalStartRequest(BaseModel):
+    """启动审批请求"""
+    
+    workflow_id: Optional[int] = Field(None, description="指定工作流ID（可选，不指定则根据路由规则自动选择）")
+    comment: Optional[str] = Field(None, description="提交说明")
+
+
+class ApprovalActionRequest(BaseModel):
+    """审批操作请求"""
+    
+    action: str = Field(..., description="审批操作：APPROVE/REJECT/DELEGATE/WITHDRAW")
+    comment: Optional[str] = Field(None, description="审批意见")
+    delegate_to_id: Optional[int] = Field(None, description="委托给的用户ID（action为DELEGATE时必填）")
+
+
+class ApprovalStatusResponse(BaseModel):
+    """审批状态响应"""
+    
+    record: Optional[ApprovalRecordResponse] = None
+    current_step_info: Optional[Dict[str, Any]] = None
+    can_approve: bool = False
+    can_reject: bool = False
+    can_delegate: bool = False
+    can_withdraw: bool = False

@@ -19,6 +19,7 @@ from app.core.config import settings
 from app.core import security
 from app.models.user import User
 from app.models.material import BomHeader, BomItem, Material, Supplier
+from app.models.purchase import PurchaseRequest, PurchaseRequestItem
 from app.models.project import Project, Machine
 from app.schemas.material import (
     BomCreate,
@@ -589,6 +590,32 @@ def release_bom(
         import logging
         logging.warning(f"BOM发布后成本归集失败：{str(e)}")
     
+    # Issue 1.2: BOM发布后自动触发阶段流转检查（S4→S5）
+    if bom.project_id:
+        try:
+            from app.services.status_transition_service import StatusTransitionService
+            transition_service = StatusTransitionService(db)
+            
+            # 调用BOM发布完成处理
+            transition_service.handle_bom_published(bom.project_id, bom.machine_id)
+            
+            # 检查是否可以自动推进阶段
+            project = db.query(Project).filter(Project.id == bom.project_id).first()
+            if project and project.stage == "S4":
+                auto_transition_result = transition_service.check_auto_stage_transition(
+                    bom.project_id,
+                    auto_advance=True  # 自动推进
+                )
+                
+                if auto_transition_result.get("auto_advanced"):
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.info(f"BOM发布后自动推进项目 {bom.project_id} 至 {auto_transition_result.get('target_stage')} 阶段")
+        except Exception as e:
+            # 自动流转失败不影响BOM发布，记录日志
+            import logging
+            logging.warning(f"BOM发布后自动阶段流转失败：{str(e)}", exc_info=True)
+    
     db.commit()
     db.refresh(bom)
     
@@ -1037,53 +1064,45 @@ def generate_purchase_request_from_bom(
     *,
     db: Session = Depends(deps.get_db),
     bom_id: int,
-    supplier_id: Optional[int] = Query(None, description="默认供应商ID（可选）"),
-    current_user: User = Depends(security.get_current_active_user),
+    supplier_id: Optional[int] = Query(None, description="默认供应商（可选）"),
+    create_requests: bool = Query(True, description="是否直接创建采购申请"),
+    current_user: User = Depends(security.require_procurement_access()),
 ) -> Any:
     """
-    从BOM生成采购需求
-    根据BOM明细中需要采购的物料，生成采购订单或采购需求清单
+    从BOM生成采购需求/采购申请
     """
+    from collections import defaultdict
+    from app.api.v1.endpoints.purchase import generate_request_no  # 避免循环导入
+
     bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
     if not bom:
         raise HTTPException(status_code=404, detail="BOM不存在")
     
-    # 获取BOM明细中需要采购的物料
-    bom_items = bom.items.filter(
-        BomItem.source_type == "PURCHASE"
-    ).all()
-    
+    bom_items = bom.items.filter(BomItem.source_type == "PURCHASE").all()
     if not bom_items:
         raise HTTPException(status_code=400, detail="BOM中没有需要采购的物料")
     
-    # 按供应商分组物料
-    from collections import defaultdict
     supplier_items = defaultdict(list)
-    
     for item in bom_items:
-        # 确定供应商
         target_supplier_id = supplier_id
         if not target_supplier_id and item.supplier_id:
             target_supplier_id = item.supplier_id
         elif not target_supplier_id and item.material_id:
-            # 尝试从物料获取默认供应商
             material = db.query(Material).filter(Material.id == item.material_id).first()
             if material and material.default_supplier_id:
                 target_supplier_id = material.default_supplier_id
         
         if not target_supplier_id:
-            # 如果没有供应商，使用默认供应商ID 0（表示未指定）
             target_supplier_id = 0
         
         supplier_items[target_supplier_id].append(item)
     
-    # 生成采购需求清单
     purchase_requests = []
+    created_requests = []
     
     for supplier_id_key, items in supplier_items.items():
-        if supplier_id_key == 0:
-            supplier_name = "未指定供应商"
-        else:
+        supplier_name = "未指定供应商"
+        if supplier_id_key != 0:
             supplier = db.query(Supplier).filter(Supplier.id == supplier_id_key).first()
             supplier_name = supplier.supplier_name if supplier else f"供应商ID {supplier_id_key}"
         
@@ -1091,12 +1110,11 @@ def generate_purchase_request_from_bom(
         total_amount = Decimal(0)
         
         for item in items:
-            # 计算未采购数量（数量 - 已采购数量）
-            remaining_qty = item.quantity - (item.purchased_qty or 0)
+            remaining_qty = (item.quantity or Decimal(0)) - (item.purchased_qty or Decimal(0))
             if remaining_qty <= 0:
-                continue  # 跳过已完全采购的物料
+                continue
             
-            unit_price = item.unit_price or 0
+            unit_price = item.unit_price or Decimal(0)
             amount = remaining_qty * unit_price
             total_amount += amount
             
@@ -1106,22 +1124,89 @@ def generate_purchase_request_from_bom(
                 "material_code": item.material_code,
                 "material_name": item.material_name,
                 "specification": item.specification,
-                "unit": item.unit,
-                "quantity": float(remaining_qty),
-                "unit_price": float(unit_price),
-                "amount": float(amount),
-                "required_date": item.required_date.isoformat() if item.required_date else None,
+                "unit": item.unit or "件",
+                "quantity": remaining_qty,
+                "unit_price": unit_price,
+                "amount": amount,
+                "required_date": item.required_date,
                 "is_key_item": item.is_key_item,
             })
         
-        if request_items:
-            purchase_requests.append({
-                "supplier_id": supplier_id_key if supplier_id_key != 0 else None,
+        if not request_items:
+            continue
+        
+        formatted_items = []
+        for it in request_items:
+            formatted_items.append({
+                "bom_item_id": it["bom_item_id"],
+                "material_id": it["material_id"],
+                "material_code": it["material_code"],
+                "material_name": it["material_name"],
+                "specification": it["specification"],
+                "unit": it["unit"],
+                "quantity": float(it["quantity"]),
+                "unit_price": float(it["unit_price"]),
+                "amount": float(it["amount"]),
+                "required_date": it["required_date"].isoformat() if it["required_date"] else None,
+                "is_key_item": it["is_key_item"],
+            })
+        
+        purchase_requests.append({
+            "supplier_id": supplier_id_key if supplier_id_key != 0 else None,
+            "supplier_name": supplier_name,
+            "items": formatted_items,
+            "total_amount": float(total_amount),
+            "item_count": len(formatted_items),
+        })
+        
+        if create_requests:
+            request_no = generate_request_no(db)
+            pr = PurchaseRequest(
+                request_no=request_no,
+                project_id=bom.project_id,
+                machine_id=bom.machine_id,
+                supplier_id=supplier_id_key if supplier_id_key != 0 else None,
+                request_type="NORMAL",
+                source_type="BOM",
+                source_id=bom.id,
+                request_reason=f"来自BOM {bom.bom_no} 的采购需求",
+                required_date=bom.required_date,
+                status="DRAFT",
+                total_amount=total_amount,
+                created_by=current_user.id,
+            )
+            db.add(pr)
+            db.flush()
+            
+            for it in request_items:
+                pr_item = PurchaseRequestItem(
+                    request_id=pr.id,
+                    bom_item_id=it["bom_item_id"],
+                    material_id=it["material_id"],
+                    material_code=it["material_code"],
+                    material_name=it["material_name"],
+                    specification=it["specification"],
+                    unit=it["unit"],
+                    quantity=it["quantity"],
+                    unit_price=it["unit_price"],
+                    amount=it["amount"],
+                    required_date=it["required_date"],
+                )
+                db.add(pr_item)
+            
+            created_requests.append({
+                "request_id": pr.id,
+                "request_no": pr.request_no,
+                "supplier_id": pr.supplier_id,
                 "supplier_name": supplier_name,
-                "items": request_items,
                 "total_amount": float(total_amount),
                 "item_count": len(request_items),
             })
+    
+    if create_requests and created_requests:
+        db.commit()
+    elif create_requests:
+        db.rollback()
     
     return ResponseModel(
         code=200,
@@ -1132,11 +1217,12 @@ def generate_purchase_request_from_bom(
             "project_id": bom.project_id,
             "machine_id": bom.machine_id,
             "purchase_requests": purchase_requests,
+            "created_requests": created_requests if create_requests else None,
             "summary": {
                 "total_suppliers": len(purchase_requests),
                 "total_items": sum(len(req["items"]) for req in purchase_requests),
                 "total_amount": sum(req["total_amount"] for req in purchase_requests),
+                "created_count": len(created_requests) if create_requests else 0,
             }
         }
     )
-

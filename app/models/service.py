@@ -328,6 +328,64 @@ class CustomerSatisfaction(Base, TimestampMixin):
         return f'<CustomerSatisfaction {self.survey_no}>'
 
 
+# ==================== 满意度调查模板 ====================
+
+class SatisfactionSurveyTemplate(Base, TimestampMixin):
+    """满意度调查模板表"""
+    __tablename__ = 'satisfaction_survey_templates'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    template_name = Column(String(100), nullable=False, comment='模板名称')
+    template_code = Column(String(50), unique=True, nullable=False, comment='模板编码')
+    
+    # 模板分类
+    survey_type = Column(String(20), nullable=False, comment='调查类型')
+    
+    # 模板内容
+    questions = Column(JSON, nullable=False, comment='问题列表（JSON格式）')
+    # questions格式示例：
+    # [
+    #   {
+    #     "id": 1,
+    #     "type": "rating",  # rating/text/choice
+    #     "question": "服务响应速度",
+    #     "required": true,
+    #     "options": null  # 如果是choice类型，这里是选项列表
+    #   },
+    #   ...
+    # ]
+    
+    # 默认配置
+    default_send_method = Column(String(20), comment='默认发送方式')
+    default_deadline_days = Column(Integer, default=7, comment='默认截止天数（从发送日期起）')
+    
+    # 使用统计
+    usage_count = Column(Integer, default=0, comment='使用次数')
+    last_used_at = Column(DateTime, comment='最后使用时间')
+    
+    # 状态
+    is_active = Column(Boolean, default=True, comment='是否启用')
+    
+    # 创建人
+    created_by = Column(Integer, ForeignKey('users.id'), nullable=False, comment='创建人ID')
+    created_by_name = Column(String(50), comment='创建人姓名')
+    
+    # 备注
+    remark = Column(Text, comment='备注说明')
+    
+    # 关系
+    creator = relationship('User', foreign_keys=[created_by])
+    
+    __table_args__ = (
+        Index('idx_survey_template_code', 'template_code'),
+        Index('idx_survey_template_type', 'survey_type'),
+        {'comment': '满意度调查模板表'},
+    )
+    
+    def __repr__(self):
+        return f'<SatisfactionSurveyTemplate {self.template_code}: {self.template_name}>'
+
+
 # ==================== 知识库 ====================
 
 class KnowledgeBase(Base, TimestampMixin):

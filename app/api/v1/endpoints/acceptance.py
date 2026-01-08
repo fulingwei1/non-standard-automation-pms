@@ -6,14 +6,29 @@
 
 import os
 import hashlib
+import logging
 from typing import Any, List, Optional
 from datetime import date, datetime
 from decimal import Decimal
+from io import BytesIO
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Response, Request, UploadFile, File, Form
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, desc, func
+
+try:
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4, letter
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import cm
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+    REPORTLAB_AVAILABLE = True
+except ImportError:
+    REPORTLAB_AVAILABLE = False
 
 from app.api import deps
 from app.core import security
@@ -33,6 +48,8 @@ from app.schemas.acceptance import (
     AcceptanceOrderResponse, AcceptanceOrderListResponse,
     CheckItemResultUpdate, CheckItemResultResponse,
     AcceptanceIssueCreate, AcceptanceIssueUpdate, AcceptanceIssueResponse,
+    AcceptanceIssueAssign, AcceptanceIssueResolve, AcceptanceIssueVerify, AcceptanceIssueDefer,
+    IssueFollowUpCreate, IssueFollowUpResponse,
     AcceptanceSignatureCreate, AcceptanceSignatureResponse,
     AcceptanceReportGenerateRequest, AcceptanceReportResponse
 )
@@ -41,36 +58,319 @@ from app.schemas.common import ResponseModel, PaginatedResponse
 router = APIRouter()
 
 
-def generate_order_no(db: Session) -> str:
-    """生成验收单号：AC-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_order = (
-        db.query(AcceptanceOrder)
-        .filter(AcceptanceOrder.order_no.like(f"AC-{today}-%"))
-        .order_by(desc(AcceptanceOrder.order_no))
-        .first()
+# ==================== 验收约束规则验证 ====================
+
+def validate_acceptance_rules(
+    db: Session,
+    acceptance_type: str,
+    project_id: int,
+    machine_id: Optional[int] = None,
+    order_id: Optional[int] = None
+) -> None:
+    """
+    验证验收约束规则
+    
+    规则：
+    - AR001: FAT验收必须在设备调试完成后
+    - AR002: SAT验收必须在FAT通过后
+    - AR003: 终验收必须在所有SAT通过后
+    
+    Args:
+        db: 数据库会话
+        acceptance_type: 验收类型（FAT/SAT/FINAL）
+        project_id: 项目ID
+        machine_id: 设备ID（FAT/SAT需要）
+        order_id: 验收单ID（用于更新时检查）
+    
+    Raises:
+        HTTPException: 如果违反约束规则
+    """
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="项目不存在")
+    
+    if acceptance_type == "FAT":
+        # AR001: FAT验收必须在设备调试完成后
+        if not machine_id:
+            raise HTTPException(status_code=400, detail="FAT验收必须指定设备")
+        
+        machine = db.query(Machine).filter(Machine.id == machine_id).first()
+        if not machine:
+            raise HTTPException(status_code=404, detail="设备不存在")
+        
+        # 检查设备是否在S5（装配调试）阶段之后
+        # S5是装配调试，S6是出厂验收，所以设备应该在S5或S6阶段
+        if machine.stage not in ["S5", "S6"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"设备尚未完成调试，当前阶段：{machine.stage}。FAT验收需要在设备调试完成后（S5阶段）进行"
+            )
+        
+        # 检查项目阶段是否在S6（出厂验收）阶段
+        if project.stage not in ["S5", "S6"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"项目尚未进入调试出厂阶段，当前阶段：{project.stage}。FAT验收需要在S5或S6阶段进行"
+            )
+    
+    elif acceptance_type == "SAT":
+        # AR002: SAT验收必须在FAT通过后
+        if not machine_id:
+            raise HTTPException(status_code=400, detail="SAT验收必须指定设备")
+        
+        machine = db.query(Machine).filter(Machine.id == machine_id).first()
+        if not machine:
+            raise HTTPException(status_code=404, detail="设备不存在")
+        
+        # 检查该设备是否有通过的FAT验收
+        fat_orders = db.query(AcceptanceOrder).filter(
+            AcceptanceOrder.project_id == project_id,
+            AcceptanceOrder.machine_id == machine_id,
+            AcceptanceOrder.acceptance_type == "FAT",
+            AcceptanceOrder.status == "COMPLETED",
+            AcceptanceOrder.overall_result == "PASSED"
+        ).all()
+        
+        if not fat_orders:
+            raise HTTPException(
+                status_code=400,
+                detail="SAT验收必须在FAT验收通过后进行。请先完成并通过该设备的FAT验收"
+            )
+        
+        # 检查项目阶段是否在S7或S8阶段（现场安装）
+        if project.stage not in ["S7", "S8"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"项目尚未进入现场安装阶段，当前阶段：{project.stage}。SAT验收需要在S7或S8阶段进行"
+            )
+    
+    elif acceptance_type == "FINAL":
+        # AR003: 终验收必须在所有SAT通过后
+        # 检查项目中所有设备是否都有通过的SAT验收
+        machines = db.query(Machine).filter(Machine.project_id == project_id).all()
+        
+        if not machines:
+            raise HTTPException(status_code=400, detail="项目中没有设备，无法进行终验收")
+        
+        for machine in machines:
+            # 检查该设备是否有通过的SAT验收
+            sat_orders = db.query(AcceptanceOrder).filter(
+                AcceptanceOrder.project_id == project_id,
+                AcceptanceOrder.machine_id == machine.id,
+                AcceptanceOrder.acceptance_type == "SAT",
+                AcceptanceOrder.status == "COMPLETED",
+                AcceptanceOrder.overall_result == "PASSED"
+            ).all()
+            
+            if not sat_orders:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"设备 {machine.machine_name} (编码: {machine.machine_code}) 尚未通过SAT验收，无法进行终验收。请先完成所有设备的SAT验收"
+                )
+        
+        # 检查项目阶段是否在S8或S9阶段（验收结项）
+        if project.stage not in ["S8", "S9"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"项目尚未进入验收结项阶段，当前阶段：{project.stage}。终验收需要在S8或S9阶段进行"
+            )
+
+
+def validate_completion_rules(
+    db: Session,
+    order_id: int
+) -> None:
+    """
+    验证完成验收的约束规则
+    
+    规则：
+    - AR004: 存在未闭环阻塞问题不能通过验收
+    - AR005: 必检项全部填写才能完成验收（已在complete_acceptance中实现）
+    
+    Args:
+        db: 数据库会话
+        order_id: 验收单ID
+    
+    Raises:
+        HTTPException: 如果违反约束规则
+    """
+    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="验收单不存在")
+    
+    # AR004: 检查是否存在未闭环的阻塞问题
+    blocking_issues = db.query(AcceptanceIssue).filter(
+        AcceptanceIssue.order_id == order_id,
+        AcceptanceIssue.is_blocking == True,
+        AcceptanceIssue.status.in_(["OPEN", "PROCESSING", "RESOLVED", "DEFERRED"])
+    ).all()
+    
+    # 如果问题状态是RESOLVED，需要检查是否已验证通过
+    unresolved_blocking_issues = []
+    for issue in blocking_issues:
+        if issue.status == "RESOLVED":
+            # 已解决的问题需要验证通过才能算闭环
+            if issue.verified_result != "VERIFIED":
+                unresolved_blocking_issues.append(issue)
+        else:
+            unresolved_blocking_issues.append(issue)
+    
+    if unresolved_blocking_issues:
+        issue_nos = [issue.issue_no for issue in unresolved_blocking_issues]
+        raise HTTPException(
+            status_code=400,
+            detail=f"存在 {len(unresolved_blocking_issues)} 个未闭环的阻塞问题，无法通过验收。问题编号：{', '.join(issue_nos)}"
+        )
+
+
+def validate_edit_rules(
+    db: Session,
+    order_id: int
+) -> None:
+    """
+    验证编辑验收单的约束规则
+    
+    规则：
+    - AR006: 客户签字后验收单不可修改
+    
+    Args:
+        db: 数据库会话
+        order_id: 验收单ID
+    
+    Raises:
+        HTTPException: 如果违反约束规则
+    """
+    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="验收单不存在")
+    
+    # AR006: 检查是否有客户签字
+    if order.customer_signed_at or order.customer_signer:
+        raise HTTPException(
+            status_code=400,
+            detail="客户已签字确认，验收单不可修改。如需修改，请联系管理员"
+        )
+    
+    # 检查是否有客户签署文件上传
+    if order.is_officially_completed:
+        raise HTTPException(
+            status_code=400,
+            detail="验收单已正式完成（已上传客户签署文件），不可修改"
+        )
+
+
+def generate_order_no(
+    db: Session,
+    acceptance_type: str,
+    project_code: str,
+    machine_no: Optional[int] = None
+) -> str:
+    """
+    生成验收单号
+    
+    规则：
+    - FAT验收单：FAT-{项目编号}-{设备序号}-{序号}
+      示例：FAT-P2025001-M01-001
+    - SAT验收单：SAT-{项目编号}-{设备序号}-{序号}
+      示例：SAT-P2025001-M01-001
+    - 终验收单：FIN-{项目编号}-{序号}
+      示例：FIN-P2025001-001
+    """
+    # 确定前缀
+    if acceptance_type == "FAT":
+        prefix = "FAT"
+    elif acceptance_type == "SAT":
+        prefix = "SAT"
+    elif acceptance_type == "FINAL":
+        prefix = "FIN"
+    else:
+        # 兼容旧代码，如果类型未知，使用AC前缀
+        prefix = "AC"
+    
+    # 构建基础编号（不含序号）
+    if acceptance_type == "FINAL":
+        # 终验收没有设备序号
+        base_no = f"{prefix}-{project_code}"
+    else:
+        # FAT和SAT需要设备序号
+        if machine_no is None:
+            raise ValueError(f"{acceptance_type}验收单必须提供设备序号")
+        machine_seq = f"M{machine_no:02d}"  # M01, M02, ...
+        base_no = f"{prefix}-{project_code}-{machine_seq}"
+    
+    # 查找同类型、同项目、同设备（如果是FAT/SAT）的最大序号
+    query = db.query(AcceptanceOrder).filter(
+        AcceptanceOrder.order_no.like(f"{base_no}-%")
     )
+    
+    max_order = query.order_by(desc(AcceptanceOrder.order_no)).first()
+    
     if max_order:
-        seq = int(max_order.order_no.split("-")[-1]) + 1
+        # 提取最后一部分序号
+        try:
+            seq = int(max_order.order_no.split("-")[-1]) + 1
+        except (ValueError, IndexError):
+            seq = 1
     else:
         seq = 1
-    return f"AC-{today}-{seq:03d}"
+    
+    return f"{base_no}-{seq:03d}"
 
 
-def generate_issue_no(db: Session) -> str:
-    """生成问题编号：IS-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
+def generate_issue_no(db: Session, order_no: str) -> str:
+    """
+    生成问题编号
+    
+    规则：
+    - 验收问题：AI-{验收单号后缀}-{序号}
+    - 示例：AI-FAT001-001（如果验收单号是 FAT-P2025001-M01-001）
+    
+    验收单号后缀提取规则：
+    - 提取验收单号的前缀（FAT/SAT/FIN）和最后序号部分（保留3位数字格式）
+    - 例如：FAT-P2025001-M01-001 -> FAT001
+    - 例如：SAT-P2025001-M01-002 -> SAT002
+    - 例如：FIN-P2025001-001 -> FIN001
+    """
+    # 解析验收单号，提取前缀和最后序号
+    parts = order_no.split("-")
+    if len(parts) >= 2:
+        # 提取前缀（FAT/SAT/FIN）
+        prefix = parts[0]
+        # 提取最后序号部分（保留原始格式，如001）
+        last_part = parts[-1]
+        try:
+            # 尝试转换为整数再格式化，确保是3位数字
+            seq_num = int(last_part)
+            suffix = f"{prefix}{seq_num:03d}"  # FAT001, SAT002, FIN001
+        except ValueError:
+            # 如果最后部分不是数字，使用原始格式
+            suffix = f"{prefix}{last_part}"
+    else:
+        # 如果格式不符合预期，使用简化规则
+        # 提取前3个字符作为前缀，最后3个字符作为序号
+        if len(order_no) >= 6:
+            suffix = f"{order_no[:3]}{order_no[-3:]}"
+        else:
+            suffix = order_no.replace("-", "")[:8]  # 取前8位
+    
+    # 查找同验收单的最大问题序号
+    pattern = f"AI-{suffix}-%"
     max_issue = (
         db.query(AcceptanceIssue)
-        .filter(AcceptanceIssue.issue_no.like(f"IS-{today}-%"))
+        .filter(AcceptanceIssue.issue_no.like(pattern))
         .order_by(desc(AcceptanceIssue.issue_no))
         .first()
     )
+    
     if max_issue:
-        seq = int(max_issue.issue_no.split("-")[-1]) + 1
+        try:
+            seq = int(max_issue.issue_no.split("-")[-1]) + 1
+        except (ValueError, IndexError):
+            seq = 1
     else:
         seq = 1
-    return f"IS-{today}-{seq:03d}"
+    
+    return f"AI-{suffix}-{seq:03d}"
 
 
 # ==================== 验收模板 ====================
@@ -363,6 +663,194 @@ def add_template_items(
     return ResponseModel(message="检查项添加成功")
 
 
+@router.put("/acceptance-templates/{template_id}", response_model=AcceptanceTemplateResponse, status_code=status.HTTP_200_OK)
+def update_acceptance_template(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    template_in: AcceptanceTemplateCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    更新验收模板
+    """
+    template = db.query(AcceptanceTemplate).filter(AcceptanceTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="验收模板不存在")
+    
+    # 系统预置模板不能修改
+    if template.is_system:
+        raise HTTPException(status_code=400, detail="系统预置模板不能修改")
+    
+    # 检查编码是否已被其他模板使用
+    if template_in.template_code != template.template_code:
+        existing = db.query(AcceptanceTemplate).filter(
+            AcceptanceTemplate.template_code == template_in.template_code,
+            AcceptanceTemplate.id != template_id
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="模板编码已被使用")
+    
+    # 更新模板基本信息
+    template.template_name = template_in.template_name
+    template.acceptance_type = template_in.acceptance_type
+    template.equipment_type = template_in.equipment_type
+    template.version = template_in.version
+    template.description = template_in.description
+    
+    db.add(template)
+    db.commit()
+    db.refresh(template)
+    
+    return AcceptanceTemplateResponse(
+        id=template.id,
+        template_code=template.template_code,
+        template_name=template.template_name,
+        acceptance_type=template.acceptance_type,
+        equipment_type=template.equipment_type,
+        version=template.version,
+        is_system=template.is_system,
+        is_active=template.is_active,
+        created_at=template.created_at,
+        updated_at=template.updated_at
+    )
+
+
+@router.delete("/acceptance-templates/{template_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def delete_acceptance_template(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    删除验收模板（软删除）
+    """
+    template = db.query(AcceptanceTemplate).filter(AcceptanceTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="验收模板不存在")
+    
+    # 系统预置模板不能删除
+    if template.is_system:
+        raise HTTPException(status_code=400, detail="系统预置模板不能删除")
+    
+    # 检查是否被使用
+    used_count = db.query(AcceptanceOrder).filter(AcceptanceOrder.template_id == template_id).count()
+    if used_count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"模板已被 {used_count} 个验收单使用，无法删除。建议禁用模板而不是删除"
+        )
+    
+    # 软删除：删除分类和检查项
+    categories = db.query(TemplateCategory).filter(TemplateCategory.template_id == template_id).all()
+    for category in categories:
+        # 删除检查项
+        db.query(TemplateCheckItem).filter(TemplateCheckItem.category_id == category.id).delete()
+        # 删除分类
+        db.delete(category)
+    
+    # 删除模板
+    db.delete(template)
+    db.commit()
+    
+    return ResponseModel(message="验收模板已删除")
+
+
+@router.post("/acceptance-templates/{template_id}/copy", response_model=AcceptanceTemplateResponse, status_code=status.HTTP_201_CREATED)
+def copy_acceptance_template(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    new_code: str = Query(..., description="新模板编码"),
+    new_name: str = Query(..., description="新模板名称"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    复制验收模板
+    """
+    source_template = db.query(AcceptanceTemplate).filter(AcceptanceTemplate.id == template_id).first()
+    if not source_template:
+        raise HTTPException(status_code=404, detail="源模板不存在")
+    
+    # 检查新编码是否已存在
+    existing = db.query(AcceptanceTemplate).filter(AcceptanceTemplate.template_code == new_code).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="模板编码已存在")
+    
+    # 创建新模板
+    new_template = AcceptanceTemplate(
+        template_code=new_code,
+        template_name=new_name,
+        acceptance_type=source_template.acceptance_type,
+        equipment_type=source_template.equipment_type,
+        version="1.0",
+        description=source_template.description,
+        is_system=False,
+        is_active=True,
+        created_by=current_user.id
+    )
+    db.add(new_template)
+    db.flush()
+    
+    # 复制分类和检查项
+    source_categories = db.query(TemplateCategory).filter(
+        TemplateCategory.template_id == template_id
+    ).order_by(TemplateCategory.sort_order).all()
+    
+    for source_category in source_categories:
+        # 创建新分类
+        new_category = TemplateCategory(
+            template_id=new_template.id,
+            category_code=source_category.category_code,
+            category_name=source_category.category_name,
+            weight=source_category.weight,
+            sort_order=source_category.sort_order,
+            is_required=source_category.is_required,
+            description=source_category.description
+        )
+        db.add(new_category)
+        db.flush()
+        
+        # 复制检查项
+        source_items = db.query(TemplateCheckItem).filter(
+            TemplateCheckItem.category_id == source_category.id
+        ).order_by(TemplateCheckItem.sort_order).all()
+        
+        for source_item in source_items:
+            new_item = TemplateCheckItem(
+                category_id=new_category.id,
+                item_code=source_item.item_code,
+                item_name=source_item.item_name,
+                check_method=source_item.check_method,
+                acceptance_criteria=source_item.acceptance_criteria,
+                standard_value=source_item.standard_value,
+                tolerance_min=source_item.tolerance_min,
+                tolerance_max=source_item.tolerance_max,
+                unit=source_item.unit,
+                is_required=source_item.is_required,
+                is_key_item=source_item.is_key_item,
+                sort_order=source_item.sort_order
+            )
+            db.add(new_item)
+    
+    db.commit()
+    db.refresh(new_template)
+    
+    return AcceptanceTemplateResponse(
+        id=new_template.id,
+        template_code=new_template.template_code,
+        template_name=new_template.template_name,
+        acceptance_type=new_template.acceptance_type,
+        equipment_type=new_template.equipment_type,
+        version=new_template.version,
+        is_system=new_template.is_system,
+        is_active=new_template.is_active,
+        created_at=new_template.created_at,
+        updated_at=new_template.updated_at
+    )
+
+
 # ==================== 验收单 ====================
 
 @router.get("/acceptance-orders", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
@@ -507,10 +995,24 @@ def create_acceptance_order(
         raise HTTPException(status_code=404, detail="项目不存在")
     
     # 验证机台（如果提供）
+    machine = None
+    machine_no = None
     if order_in.machine_id:
         machine = db.query(Machine).filter(Machine.id == order_in.machine_id).first()
         if not machine or machine.project_id != order_in.project_id:
             raise HTTPException(status_code=400, detail="机台不存在或不属于该项目")
+        machine_no = machine.machine_no
+    elif order_in.acceptance_type != "FINAL":
+        # FAT和SAT验收必须提供设备
+        raise HTTPException(status_code=400, detail=f"{order_in.acceptance_type}验收单必须指定设备")
+    
+    # 验证验收约束规则（AR001, AR002, AR003）
+    validate_acceptance_rules(
+        db=db,
+        acceptance_type=order_in.acceptance_type,
+        project_id=order_in.project_id,
+        machine_id=order_in.machine_id
+    )
     
     # 验证模板（如果提供）
     template = None
@@ -521,7 +1023,13 @@ def create_acceptance_order(
         if template.acceptance_type != order_in.acceptance_type:
             raise HTTPException(status_code=400, detail="模板类型与验收类型不匹配")
     
-    order_no = generate_order_no(db)
+    # 生成验收单号（符合设计规范）
+    order_no = generate_order_no(
+        db=db,
+        acceptance_type=order_in.acceptance_type,
+        project_code=project.project_code,
+        machine_no=machine_no
+    )
     
     order = AcceptanceOrder(
         order_no=order_no,
@@ -575,6 +1083,74 @@ def create_acceptance_order(
     return read_acceptance_order(order.id, db, current_user)
 
 
+@router.put("/acceptance-orders/{order_id}", response_model=AcceptanceOrderResponse, status_code=status.HTTP_200_OK)
+def update_acceptance_order(
+    *,
+    db: Session = Depends(deps.get_db),
+    order_id: int,
+    order_in: AcceptanceOrderUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    更新验收单
+    
+    只能更新草稿状态的验收单，且客户签字后不可修改（AR006）
+    """
+    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="验收单不存在")
+    
+    # AR006: 客户签字后验收单不可修改
+    validate_edit_rules(db, order_id)
+    
+    # 只能更新草稿状态的验收单
+    if order.status != "DRAFT":
+        raise HTTPException(status_code=400, detail="只能更新草稿状态的验收单")
+    
+    # 更新字段
+    update_data = order_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(order, field, value)
+    
+    db.add(order)
+    db.commit()
+    db.refresh(order)
+    
+    return read_acceptance_order(order_id, db, current_user)
+
+
+@router.post("/acceptance-orders/{order_id}/submit", response_model=AcceptanceOrderResponse, status_code=status.HTTP_200_OK)
+def submit_acceptance_order(
+    *,
+    db: Session = Depends(deps.get_db),
+    order_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    提交验收单（草稿→待验收）
+    """
+    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="验收单不存在")
+    
+    # AR006: 客户签字后验收单不可修改
+    validate_edit_rules(db, order_id)
+    
+    if order.status != "DRAFT":
+        raise HTTPException(status_code=400, detail="只能提交草稿状态的验收单")
+    
+    if order.total_items == 0:
+        raise HTTPException(status_code=400, detail="验收单没有检查项，无法提交")
+    
+    order.status = "PENDING"
+    
+    db.add(order)
+    db.commit()
+    db.refresh(order)
+    
+    return read_acceptance_order(order_id, db, current_user)
+
+
 @router.put("/acceptance-orders/{order_id}/start", response_model=AcceptanceOrderResponse, status_code=status.HTTP_200_OK)
 def start_acceptance(
     *,
@@ -584,14 +1160,14 @@ def start_acceptance(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    开始验收
+    开始验收（待验收→验收中）
     """
     order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="验收单不存在")
     
-    if order.status != "DRAFT":
-        raise HTTPException(status_code=400, detail="只能开始草稿状态的验收单")
+    if order.status not in ["DRAFT", "PENDING"]:
+        raise HTTPException(status_code=400, detail="只能开始草稿或待验收状态的验收单")
     
     if order.total_items == 0:
         raise HTTPException(status_code=400, detail="验收单没有检查项，无法开始验收")
@@ -606,6 +1182,49 @@ def start_acceptance(
     db.refresh(order)
     
     return read_acceptance_order(order_id, db, current_user)
+
+
+@router.delete("/acceptance-orders/{order_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def delete_acceptance_order(
+    *,
+    db: Session = Depends(deps.get_db),
+    order_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    删除验收单（仅草稿状态）
+    """
+    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="验收单不存在")
+    
+    if order.status != "DRAFT":
+        raise HTTPException(status_code=400, detail="只能删除草稿状态的验收单")
+    
+    # AR006: 客户签字后验收单不可删除
+    validate_edit_rules(db, order_id)
+    
+    # 删除关联的检查项
+    db.query(AcceptanceOrderItem).filter(AcceptanceOrderItem.order_id == order_id).delete()
+    
+    # 删除关联的问题
+    issues = db.query(AcceptanceIssue).filter(AcceptanceIssue.order_id == order_id).all()
+    for issue in issues:
+        # 删除问题的跟进记录
+        db.query(IssueFollowUp).filter(IssueFollowUp.issue_id == issue.id).delete()
+    db.query(AcceptanceIssue).filter(AcceptanceIssue.order_id == order_id).delete()
+    
+    # 删除关联的签字记录
+    db.query(AcceptanceSignature).filter(AcceptanceSignature.order_id == order_id).delete()
+    
+    # 删除关联的报告
+    db.query(AcceptanceReport).filter(AcceptanceReport.order_id == order_id).delete()
+    
+    # 删除验收单
+    db.delete(order)
+    db.commit()
+    
+    return ResponseModel(message="验收单已删除")
 
 
 @router.get("/acceptance-orders/{order_id}/items", response_model=List[CheckItemResultResponse], status_code=status.HTTP_200_OK)
@@ -688,20 +1307,25 @@ def update_check_item_result(
     
     db.add(item)
     
-    # 更新验收单统计
+    # 更新验收单统计（支持有条件通过的权重计算）
     items = db.query(AcceptanceOrderItem).filter(AcceptanceOrderItem.order_id == order.id).all()
     passed = len([i for i in items if i.result_status == "PASSED"])
     failed = len([i for i in items if i.result_status == "FAILED"])
     na = len([i for i in items if i.result_status == "NA"])
-    total = len([i for i in items if i.result_status != "PENDING"])
+    conditional = len([i for i in items if i.result_status == "CONDITIONAL"])
+    # 不适用(NA)的项不计入总数
+    total = len([i for i in items if i.result_status != "PENDING" and i.result_status != "NA"])
     
     order.passed_items = passed
     order.failed_items = failed
     order.na_items = na
     order.total_items = len(items)
     
+    # 通过率计算：通过数 + 有条件通过数*0.8
     if total > 0:
-        order.pass_rate = Decimal(str((passed / total) * 100))
+        # 有条件通过按0.8权重计算
+        effective_passed = passed + conditional * Decimal("0.8")
+        order.pass_rate = Decimal(str((effective_passed / total) * 100)).quantize(Decimal("0.01"))
     else:
         order.pass_rate = Decimal("0")
     
@@ -758,7 +1382,7 @@ def complete_acceptance(
     if order.status != "IN_PROGRESS":
         raise HTTPException(status_code=400, detail="只能完成进行中状态的验收单")
     
-    # 检查是否所有必检项都已检查
+    # AR005: 检查是否所有必检项都已检查
     pending_items = db.query(AcceptanceOrderItem).filter(
         AcceptanceOrderItem.order_id == order_id,
         AcceptanceOrderItem.is_required == True,
@@ -767,6 +1391,9 @@ def complete_acceptance(
     
     if pending_items > 0:
         raise HTTPException(status_code=400, detail=f"还有 {pending_items} 个必检项未完成检查")
+    
+    # AR004: 检查是否存在未闭环的阻塞问题
+    validate_completion_rules(db, order_id)
     
     order.status = "COMPLETED"
     order.actual_end_date = datetime.now()
@@ -855,6 +1482,120 @@ def complete_acceptance(
                     
                     db.add(plan)
     
+    # Sprint 2.2: 验收管理状态联动（FAT/SAT）
+    logger = logging.getLogger(__name__)
+    try:
+        from app.services.status_transition_service import StatusTransitionService
+        transition_service = StatusTransitionService(db)
+        
+        # 根据验收类型和结果更新项目状态
+        if order.acceptance_type == "FAT":
+            if complete_in.overall_result == "PASSED":
+                # FAT通过：状态→ST23，可推进至S8，健康度→H1
+                transition_service.handle_fat_passed(order.project_id, order.machine_id)
+                logger.info(f"FAT验收通过，项目状态已更新")
+            elif complete_in.overall_result == "FAILED":
+                # FAT不通过：状态→ST22，健康度→H2
+                # 获取问题列表
+                issues = db.query(AcceptanceIssue).filter(
+                    AcceptanceIssue.order_id == order_id,
+                    AcceptanceIssue.status != "RESOLVED"
+                ).all()
+                issue_descriptions = [issue.issue_description for issue in issues if issue.issue_description]
+                transition_service.handle_fat_failed(order.project_id, order.machine_id, issue_descriptions)
+                logger.info(f"FAT验收不通过，项目状态已更新")
+        elif order.acceptance_type == "SAT":
+            if complete_in.overall_result == "PASSED":
+                # SAT通过：状态→ST27，可推进至S9
+                transition_service.handle_sat_passed(order.project_id, order.machine_id)
+                logger.info(f"SAT验收通过，项目状态已更新")
+            elif complete_in.overall_result == "FAILED":
+                # SAT不通过：状态→ST26，健康度→H2
+                issues = db.query(AcceptanceIssue).filter(
+                    AcceptanceIssue.order_id == order_id,
+                    AcceptanceIssue.status != "RESOLVED"
+                ).all()
+                issue_descriptions = [issue.issue_description for issue in issues if issue.issue_description]
+                transition_service.handle_sat_failed(order.project_id, order.machine_id, issue_descriptions)
+                logger.info(f"SAT验收不通过，项目状态已更新")
+        elif order.acceptance_type == "FINAL":
+            if complete_in.overall_result == "PASSED":
+                # 终验收通过：可推进至S9
+                transition_service.handle_final_acceptance_passed(order.project_id)
+                logger.info(f"终验收通过，项目可推进至S9")
+    except Exception as e:
+        # 状态联动失败不影响验收完成，记录日志
+        logger.error(f"验收状态联动处理失败: {str(e)}", exc_info=True)
+    
+    # 验收联动：处理验收结果对进度跟踪的影响
+    try:
+        from app.services.progress_integration_service import ProgressIntegrationService
+        integration_service = ProgressIntegrationService(db)
+        
+        if complete_in.overall_result == "FAILED":
+            # 验收失败：阻塞相关里程碑并生成问题清单
+            blocked_milestones = integration_service.handle_acceptance_failed(order)
+            logger.info(f"验收失败，已阻塞 {len(blocked_milestones)} 个里程碑")
+        elif complete_in.overall_result == "PASSED":
+            # 验收通过：解除相关里程碑阻塞
+            unblocked_milestones = integration_service.handle_acceptance_passed(order)
+            logger.info(f"验收通过，已解除 {len(unblocked_milestones)} 个里程碑阻塞")
+    except Exception as e:
+        # 联动失败不影响验收完成，记录日志
+        logger.error(f"验收联动处理失败: {str(e)}", exc_info=True)
+    
+    # Issue 1.2: FAT/SAT验收通过后自动触发阶段流转检查
+    if complete_in.overall_result == "PASSED" and order.project_id:
+        try:
+            from app.services.status_transition_service import StatusTransitionService
+            transition_service = StatusTransitionService(db)
+            
+            project = db.query(Project).filter(Project.id == order.project_id).first()
+            if project:
+                # 检查是否可以自动推进阶段
+                if order.acceptance_type == "FAT" and project.stage == "S7":
+                    # FAT通过，检查是否可以推进到S8
+                    auto_transition_result = transition_service.check_auto_stage_transition(
+                        order.project_id,
+                        auto_advance=True
+                    )
+                    if auto_transition_result.get("auto_advanced"):
+                        logger.info(f"FAT验收通过后自动推进项目 {order.project_id} 至 S8 阶段")
+                
+                elif order.acceptance_type in ["SAT", "FINAL"] and project.stage == "S8":
+                    # SAT/终验收通过，检查是否可以推进到S9
+                    auto_transition_result = transition_service.check_auto_stage_transition(
+                        order.project_id,
+                        auto_advance=True
+                    )
+                    if auto_transition_result.get("auto_advanced"):
+                        logger.info(f"终验收通过后自动推进项目 {order.project_id} 至 S9 阶段")
+        except Exception as e:
+            # 自动流转失败不影响验收完成，记录日志
+            logger.warning(f"验收通过后自动阶段流转失败：{str(e)}", exc_info=True)
+    
+    # AR007: 如果终验收通过，自动触发质保期
+    if complete_in.overall_result == "PASSED" and order.acceptance_type == "FINAL":
+        try:
+            # 更新项目阶段为S9（质保结项）
+            project = db.query(Project).filter(Project.id == order.project_id).first()
+            if project:
+                project.stage = "S9"
+                project.actual_end_date = date.today()
+                db.add(project)
+                
+                # 更新所有设备状态
+                machines = db.query(Machine).filter(Machine.project_id == order.project_id).all()
+                for machine in machines:
+                    machine.stage = "S9"
+                    machine.status = "COMPLETED"
+                    db.add(machine)
+                
+                logger.info(f"终验收通过，项目 {project.project_code} 已进入质保期（S9阶段）")
+        except Exception as e:
+            # 质保期触发失败不影响验收完成，记录日志
+            logger.error(f"终验收后质保期触发失败: {str(e)}", exc_info=True)
+    
     # 如果验收通过，自动触发奖金计算
     if complete_in.overall_result == "PASSED":
         try:
@@ -868,8 +1609,6 @@ def complete_acceptance(
                 calculator.trigger_acceptance_bonus_calculation(project, order)
         except Exception as e:
             # 奖金计算失败不影响验收完成，记录日志
-            import logging
-            logger = logging.getLogger(__name__)
             logger.error(f"验收后奖金计算失败: {str(e)}", exc_info=True)
     
     db.commit()
@@ -879,6 +1618,75 @@ def complete_acceptance(
 
 
 # ==================== 验收问题 ====================
+
+def build_issue_response(issue: AcceptanceIssue, db: Session) -> AcceptanceIssueResponse:
+    """构建问题响应对象"""
+    found_by_name = None
+    if issue.found_by:
+        user = db.query(User).filter(User.id == issue.found_by).first()
+        found_by_name = user.real_name or user.username if user else None
+    
+    assigned_to_name = None
+    if issue.assigned_to:
+        user = db.query(User).filter(User.id == issue.assigned_to).first()
+        assigned_to_name = user.real_name or user.username if user else None
+    
+    resolved_by_name = None
+    if issue.resolved_by:
+        user = db.query(User).filter(User.id == issue.resolved_by).first()
+        resolved_by_name = user.real_name or user.username if user else None
+    
+    verified_by_name = None
+    if issue.verified_by:
+        user = db.query(User).filter(User.id == issue.verified_by).first()
+        verified_by_name = user.real_name or user.username if user else None
+    
+    return AcceptanceIssueResponse(
+        id=issue.id,
+        issue_no=issue.issue_no,
+        order_id=issue.order_id,
+        order_item_id=issue.order_item_id,
+        issue_type=issue.issue_type,
+        severity=issue.severity,
+        title=issue.title,
+        description=issue.description,
+        found_at=issue.found_at,
+        found_by=issue.found_by,
+        found_by_name=found_by_name,
+        status=issue.status,
+        assigned_to=issue.assigned_to,
+        assigned_to_name=assigned_to_name,
+        due_date=issue.due_date,
+        solution=issue.solution,
+        resolved_at=issue.resolved_at,
+        resolved_by=issue.resolved_by,
+        resolved_by_name=resolved_by_name,
+        verified_at=issue.verified_at,
+        verified_by=issue.verified_by,
+        verified_by_name=verified_by_name,
+        verified_result=issue.verified_result,
+        is_blocking=issue.is_blocking,
+        attachments=issue.attachments,
+        created_at=issue.created_at,
+        updated_at=issue.updated_at
+    )
+
+
+@router.get("/acceptance-issues/{issue_id}", response_model=AcceptanceIssueResponse, status_code=status.HTTP_200_OK)
+def read_acceptance_issue(
+    issue_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取问题详情
+    """
+    issue = db.query(AcceptanceIssue).filter(AcceptanceIssue.id == issue_id).first()
+    if not issue:
+        raise HTTPException(status_code=404, detail="验收问题不存在")
+    
+    return build_issue_response(issue, db)
+
 
 @router.get("/acceptance-orders/{order_id}/issues", response_model=List[AcceptanceIssueResponse], status_code=status.HTTP_200_OK)
 def read_acceptance_issues(
@@ -903,38 +1711,7 @@ def read_acceptance_issues(
     
     items = []
     for issue in issues:
-        found_by_name = None
-        if issue.found_by:
-            user = db.query(User).filter(User.id == issue.found_by).first()
-            found_by_name = user.real_name or user.username if user else None
-        
-        assigned_to_name = None
-        if issue.assigned_to:
-            user = db.query(User).filter(User.id == issue.assigned_to).first()
-            assigned_to_name = user.real_name or user.username if user else None
-        
-        items.append(AcceptanceIssueResponse(
-            id=issue.id,
-            issue_no=issue.issue_no,
-            order_id=issue.order_id,
-            order_item_id=issue.order_item_id,
-            issue_type=issue.issue_type,
-            severity=issue.severity,
-            title=issue.title,
-            description=issue.description,
-            found_at=issue.found_at,
-            found_by=issue.found_by,
-            found_by_name=found_by_name,
-            status=issue.status,
-            assigned_to=issue.assigned_to,
-            assigned_to_name=assigned_to_name,
-            due_date=issue.due_date,
-            solution=issue.solution,
-            resolved_at=issue.resolved_at,
-            is_blocking=issue.is_blocking,
-            created_at=issue.created_at,
-            updated_at=issue.updated_at
-        ))
+        items.append(build_issue_response(issue, db))
     
     return items
 
@@ -963,7 +1740,8 @@ def create_acceptance_issue(
         if not item or item.order_id != order_id:
             raise HTTPException(status_code=400, detail="检查项不存在或不属于该验收单")
     
-    issue_no = generate_issue_no(db)
+    # 生成问题编号（符合设计规范）
+    issue_no = generate_issue_no(db, order.order_no)
     
     issue = AcceptanceIssue(
         issue_no=issue_no,
@@ -986,34 +1764,7 @@ def create_acceptance_issue(
     db.commit()
     db.refresh(issue)
     
-    found_by_name = current_user.real_name or current_user.username
-    assigned_to_name = None
-    if issue.assigned_to:
-        user = db.query(User).filter(User.id == issue.assigned_to).first()
-        assigned_to_name = user.real_name or user.username if user else None
-    
-    return AcceptanceIssueResponse(
-        id=issue.id,
-        issue_no=issue.issue_no,
-        order_id=issue.order_id,
-        order_item_id=issue.order_item_id,
-        issue_type=issue.issue_type,
-        severity=issue.severity,
-        title=issue.title,
-        description=issue.description,
-        found_at=issue.found_at,
-        found_by=issue.found_by,
-        found_by_name=found_by_name,
-        status=issue.status,
-        assigned_to=issue.assigned_to,
-        assigned_to_name=assigned_to_name,
-        due_date=issue.due_date,
-        solution=issue.solution,
-        resolved_at=issue.resolved_at,
-        is_blocking=issue.is_blocking,
-        created_at=issue.created_at,
-        updated_at=issue.updated_at
-    )
+    return build_issue_response(issue, db)
 
 
 @router.put("/acceptance-issues/{issue_id}", response_model=AcceptanceIssueResponse, status_code=status.HTTP_200_OK)
@@ -1035,46 +1786,16 @@ def update_acceptance_issue(
     for field, value in update_data.items():
         setattr(issue, field, value)
     
-    # 如果状态更新为已解决，记录解决时间
+    # 如果状态更新为已解决，记录解决时间和解决人
     if issue_in.status == "RESOLVED" and not issue.resolved_at:
         issue.resolved_at = datetime.now()
+        issue.resolved_by = current_user.id
     
     db.add(issue)
     db.commit()
     db.refresh(issue)
     
-    found_by_name = None
-    if issue.found_by:
-        user = db.query(User).filter(User.id == issue.found_by).first()
-        found_by_name = user.real_name or user.username if user else None
-    
-    assigned_to_name = None
-    if issue.assigned_to:
-        user = db.query(User).filter(User.id == issue.assigned_to).first()
-        assigned_to_name = user.real_name or user.username if user else None
-    
-    return AcceptanceIssueResponse(
-        id=issue.id,
-        issue_no=issue.issue_no,
-        order_id=issue.order_id,
-        order_item_id=issue.order_item_id,
-        issue_type=issue.issue_type,
-        severity=issue.severity,
-        title=issue.title,
-        description=issue.description,
-        found_at=issue.found_at,
-        found_by=issue.found_by,
-        found_by_name=found_by_name,
-        status=issue.status,
-        assigned_to=issue.assigned_to,
-        assigned_to_name=assigned_to_name,
-        due_date=issue.due_date,
-        solution=issue.solution,
-        resolved_at=issue.resolved_at,
-        is_blocking=issue.is_blocking,
-        created_at=issue.created_at,
-        updated_at=issue.updated_at
-    )
+    return build_issue_response(issue, db)
 
 
 @router.put("/acceptance-issues/{issue_id}/close", response_model=AcceptanceIssueResponse, status_code=status.HTTP_200_OK)
@@ -1098,43 +1819,262 @@ def close_acceptance_issue(
     issue.status = "CLOSED"
     issue.solution = solution
     issue.resolved_at = datetime.now()
+    issue.resolved_by = current_user.id
     
     db.add(issue)
     db.commit()
     db.refresh(issue)
     
-    found_by_name = None
-    if issue.found_by:
-        user = db.query(User).filter(User.id == issue.found_by).first()
-        found_by_name = user.real_name or user.username if user else None
+    return build_issue_response(issue, db)
+
+
+@router.post("/acceptance-issues/{issue_id}/assign", response_model=AcceptanceIssueResponse, status_code=status.HTTP_200_OK)
+def assign_acceptance_issue(
+    *,
+    db: Session = Depends(deps.get_db),
+    issue_id: int,
+    assign_in: AcceptanceIssueAssign,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    指派问题
+    """
+    issue = db.query(AcceptanceIssue).filter(AcceptanceIssue.id == issue_id).first()
+    if not issue:
+        raise HTTPException(status_code=404, detail="验收问题不存在")
     
-    assigned_to_name = None
-    if issue.assigned_to:
-        user = db.query(User).filter(User.id == issue.assigned_to).first()
-        assigned_to_name = user.real_name or user.username if user else None
+    # 验证被指派人是否存在
+    assigned_user = db.query(User).filter(User.id == assign_in.assigned_to).first()
+    if not assigned_user:
+        raise HTTPException(status_code=404, detail="被指派人不存在")
     
-    return AcceptanceIssueResponse(
-        id=issue.id,
-        issue_no=issue.issue_no,
-        order_id=issue.order_id,
-        order_item_id=issue.order_item_id,
-        issue_type=issue.issue_type,
-        severity=issue.severity,
-        title=issue.title,
-        description=issue.description,
-        found_at=issue.found_at,
-        found_by=issue.found_by,
-        found_by_name=found_by_name,
-        status=issue.status,
-        assigned_to=issue.assigned_to,
-        assigned_to_name=assigned_to_name,
-        due_date=issue.due_date,
-        solution=issue.solution,
-        resolved_at=issue.resolved_at,
-        is_blocking=issue.is_blocking,
-        created_at=issue.created_at,
-        updated_at=issue.updated_at
+    # 记录原值
+    old_assigned_to = issue.assigned_to
+    old_due_date = issue.due_date
+    
+    # 更新问题
+    issue.assigned_to = assign_in.assigned_to
+    issue.due_date = assign_in.due_date
+    issue.status = "PROCESSING" if issue.status == "OPEN" else issue.status
+    
+    db.add(issue)
+    db.flush()
+    
+    # 创建跟进记录
+    follow_up = IssueFollowUp(
+        issue_id=issue_id,
+        action_type="ASSIGN",
+        action_content=assign_in.remark or f"问题已指派给 {assigned_user.real_name or assigned_user.username}",
+        old_value=str(old_assigned_to) if old_assigned_to else None,
+        new_value=str(assign_in.assigned_to),
+        created_by=current_user.id
     )
+    db.add(follow_up)
+    
+    db.commit()
+    db.refresh(issue)
+    
+    return build_issue_response(issue, db)
+
+
+@router.post("/acceptance-issues/{issue_id}/resolve", response_model=AcceptanceIssueResponse, status_code=status.HTTP_200_OK)
+def resolve_acceptance_issue(
+    *,
+    db: Session = Depends(deps.get_db),
+    issue_id: int,
+    resolve_in: AcceptanceIssueResolve,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    解决问题
+    """
+    issue = db.query(AcceptanceIssue).filter(AcceptanceIssue.id == issue_id).first()
+    if not issue:
+        raise HTTPException(status_code=404, detail="验收问题不存在")
+    
+    if issue.status == "CLOSED":
+        raise HTTPException(status_code=400, detail="问题已经关闭，无法解决")
+    
+    # 保存旧状态（用于跟进记录）
+    old_status = issue.status
+    
+    # 更新问题
+    issue.status = "RESOLVED"
+    issue.solution = resolve_in.solution
+    issue.resolved_at = datetime.now()
+    issue.resolved_by = current_user.id
+    if resolve_in.attachments:
+        # 合并附件
+        if issue.attachments:
+            issue.attachments = list(issue.attachments) + resolve_in.attachments
+        else:
+            issue.attachments = resolve_in.attachments
+    
+    db.add(issue)
+    db.flush()
+    
+    # 创建跟进记录
+    follow_up = IssueFollowUp(
+        issue_id=issue_id,
+        action_type="RESOLVE",
+        action_content=f"问题已解决：{resolve_in.solution}",
+        old_value=old_status,
+        new_value="RESOLVED",
+        attachments=resolve_in.attachments,
+        created_by=current_user.id
+    )
+    db.add(follow_up)
+    
+    db.commit()
+    db.refresh(issue)
+    
+    return build_issue_response(issue, db)
+
+
+@router.post("/acceptance-issues/{issue_id}/verify", response_model=AcceptanceIssueResponse, status_code=status.HTTP_200_OK)
+def verify_acceptance_issue(
+    *,
+    db: Session = Depends(deps.get_db),
+    issue_id: int,
+    verify_in: AcceptanceIssueVerify,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    验证问题
+    
+    验证结果：
+    - VERIFIED: 验证通过，问题已解决
+    - REJECTED: 验证不通过，问题需要重新处理
+    """
+    issue = db.query(AcceptanceIssue).filter(AcceptanceIssue.id == issue_id).first()
+    if not issue:
+        raise HTTPException(status_code=404, detail="验收问题不存在")
+    
+    if issue.status != "RESOLVED":
+        raise HTTPException(status_code=400, detail="只能验证已解决的问题")
+    
+    if verify_in.verified_result not in ["VERIFIED", "REJECTED"]:
+        raise HTTPException(status_code=400, detail="验证结果必须是 VERIFIED 或 REJECTED")
+    
+    # 记录原值
+    old_status = issue.status
+    old_verified_result = issue.verified_result
+    
+    # 更新问题
+    issue.verified_at = datetime.now()
+    issue.verified_by = current_user.id
+    issue.verified_result = verify_in.verified_result
+    
+    if verify_in.verified_result == "VERIFIED":
+        # 验证通过，关闭问题
+        issue.status = "CLOSED"
+    else:
+        # 验证不通过，重新打开问题
+        issue.status = "OPEN"
+        issue.resolved_at = None
+        issue.resolved_by = None
+    
+    db.add(issue)
+    db.flush()
+    
+    # 创建跟进记录
+    follow_up = IssueFollowUp(
+        issue_id=issue_id,
+        action_type="VERIFY",
+        action_content=f"验证结果：{verify_in.verified_result}。{verify_in.remark or ''}",
+        old_value=old_verified_result or old_status,
+        new_value=verify_in.verified_result,
+        created_by=current_user.id
+    )
+    db.add(follow_up)
+    
+    db.commit()
+    db.refresh(issue)
+    
+    return build_issue_response(issue, db)
+
+
+@router.post("/acceptance-issues/{issue_id}/defer", response_model=AcceptanceIssueResponse, status_code=status.HTTP_200_OK)
+def defer_acceptance_issue(
+    *,
+    db: Session = Depends(deps.get_db),
+    issue_id: int,
+    defer_in: AcceptanceIssueDefer,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    延期问题
+    """
+    issue = db.query(AcceptanceIssue).filter(AcceptanceIssue.id == issue_id).first()
+    if not issue:
+        raise HTTPException(status_code=404, detail="验收问题不存在")
+    
+    if issue.status == "CLOSED":
+        raise HTTPException(status_code=400, detail="已关闭的问题不能延期")
+    
+    # 记录原值
+    old_due_date = issue.due_date
+    
+    # 更新问题
+    issue.due_date = defer_in.new_due_date
+    issue.status = "DEFERRED" if issue.status != "DEFERRED" else issue.status
+    
+    db.add(issue)
+    db.flush()
+    
+    # 创建跟进记录
+    follow_up = IssueFollowUp(
+        issue_id=issue_id,
+        action_type="STATUS_CHANGE",
+        action_content=f"问题延期：{defer_in.reason}。新完成日期：{defer_in.new_due_date}",
+        old_value=str(old_due_date) if old_due_date else None,
+        new_value=str(defer_in.new_due_date),
+        created_by=current_user.id
+    )
+    db.add(follow_up)
+    
+    db.commit()
+    db.refresh(issue)
+    
+    return build_issue_response(issue, db)
+
+
+@router.get("/acceptance-issues/{issue_id}/follow-ups", response_model=List[IssueFollowUpResponse], status_code=status.HTTP_200_OK)
+def read_issue_follow_ups(
+    issue_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取问题跟进记录
+    """
+    issue = db.query(AcceptanceIssue).filter(AcceptanceIssue.id == issue_id).first()
+    if not issue:
+        raise HTTPException(status_code=404, detail="验收问题不存在")
+    
+    follow_ups = db.query(IssueFollowUp).filter(IssueFollowUp.issue_id == issue_id).order_by(IssueFollowUp.created_at).all()
+    
+    items = []
+    for follow_up in follow_ups:
+        created_by_name = None
+        if follow_up.created_by:
+            user = db.query(User).filter(User.id == follow_up.created_by).first()
+            created_by_name = user.real_name or user.username if user else None
+        
+        items.append(IssueFollowUpResponse(
+            id=follow_up.id,
+            issue_id=follow_up.issue_id,
+            action_type=follow_up.action_type,
+            action_content=follow_up.action_content,
+            old_value=follow_up.old_value,
+            new_value=follow_up.new_value,
+            attachments=follow_up.attachments,
+            created_by=follow_up.created_by,
+            created_by_name=created_by_name,
+            created_at=follow_up.created_at
+        ))
+    
+    return items
 
 
 @router.post("/acceptance-issues/{issue_id}/follow-ups", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
@@ -1142,7 +2082,7 @@ def add_issue_follow_up(
     *,
     db: Session = Depends(deps.get_db),
     issue_id: int,
-    follow_up_note: str = Query(..., description="跟进记录"),
+    follow_up_in: IssueFollowUpCreate,
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
@@ -1154,8 +2094,9 @@ def add_issue_follow_up(
     
     follow_up = IssueFollowUp(
         issue_id=issue_id,
-        action_type="FOLLOW_UP",
-        action_content=follow_up_note,
+        action_type=follow_up_in.action_type,
+        action_content=follow_up_in.action_content,
+        attachments=follow_up_in.attachments,
         created_by=current_user.id
     )
     
@@ -1283,6 +2224,370 @@ def generate_report_no(db: Session, report_type: str) -> str:
     return f"{prefix}{seq:03d}"
 
 
+def generate_pdf_report(
+    order: AcceptanceOrder,
+    db: Session,
+    report_no: str,
+    version: int,
+    current_user: User,
+    include_signatures: bool = True
+) -> bytes:
+    """
+    生成PDF格式的验收报告
+    
+    Args:
+        order: 验收单对象
+        db: 数据库会话
+        report_no: 报告编号
+        version: 报告版本号
+        current_user: 当前用户
+        include_signatures: 是否包含签字信息
+    
+    Returns:
+        PDF文件的字节内容
+    """
+    if not REPORTLAB_AVAILABLE:
+        raise HTTPException(
+            status_code=500,
+            detail="PDF生成功能不可用，请安装reportlab库：pip install reportlab"
+        )
+    
+    # 创建PDF缓冲区
+    buffer = BytesIO()
+    
+    # 创建PDF文档
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=2*cm,
+        leftMargin=2*cm,
+        topMargin=2*cm,
+        bottomMargin=2*cm
+    )
+    
+    # 获取样式
+    styles = getSampleStyleSheet()
+    
+    # 创建自定义样式
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        textColor=colors.HexColor('#1e40af'),
+        spaceAfter=30,
+        alignment=1,  # 居中
+        fontName='Helvetica-Bold'
+    )
+    
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=14,
+        textColor=colors.HexColor('#1e40af'),
+        spaceAfter=12,
+        spaceBefore=12,
+        fontName='Helvetica-Bold'
+    )
+    
+    normal_style = styles['Normal']
+    normal_style.fontSize = 10
+    normal_style.leading = 14
+    
+    # 构建PDF内容
+    story = []
+    
+    # 标题
+    story.append(Paragraph("设备验收报告", title_style))
+    story.append(Spacer(1, 0.5*cm))
+    
+    # 报告基本信息
+    project = db.query(Project).filter(Project.id == order.project_id).first()
+    machine = None
+    if order.machine_id:
+        machine = db.query(Machine).filter(Machine.id == order.machine_id).first()
+    
+    # 验收类型中文
+    type_map = {
+        "FAT": "出厂验收",
+        "SAT": "现场验收",
+        "FINAL": "终验收"
+    }
+    acceptance_type_cn = type_map.get(order.acceptance_type, order.acceptance_type)
+    
+    # 基本信息表格
+    info_data = [
+        ["报告编号", report_no],
+        ["验收单号", order.order_no],
+        ["验收类型", acceptance_type_cn],
+        ["版本号", f"V{version}"],
+        ["项目名称", project.project_name if project else "N/A"],
+        ["设备名称", machine.machine_name if machine else "N/A"],
+        ["验收日期", order.actual_end_date.strftime('%Y年%m月%d日') if order.actual_end_date else "N/A"],
+        ["验收地点", order.location or "N/A"],
+    ]
+    
+    info_table = Table(info_data, colWidths=[4*cm, 10*cm])
+    info_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f3f4f6')),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+    ]))
+    story.append(info_table)
+    story.append(Spacer(1, 0.5*cm))
+    
+    # 一、验收项目统计
+    story.append(Paragraph("一、验收项目统计", heading_style))
+    
+    # 获取检查项按分类统计
+    items = db.query(AcceptanceOrderItem).filter(
+        AcceptanceOrderItem.order_id == order.id
+    ).order_by(
+        AcceptanceOrderItem.category_code,
+        AcceptanceOrderItem.sort_order
+    ).all()
+    
+    # 按分类统计
+    category_stats = {}
+    for item in items:
+        cat_code = item.category_code
+        if cat_code not in category_stats:
+            category_stats[cat_code] = {
+                'name': item.category_name,
+                'total': 0,
+                'passed': 0,
+                'failed': 0,
+                'na': 0,
+                'conditional': 0
+            }
+        
+        stats = category_stats[cat_code]
+        stats['total'] += 1
+        if item.result_status == 'PASSED':
+            stats['passed'] += 1
+        elif item.result_status == 'FAILED':
+            stats['failed'] += 1
+        elif item.result_status == 'NA':
+            stats['na'] += 1
+        elif item.result_status == 'CONDITIONAL':
+            stats['conditional'] += 1
+    
+    # 构建统计表格
+    stats_data = [['分类', '总数', '通过', '不通过', '不适用', '有条件通过', '通过率']]
+    
+    total_all = {'total': 0, 'passed': 0, 'failed': 0, 'na': 0, 'conditional': 0}
+    
+    for cat_code, stats in sorted(category_stats.items()):
+        # 计算通过率（不适用不计入总数，有条件通过按0.8权重）
+        valid_total = stats['total'] - stats['na']
+        if valid_total > 0:
+            effective_passed = stats['passed'] + stats['conditional'] * 0.8
+            pass_rate = (effective_passed / valid_total) * 100
+        else:
+            pass_rate = 100.0
+        
+        stats_data.append([
+            stats['name'],
+            str(stats['total']),
+            str(stats['passed']),
+            str(stats['failed']),
+            str(stats['na']),
+            str(stats['conditional']),
+            f"{pass_rate:.1f}%"
+        ])
+        
+        # 累计总计
+        for key in total_all:
+            total_all[key] += stats[key]
+    
+    # 添加合计行
+    valid_total_all = total_all['total'] - total_all['na']
+    if valid_total_all > 0:
+        effective_passed_all = total_all['passed'] + total_all['conditional'] * 0.8
+        pass_rate_all = (effective_passed_all / valid_total_all) * 100
+    else:
+        pass_rate_all = 100.0
+    
+    stats_data.append([
+        '<b>合计</b>',
+        str(total_all['total']),
+        str(total_all['passed']),
+        str(total_all['failed']),
+        str(total_all['na']),
+        str(total_all['conditional']),
+        f"<b>{pass_rate_all:.1f}%</b>"
+    ])
+    
+    stats_table = Table(stats_data, colWidths=[3*cm, 1.5*cm, 1.5*cm, 1.5*cm, 1.5*cm, 1.5*cm, 2*cm])
+    stats_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 11),
+        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#f3f4f6')),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+    ]))
+    story.append(stats_table)
+    story.append(Spacer(1, 0.5*cm))
+    
+    # 二、验收结论
+    story.append(Paragraph("二、验收结论", heading_style))
+    
+    result_map = {
+        "PASSED": "通过",
+        "FAILED": "不通过",
+        "CONDITIONAL": "有条件通过"
+    }
+    result_cn = result_map.get(order.overall_result, order.overall_result or "未填写")
+    
+    conclusion_text = f"本次验收结果：<b>{result_cn}</b>"
+    if order.conclusion:
+        conclusion_text += f"<br/><br/>{order.conclusion}"
+    if order.conditions:
+        conclusion_text += f"<br/><br/>条件说明：{order.conditions}"
+    
+    story.append(Paragraph(conclusion_text, normal_style))
+    story.append(Spacer(1, 0.3*cm))
+    
+    # 三、问题统计
+    issues = db.query(AcceptanceIssue).filter(
+        AcceptanceIssue.order_id == order.id
+    ).all()
+    
+    if issues:
+        story.append(Paragraph("三、验收问题", heading_style))
+        
+        total_issues = len(issues)
+        resolved_issues = len([i for i in issues if i.status in ["RESOLVED", "CLOSED"]])
+        blocking_issues = len([i for i in issues if i.is_blocking])
+        
+        issue_summary = f"""
+        总问题数：{total_issues}个<br/>
+        已解决：{resolved_issues}个<br/>
+        待解决：{total_issues - resolved_issues}个<br/>
+        阻塞问题：{blocking_issues}个
+        """
+        story.append(Paragraph(issue_summary, normal_style))
+        story.append(Spacer(1, 0.3*cm))
+        
+        # 问题列表（仅显示前10个）
+        if len(issues) > 0:
+            issue_data = [['问题编号', '标题', '严重程度', '状态', '是否阻塞']]
+            for issue in issues[:10]:  # 最多显示10个问题
+                severity_map = {
+                    "CRITICAL": "严重",
+                    "MAJOR": "一般",
+                    "MINOR": "轻微"
+                }
+                status_map = {
+                    "OPEN": "待处理",
+                    "PROCESSING": "处理中",
+                    "RESOLVED": "已解决",
+                    "CLOSED": "已关闭",
+                    "DEFERRED": "已延期"
+                }
+                issue_data.append([
+                    issue.issue_no,
+                    issue.title[:20] + "..." if len(issue.title) > 20 else issue.title,
+                    severity_map.get(issue.severity, issue.severity),
+                    status_map.get(issue.status, issue.status),
+                    "是" if issue.is_blocking else "否"
+                ])
+            
+            if len(issues) > 10:
+                issue_data.append([f"（还有 {len(issues) - 10} 个问题未显示）", "", "", "", ""])
+            
+            issue_table = Table(issue_data, colWidths=[2.5*cm, 5*cm, 2*cm, 2*cm, 2*cm])
+            issue_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+            ]))
+            story.append(issue_table)
+            story.append(Spacer(1, 0.3*cm))
+    
+    # 四、签字信息
+    if include_signatures:
+        story.append(Paragraph("四、签字确认", heading_style))
+        
+        signatures = db.query(AcceptanceSignature).filter(
+            AcceptanceSignature.order_id == order.id
+        ).all()
+        
+        if signatures:
+            signature_data = [['签字人类型', '签字人', '角色', '公司', '签字时间']]
+            for sig in signatures:
+                signer_type_map = {
+                    "QA": "质检",
+                    "PM": "项目经理",
+                    "CUSTOMER": "客户",
+                    "WITNESS": "见证人"
+                }
+                signature_data.append([
+                    signer_type_map.get(sig.signer_type, sig.signer_type),
+                    sig.signer_name,
+                    sig.signer_role or "N/A",
+                    sig.signer_company or "N/A",
+                    sig.signed_at.strftime('%Y-%m-%d %H:%M') if sig.signed_at else "N/A"
+                ])
+            
+            sig_table = Table(signature_data, colWidths=[2.5*cm, 3*cm, 2.5*cm, 3*cm, 3*cm])
+            sig_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+            ]))
+            story.append(sig_table)
+        else:
+            story.append(Paragraph("暂无签字记录", normal_style))
+        
+        story.append(Spacer(1, 0.3*cm))
+    
+    # 报告生成信息
+    story.append(Spacer(1, 0.5*cm))
+    story.append(Paragraph(
+        f"报告生成时间：{datetime.now().strftime('%Y年%m月%d日 %H:%M:%S')}<br/>"
+        f"生成人：{current_user.real_name or current_user.username}",
+        ParagraphStyle(
+            'Footer',
+            parent=normal_style,
+            fontSize=9,
+            textColor=colors.grey,
+            alignment=2  # 右对齐
+        )
+    ))
+    
+    # 构建PDF
+    doc.build(story)
+    
+    # 获取PDF字节
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    
+    return pdf_bytes
+
+
 @router.post("/acceptance-orders/{order_id}/report", response_model=AcceptanceReportResponse, status_code=status.HTTP_201_CREATED)
 def generate_acceptance_report(
     *,
@@ -1313,7 +2618,11 @@ def generate_acceptance_report(
     
     report_no = generate_report_no(db, report_in.report_type)
     
-    # 生成报告内容（简化版，实际应使用模板引擎）
+    # 生成报告文件
+    report_dir = os.path.join(settings.UPLOAD_DIR, "reports")
+    os.makedirs(report_dir, exist_ok=True)
+    
+    # 准备报告内容（用于文本版本和数据库存储）
     project_name = order.project.project_name if getattr(order, "project", None) else None
     machine_name = order.machine.machine_name if getattr(order, "machine", None) else None
     qa_signer_name = None
@@ -1371,16 +2680,47 @@ def generate_acceptance_report(
 生成人：{current_user.real_name or current_user.username}
 """
     
-    # 生成报告文件
-    report_dir = os.path.join(settings.UPLOAD_DIR, "reports")
-    os.makedirs(report_dir, exist_ok=True)
-    file_rel_path = f"reports/{report_no}.txt"
-    file_full_path = os.path.join(settings.UPLOAD_DIR, file_rel_path)
-    file_bytes = report_content.encode("utf-8")
-    with open(file_full_path, "wb") as f:
-        f.write(file_bytes)
-    file_size = len(file_bytes)
-    file_hash = hashlib.sha256(file_bytes).hexdigest()
+    # 尝试生成PDF报告
+    file_rel_path = None
+    file_size = None
+    file_hash = None
+    
+    try:
+        if REPORTLAB_AVAILABLE:
+            # 生成PDF
+            pdf_bytes = generate_pdf_report(
+                order=order,
+                db=db,
+                report_no=report_no,
+                version=version,
+                current_user=current_user,
+                include_signatures=report_in.include_signatures
+            )
+            
+            # 保存PDF文件
+            file_rel_path = f"reports/{report_no}.pdf"
+            file_full_path = os.path.join(settings.UPLOAD_DIR, file_rel_path)
+            with open(file_full_path, "wb") as f:
+                f.write(pdf_bytes)
+            file_size = len(pdf_bytes)
+            file_hash = hashlib.sha256(pdf_bytes).hexdigest()
+        else:
+            # reportlab不可用，使用文本格式
+            raise ImportError("reportlab库未安装")
+            
+    except Exception as e:
+        # 如果PDF生成失败，回退到文本格式
+        logger = logging.getLogger(__name__)
+        logger.warning(f"PDF生成失败，使用文本格式: {str(e)}", exc_info=True)
+        
+        # 生成文本报告
+        file_rel_path = f"reports/{report_no}.txt"
+        file_full_path = os.path.join(settings.UPLOAD_DIR, file_rel_path)
+        file_bytes = report_content.encode("utf-8")
+        with open(file_full_path, "wb") as f:
+            f.write(file_bytes)
+        file_size = len(file_bytes)
+        file_hash = hashlib.sha256(file_bytes).hexdigest()
     
     report = AcceptanceReport(
         order_id=order_id,
@@ -1400,6 +2740,7 @@ def generate_acceptance_report(
     # 更新验收单的报告文件路径（如果有最新报告）
     if not order.report_file_path or report_in.report_type == "FINAL":
         order.report_file_path = file_rel_path
+        db.add(order)
     
     db.commit()
     db.refresh(report)
@@ -1429,7 +2770,7 @@ def download_acceptance_report(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    下载验收报告
+    下载验收报告（支持PDF和文本格式）
     """
     report = db.query(AcceptanceReport).filter(AcceptanceReport.id == report_id).first()
     if not report:
@@ -1452,12 +2793,63 @@ def download_acceptance_report(
         )
     
     filename = os.path.basename(file_path)
-    media_type = "text/plain" if filename.endswith(".txt") else "application/octet-stream"
+    # 根据文件扩展名设置媒体类型
+    if filename.endswith(".pdf"):
+        media_type = "application/pdf"
+    elif filename.endswith(".txt"):
+        media_type = "text/plain"
+    else:
+        media_type = "application/octet-stream"
+    
     return FileResponse(
         path=file_path,
         filename=filename,
         media_type=media_type
     )
+
+
+@router.get("/acceptance-orders/{order_id}/report", response_model=List[AcceptanceReportResponse], status_code=status.HTTP_200_OK)
+def read_acceptance_reports(
+    order_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取验收单的所有报告列表
+    """
+    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="验收单不存在")
+    
+    reports = db.query(AcceptanceReport).filter(
+        AcceptanceReport.order_id == order_id
+    ).order_by(desc(AcceptanceReport.version)).all()
+    
+    items = []
+    for report in reports:
+        generated_by_name = None
+        if report.generated_by:
+            user = db.query(User).filter(User.id == report.generated_by).first()
+            generated_by_name = user.real_name or user.username if user else None
+        
+        items.append(AcceptanceReportResponse(
+            id=report.id,
+            order_id=report.order_id,
+            report_no=report.report_no,
+            report_type=report.report_type,
+            version=report.version,
+            report_content=report.report_content,
+            file_path=report.file_path,
+            file_size=report.file_size,
+            file_hash=report.file_hash,
+            generated_at=report.generated_at,
+            generated_by=report.generated_by,
+            generated_by_name=generated_by_name,
+            created_at=report.created_at,
+            updated_at=report.updated_at
+        ))
+    
+    return items
 
 
 # ==================== 客户签署验收单上传 ====================

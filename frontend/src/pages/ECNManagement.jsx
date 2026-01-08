@@ -28,6 +28,8 @@ import {
   Pause,
   X,
   RefreshCw,
+  Download,
+  CheckSquare,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -85,12 +87,47 @@ const statusConfigs = {
 }
 
 const typeConfigs = {
-  DESIGN: { label: '设计变更', color: 'bg-blue-500' },
-  MATERIAL: { label: '物料变更', color: 'bg-amber-500' },
-  PROCESS: { label: '工艺变更', color: 'bg-purple-500' },
-  SPECIFICATION: { label: '规格变更', color: 'bg-green-500' },
-  SCHEDULE: { label: '计划变更', color: 'bg-orange-500' },
-  OTHER: { label: '其他', color: 'bg-slate-500' },
+  // 客户相关（3种）- 蓝色系
+  CUSTOMER_REQUIREMENT: { label: '客户需求变更', color: 'bg-blue-500', category: '客户相关' },
+  CUSTOMER_SPEC: { label: '客户规格调整', color: 'bg-blue-400', category: '客户相关' },
+  CUSTOMER_FEEDBACK: { label: '客户现场反馈', color: 'bg-blue-600', category: '客户相关' },
+  
+  // 设计变更（5种）- 青色系
+  MECHANICAL_STRUCTURE: { label: '机械结构变更', color: 'bg-cyan-500', category: '设计变更' },
+  ELECTRICAL_SCHEME: { label: '电气方案变更', color: 'bg-cyan-400', category: '设计变更' },
+  SOFTWARE_FUNCTION: { label: '软件功能变更', color: 'bg-cyan-600', category: '设计变更' },
+  TECH_OPTIMIZATION: { label: '技术方案优化', color: 'bg-teal-500', category: '设计变更' },
+  DESIGN_FIX: { label: '设计缺陷修复', color: 'bg-teal-600', category: '设计变更' },
+  
+  // 测试相关（4种）- 紫色系
+  TEST_STANDARD: { label: '测试标准变更', color: 'bg-purple-500', category: '测试相关' },
+  TEST_FIXTURE: { label: '测试工装变更', color: 'bg-purple-400', category: '测试相关' },
+  CALIBRATION_SCHEME: { label: '校准方案变更', color: 'bg-purple-600', category: '测试相关' },
+  TEST_PROGRAM: { label: '测试程序变更', color: 'bg-violet-500', category: '测试相关' },
+  
+  // 生产制造（4种）- 橙色系
+  PROCESS_IMPROVEMENT: { label: '工艺改进', color: 'bg-orange-500', category: '生产制造' },
+  MATERIAL_SUBSTITUTE: { label: '物料替代', color: 'bg-orange-400', category: '生产制造' },
+  SUPPLIER_CHANGE: { label: '供应商变更', color: 'bg-orange-600', category: '生产制造' },
+  COST_OPTIMIZATION: { label: '成本优化', color: 'bg-amber-500', category: '生产制造' },
+  
+  // 质量安全（3种）- 红色系
+  QUALITY_ISSUE: { label: '质量问题整改', color: 'bg-red-500', category: '质量安全' },
+  SAFETY_COMPLIANCE: { label: '安全合规变更', color: 'bg-red-600', category: '质量安全' },
+  RELIABILITY_IMPROVEMENT: { label: '可靠性改进', color: 'bg-rose-500', category: '质量安全' },
+  
+  // 项目管理（3种）- 绿色系
+  SCHEDULE_ADJUSTMENT: { label: '进度调整', color: 'bg-green-500', category: '项目管理' },
+  DOCUMENT_UPDATE: { label: '文档更新', color: 'bg-green-400', category: '项目管理' },
+  DRAWING_CHANGE: { label: '图纸变更', color: 'bg-emerald-500', category: '项目管理' },
+  
+  // 兼容旧版本
+  DESIGN: { label: '设计变更', color: 'bg-blue-500', category: '设计变更' },
+  MATERIAL: { label: '物料变更', color: 'bg-amber-500', category: '生产制造' },
+  PROCESS: { label: '工艺变更', color: 'bg-purple-500', category: '生产制造' },
+  SPECIFICATION: { label: '规格变更', color: 'bg-green-500', category: '项目管理' },
+  SCHEDULE: { label: '计划变更', color: 'bg-orange-500', category: '项目管理' },
+  OTHER: { label: '其他', color: 'bg-slate-500', category: '其他' },
 }
 
 const priorityConfigs = {
@@ -135,6 +172,7 @@ export default function ECNManagement() {
   const [selectedECNIds, setSelectedECNIds] = useState(new Set())
   const [showBatchDialog, setShowBatchDialog] = useState(false)
   const [batchOperation, setBatchOperation] = useState('')
+  const [exporting, setExporting] = useState(false)
   
   // Detail data
   const [evaluations, setEvaluations] = useState([])
@@ -148,7 +186,7 @@ export default function ECNManagement() {
   // Form state
   const [newECN, setNewECN] = useState({
     ecn_title: '',
-    ecn_type: 'DESIGN',
+    ecn_type: 'CUSTOMER_REQUIREMENT',
     project_id: null,
     machine_id: null,
     priority: 'MEDIUM',
@@ -294,10 +332,8 @@ export default function ECNManagement() {
     }
   }
 
-  const handleViewDetail = async (ecnId) => {
-    setActiveTab('info')
-    await fetchECNDetail(ecnId)
-    setShowDetailDialog(true)
+  const handleViewDetail = (ecnId) => {
+    navigate(`/ecns/${ecnId}`)
   }
 
   const handleCreateECN = async () => {
@@ -318,7 +354,7 @@ export default function ECNManagement() {
       setShowCreateDialog(false)
       setNewECN({
         ecn_title: '',
-        ecn_type: 'DESIGN',
+        ecn_type: 'CUSTOMER_REQUIREMENT',
         project_id: null,
         machine_id: null,
         priority: 'MEDIUM',
@@ -473,6 +509,143 @@ export default function ECNManagement() {
     })
   }, [ecns, searchKeyword])
 
+  // 导出ECN列表
+  const handleExport = () => {
+    try {
+      setExporting(true)
+      const exportData = [
+        ['ECN编号', 'ECN标题', '项目', '类型', '状态', '优先级', '申请人', '申请时间', '成本影响', '工期影响'],
+        ...filteredECNs.map(ecn => [
+          ecn.ecn_no || '',
+          ecn.ecn_title || '',
+          ecn.project_name || '',
+          typeConfigs[ecn.ecn_type]?.label || ecn.ecn_type || '',
+          statusConfigs[ecn.status]?.label || ecn.status || '',
+          priorityConfigs[ecn.priority]?.label || ecn.priority || '',
+          ecn.applicant_name || '',
+          ecn.applied_at ? new Date(ecn.applied_at).toLocaleDateString('zh-CN') : '',
+          ecn.cost_impact ? `¥${ecn.cost_impact}` : '¥0',
+          ecn.schedule_impact_days ? `${ecn.schedule_impact_days}天` : '0天',
+        ]),
+      ]
+
+      const csvContent = exportData
+        .map(row => row.map(cell => `"${cell}"`).join(','))
+        .join('\n')
+
+      const BOM = '\uFEFF'
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute(
+        'download',
+        `ECN列表_${new Date().toISOString().split('T')[0]}.csv`
+      )
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('导出失败:', error)
+      alert('导出失败: ' + error.message)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  // 批量操作
+  const handleBatchOperation = async (operation) => {
+    if (selectedECNIds.size === 0) {
+      alert('请先选择ECN')
+      return
+    }
+
+    const ids = Array.from(selectedECNIds)
+    let confirmMessage = ''
+    let apiCall = null
+
+    switch (operation) {
+      case 'submit':
+        confirmMessage = `确认要批量提交 ${ids.length} 个ECN吗？`
+        apiCall = async (id) => {
+          // 需要先获取审批ID，这里简化处理，直接调用submit
+          await ecnApi.submit(id, { remark: '批量提交' })
+        }
+        break
+      case 'approve':
+        confirmMessage = `确认要批量批准 ${ids.length} 个ECN吗？`
+        // 注意：approve需要approval_id，这里需要先获取审批记录
+        apiCall = async (id) => {
+          // 简化处理：这里需要根据实际API调整
+          alert('批量批准功能需要先获取审批记录，请使用单个批准功能')
+          throw new Error('批量批准需要审批ID')
+        }
+        break
+      case 'close':
+        confirmMessage = `确认要批量关闭 ${ids.length} 个ECN吗？`
+        apiCall = async (id) => {
+          await ecnApi.close(id, { close_note: '批量关闭' })
+        }
+        break
+      default:
+        alert('未知操作')
+        return
+    }
+
+    if (!confirm(confirmMessage)) return
+
+    try {
+      const results = []
+      for (const id of ids) {
+        try {
+          await apiCall(id)
+          results.push({ id, success: true })
+        } catch (error) {
+          results.push({ id, success: false, error: error.response?.data?.detail || error.message })
+        }
+      }
+
+      const successCount = results.filter(r => r.success).length
+      const failCount = results.filter(r => !r.success).length
+
+      if (failCount > 0) {
+        const failDetails = results
+          .filter(r => !r.success)
+          .map(r => `ECN ${r.id}: ${r.error}`)
+          .join('\n')
+        alert(`批量操作完成：成功 ${successCount} 个，失败 ${failCount} 个\n\n失败详情：\n${failDetails}`)
+      } else {
+        alert(`批量操作完成：成功 ${successCount} 个`)
+      }
+      setSelectedECNIds(new Set())
+      fetchECNs()
+    } catch (error) {
+      alert('批量操作失败: ' + (error.response?.data?.detail || error.message))
+    }
+  }
+
+  // 全选/取消全选
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedECNIds(new Set(filteredECNs.map(ecn => ecn.id)))
+    } else {
+      setSelectedECNIds(new Set())
+    }
+  }
+
+  // 切换单个选择
+  const handleToggleSelect = (ecnId) => {
+    const newSelected = new Set(selectedECNIds)
+    if (newSelected.has(ecnId)) {
+      newSelected.delete(ecnId)
+    } else {
+      newSelected.add(ecnId)
+    }
+    setSelectedECNIds(newSelected)
+  }
+
   return (
     <div className="space-y-6 p-6">
       <PageHeader
@@ -550,11 +723,51 @@ export default function ECNManagement() {
       </Card>
       
       {/* Action Bar */}
-      <div className="flex justify-end">
-        <Button onClick={() => setShowCreateDialog(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          新建ECN
-        </Button>
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          {selectedECNIds.size > 0 && (
+            <>
+              <span className="text-sm text-slate-500">
+                已选择 {selectedECNIds.size} 个ECN
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleBatchOperation('submit')}
+              >
+                批量提交
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleBatchOperation('close')}
+              >
+                批量关闭
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedECNIds(new Set())}
+              >
+                取消选择
+              </Button>
+            </>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            disabled={exporting || filteredECNs.length === 0}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            {exporting ? '导出中...' : '导出列表'}
+          </Button>
+          <Button onClick={() => setShowCreateDialog(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            新建ECN
+          </Button>
+        </div>
       </div>
       
       {/* ECN List */}
@@ -574,6 +787,12 @@ export default function ECNManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectedECNIds.size === filteredECNs.length && filteredECNs.length > 0}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </TableHead>
                   <TableHead>ECN编号</TableHead>
                   <TableHead>ECN标题</TableHead>
                   <TableHead>项目</TableHead>
@@ -588,6 +807,12 @@ export default function ECNManagement() {
               <TableBody>
                 {filteredECNs.map((ecn) => (
                   <TableRow key={ecn.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedECNIds.has(ecn.id)}
+                        onCheckedChange={() => handleToggleSelect(ecn.id)}
+                      />
+                    </TableCell>
                     <TableCell className="font-mono text-sm">
                       {ecn.ecn_no}
                     </TableCell>

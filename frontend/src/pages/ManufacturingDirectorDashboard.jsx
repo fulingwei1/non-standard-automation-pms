@@ -57,7 +57,7 @@ import {
 } from '../components/ui'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
-import { productionApi, shortageApi } from '../services/api'
+import { productionApi, shortageApi, serviceApi, materialApi, businessSupportApi } from '../services/api'
 
 // Mock data - Overall manufacturing center stats
 const mockManufacturingStats = {
@@ -347,6 +347,10 @@ export default function ManufacturingDirectorDashboard() {
   const [dailyError, setDailyError] = useState(null)
   const [selectedDate, setSelectedDate] = useState('')
   const formattedDate = selectedDate || ''
+  const [serviceStats, setServiceStats] = useState(mockManufacturingStats.customerService)
+  const [warehouseStats, setWarehouseStats] = useState(mockManufacturingStats.warehouse)
+  const [shippingStats, setShippingStats] = useState(mockManufacturingStats.shipping)
+  const [loadingStats, setLoadingStats] = useState(false)
 
   const fetchProductionDaily = useCallback(async (dateFilter) => {
     if (!dateFilter) {
@@ -457,6 +461,66 @@ export default function ManufacturingDirectorDashboard() {
   useEffect(() => {
     loadDailySnapshots(formattedDate || null)
   }, [formattedDate, loadDailySnapshots])
+
+  // Load service, warehouse, shipping statistics
+  const loadStatistics = useCallback(async () => {
+    try {
+      setLoadingStats(true)
+      const [serviceRes, warehouseRes, shippingRes] = await Promise.all([
+        serviceApi.dashboardStatistics().catch(() => ({ data: null })),
+        materialApi.warehouse.statistics().catch(() => ({ data: null })),
+        businessSupportApi.deliveryOrders.statistics().catch(() => ({ data: null })),
+      ])
+      
+      if (serviceRes?.data) {
+        setServiceStats({
+          activeCases: serviceRes.data.active_cases || 0,
+          resolvedToday: serviceRes.data.resolved_today || 0,
+          pendingCases: serviceRes.data.pending_cases || 0,
+          avgResponseTime: serviceRes.data.avg_response_time || 0,
+          customerSatisfaction: serviceRes.data.customer_satisfaction || 0,
+          onSiteServices: serviceRes.data.on_site_services || 0,
+          totalEngineers: serviceRes.data.total_engineers || 0,
+          activeEngineers: serviceRes.data.active_engineers || 0,
+        })
+      }
+      
+      if (warehouseRes?.data) {
+        setWarehouseStats({
+          totalItems: warehouseRes.data.total_items || 0,
+          inStockItems: warehouseRes.data.in_stock_items || 0,
+          lowStockItems: warehouseRes.data.low_stock_items || 0,
+          outOfStockItems: warehouseRes.data.out_of_stock_items || 0,
+          inventoryTurnover: warehouseRes.data.inventory_turnover || 0,
+          warehouseUtilization: warehouseRes.data.warehouse_utilization || 0,
+          pendingInbound: warehouseRes.data.pending_inbound || 0,
+          pendingOutbound: warehouseRes.data.pending_outbound || 0,
+        })
+      }
+      
+      if (shippingRes?.data?.data) {
+        const shipping = shippingRes.data.data
+        setShippingStats({
+          pendingShipments: shipping.pending_shipments || 0,
+          shippedToday: shipping.shipped_today || 0,
+          inTransit: shipping.in_transit || 0,
+          deliveredThisWeek: shipping.delivered_this_week || 0,
+          onTimeShippingRate: shipping.on_time_shipping_rate || 0,
+          avgShippingTime: shipping.avg_shipping_time || 0,
+          totalOrders: shipping.total_orders || 0,
+        })
+      }
+    } catch (err) {
+      console.error('Failed to load statistics:', err)
+    } finally {
+      setLoadingStats(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadStatistics()
+  }, [loadStatistics])
+
   const [selectedTab, setSelectedTab] = useState('overview')
 
   return (
@@ -685,8 +749,8 @@ export default function ManufacturingDirectorDashboard() {
         {/* Customer Service Department Stats */}
         <StatCard
           title="服务案例"
-          value={mockManufacturingStats.customerService.activeCases}
-          subtitle={`今日解决 ${mockManufacturingStats.customerService.resolvedToday}`}
+          value={serviceStats.activeCases}
+          subtitle={`今日解决 ${serviceStats.resolvedToday}`}
           trend={8.5}
           icon={Headphones}
           color="text-purple-400"
@@ -694,7 +758,7 @@ export default function ManufacturingDirectorDashboard() {
         />
         <StatCard
           title="满意度"
-          value={`${mockManufacturingStats.customerService.customerSatisfaction}%`}
+          value={`${serviceStats.customerSatisfaction.toFixed(1)}%`}
           subtitle="客户满意度"
           icon={Award}
           color="text-amber-400"
@@ -704,8 +768,8 @@ export default function ManufacturingDirectorDashboard() {
         {/* Warehouse Department Stats */}
         <StatCard
           title="库存SKU"
-          value={mockManufacturingStats.warehouse.totalItems}
-          subtitle={`在库 ${mockManufacturingStats.warehouse.inStockItems}`}
+          value={warehouseStats.totalItems}
+          subtitle={`在库 ${warehouseStats.inStockItems}`}
           trend={-2.3}
           icon={Warehouse}
           color="text-cyan-400"
@@ -713,7 +777,7 @@ export default function ManufacturingDirectorDashboard() {
         />
         <StatCard
           title="周转率"
-          value={`${mockManufacturingStats.warehouse.inventoryTurnover}x`}
+          value={`${warehouseStats.inventoryTurnover.toFixed(1)}x`}
           subtitle="库存周转"
           icon={Activity}
           color="text-indigo-400"
@@ -723,8 +787,8 @@ export default function ManufacturingDirectorDashboard() {
         {/* Shipping Department Stats */}
         <StatCard
           title="待发货"
-          value={mockManufacturingStats.shipping.pendingShipments}
-          subtitle={`今日已发 ${mockManufacturingStats.shipping.shippedToday}`}
+          value={shippingStats.pendingShipments}
+          subtitle={`今日已发 ${shippingStats.shippedToday}`}
           trend={12.5}
           icon={Ship}
           color="text-orange-400"
@@ -732,7 +796,7 @@ export default function ManufacturingDirectorDashboard() {
         />
         <StatCard
           title="准时率"
-          value={`${mockManufacturingStats.shipping.onTimeShippingRate}%`}
+          value={`${shippingStats.onTimeShippingRate.toFixed(1)}%`}
           subtitle="发货准时率"
           icon={CheckCircle2}
           color="text-green-400"
@@ -806,7 +870,7 @@ export default function ManufacturingDirectorDashboard() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-400">平均响应时间</span>
                     <span className="text-white font-semibold">
-                      {mockManufacturingStats.customerService.avgResponseTime} 小时
+                      {serviceStats.avgResponseTime.toFixed(1)} 小时
                     </span>
                   </div>
                   <Progress value={95} className="h-2" />
@@ -815,13 +879,13 @@ export default function ManufacturingDirectorDashboard() {
                   <div>
                     <p className="text-xs text-slate-400 mb-1">待处理</p>
                     <p className="text-lg font-semibold text-white">
-                      {mockManufacturingStats.customerService.pendingCases}
+                      {serviceStats.pendingCases}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400 mb-1">在岗工程师</p>
                     <p className="text-lg font-semibold text-white">
-                      {mockManufacturingStats.customerService.activeEngineers}/{mockManufacturingStats.customerService.totalEngineers}
+                      {serviceStats.activeEngineers}/{serviceStats.totalEngineers}
                     </p>
                   </div>
                 </div>
@@ -845,14 +909,14 @@ export default function ManufacturingDirectorDashboard() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-400">仓储利用率</span>
                     <span className="text-white font-semibold">
-                      {mockManufacturingStats.warehouse.warehouseUtilization}%
+                      {warehouseStats.warehouseUtilization.toFixed(1)}%
                     </span>
                   </div>
-                  <Progress value={mockManufacturingStats.warehouse.warehouseUtilization} className="h-2" />
+                  <Progress value={warehouseStats.warehouseUtilization} className="h-2" />
                   <div className="flex items-center justify-between text-sm pt-2 border-t border-white/10">
                     <span className="text-slate-400">在途订单</span>
                     <span className="text-white font-semibold">
-                      {mockManufacturingStats.shipping.inTransit}
+                      {shippingStats.inTransit}
                     </span>
                   </div>
                 </div>
@@ -860,13 +924,13 @@ export default function ManufacturingDirectorDashboard() {
                   <div>
                     <p className="text-xs text-slate-400 mb-1">待入库</p>
                     <p className="text-lg font-semibold text-white">
-                      {mockManufacturingStats.warehouse.pendingInbound}
+                      {warehouseStats.pendingInbound}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400 mb-1">待出库</p>
                     <p className="text-lg font-semibold text-white">
-                      {mockManufacturingStats.warehouse.pendingOutbound}
+                      {warehouseStats.pendingOutbound}
                     </p>
                   </div>
                 </div>
@@ -1116,16 +1180,16 @@ export default function ManufacturingDirectorDashboard() {
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm text-slate-400">客户满意度</p>
                     <p className="text-lg font-bold text-white">
-                      {mockManufacturingStats.customerService.customerSatisfaction}%
+                      {serviceStats.customerSatisfaction.toFixed(1)}%
                     </p>
                   </div>
-                  <Progress value={mockManufacturingStats.customerService.customerSatisfaction} className="h-2" />
+                  <Progress value={serviceStats.customerSatisfaction} className="h-2" />
                 </div>
                 <div className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm text-slate-400">平均响应时间</p>
                     <p className="text-lg font-bold text-white">
-                      {mockManufacturingStats.customerService.avgResponseTime} 小时
+                      {serviceStats.avgResponseTime.toFixed(1)} 小时
                     </p>
                   </div>
                 </div>
@@ -1133,7 +1197,7 @@ export default function ManufacturingDirectorDashboard() {
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm text-slate-400">在岗工程师</p>
                     <p className="text-lg font-bold text-white">
-                      {mockManufacturingStats.customerService.activeEngineers}/{mockManufacturingStats.customerService.totalEngineers}
+                      {serviceStats.activeEngineers}/{serviceStats.totalEngineers}
                     </p>
                   </div>
                 </div>
@@ -1206,16 +1270,16 @@ export default function ManufacturingDirectorDashboard() {
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm text-slate-400">仓储利用率</p>
                     <p className="text-lg font-bold text-white">
-                      {mockManufacturingStats.warehouse.warehouseUtilization}%
+                      {warehouseStats.warehouseUtilization.toFixed(1)}%
                     </p>
                   </div>
-                  <Progress value={mockManufacturingStats.warehouse.warehouseUtilization} className="h-2" />
+                  <Progress value={warehouseStats.warehouseUtilization} className="h-2" />
                 </div>
                 <div className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm text-slate-400">库存周转率</p>
                     <p className="text-lg font-bold text-white">
-                      {mockManufacturingStats.warehouse.inventoryTurnover}x
+                      {warehouseStats.inventoryTurnover.toFixed(1)}x
                     </p>
                   </div>
                 </div>
@@ -1223,7 +1287,7 @@ export default function ManufacturingDirectorDashboard() {
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm text-slate-400">在库SKU</p>
                     <p className="text-lg font-bold text-white">
-                      {mockManufacturingStats.warehouse.inStockItems}/{mockManufacturingStats.warehouse.totalItems}
+                      {warehouseStats.inStockItems}/{warehouseStats.totalItems}
                     </p>
                   </div>
                 </div>
@@ -1301,16 +1365,16 @@ export default function ManufacturingDirectorDashboard() {
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm text-slate-400">准时发货率</p>
                     <p className="text-lg font-bold text-white">
-                      {mockManufacturingStats.shipping.onTimeShippingRate}%
+                      {shippingStats.onTimeShippingRate.toFixed(1)}%
                     </p>
                   </div>
-                  <Progress value={mockManufacturingStats.shipping.onTimeShippingRate} className="h-2" />
+                  <Progress value={shippingStats.onTimeShippingRate} className="h-2" />
                 </div>
                 <div className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm text-slate-400">平均发货时间</p>
                     <p className="text-lg font-bold text-white">
-                      {mockManufacturingStats.shipping.avgShippingTime} 天
+                      {shippingStats.avgShippingTime.toFixed(1)} 天
                     </p>
                   </div>
                 </div>
@@ -1318,7 +1382,7 @@ export default function ManufacturingDirectorDashboard() {
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm text-slate-400">在途订单</p>
                     <p className="text-lg font-bold text-white">
-                      {mockManufacturingStats.shipping.inTransit}
+                      {shippingStats.inTransit}
                     </p>
                   </div>
                 </div>

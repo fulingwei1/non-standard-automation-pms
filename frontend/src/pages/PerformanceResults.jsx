@@ -2,7 +2,7 @@
  * Performance Results - 绩效结果查看
  * Features: 个人绩效详情、历史记录、各项指标得分、趋势分析
  */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Award,
@@ -19,6 +19,7 @@ import {
   ChevronRight,
   CheckCircle,
   AlertCircle,
+  Loader2,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
@@ -28,6 +29,7 @@ import { Progress } from '../components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
+import { performanceApi } from '../services/api'
 
 // Mock data
 const mockCurrentResult = {
@@ -163,8 +165,35 @@ const getScoreColor = (actual, target) => {
 
 export default function PerformanceResults() {
   const [selectedPeriod, setSelectedPeriod] = useState('current')
+  const [loading, setLoading] = useState(true)
+  const [currentResult, setCurrentResult] = useState(mockCurrentResult)
+  const [historyResults, setHistoryResults] = useState(mockHistoryResults)
 
-  const levelColor = getLevelColor(mockCurrentResult.level)
+  // Fetch performance results
+  useEffect(() => {
+    const fetchResults = async () => {
+      setLoading(true)
+      try {
+        const myPerfRes = await performanceApi.getMyPerformance()
+        if (myPerfRes.data) {
+          const perfData = myPerfRes.data
+          // Map API response to component data structure
+          if (perfData.current_result) {
+            setCurrentResult(prev => ({ ...prev, ...perfData.current_result }))
+          }
+          if (perfData.history?.length > 0) {
+            setHistoryResults(perfData.history)
+          }
+        }
+      } catch (err) {
+        console.log('Performance results API unavailable, using mock data')
+      }
+      setLoading(false)
+    }
+    fetchResults()
+  }, [])
+
+  const levelColor = getLevelColor(currentResult.level)
 
   return (
     <motion.div
@@ -194,6 +223,11 @@ export default function PerformanceResults() {
       <motion.div variants={fadeIn}>
         <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
           <CardContent className="pt-6">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+              </div>
+            ) : (
             <div className="flex items-start justify-between gap-6">
               <div className="flex items-start gap-4">
                 <div
@@ -202,30 +236,30 @@ export default function PerformanceResults() {
                     `bg-${levelColor}-500/20 text-${levelColor}-400 border-2 border-${levelColor}-500/50`
                   )}
                 >
-                  {mockCurrentResult.level === 'EXCELLENT'
+                  {currentResult.level === 'EXCELLENT'
                     ? 'A'
-                    : mockCurrentResult.level === 'GOOD'
+                    : currentResult.level === 'GOOD'
                       ? 'B'
-                      : mockCurrentResult.level === 'QUALIFIED'
+                      : currentResult.level === 'QUALIFIED'
                         ? 'C'
                         : 'D'}
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-2">
-                    {mockCurrentResult.periodName}绩效结果
+                    {currentResult.periodName}绩效结果
                   </h2>
                   <div className="flex items-center gap-4 text-sm text-slate-400">
                     <div className="flex items-center gap-1">
                       <User className="w-4 h-4" />
-                      <span>{mockCurrentResult.employeeName}</span>
+                      <span>{currentResult.employeeName}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Building2 className="w-4 h-4" />
-                      <span>{mockCurrentResult.department}</span>
+                      <span>{currentResult.department}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
-                      <span>评价时间: {mockCurrentResult.evaluateDate}</span>
+                      <span>评价时间: {currentResult.evaluateDate}</span>
                     </div>
                   </div>
                 </div>
@@ -235,7 +269,7 @@ export default function PerformanceResults() {
                 <div className="text-center">
                   <p className="text-sm text-slate-400 mb-1">综合得分</p>
                   <p className={cn('text-4xl font-bold', `text-${levelColor}-400`)}>
-                    {mockCurrentResult.totalScore}
+                    {currentResult.totalScore}
                   </p>
                 </div>
                 <div className="text-center">
@@ -246,21 +280,22 @@ export default function PerformanceResults() {
                       `bg-${levelColor}-500/20 text-${levelColor}-400 border-${levelColor}-500/50`
                     )}
                   >
-                    {mockCurrentResult.levelName}
+                    {currentResult.levelName}
                   </Badge>
                 </div>
                 <div className="text-center">
                   <p className="text-sm text-slate-400 mb-1">排名</p>
                   <p className="text-2xl font-bold text-white">
-                    {mockCurrentResult.rank}
-                    <span className="text-sm text-slate-400">/{mockCurrentResult.totalEmployees}</span>
+                    {currentResult.rank}
+                    <span className="text-sm text-slate-400">/{currentResult.totalEmployees}</span>
                   </p>
                   <p className="text-xs text-slate-500 mt-1">
-                    超越 {mockCurrentResult.percentile}% 员工
+                    超越 {currentResult.percentile}% 员工
                   </p>
                 </div>
               </div>
             </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>
@@ -292,8 +327,13 @@ export default function PerformanceResults() {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+                </div>
+              ) : (
               <div className="space-y-4">
-                {mockCurrentResult.indicators.map((indicator, index) => (
+                {currentResult.indicators.map((indicator, index) => (
                   <motion.div
                     key={index}
                     variants={fadeIn}
@@ -360,6 +400,7 @@ export default function PerformanceResults() {
                   </motion.div>
                 ))}
               </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -374,8 +415,13 @@ export default function PerformanceResults() {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+                </div>
+              ) : (
               <div className="space-y-3">
-                {mockHistoryResults.map((result, index) => (
+                {historyResults.map((result, index) => (
                   <motion.div
                     key={index}
                     variants={fadeIn}
@@ -430,6 +476,7 @@ export default function PerformanceResults() {
                   </motion.div>
                 ))}
               </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -444,8 +491,13 @@ export default function PerformanceResults() {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+                </div>
+              ) : (
               <div className="space-y-4">
-                {mockCurrentResult.comments.map((comment, index) => (
+                {currentResult.comments.map((comment, index) => (
                   <motion.div
                     key={index}
                     variants={fadeIn}
@@ -464,6 +516,7 @@ export default function PerformanceResults() {
                   </motion.div>
                 ))}
               </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

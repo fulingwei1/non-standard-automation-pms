@@ -243,6 +243,7 @@ export default function ServiceTicketManagement() {
         resolved_time: ticket.resolved_time || '',
         solution: ticket.solution || '',
         satisfaction: ticket.satisfaction_score || null,
+        timeline: ticket.timeline || null,
       }))
       
       setTickets(transformedTickets)
@@ -1410,39 +1411,157 @@ function TicketDetailDialog({ ticket, onClose, onAssign, onCloseTicket }) {
                 )}
               </div>
 
-              {/* Timeline */}
+              {/* Timeline - Enhanced Visualization */}
               <div>
-                <p className="text-sm text-slate-400 mb-2">处理时间线</p>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="w-4 h-4 text-slate-400" />
-                    <span className="text-slate-400">报告时间:</span>
-                    <span className="text-white">{ticket.reported_time ? formatDate(ticket.reported_time) : '-'}</span>
+                <p className="text-sm text-slate-400 mb-3 font-medium">处理时间线</p>
+                <div className="relative">
+                  {/* Timeline Line */}
+                  <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-700"></div>
+                  
+                  <div className="space-y-4 relative">
+                    {/* Timeline from backend */}
+                    {ticket.timeline && Array.isArray(ticket.timeline) && ticket.timeline.length > 0 ? (
+                      ticket.timeline.map((item, index) => {
+                        const getIcon = (type) => {
+                          switch (type) {
+                            case 'REPORTED':
+                              return <Clock className="w-4 h-4 text-slate-400" />
+                            case 'ASSIGNED':
+                              return <User className="w-4 h-4 text-blue-400" />
+                            case 'STATUS_CHANGE':
+                              return <ArrowUpDown className="w-4 h-4 text-amber-400" />
+                            case 'CLOSED':
+                              return <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                            default:
+                              return <FileText className="w-4 h-4 text-slate-400" />
+                          }
+                        }
+                        
+                        const getColor = (type) => {
+                          switch (type) {
+                            case 'REPORTED':
+                              return 'bg-slate-500'
+                            case 'ASSIGNED':
+                              return 'bg-blue-500'
+                            case 'STATUS_CHANGE':
+                              return 'bg-amber-500'
+                            case 'CLOSED':
+                              return 'bg-emerald-500'
+                            default:
+                              return 'bg-slate-500'
+                          }
+                        }
+                        
+                        return (
+                          <div key={index} className="flex items-start gap-3 relative">
+                            {/* Timeline Dot */}
+                            <div className={cn(
+                              "relative z-10 w-8 h-8 rounded-full flex items-center justify-center",
+                              getColor(item.type)
+                            )}>
+                              {getIcon(item.type)}
+                            </div>
+                            
+                            {/* Timeline Content */}
+                            <div className="flex-1 pb-4">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-medium text-white">
+                                  {item.type === 'REPORTED' && '工单创建'}
+                                  {item.type === 'ASSIGNED' && '工单分配'}
+                                  {item.type === 'STATUS_CHANGE' && '状态变更'}
+                                  {item.type === 'CLOSED' && '工单关闭'}
+                                  {!['REPORTED', 'ASSIGNED', 'STATUS_CHANGE', 'CLOSED'].includes(item.type) && '操作记录'}
+                                </span>
+                                <span className="text-xs text-slate-500">
+                                  {item.timestamp ? formatDate(item.timestamp) : '-'}
+                                </span>
+                              </div>
+                              {item.user && (
+                                <div className="text-xs text-slate-400 mb-1">
+                                  操作人: {item.user}
+                                </div>
+                              )}
+                              {item.description && (
+                                <div className="text-sm text-slate-300 bg-slate-800/50 p-2 rounded">
+                                  {item.description}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })
+                    ) : (
+                      // Fallback to basic timeline if no timeline data
+                      <>
+                        <div className="flex items-start gap-3 relative">
+                          <div className="relative z-10 w-8 h-8 rounded-full bg-slate-500 flex items-center justify-center">
+                            <Clock className="w-4 h-4 text-white" />
+                          </div>
+                          <div className="flex-1 pb-4">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-sm font-medium text-white">工单创建</span>
+                              <span className="text-xs text-slate-500">
+                                {ticket.reported_time ? formatDate(ticket.reported_time) : '-'}
+                              </span>
+                            </div>
+                            <div className="text-xs text-slate-400">
+                              报告人: {ticket.reported_by}
+                            </div>
+                          </div>
+                        </div>
+                        {ticket.assigned_time && (
+                          <div className="flex items-start gap-3 relative">
+                            <div className="relative z-10 w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                              <User className="w-4 h-4 text-white" />
+                            </div>
+                            <div className="flex-1 pb-4">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-medium text-white">工单分配</span>
+                                <span className="text-xs text-slate-500">
+                                  {formatDate(ticket.assigned_time)}
+                                </span>
+                              </div>
+                              {ticket.assigned_name && (
+                                <div className="text-xs text-slate-400">
+                                  分配给: {ticket.assigned_name}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {ticket.response_time && (
+                          <div className="flex items-start gap-3 relative">
+                            <div className="relative z-10 w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                              <CheckCircle2 className="w-4 h-4 text-white" />
+                            </div>
+                            <div className="flex-1 pb-4">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-medium text-white">响应</span>
+                                <span className="text-xs text-slate-500">
+                                  {formatDate(ticket.response_time)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {ticket.resolved_time && (
+                          <div className="flex items-start gap-3 relative">
+                            <div className="relative z-10 w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center">
+                              <CheckCircle2 className="w-4 h-4 text-white" />
+                            </div>
+                            <div className="flex-1 pb-4">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-medium text-white">工单解决</span>
+                                <span className="text-xs text-slate-500">
+                                  {formatDate(ticket.resolved_time)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
-                  {ticket.assigned_time && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <User className="w-4 h-4 text-blue-400" />
-                      <span className="text-slate-400">分配时间:</span>
-                      <span className="text-white">{formatDate(ticket.assigned_time)}</span>
-                      {ticket.assigned_name && (
-                        <span className="text-slate-400">({ticket.assigned_name})</span>
-                      )}
-                    </div>
-                  )}
-                  {ticket.response_time && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-blue-400" />
-                      <span className="text-slate-400">响应时间:</span>
-                      <span className="text-white">{formatDate(ticket.response_time)}</span>
-                    </div>
-                  )}
-                  {ticket.resolved_time && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                      <span className="text-slate-400">解决时间:</span>
-                      <span className="text-white">{formatDate(ticket.resolved_time)}</span>
-                    </div>
-                  )}
                 </div>
               </div>
 

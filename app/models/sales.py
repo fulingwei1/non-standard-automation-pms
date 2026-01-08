@@ -21,7 +21,8 @@ from app.models.enums import (
     InvoiceTypeEnum, QuoteItemTypeEnum, DisputeStatusEnum,
     DisputeReasonCodeEnum,
     AssessmentSourceTypeEnum, AssessmentStatusEnum, AssessmentDecisionEnum,
-    FreezeTypeEnum, OpenItemTypeEnum, OpenItemStatusEnum, ResponsiblePartyEnum
+    FreezeTypeEnum, OpenItemTypeEnum, OpenItemStatusEnum, ResponsiblePartyEnum,
+    WorkflowTypeEnum, ApprovalRecordStatusEnum, ApprovalActionEnum
 )
 
 
@@ -379,6 +380,115 @@ class QuoteCostHistory(Base):
     
     def __repr__(self):
         return f"<QuoteCostHistory {self.quote_id}-{self.change_type}>"
+
+
+class PurchaseMaterialCost(Base, TimestampMixin):
+    """采购物料成本清单表（采购部维护的标准件成本信息）"""
+    
+    __tablename__ = "purchase_material_costs"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    
+    # 物料信息
+    material_code = Column(String(50), comment="物料编码")
+    material_name = Column(String(200), nullable=False, comment="物料名称")
+    specification = Column(String(500), comment="规格型号")
+    brand = Column(String(100), comment="品牌")
+    unit = Column(String(20), default="件", comment="单位")
+    
+    # 物料类型
+    material_type = Column(String(50), comment="物料类型：标准件/电气件/机械件等")
+    is_standard_part = Column(Boolean, default=True, comment="是否标准件")
+    
+    # 成本信息
+    unit_cost = Column(Numeric(12, 4), nullable=False, comment="单位成本")
+    currency = Column(String(10), default="CNY", comment="币种")
+    
+    # 供应商信息
+    supplier_id = Column(Integer, ForeignKey("suppliers.id"), comment="供应商ID")
+    supplier_name = Column(String(200), comment="供应商名称")
+    
+    # 采购信息
+    purchase_date = Column(Date, comment="采购日期")
+    purchase_order_no = Column(String(50), comment="采购订单号")
+    purchase_quantity = Column(Numeric(10, 4), comment="采购数量")
+    
+    # 交期信息
+    lead_time_days = Column(Integer, comment="交期(天)")
+    
+    # 匹配相关
+    is_active = Column(Boolean, default=True, comment="是否启用（用于自动匹配）")
+    match_priority = Column(Integer, default=0, comment="匹配优先级（数字越大优先级越高）")
+    match_keywords = Column(Text, comment="匹配关键词（逗号分隔，用于模糊匹配）")
+    
+    # 统计信息
+    usage_count = Column(Integer, default=0, comment="使用次数（被匹配次数）")
+    last_used_at = Column(DateTime, comment="最后使用时间")
+    
+    # 备注
+    remark = Column(Text, comment="备注")
+    submitted_by = Column(Integer, ForeignKey("users.id"), comment="提交人ID（采购部）")
+    
+    # 关系
+    supplier = relationship("Supplier", foreign_keys=[supplier_id])
+    submitter = relationship("User", foreign_keys=[submitted_by])
+    
+    __table_args__ = (
+        Index("idx_material_code", "material_code"),
+        Index("idx_material_name", "material_name"),
+        Index("idx_material_type", "material_type"),
+        Index("idx_is_standard", "is_standard_part"),
+        Index("idx_is_active", "is_active"),
+        Index("idx_match_priority", "match_priority"),
+        {"comment": "采购物料成本清单表"}
+    )
+    
+    def __repr__(self):
+        return f"<PurchaseMaterialCost {self.material_name}>"
+
+
+class MaterialCostUpdateReminder(Base, TimestampMixin):
+    """物料成本更新提醒表"""
+    
+    __tablename__ = "material_cost_update_reminders"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    
+    # 提醒配置
+    reminder_type = Column(String(50), default="PERIODIC", comment="提醒类型：PERIODIC（定期）/MANUAL（手动）")
+    reminder_interval_days = Column(Integer, default=30, comment="提醒间隔（天），默认30天")
+    
+    # 提醒状态
+    last_reminder_date = Column(Date, comment="最后提醒日期")
+    next_reminder_date = Column(Date, comment="下次提醒日期")
+    is_enabled = Column(Boolean, default=True, comment="是否启用提醒")
+    
+    # 提醒范围
+    material_type_filter = Column(String(50), comment="物料类型筛选（为空表示全部）")
+    include_standard = Column(Boolean, default=True, comment="包含标准件")
+    include_non_standard = Column(Boolean, default=True, comment="包含非标准件")
+    
+    # 提醒对象
+    notify_roles = Column(JSON, comment="通知角色列表（JSON数组）")
+    notify_users = Column(JSON, comment="通知用户ID列表（JSON数组）")
+    
+    # 统计信息
+    reminder_count = Column(Integer, default=0, comment="提醒次数")
+    last_updated_by = Column(Integer, ForeignKey("users.id"), comment="最后更新人ID")
+    last_updated_at = Column(DateTime, comment="最后更新时间")
+    
+    # 关系
+    updater = relationship("User", foreign_keys=[last_updated_by])
+    
+    __table_args__ = (
+        Index("idx_reminder_type", "reminder_type"),
+        Index("idx_next_reminder_date", "next_reminder_date"),
+        Index("idx_is_enabled", "is_enabled"),
+        {"comment": "物料成本更新提醒表"}
+    )
+    
+    def __repr__(self):
+        return f"<MaterialCostUpdateReminder {self.reminder_type}>"
 
 
 class CpqRuleSet(Base, TimestampMixin):
@@ -1113,3 +1223,139 @@ class AIClarification(Base, TimestampMixin):
     
     def __repr__(self):
         return f"<AIClarification {self.id}>"
+
+
+# ==================== 审批工作流相关 ====================
+
+class ApprovalWorkflow(Base, TimestampMixin):
+    """审批工作流配置表"""
+    
+    __tablename__ = "approval_workflows"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    workflow_type = Column(String(20), nullable=False, comment="工作流类型：QUOTE/CONTRACT/INVOICE")
+    workflow_name = Column(String(100), nullable=False, comment="工作流名称")
+    description = Column(Text, comment="工作流描述")
+    
+    # 审批路由规则（JSON格式，存储金额阈值等条件）
+    routing_rules = Column(JSON, comment="审批路由规则（JSON）")
+    
+    # 状态
+    is_active = Column(Boolean, default=True, comment="是否启用")
+    
+    # 关系
+    steps = relationship("ApprovalWorkflowStep", back_populates="workflow", cascade="all, delete-orphan", order_by="ApprovalWorkflowStep.step_order")
+    records = relationship("ApprovalRecord", back_populates="workflow")
+    
+    __table_args__ = (
+        Index("idx_approval_workflow_type", "workflow_type"),
+        Index("idx_approval_workflow_active", "is_active"),
+    )
+    
+    def __repr__(self):
+        return f"<ApprovalWorkflow {self.workflow_name}>"
+
+
+class ApprovalWorkflowStep(Base, TimestampMixin):
+    """审批工作流步骤表"""
+    
+    __tablename__ = "approval_workflow_steps"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    workflow_id = Column(Integer, ForeignKey("approval_workflows.id"), nullable=False, comment="工作流ID")
+    step_order = Column(Integer, nullable=False, comment="步骤顺序")
+    step_name = Column(String(100), nullable=False, comment="步骤名称")
+    
+    # 审批人配置
+    approver_role = Column(String(50), comment="审批角色（如：SALES_MANAGER）")
+    approver_id = Column(Integer, ForeignKey("users.id"), comment="指定审批人ID（可选）")
+    
+    # 步骤配置
+    is_required = Column(Boolean, default=True, comment="是否必需")
+    can_delegate = Column(Boolean, default=True, comment="是否允许委托")
+    can_withdraw = Column(Boolean, default=True, comment="是否允许撤回（在下一级审批前）")
+    
+    # 审批期限（小时）
+    due_hours = Column(Integer, comment="审批期限（小时）")
+    
+    # 关系
+    workflow = relationship("ApprovalWorkflow", back_populates="steps")
+    approver = relationship("User", foreign_keys=[approver_id])
+    
+    __table_args__ = (
+        Index("idx_approval_workflow_step_workflow", "workflow_id"),
+        Index("idx_approval_workflow_step_order", "workflow_id", "step_order"),
+    )
+    
+    def __repr__(self):
+        return f"<ApprovalWorkflowStep {self.workflow_id}-{self.step_order}>"
+
+
+class ApprovalRecord(Base, TimestampMixin):
+    """审批记录表（每个实体的审批实例）"""
+    
+    __tablename__ = "approval_records"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    entity_type = Column(String(20), nullable=False, comment="实体类型：QUOTE/CONTRACT/INVOICE")
+    entity_id = Column(Integer, nullable=False, comment="实体ID")
+    workflow_id = Column(Integer, ForeignKey("approval_workflows.id"), nullable=False, comment="工作流ID")
+    
+    # 当前状态
+    current_step = Column(Integer, default=1, comment="当前审批步骤（从1开始）")
+    status = Column(String(20), default="PENDING", comment="审批状态：PENDING/APPROVED/REJECTED/CANCELLED")
+    
+    # 发起人
+    initiator_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="发起人ID")
+    
+    # 关系
+    workflow = relationship("ApprovalWorkflow", back_populates="records")
+    initiator = relationship("User", foreign_keys=[initiator_id])
+    history = relationship("ApprovalHistory", back_populates="record", cascade="all, delete-orphan", order_by="ApprovalHistory.step_order")
+    
+    __table_args__ = (
+        Index("idx_approval_record_entity", "entity_type", "entity_id"),
+        Index("idx_approval_record_workflow", "workflow_id"),
+        Index("idx_approval_record_status", "status"),
+        Index("idx_approval_record_initiator", "initiator_id"),
+    )
+    
+    def __repr__(self):
+        return f"<ApprovalRecord {self.entity_type}-{self.entity_id}>"
+
+
+class ApprovalHistory(Base, TimestampMixin):
+    """审批历史表（记录每个审批步骤的历史）"""
+    
+    __tablename__ = "approval_history"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    approval_record_id = Column(Integer, ForeignKey("approval_records.id"), nullable=False, comment="审批记录ID")
+    step_order = Column(Integer, nullable=False, comment="步骤顺序")
+    
+    # 审批人
+    approver_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="审批人ID")
+    
+    # 审批操作
+    action = Column(String(20), nullable=False, comment="审批操作：APPROVE/REJECT/DELEGATE/WITHDRAW")
+    comment = Column(Text, comment="审批意见")
+    
+    # 委托信息（如果action是DELEGATE）
+    delegate_to_id = Column(Integer, ForeignKey("users.id"), comment="委托给的用户ID")
+    
+    # 时间
+    action_at = Column(DateTime, nullable=False, default=datetime.now, comment="操作时间")
+    
+    # 关系
+    record = relationship("ApprovalRecord", back_populates="history")
+    approver = relationship("User", foreign_keys=[approver_id])
+    delegate_to = relationship("User", foreign_keys=[delegate_to_id])
+    
+    __table_args__ = (
+        Index("idx_approval_history_record", "approval_record_id"),
+        Index("idx_approval_history_step", "approval_record_id", "step_order"),
+        Index("idx_approval_history_approver", "approver_id"),
+    )
+    
+    def __repr__(self):
+        return f"<ApprovalHistory {self.approval_record_id}-{self.step_order}>"

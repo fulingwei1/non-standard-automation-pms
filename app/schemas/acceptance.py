@@ -218,7 +218,60 @@ class AcceptanceIssueResponse(TimestampSchema):
     due_date: Optional[date] = None
     solution: Optional[str] = None
     resolved_at: Optional[datetime] = None
+    resolved_by: Optional[int] = None
+    resolved_by_name: Optional[str] = None
+    verified_at: Optional[datetime] = None
+    verified_by: Optional[int] = None
+    verified_by_name: Optional[str] = None
+    verified_result: Optional[str] = None
     is_blocking: bool = False
+    attachments: Optional[List[Any]] = None
+
+
+class AcceptanceIssueAssign(BaseModel):
+    """指派问题"""
+    assigned_to: int = Field(description="处理负责人ID")
+    due_date: Optional[date] = None
+    remark: Optional[str] = None
+
+
+class AcceptanceIssueResolve(BaseModel):
+    """解决问题"""
+    solution: str = Field(description="解决方案")
+    attachments: Optional[List[Any]] = None
+
+
+class AcceptanceIssueVerify(BaseModel):
+    """验证问题"""
+    verified_result: str = Field(description="验证结果：VERIFIED/REJECTED")
+    remark: Optional[str] = None
+
+
+class AcceptanceIssueDefer(BaseModel):
+    """延期问题"""
+    reason: str = Field(description="延期原因")
+    new_due_date: date = Field(description="新的完成日期")
+
+
+class IssueFollowUpCreate(BaseModel):
+    """创建跟进记录"""
+    action_type: str = Field(description="操作类型：COMMENT/STATUS_CHANGE/ASSIGN/RESOLVE/VERIFY")
+    action_content: str = Field(description="操作内容")
+    attachments: Optional[List[Any]] = None
+
+
+class IssueFollowUpResponse(BaseSchema):
+    """跟进记录响应"""
+    id: int
+    issue_id: int
+    action_type: str
+    action_content: str
+    old_value: Optional[str] = None
+    new_value: Optional[str] = None
+    attachments: Optional[List[Any]] = None
+    created_by: Optional[int] = None
+    created_by_name: Optional[str] = None
+    created_at: datetime
 
 
 # ==================== 签字 ====================
