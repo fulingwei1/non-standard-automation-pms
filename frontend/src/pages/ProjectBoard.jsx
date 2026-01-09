@@ -7,7 +7,7 @@ import { useRoleFilter } from '../hooks/useRoleFilter'
 import { projectApi } from '../services/api'
 import { PageHeader } from '../components/layout/PageHeader'
 import { BoardColumn, BoardFilters, ProjectCard } from '../components/board'
-import { Card, Skeleton } from '../components/ui'
+import { Card, Skeleton, ApiIntegrationError } from '../components/ui'
 import {
   Layers,
   AlertCircle,
@@ -24,47 +24,12 @@ const mockUser = {
   role: 'admin',
 }
 
-// 模拟项目数据（后续从 API 获取）
-const generateMockProjects = () => {
-  const stages = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9']
-  const healths = ['H1', 'H1', 'H1', 'H2', 'H2', 'H3']
-  const customers = ['比亚迪', '宁德时代', '特斯拉', '蔚来汽车', '小鹏汽车', '理想汽车']
-  const pms = ['张工', '李工', '王工', '赵工']
-  
-  const projects = []
-  let id = 1
-  
-  stages.forEach(stage => {
-    const count = Math.floor(Math.random() * 4) + 1
-    for (let i = 0; i < count; i++) {
-      const health = healths[Math.floor(Math.random() * healths.length)]
-      const endDate = new Date()
-      endDate.setDate(endDate.getDate() + Math.floor(Math.random() * 60) - 20)
-      
-      projects.push({
-        id: id++,
-        project_code: `PJ25010${String(id).padStart(4, '0')}`,
-        name: `${customers[Math.floor(Math.random() * customers.length)]} - ${['BMS老化测试设备', 'EOL测试线', 'ICT测试设备', '视觉检测设备', '自动组装线'][Math.floor(Math.random() * 5)]}`,
-        current_stage: stage,
-        health: health,
-        status: health === 'H4' ? 'completed' : 'active',
-        customer_name: customers[Math.floor(Math.random() * customers.length)],
-        pm_name: pms[Math.floor(Math.random() * pms.length)],
-        pm_id: Math.floor(Math.random() * 4) + 1,
-        planned_end_date: endDate.toISOString().split('T')[0],
-        progress: Math.floor(Math.random() * 100),
-        machine_count: Math.floor(Math.random() * 5) + 1,
-        members: [{ user_id: 1 }, { user_id: 2 }],
-      })
-    }
-  })
-  
-  return projects
-}
+// Mock data removed - using real API only
 
 export default function ProjectBoard() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [projects, setProjects] = useState([])
   const [user] = useState(mockUser)
   
@@ -89,19 +54,18 @@ export default function ProjectBoard() {
   // 加载数据
   const fetchData = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
-      // 尝试从 API 获取数据
       const response = await projectApi.list()
       if (response.data && response.data.length > 0) {
         setProjects(response.data)
       } else {
-        // 使用模拟数据
-        setProjects(generateMockProjects())
+        setProjects([])
       }
-    } catch (error) {
-      console.error('Failed to fetch projects:', error)
-      // 使用模拟数据
-      setProjects(generateMockProjects())
+    } catch (err) {
+      console.error('Failed to fetch projects:', err)
+      setError(err)
+      setProjects([])
     } finally {
       setLoading(false)
     }
@@ -223,6 +187,15 @@ export default function ProjectBoard() {
         stats={stats}
       />
 
+      {/* 错误状态 */}
+      {error && !loading && (
+        <ApiIntegrationError
+          error={error}
+          apiEndpoint="/api/v1/projects"
+          onRetry={fetchData}
+        />
+      )}
+
       {/* 加载状态 */}
       {loading && (
         <div className="flex gap-4 overflow-hidden">
@@ -238,7 +211,7 @@ export default function ProjectBoard() {
       )}
 
       {/* 看板视图 */}
-      {!loading && viewMode === 'kanban' && (
+      {!loading && !error && viewMode === 'kanban' && (
         <div className="relative">
           {/* 左滚动按钮 */}
           <button
@@ -279,7 +252,7 @@ export default function ProjectBoard() {
       )}
 
       {/* 矩阵视图 */}
-      {!loading && viewMode === 'matrix' && (
+      {!loading && !error && viewMode === 'matrix' && (
         <MatrixView
           projects={filteredProjects}
           stages={PROJECT_STAGES}
@@ -288,7 +261,7 @@ export default function ProjectBoard() {
       )}
 
       {/* 列表视图 */}
-      {!loading && viewMode === 'list' && (
+      {!loading && !error && viewMode === 'list' && (
         <ListView
           projects={filteredProjects}
           onProjectClick={handleProjectClick}

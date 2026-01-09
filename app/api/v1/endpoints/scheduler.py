@@ -11,7 +11,14 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.core.security import get_current_active_user
 from app.models.user import User
+from app.models.scheduler_config import SchedulerTaskConfig
 from app.schemas.common import ResponseModel
+from app.schemas.scheduler_config import (
+    SchedulerTaskConfigResponse,
+    SchedulerTaskConfigUpdate,
+    SchedulerTaskConfigListResponse,
+    SchedulerTaskConfigSyncRequest,
+)
 
 router = APIRouter()
 
@@ -364,3 +371,252 @@ def list_all_services(
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取服务列表失败: {str(e)}")
+
+
+# ==================== 定时服务配置管理 ====================
+
+@router.get("/configs", response_model=ResponseModel)
+def get_task_configs(
+    category: Optional[str] = Query(None, description="按分类筛选"),
+    enabled: Optional[bool] = Query(None, description="按启用状态筛选"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
+    """
+    获取所有定时任务配置列表
+    """
+    try:
+        query = db.query(SchedulerTaskConfig)
+        
+        if category:
+            query = query.filter(SchedulerTaskConfig.category == category)
+        if enabled is not None:
+            query = query.filter(SchedulerTaskConfig.is_enabled == enabled)
+        
+        configs = query.order_by(SchedulerTaskConfig.category, SchedulerTaskConfig.task_name).all()
+        
+        return ResponseModel(
+            code=200,
+            message="success",
+            data={
+                "total": len(configs),
+                "items": [
+                    {
+                        "id": config.id,
+                        "task_id": config.task_id,
+                        "task_name": config.task_name,
+                        "module": config.module,
+                        "callable_name": config.callable_name,
+                        "owner": config.owner,
+                        "category": config.category,
+                        "description": config.description,
+                        "is_enabled": config.is_enabled,
+                        "cron_config": config.cron_config if config.cron_config else {},
+                        "dependencies_tables": config.dependencies_tables if config.dependencies_tables else [],
+                        "risk_level": config.risk_level,
+                        "sla_config": config.sla_config if config.sla_config else {},
+                        "updated_by": config.updated_by,
+                        "created_at": config.created_at.isoformat() if config.created_at else None,
+                        "updated_at": config.updated_at.isoformat() if config.updated_at else None,
+                    }
+                    for config in configs
+                ]
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取任务配置列表失败: {str(e)}")
+
+
+@router.get("/configs/{task_id}", response_model=ResponseModel)
+def get_task_config(
+    task_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
+    """
+    获取指定任务的配置
+    """
+    try:
+        config = db.query(SchedulerTaskConfig).filter(
+            SchedulerTaskConfig.task_id == task_id
+        ).first()
+        
+        if not config:
+            raise HTTPException(status_code=404, detail=f"任务配置 {task_id} 不存在")
+        
+        return ResponseModel(
+            code=200,
+            message="success",
+            data={
+                "id": config.id,
+                "task_id": config.task_id,
+                "task_name": config.task_name,
+                "module": config.module,
+                "callable_name": config.callable_name,
+                "owner": config.owner,
+                "category": config.category,
+                "description": config.description,
+                "is_enabled": config.is_enabled,
+                "cron_config": config.cron_config if config.cron_config else {},
+                "dependencies_tables": config.dependencies_tables if config.dependencies_tables else [],
+                "risk_level": config.risk_level,
+                "sla_config": config.sla_config if config.sla_config else {},
+                "updated_by": config.updated_by,
+                "created_at": config.created_at.isoformat() if config.created_at else None,
+                "updated_at": config.updated_at.isoformat() if config.updated_at else None,
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取任务配置失败: {str(e)}")
+
+
+@router.put("/configs/{task_id}", response_model=ResponseModel)
+def update_task_config(
+    task_id: str,
+    config_update: SchedulerTaskConfigUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
+    """
+    更新定时任务配置（频率、启用状态等）
+    注意：需要管理员权限
+    """
+    # TODO: 添加管理员权限检查
+    # if not current_user.is_admin:
+    #     raise HTTPException(status_code=403, detail="需要管理员权限")
+    
+    try:
+        config = db.query(SchedulerTaskConfig).filter(
+            SchedulerTaskConfig.task_id == task_id
+        ).first()
+        
+        if not config:
+            raise HTTPException(status_code=404, detail=f"任务配置 {task_id} 不存在")
+        
+        # 更新配置
+        if config_update.is_enabled is not None:
+            config.is_enabled = config_update.is_enabled
+        if config_update.cron_config is not None:
+            config.cron_config = config_update.cron_config
+        config.updated_by = current_user.id
+        
+        db.commit()
+        
+        # 动态更新调度器中的任务
+        try:
+            from app.utils.scheduler import scheduler
+            job = scheduler.get_job(task_id)
+            if job:
+                # 更新任务的Cron配置
+                if config_update.cron_config:
+                    scheduler.reschedule_job(
+                        task_id,
+                        trigger='cron',
+                        **config_update.cron_config
+                    )
+                # 启用/禁用任务
+                if config_update.is_enabled is not None:
+                    if config_update.is_enabled:
+                        scheduler.resume_job(task_id)
+                    else:
+                        scheduler.pause_job(task_id)
+        except Exception as scheduler_err:
+            # 调度器更新失败不影响数据库更新
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"更新调度器任务失败: {str(scheduler_err)}")
+        
+        return ResponseModel(
+            code=200,
+            message="success",
+            data={
+                "task_id": task_id,
+                "message": "配置已更新"
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"更新任务配置失败: {str(e)}")
+
+
+@router.post("/configs/sync", response_model=ResponseModel)
+def sync_task_configs(
+    sync_request: SchedulerTaskConfigSyncRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
+    """
+    从 scheduler_config.py 同步任务配置到数据库
+    用于初始化或更新配置
+    """
+    # TODO: 添加管理员权限检查
+    # if not current_user.is_admin:
+    #     raise HTTPException(status_code=403, detail="需要管理员权限")
+    
+    try:
+        from app.utils.scheduler_config import SCHEDULER_TASKS
+        
+        synced_count = 0
+        created_count = 0
+        updated_count = 0
+        
+        for task in SCHEDULER_TASKS:
+            config = db.query(SchedulerTaskConfig).filter(
+                SchedulerTaskConfig.task_id == task["id"]
+            ).first()
+            
+            # 准备配置数据
+            cron_config = task.get("cron", {})
+            dependencies_tables = task.get("dependencies_tables", [])
+            sla_config = task.get("sla", {})
+            
+            config_data = {
+                "task_id": task["id"],
+                "task_name": task["name"],
+                "module": task["module"],
+                "callable_name": task["callable"],
+                "owner": task.get("owner"),
+                "category": task.get("category"),
+                "description": task.get("description"),
+                "is_enabled": task.get("enabled", True),
+                "cron_config": cron_config,
+                "dependencies_tables": dependencies_tables if dependencies_tables else None,
+                "risk_level": task.get("risk_level"),
+                "sla_config": sla_config if sla_config else None,
+                "updated_by": current_user.id,
+            }
+            
+            if config:
+                # 更新现有配置
+                if sync_request.force:
+                    for key, value in config_data.items():
+                        if key != "task_id":  # 不更新task_id
+                            setattr(config, key, value)
+                    updated_count += 1
+            else:
+                # 创建新配置
+                config = SchedulerTaskConfig(**config_data)
+                db.add(config)
+                created_count += 1
+            
+            synced_count += 1
+        
+        db.commit()
+        
+        return ResponseModel(
+            code=200,
+            message="success",
+            data={
+                "synced_count": synced_count,
+                "created_count": created_count,
+                "updated_count": updated_count,
+                "message": f"成功同步 {synced_count} 个任务配置（新建 {created_count} 个，更新 {updated_count} 个）"
+            }
+        )
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"同步任务配置失败: {str(e)}")

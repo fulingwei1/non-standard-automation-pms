@@ -50,9 +50,10 @@ import {
 } from '../services/api'
 import { toast } from '../components/ui/toast'
 import { LoadingCard, ErrorMessage, EmptyState } from '../components/common'
+import { ApiIntegrationError } from '../components/ui'
 
-// Mock approval data
-const mockApprovals = [
+// Mock approval data - 已移除，使用真实API
+// const mockApprovals = [
   {
     id: 'APV-20260104-001',
     type: 'ecn',
@@ -131,7 +132,7 @@ const mockApprovals = [
     ],
     rejectReason: '当前项目紧急，建议延后',
   },
-]
+] // 已移除，使用真实API
 
 const typeConfigs = {
   ecn: { label: '设计变更', icon: Wrench, color: 'text-purple-400', bgColor: 'bg-purple-500/10' },
@@ -847,17 +848,8 @@ export default function ApprovalCenter() {
       setApprovals(allApprovals)
     } catch (err) {
       console.error('Failed to load approvals:', err)
-      const errorMessage = err.response?.data?.detail || err.message || '加载审批列表失败'
-      setError(errorMessage)
-      
-      // 如果是演示账号，使用 mock 数据
-      const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-      if (isDemoAccount) {
-        setApprovals(mockApprovals)
-        setError(null)
-      } else {
-        setApprovals([])
-      }
+      setError(err)
+      setApprovals([])
     } finally {
       setLoading(false)
     }
@@ -1007,7 +999,11 @@ export default function ApprovalCenter() {
       {loading && approvals.length === 0 ? (
         <LoadingCard rows={5} />
       ) : error && approvals.length === 0 ? (
-        <ErrorMessage error={error} onRetry={loadApprovals} />
+        <ApiIntegrationError
+          error={error}
+          apiEndpoint="/api/v1/approvals"
+          onRetry={loadApprovals}
+        />
       ) : (
         <>
 

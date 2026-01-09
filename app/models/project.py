@@ -82,6 +82,7 @@ class Project(Base, TimestampMixin):
     project_type = Column(String(20), comment="项目类型")
     product_category = Column(String(50), comment="产品类别")
     industry = Column(String(50), comment="行业")
+    project_category = Column(String(20), comment="项目分类：销售/研发/改造/维保")
 
     # 3D状态
     stage = Column(String(20), default="S1", comment="阶段")
@@ -127,6 +128,33 @@ class Project(Base, TimestampMixin):
     template_id = Column(Integer, ForeignKey("project_templates.id"), comment="创建时使用的模板ID")
     template_version_id = Column(Integer, ForeignKey("project_template_versions.id"), comment="创建时使用的模板版本ID")
 
+    # 销售关联
+    opportunity_id = Column(Integer, ForeignKey("opportunities.id"), comment="销售机会ID")
+    contract_id = Column(Integer, ForeignKey("contracts.id"), comment="合同ID")
+
+    # ERP集成
+    erp_synced = Column(Boolean, default=False, comment="是否已录入ERP系统")
+    erp_sync_time = Column(DateTime, comment="ERP同步时间")
+    erp_order_no = Column(String(50), comment="ERP订单号")
+    erp_sync_status = Column(String(20), default="PENDING", comment="ERP同步状态：PENDING/SYNCED/FAILED")
+
+    # 财务状态
+    invoice_issued = Column(Boolean, default=False, comment="是否已开票")
+    final_payment_completed = Column(Boolean, default=False, comment="是否已结尾款")
+    final_payment_date = Column(Date, comment="结尾款日期")
+
+    # 质保信息
+    warranty_period_months = Column(Integer, comment="质保期限（月）")
+    warranty_start_date = Column(Date, comment="质保开始日期")
+    warranty_end_date = Column(Date, comment="质保结束日期")
+
+    # 实施信息
+    implementation_address = Column(String(500), comment="实施地址")
+    test_encryption = Column(String(100), comment="测试加密")
+
+    # 预立项流程关联
+    initiation_id = Column(Integer, ForeignKey("pmo_project_initiation.id"), comment="预立项申请ID")
+
     created_by = Column(Integer, ForeignKey("users.id"), comment="创建人")
 
     # 关系
@@ -138,6 +166,9 @@ class Project(Base, TimestampMixin):
         "User", foreign_keys=[pm_id], back_populates="managed_projects"
     )
     department = relationship(Department)
+    opportunity = relationship("Opportunity", foreign_keys=[opportunity_id])
+    contract = relationship("Contract", foreign_keys=[contract_id])
+    initiation = relationship("PmoProjectInitiation", foreign_keys=[initiation_id])
     machines = relationship("Machine", back_populates="project", lazy="dynamic")
     stages = relationship("ProjectStage", back_populates="project", lazy="dynamic")
     milestones = relationship(
@@ -163,6 +194,10 @@ class Project(Base, TimestampMixin):
         Index("idx_projects_active_archived", "is_active", "is_archived"),
         Index("idx_projects_created_at", "created_at"),  # 用于排序
         Index("idx_projects_type_category", "project_type", "product_category"),  # 用于筛选
+        Index("idx_projects_opportunity", "opportunity_id"),  # 销售机会关联
+        Index("idx_projects_contract", "contract_id"),  # 合同关联
+        Index("idx_projects_erp_sync", "erp_synced", "erp_sync_status"),  # ERP同步状态
+        Index("idx_projects_initiation", "initiation_id"),  # 预立项关联
     )
 
     def __repr__(self):
@@ -663,7 +698,7 @@ class ProjectDocument(Base, TimestampMixin):
         Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
     )
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID")
-    rd_project_id = Column(Integer, ForeignKey("rd_projects.id"), comment="研发项目ID")
+    rd_project_id = Column(Integer, ForeignKey("rd_project.id"), comment="研发项目ID")
     doc_type = Column(String(50), nullable=False, comment="文档类型")
     doc_category = Column(String(50), comment="文档分类")
     doc_name = Column(String(200), nullable=False, comment="文档名称")

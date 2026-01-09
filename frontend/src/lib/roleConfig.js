@@ -442,6 +442,7 @@ export function getNavForRole(role) {
           { name: '销售总监工作台', path: '/sales-director-dashboard', icon: 'LayoutDashboard' },
           { name: '销售团队管理', path: '/sales/team', icon: 'Users' },
           { name: '团队业绩排名', path: '/sales/team/ranking', icon: 'Award' },
+          { name: '销售目标', path: '/sales/targets', icon: 'Target' },
         ],
       },
       {
@@ -449,6 +450,7 @@ export function getNavForRole(role) {
         items: [
           { name: '销售统计', path: '/sales/statistics', icon: 'BarChart3' },
           { name: '销售漏斗', path: '/sales/funnel', icon: 'Target' },
+          { name: 'CPQ配置报价', path: '/sales/cpq', icon: 'Calculator' },
           { name: '客户管理', path: '/customers', icon: 'Building2' },
           { name: '商机看板', path: '/opportunities', icon: 'Target' },
         ],
@@ -491,6 +493,7 @@ export function getNavForRole(role) {
         items: [
           { name: '线索评估', path: '/lead-assessment', icon: 'Target' },
           { name: '报价管理', path: '/sales/quotes', icon: 'Calculator' },
+          { name: 'CPQ配置报价', path: '/sales/cpq', icon: 'Calculator' },
           { name: '合同管理', path: '/sales/contracts', icon: 'FileCheck' },
           { name: '回款跟踪', path: '/payments', icon: 'CreditCard' },
           { name: '应收账款', path: '/sales/receivables', icon: 'CreditCard' },
@@ -501,6 +504,7 @@ export function getNavForRole(role) {
         items: [
           { name: '团队业绩', path: '/sales/team/performance', icon: 'Users' },
           { name: '团队统计', path: '/sales/statistics', icon: 'BarChart3' },
+          { name: '销售目标', path: '/sales/targets', icon: 'Target' },
         ],
       },
       {

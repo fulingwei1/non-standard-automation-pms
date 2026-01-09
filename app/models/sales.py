@@ -1359,3 +1359,59 @@ class ApprovalHistory(Base, TimestampMixin):
     
     def __repr__(self):
         return f"<ApprovalHistory {self.approval_record_id}-{self.step_order}>"
+
+
+class SalesTarget(Base, TimestampMixin):
+    """销售目标表"""
+    
+    __tablename__ = "sales_targets"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    
+    # 目标范围：PERSONAL(个人)/TEAM(团队)/DEPARTMENT(部门)
+    target_scope = Column(String(20), nullable=False, comment="目标范围：PERSONAL/TEAM/DEPARTMENT")
+    
+    # 目标对象
+    user_id = Column(Integer, ForeignKey("users.id"), comment="用户ID（个人目标）")
+    department_id = Column(Integer, ForeignKey("departments.id"), comment="部门ID（部门目标）")
+    team_id = Column(Integer, comment="团队ID（团队目标，暂未实现团队表）")
+    
+    # 目标类型：LEAD_COUNT(线索数量)/OPPORTUNITY_COUNT(商机数量)/CONTRACT_AMOUNT(合同金额)/COLLECTION_AMOUNT(回款金额)
+    target_type = Column(String(20), nullable=False, comment="目标类型：LEAD_COUNT/OPPORTUNITY_COUNT/CONTRACT_AMOUNT/COLLECTION_AMOUNT")
+    
+    # 目标周期：MONTHLY(月度)/QUARTERLY(季度)/YEARLY(年度)
+    target_period = Column(String(20), nullable=False, comment="目标周期：MONTHLY/QUARTERLY/YEARLY")
+    
+    # 周期标识：2025-01(月度)/2025-Q1(季度)/2025(年度)
+    period_value = Column(String(20), nullable=False, comment="周期标识：2025-01/2025-Q1/2025")
+    
+    # 目标值
+    target_value = Column(Numeric(14, 2), nullable=False, comment="目标值")
+    
+    # 实际完成值（计算字段，不存储，通过统计API计算）
+    # actual_value = Column(Numeric(14, 2), comment="实际完成值")
+    
+    # 目标描述
+    description = Column(Text, comment="目标描述")
+    
+    # 状态
+    status = Column(String(20), default="ACTIVE", comment="状态：ACTIVE/COMPLETED/CANCELLED")
+    
+    # 创建人
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=False, comment="创建人ID")
+    
+    # 关系
+    user = relationship("User", foreign_keys=[user_id])
+    department = relationship("Department", foreign_keys=[department_id])
+    creator = relationship("User", foreign_keys=[created_by])
+    
+    __table_args__ = (
+        Index("idx_sales_target_scope", "target_scope", "user_id", "department_id"),
+        Index("idx_sales_target_type_period", "target_type", "target_period", "period_value"),
+        Index("idx_sales_target_status", "status"),
+        Index("idx_sales_target_user", "user_id"),
+        Index("idx_sales_target_department", "department_id"),
+    )
+    
+    def __repr__(self):
+        return f"<SalesTarget {self.target_type}-{self.period_value}>"

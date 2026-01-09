@@ -46,6 +46,8 @@ import SalesDirectorWorkstation from './pages/SalesDirectorWorkstation'
 import SalesManagerWorkstation from './pages/SalesManagerWorkstation'
 import SalesReports from './pages/SalesReports'
 import SalesTeam from './pages/SalesTeam'
+import SalesTarget from './pages/SalesTarget'
+import CpqConfigurator from './pages/CpqConfigurator'
 import ContractApproval from './pages/ContractApproval'
 import ChairmanWorkstation from './pages/ChairmanWorkstation'
 import GeneralManagerWorkstation from './pages/GeneralManagerWorkstation'
@@ -200,6 +202,7 @@ import ServiceAnalytics from './pages/ServiceAnalytics'
 import ServiceKnowledgeBase from './pages/ServiceKnowledgeBase'
 import AdminDashboard from './pages/AdminDashboard'
 import SchedulerMonitoringDashboard from './pages/SchedulerMonitoringDashboard'
+import SchedulerConfigManagement from './pages/SchedulerConfigManagement'
 import UserManagement from './pages/UserManagement'
 import RiskWall from './pages/RiskWall'
 import WeeklyReport from './pages/WeeklyReport'
@@ -640,6 +643,7 @@ function App() {
           <Route path="/sales-manager-dashboard" element={<SalesManagerWorkstation />} />
           <Route path="/sales-reports" element={<SalesReports />} />
           <Route path="/sales-team" element={<SalesTeam />} />
+          <Route path="/sales/targets" element={<SalesTarget />} />
           <Route path="/contract-approval" element={<ContractApproval />} />
           <Route path="/business-support" element={<BusinessSupportWorkstation />} />
           <Route path="/customers" element={<CustomerList />} />
@@ -679,6 +683,7 @@ function App() {
           <Route path="/sales/receivables" element={<ReceivableManagement />} />
           <Route path="/sales/statistics" element={<SalesStatistics />} />
           <Route path="/sales/templates" element={<SalesTemplateCenter />} />
+          <Route path="/sales/cpq" element={<CpqConfigurator />} />
 
           {/* Pre-sales Routes */}
           <Route path="/presales-dashboard" element={<PresalesWorkstation />} />
@@ -972,6 +977,7 @@ function App() {
           <Route path="/permission-management" element={<PermissionManagement />} />
           <Route path="/project-role-types" element={<ProjectRoleTypeManagement />} />
           <Route path="/scheduler-monitoring" element={<SchedulerMonitoringDashboard />} />
+          <Route path="/scheduler-config" element={<SchedulerConfigManagement />} />
           
           {/* Master Data Management */}
           <Route path="/customer-management" element={<CustomerManagement />} />

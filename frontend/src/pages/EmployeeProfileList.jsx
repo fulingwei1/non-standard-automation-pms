@@ -3,11 +3,11 @@
  * 员工档案列表页面
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Users, Search, Eye, RefreshCw, User, Briefcase, Clock
+  Users, Search, Eye, RefreshCw, User, Clock, Upload, FileSpreadsheet, CheckCircle, AlertCircle, UserCheck, UserX, Briefcase
 } from 'lucide-react';
 import { PageHeader } from '../components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -16,60 +16,90 @@ import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import { Progress } from '../components/ui/progress';
 import { cn } from '../lib/utils';
-import { staffMatchingApi } from '../services/api';
+import { staffMatchingApi, organizationApi } from '../services/api';
 
-// 模拟数据
-const mockProfiles = [
-  {
-    id: 1, employee_id: 1, employee_name: '张工', employee_code: 'EMP001',
-    department: '机械设计部', position: '高级机械工程师',
-    skill_score_avg: 88, domain_score_avg: 85, attitude_score_avg: 90,
-    quality_score_avg: 92, current_workload_pct: 60, project_count: 5,
-    avg_contribution_level: '核心', skill_tags: ['机械设计', 'SolidWorks', 'AutoCAD']
-  },
-  {
-    id: 2, employee_id: 2, employee_name: '李工', employee_code: 'EMP002',
-    department: '机械设计部', position: '机械工程师',
-    skill_score_avg: 82, domain_score_avg: 78, attitude_score_avg: 85,
-    quality_score_avg: 80, current_workload_pct: 85, project_count: 3,
-    avg_contribution_level: '骨干', skill_tags: ['机械设计', 'SolidWorks']
-  },
-  {
-    id: 3, employee_id: 3, employee_name: '王工', employee_code: 'EMP003',
-    department: '电气设计部', position: '电气工程师',
-    skill_score_avg: 85, domain_score_avg: 80, attitude_score_avg: 88,
-    quality_score_avg: 85, current_workload_pct: 45, project_count: 4,
-    avg_contribution_level: '骨干', skill_tags: ['PLC编程', '电气设计']
-  },
-  {
-    id: 4, employee_id: 4, employee_name: '赵工', employee_code: 'EMP004',
-    department: '软件开发部', position: '软件工程师',
-    skill_score_avg: 90, domain_score_avg: 88, attitude_score_avg: 92,
-    quality_score_avg: 90, current_workload_pct: 100, project_count: 2,
-    avg_contribution_level: '核心', skill_tags: ['C#开发', '视觉算法']
-  },
+// 默认空数据
+const defaultProfiles = [];
+
+// 状态标签配置
+const STATUS_TABS = [
+  { key: 'active', label: '在职', icon: UserCheck, color: 'text-green-400', bgColor: 'bg-green-500/10' },
+  { key: 'regular', label: '正式', icon: Briefcase, color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
+  { key: 'probation', label: '试用期', icon: Clock, color: 'text-yellow-400', bgColor: 'bg-yellow-500/10' },
+  { key: 'intern', label: '实习期', icon: User, color: 'text-purple-400', bgColor: 'bg-purple-500/10' },
+  { key: 'resigned', label: '离职', icon: UserX, color: 'text-slate-400', bgColor: 'bg-slate-500/10' },
 ];
+
+// 获取员工显示标签
+const getEmployeeStatusBadge = (status, type) => {
+  if (status === 'resigned') {
+    return { label: '离职', variant: 'secondary', className: 'bg-slate-500/20 text-slate-400' };
+  }
+  if (type === 'probation') {
+    return { label: '试用期', variant: 'secondary', className: 'bg-yellow-500/20 text-yellow-400' };
+  }
+  if (type === 'intern') {
+    return { label: '实习期', variant: 'secondary', className: 'bg-purple-500/20 text-purple-400' };
+  }
+  return { label: '正式', variant: 'secondary', className: 'bg-green-500/20 text-green-400' };
+};
 
 export default function EmployeeProfileList() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [profiles, setProfiles] = useState(mockProfiles);
+  const [profiles, setProfiles] = useState(defaultProfiles);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('all');
+  const [activeStatusTab, setActiveStatusTab] = useState('active');
+
+  // 上传相关状态
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState(null);
+  const fileInputRef = useRef(null);
 
   const loadProfiles = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await staffMatchingApi.getProfiles({ page_size: 100 });
-      if (response.data?.items) {
-        setProfiles(response.data.items);
+      // 根据选中的标签构建查询参数
+      const params = { limit: 200 };
+
+      if (activeStatusTab === 'active') {
+        params.employment_status = 'active';
+      } else if (activeStatusTab === 'resigned') {
+        params.employment_status = 'resigned';
+      } else if (activeStatusTab === 'regular') {
+        params.employment_status = 'active';
+        params.employment_type = 'regular';
+      } else if (activeStatusTab === 'probation') {
+        params.employment_status = 'active';
+        params.employment_type = 'probation';
+      } else if (activeStatusTab === 'intern') {
+        params.employment_status = 'active';
+        params.employment_type = 'intern';
+      }
+
+      console.log('[员工档案] 发起API请求, 参数:', params);
+      const response = await staffMatchingApi.getProfiles(params);
+      console.log('[员工档案] API响应:', response);
+      // API 直接返回数组，不是 items 包装
+      const data = response.data || response;
+      console.log('[员工档案] 解析后数据:', data, '是否数组:', Array.isArray(data));
+      if (Array.isArray(data)) {
+        console.log('[员工档案] 设置数据, 数量:', data.length);
+        setProfiles(data);
+      } else if (data?.items) {
+        console.log('[员工档案] 设置items数据, 数量:', data.items.length);
+        setProfiles(data.items);
+      } else {
+        console.warn('[员工档案] 数据格式不正确:', data);
       }
     } catch (error) {
-      console.error('加载员工档案失败:', error);
+      console.error('[员工档案] 加载失败:', error.response?.status, error.response?.data, error.message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeStatusTab]);
 
   useEffect(() => {
     loadProfiles();
@@ -100,12 +130,195 @@ export default function EmployeeProfileList() {
     return 'text-green-400';
   };
 
+  // 处理文件上传
+  const handleFileUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // 验证文件类型
+    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+      setUploadResult({
+        success: false,
+        message: '请上传 Excel 文件（.xlsx 或 .xls 格式）'
+      });
+      return;
+    }
+
+    setUploading(true);
+    setUploadResult(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await organizationApi.importEmployees(formData);
+      setUploadResult(response.data || response);
+
+      // 导入成功后刷新列表
+      if (response.data?.success || response.success) {
+        setTimeout(() => {
+          loadProfiles();
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('上传失败:', error);
+      setUploadResult({
+        success: false,
+        message: error.response?.data?.detail || error.message || '上传失败，请重试'
+      });
+    } finally {
+      setUploading(false);
+      // 清空文件输入，允许重复选择同一文件
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="员工能力档案"
         description="查看员工技能评估、工作负载和项目绩效"
+        actions={
+          <Button onClick={() => setShowUploadModal(true)}>
+            <Upload className="h-4 w-4 mr-2" />
+            导入员工数据
+          </Button>
+        }
       />
+
+      {/* 上传弹窗 */}
+      {showUploadModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => {
+              setShowUploadModal(false);
+              setUploadResult(null);
+            }}
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative z-10 w-full max-w-lg bg-slate-900 border border-white/10 rounded-xl p-6 shadow-xl"
+          >
+            <h3 className="text-lg font-semibold text-white mb-4">导入员工数据</h3>
+
+            {/* 上传区域 */}
+            <div
+              className={cn(
+                "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors",
+                uploading ? "border-primary/50 bg-primary/5" : "border-white/20 hover:border-primary/50 hover:bg-white/5"
+              )}
+              onClick={() => !uploading && fileInputRef.current?.click()}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              {uploading ? (
+                <div className="flex flex-col items-center gap-3">
+                  <RefreshCw className="h-10 w-10 text-primary animate-spin" />
+                  <div className="text-slate-300">正在导入...</div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-3">
+                  <FileSpreadsheet className="h-10 w-10 text-slate-400" />
+                  <div className="text-slate-300">点击或拖拽上传 Excel 文件</div>
+                  <div className="text-xs text-slate-500">支持 .xlsx、.xls 格式</div>
+                </div>
+              )}
+            </div>
+
+            {/* 上传结果 */}
+            {uploadResult && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={cn(
+                  "mt-4 p-4 rounded-lg",
+                  uploadResult.success ? "bg-green-500/10 border border-green-500/30" : "bg-red-500/10 border border-red-500/30"
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  {uploadResult.success ? (
+                    <CheckCircle className="h-5 w-5 text-green-400 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="h-5 w-5 text-red-400 mt-0.5" />
+                  )}
+                  <div>
+                    <div className={uploadResult.success ? "text-green-300" : "text-red-300"}>
+                      {uploadResult.message}
+                    </div>
+                    {uploadResult.success && (
+                      <div className="text-sm text-slate-400 mt-2">
+                        新增 {uploadResult.imported} 人 · 更新 {uploadResult.updated} 人 · 跳过 {uploadResult.skipped} 条
+                      </div>
+                    )}
+                    {uploadResult.errors?.length > 0 && (
+                      <div className="text-xs text-red-400/80 mt-2">
+                        {uploadResult.errors.slice(0, 3).map((err, i) => (
+                          <div key={i}>{err}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* 说明 */}
+            <div className="mt-4 p-3 bg-white/5 rounded-lg text-xs text-slate-400 space-y-1">
+              <div className="font-medium text-slate-300 mb-2">导入说明：</div>
+              <div>• Excel 文件必须包含"姓名"列</div>
+              <div>• 支持的列：姓名、一级部门、二级部门、三级部门、职务、联系方式、在职离职状态</div>
+              <div>• 系统会根据 姓名+部门 判断员工是否已存在</div>
+              <div>• 已存在的员工会更新信息，不会重复创建</div>
+              <div>• 支持直接导入企业微信导出的通讯录</div>
+            </div>
+
+            {/* 按钮 */}
+            <div className="mt-6 flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowUploadModal(false);
+                  setUploadResult(null);
+                }}
+              >
+                关闭
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* 状态标签筛选 */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {STATUS_TABS.map(tab => {
+          const Icon = tab.icon;
+          const isActive = activeStatusTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveStatusTab(tab.key)}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-lg border transition-all",
+                isActive
+                  ? `${tab.bgColor} border-current ${tab.color}`
+                  : "border-white/10 text-slate-400 hover:bg-white/5 hover:text-white"
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              <span className="font-medium">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-3 gap-4">
@@ -117,7 +330,13 @@ export default function EmployeeProfileList() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-white">{stats.total}</div>
-                <div className="text-sm text-slate-400">总员工数</div>
+                <div className="text-sm text-slate-400">
+                  {activeStatusTab === 'active' ? '在职员工' :
+                   activeStatusTab === 'regular' ? '正式员工' :
+                   activeStatusTab === 'probation' ? '试用期员工' :
+                   activeStatusTab === 'intern' ? '实习期员工' :
+                   activeStatusTab === 'resigned' ? '离职员工' : '总员工数'}
+                </div>
               </div>
             </div>
           </CardContent>
@@ -196,21 +415,30 @@ export default function EmployeeProfileList() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center text-white font-semibold">
-                        {profile.employee_name.charAt(0)}
+                        {profile.employee_name?.charAt(0) || '?'}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-white">{profile.employee_name}</span>
                           <span className="text-xs text-slate-500">{profile.employee_code}</span>
-                          <Badge variant="outline" className="text-xs">
-                            {profile.avg_contribution_level}
-                          </Badge>
+                          {/* 员工状态标签 */}
+                          {(() => {
+                            const statusBadge = getEmployeeStatusBadge(
+                              profile.employment_status,
+                              profile.employment_type
+                            );
+                            return (
+                              <Badge variant={statusBadge.variant} className={cn("text-xs", statusBadge.className)}>
+                                {statusBadge.label}
+                              </Badge>
+                            );
+                          })()}
                         </div>
                         <div className="text-sm text-slate-400 mt-1">
-                          {profile.department} · {profile.position}
+                          {profile.department || '未分配部门'}
                         </div>
                         <div className="flex gap-1 mt-2">
-                          {profile.skill_tags?.slice(0, 4).map(tag => (
+                          {(profile.top_skills || []).slice(0, 4).map(tag => (
                             <Badge key={tag} variant="secondary" className="text-xs">
                               {tag}
                             </Badge>
@@ -220,31 +448,31 @@ export default function EmployeeProfileList() {
                     </div>
 
                     <div className="flex items-center gap-8">
-                      {/* 能力得分 */}
+                      {/* 综合得分 */}
                       <div className="text-center">
                         <div className="text-xl font-bold text-primary">
-                          {Math.round((profile.skill_score_avg + profile.domain_score_avg + profile.attitude_score_avg + profile.quality_score_avg) / 4)}
+                          {profile.avg_performance_score ? Math.round(profile.avg_performance_score) : '--'}
                         </div>
-                        <div className="text-xs text-slate-500">综合评分</div>
+                        <div className="text-xs text-slate-500">绩效评分</div>
                       </div>
 
                       {/* 工作负载 */}
                       <div className="w-32">
                         <div className="flex justify-between text-xs mb-1">
                           <span className="text-slate-400">工作负载</span>
-                          <span className={getWorkloadColor(profile.current_workload_pct)}>
-                            {profile.current_workload_pct}%
+                          <span className={getWorkloadColor(profile.current_workload_pct || 0)}>
+                            {profile.current_workload_pct || 0}%
                           </span>
                         </div>
                         <Progress
-                          value={profile.current_workload_pct}
+                          value={profile.current_workload_pct || 0}
                           className="h-2"
                         />
                       </div>
 
                       {/* 项目数 */}
                       <div className="text-center">
-                        <div className="text-lg font-semibold text-white">{profile.project_count}</div>
+                        <div className="text-lg font-semibold text-white">{profile.total_projects || 0}</div>
                         <div className="text-xs text-slate-500">参与项目</div>
                       </div>
 

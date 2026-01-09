@@ -53,6 +53,7 @@ from .alert import (
     AlertStatistics, ProjectHealthSnapshot, AlertRuleTemplate,
     AlertSubscription
 )
+from .scheduler_config import SchedulerTaskConfig
 from .production import (
     Workshop, Workstation, Worker, WorkerSkill, ProcessDict,
     Equipment, EquipmentMaintenance, ProductionPlan,
@@ -105,6 +106,7 @@ from .sales import (
     PurchaseMaterialCost,
     CpqRuleSet, QuoteTemplate, QuoteTemplateVersion,
     ContractTemplate, ContractTemplateVersion,
+    SalesTarget,
     Contract, ContractDeliverable, ContractAmendment,
     Invoice, ReceivableDispute,
     QuoteApproval, ContractApproval, InvoiceApproval,
@@ -223,6 +225,8 @@ __all__ = [
     'ExceptionEvent', 'ExceptionAction', 'ExceptionEscalation',
     'AlertStatistics', 'ProjectHealthSnapshot', 'AlertRuleTemplate',
     'AlertSubscription',
+    # Scheduler Config
+    'SchedulerTaskConfig',
     # Production
     'Workshop', 'Workstation', 'Worker', 'WorkerSkill', 'ProcessDict',
     'Equipment', 'EquipmentMaintenance', 'ProductionPlan',
@@ -266,7 +270,7 @@ __all__ = [
     'CpqRuleSet', 'QuoteTemplate', 'QuoteTemplateVersion',
     'ContractTemplate', 'ContractTemplateVersion',
     'Contract', 'ContractDeliverable', 'ContractAmendment',
-    'Invoice', 'ReceivableDispute',
+    'Invoice', 'ReceivableDispute', 'SalesTarget',
     'QuoteApproval', 'ContractApproval', 'InvoiceApproval',
     # Technical Assessment
     'TechnicalAssessment', 'ScoringRule', 'FailureCase',

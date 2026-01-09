@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import api from '../services/api'
 import {
   Users,
   Shield,
@@ -64,41 +65,32 @@ import {
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 
-// Mock data for admin dashboard
-const mockSystemStats = {
-  // User statistics
-  totalUsers: 186,
-  activeUsers: 178,
-  inactiveUsers: 8,
-  newUsersThisMonth: 12,
-  usersWithRoles: 175,
-  usersWithoutRoles: 11,
-  
-  // Role statistics
-  totalRoles: 28,
-  systemRoles: 8,
-  customRoles: 20,
-  activeRoles: 26,
-  inactiveRoles: 2,
-  
-  // Permission statistics
-  totalPermissions: 156,
-  assignedPermissions: 1420,
-  unassignedPermissions: 36,
-  
-  // System health
-  systemUptime: 99.8,
-  databaseSize: 2.5, // GB
-  storageUsed: 68.5, // %
-  apiResponseTime: 125, // ms
-  errorRate: 0.02, // %
-  
-  // Activity statistics
-  loginCountToday: 145,
-  loginCountThisWeek: 892,
-  lastBackup: '2025-01-06 02:00',
-  auditLogsToday: 234,
-  auditLogsThisWeek: 1456,
+// 默认统计数据（加载前显示）
+const defaultStats = {
+  totalUsers: 0,
+  activeUsers: 0,
+  inactiveUsers: 0,
+  newUsersThisMonth: 0,
+  usersWithRoles: 0,
+  usersWithoutRoles: 0,
+  totalRoles: 0,
+  systemRoles: 0,
+  customRoles: 0,
+  activeRoles: 0,
+  inactiveRoles: 0,
+  totalPermissions: 0,
+  assignedPermissions: 0,
+  unassignedPermissions: 0,
+  systemUptime: 99.9,
+  databaseSize: 0,
+  storageUsed: 0,
+  apiResponseTime: 0,
+  errorRate: 0,
+  loginCountToday: 0,
+  loginCountThisWeek: 0,
+  lastBackup: null,
+  auditLogsToday: 0,
+  auditLogsThisWeek: 0,
 }
 
 const mockRecentActivities = [
@@ -361,7 +353,7 @@ const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg, onClic
 export default function AdminDashboard() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
-  const [stats] = useState(mockSystemStats)
+  const [stats, setStats] = useState(defaultStats)
   const [rolePermissions, setRolePermissions] = useState(() => cloneRolePermissions(mockRolePermissions))
   const [savedRolePermissions, setSavedRolePermissions] = useState(() => cloneRolePermissions(mockRolePermissions))
   const [selectedRoleCode, setSelectedRoleCode] = useState(mockRolePermissions[0]?.roleCode ?? '')
@@ -370,11 +362,20 @@ export default function AdminDashboard() {
   const [permissionNotice, setPermissionNotice] = useState(null)
 
   useEffect(() => {
-    // Simulate data loading
-    const timer = setTimeout(() => {
-      setLoading(false)
-    }, 500)
-    return () => clearTimeout(timer)
+    // 从后端获取真实统计数据
+    const fetchStats = async () => {
+      try {
+        const response = await api.get('/admin/stats')
+        if (response.data?.data) {
+          setStats(response.data.data)
+        }
+      } catch (error) {
+        console.error('获取统计数据失败:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchStats()
   }, [])
 
   useEffect(() => {
@@ -390,16 +391,16 @@ export default function AdminDashboard() {
   const handleStatCardClick = (type) => {
     switch (type) {
       case 'users':
-        navigate('/users')
+        navigate('/user-management')
         break
       case 'roles':
-        navigate('/roles')
+        navigate('/role-management')
         break
       case 'permissions':
-        navigate('/roles')
+        navigate('/permission-management')
         break
       case 'system':
-        navigate('/config')
+        navigate('/settings')
         break
       default:
         break
@@ -726,7 +727,7 @@ export default function AdminDashboard() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-white">用户管理</CardTitle>
-                <Button onClick={() => navigate('/users')}>
+                <Button onClick={() => navigate('/user-management')}>
                   <UserPlus className="w-4 h-4 mr-2" />
                   管理用户
                 </Button>
@@ -761,7 +762,7 @@ export default function AdminDashboard() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-white">角色权限管理</CardTitle>
-                <Button onClick={() => navigate('/roles')}>
+                <Button onClick={() => navigate('/role-management')}>
                   <Shield className="w-4 h-4 mr-2" />
                   管理角色
                 </Button>
@@ -1072,7 +1073,7 @@ export default function AdminDashboard() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-white">最近活动</CardTitle>
-                <Button variant="outline" size="sm" onClick={() => navigate('/audit-logs')}>
+                <Button variant="outline" size="sm" disabled title="审计日志功能开发中">
                   <Eye className="w-4 h-4 mr-2" />
                   查看全部
                 </Button>

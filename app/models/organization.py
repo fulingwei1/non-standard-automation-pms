@@ -45,6 +45,10 @@ class Employee(Base, TimestampMixin):
     phone = Column(String(20), comment="电话")
     wechat_userid = Column(String(50), comment="企业微信UserID")
     is_active = Column(Boolean, default=True, comment="是否在职")
+    employment_status = Column(String(20), default="active", comment="在职状态: active(在职), resigned(离职)")
+    employment_type = Column(String(20), default="regular", comment="员工类型: regular(正式), probation(试用期), intern(实习期)")
+    id_card = Column(String(18), comment="身份证号")
+    pinyin_name = Column(String(100), comment="姓名拼音")
 
     # 关系
     # user = relationship('User', back_populates='employee')

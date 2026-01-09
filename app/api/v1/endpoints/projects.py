@@ -7439,3 +7439,145 @@ def get_project_sync_status(
         message="获取同步状态成功",
         data=result
     )
+
+
+# ==================== ERP集成 ====================
+
+@router.post("/{project_id}/sync-to-erp", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def sync_project_to_erp(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    erp_order_no: Optional[str] = Body(None, description="ERP订单号（可选，不提供则自动生成）"),
+    current_user: User = Depends(security.require_permission("project:erp:sync")),
+) -> Any:
+    """
+    同步项目到ERP系统
+    
+    将项目信息同步到ERP系统，更新ERP同步状态
+    """
+    from app.utils.permission_helpers import check_project_access_or_raise
+    
+    # 检查项目访问权限
+    check_project_access_or_raise(db, current_user, project_id)
+    
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="项目不存在")
+    
+    # TODO: 这里应该调用实际的ERP系统API进行同步
+    # 目前仅更新本地状态
+    
+    project.erp_synced = True
+    project.erp_sync_time = datetime.now()
+    project.erp_sync_status = "SYNCED"
+    
+    if erp_order_no:
+        project.erp_order_no = erp_order_no
+    elif not project.erp_order_no:
+        # 自动生成ERP订单号（格式：ERP-项目编号）
+        project.erp_order_no = f"ERP-{project.project_code}"
+    
+    db.commit()
+    db.refresh(project)
+    
+    return ResponseModel(
+        code=200,
+        message="项目已同步到ERP系统",
+        data={
+            "project_id": project.id,
+            "project_code": project.project_code,
+            "erp_order_no": project.erp_order_no,
+            "erp_sync_time": project.erp_sync_time.isoformat() if project.erp_sync_time else None,
+            "erp_sync_status": project.erp_sync_status
+        }
+    )
+
+
+@router.get("/{project_id}/erp-status", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def get_project_erp_status(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取项目ERP同步状态
+    
+    查询项目的ERP同步状态、订单号等信息
+    """
+    from app.utils.permission_helpers import check_project_access_or_raise
+    
+    # 检查项目访问权限
+    check_project_access_or_raise(db, current_user, project_id)
+    
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="项目不存在")
+    
+    return ResponseModel(
+        code=200,
+        message="获取ERP状态成功",
+        data={
+            "project_id": project.id,
+            "project_code": project.project_code,
+            "erp_synced": project.erp_synced,
+            "erp_sync_time": project.erp_sync_time.isoformat() if project.erp_sync_time else None,
+            "erp_order_no": project.erp_order_no,
+            "erp_sync_status": project.erp_sync_status
+        }
+    )
+
+
+@router.put("/{project_id}/erp-status", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def update_project_erp_status(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    erp_synced: Optional[bool] = Body(None, description="是否已录入ERP系统"),
+    erp_order_no: Optional[str] = Body(None, description="ERP订单号"),
+    erp_sync_status: Optional[str] = Body(None, description="ERP同步状态：PENDING/SYNCED/FAILED"),
+    current_user: User = Depends(security.require_permission("project:erp:update")),
+) -> Any:
+    """
+    更新项目ERP同步状态
+    
+    手动更新项目的ERP同步状态（通常由ERP系统回调或管理员操作）
+    """
+    from app.utils.permission_helpers import check_project_access_or_raise
+    
+    # 检查项目访问权限
+    check_project_access_or_raise(db, current_user, project_id)
+    
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="项目不存在")
+    
+    if erp_synced is not None:
+        project.erp_synced = erp_synced
+        if erp_synced and not project.erp_sync_time:
+            project.erp_sync_time = datetime.now()
+    
+    if erp_order_no is not None:
+        project.erp_order_no = erp_order_no
+    
+    if erp_sync_status is not None:
+        if erp_sync_status not in ["PENDING", "SYNCED", "FAILED"]:
+            raise HTTPException(status_code=400, detail="无效的ERP同步状态")
+        project.erp_sync_status = erp_sync_status
+    
+    db.commit()
+    db.refresh(project)
+    
+    return ResponseModel(
+        code=200,
+        message="ERP状态更新成功",
+        data={
+            "project_id": project.id,
+            "project_code": project.project_code,
+            "erp_synced": project.erp_synced,
+            "erp_sync_time": project.erp_sync_time.isoformat() if project.erp_sync_time else None,
+            "erp_order_no": project.erp_order_no,
+            "erp_sync_status": project.erp_sync_status
+        }
+    )

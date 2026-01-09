@@ -146,6 +146,23 @@ SCHEDULER_TASKS = [
         },
     },
     {
+        "id": "check_milestone_status_and_adjust_payments",
+        "name": "里程碑状态监控与收款计划调整",
+        "module": "app.utils.scheduled_tasks",
+        "callable": "check_milestone_status_and_adjust_payments",
+        "cron": {"minute": 0},
+        "owner": "Sales",
+        "category": "Payment",
+        "description": "Issue 7.3: 每小时检查里程碑状态变化，自动调整关联的收款计划。",
+        "enabled": True,
+        "dependencies_tables": ["project_milestones", "project_payment_plans", "notifications"],
+        "risk_level": "MEDIUM",
+        "sla": {
+            "max_execution_time_seconds": 300,
+            "retry_on_failure": True,
+        },
+    },
+    {
         "id": "check_cost_overrun_alerts",
         "name": "成本超支预警",
         "module": "app.utils.scheduled_tasks",

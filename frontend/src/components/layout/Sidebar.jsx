@@ -54,6 +54,7 @@ import {
   Layers,
   Heart,
   Key,
+  Activity,
 } from 'lucide-react'
 
 // Icon mapping
@@ -103,6 +104,7 @@ const iconMap = {
   Layers,
   Heart,
   Key,
+  Activity,
 }
 
 // Default navigation groups (for admin and general use)
@@ -198,6 +200,8 @@ const defaultNavGroups = [
       { name: '角色管理', path: '/role-management', icon: 'Shield' },
       { name: '权限管理', path: '/permission-management', icon: 'Key' },
       { name: '项目角色类型', path: '/project-role-types', icon: 'UserCog' },
+      { name: '调度器监控', path: '/scheduler-monitoring', icon: 'Activity' },
+      { name: '定时服务配置', path: '/scheduler-config', icon: 'Cog' },
     ],
     roles: ['admin', 'super_admin'], // 仅管理员可见
   },

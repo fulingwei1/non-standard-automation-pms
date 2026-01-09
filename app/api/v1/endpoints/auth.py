@@ -25,21 +25,64 @@ def login(
 ) -> Any:
     """
     用户登录，返回 JWT Token
-    
+
     - **username**: 用户名
     - **password**: 密码
+
+    错误码说明：
+    - USER_NOT_FOUND: 账号不存在
+    - USER_INACTIVE: 账号未激活
+    - USER_DISABLED: 账号已禁用（员工已离职）
+    - WRONG_PASSWORD: 密码错误
     """
     user = db.query(User).filter(User.username == form_data.username).first()
-    if not user or not security.verify_password(form_data.password, user.password_hash):
+
+    # 1. 账号不存在
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="用户名或密码错误",
+            detail={
+                "error_code": "USER_NOT_FOUND",
+                "message": "该员工尚未开通系统账号，请联系管理员"
+            },
             headers={"WWW-Authenticate": "Bearer"},
         )
-    elif not user.is_active:
+
+    # 2. 密码错误
+    if not security.verify_password(form_data.password, user.password_hash):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="用户已被禁用"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error_code": "WRONG_PASSWORD",
+                "message": "密码错误，忘记密码请联系管理员重置"
+            },
+            headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # 3. 账号未激活或已禁用
+    if not user.is_active:
+        # 检查关联的员工状态来区分是未激活还是离职
+        from app.models.organization import Employee
+        employee = db.query(Employee).filter(Employee.id == user.employee_id).first()
+
+        if employee and employee.employment_status != 'active':
+            # 员工已离职
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "error_code": "USER_DISABLED",
+                    "message": "账号已被禁用，如有疑问请联系管理员"
+                }
+            )
+        else:
+            # 账号未激活
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "error_code": "USER_INACTIVE",
+                    "message": "账号待激活，请联系管理员开通系统访问权限"
+                }
+            )
 
     # 更新最后登录时间
     user.last_login_at = datetime.now()

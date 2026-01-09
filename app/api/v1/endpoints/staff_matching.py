@@ -336,6 +336,8 @@ def delete_evaluation(
 @router.get("/profiles", response_model=List[schemas.EmployeeProfileSummary])
 def list_profiles(
     department: Optional[str] = Query(None, description="部门筛选"),
+    employment_status: Optional[str] = Query(None, description="在职状态: active(在职), resigned(离职), all(全部)"),
+    employment_type: Optional[str] = Query(None, description="员工类型: regular(正式), probation(试用期), intern(实习期)"),
     min_workload: Optional[float] = Query(None, description="最小工作负载"),
     max_workload: Optional[float] = Query(None, description="最大工作负载"),
     has_skill: Optional[int] = Query(None, description="包含技能ID"),
@@ -347,7 +349,20 @@ def list_profiles(
     """获取员工档案列表"""
     query = db.query(Employee, HrEmployeeProfile).outerjoin(
         HrEmployeeProfile, Employee.id == HrEmployeeProfile.employee_id
-    ).filter(Employee.is_active == True)
+    )
+
+    # 默认只显示在职员工，除非明确请求全部或离职
+    if employment_status == 'all':
+        pass  # 不过滤
+    elif employment_status == 'resigned':
+        query = query.filter(Employee.employment_status == 'resigned')
+    else:
+        # 默认显示在职员工
+        query = query.filter(Employee.employment_status == 'active')
+
+    # 员工类型筛选
+    if employment_type:
+        query = query.filter(Employee.employment_type == employment_type)
 
     if department:
         query = query.filter(Employee.department.contains(department))
@@ -382,6 +397,8 @@ def list_profiles(
             'employee_name': employee.name,
             'employee_code': employee.employee_code,
             'department': employee.department,
+            'employment_status': getattr(employee, 'employment_status', 'active') or 'active',
+            'employment_type': getattr(employee, 'employment_type', 'regular') or 'regular',
             'top_skills': top_skills,
             'attitude_score': profile.attitude_score if profile else None,
             'quality_score': profile.quality_score if profile else None,

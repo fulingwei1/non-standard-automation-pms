@@ -232,6 +232,7 @@ class ProjectUpdate(BaseModel):
     customer_id: Optional[int] = None
     contract_no: Optional[str] = None
     project_type: Optional[str] = None
+    project_category: Optional[str] = None
     stage: Optional[str] = None
     status: Optional[str] = None
     health: Optional[str] = None
@@ -246,6 +247,26 @@ class ProjectUpdate(BaseModel):
     actual_cost: Optional[Decimal] = None
     pm_id: Optional[int] = None
     description: Optional[str] = None
+    # 销售关联
+    opportunity_id: Optional[int] = None
+    contract_id: Optional[int] = None
+    # ERP集成
+    erp_synced: Optional[bool] = None
+    erp_order_no: Optional[str] = None
+    erp_sync_status: Optional[str] = None
+    # 财务状态
+    invoice_issued: Optional[bool] = None
+    final_payment_completed: Optional[bool] = None
+    final_payment_date: Optional[date] = None
+    # 质保信息
+    warranty_period_months: Optional[int] = None
+    warranty_start_date: Optional[date] = None
+    warranty_end_date: Optional[date] = None
+    # 实施信息
+    implementation_address: Optional[str] = None
+    test_encryption: Optional[str] = None
+    # 预立项关联
+    initiation_id: Optional[int] = None
 
 
 class ProjectResponse(TimestampSchema):
@@ -257,6 +278,9 @@ class ProjectResponse(TimestampSchema):
     short_name: Optional[str] = None
     customer_id: Optional[int] = None
     customer_name: Optional[str] = None
+    project_type: Optional[str] = None
+    project_category: Optional[str] = None
+    industry: Optional[str] = None
     stage: str = "S1"
     status: Optional[str] = None
     health: str = "H1"
@@ -264,14 +288,33 @@ class ProjectResponse(TimestampSchema):
     contract_date: Optional[date] = None
     planned_start_date: Optional[date] = None
     planned_end_date: Optional[date] = None
-    # delivery_date: Optional[date] = None
     contract_amount: Decimal = 0
     budget_amount: Decimal = 0
     actual_cost: Decimal = 0
     pm_id: Optional[int] = None
     pm_name: Optional[str] = None
-    # machine_count: int = 1
     is_active: bool = True
+    # 销售关联
+    opportunity_id: Optional[int] = None
+    contract_id: Optional[int] = None
+    # ERP集成
+    erp_synced: bool = False
+    erp_sync_time: Optional[datetime] = None
+    erp_order_no: Optional[str] = None
+    erp_sync_status: str = "PENDING"
+    # 财务状态
+    invoice_issued: bool = False
+    final_payment_completed: bool = False
+    final_payment_date: Optional[date] = None
+    # 质保信息
+    warranty_period_months: Optional[int] = None
+    warranty_start_date: Optional[date] = None
+    warranty_end_date: Optional[date] = None
+    # 实施信息
+    implementation_address: Optional[str] = None
+    test_encryption: Optional[str] = None
+    # 预立项关联
+    initiation_id: Optional[int] = None
 
     class Config:
         from_attributes = True

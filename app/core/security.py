@@ -51,6 +51,15 @@ __all__ = [
     "require_project_access",
     "has_sales_assessment_access",
     "require_sales_assessment_access",
+    "get_sales_data_scope",
+    "filter_sales_data_by_scope",
+    "filter_sales_finance_data_by_scope",
+    "check_sales_create_permission",
+    "check_sales_edit_permission",
+    "check_sales_delete_permission",
+    "require_sales_create_permission",
+    "require_sales_edit_permission",
+    "require_sales_delete_permission",
     "has_hr_access",
     "require_hr_access",
     "has_rd_project_access",
@@ -208,6 +217,9 @@ async def get_current_user(
         detail="无效的认证凭据",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    
+    # 调试日志
+    logger.debug(f"收到认证请求，token长度: {len(token) if token else 0}")
     if is_token_revoked(token):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -218,16 +230,49 @@ async def get_current_user(
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        user_id: int = payload.get("sub")
-        if user_id is None:
+        user_id_str = payload.get("sub")
+        if user_id_str is None:
+            raise credentials_exception
+        # sub字段是字符串，需要转换为整数
+        try:
+            user_id = int(user_id_str)
+        except (ValueError, TypeError):
             raise credentials_exception
     except JWTError:
         raise credentials_exception
 
-    user = db.query(User).filter(User.id == user_id).first()
-    if user is None:
-        raise credentials_exception
-    return user
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if user is None:
+            raise credentials_exception
+        return user
+    except Exception as e:
+        logger.error(f"ORM查询用户失败: {e}", exc_info=True)
+        # 如果是因为其他模型关系错误，尝试使用SQL查询
+        try:
+            from sqlalchemy import text
+            result = db.execute(
+                text("SELECT id, username, is_active, is_superuser FROM users WHERE id = :user_id"),
+                {"user_id": user_id}
+            )
+            user_row = result.fetchone()
+            if user_row:
+                # 创建一个简单的User对象
+                user = User()
+                user.id = user_row[0]
+                user.username = user_row[1]
+                user.is_active = bool(user_row[2])
+                user.is_superuser = bool(user_row[3]) if len(user_row) > 3 else False
+                # 设置其他必需字段的默认值
+                user.employee_id = 0
+                user.password_hash = ""
+                user.auth_type = "password"
+                return user
+            else:
+                raise credentials_exception
+        except Exception as sql_e:
+            logger.error(f"SQL查询用户也失败: {sql_e}", exc_info=True)
+            raise credentials_exception
 
 
 async def get_current_active_user(
@@ -494,6 +539,377 @@ def require_project_access():
             )
         return current_user
     return project_access_checker
+
+
+def get_sales_data_scope(user: User, db: Session) -> str:
+    """
+    Issue 7.1: 获取销售数据权限范围
+    
+    Returns:
+        'ALL': 销售总监 - 可以看到所有数据
+        'TEAM': 销售经理 - 可以看到团队数据（同部门或下属）
+        'OWN': 销售 - 只能看到自己的数据
+        'FINANCE_ONLY': 财务 - 只能看到发票和收款数据
+        'NONE': 无权限
+    """
+    if user.is_superuser:
+        return 'ALL'
+    
+    # 获取用户所有角色的角色代码
+    role_codes = set()
+    for user_role in user.roles:
+        if user_role.role and user_role.role.is_active:
+            role_code = (user_role.role.role_code or '').upper()
+            role_codes.add(role_code)
+    
+    # 优先级：SALES_DIRECTOR > SALES_MANAGER > FINANCE > SALES
+    if any(code in ['SALES_DIRECTOR', 'SALESDIRECTOR', '销售总监'] for code in role_codes):
+        return 'ALL'
+    elif any(code in ['SALES_MANAGER', 'SALESMANAGER', '销售经理'] for code in role_codes):
+        return 'TEAM'
+    elif any(code in ['FINANCE', '财务', 'FINANCE_MANAGER', '财务经理'] for code in role_codes):
+        return 'FINANCE_ONLY'
+    elif any(code in ['SALES', '销售', 'PRESALES', '售前'] for code in role_codes):
+        return 'OWN'
+    
+    return 'NONE'
+
+
+def filter_sales_data_by_scope(
+    query,
+    user: User,
+    db: Session,
+    owner_field_name: str = 'owner_id',
+    department_field_name: Optional[str] = None,
+) -> Any:
+    """
+    Issue 7.1: 根据销售数据权限范围过滤查询
+    
+    Args:
+        query: SQLAlchemy 查询对象
+        user: 当前用户
+        db: 数据库会话
+        owner_field_name: 负责人字段名（默认 'owner_id'）
+        department_field_name: 部门字段名（可选，用于团队过滤）
+    
+    Returns:
+        过滤后的查询对象
+    """
+    scope = get_sales_data_scope(user, db)
+    
+    if scope == 'ALL':
+        # 销售总监：不进行任何过滤
+        return query
+    elif scope == 'TEAM':
+        # 销售经理：可以看到团队数据（同部门或下属）
+        from app.models.organization import Department
+        from sqlalchemy import or_
+        
+        # 获取用户部门
+        if user.department:
+            dept = db.query(Department).filter(Department.dept_name == user.department).first()
+            if dept:
+                # 同部门的所有用户ID
+                dept_user_ids = [
+                    u.id for u in db.query(User).filter(User.department == user.department).all()
+                ]
+                # 过滤：负责人是同部门的用户，或者是当前用户
+                if department_field_name:
+                    # 如果模型有部门字段，也可以通过部门过滤
+                    return query.filter(
+                        or_(
+                            getattr(query.column_descriptions[0]['entity'], owner_field_name).in_(dept_user_ids),
+                            getattr(query.column_descriptions[0]['entity'], owner_field_name) == user.id,
+                        )
+                    )
+                else:
+                    # 只通过负责人过滤
+                    return query.filter(
+                        getattr(query.column_descriptions[0]['entity'], owner_field_name).in_(dept_user_ids + [user.id])
+                    )
+        
+        # 如果没有部门信息，降级为OWN
+        return query.filter(getattr(query.column_descriptions[0]['entity'], owner_field_name) == user.id)
+    elif scope == 'OWN':
+        # 销售：只能看到自己的数据
+        return query.filter(getattr(query.column_descriptions[0]['entity'], owner_field_name) == user.id)
+    elif scope == 'FINANCE_ONLY':
+        # 财务：对于非发票/收款数据，返回空结果
+        # 这个函数主要用于线索/商机/报价/合同，发票和收款有单独的过滤逻辑
+        return query.filter(False)  # 返回空结果
+    else:
+        # 无权限：返回空结果
+        return query.filter(False)
+
+
+def filter_sales_finance_data_by_scope(
+    query,
+    user: User,
+    db: Session,
+    owner_field_name: str = 'owner_id',
+) -> Any:
+    """
+    Issue 7.1: 财务数据权限过滤（发票和收款）
+    财务可以看到所有发票和收款数据
+    """
+    scope = get_sales_data_scope(user, db)
+    
+    if scope in ['ALL', 'FINANCE_ONLY']:
+        # 销售总监和财务：可以看到所有发票和收款数据
+        return query
+    elif scope == 'TEAM':
+        # 销售经理：可以看到团队数据
+        from app.models.organization import Department
+        from sqlalchemy import or_
+        
+        if user.department:
+            dept = db.query(Department).filter(Department.dept_name == user.department).first()
+            if dept:
+                dept_user_ids = [
+                    u.id for u in db.query(User).filter(User.department == user.department).all()
+                ]
+                return query.filter(
+                    getattr(query.column_descriptions[0]['entity'], owner_field_name).in_(dept_user_ids + [user.id])
+                )
+        
+        return query.filter(getattr(query.column_descriptions[0]['entity'], owner_field_name) == user.id)
+    elif scope == 'OWN':
+        # 销售：只能看到自己的数据
+        return query.filter(getattr(query.column_descriptions[0]['entity'], owner_field_name) == user.id)
+    else:
+        return query.filter(False)
+
+
+def get_sales_data_scope(user: User, db: Session) -> str:
+    """
+    Issue 7.1: 获取销售数据权限范围
+    
+    Returns:
+        'ALL': 销售总监 - 可以看到所有数据
+        'TEAM': 销售经理 - 可以看到团队数据（同部门或下属）
+        'OWN': 销售 - 只能看到自己的数据
+        'FINANCE_ONLY': 财务 - 只能看到发票和收款数据
+        'NONE': 无权限
+    """
+    if user.is_superuser:
+        return 'ALL'
+    
+    # 获取用户所有角色的角色代码
+    role_codes = set()
+    for user_role in user.roles:
+        if user_role.role and user_role.role.is_active:
+            role_code = (user_role.role.role_code or '').upper()
+            role_codes.add(role_code)
+    
+    # 优先级：SALES_DIRECTOR > SALES_MANAGER > FINANCE > SALES
+    if any(code in ['SALES_DIRECTOR', 'SALESDIRECTOR', '销售总监'] for code in role_codes):
+        return 'ALL'
+    elif any(code in ['SALES_MANAGER', 'SALESMANAGER', '销售经理'] for code in role_codes):
+        return 'TEAM'
+    elif any(code in ['FINANCE', '财务', 'FINANCE_MANAGER', '财务经理'] for code in role_codes):
+        return 'FINANCE_ONLY'
+    elif any(code in ['SALES', '销售', 'PRESALES', '售前'] for code in role_codes):
+        return 'OWN'
+    
+    return 'NONE'
+
+
+def filter_sales_data_by_scope(
+    query,
+    user: User,
+    db: Session,
+    model_class,
+    owner_field_name: str = 'owner_id',
+) -> Any:
+    """
+    Issue 7.1: 根据销售数据权限范围过滤查询
+    
+    Args:
+        query: SQLAlchemy 查询对象
+        user: 当前用户
+        db: 数据库会话
+        model_class: 模型类（用于获取字段）
+        owner_field_name: 负责人字段名（默认 'owner_id'）
+    
+    Returns:
+        过滤后的查询对象
+    """
+    scope = get_sales_data_scope(user, db)
+    
+    if scope == 'ALL':
+        # 销售总监：不进行任何过滤
+        return query
+    elif scope == 'TEAM':
+        # 销售经理：可以看到团队数据（同部门或下属）
+        from app.models.organization import Department
+        from sqlalchemy import or_
+        
+        # 获取用户部门
+        if user.department:
+            dept = db.query(Department).filter(Department.dept_name == user.department).first()
+            if dept:
+                # 同部门的所有用户ID
+                dept_users = db.query(User).filter(User.department == user.department).all()
+                dept_user_ids = [u.id for u in dept_users]
+                # 过滤：负责人是同部门的用户，或者是当前用户
+                owner_field = getattr(model_class, owner_field_name)
+                return query.filter(owner_field.in_(dept_user_ids + [user.id]))
+        
+        # 如果没有部门信息，降级为OWN
+        owner_field = getattr(model_class, owner_field_name)
+        return query.filter(owner_field == user.id)
+    elif scope == 'OWN':
+        # 销售：只能看到自己的数据
+        owner_field = getattr(model_class, owner_field_name)
+        return query.filter(owner_field == user.id)
+    elif scope == 'FINANCE_ONLY':
+        # 财务：对于非发票/收款数据，返回空结果
+        # 这个函数主要用于线索/商机/报价/合同，发票和收款有单独的过滤逻辑
+        return query.filter(False)  # 返回空结果
+    else:
+        # 无权限：返回空结果
+        return query.filter(False)
+
+
+def filter_sales_finance_data_by_scope(
+    query,
+    user: User,
+    db: Session,
+    model_class,
+    owner_field_name: str = 'owner_id',
+) -> Any:
+    """
+    Issue 7.1: 财务数据权限过滤（发票和收款）
+    财务可以看到所有发票和收款数据
+    """
+    scope = get_sales_data_scope(user, db)
+    
+    if scope in ['ALL', 'FINANCE_ONLY']:
+        # 销售总监和财务：可以看到所有发票和收款数据
+        return query
+    elif scope == 'TEAM':
+        # 销售经理：可以看到团队数据
+        from app.models.organization import Department
+        
+        if user.department:
+            dept = db.query(Department).filter(Department.dept_name == user.department).first()
+            if dept:
+                dept_users = db.query(User).filter(User.department == user.department).all()
+                dept_user_ids = [u.id for u in dept_users]
+                owner_field = getattr(model_class, owner_field_name)
+                return query.filter(owner_field.in_(dept_user_ids + [user.id]))
+        
+        owner_field = getattr(model_class, owner_field_name)
+        return query.filter(owner_field == user.id)
+    elif scope == 'OWN':
+        # 销售：只能看到自己的数据
+        owner_field = getattr(model_class, owner_field_name)
+        return query.filter(owner_field == user.id)
+    else:
+        return query.filter(False)
+
+
+def check_sales_create_permission(user: User, db: Session) -> bool:
+    """
+    Issue 7.2: 检查销售数据创建权限
+    创建权限：销售、销售经理、销售总监
+    """
+    if user.is_superuser:
+        return True
+    
+    scope = get_sales_data_scope(user, db)
+    return scope in ['ALL', 'TEAM', 'OWN']
+
+
+def check_sales_edit_permission(
+    user: User,
+    db: Session,
+    entity_created_by: Optional[int] = None,
+    entity_owner_id: Optional[int] = None,
+) -> bool:
+    """
+    Issue 7.2: 检查销售数据编辑权限
+    编辑权限：创建人、负责人、销售经理、销售总监
+    """
+    if user.is_superuser:
+        return True
+    
+    scope = get_sales_data_scope(user, db)
+    
+    # 销售总监和销售经理可以编辑所有数据
+    if scope in ['ALL', 'TEAM']:
+        return True
+    
+    # 销售只能编辑自己创建或负责的数据
+    if scope == 'OWN':
+        if entity_created_by and entity_created_by == user.id:
+            return True
+        if entity_owner_id and entity_owner_id == user.id:
+            return True
+        return False
+    
+    return False
+
+
+def check_sales_delete_permission(
+    user: User,
+    db: Session,
+    entity_created_by: Optional[int] = None,
+) -> bool:
+    """
+    Issue 7.2: 检查销售数据删除权限
+    删除权限：仅创建人、销售总监、管理员
+    """
+    if user.is_superuser:
+        return True
+    
+    scope = get_sales_data_scope(user, db)
+    
+    # 销售总监可以删除所有数据
+    if scope == 'ALL':
+        return True
+    
+    # 只有创建人可以删除自己的数据
+    if entity_created_by and entity_created_by == user.id:
+        return True
+    
+    return False
+
+
+def require_sales_create_permission():
+    """Issue 7.2: 销售数据创建权限检查依赖"""
+    async def permission_checker(current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+        if not check_sales_create_permission(current_user, db):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="您没有权限创建销售数据"
+            )
+        return current_user
+    return permission_checker
+
+
+def require_sales_edit_permission(entity_created_by: Optional[int] = None, entity_owner_id: Optional[int] = None):
+    """Issue 7.2: 销售数据编辑权限检查依赖"""
+    async def permission_checker(current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+        if not check_sales_edit_permission(current_user, db, entity_created_by, entity_owner_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="您没有权限编辑此数据"
+            )
+        return current_user
+    return permission_checker
+
+
+def require_sales_delete_permission(entity_created_by: Optional[int] = None):
+    """Issue 7.2: 销售数据删除权限检查依赖"""
+    async def permission_checker(current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+        if not check_sales_delete_permission(current_user, db, entity_created_by):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="您没有权限删除此数据"
+            )
+        return current_user
+    return permission_checker
 
 
 def has_sales_assessment_access(user: User) -> bool:

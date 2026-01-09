@@ -130,39 +130,84 @@ def _wrap_job_callable(func: Callable[..., Any], task: Dict[str, Any]) -> Callab
     return _job_wrapper
 
 
+def _load_task_config_from_db(task_id: str) -> Optional[Dict[str, Any]]:
+    """从数据库加载任务配置"""
+    try:
+        from app.models.base import get_db_session
+        from app.models.scheduler_config import SchedulerTaskConfig
+        
+        with get_db_session() as db:
+            config = db.query(SchedulerTaskConfig).filter(
+                SchedulerTaskConfig.task_id == task_id,
+                SchedulerTaskConfig.is_enabled == True
+            ).first()
+            
+            if config:
+                # JSONType会自动处理JSON序列化/反序列化
+                cron_config = config.cron_config if config.cron_config else {}
+                return {
+                    "enabled": config.is_enabled,
+                    "cron": cron_config
+                }
+    except Exception as e:
+        logger.warning(f"从数据库加载任务配置失败 ({task_id}): {str(e)}")
+    return None
+
+
 def init_scheduler():
     """初始化并启动调度器"""
     # 注册事件监听器
     scheduler.add_listener(job_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
 
     job_count = 0
+    db_config_count = 0
+    
     for task in SCHEDULER_TASKS:
-        if not task.get("enabled", True):
-            logger.info(f"跳过未启用的调度任务：{task['id']}")
-            continue
+        task_id = task["id"]
+        
+        # 优先从数据库读取配置
+        db_config = _load_task_config_from_db(task_id)
+        
+        if db_config:
+            # 使用数据库配置
+            if not db_config.get("enabled", True):
+                logger.info(f"跳过未启用的调度任务（数据库配置）：{task_id}")
+                continue
+            cron_config = db_config.get("cron", task.get("cron", {}))
+            db_config_count += 1
+        else:
+            # 使用默认配置（scheduler_config.py）
+            if not task.get("enabled", True):
+                logger.info(f"跳过未启用的调度任务（默认配置）：{task_id}")
+                continue
+            cron_config = task.get("cron", {})
+        
         try:
             base_callable = _resolve_callable(task)
             job_callable = _wrap_job_callable(base_callable, task)
         except Exception as exc:
-            logger.error(f"加载调度任务 {task['id']} 失败: {exc}")
+            logger.error(f"加载调度任务 {task_id} 失败: {exc}")
             continue
 
         try:
             scheduler.add_job(
                 job_callable,
                 "cron",
-                id=task["id"],
+                id=task_id,
                 name=task["name"],
                 replace_existing=True,
-                **task.get("cron", {}),
+                **cron_config,
             )
             job_count += 1
         except Exception as exc:
-            logger.error(f"注册调度任务 {task['id']} 失败: {exc}")
+            logger.error(f"注册调度任务 {task_id} 失败: {exc}")
 
     # 启动调度器
     scheduler.start()
-    logger.info(f"定时任务调度器已启动（包含{job_count}个预警/定时服务）")
+    logger.info(
+        f"定时任务调度器已启动（包含{job_count}个预警/定时服务，"
+        f"其中{db_config_count}个使用数据库配置）"
+    )
 
     return scheduler
 

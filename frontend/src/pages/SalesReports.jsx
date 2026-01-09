@@ -40,39 +40,7 @@ import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { salesStatisticsApi } from '../services/api'
 
-// Mock data
-const mockMonthlySales = [
-  { month: '2024-07', target: 4000000, achieved: 3200000, growth: 8.5 },
-  { month: '2024-08', target: 4200000, achieved: 3850000, growth: 12.3 },
-  { month: '2024-09', target: 4500000, achieved: 4100000, growth: 6.5 },
-  { month: '2024-10', target: 4800000, achieved: 4450000, growth: 8.5 },
-  { month: '2024-11', target: 5000000, achieved: 4650000, growth: 4.5 },
-  { month: '2024-12', target: 5200000, achieved: 5120000, growth: 10.1 },
-  { month: '2025-01', target: 5000000, achieved: 3850000, growth: -15.2 },
-]
-
-const mockCustomerAnalysis = [
-  { name: '深圳XX科技', amount: 8500000, projects: 8, growth: 25.5, rank: 1 },
-  { name: '东莞XX电子', amount: 6200000, projects: 6, growth: 18.2, rank: 2 },
-  { name: '广州XX汽车', amount: 5200000, projects: 5, growth: 12.8, rank: 3 },
-  { name: '惠州XX电池', amount: 4500000, projects: 4, growth: 8.5, rank: 4 },
-  { name: '佛山XX制造', amount: 3800000, projects: 3, growth: -5.2, rank: 5 },
-]
-
-const mockProductAnalysis = [
-  { name: 'ICT测试设备', amount: 18500000, count: 25, avgPrice: 740000, ratio: 43.5 },
-  { name: 'FCT测试设备', amount: 12000000, count: 18, avgPrice: 666667, ratio: 28.2 },
-  { name: 'EOL测试设备', amount: 8500000, count: 12, avgPrice: 708333, ratio: 20.0 },
-  { name: '烧录设备', amount: 3500000, count: 8, avgPrice: 437500, ratio: 8.2 },
-]
-
-const mockRegionalAnalysis = [
-  { region: '深圳', amount: 12500000, customers: 45, growth: 15.5 },
-  { region: '东莞', amount: 9800000, customers: 32, growth: 12.3 },
-  { region: '广州', amount: 7200000, customers: 28, growth: 8.5 },
-  { region: '惠州', amount: 5800000, customers: 22, growth: 5.2 },
-  { region: '其他', amount: 7200000, customers: 29, growth: 3.8 },
-]
+// Mock data removed - using real API only
 
 const formatCurrency = (value) => {
   if (value >= 10000) {

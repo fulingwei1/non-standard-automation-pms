@@ -5,9 +5,10 @@
 from typing import Any, List, Optional
 from datetime import date
 from decimal import Decimal
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Body
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
+from pydantic import BaseModel
 
 from app.api import deps
 from app.core import security
@@ -20,7 +21,27 @@ from app.models.rd_project import RdProject
 from app.schemas.auth import UserCreate, UserUpdate, UserResponse, UserRoleAssign
 from app.schemas.common import ResponseModel, PaginatedResponse
 from app.services.permission_audit_service import PermissionAuditService
+from app.services.user_sync_service import UserSyncService
 from fastapi import Request
+
+
+# 请求体模型
+class SyncEmployeesRequest(BaseModel):
+    """同步员工请求"""
+    only_active: bool = True  # 只同步在职员工
+    auto_activate: bool = False  # 是否自动激活
+    department_filter: Optional[str] = None  # 部门筛选
+
+
+class BatchToggleActiveRequest(BaseModel):
+    """批量激活/禁用请求"""
+    user_ids: List[int]
+    is_active: bool
+
+
+class ToggleActiveRequest(BaseModel):
+    """激活/禁用请求"""
+    is_active: bool
 
 router = APIRouter()
 
@@ -36,6 +57,14 @@ def _get_role_names(user: User) -> List[str]:
     if hasattr(roles, "all"):
         roles = roles.all()
     return [ur.role.role_name for ur in roles] if roles else []
+
+
+def _get_role_ids(user: User) -> List[int]:
+    """提取用户角色ID列表"""
+    roles = user.roles
+    if hasattr(roles, "all"):
+        roles = roles.all()
+    return [ur.role_id for ur in roles] if roles else []
 
 
 def _build_user_response(user: User) -> UserResponse:
@@ -55,6 +84,7 @@ def _build_user_response(user: User) -> UserResponse:
         is_superuser=user.is_superuser,
         last_login_at=user.last_login_at,
         roles=_get_role_names(user),
+        role_ids=_get_role_ids(user),
         created_at=user.created_at,
         updated_at=user.updated_at,
     )
@@ -419,6 +449,219 @@ def delete_user(
         message="用户已禁用"
     )
 
+
+# ==================== 用户同步相关接口 ====================
+
+@router.post("/sync-from-employees", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def sync_users_from_employees(
+    *,
+    db: Session = Depends(deps.get_db),
+    sync_request: SyncEmployeesRequest = Body(default=SyncEmployeesRequest()),
+    current_user: User = Depends(security.require_permission("USER_CREATE")),
+) -> Any:
+    """
+    批量同步员工到用户表
+
+    - **only_active**: 只同步在职员工（默认 true）
+    - **auto_activate**: 是否自动激活新账号（默认 false）
+    - **department_filter**: 部门筛选（可选）
+
+    同步规则：
+    - 用户名：姓名拼音（重名加数字后缀）
+    - 初始密码：姓名拼音 + 工号后4位
+    - 初始角色：根据岗位自动映射
+    """
+    result = UserSyncService.sync_all_employees(
+        db=db,
+        only_active=sync_request.only_active,
+        auto_activate=sync_request.auto_activate,
+        department_filter=sync_request.department_filter,
+    )
+
+    return ResponseModel(
+        code=200,
+        message=f"同步完成：创建 {result['created']} 个账号，跳过 {result['skipped']} 个",
+        data=result
+    )
+
+
+@router.post("/create-from-employee/{employee_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def create_user_from_employee(
+    *,
+    db: Session = Depends(deps.get_db),
+    employee_id: int,
+    auto_activate: bool = Query(False, description="是否自动激活"),
+    current_user: User = Depends(security.require_permission("USER_CREATE")),
+) -> Any:
+    """
+    从单个员工创建用户账号
+
+    - **employee_id**: 员工ID
+    - **auto_activate**: 是否自动激活账号
+    """
+    employee = db.query(Employee).filter(Employee.id == employee_id).first()
+    if not employee:
+        raise HTTPException(status_code=404, detail="员工不存在")
+
+    existing_usernames = set(u.username for u in db.query(User.username).all())
+
+    user, password = UserSyncService.create_user_from_employee(
+        db=db,
+        employee=employee,
+        existing_usernames=existing_usernames,
+        auto_activate=auto_activate,
+    )
+
+    if not user:
+        raise HTTPException(status_code=400, detail=password)  # password contains error message
+
+    db.commit()
+
+    return ResponseModel(
+        code=200,
+        message="用户创建成功",
+        data={
+            "user_id": user.id,
+            "username": user.username,
+            "initial_password": password,
+            "is_active": user.is_active,
+        }
+    )
+
+
+@router.put("/{user_id}/toggle-active", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def toggle_user_active(
+    *,
+    db: Session = Depends(deps.get_db),
+    user_id: int,
+    toggle_request: ToggleActiveRequest,
+    request: Request,
+    current_user: User = Depends(security.require_permission("USER_UPDATE")),
+) -> Any:
+    """
+    切换用户激活状态
+
+    - **user_id**: 用户ID
+    - **is_active**: 目标状态（true=激活，false=禁用）
+    """
+    success, message = UserSyncService.toggle_user_active(
+        db=db,
+        user_id=user_id,
+        is_active=toggle_request.is_active
+    )
+
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+
+    # 记录审计日志
+    try:
+        action = PermissionAuditService.ACTION_USER_ACTIVATED if toggle_request.is_active else PermissionAuditService.ACTION_USER_DEACTIVATED
+        PermissionAuditService.log_user_operation(
+            db=db,
+            operator_id=current_user.id,
+            user_id=user_id,
+            action=action,
+            changes={"is_active": toggle_request.is_active},
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent")
+        )
+    except Exception:
+        pass
+
+    return ResponseModel(
+        code=200,
+        message=message
+    )
+
+
+@router.put("/{user_id}/reset-password", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def reset_user_password(
+    *,
+    db: Session = Depends(deps.get_db),
+    user_id: int,
+    request: Request,
+    current_user: User = Depends(security.require_permission("USER_UPDATE")),
+) -> Any:
+    """
+    重置用户密码为初始密码
+
+    - **user_id**: 用户ID
+
+    初始密码规则：姓名拼音 + 工号后4位
+    """
+    success, result = UserSyncService.reset_user_password(db=db, user_id=user_id)
+
+    if not success:
+        raise HTTPException(status_code=400, detail=result)
+
+    # 记录审计日志
+    try:
+        PermissionAuditService.log_user_operation(
+            db=db,
+            operator_id=current_user.id,
+            user_id=user_id,
+            action="PASSWORD_RESET",
+            changes={"password": "重置为初始密码"},
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent")
+        )
+    except Exception:
+        pass
+
+    return ResponseModel(
+        code=200,
+        message="密码重置成功",
+        data={
+            "new_password": result
+        }
+    )
+
+
+@router.post("/batch-toggle-active", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def batch_toggle_user_active(
+    *,
+    db: Session = Depends(deps.get_db),
+    batch_request: BatchToggleActiveRequest,
+    request: Request,
+    current_user: User = Depends(security.require_permission("USER_UPDATE")),
+) -> Any:
+    """
+    批量切换用户激活状态
+
+    - **user_ids**: 用户ID列表
+    - **is_active**: 目标状态（true=激活，false=禁用）
+    """
+    result = UserSyncService.batch_toggle_active(
+        db=db,
+        user_ids=batch_request.user_ids,
+        is_active=batch_request.is_active
+    )
+
+    # 记录审计日志
+    try:
+        action = PermissionAuditService.ACTION_USER_ACTIVATED if batch_request.is_active else PermissionAuditService.ACTION_USER_DEACTIVATED
+        for user_id in batch_request.user_ids:
+            PermissionAuditService.log_user_operation(
+                db=db,
+                operator_id=current_user.id,
+                user_id=user_id,
+                action=action,
+                changes={"is_active": batch_request.is_active, "batch": True},
+                ip_address=request.client.host if request.client else None,
+                user_agent=request.headers.get("user-agent")
+            )
+    except Exception:
+        pass
+
+    status_text = "激活" if batch_request.is_active else "禁用"
+    return ResponseModel(
+        code=200,
+        message=f"批量{status_text}完成：成功 {result['success']} 个，失败 {result['failed']} 个",
+        data=result
+    )
+
+
+# ==================== 工时分配接口 ====================
 
 @router.get("/{user_id}/time-allocation", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def get_user_time_allocation(

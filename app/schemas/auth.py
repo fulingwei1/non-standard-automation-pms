@@ -79,6 +79,7 @@ class UserResponse(TimestampSchema):
     is_superuser: bool = False
     last_login_at: Optional[datetime] = None
     roles: List[str] = Field(default_factory=list)
+    role_ids: List[int] = Field(default_factory=list, description="角色ID列表")
     permissions: List[str] = Field(default_factory=list)
 
 
@@ -123,7 +124,7 @@ class PermissionResponse(TimestampSchema):
     resource: Optional[str] = None
     action: Optional[str] = None
     description: Optional[str] = None
-    is_active: bool = True
+    is_active: Optional[bool] = True  # 兼容旧表结构，可能不存在
 
 
 class UserRoleAssign(BaseModel):

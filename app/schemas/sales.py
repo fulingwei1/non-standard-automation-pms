@@ -1761,3 +1761,55 @@ class ApprovalStatusResponse(BaseModel):
     can_reject: bool = False
     can_delegate: bool = False
     can_withdraw: bool = False
+
+
+# ==================== 销售目标 ====================
+
+
+class SalesTargetCreate(BaseModel):
+    """创建销售目标"""
+    
+    target_scope: str = Field(..., description="目标范围：PERSONAL/TEAM/DEPARTMENT")
+    user_id: Optional[int] = Field(None, description="用户ID（个人目标）")
+    department_id: Optional[int] = Field(None, description="部门ID（部门目标）")
+    team_id: Optional[int] = Field(None, description="团队ID（团队目标）")
+    target_type: str = Field(..., description="目标类型：LEAD_COUNT/OPPORTUNITY_COUNT/CONTRACT_AMOUNT/COLLECTION_AMOUNT")
+    target_period: str = Field(..., description="目标周期：MONTHLY/QUARTERLY/YEARLY")
+    period_value: str = Field(..., description="周期标识：2025-01/2025-Q1/2025")
+    target_value: Decimal = Field(..., description="目标值")
+    description: Optional[str] = Field(None, description="目标描述")
+    status: Optional[str] = Field("ACTIVE", description="状态：ACTIVE/COMPLETED/CANCELLED")
+
+
+class SalesTargetUpdate(BaseModel):
+    """更新销售目标"""
+    
+    target_value: Optional[Decimal] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+
+
+class SalesTargetResponse(TimestampSchema):
+    """销售目标响应"""
+    
+    id: int
+    target_scope: str
+    user_id: Optional[int] = None
+    department_id: Optional[int] = None
+    team_id: Optional[int] = None
+    target_type: str
+    target_period: str
+    period_value: str
+    target_value: Decimal
+    description: Optional[str] = None
+    status: str
+    created_by: int
+    # 扩展字段：实际完成值（通过统计API计算）
+    actual_value: Optional[Decimal] = None
+    completion_rate: Optional[float] = None
+    # 扩展字段：用户/部门名称
+    user_name: Optional[str] = None
+    department_name: Optional[str] = None
+    
+    class Config:
+        from_attributes = True

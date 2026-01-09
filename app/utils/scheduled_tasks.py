@@ -912,6 +912,62 @@ def check_milestone_alerts():
         return {'error': str(e)}
 
 
+def check_milestone_status_and_adjust_payments():
+    """
+    Issue 7.3: 监控项目里程碑状态变化并自动调整收款计划
+    每小时执行一次，检查里程碑状态变化（延期、提前完成）并调整关联的收款计划
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        with get_db_session() as db:
+            from app.services.payment_adjustment_service import PaymentAdjustmentService
+            from datetime import timedelta
+            
+            service = PaymentAdjustmentService(db)
+            
+            # 查询最近状态发生变化的里程碑（最近1小时内更新的）
+            one_hour_ago = datetime.now() - timedelta(hours=1)
+            
+            # 查询状态为 DELAYED 或 COMPLETED 的里程碑
+            changed_milestones = db.query(ProjectMilestone).filter(
+                ProjectMilestone.status.in_(["DELAYED", "COMPLETED"]),
+                ProjectMilestone.updated_at >= one_hour_ago
+            ).all()
+            
+            adjusted_count = 0
+            
+            for milestone in changed_milestones:
+                try:
+                    result = service.adjust_payment_plan_by_milestone(
+                        milestone_id=milestone.id,
+                        reason=f"里程碑状态变更为 {milestone.status}，自动调整收款计划"
+                    )
+                    
+                    if result.get("success") and result.get("adjusted_plans"):
+                        adjusted_count += len(result.get("adjusted_plans", []))
+                        logger.info(
+                            f"里程碑 {milestone.milestone_code} 状态变化，已调整 {len(result.get('adjusted_plans', []))} 个收款计划"
+                        )
+                except Exception as e:
+                    logger.error(f"调整里程碑 {milestone.id} 关联的收款计划失败: {e}", exc_info=True)
+            
+            logger.info(f"[{datetime.now()}] 里程碑状态监控完成: 检查 {len(changed_milestones)} 个里程碑, 调整 {adjusted_count} 个收款计划")
+            print(f"[{datetime.now()}] 里程碑状态监控完成: 检查 {len(changed_milestones)} 个里程碑, 调整 {adjusted_count} 个收款计划")
+            
+            return {
+                'checked_milestones': len(changed_milestones),
+                'adjusted_plans': adjusted_count,
+                'timestamp': datetime.now().isoformat()
+            }
+    except Exception as e:
+        logger.error(f"[{datetime.now()}] 里程碑状态监控失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {'error': str(e)}
+
+
 def check_cost_overrun_alerts():
     """
     成本超支预警服务
@@ -3467,6 +3523,102 @@ def send_alert_notifications():
             }
     except Exception as e:
         logger.error(f"[{datetime.now()}] 消息推送服务失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {'error': str(e)}
+
+
+# ==================== 计算响应时效指标 ====================
+
+def calculate_response_metrics():
+    """
+    计算响应时效指标
+    每天凌晨1点执行，计算昨天的预警响应时效指标并更新统计表
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        with get_db_session() as db:
+            from app.models.alert import AlertStatistics
+            from decimal import Decimal
+            
+            # 计算昨天的日期
+            yesterday = date.today() - timedelta(days=1)
+            
+            # 查询昨天触发的预警
+            yesterday_start = datetime.combine(yesterday, datetime.min.time())
+            yesterday_end = datetime.combine(yesterday, datetime.max.time())
+            
+            alerts = db.query(AlertRecord).filter(
+                AlertRecord.triggered_at >= yesterday_start,
+                AlertRecord.triggered_at <= yesterday_end
+            ).all()
+            
+            # 计算响应时间（已确认的预警）
+            response_times = []
+            for alert in alerts:
+                if alert.acknowledged_at and alert.triggered_at:
+                    delta = alert.acknowledged_at - alert.triggered_at
+                    hours = delta.total_seconds() / 3600
+                    response_times.append(hours)
+            
+            # 计算解决时间（已解决的预警）
+            resolve_times = []
+            for alert in alerts:
+                if alert.acknowledged_at and alert.handle_end_at:
+                    delta = alert.handle_end_at - alert.acknowledged_at
+                    hours = delta.total_seconds() / 3600
+                    resolve_times.append(hours)
+            
+            # 计算平均值
+            avg_response_time = Decimal(str(sum(response_times) / len(response_times))) if response_times else Decimal("0")
+            avg_resolve_time = Decimal(str(sum(resolve_times) / len(resolve_times))) if resolve_times else Decimal("0")
+            
+            # 获取或创建统计记录
+            stat = db.query(AlertStatistics).filter(
+                AlertStatistics.stat_date == yesterday,
+                AlertStatistics.stat_type == 'DAILY'
+            ).first()
+            
+            if not stat:
+                stat = AlertStatistics(
+                    stat_date=yesterday,
+                    stat_type='DAILY',
+                    total_alerts=len(alerts),
+                    avg_response_time=avg_response_time,
+                    avg_resolve_time=avg_resolve_time
+                )
+                db.add(stat)
+            else:
+                stat.avg_response_time = avg_response_time
+                stat.avg_resolve_time = avg_resolve_time
+                stat.total_alerts = len(alerts)
+            
+            db.commit()
+            
+            logger.info(
+                f"[{datetime.now()}] 响应时效指标计算完成（{yesterday}）: "
+                f"预警数={len(alerts)}, 平均响应时间={float(avg_response_time):.2f}小时, "
+                f"平均解决时间={float(avg_resolve_time):.2f}小时"
+            )
+            print(
+                f"[{datetime.now()}] 响应时效指标计算完成（{yesterday}）: "
+                f"预警数={len(alerts)}, 平均响应时间={float(avg_response_time):.2f}小时, "
+                f"平均解决时间={float(avg_resolve_time):.2f}小时"
+            )
+            
+            return {
+                'stat_date': yesterday.isoformat(),
+                'total_alerts': len(alerts),
+                'avg_response_time_hours': float(avg_response_time),
+                'avg_resolve_time_hours': float(avg_resolve_time),
+                'response_count': len(response_times),
+                'resolve_count': len(resolve_times),
+                'timestamp': datetime.now().isoformat()
+            }
+    except Exception as e:
+        logger.error(f"[{datetime.now()}] 响应时效指标计算失败: {str(e)}")
         import traceback
         traceback.print_exc()
         return {'error': str(e)}

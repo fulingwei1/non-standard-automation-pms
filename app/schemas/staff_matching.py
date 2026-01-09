@@ -171,6 +171,9 @@ class EmployeeProfileSummary(BaseModel):
     employee_name: Optional[str] = None
     employee_code: Optional[str] = None
     department: Optional[str] = None
+    # 员工状态
+    employment_status: Optional[str] = "active"  # active(在职), resigned(离职)
+    employment_type: Optional[str] = "regular"  # regular(正式), probation(试用期), intern(实习期)
 
     # 主要技能（前3个）
     top_skills: Optional[List[str]] = None

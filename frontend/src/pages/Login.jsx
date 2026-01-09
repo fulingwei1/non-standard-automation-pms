@@ -352,12 +352,43 @@ export default function Login({ onLoginSuccess }) {
       
       // 更详细的错误信息
       let errorMessage = '登录失败，请检查用户名和密码'
+      let errorCode = ''
       if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
         // 超时错误
         errorMessage = '登录请求超时，请检查网络连接或稍后重试'
       } else if (err.response) {
         // 服务器返回了错误响应
-        errorMessage = err.response.data?.detail || err.response.data?.message || errorMessage
+        const detail = err.response.data?.detail
+        // 检查是否是新的错误响应格式（包含 error_code 和 message）
+        if (detail && typeof detail === 'object' && detail.error_code) {
+          errorCode = detail.error_code
+          errorMessage = detail.message
+          // 根据错误码添加额外提示
+          switch (detail.error_code) {
+            case 'USER_NOT_FOUND':
+              // 账号不存在
+              errorMessage = '该员工尚未开通系统账号，请联系管理员'
+              break
+            case 'USER_INACTIVE':
+              // 账号未激活
+              errorMessage = '账号待激活，请联系管理员开通系统访问权限'
+              break
+            case 'USER_DISABLED':
+              // 账号已禁用
+              errorMessage = '账号已被禁用，如有疑问请联系管理员'
+              break
+            case 'WRONG_PASSWORD':
+              // 密码错误
+              errorMessage = '密码错误，忘记密码请联系管理员重置'
+              break
+            default:
+              errorMessage = detail.message || errorMessage
+          }
+        } else if (typeof detail === 'string') {
+          errorMessage = detail
+        } else {
+          errorMessage = err.response.data?.message || errorMessage
+        }
       } else if (err.request) {
         // 请求已发出但没有收到响应
         errorMessage = '无法连接到服务器，请检查后端服务是否启动'
@@ -365,7 +396,7 @@ export default function Login({ onLoginSuccess }) {
         // 其他错误
         errorMessage = err.message || errorMessage
       }
-      
+
       setError(errorMessage)
     } finally {
       setLoading(false)

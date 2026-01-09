@@ -44,11 +44,36 @@ export default function PermissionManagement() {
   const [selectedPermission, setSelectedPermission] = useState(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [permissionRoles, setPermissionRoles] = useState([]);
+  
+  // 检查是否是演示账号
+  const token = localStorage.getItem('token');
+  const isDemoAccount = token && token.startsWith('demo_token_');
 
   // 加载权限列表
   const loadPermissions = async () => {
     setLoading(true);
     try {
+      // 检查token是否存在
+      const token = localStorage.getItem('token');
+      console.log('[权限管理] 开始加载权限列表...');
+      console.log('[权限管理] Token检查:', token ? (token.startsWith('demo_token_') ? '演示账号token' : `真实token (${token.substring(0, 30)}...)`) : '❌ 未找到token');
+      
+      if (!token) {
+        console.error('[权限管理] ❌ 未找到token，请重新登录');
+        alert('未找到认证token，请重新登录');
+        window.location.href = '/';
+        return;
+      }
+      
+      if (token.startsWith('demo_token_')) {
+        console.warn('[权限管理] ⚠️ 这是演示账号token，不会发送到后端');
+        // 不直接返回，而是设置一个状态来显示友好的提示界面
+        setPermissions([]);
+        setLoading(false);
+        return;
+      }
+      
+      console.log('[权限管理] ✅ Token存在，发送请求...');
       let response;
       if (filterModule !== 'all') {
         // 如果指定了模块，需要传递module参数
@@ -56,10 +81,34 @@ export default function PermissionManagement() {
       } else {
         response = await roleApi.permissions();
       }
+      console.log('[权限管理] ✅ 成功获取权限列表:', response.data?.length || 0, '条');
       setPermissions(response.data || []);
     } catch (error) {
-      console.error('加载权限列表失败:', error);
-      alert('加载权限列表失败: ' + (error.response?.data?.detail || error.message));
+      console.error('[权限管理] ❌ 加载权限列表失败:', error);
+      const errorDetail = error.response?.data?.detail || error.message;
+      const statusCode = error.response?.status;
+      console.error('[权限管理] 错误详情:', {
+        status: statusCode,
+        detail: errorDetail,
+        message: error.message,
+        response: error.response?.data
+      });
+      
+      // 如果是认证错误，提示重新登录
+      if (statusCode === 401 || statusCode === 403 || errorDetail?.includes('Not authenticated') || errorDetail?.includes('认证') || errorDetail?.includes('无效的认证凭据')) {
+        console.error('[权限管理] 认证失败，清除token并跳转登录页');
+        alert('认证失败，请重新登录');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/';
+      } else {
+        // 格式化错误信息
+        let errorMessage = errorDetail;
+        if (typeof errorDetail === 'object') {
+          errorMessage = JSON.stringify(errorDetail, null, 2);
+        }
+        alert('加载权限列表失败: ' + errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -76,6 +125,12 @@ export default function PermissionManagement() {
   };
 
   useEffect(() => {
+    // 演示账号不加载数据
+    const token = localStorage.getItem('token');
+    if (token && token.startsWith('demo_token_')) {
+      console.log('[权限管理] 演示账号，跳过数据加载');
+      return;
+    }
     loadPermissions();
     loadRoles();
   }, [filterModule]);
@@ -165,7 +220,7 @@ export default function PermissionManagement() {
   const stats = {
     total: permissions.length,
     modules: modules.length,
-    active: permissions.filter(p => p.is_active).length,
+    active: permissions.filter(p => p.is_active !== false).length, // 兼容is_active可能不存在的情况
   };
 
   return (
@@ -264,6 +319,54 @@ export default function PermissionManagement() {
         </CardContent>
       </Card>
 
+      {/* 演示账号提示 */}
+      {isDemoAccount && (
+        <Card className="border-amber-500/50 bg-amber-500/10">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <Shield className="h-8 w-8 text-amber-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-amber-400 mb-2">
+                  演示账号限制
+                </h3>
+                <p className="text-slate-300 mb-4">
+                  权限管理功能需要连接真实的后端服务，演示账号无法访问此功能。
+                  如需使用权限管理功能，请使用真实账号登录。
+                </p>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => {
+                      localStorage.removeItem('token');
+                      localStorage.removeItem('user');
+                      window.location.href = '/';
+                    }}
+                    className="bg-amber-500 hover:bg-amber-600 text-white"
+                  >
+                    切换到真实账号登录
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => window.history.back()}
+                    className="border-slate-600 text-slate-300 hover:bg-slate-800"
+                  >
+                    返回上一页
+                  </Button>
+                </div>
+                <div className="mt-4 p-3 bg-slate-800/50 rounded-lg">
+                  <p className="text-xs text-slate-400 mb-1">💡 提示：</p>
+                  <p className="text-xs text-slate-400">
+                    真实账号需要后端服务支持。请使用数据库中的真实用户账号登录（如：admin/admin）。
+                    如果后端服务未启动或数据库中没有用户，请联系系统管理员。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* 权限列表 */}
       {loading ? (
         <Card>
@@ -271,7 +374,7 @@ export default function PermissionManagement() {
             <div className="text-center py-8 text-slate-400">加载中...</div>
           </CardContent>
         </Card>
-      ) : Object.keys(filteredPermissions).length === 0 ? (
+      ) : isDemoAccount ? null : Object.keys(filteredPermissions).length === 0 ? (
         <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8 text-slate-400">
@@ -329,7 +432,7 @@ export default function PermissionManagement() {
                                   {permission.action}
                                 </Badge>
                               )}
-                              {!permission.is_active && (
+                              {permission.is_active === false && (
                                 <Badge variant="destructive" className="text-xs">
                                   已禁用
                                 </Badge>
@@ -421,7 +524,7 @@ export default function PermissionManagement() {
                 <div>
                   <label className="text-sm font-medium text-slate-400">状态</label>
                   <p className="text-white mt-1">
-                    {selectedPermission.is_active ? (
+                    {selectedPermission.is_active !== false ? (
                       <Badge className="bg-green-500/10 text-green-400">启用</Badge>
                     ) : (
                       <Badge variant="destructive">禁用</Badge>

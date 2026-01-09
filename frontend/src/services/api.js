@@ -12,10 +12,22 @@ const api = axios.create({
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
+        const url = config.url || '';
+        
+        // 调试日志（总是启用，帮助诊断问题）
+        console.log(`[API请求] ${config.method?.toUpperCase()} ${url}`);
+        console.log(`[API] Token状态:`, token ? (token.startsWith('demo_token_') ? '演示账号token' : `真实token (${token.substring(0, 20)}...)`) : '未找到token');
+        
         // 如果是演示账号的 token，不发送 Authorization header，避免后端返回 401
         if (token && !token.startsWith('demo_token_')) {
             config.headers.Authorization = `Bearer ${token}`;
+            console.log(`[API] ✅ 已添加Authorization头`);
+        } else if (!token) {
+            console.warn('[API] ⚠️ 未找到token，请求可能失败 (Not authenticated)');
+        } else {
+            console.log('[API] ℹ️ 演示账号token，不发送Authorization头');
         }
+        
         return config;
     },
     (error) => Promise.reject(error)
@@ -202,6 +214,14 @@ export const userApi = {
     update: (id, data) => api.put(`/users/${id}`, data),
     delete: (id) => api.delete(`/users/${id}`),
     assignRoles: (id, roleIds) => api.put(`/users/${id}/roles`, roleIds),
+    // 用户同步相关
+    syncFromEmployees: (params = {}) => api.post('/users/sync-from-employees', params),
+    createFromEmployee: (employeeId, autoActivate = false) =>
+        api.post(`/users/create-from-employee/${employeeId}?auto_activate=${autoActivate}`),
+    toggleActive: (id, isActive) => api.put(`/users/${id}/toggle-active`, { is_active: isActive }),
+    resetPassword: (id) => api.put(`/users/${id}/reset-password`),
+    batchToggleActive: (userIds, isActive) =>
+        api.post('/users/batch-toggle-active', { user_ids: userIds, is_active: isActive }),
 };
 
 export const roleApi = {
@@ -247,6 +267,14 @@ export const orgApi = {
     employees: () => api.get('/org/employees'),
 };
 
+// Organization API (员工档案导入)
+export const organizationApi = {
+    importEmployees: (formData) => api.post('/org/employees/import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 60000,
+    }),
+};
+
 // Sales Module APIs
 export const leadApi = {
     list: (params) => api.get('/sales/leads', { params }),
@@ -261,6 +289,8 @@ export const leadApi = {
 };
 
 export const opportunityApi = {
+    // Issue 6.3: 商机赢单概率预测
+    getWinProbability: (id) => api.get(`/sales/opportunities/${id}/win-probability`),
     list: (params) => api.get('/sales/opportunities', { params }),
     get: (id) => api.get(`/sales/opportunities/${id}`),
     create: (data) => api.post('/sales/opportunities', data),
@@ -402,11 +432,38 @@ export const disputeApi = {
     update: (id, data) => api.put(`/sales/disputes/${id}`, data),
 };
 
+// Sales Team Management APIs
+export const salesTeamApi = {
+    // 获取销售团队列表
+    getTeam: (params) => api.get('/sales/team', { params }),
+    // 获取销售业绩排名
+    getRanking: (params) => api.get('/sales/team/ranking', { params }),
+    // 导出销售团队数据
+    exportTeam: (params) => api.get('/sales/team/export', { params, responseType: 'blob' }),
+};
+
+// Sales Target Management APIs
+export const salesTargetApi = {
+    // 获取销售目标列表
+    list: (params) => api.get('/sales/targets', { params }),
+    // 获取单个销售目标
+    get: (id) => api.get(`/sales/targets/${id}`),
+    // 创建销售目标
+    create: (data) => api.post('/sales/targets', data),
+    // 更新销售目标
+    update: (id, data) => api.put(`/sales/targets/${id}`, data),
+    // 删除销售目标
+    delete: (id) => api.delete(`/sales/targets/${id}`),
+};
+
 export const salesStatisticsApi = {
     funnel: (params) => api.get('/sales/statistics/funnel', { params }),
     opportunitiesByStage: () => api.get('/sales/statistics/opportunities-by-stage'),
     revenueForecast: (params) => api.get('/sales/statistics/revenue-forecast', { params }),
     summary: (params) => api.get('/sales/statistics/summary', { params }),
+    // Issue 6.3: 销售预测增强
+    prediction: (params) => api.get('/sales/statistics/prediction', { params }),
+    predictionAccuracy: (params) => api.get('/sales/statistics/prediction/accuracy', { params }),
 };
 
 // Alert Management APIs
@@ -1644,6 +1701,11 @@ export const schedulerApi = {
     metricsPrometheus: () => api.get('/scheduler/metrics/prometheus', { responseType: 'text' }),
     triggerJob: (jobId) => api.post(`/scheduler/jobs/${jobId}/trigger`),
     listServices: () => api.get('/scheduler/services/list'),
+    // 配置管理
+    getConfigs: (params) => api.get('/scheduler/configs', { params }),
+    getConfig: (taskId) => api.get(`/scheduler/configs/${taskId}`),
+    updateConfig: (taskId, data) => api.put(`/scheduler/configs/${taskId}`, data),
+    syncConfigs: (force = false) => api.post('/scheduler/configs/sync', { force }),
 };
 
 // Staff Matching APIs - AI驱动人员智能匹配

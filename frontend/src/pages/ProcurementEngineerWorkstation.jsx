@@ -46,6 +46,7 @@ import {
 import { cn, formatCurrency, formatDate } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { purchaseApi, shortageApi, supplierApi } from '../services/api'
+import { ApiIntegrationError } from '../components/ui'
 
 // Statistics configuration
 const statConfig = {
@@ -103,170 +104,7 @@ const statConfig = {
   }
 }
 
-// Mock data for todos
-const mockTodos = [
-  {
-    id: 1,
-    type: 'order',
-    title: '采购订单待审核',
-    target: '铝合金型材 - 深圳XX供应商',
-    deadline: '2025-01-05',
-    daysLeft: 0,
-    priority: 'high',
-    status: 'pending'
-  },
-  {
-    id: 2,
-    type: 'shortage',
-    title: '物料缺料预警',
-    target: '电控柜 - 需求日期2026-01-20',
-    deadline: '2025-01-06',
-    daysLeft: 1,
-    priority: 'high',
-    status: 'pending'
-  },
-  {
-    id: 3,
-    type: 'arrival',
-    title: '到货收货待办',
-    target: '东莞XX工厂 - PO-2025-0015',
-    deadline: '2025-01-07',
-    daysLeft: 2,
-    priority: 'high',
-    status: 'pending'
-  },
-  {
-    id: 4,
-    type: 'inspection',
-    title: '来料检验待完成',
-    target: '钣金件 - 批次20250104',
-    deadline: '2025-01-08',
-    daysLeft: 3,
-    priority: 'medium',
-    status: 'pending'
-  },
-  {
-    id: 5,
-    type: 'supplier',
-    title: '供应商资质更新',
-    target: '佛山XX铸造厂 - ISO认证',
-    deadline: '2025-01-10',
-    daysLeft: 5,
-    priority: 'medium',
-    status: 'pending'
-  },
-  {
-    id: 6,
-    type: 'cost',
-    title: '采购成本分析',
-    target: '12月采购成本核算',
-    deadline: '2025-01-15',
-    daysLeft: 10,
-    priority: 'low',
-    status: 'pending'
-  }
-]
-
-// Mock purchase orders
-const mockPurchaseOrders = [
-  {
-    id: 'PO-2025-0018',
-    supplier: '深圳XX供应商',
-    items: '铝合金型材 x100米',
-    quantity: 100,
-    unit: '米',
-    unitPrice: 180,
-    totalAmount: 18000,
-    orderDate: '2025-01-01',
-    dueDate: '2025-01-15',
-    daysLeft: 11,
-    status: 'confirmed', // draft | submitted | confirmed | shipped | received | completed
-    paymentStatus: 'unpaid',
-    arrivalStatus: 'pending'
-  },
-  {
-    id: 'PO-2025-0017',
-    supplier: '东莞精密工厂',
-    items: '钣金件组件',
-    quantity: 50,
-    unit: '套',
-    unitPrice: 2800,
-    totalAmount: 140000,
-    orderDate: '2025-12-25',
-    dueDate: '2025-01-10',
-    daysLeft: 6,
-    status: 'shipped',
-    paymentStatus: 'partial',
-    arrivalStatus: 'in_transit'
-  },
-  {
-    id: 'PO-2025-0016',
-    supplier: '苏州电器供应',
-    items: '电控柜 + 配件',
-    quantity: 20,
-    unit: '套',
-    unitPrice: 8500,
-    totalAmount: 170000,
-    orderDate: '2024-12-20',
-    dueDate: '2025-01-05',
-    daysLeft: 1,
-    status: 'pending', // 超期风险
-    paymentStatus: 'unpaid',
-    arrivalStatus: 'delayed'
-  },
-  {
-    id: 'PO-2025-0015',
-    supplier: '东莞XX工厂',
-    items: '机械零件',
-    quantity: 200,
-    unit: '件',
-    unitPrice: 45,
-    totalAmount: 9000,
-    orderDate: '2024-12-15',
-    dueDate: '2025-01-04',
-    daysLeft: 0,
-    status: 'received',
-    paymentStatus: 'paid',
-    arrivalStatus: 'completed'
-  }
-]
-
-// Mock shortage alerts
-const mockShortages = [
-  {
-    id: 1,
-    material: '电控柜',
-    required: 25,
-    available: 8,
-    shortage: 17,
-    neededDate: '2026-01-20',
-    daysToNeeded: 16,
-    priority: 'high',
-    status: 'alert'
-  },
-  {
-    id: 2,
-    material: '驱动马达',
-    required: 15,
-    available: 12,
-    shortage: 3,
-    neededDate: '2026-01-25',
-    daysToNeeded: 21,
-    priority: 'medium',
-    status: 'warning'
-  },
-  {
-    id: 3,
-    material: '传感器模块',
-    required: 40,
-    available: 35,
-    shortage: 5,
-    neededDate: '2026-02-01',
-    daysToNeeded: 28,
-    priority: 'low',
-    status: 'info'
-  }
-]
+// Mock data removed - 使用真实API
 
 // Task type configuration
 const taskTypeConfig = {
@@ -509,83 +347,19 @@ export default function ProcurementEngineerWorkstation() {
       setLoading(true)
       setError(null)
 
-      // Check if demo account
-      const token = localStorage.getItem('token')
-      const isDemoAccount = token && token.startsWith('demo_token_')
-
-      // Mock data for demo accounts
-      const mockOrders = [
-        {
-          id: 'PO250104001',
-          order_no: 'PO250104001',
-          supplier_name: '欧姆龙(上海)代理',
-          status: 'SUBMITTED',
-          total_amount: 45680.00,
-          amount_with_tax: 51618.40,
-          order_date: '2026-01-02',
-          required_date: '2026-01-08',
-          items: [
-            { material_name: '光电传感器 E3Z-D82', quantity: 12 },
-            { material_name: '接近传感器 E2E-X5', quantity: 8 },
-          ],
-        },
-        {
-          id: 'PO250104002',
-          order_no: 'PO250104002',
-          supplier_name: 'THK(深圳)销售',
-          status: 'DRAFT',
-          total_amount: 28900.00,
-          amount_with_tax: 32657.00,
-          order_date: '2026-01-03',
-          required_date: '2026-01-10',
-          items: [
-            { material_name: '精密导轨 HSR25', quantity: 4 },
-            { material_name: '滑块 HSR25R', quantity: 8 },
-          ],
-        },
-      ]
-
-      const mockShortages = [
-        {
-          id: 1,
-          material_name: '光电传感器 E3Z-D82',
-          material_code: 'EL-02-03-0015',
-          required_qty: 20,
-          available_qty: 8,
-          needed_date: '2026-01-10',
-          days_to_needed: 5,
-          priority: 'high',
-          status: 'alert',
-        },
-        {
-          id: 2,
-          material_name: '接近传感器 E2E-X5',
-          material_code: 'EL-02-03-0018',
-          required_qty: 15,
-          available_qty: 5,
-          needed_date: '2026-01-12',
-          days_to_needed: 7,
-          priority: 'medium',
-          status: 'alert',
-        },
-      ]
-
-      let ordersData = []
-      let shortageData = []
-
-      if (isDemoAccount) {
-        // Use mock data for demo accounts
-        console.log('演示账号使用 mock 数据')
-        ordersData = mockOrders
-        shortageData = mockShortages
-      } else {
-        // Load purchase orders
-        const ordersResponse = await purchaseApi.orders.list({
-          page: 1,
-          page_size: 20,
-        })
-        ordersData = ordersResponse.data?.items || ordersResponse.data || []
-      }
+      // Load purchase orders
+      const ordersResponse = await purchaseApi.orders.list({
+        page: 1,
+        page_size: 20,
+      })
+      const ordersData = ordersResponse.data?.items || ordersResponse.data || []
+      
+      // Load shortages
+      const shortagesResponse = await shortageApi.list({
+        page: 1,
+        page_size: 20,
+      })
+      let shortageData = shortagesResponse.data?.items || shortagesResponse.data || []
       
       // Transform purchase orders
       const transformedOrders = ordersData.map(order => {
@@ -617,17 +391,6 @@ export default function ProcurementEngineerWorkstation() {
       })
 
       setPurchaseOrders(transformedOrders)
-
-      // Load shortages
-      if (!isDemoAccount) {
-        try {
-          const shortageResponse = await shortageApi.reports.list({ page: 1, page_size: 10 })
-          shortageData = shortageResponse.data?.items || shortageResponse.data || []
-        } catch (err) {
-          console.error('Failed to load shortages:', err)
-          shortageData = []
-        }
-      }
       
       const transformedShortages = shortageData.map(s => ({
           id: s.id,
@@ -645,17 +408,15 @@ export default function ProcurementEngineerWorkstation() {
       // Calculate statistics
       const pendingOrders = ordersData.filter(o => o.status === 'DRAFT' || o.status === 'SUBMITTED').length
       const arrivedCount = ordersData.filter(o => o.status === 'RECEIVED').length
-      const shortageCount = shortages.length
+      const shortageCount = transformedShortages.length
       
       // Load suppliers count
       let suppliersCount = 24 // Default
-      if (!isDemoAccount) {
-        try {
-          const suppliersResponse = await supplierApi.list({ page: 1, page_size: 1 })
-          suppliersCount = suppliersResponse.data?.total || suppliersResponse.data?.items?.length || 24
-        } catch (err) {
-          console.error('Failed to load suppliers:', err)
-        }
+      try {
+        const suppliersResponse = await supplierApi.list({ page: 1, page_size: 1 })
+        suppliersCount = suppliersResponse.data?.total || suppliersResponse.data?.items?.length || 24
+      } catch (err) {
+        console.error('Failed to load suppliers:', err)
       }
 
       const delayedOrders = transformedOrders.filter(o => o.daysLeft < 0 && o.arrivalStatus !== 'completed').length
@@ -723,56 +484,10 @@ export default function ProcurementEngineerWorkstation() {
 
     } catch (err) {
       console.error('Failed to load procurement data:', err)
-      
-      // Check if demo account - use mock data on error
-      const token = localStorage.getItem('token')
-      const isDemoAccount = token && token.startsWith('demo_token_')
-      
-      if (isDemoAccount) {
-        // For demo accounts, use mock data even on error
-        console.log('演示账号使用 mock 数据（错误恢复）')
-        const mockOrders = [
-          {
-            id: 'PO250104001',
-            order_no: 'PO250104001',
-            supplier_name: '欧姆龙(上海)代理',
-            status: 'SUBMITTED',
-            total_amount: 45680.00,
-            amount_with_tax: 51618.40,
-            order_date: '2026-01-02',
-            required_date: '2026-01-08',
-            items: [{ material_name: '光电传感器 E3Z-D82', quantity: 12 }],
-          },
-        ]
-        const transformedOrders = mockOrders.map(order => {
-          const dueDate = new Date(order.required_date || '')
-          const today = new Date()
-          const daysLeft = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24))
-          return {
-            id: order.order_no || order.id?.toString(),
-            supplier: order.supplier_name || '',
-            items: order.items?.map(i => i.material_name).join(', ') || '',
-            quantity: order.items?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 0,
-            unit: '件',
-            totalAmount: parseFloat(order.total_amount || order.amount_with_tax || 0),
-            orderDate: order.order_date || '',
-            dueDate: order.required_date || '',
-            daysLeft,
-            status: order.status?.toLowerCase() || 'draft',
-            arrivalStatus: 'pending',
-          }
-        })
-        setPurchaseOrders(transformedOrders)
-        setShortages([])
-        setTodos([])
-        setError(null) // Clear error for demo accounts
-      } else {
-        // Real accounts show error
-        setError(err.response?.data?.detail || err.message || '加载采购数据失败')
-        setTodos([])
-        setPurchaseOrders([])
-        setShortages([])
-      }
+      setError(err)
+      setTodos([])
+      setPurchaseOrders([])
+      setShortages([])
     } finally {
       setLoading(false)
     }
@@ -808,6 +523,15 @@ export default function ProcurementEngineerWorkstation() {
         }
       />
 
+      {/* Error state */}
+      {error && (
+        <ApiIntegrationError
+          error={error}
+          apiEndpoint="/api/v1/purchase/orders"
+          onRetry={loadData}
+        />
+      )}
+
       {/* Key statistics */}
       {loading ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
@@ -820,11 +544,11 @@ export default function ProcurementEngineerWorkstation() {
           ))}
         </div>
       ) : error ? (
-        <Card className="bg-red-500/10 border-red-500/30">
-          <CardContent className="p-4">
-            <p className="text-red-400 text-sm">{error}</p>
-          </CardContent>
-        </Card>
+        <ApiIntegrationError
+          error={error}
+          apiEndpoint="/api/v1/purchase/orders"
+          onRetry={loadData}
+        />
       ) : (
         <motion.div
           variants={staggerContainer}
@@ -884,7 +608,7 @@ export default function ProcurementEngineerWorkstation() {
                   今日工作清单
                 </CardTitle>
                 <span className="text-sm text-slate-400">
-                  {allTodos.length} / {mockTodos.length}
+                  {allTodos.length}
                 </span>
               </div>
             </CardHeader>

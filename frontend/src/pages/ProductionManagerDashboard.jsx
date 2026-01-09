@@ -53,7 +53,7 @@ import {
   TabsTrigger,
 } from '../components/ui'
 import { cn } from '../lib/utils'
-import { productionApi, shortageApi, projectApi, materialApi } from '../services/api'
+import { productionApi, shortageApi, projectApi, materialApi, alertApi } from '../services/api'
 
 // Mock data
 const mockProductionStats = {
@@ -211,56 +211,6 @@ const mockWorkOrders = [
   },
 ]
 
-const mockAlerts = [
-  {
-    id: 1,
-    type: 'material_shortage',
-    level: 'warning',
-    title: '缺料预警',
-    content: 'BMS老化测试设备 - 缺料：导轨 20mm x 500mm x 2根',
-    projectCode: 'PJ250708001',
-    workshop: '装配车间',
-    createdAt: '2025-01-15 10:30',
-    status: 'pending',
-  },
-  {
-    id: 2,
-    type: 'delay',
-    level: 'critical',
-    title: '进度延误',
-    content: 'ICT测试设备 - 机加进度延误 3 天',
-    projectCode: 'PJ250708002',
-    workshop: '机加车间',
-    createdAt: '2025-01-15 09:15',
-    status: 'pending',
-  },
-  {
-    id: 3,
-    type: 'quality',
-    level: 'warning',
-    title: '质量问题',
-    content: '视觉检测设备 - 装配质量异常，需返工',
-    projectCode: 'PJ250708003',
-    workshop: '装配车间',
-    createdAt: '2025-01-14 16:45',
-    status: 'processing',
-  },
-]
-
-const mockTeamStats = {
-  totalWorkers: 45,
-  activeWorkers: 42,
-  onLeave: 3,
-  averageEfficiency: 88.5,
-  todayAttendance: 95.6,
-  skillDistribution: {
-    expert: 5,
-    senior: 15,
-    intermediate: 20,
-    junior: 5,
-  },
-}
-
 export default function ProductionManagerDashboard() {
   const [selectedTab, setSelectedTab] = useState('overview')
   const [searchQuery, setSearchQuery] = useState('')
@@ -293,6 +243,7 @@ export default function ProductionManagerDashboard() {
   const [materialSearchResults, setMaterialSearchResults] = useState([])
   const [materialSearchKeyword, setMaterialSearchKeyword] = useState('')
   const [materialSearchLoading, setMaterialSearchLoading] = useState(false)
+  const [alerts, setAlerts] = useState([])
 
   // Map backend status to frontend status
   const mapBackendStatus = (backendStatus) => {
@@ -309,6 +260,29 @@ export default function ProductionManagerDashboard() {
     }
     return statusMap[backendStatus] || backendStatus?.toLowerCase() || 'pending'
   }
+
+  const teamStats = useMemo(() => {
+    const overall = productionDaily?.overall || {}
+    const skill = overall.skill_distribution || {}
+    const shouldAttend = overall.should_attend ?? productionStats.totalWorkers ?? 0
+    const actualAttend = overall.actual_attend ?? productionStats.activeWorkers ?? 0
+    const attendanceRate = shouldAttend > 0 ? Math.round((actualAttend / shouldAttend) * 100) : 0
+    const efficiency = overall.efficiency ?? overall.completion_rate ?? productionStats.completionRate ?? 0
+
+    return {
+      totalWorkers: shouldAttend || productionStats.totalWorkers || 0,
+      activeWorkers: actualAttend || productionStats.activeWorkers || 0,
+      onLeave: Math.max((shouldAttend || 0) - (actualAttend || 0), 0),
+      todayAttendance: attendanceRate,
+      averageEfficiency: Math.round(efficiency),
+      skillDistribution: {
+        expert: skill.expert || 0,
+        senior: skill.senior || 0,
+        intermediate: skill.intermediate || 0,
+        junior: skill.junior || 0,
+      },
+    }
+  }, [productionDaily, productionStats])
 
   // Load dashboard data
   const loadDashboard = useCallback(async () => {
@@ -556,12 +530,53 @@ export default function ProductionManagerDashboard() {
     }
   }, [])
 
+  const loadAlerts = useCallback(async () => {
+    try {
+      const response = await alertApi.list({ page: 1, page_size: 6, status: 'PENDING' })
+      const payload = response.data?.items || response.data?.data?.items || response.data?.data || response.data || []
+      const list = Array.isArray(payload) ? payload : payload.items || []
+      const normalized = list.map((alert) => {
+        const levelMap = {
+          URGENT: 'critical',
+          CRITICAL: 'critical',
+          WARNING: 'warning',
+          INFO: 'info',
+        }
+        const statusMap = {
+          PENDING: 'pending',
+          HANDLING: 'processing',
+          RESOLVED: 'resolved',
+          CLOSED: 'closed',
+        }
+        const triggeredAt = alert.triggered_at ? new Date(alert.triggered_at) : null
+        const timestamp = triggeredAt && !isNaN(triggeredAt.getTime())
+          ? `${triggeredAt.getMonth() + 1}-${triggeredAt.getDate()} ${triggeredAt.getHours().toString().padStart(2, '0')}:${triggeredAt.getMinutes().toString().padStart(2, '0')}`
+          : ''
+        return {
+          id: alert.id,
+          level: levelMap[alert.alert_level?.toUpperCase?.()] || 'warning',
+          title: alert.alert_title || alert.rule_name || '异常预警',
+          content: alert.alert_content || alert.target_name || alert.target_type || '请查看详情',
+          projectCode: alert.project_name || alert.project_code || alert.alert_no || '未关联项目',
+          workshop: alert.target_name || alert.target_type || '—',
+          createdAt: timestamp,
+          status: statusMap[alert.status?.toUpperCase?.()] || 'pending',
+        }
+      })
+      setAlerts(normalized)
+    } catch (err) {
+      console.error('Failed to load alerts:', err)
+      setAlerts([])
+    }
+  }, [])
+
   // Load data when component mounts or tab changes
   useEffect(() => {
     if (selectedTab === 'overview') {
       loadDashboard()
       loadWorkshops()
       loadDailySnapshots(selectedDate || null)
+      loadAlerts()
     } else if (selectedTab === 'workshops') {
       loadWorkshops()
     } else if (selectedTab === 'plans') {
@@ -585,6 +600,7 @@ export default function ProductionManagerDashboard() {
     loadDailySnapshots,
     loadWorkerRankings,
     loadInProductionProjects,
+    loadAlerts,
   ])
 
   // Material search with debounce
@@ -663,6 +679,16 @@ export default function ProductionManagerDashboard() {
       info: 'bg-blue-500',
     }
     return colors[level] || 'bg-slate-500'
+  }
+
+  const getAlertStatusConfig = (status) => {
+    const configs = {
+      pending: { label: '待处理', className: 'bg-amber-500/20 text-amber-400' },
+      processing: { label: '处理中', className: 'bg-blue-500/20 text-blue-400' },
+      resolved: { label: '已处理', className: 'bg-emerald-500/20 text-emerald-400' },
+      closed: { label: '已关闭', className: 'bg-slate-500/20 text-slate-400' },
+    }
+    return configs[status] || configs.pending
   }
 
   return (
@@ -1707,40 +1733,46 @@ export default function ProductionManagerDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockAlerts.map((alert, index) => (
-                    <motion.div
-                      key={alert.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="p-4 rounded-lg bg-surface-100 border border-white/5 hover:bg-white/[0.03] cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <Badge className={cn('text-xs', getAlertLevelColor(alert.level))}>
-                              {alert.level === 'critical' ? '严重' : alert.level === 'warning' ? '警告' : '提示'}
-                            </Badge>
-                            <span className="text-sm font-semibold text-white">{alert.title}</span>
-                            <span className="text-xs text-slate-400">{alert.createdAt}</span>
+                  {alerts.length === 0 ? (
+                    <div className="text-center py-8 text-slate-500 text-sm">
+                      暂无新的预警
+                    </div>
+                  ) : (
+                    alerts.map((alert, index) => {
+                      const statusConfig = getAlertStatusConfig(alert.status)
+                      return (
+                        <motion.div
+                          key={alert.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="p-4 rounded-lg bg-surface-100 border border-white/5 hover:bg-white/[0.03] cursor-pointer transition-colors"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <Badge className={cn('text-xs', getAlertLevelColor(alert.level))}>
+                                  {alert.level === 'critical' ? '严重' : alert.level === 'warning' ? '警告' : '提示'}
+                                </Badge>
+                                <span className="text-sm font-semibold text-white">{alert.title}</span>
+                                <span className="text-xs text-slate-400">{alert.createdAt}</span>
+                              </div>
+                              <p className="text-sm text-slate-300 mb-2">{alert.content}</p>
+                              <div className="flex items-center gap-4 text-xs text-slate-400">
+                                <span>{alert.projectCode}</span>
+                                <span>{alert.workshop}</span>
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <Badge className={cn('text-xs', statusConfig.className)}>
+                                {statusConfig.label}
+                              </Badge>
+                            </div>
                           </div>
-                          <p className="text-sm text-slate-300 mb-2">{alert.content}</p>
-                          <div className="flex items-center gap-4 text-xs text-slate-400">
-                            <span>{alert.projectCode}</span>
-                            <span>{alert.workshop}</span>
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <Badge className={cn(
-                            'text-xs',
-                            alert.status === 'pending' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'
-                          )}>
-                            {alert.status === 'pending' ? '待处理' : '处理中'}
-                          </Badge>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                        </motion.div>
+                      )
+                    })
+                  )}
                 </div>
               </CardContent>
             </Card>

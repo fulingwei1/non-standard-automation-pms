@@ -54,84 +54,9 @@ import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { purchaseApi, supplierApi, projectApi, materialApi } from '../services/api'
 import { toast } from '../components/ui/toast'
+import { ApiIntegrationError } from '../components/ui'
 
-// Mock purchase orders data
-const mockPurchaseOrders = [
-  {
-    id: 'PO250104001',
-    projectId: 'PJ250108001',
-    projectName: 'BMS老化测试设备',
-    supplierId: 'V00015',
-    supplierName: '欧姆龙(上海)代理',
-    status: 'partial_received',
-    orderDate: '2026-01-02',
-    expectedDate: '2026-01-08',
-    totalAmount: 45680.00,
-    receivedAmount: 32500.00,
-    itemCount: 12,
-    receivedCount: 8,
-    buyer: '王采购',
-    urgency: 'normal',
-    items: [
-      { code: 'EL-02-03-0015', name: '光电传感器 E3Z-D82', qty: 12, price: 450, received: 12 },
-      { code: 'EL-02-03-0018', name: '接近传感器 E2E-X5', qty: 8, price: 280, received: 0 },
-    ],
-  },
-  {
-    id: 'PO250104002',
-    projectId: 'PJ250108001',
-    projectName: 'BMS老化测试设备',
-    supplierId: 'V00023',
-    supplierName: 'THK(深圳)销售',
-    status: 'pending',
-    orderDate: '2026-01-03',
-    expectedDate: '2026-01-10',
-    totalAmount: 28900.00,
-    receivedAmount: 0,
-    itemCount: 4,
-    receivedCount: 0,
-    buyer: '王采购',
-    urgency: 'urgent',
-    items: [
-      { code: 'ME-03-02-0008', name: '精密导轨 HSR25', qty: 4, price: 4200, received: 0 },
-      { code: 'ME-03-02-0012', name: '滑块 HSR25R', qty: 8, price: 850, received: 0 },
-    ],
-  },
-  {
-    id: 'PO250103005',
-    projectId: 'PJ250105002',
-    projectName: 'EOL功能测试设备',
-    supplierId: 'V00008',
-    supplierName: '西门子官方授权',
-    status: 'completed',
-    orderDate: '2025-12-28',
-    expectedDate: '2026-01-05',
-    totalAmount: 156800.00,
-    receivedAmount: 156800.00,
-    itemCount: 6,
-    receivedCount: 6,
-    buyer: '李采购',
-    urgency: 'normal',
-  },
-  {
-    id: 'PO250104003',
-    projectId: 'PJ250106003',
-    projectName: 'ICT测试设备',
-    supplierId: 'V00031',
-    supplierName: '海康威视代理',
-    status: 'delayed',
-    orderDate: '2026-01-02',
-    expectedDate: '2026-01-08',
-    delayedDate: '2026-01-15',
-    totalAmount: 18600.00,
-    receivedAmount: 0,
-    itemCount: 2,
-    receivedCount: 0,
-    buyer: '王采购',
-    urgency: 'urgent',
-    delayReason: '供应商产能不足',
-  },
-]
+// Mock purchase orders data - 已移除，使用真实API
 
 const statusConfigs = {
   draft: { label: '草稿', color: 'bg-slate-500', icon: FileText },
@@ -369,7 +294,7 @@ function OrderDetailDialog({ order, open, onOpenChange }) {
 export default function PurchaseOrders() {
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
-  const [orders, setOrders] = useState([])
+  const [orders, setOrders] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -512,15 +437,8 @@ export default function PurchaseOrders() {
       setOrders(transformedOrders)
     } catch (err) {
       console.error('Failed to load purchase orders:', err)
-
-      // API 调用失败时，使用 mock 数据让用户仍能看到界面
-      // 这包括演示账号、401错误（后端未完善）等情况
-      console.log('API 调用失败，使用 mock 数据展示界面', {
-        status: err.response?.status,
-        message: err.message
-      })
-      setOrders(mockPurchaseOrders)
-      setError(null) // 清除错误，使用 mock 数据
+      setError(err)
+      setOrders([]) // 清空数据
     } finally {
       setLoading(false)
     }
@@ -528,35 +446,13 @@ export default function PurchaseOrders() {
 
   // Initial load on component mount
   useEffect(() => {
-    // 检查是否是演示账号，如果是，直接使用 mock 数据
-    const token = localStorage.getItem('token')
-    const isDemoAccount = token && token.startsWith('demo_token_')
-    
-    console.log('PurchaseOrders: Initial load', { token, isDemoAccount, mockOrdersCount: mockPurchaseOrders.length })
-    
-    if (isDemoAccount) {
-      // 演示账号直接使用 mock 数据，不调用 API
-      console.log('演示账号直接使用 mock 数据', mockPurchaseOrders)
-      setOrders(mockPurchaseOrders)
-      setLoading(false)
-      setError(null)
-    } else {
-      // 真实账号调用 API
-      console.log('真实账号调用 API')
-      loadOrders()
-    }
+    loadOrders()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // 只在组件挂载时执行一次
 
-  // Reload when filters change (only for real accounts)
+  // Reload when filters change
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    const isDemoAccount = token && token.startsWith('demo_token_')
-    
-    // 演示账号不需要重新加载，因为数据已经在客户端
-    if (!isDemoAccount) {
-      loadOrders()
-    }
+    loadOrders()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, searchQuery]) // 筛选条件变化时重新加载
 
@@ -564,25 +460,7 @@ export default function PurchaseOrders() {
   useEffect(() => {
     const loadDropdownData = async () => {
       try {
-        const token = localStorage.getItem('token')
-        const isDemoAccount = token && token.startsWith('demo_token_')
-        
-        if (isDemoAccount) {
-          // 演示账号使用 mock 数据
-          setSuppliers([
-            { id: 1, supplier_name: '欧姆龙(上海)代理' },
-            { id: 2, supplier_name: 'THK(深圳)销售' },
-            { id: 3, supplier_name: '西门子官方授权' },
-          ])
-          setProjects([
-            { id: 1, project_name: 'BMS老化测试设备', project_code: 'PJ250108001' },
-            { id: 2, project_name: 'EOL功能测试设备', project_code: 'PJ250105002' },
-          ])
-          setMaterials([])
-          return
-        }
-
-        // 真实账号加载数据
+        // 加载数据
         const [suppliersRes, projectsRes] = await Promise.all([
           supplierApi.list({ page_size: 1000 }),
           projectApi.list({ page_size: 1000 }),
@@ -595,16 +473,9 @@ export default function PurchaseOrders() {
         setProjects(projectsData)
       } catch (err) {
         console.error('Failed to load dropdown data:', err)
-        // API 失败时使用 mock 数据
-        setSuppliers([
-          { id: 1, supplier_name: '欧姆龙(上海)代理' },
-          { id: 2, supplier_name: 'THK(深圳)销售' },
-          { id: 3, supplier_name: '西门子官方授权' },
-        ])
-        setProjects([
-          { id: 1, project_name: 'BMS老化测试设备', project_code: 'PJ250108001' },
-          { id: 2, project_name: 'EOL功能测试设备', project_code: 'PJ250105002' },
-        ])
+        // 下拉数据失败不影响主功能，只记录错误
+        setSuppliers([])
+        setProjects([])
       }
     }
     
@@ -627,10 +498,10 @@ export default function PurchaseOrders() {
 
   // Calculate stats
   const stats = {
-    total: orders.length || 0,
-    pending: orders.filter((o) => o.status === 'pending').length || 0,
-    delayed: orders.filter((o) => o.status === 'delayed').length || 0,
-    totalAmount: orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0) || 0,
+    total: (orders || []).length || 0,
+    pending: (orders || []).filter((o) => o.status === 'pending').length || 0,
+    delayed: (orders || []).filter((o) => o.status === 'delayed').length || 0,
+    totalAmount: (orders || []).reduce((sum, o) => sum + (o.totalAmount || 0), 0) || 0,
   }
 
   const handleViewOrder = async (order) => {
@@ -695,7 +566,7 @@ export default function PurchaseOrders() {
       setSearchParams({}, { replace: true })
     } else if (action === 'edit' && orderId) {
       // 查找订单并打开编辑对话框
-      const order = orders.find(o => o.id === parseInt(orderId) || o.id === orderId)
+      const order = (orders || []).find(o => o.id === parseInt(orderId) || o.id === orderId)
       if (order) {
         handleEditOrder(order)
       } else {
@@ -759,19 +630,10 @@ export default function PurchaseOrders() {
     }
 
     try {
-      const token = localStorage.getItem('token')
-      const isDemoAccount = token && token.startsWith('demo_token_')
-      
-      if (isDemoAccount) {
-        // 演示账号：从列表中移除
-        setOrders(orders.filter(o => o.id !== order.id))
-        toast.success('订单已删除')
-      } else {
-        // 真实账号：调用 API（如果后端支持删除）
-        // await purchaseApi.orders.delete(order._original?.id)
-        toast.success('订单已删除')
-        loadOrders()
-      }
+      // 调用 API（如果后端支持删除）
+      // await purchaseApi.orders.delete(order._original?.id)
+      toast.success('订单已删除')
+      loadOrders()
     } catch (err) {
       console.error('Failed to delete order:', err)
       toast.error(err.response?.data?.detail || '删除订单失败')
@@ -785,20 +647,9 @@ export default function PurchaseOrders() {
     }
 
     try {
-      const token = localStorage.getItem('token')
-      const isDemoAccount = token && token.startsWith('demo_token_')
-      
-      if (isDemoAccount) {
-        // 演示账号：更新状态
-        setOrders(orders.map(o => 
-          o.id === order.id ? { ...o, status: 'pending' } : o
-        ))
-        toast.success('订单已提交，等待审批')
-      } else {
-        await purchaseApi.orders.submit(order._original?.id)
-        toast.success('订单已提交，等待审批')
-        loadOrders()
-      }
+      await purchaseApi.orders.submit(order._original?.id)
+      toast.success('订单已提交，等待审批')
+      loadOrders()
     } catch (err) {
       console.error('Failed to submit order:', err)
       toast.error(err.response?.data?.detail || '提交订单失败')
@@ -819,23 +670,12 @@ export default function PurchaseOrders() {
     if (!approvingOrder) return
 
     try {
-      const token = localStorage.getItem('token')
-      const isDemoAccount = token && token.startsWith('demo_token_')
-      
-      if (isDemoAccount) {
-        // 演示账号：更新状态
-        setOrders(orders.map(o => 
-          o.id === approvingOrder.id ? { ...o, status: approved ? 'approved' : 'rejected' } : o
-        ))
-        toast.success(approved ? '订单已审批通过' : '订单已驳回')
-      } else {
-        await purchaseApi.orders.approve(approvingOrder._original?.id, {
-          approved,
-          approval_note: approvalNote,
-        })
-        toast.success(approved ? '订单已审批通过' : '订单已驳回')
-        loadOrders()
-      }
+      await purchaseApi.orders.approve(approvingOrder._original?.id, {
+        approved,
+        approval_note: approvalNote,
+      })
+      toast.success(approved ? '订单已审批通过' : '订单已驳回')
+      loadOrders()
       setShowApproveDialog(false)
       setApprovingOrder(null)
       setApprovalNote('')
@@ -857,34 +697,7 @@ export default function PurchaseOrders() {
     }
 
     try {
-      const token = localStorage.getItem('token')
-      const isDemoAccount = token && token.startsWith('demo_token_')
-      
-      if (isDemoAccount) {
-        // 演示账号：添加到列表
-        const newOrderData = {
-          id: `PO${Date.now()}`,
-          projectId: newOrder.project_id?.toString() || '',
-          projectName: projects.find(p => p.id === newOrder.project_id)?.project_name || '',
-          supplierId: newOrder.supplier_id.toString(),
-          supplierName: suppliers.find(s => s.id === newOrder.supplier_id)?.supplier_name || '',
-          status: 'draft',
-          orderDate: new Date().toISOString().split('T')[0],
-          expectedDate: newOrder.required_date || '',
-          totalAmount: newOrder.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0),
-          receivedAmount: 0,
-          itemCount: newOrder.items.length,
-          receivedCount: 0,
-          buyer: '当前用户',
-          urgency: 'normal',
-          items: newOrder.items,
-        }
-        setOrders([newOrderData, ...orders])
-        toast.success('订单已创建')
-        setShowCreateDialog(false)
-      } else {
-        // 真实账号：调用 API
-        const orderData = {
+      const orderData = {
           supplier_id: newOrder.supplier_id,
           project_id: newOrder.project_id || null,
           order_type: newOrder.order_type,
@@ -912,13 +725,12 @@ export default function PurchaseOrders() {
           await purchaseApi.orders.update(editingOrder._original?.id, orderData)
           toast.success('订单已更新')
           setShowEditDialog(false)
-        } else {
-          await purchaseApi.orders.create(orderData)
-          toast.success('订单已创建')
-          setShowCreateDialog(false)
-        }
-        loadOrders()
+      } else {
+        await purchaseApi.orders.create(orderData)
+        toast.success('订单已创建')
+        setShowCreateDialog(false)
       }
+      loadOrders()
     } catch (err) {
       console.error('Failed to save order:', err)
       toast.error(err.response?.data?.detail || '保存订单失败')
@@ -960,15 +772,20 @@ export default function PurchaseOrders() {
     )
   }
 
-  // Show error state (only for real accounts)
-  if (error && !(localStorage.getItem('token')?.startsWith('demo_token_'))) {
+  // Show error state
+  if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-        <div className="container mx-auto px-4 py-6">
-          <div className="text-center py-16">
-            <p className="text-red-400 mb-4">{error}</p>
-            <Button onClick={loadOrders}>重试</Button>
-          </div>
+        <div className="container mx-auto px-4 py-6 space-y-6">
+          <PageHeader
+            title="采购订单"
+            description="管理采购订单，跟踪到货状态"
+          />
+          <ApiIntegrationError
+            error={error}
+            apiEndpoint="/api/v1/purchase/orders"
+            onRetry={loadOrders}
+          />
         </div>
       </div>
     )

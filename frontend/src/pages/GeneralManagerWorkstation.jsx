@@ -53,8 +53,9 @@ import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { projectApi, salesStatisticsApi, productionApi, contractApi, invoiceApi, pmoApi, ecnApi, purchaseApi, departmentApi } from '../services/api'
 import CultureWallCarousel from '../components/culture/CultureWallCarousel'
+import { ApiIntegrationError } from '../components/ui'
 
-// Mock data for general manager dashboard
+/* Mock data for general manager dashboard - 已移除，使用真实API
 const mockBusinessStats = {
   // Financial metrics
   monthlyRevenue: 12500000,
@@ -66,7 +67,7 @@ const mockBusinessStats = {
   profit: 25000000,
   profitMargin: 20,
   cost: 100000000,
-  
+
   // Project metrics
   totalProjects: 68,
   activeProjects: 42,
@@ -74,36 +75,37 @@ const mockBusinessStats = {
   projectHealthGood: 32,
   projectHealthWarning: 8,
   projectHealthCritical: 2,
-  
+
   // Sales metrics
   totalContracts: 156,
   activeContracts: 42,
   pendingApproval: 8,
   totalCustomers: 245,
   newCustomersThisMonth: 18,
-  
+
   // Operations metrics
   productionCapacity: 85,
   qualityPassRate: 96.2,
   materialArrivalRate: 92.5,
   onTimeDeliveryRate: 88.5,
-  
+
   // Financial health
   accountsReceivable: 28500000,
   overdueReceivable: 3500000,
   collectionRate: 87.7,
   cashFlow: 18500000,
-  
+
   // Team metrics
   totalEmployees: 186,
   activeEmployees: 178,
   departments: 8,
-  
+
   // Growth metrics
   revenueGrowth: 18.5,
   customerGrowth: 12.3,
   projectGrowth: 15.8,
 }
+*/
 
 const mockPendingApprovals = [
   {
@@ -370,7 +372,7 @@ const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg }) => {
 export default function GeneralManagerWorkstation() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [businessStats, setBusinessStats] = useState(mockBusinessStats)
+  const [businessStats, setBusinessStats] = useState(null)
   const [pendingApprovals, setPendingApprovals] = useState([])
   const [projectHealth, setProjectHealth] = useState([])
 
@@ -597,21 +599,10 @@ export default function GeneralManagerWorkstation() {
 
     } catch (err) {
       console.error('Failed to load dashboard:', err)
-      // 检查是否是演示账号
-      const token = localStorage.getItem('token')
-      const isDemoAccount = token && token.startsWith('demo_token_')
-      
-      if (isDemoAccount) {
-        // 演示账号使用 mock 数据
-        console.log('演示账号使用 mock 数据')
-        setBusinessStats(mockBusinessStats)
-        setPendingApprovals(mockPendingApprovals)
-        setProjectHealth(mockProjectHealth)
-        setError(null) // 清除错误，使用 mock 数据
-      } else {
-        // 真实账号显示错误
-        setError(err.response?.data?.detail || err.message || '加载工作台数据失败')
-      }
+      setError(err)
+      setBusinessStats(null)
+      setPendingApprovals([])
+      setProjectHealth([])
     } finally {
       setLoading(false)
     }

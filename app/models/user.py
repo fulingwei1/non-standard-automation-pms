@@ -77,15 +77,18 @@ class Permission(Base, TimestampMixin):
     __tablename__ = "permissions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    # 兼容旧表结构：数据库使用 perm_code，模型使用 permission_code
+    # 使用 name 参数映射到数据库字段名
     permission_code = Column(
-        String(100), unique=True, nullable=False, comment="权限编码"
+        "perm_code", String(100), unique=True, nullable=False, comment="权限编码"
     )
-    permission_name = Column(String(200), nullable=False, comment="权限名称")
+    permission_name = Column("perm_name", String(200), nullable=False, comment="权限名称")
     module = Column(String(50), comment="所属模块")
-    resource = Column(String(50), comment="资源类型")
+    # 以下字段在旧表结构中可能不存在，设为可选
+    resource = Column(String(50), nullable=True, comment="资源类型")
     action = Column(String(20), comment="操作类型")
-    description = Column(Text, comment="权限描述")
-    is_active = Column(Boolean, default=True, comment="是否启用")
+    description = Column(Text, nullable=True, comment="权限描述")
+    is_active = Column(Boolean, default=True, nullable=True, comment="是否启用")
 
     # 关系
     roles = relationship("RolePermission", back_populates="permission", lazy="dynamic")

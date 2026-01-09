@@ -12,6 +12,7 @@ import {
   Progress,
   Badge,
   SkeletonCard,
+  ApiIntegrationError,
 } from '../components/ui'
 import {
   Briefcase,
@@ -61,69 +62,30 @@ const getRiskLevelName = (level) => {
   return names[level] || '未知'
 }
 
-// Mock data for when API fails
-const mockPMODashboardData = {
-  summary: {
-    total_projects: 12,
-    active_projects: 8,
-    completed_projects: 3,
-    delayed_projects: 1,
-    total_budget: 5680000,
-    total_cost: 3250000,
-    total_members: 45,
-    avg_completion: 68.5,
-    total_risks: 6,
-    critical_risks: 1,
-    high_risks: 2,
-  },
-  // Object format: { status: count } - 页面使用 Object.entries 遍历
-  projects_by_status: {
-    '进行中': 8,
-    '已完成': 3,
-    '延期': 1,
-  },
-  // Object format: { stage: count } - 页面使用 Object.entries 遍历
-  projects_by_stage: {
-    'S1-需求进入': 1,
-    'S2-方案设计': 2,
-    'S3-采购备料': 1,
-    'S4-加工制造': 2,
-    'S5-装配调试': 3,
-    'S6-出厂验收': 1,
-    'S7-包装发运': 1,
-    'S8-现场安装': 1,
-  },
-  recent_risks: [
-    { id: 1, risk_name: '关键物料交期延迟', risk_level: 'HIGH', risk_category: '进度风险', description: '关键物料交期延迟，可能影响整体进度', owner_name: '张经理' },
-    { id: 2, risk_name: '新工艺验证周期', risk_level: 'MEDIUM', risk_category: '技术风险', description: '新工艺验证需要更多时间', owner_name: '李经理' },
-    { id: 3, risk_name: '汇率波动影响', risk_level: 'LOW', risk_category: '成本风险', description: '汇率波动可能影响采购成本', owner_name: '王经理' },
-  ],
-}
+// Mock data removed - using real API only
 
 export default function PMODashboard() {
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [dashboardData, setDashboardData] = useState(null)
   const [selectedProjectId, setSelectedProjectId] = useState(null)
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        const res = await pmoApi.dashboard()
-        setDashboardData(res.data)
-      } catch (err) {
-        console.error('Failed to fetch PMO dashboard data:', err)
-        // API 调用失败时，使用 mock 数据让用户仍能看到界面
-        console.log('API 调用失败，使用 mock 数据展示界面', {
-          status: err.response?.status,
-          message: err.message
-        })
-        setDashboardData(mockPMODashboardData)
-      } finally {
-        setLoading(false)
-      }
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const res = await pmoApi.dashboard()
+      setDashboardData(res.data)
+    } catch (err) {
+      console.error('Failed to fetch PMO dashboard data:', err)
+      setError(err)
+      setDashboardData(null)
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchData()
   }, [])
 
@@ -144,6 +106,19 @@ export default function PMODashboard() {
               </Card>
             ))}
         </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="PMO 驾驶舱" description="项目管理部全景视图" />
+        <ApiIntegrationError
+          error={error}
+          apiEndpoint="/api/v1/pmo/dashboard"
+          onRetry={fetchData}
+        />
       </div>
     )
   }

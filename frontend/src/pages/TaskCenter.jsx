@@ -38,97 +38,9 @@ import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { getRoleInfo, isEngineerRole } from '../lib/roleConfig'
 import { progressApi, projectApi, taskCenterApi } from '../services/api'
+import { ApiIntegrationError } from '../components/ui'
 
-// Mock task data for engineers/managers
-const mockTasks = [
-  {
-    id: 'T001',
-    title: 'BMS老化设备 - 机械结构设计',
-    projectId: 'PJ250108001',
-    projectName: 'BMS老化测试设备',
-    status: 'in_progress',
-    priority: 'high',
-    progress: 65,
-    assignee: '张工',
-    dueDate: '2026-01-08',
-    estimatedHours: 40,
-    actualHours: 26,
-    tags: ['机械设计', '3D建模'],
-    subTasks: [
-      { id: 'ST001', title: '框架结构设计', completed: true },
-      { id: 'ST002', title: '传动机构设计', completed: true },
-      { id: 'ST003', title: '工装夹具设计', completed: false },
-      { id: 'ST004', title: '工程图纸输出', completed: false },
-    ],
-    blockedBy: null,
-  },
-  {
-    id: 'T002',
-    title: 'BMS老化设备 - BOM整理发布',
-    projectId: 'PJ250108001',
-    projectName: 'BMS老化测试设备',
-    status: 'pending',
-    priority: 'high',
-    progress: 0,
-    assignee: '张工',
-    dueDate: '2026-01-10',
-    estimatedHours: 8,
-    actualHours: 0,
-    tags: ['BOM'],
-    subTasks: [],
-    blockedBy: 'T001',
-  },
-  {
-    id: 'T003',
-    title: 'EOL测试设备 - 电气原理图',
-    projectId: 'PJ250105002',
-    projectName: 'EOL功能测试设备',
-    status: 'in_progress',
-    priority: 'medium',
-    progress: 80,
-    assignee: '李工',
-    dueDate: '2026-01-06',
-    estimatedHours: 24,
-    actualHours: 19,
-    tags: ['电气设计'],
-    subTasks: [],
-    blockedBy: null,
-  },
-  {
-    id: 'T004',
-    title: 'ICT测试设备 - PLC程序框架',
-    projectId: 'PJ250106003',
-    projectName: 'ICT测试设备',
-    status: 'blocked',
-    priority: 'high',
-    progress: 30,
-    assignee: '王工',
-    dueDate: '2026-01-12',
-    estimatedHours: 32,
-    actualHours: 10,
-    tags: ['PLC编程', '软件'],
-    subTasks: [],
-    blockedBy: null,
-    blockReason: '等待硬件选型确认',
-  },
-  {
-    id: 'T005',
-    title: 'BMS老化设备 - 设计评审',
-    projectId: 'PJ250108001',
-    projectName: 'BMS老化测试设备',
-    status: 'completed',
-    priority: 'medium',
-    progress: 100,
-    assignee: '张工',
-    dueDate: '2026-01-03',
-    completedDate: '2026-01-03',
-    estimatedHours: 4,
-    actualHours: 3,
-    tags: ['评审'],
-    subTasks: [],
-    blockedBy: null,
-  },
-]
+// Mock task data removed - 使用真实API
 
 // Mock assembly tasks for workers (装配技工专用任务)
 const mockAssemblyTasks = [
@@ -1054,8 +966,10 @@ export default function TaskCenter() {
           </Card>
         ))}
       </motion.div>
+      )}
 
       {/* Filters */}
+      {!error && (
       <motion.div variants={fadeIn}>
         <Card className="bg-surface-1/50">
           <CardContent className="p-4">
@@ -1111,9 +1025,10 @@ export default function TaskCenter() {
           </CardContent>
         </Card>
       </motion.div>
+      )}
 
       {/* Task List */}
-      {viewMode === 'list' && (
+      {!error && viewMode === 'list' && (
         <motion.div variants={fadeIn} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {filteredTasks.map((task) => (
             <TaskCard
@@ -1174,6 +1089,7 @@ export default function TaskCenter() {
               : '点击"新建任务"开始工作'}
           </p>
         </motion.div>
+      )}
       )}
     </motion.div>
   )

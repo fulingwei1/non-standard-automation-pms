@@ -41,20 +41,195 @@ import {
   Input,
 } from '../components/ui'
 import { fadeIn, staggerContainer } from '../lib/animations'
-import { cn } from '../lib/utils'
+import { cn, formatDate } from '../lib/utils'
 import { SalesFunnel, CustomerCard, OpportunityCard, PaymentTimeline, PaymentStats } from '../components/sales'
-import { salesStatisticsApi, opportunityApi, customerApi, contractApi, invoiceApi, projectApi, quoteApi } from '../services/api'
+import {
+  salesStatisticsApi,
+  opportunityApi,
+  customerApi,
+  contractApi,
+  invoiceApi,
+  projectApi,
+  quoteApi,
+  taskCenterApi,
+} from '../services/api'
 
-// Mock data
-const mockStats = {
+const DEFAULT_STATS = {
   monthlyTarget: 1200000,
-  monthlyAchieved: 856000,
-  opportunityCount: 23,
-  hotOpportunities: 8,
-  pendingPayment: 320000,
-  overduePayment: 85000,
-  customerCount: 45,
-  newCustomers: 5,
+  monthlyAchieved: 0,
+  opportunityCount: 0,
+  hotOpportunities: 0,
+  pendingPayment: 0,
+  overduePayment: 0,
+  customerCount: 0,
+  newCustomers: 0,
+}
+
+const OPPORTUNITY_STAGE_MAP = {
+  DISCOVERY: 'lead',
+  QUALIFIED: 'contact',
+  PROPOSAL: 'quote',
+  NEGOTIATION: 'negotiate',
+  WON: 'won',
+  LOST: 'lost',
+  ON_HOLD: 'contact',
+}
+
+const PROJECT_STAGE_LABELS = {
+  INITIATION: '立项',
+  PLAN: '计划',
+  DESIGN: '设计',
+  PRODUCTION: '生产',
+  DELIVERY: '交付',
+  ACCEPTANCE: '验收',
+  CLOSED: '结项',
+}
+
+const HEALTH_MAP = {
+  H1: 'good',
+  HEALTH_GREEN: 'good',
+  GREEN: 'good',
+  H2: 'warning',
+  HEALTH_YELLOW: 'warning',
+  YELLOW: 'warning',
+  H3: 'critical',
+  HEALTH_RED: 'critical',
+  RED: 'critical',
+}
+
+const mapOpportunityStage = (stage) => OPPORTUNITY_STAGE_MAP[stage?.toUpperCase?.()] || 'lead'
+
+const mapOpportunityPriority = (priority) => {
+  const value = (priority || '').toString().toLowerCase()
+  if (value.includes('urgent')) return 'urgent'
+  if (value.includes('high')) return 'high'
+  if (value.includes('low')) return 'low'
+  return 'medium'
+}
+
+const mapProjectStageLabel = (stage) => {
+  if (!stage) return '进行中'
+  const normalized = stage.toString().toUpperCase()
+  return PROJECT_STAGE_LABELS[normalized] || stage
+}
+
+const mapProjectHealth = (health) => {
+  if (!health) return 'warning'
+  const normalized = health.toString().toUpperCase()
+  return HEALTH_MAP[normalized] || 'warning'
+}
+
+const isCurrentMonth = (date) => {
+  if (!date) return false
+  const checkDate = new Date(date)
+  if (isNaN(checkDate.getTime())) return false
+  const now = new Date()
+  return checkDate.getFullYear() === now.getFullYear() && checkDate.getMonth() === now.getMonth()
+}
+
+const mapTaskToTodoType = (task) => {
+  const type = (task.task_type || task.source_type || '').toUpperCase()
+  if (type.includes('QUOTE')) return 'quote'
+  if (type.includes('PAY')) return 'payment'
+  if (type.includes('VISIT')) return 'visit'
+  if (type.includes('APPROVAL')) return 'approval'
+  if (type.includes('FOLLOW')) return 'follow'
+  return 'reminder'
+}
+
+const calculateDaysBetween = (date) => {
+  if (!date) return 0
+  const target = new Date(date)
+  if (isNaN(target.getTime())) return 0
+  const diff = Date.now() - target.getTime()
+  return Math.max(Math.floor(diff / (1000 * 60 * 60 * 24)), 0)
+}
+
+const transformOpportunity = (opportunity) => {
+  const stage = mapOpportunityStage(opportunity.stage || opportunity.opportunity_stage)
+  const expectedCloseDate = opportunity.estimated_close_date || opportunity.expected_close_date || ''
+  const probability = Number(opportunity.win_probability ?? opportunity.success_rate ?? 0)
+  return {
+    id: opportunity.id,
+    name: opportunity.opportunity_name || opportunity.name || opportunity.opportunity_code || '未命名商机',
+    customerName: opportunity.customer?.customer_name || opportunity.customer_name || '',
+    customerShort: opportunity.customer?.short_name || opportunity.customer?.customer_name || opportunity.customer_name || '',
+    stage,
+    priority: mapOpportunityPriority(opportunity.priority),
+    expectedAmount: parseFloat(opportunity.est_amount || opportunity.expected_amount || 0),
+    expectedCloseDate: expectedCloseDate ? formatDate(expectedCloseDate) : '未设置',
+    probability,
+    owner: opportunity.owner?.real_name || opportunity.owner_name || opportunity.owner?.username || '未分配',
+    daysInStage: calculateDaysBetween(opportunity.stage_updated_at || opportunity.updated_at),
+    isHot: probability >= 70,
+    isOverdue: expectedCloseDate ? new Date(expectedCloseDate) < new Date() && stage !== 'won' : false,
+    tags: opportunity.industry ? [opportunity.industry] : [],
+  }
+}
+
+const transformCustomer = (customer) => ({
+  id: customer.id,
+  name: customer.customer_name || customer.name || '未命名客户',
+  shortName: customer.short_name || customer.customer_name || customer.name || '客户',
+  grade: (customer.grade || customer.level || 'B').toUpperCase(),
+  status: (customer.status || 'active').toLowerCase(),
+  industry: customer.industry || customer.category || '未分类',
+  location: [customer.region, customer.city, customer.address].filter(Boolean).slice(0, 2).join(' · ') || '未设置',
+  contactPerson: customer.contact_person || customer.primary_contact?.name,
+  phone: customer.contact_phone || customer.primary_contact?.phone,
+  totalAmount: parseFloat(customer.total_contract_amount || 0),
+  pendingAmount: parseFloat(customer.pending_payment || 0),
+  projectCount: customer.project_count || 0,
+  opportunityCount: customer.opportunity_count || 0,
+  tags: customer.tags || [],
+  lastContact: customer.last_follow_up_at ? formatDate(customer.last_follow_up_at) : '无记录',
+  createdAt: customer.created_at,
+})
+
+const transformInvoiceToPayment = (invoice) => {
+  const statusMap = {
+    PAID: 'paid',
+    PENDING: 'pending',
+    ISSUED: 'invoiced',
+    OVERDUE: 'overdue',
+  }
+  const backendStatus = invoice.payment_status || invoice.status
+  const status = statusMap[backendStatus] || 'pending'
+  return {
+    id: invoice.id,
+    type: (invoice.payment_type || 'progress').toLowerCase(),
+    projectName: invoice.project_name || invoice.contract_name || '未关联项目',
+    amount: parseFloat(invoice.amount || invoice.invoice_amount || 0),
+    dueDate: invoice.due_date || invoice.payment_due_date || invoice.expected_payment_date || '',
+    paidDate: invoice.paid_date || '',
+    status,
+    invoiceNo: invoice.invoice_code,
+    notes: invoice.remark || '',
+  }
+}
+
+const transformProject = (project) => ({
+  id: project.id || project.project_id,
+  name: project.project_name || project.name || project.project_code || '项目',
+  customer: project.customer?.customer_name || project.customer_name || '未设置',
+  stageLabel: mapProjectStageLabel(project.stage || project.project_stage || project.status),
+  progress: Math.round(project.progress_pct ?? project.progress ?? 0),
+  health: mapProjectHealth(project.health || project.health_status || project.health_level),
+  acceptanceDate: project.acceptance_date || project.delivery_date || project.target_acceptance_date || project.expected_acceptance_date || '未设置',
+})
+
+const transformTaskToTodo = (task) => {
+  const deadline = task.deadline || task.plan_end_date
+  const priority = (task.priority || '').toLowerCase()
+  return {
+    id: `task-${task.id}`,
+    type: mapTaskToTodoType(task),
+    title: task.title,
+    target: task.project_name || task.source_name || task.task_code,
+    time: deadline ? formatDate(deadline) : '无截止',
+    priority: priority === 'urgent' ? 'urgent' : priority === 'high' ? 'high' : 'normal',
+    done: task.status === 'COMPLETED',
+  }
 }
 
 
@@ -77,11 +252,12 @@ const healthColors = {
 
 export default function SalesWorkstation() {
   const [todos, setTodos] = useState([])
-  const [stats, setStats] = useState(mockStats)
+  const [stats, setStats] = useState({ ...DEFAULT_STATS })
   const [customers, setCustomers] = useState([])
   const [projects, setProjects] = useState([])
   const [payments, setPayments] = useState([])
   const [opportunities, setOpportunities] = useState([])
+  const [funnelData, setFunnelData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -91,154 +267,152 @@ export default function SalesWorkstation() {
       setLoading(true)
       setError(null)
 
-      // Get current month date range
       const now = new Date()
       const startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
       const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0]
+      const params = { start_date: startDate, end_date: endDate }
 
-      // Load sales summary
-      const summaryResponse = await salesStatisticsApi.summary({ start_date: startDate, end_date: endDate })
-      const summaryData = summaryResponse.data || {}
+      const [
+        summaryResponse,
+        funnelResponse,
+        opportunitiesResponse,
+        customersResponse,
+        contractsResponse,
+        invoicesResponse,
+      ] = await Promise.all([
+        salesStatisticsApi.summary(params),
+        salesStatisticsApi.funnel(params),
+        opportunityApi.list({ page: 1, page_size: 100 }),
+        customerApi.list({ page: 1, page_size: 10 }),
+        contractApi.list({ page: 1, page_size: 10, status: 'SIGNED' }),
+        invoiceApi.list({ page: 1, page_size: 10 }),
+      ])
 
-      // Load sales performance
-      const performanceResponse = await salesStatisticsApi.performance({ start_date: startDate, end_date: endDate })
-      const performanceData = performanceResponse.data || {}
-
-      // Load funnel data
-      await salesStatisticsApi.funnel({ start_date: startDate, end_date: endDate })
-
-      // Load opportunities
-      const opportunitiesResponse = await opportunityApi.list({ page: 1, page_size: 100 })
+      const summaryData = summaryResponse.data?.data || summaryResponse.data || summaryResponse
+      const funnelPayload = funnelResponse.data?.data || funnelResponse.data || {}
       const oppsData = opportunitiesResponse.data?.items || opportunitiesResponse.data || []
-
-      // Calculate stats
-      const monthlyTarget = 1200000 // Default target, can be configured
-      const monthlyAchieved = performanceData.total_contract_amount || performanceData.paid_amount || 0
-      const opportunityCount = summaryData.total_opportunities || oppsData.length
-      const hotOpportunities = oppsData.filter(opp => {
-        const stage = opp.stage || opp.opportunity_stage || ''
-        return stage === 'QUALIFICATION' || stage === 'PROPOSAL' || stage === 'QUALIFYING'
-      }).length
-      
-      setOpportunities(oppsData.slice(0, 5))
-
-      // Load customers
-      const customersResponse = await customerApi.list({ page: 1, page_size: 10 })
       const customersData = customersResponse.data?.items || customersResponse.data || []
-      setCustomers(customersData.slice(0, 3))
-
-      // Load projects (from contracts)
-      const contractsResponse = await contractApi.list({ page: 1, page_size: 10, status: 'SIGNED' })
       const contractsData = contractsResponse.data?.items || contractsResponse.data || []
-      
-      // Get projects for these contracts
-      const projectIds = contractsData.map(c => c.project_id).filter(Boolean)
-      const projectsData = []
-      for (const projectId of projectIds.slice(0, 3)) {
-        try {
-          const projectResponse = await projectApi.get(projectId)
-          projectsData.push(projectResponse.data || projectResponse)
-        } catch (err) {
-          console.error(`Failed to load project ${projectId}:`, err)
-        }
-      }
-      setProjects(projectsData)
-
-      // Load invoices for payment tracking
-      const invoicesResponse = await invoiceApi.list({ page: 1, page_size: 10 })
       const invoicesData = invoicesResponse.data?.items || invoicesResponse.data || []
-      const paymentsData = invoicesData.map(inv => ({
-        id: inv.id,
-        type: 'progress', // Default type
-        projectName: inv.project_name || '',
-        amount: parseFloat(inv.amount || 0),
-        dueDate: inv.due_date || '',
-        paidDate: inv.paid_date || '',
-        status: inv.status?.toLowerCase() || 'pending',
-      }))
-      setPayments(paymentsData.slice(0, 4))
 
-      // Calculate pending and overdue payments
-      const pendingPayment = paymentsData
-        .filter(p => p.status === 'pending' || p.status === 'issued')
-        .reduce((sum, p) => sum + p.amount, 0)
-      const overduePayment = paymentsData
-        .filter(p => p.status === 'overdue' || (p.dueDate && new Date(p.dueDate) < new Date() && p.status !== 'paid'))
-        .reduce((sum, p) => sum + p.amount, 0)
+      const normalizedOpportunities = oppsData.map(transformOpportunity)
+      setOpportunities(normalizedOpportunities.slice(0, 5))
+      const hotOpportunities = normalizedOpportunities.filter(opp => opp.isHot).length
 
-      // Load todos (Sprint 3: Reminders)
-      // TODO: Load from notifications API
-      const todosData = []
-      
-      // Load pending approvals
-      try {
-        const approvalStatuses = []
-        // Check quotes with pending approvals
-        const quotesResponse = await quoteApi.list({ status: 'SUBMITTED', page_size: 10 })
-        const quotes = quotesResponse.data?.items || quotesResponse.data || []
-        for (const quote of quotes) {
+      const normalizedCustomers = customersData.slice(0, 3).map(transformCustomer)
+      setCustomers(normalizedCustomers)
+      const newCustomerCount = normalizedCustomers.filter(c => isCurrentMonth(c.createdAt)).length
+      const totalCustomers = customersResponse.data?.total ?? customersData.length
+
+      const paymentEntries = invoicesData.map(transformInvoiceToPayment)
+      setPayments(paymentEntries)
+      const pendingPayment = paymentEntries
+        .filter(p => p.status === 'pending' || p.status === 'invoiced')
+        .reduce((sum, p) => sum + (p.amount || 0), 0)
+      const overduePayment = paymentEntries
+        .filter(p => {
+          if (p.status === 'overdue') return true
+          if (p.status !== 'paid' && p.dueDate) {
+            return new Date(p.dueDate) < new Date()
+          }
+          return false
+        })
+        .reduce((sum, p) => sum + (p.amount || 0), 0)
+
+      const projectIds = contractsData.map(c => c.project_id).filter(Boolean).slice(0, 3)
+      const projectDetails = await Promise.all(
+        projectIds.map(async (projectId) => {
           try {
-            const approvalStatus = await quoteApi.getApprovalStatus(quote.id)
-            if (approvalStatus?.status === 'PENDING') {
-              todosData.push({
+            const projectResponse = await projectApi.get(projectId)
+            const projectData = projectResponse.data || projectResponse
+            return transformProject(projectData)
+          } catch (err) {
+            console.error(`Failed to load project ${projectId}:`, err)
+            return null
+          }
+        })
+      )
+      setProjects(projectDetails.filter(Boolean))
+
+      const funnelCounts = {
+        lead: funnelPayload.leads || 0,
+        contact: funnelPayload.opportunities || 0,
+        quote: funnelPayload.quotes || 0,
+        negotiate: Math.max((funnelPayload.contracts || 0) - (summaryData?.won_opportunities || 0), 0),
+        won: summaryData?.won_opportunities || funnelPayload.contracts || 0,
+      }
+      setFunnelData(funnelCounts)
+
+      setStats({
+        monthlyTarget: summaryData?.monthly_target || DEFAULT_STATS.monthlyTarget,
+        monthlyAchieved: summaryData?.total_contract_amount || 0,
+        opportunityCount: summaryData?.total_opportunities || normalizedOpportunities.length,
+        hotOpportunities,
+        pendingPayment,
+        overduePayment,
+        customerCount: totalCustomers || summaryData?.total_leads || 0,
+        newCustomers: newCustomerCount,
+      })
+    } catch (err) {
+      console.error('Failed to load sales statistics:', err)
+      setError(err.response?.data?.detail || err.message || '加载销售数据失败')
+      setStats({ ...DEFAULT_STATS })
+      setFunnelData(null)
+      setOpportunities([])
+      setCustomers([])
+      setProjects([])
+      setPayments([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const loadTodos = useCallback(async () => {
+    try {
+      const [tasksResponse, quotesResponse] = await Promise.all([
+        taskCenterApi.myTasks({ page: 1, page_size: 10, status: 'IN_PROGRESS' }),
+        quoteApi.list({ status: 'SUBMITTED', page_size: 5 }),
+      ])
+
+      const taskItems = tasksResponse.data?.items || tasksResponse.data || []
+      const taskTodos = taskItems.map(transformTaskToTodo)
+
+      const quotes = quotesResponse.data?.items || quotesResponse.data || []
+      const approvalTodos = []
+      await Promise.all(
+        quotes.slice(0, 3).map(async (quote) => {
+          try {
+            const statusResponse = await quoteApi.getApprovalStatus(quote.id)
+            const statusData = statusResponse.data?.data || statusResponse.data || statusResponse
+            if ((statusData.status || statusData.approval_status) === 'PENDING') {
+              approvalTodos.push({
                 id: `approval-quote-${quote.id}`,
                 type: 'approval',
-                title: `报价审批 - ${quote.quote_code}`,
-                target: quote.customer?.customer_name || '',
+                title: `报价审批 - ${quote.quote_code || quote.code}`,
+                target: quote.customer?.customer_name || quote.customer_name || '',
                 time: '待审批',
                 priority: 'high',
                 done: false,
               })
             }
           } catch (err) {
-            // Ignore errors
+            console.error('Failed to load quote approval status:', err)
           }
-        }
-      } catch (err) {
-        console.error('Failed to load approval todos:', err)
-      }
+        })
+      )
 
-      // Load overdue reminders
-      // TODO: Load from reminders API
-
-      setTodos(todosData)
-
-      setStats({
-        monthlyTarget,
-        monthlyAchieved,
-        opportunityCount,
-        hotOpportunities,
-        pendingPayment,
-        overduePayment,
-        customerCount: summaryData.total_leads || customersData.length,
-        newCustomers: customersData.filter(c => {
-          const createdDate = new Date(c.created_at || c.createdAt || '')
-          return createdDate >= new Date(startDate)
-        }).length,
-      })
+      setTodos([...taskTodos, ...approvalTodos])
     } catch (err) {
-      console.error('Failed to load sales statistics:', err)
-      setError(err.response?.data?.detail || err.message || '加载销售数据失败')
-      // 使用默认值而不是mock数据
-      setStats({
-        monthlyTarget: 0,
-        monthlyAchieved: 0,
-        opportunityCount: 0,
-        hotOpportunities: 0,
-        pendingPayment: 0,
-        overduePayment: 0,
-        customerCount: 0,
-        newCustomers: 0,
-      })
-    } finally {
-      setLoading(false)
+      console.error('Failed to load todos:', err)
+      setTodos([])
     }
   }, [])
 
   // Load data when component mounts
   useEffect(() => {
     loadStatistics()
-  }, [loadStatistics])
+    loadTodos()
+  }, [loadStatistics, loadTodos])
 
   const achievementRate = stats.monthlyTarget > 0 
     ? (stats.monthlyAchieved / stats.monthlyTarget * 100).toFixed(1)
@@ -378,9 +552,12 @@ export default function SalesWorkstation() {
               </div>
             </CardHeader>
             <CardContent>
-              <SalesFunnel onStageClick={() => {
+              <SalesFunnel
+                data={funnelData || undefined}
+                onStageClick={() => {
                 // Handle stage click if needed
-              }} />
+                }}
+              />
             </CardContent>
           </Card>
 
@@ -586,4 +763,3 @@ export default function SalesWorkstation() {
     </motion.div>
   )
 }
-

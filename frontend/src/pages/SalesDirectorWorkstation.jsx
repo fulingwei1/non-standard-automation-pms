@@ -44,76 +44,9 @@ import {
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { salesStatisticsApi, opportunityApi, contractApi } from '../services/api'
+import { ApiIntegrationError } from '../components/ui'
 
-// Mock data for sales director dashboard
-const mockOverallStats = {
-  monthlyTarget: 5000000,
-  monthlyAchieved: 3850000,
-  achievementRate: 77,
-  yearTarget: 60000000,
-  yearAchieved: 42500000,
-  yearProgress: 70.8,
-  activeContracts: 28,
-  pendingContracts: 5,
-  totalCustomers: 156,
-  newCustomersThisMonth: 12,
-  teamSize: 18,
-  activeOpportunities: 45,
-  hotOpportunities: 18,
-  totalRevenue: 42500000,
-  pendingPayment: 2850000,
-  overduePayment: 350000,
-  collectionRate: 92.5,
-}
-
-
-const mockTeamPerformance = [
-  {
-    id: 1,
-    name: '张销售',
-    role: '销售工程师',
-    monthlyTarget: 300000,
-    monthlyAchieved: 285000,
-    achievementRate: 95,
-    activeProjects: 5,
-    newCustomers: 2,
-    status: 'excellent',
-  },
-  {
-    id: 2,
-    name: '李销售',
-    role: '销售工程师',
-    monthlyTarget: 300000,
-    monthlyAchieved: 245000,
-    achievementRate: 81.7,
-    activeProjects: 4,
-    newCustomers: 1,
-    status: 'good',
-  },
-  {
-    id: 3,
-    name: '王销售',
-    role: '销售工程师',
-    monthlyTarget: 300000,
-    monthlyAchieved: 198000,
-    achievementRate: 66,
-    activeProjects: 3,
-    newCustomers: 0,
-    status: 'warning',
-  },
-  {
-    id: 4,
-    name: '刘销售',
-    role: '销售经理',
-    monthlyTarget: 800000,
-    monthlyAchieved: 720000,
-    achievementRate: 90,
-    activeProjects: 8,
-    newCustomers: 3,
-    status: 'excellent',
-  },
-]
-
+// Mock data removed - 使用真实API
 const mockSalesFunnel = {
   inquiry: { count: 120, amount: 15000000, conversion: 100 },
   qualification: { count: 85, amount: 12000000, conversion: 70.8 },
@@ -122,6 +55,7 @@ const mockSalesFunnel = {
   closed: { count: 15, amount: 3850000, conversion: 53.6 },
 }
 
+// const mockTopCustomers = [ // 已移除，使用真实API
 const mockTopCustomers = [
   {
     id: 1,
@@ -195,6 +129,7 @@ const mockPendingApprovals = [
   },
 ]
 
+// const mockRecentActivities = [ // 已移除，使用真实API
 const mockRecentActivities = [
   {
     id: 1,
@@ -304,47 +239,78 @@ const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg }) => {
 
 export default function SalesDirectorWorkstation() {
   const [loading, setLoading] = useState(true)
-  const [overallStats, setOverallStats] = useState(mockOverallStats)
-  const [teamPerformance, setTeamPerformance] = useState(mockTeamPerformance)
-  const [pendingApprovals, setPendingApprovals] = useState(mockPendingApprovals)
-  const [recentActivities, setRecentActivities] = useState(mockRecentActivities)
+  const [error, setError] = useState(null)
+  const [overallStats, setOverallStats] = useState(null)
+  const [teamPerformance, setTeamPerformance] = useState([])
+  const [pendingApprovals, setPendingApprovals] = useState([])
+  const [recentActivities, setRecentActivities] = useState([])
   const [selectedPeriod, setSelectedPeriod] = useState('month')
 
-  // Load data from API with fallback to mock data
+  // Load data from API
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
       try {
-        const statsRes = await salesStatisticsApi.getSummary({ period: selectedPeriod })
-        if (statsRes.data) {
-          setOverallStats(prev => ({ ...prev, ...statsRes.data }))
-        }
-      } catch (err) {
-        console.log('Sales statistics API unavailable, using mock data')
-      }
+        setLoading(true)
+        setError(null)
 
-      try {
-        const teamRes = await salesStatisticsApi.getSalesPerformance({ period: selectedPeriod })
+        const [statsRes, teamRes, approvalsRes] = await Promise.all([
+          salesStatisticsApi.getSummary({ period: selectedPeriod }),
+          salesStatisticsApi.getSalesPerformance({ period: selectedPeriod }),
+          contractApi.list({ status: 'pending_approval' })
+        ])
+
+        if (statsRes.data) {
+          setOverallStats(statsRes.data)
+        }
         if (teamRes.data?.items) {
           setTeamPerformance(teamRes.data.items)
         }
-      } catch (err) {
-        console.log('Team performance API unavailable')
-      }
-
-      try {
-        const approvalsRes = await contractApi.list({ status: 'pending_approval' })
         if (approvalsRes.data?.items) {
           setPendingApprovals(approvalsRes.data.items)
         }
       } catch (err) {
-        console.log('Pending approvals API unavailable')
+        console.error('Failed to load sales director data:', err)
+        setError(err)
+        setOverallStats(null)
+        setTeamPerformance([])
+        setPendingApprovals([])
+        setRecentActivities([])
+      } finally {
+        setLoading(false)
       }
-
-      setLoading(false)
     }
     fetchData()
   }, [selectedPeriod])
+
+  // Show error state
+  if (error && !overallStats) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="销售总监工作台" description="销售战略总览、团队绩效监控" />
+        <ApiIntegrationError
+          error={error}
+          apiEndpoint="/api/v1/sales/statistics/summary"
+          onRetry={() => {
+            const fetchData = async () => {
+              try {
+                setLoading(true)
+                setError(null)
+                const statsRes = await salesStatisticsApi.getSummary({ period: selectedPeriod })
+                if (statsRes.data) {
+                  setOverallStats(statsRes.data)
+                }
+              } catch (err) {
+                setError(err)
+              } finally {
+                setLoading(false)
+              }
+            }
+            fetchData()
+          }}
+        />
+      </div>
+    )
+  }
 
   return (
     <motion.div
@@ -356,7 +322,7 @@ export default function SalesDirectorWorkstation() {
       {/* Page Header */}
       <PageHeader
         title="销售总监工作台"
-        description={`年度目标: ${formatCurrency(overallStats.yearTarget)} | 已完成: ${formatCurrency(overallStats.yearAchieved)} (${overallStats.yearProgress.toFixed(1)}%)`}
+        description={overallStats ? `年度目标: ${formatCurrency(overallStats.yearTarget || 0)} | 已完成: ${formatCurrency(overallStats.yearAchieved || 0)} (${(overallStats.yearProgress || 0).toFixed(1)}%)` : '销售战略总览、团队绩效监控'}
         actions={
           <motion.div variants={fadeIn} className="flex gap-2">
             <Button variant="outline" className="flex items-center gap-2">
@@ -372,6 +338,7 @@ export default function SalesDirectorWorkstation() {
       />
 
       {/* Key Statistics - 6 column grid */}
+      {overallStats && (
       <motion.div
         variants={staggerContainer}
         initial="hidden"
@@ -380,8 +347,8 @@ export default function SalesDirectorWorkstation() {
       >
         <StatCard
           title="本月签约"
-          value={formatCurrency(overallStats.monthlyAchieved)}
-          subtitle={`目标: ${formatCurrency(overallStats.monthlyTarget)}`}
+          value={formatCurrency(overallStats.monthlyAchieved || 0)}
+          subtitle={`目标: ${formatCurrency(overallStats.monthlyTarget || 0)}`}
           trend={15.2}
           icon={DollarSign}
           color="text-amber-400"
@@ -389,7 +356,7 @@ export default function SalesDirectorWorkstation() {
         />
         <StatCard
           title="完成率"
-          value={`${overallStats.achievementRate}%`}
+          value={`${overallStats.achievementRate || 0}%`}
           subtitle="本月目标达成"
           icon={Target}
           color="text-emerald-400"
@@ -397,8 +364,8 @@ export default function SalesDirectorWorkstation() {
         />
         <StatCard
           title="活跃客户"
-          value={overallStats.totalCustomers}
-          subtitle={`本月新增 ${overallStats.newCustomersThisMonth}`}
+          value={overallStats.totalCustomers || 0}
+          subtitle={`本月新增 ${overallStats.newCustomersThisMonth || 0}`}
           trend={8.5}
           icon={Building2}
           color="text-blue-400"
@@ -406,31 +373,33 @@ export default function SalesDirectorWorkstation() {
         />
         <StatCard
           title="进行中合同"
-          value={overallStats.activeContracts}
-          subtitle={`待审批 ${overallStats.pendingContracts}`}
+          value={overallStats.activeContracts || 0}
+          subtitle={`待审批 ${overallStats.pendingContracts || 0}`}
           icon={Briefcase}
           color="text-purple-400"
           bg="bg-purple-500/10"
         />
         <StatCard
           title="待回款"
-          value={formatCurrency(overallStats.pendingPayment)}
-          subtitle={`逾期 ${formatCurrency(overallStats.overduePayment)}`}
+          value={formatCurrency(overallStats.pendingPayment || 0)}
+          subtitle={`逾期 ${formatCurrency(overallStats.overduePayment || 0)}`}
           icon={CreditCard}
           color="text-red-400"
           bg="bg-red-500/10"
         />
         <StatCard
           title="回款率"
-          value={`${overallStats.collectionRate}%`}
+          value={`${overallStats.collectionRate || 0}%`}
           subtitle="回款完成率"
           icon={Receipt}
           color="text-cyan-400"
           bg="bg-cyan-500/10"
         />
       </motion.div>
+      )}
 
       {/* Main Content Grid */}
+      {overallStats && (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Sales Funnel & Team Performance */}
         <div className="lg:col-span-2 space-y-6">
@@ -444,13 +413,14 @@ export default function SalesDirectorWorkstation() {
                     销售漏斗分析
                   </CardTitle>
                   <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-                    {overallStats.activeOpportunities} 个商机
+                    {overallStats?.activeOpportunities || 0} 个商机
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {Object.entries(mockSalesFunnel).map(([stage, data], index) => {
+                  {/* Sales funnel - 需要从API获取数据 */}
+                  {/* {Object.entries(mockSalesFunnel).map(([stage, data], index) => {
                     const stageNames = {
                       inquiry: '询价阶段',
                       qualification: '需求确认',
@@ -652,7 +622,8 @@ export default function SalesDirectorWorkstation() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {mockTopCustomers.map((customer, index) => (
+                {/* Top customers - 需要从API获取数据 */}
+                {/* {mockTopCustomers.map((customer, index) => (
                   <div
                     key={customer.id}
                     className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"
@@ -685,7 +656,10 @@ export default function SalesDirectorWorkstation() {
                       </span>
                     </div>
                   </div>
-                ))}
+                ))} */}
+                <div className="text-center py-8 text-slate-500">
+                  <p>重点客户数据需要从API获取</p>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -693,6 +667,7 @@ export default function SalesDirectorWorkstation() {
       </div>
 
       {/* Year Progress */}
+      {overallStats && (
       <motion.div variants={fadeIn}>
         <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
           <CardHeader>
@@ -707,32 +682,33 @@ export default function SalesDirectorWorkstation() {
                 <div>
                   <p className="text-sm text-slate-400">年度目标</p>
                   <p className="text-2xl font-bold text-white mt-1">
-                    {formatCurrency(overallStats.yearTarget)}
+                    {formatCurrency(overallStats.yearTarget || 0)}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-slate-400">已完成</p>
                   <p className="text-2xl font-bold text-emerald-400 mt-1">
-                    {formatCurrency(overallStats.yearAchieved)}
+                    {formatCurrency(overallStats.yearAchieved || 0)}
                   </p>
                 </div>
               </div>
               <Progress
-                value={overallStats.yearProgress}
+                value={overallStats.yearProgress || 0}
                 className="h-3 bg-slate-700/50"
               />
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-400">
-                  完成率: {overallStats.yearProgress.toFixed(1)}%
+                  完成率: {(overallStats.yearProgress || 0).toFixed(1)}%
                 </span>
                 <span className="text-slate-400">
-                  剩余: {formatCurrency(overallStats.yearTarget - overallStats.yearAchieved)}
+                  剩余: {formatCurrency((overallStats.yearTarget || 0) - (overallStats.yearAchieved || 0))}
                 </span>
               </div>
             </div>
           </CardContent>
         </Card>
       </motion.div>
+      )}
     </motion.div>
   )
 }

@@ -1404,83 +1404,27 @@ def complete_acceptance(
     db.add(order)
     db.flush()
     
-    # 如果验收通过，检查是否有绑定的收款计划，自动触发开票
+    # Issue 7.4: 如果验收通过，检查是否有绑定的收款计划，自动触发开票
     if auto_trigger_invoice and complete_in.overall_result == "PASSED":
-        # 查找与验收相关的里程碑（终验类型）
-        milestones = db.query(ProjectMilestone).filter(
-            ProjectMilestone.project_id == order.project_id,
-            ProjectMilestone.milestone_type.in_(["FINAL_ACCEPTANCE", "SAT_PASS"]),
-            ProjectMilestone.status == "COMPLETED"
-        ).all()
-        
-        for milestone in milestones:
-            # 查找绑定的收款计划
-            payment_plans = db.query(ProjectPaymentPlan).filter(
-                ProjectPaymentPlan.milestone_id == milestone.id,
-                ProjectPaymentPlan.status == "PENDING",
-                ProjectPaymentPlan.payment_type == "ACCEPTANCE"
-            ).all()
+        try:
+            from app.services.invoice_auto_service import InvoiceAutoService
             
-            for plan in payment_plans:
-                # 检查是否已开票
-                if plan.invoice_id:
-                    continue
-                
-                # 获取合同信息
-                contract = None
-                if plan.contract_id:
-                    contract = db.query(Contract).filter(Contract.id == plan.contract_id).first()
-                
-                if contract:
-                    # 自动创建发票
-                    # 生成发票编码
-                    from sqlalchemy import desc
-                    from app.models.sales import Invoice as InvoiceModel
-                    today = datetime.now()
-                    month_str = today.strftime("%y%m")
-                    prefix = f"INV{month_str}-"
-                    max_invoice = (
-                        db.query(InvoiceModel)
-                        .filter(InvoiceModel.invoice_code.like(f"{prefix}%"))
-                        .order_by(desc(InvoiceModel.invoice_code))
-                        .first()
-                    )
-                    if max_invoice:
-                        try:
-                            seq = int(max_invoice.invoice_code.split("-")[-1]) + 1
-                        except:
-                            seq = 1
-                    else:
-                        seq = 1
-                    invoice_code = f"{prefix}{seq:03d}"
-                    invoice = Invoice(
-                        invoice_code=invoice_code,
-                        contract_id=contract.id,
-                        project_id=plan.project_id,
-                        payment_id=None,
-                        invoice_type="NORMAL",
-                        amount=plan.planned_amount,
-                        tax_rate=Decimal("13"),
-                        tax_amount=plan.planned_amount * Decimal("13") / Decimal("100"),
-                        total_amount=plan.planned_amount * Decimal("113") / Decimal("100"),
-                        status=InvoiceStatusEnum.DRAFT,
-                        payment_status="PENDING",
-                        issue_date=date.today(),
-                        due_date=date.today() + timedelta(days=30),
-                        buyer_name=contract.customer.customer_name if contract.customer else None,
-                        buyer_tax_no=contract.customer.tax_no if contract.customer else None,
-                    )
-                    db.add(invoice)
-                    db.flush()
-                    
-                    # 更新收款计划
-                    plan.invoice_id = invoice.id
-                    plan.invoice_no = invoice_code
-                    plan.invoice_date = date.today()
-                    plan.invoice_amount = invoice.total_amount
-                    plan.status = "INVOICED"
-                    
-                    db.add(plan)
+            # Issue 7.4: 默认创建发票申请（不直接创建发票），如果需要直接创建发票，可以设置环境变量
+            # AUTO_CREATE_INVOICE_ON_ACCEPTANCE=true
+            import os
+            auto_create_invoice = os.getenv("AUTO_CREATE_INVOICE_ON_ACCEPTANCE", "false").lower() == "true"
+            
+            service = InvoiceAutoService(db)
+            result = service.check_and_create_invoice_request(
+                acceptance_order_id=order_id,
+                auto_create=auto_create_invoice
+            )
+            
+            if result.get("success") and result.get("invoice_requests"):
+                logger.info(f"验收通过，已自动创建 {len(result.get('invoice_requests', []))} 个发票{'申请' if not auto_create_invoice else ''}")
+        except Exception as e:
+            logger.error(f"自动触发开票失败: {e}", exc_info=True)
+            # 自动开票失败不影响验收完成
     
     # Sprint 2.2: 验收管理状态联动（FAT/SAT）
     logger = logging.getLogger(__name__)

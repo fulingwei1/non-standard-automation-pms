@@ -3,11 +3,16 @@
 销售管理模块 API endpoints
 """
 
+import csv
+import io
+import calendar
+from collections import defaultdict
 from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session, joinedload, aliased
 from sqlalchemy import desc, or_, and_, func
 
@@ -16,6 +21,7 @@ from app.core.config import settings
 from app.core import security
 from app.models.user import User
 from app.models.project import Customer, Project, ProjectMilestone, ProjectPaymentPlan
+from app.models.organization import Department
 from app.schemas.project import ProjectPaymentPlanResponse
 from app.models.sales import (
     Lead, LeadFollowUp, Opportunity, OpportunityRequirement, Quote, QuoteVersion, QuoteItem,
@@ -27,7 +33,8 @@ from app.models.sales import (
     ContractTemplate, ContractTemplateVersion,
     TechnicalAssessment, ScoringRule, FailureCase, OpenItem, LeadRequirementDetail,
     RequirementFreeze, AIClarification,
-    ApprovalWorkflow, ApprovalWorkflowStep, ApprovalRecord, ApprovalHistory
+    ApprovalWorkflow, ApprovalWorkflowStep, ApprovalRecord, ApprovalHistory,
+    SalesTarget
 )
 from app.schemas.sales import (
     LeadCreate, LeadUpdate, LeadResponse, LeadFollowUpResponse, LeadFollowUpCreate,
@@ -69,13 +76,15 @@ from app.schemas.sales import (
     ApprovalWorkflowCreate, ApprovalWorkflowUpdate, ApprovalWorkflowResponse,
     ApprovalWorkflowStepCreate, ApprovalWorkflowStepResponse,
     ApprovalRecordResponse, ApprovalHistoryResponse,
-    ApprovalStartRequest, ApprovalActionRequest, ApprovalStatusResponse
+    ApprovalStartRequest, ApprovalActionRequest, ApprovalStatusResponse,
+    SalesTargetCreate, SalesTargetUpdate, SalesTargetResponse
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.services.cpq_pricing_service import CpqPricingService
 from app.services.technical_assessment_service import TechnicalAssessmentService
 from app.services.ai_assessment_service import AIAssessmentService
 from app.services.approval_workflow_service import ApprovalWorkflowService
+from app.services.sales_team_service import SalesTeamService
 from app.models.enums import (
     AssessmentSourceTypeEnum, AssessmentStatusEnum, AssessmentDecisionEnum,
     WorkflowTypeEnum, ApprovalRecordStatusEnum, ApprovalActionEnum,
@@ -83,6 +92,256 @@ from app.models.enums import (
 )
 
 router = APIRouter()
+
+
+def _normalize_date_range(
+    start_date_value: Optional[date],
+    end_date_value: Optional[date],
+) -> tuple[date, date]:
+    """Normalize and validate date range."""
+    today = date.today()
+    normalized_start = start_date_value or date(today.year, today.month, 1)
+
+    if end_date_value:
+        normalized_end = end_date_value
+    else:
+        if normalized_start.month == 12:
+            normalized_end = date(normalized_start.year, 12, 31)
+        else:
+            normalized_end = date(normalized_start.year, normalized_start.month + 1, 1) - timedelta(days=1)
+
+    if normalized_start > normalized_end:
+        raise HTTPException(status_code=400, detail="开始日期不能晚于结束日期")
+
+    return normalized_start, normalized_end
+
+
+def _get_visible_sales_users(
+    db: Session,
+    current_user: User,
+    department_id: Optional[int],
+    region_keyword: Optional[str],
+) -> List[User]:
+    """根据角色、部门和区域过滤可见的销售用户"""
+    query = db.query(User).filter(User.is_active == True)
+
+    if current_user.role in ['sales_director', '销售总监']:
+        sales_roles = ['sales', 'sales_manager', 'sales_director', '销售工程师', '销售经理', '销售总监']
+        query = query.filter(User.role.in_(sales_roles))
+    elif current_user.role in ['sales_manager', '销售经理']:
+        if current_user.department_id:
+            query = query.filter(User.department_id == current_user.department_id)
+        else:
+            query = query.filter(User.id == current_user.id)
+    else:
+        query = query.filter(User.id == current_user.id)
+
+    if department_id:
+        query = query.filter(User.department_id == department_id)
+
+    region_value = (region_keyword or "").strip()
+    if region_value:
+        pattern = f"%{region_value}%"
+        query = query.outerjoin(Department, Department.id == User.department_id)
+        query = query.filter(
+            or_(
+                Department.dept_name.ilike(pattern),
+                User.department.ilike(pattern),
+                User.position.ilike(pattern),
+            )
+        )
+
+    return query.all()
+
+
+def _build_department_name_map(db: Session, users: List[User]) -> Dict[int, str]:
+    """批量获取部门名称，减少数据库查询"""
+    dept_ids = {user.department_id for user in users if user.department_id}
+    if not dept_ids:
+        return {}
+    departments = db.query(Department).filter(Department.id.in_(dept_ids)).all()
+    return {dept.id: dept.dept_name for dept in departments}
+
+
+def _collect_sales_team_members(
+    db: Session,
+    users: List[User],
+    department_names: Dict[int, str],
+    start_date_value: date,
+    end_date_value: date,
+) -> List[dict]:
+    """构建销售团队成员的统计数据列表"""
+    if not users:
+        return []
+
+    user_ids = [user.id for user in users]
+    start_datetime = datetime.combine(start_date_value, datetime.min.time())
+    end_datetime = datetime.combine(end_date_value, datetime.max.time())
+    month_value = start_date_value.strftime("%Y-%m")
+    year_value = str(start_date_value.year)
+
+    team_service = SalesTeamService(db)
+    personal_targets_map = team_service.build_personal_target_map(user_ids, month_value, year_value)
+    recent_followups_map = team_service.get_recent_followups_map(user_ids, start_datetime, end_datetime)
+    customer_distribution_map = team_service.get_customer_distribution_map(user_ids, start_date_value, end_date_value)
+
+    team_members: List[dict] = []
+    for user in users:
+        lead_query = db.query(Lead).filter(Lead.owner_id == user.id)
+        lead_query = lead_query.filter(Lead.created_at >= start_datetime)
+        lead_query = lead_query.filter(Lead.created_at <= end_datetime)
+        lead_count = lead_query.count()
+
+        opp_query = db.query(Opportunity).filter(Opportunity.owner_id == user.id)
+        opp_query = opp_query.filter(Opportunity.created_at >= start_datetime)
+        opp_query = opp_query.filter(Opportunity.created_at <= end_datetime)
+        opp_count = opp_query.count()
+
+        contract_query = db.query(Contract).filter(Contract.owner_id == user.id)
+        contract_query = contract_query.filter(Contract.created_at >= start_datetime)
+        contract_query = contract_query.filter(Contract.created_at <= end_datetime)
+        contracts = contract_query.all()
+        contract_count = len(contracts)
+        contract_amount = sum(float(c.contract_amount or 0) for c in contracts)
+
+        invoice_query = db.query(Invoice).join(Contract).filter(Contract.owner_id == user.id)
+        invoice_query = invoice_query.filter(Invoice.paid_date.isnot(None))
+        invoice_query = invoice_query.filter(Invoice.paid_date >= start_date_value)
+        invoice_query = invoice_query.filter(Invoice.paid_date <= end_date_value)
+        invoices = invoice_query.filter(Invoice.payment_status.in_(["PAID", "PARTIAL"])).all()
+        collection_amount = sum(float(inv.paid_amount or 0) for inv in invoices)
+
+        department_name = department_names.get(user.department_id)
+        region_name = department_name or user.department or "未分配"
+
+        target_snapshot = personal_targets_map.get(user.id, {})
+        monthly_target_info = target_snapshot.get("monthly", {})
+        yearly_target_info = target_snapshot.get("yearly", {})
+
+        customer_distribution = customer_distribution_map.get(user.id, {})
+        recent_follow_up = recent_followups_map.get(user.id)
+
+        monthly_target_value = monthly_target_info.get("target_value", 0.0)
+        monthly_actual_value = monthly_target_info.get("actual_value", 0.0)
+        monthly_completion_rate = monthly_target_info.get("completion_rate", 0.0)
+
+        yearly_target_value = yearly_target_info.get("target_value", 0.0)
+        yearly_actual_value = yearly_target_info.get("actual_value", 0.0)
+        yearly_completion_rate = yearly_target_info.get("completion_rate", 0.0)
+
+        team_members.append({
+            "user_id": user.id,
+            "user_name": user.real_name or user.username,
+            "username": user.username,
+            "role": user.role,
+            "department_id": user.department_id,
+            "department_name": department_name,
+            "email": user.email,
+            "phone": user.phone,
+            "lead_count": lead_count,
+            "opportunity_count": opp_count,
+            "contract_count": contract_count,
+            "contract_amount": float(contract_amount),
+            "collection_amount": float(collection_amount),
+            "monthly_target": monthly_target_value,
+            "monthly_actual": monthly_actual_value,
+            "monthly_completion_rate": monthly_completion_rate,
+            "year_target": yearly_target_value,
+            "year_actual": yearly_actual_value,
+            "year_completion_rate": yearly_completion_rate,
+            "personal_targets": target_snapshot,
+            "recent_follow_up": recent_follow_up,
+            "customer_distribution": customer_distribution.get("categories", []),
+            "customer_total": customer_distribution.get("total", 0),
+            "new_customers": customer_distribution.get("new_customers", 0),
+            "region": region_name,
+        })
+
+    return team_members
+
+
+def _shift_month(year: int, month: int, delta: int) -> tuple[int, int]:
+    """根据delta偏移月数"""
+    total_months = year * 12 + (month - 1) + delta
+    new_year = total_months // 12
+    new_month = total_months % 12 + 1
+    return new_year, new_month
+
+
+def _generate_trend_buckets(period: str, count: int) -> List[dict]:
+    """根据周期生成统计区间"""
+    today = date.today()
+    buckets: List[dict] = []
+    period = period.upper()
+
+    if period == "QUARTER":
+        period = "QUARTER"
+    elif period == "YEAR":
+        period = "YEAR"
+    else:
+        period = "MONTH"
+
+    if period == "MONTH":
+        for offset in range(count - 1, -1, -1):
+            target_year, target_month = _shift_month(today.year, today.month, -offset)
+            start = date(target_year, target_month, 1)
+            _, last_day = calendar.monthrange(target_year, target_month)
+            end = date(target_year, target_month, last_day)
+            label = f"{target_year}-{target_month:02d}"
+            buckets.append({
+                "label": label,
+                "target_label": label,
+                "start": start,
+                "end": end,
+            })
+    elif period == "QUARTER":
+        current_quarter = (today.month - 1) // 3 + 1
+        for offset in range(count - 1, -1, -1):
+            quarter_delta = -offset
+            total_quarters = (today.year * 4 + (current_quarter - 1)) + quarter_delta
+            target_year = total_quarters // 4
+            target_quarter = total_quarters % 4 + 1
+            start_month = (target_quarter - 1) * 3 + 1
+            start = date(target_year, start_month, 1)
+            end_month = start_month + 2
+            _, last_day = calendar.monthrange(target_year, end_month)
+            end = date(target_year, end_month, last_day)
+            label = f"{target_year}-Q{target_quarter}"
+            buckets.append({
+                "label": label,
+                "target_label": label,
+                "start": start,
+                "end": end,
+            })
+    else:  # YEAR
+        for offset in range(count - 1, -1, -1):
+            target_year = today.year - offset
+            start = date(target_year, 1, 1)
+            end = date(target_year, 12, 31)
+            label = str(target_year)
+            buckets.append({
+                "label": label,
+                "target_label": label,
+                "start": start,
+                "end": end,
+            })
+
+    return buckets
+
+
+def _calculate_growth(current: float, previous: Optional[float]) -> float:
+    """计算增长率"""
+    if previous is None or previous == 0:
+        return 100.0 if current > 0 else 0.0
+    return round(((current - previous) / previous) * 100, 2)
+
+
+def _get_previous_range(start_date_value: date, end_date_value: date) -> tuple[date, date]:
+    """根据当前区间计算上一对等区间"""
+    delta_days = (end_date_value - start_date_value).days + 1
+    prev_end = start_date_value - timedelta(days=1)
+    prev_start = prev_end - timedelta(days=delta_days - 1)
+    return prev_start, prev_end
 
 
 # ==================== 阶段门验证函数 ====================
@@ -441,8 +700,12 @@ def read_leads(
 ) -> Any:
     """
     获取线索列表
+    Issue 7.1: 已集成数据权限过滤
     """
     query = db.query(Lead)
+
+    # Issue 7.1: 应用数据权限过滤
+    query = security.filter_sales_data_by_scope(query, current_user, db, Lead, 'owner_id')
 
     if keyword:
         query = query.filter(
@@ -548,10 +811,15 @@ def update_lead(
 ) -> Any:
     """
     更新线索
+    Issue 7.2: 已集成操作权限检查
     """
     lead = db.query(Lead).filter(Lead.id == lead_id).first()
     if not lead:
         raise HTTPException(status_code=404, detail="线索不存在")
+
+    # Issue 7.2: 检查编辑权限
+    if not security.check_sales_edit_permission(current_user, db, lead.created_by, lead.owner_id):
+        raise HTTPException(status_code=403, detail="您没有权限编辑此线索")
 
     update_data = lead_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -565,6 +833,31 @@ def update_lead(
         "owner_name": lead.owner.real_name if lead.owner else None,
     }
     return LeadResponse(**lead_dict)
+
+
+@router.delete("/leads/{lead_id}", response_model=ResponseModel)
+def delete_lead(
+    *,
+    db: Session = Depends(deps.get_db),
+    lead_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    删除线索
+    Issue 7.2: 已集成操作权限检查（仅创建人、销售总监、管理员可以删除）
+    """
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="线索不存在")
+
+    # Issue 7.2: 检查删除权限
+    if not security.check_sales_delete_permission(current_user, db, lead.created_by):
+        raise HTTPException(status_code=403, detail="您没有权限删除此线索")
+
+    db.delete(lead)
+    db.commit()
+
+    return ResponseModel(code=200, message="线索已删除")
 
 
 @router.get("/leads/{lead_id}/follow-ups", response_model=List[LeadFollowUpResponse])
@@ -749,8 +1042,12 @@ def read_opportunities(
 ) -> Any:
     """
     获取商机列表
+    Issue 7.1: 已集成数据权限过滤
     """
     query = db.query(Opportunity).options(joinedload(Opportunity.customer))
+
+    # Issue 7.1: 应用数据权限过滤
+    query = security.filter_sales_data_by_scope(query, current_user, db, Opportunity, 'owner_id')
 
     if keyword:
         query = query.filter(
@@ -896,10 +1193,15 @@ def update_opportunity(
 ) -> Any:
     """
     更新商机
+    Issue 7.2: 已集成操作权限检查
     """
     opportunity = db.query(Opportunity).filter(Opportunity.id == opp_id).first()
     if not opportunity:
         raise HTTPException(status_code=404, detail="商机不存在")
+
+    # Issue 7.2: 检查编辑权限
+    if not security.check_sales_edit_permission(current_user, db, opportunity.created_by, opportunity.owner_id):
+        raise HTTPException(status_code=403, detail="您没有权限编辑此商机")
 
     update_data = opp_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -980,12 +1282,16 @@ def read_quotes(
 ) -> Any:
     """
     获取报价列表
+    Issue 7.1: 已集成数据权限过滤
     """
     query = db.query(Quote).options(
         joinedload(Quote.opportunity),
         joinedload(Quote.customer),
         joinedload(Quote.owner)
     )
+
+    # Issue 7.1: 应用数据权限过滤
+    query = security.filter_sales_data_by_scope(query, current_user, db, Quote, 'owner_id')
 
     if keyword:
         query = query.filter(Quote.quote_code.contains(keyword))
@@ -1374,6 +1680,7 @@ def read_contracts(
 ) -> Any:
     """
     获取合同列表
+    Issue 7.1: 已集成数据权限过滤
     """
     query = db.query(Contract).options(
         joinedload(Contract.customer),
@@ -1381,6 +1688,9 @@ def read_contracts(
         joinedload(Contract.opportunity),
         joinedload(Contract.owner)
     )
+
+    # Issue 7.1: 应用数据权限过滤
+    query = security.filter_sales_data_by_scope(query, current_user, db, Contract, 'owner_id')
 
     if keyword:
         query = query.filter(Contract.contract_code.contains(keyword))
@@ -2479,16 +2789,75 @@ def read_invoices(
     page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
     status: Optional[str] = Query(None, description="状态筛选"),
-    contract_id: Optional[int] = Query(None, description="合同ID筛选"),
-    current_user: User = Depends(security.require_finance_access()),
+    customer_id: Optional[int] = Query(None, description="客户ID筛选"),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     获取发票列表
+    Issue 7.1: 已集成数据权限过滤（财务可以看到所有发票）
+    """
+    query = db.query(Invoice).options(
+        joinedload(Invoice.contract),
+        joinedload(Invoice.customer),
+        joinedload(Invoice.owner)
+    )
+
+    # Issue 7.1: 应用财务数据权限过滤（财务可以看到所有发票）
+    query = security.filter_sales_finance_data_by_scope(query, current_user, db, Invoice, 'owner_id')
+
+    if keyword:
+        query = query.filter(Invoice.invoice_code.contains(keyword))
+
+    if status:
+        query = query.filter(Invoice.status == status)
+
+    if customer_id:
+        query = query.filter(Invoice.customer_id == customer_id)
+
+    total = query.count()
+    offset = (page - 1) * page_size
+    invoices = query.order_by(desc(Invoice.created_at)).offset(offset).limit(page_size).all()
+
+    invoice_responses = []
+    for invoice in invoices:
+        invoice_dict = {
+            **{c.name: getattr(invoice, c.name) for c in invoice.__table__.columns},
+            "contract_code": invoice.contract.contract_code if invoice.contract else None,
+            "customer_name": invoice.customer.customer_name if invoice.customer else None,
+            "owner_name": invoice.owner.real_name if invoice.owner else None,
+        }
+        invoice_responses.append(InvoiceResponse(**invoice_dict))
+
+    return PaginatedResponse(
+        items=invoice_responses,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
+    )
+
+
+@router.get("/invoices_old", response_model=PaginatedResponse[InvoiceResponse])
+def read_invoices(
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    contract_id: Optional[int] = Query(None, description="合同ID筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取发票列表
+    Issue 7.1: 已集成数据权限过滤（财务和销售总监可以看到所有发票）
     """
     query = db.query(Invoice).options(
         joinedload(Invoice.contract).joinedload(Contract.customer),
         joinedload(Invoice.project)
     )
+
+    # Issue 7.1: 应用财务数据权限过滤（财务和销售总监可以看到所有发票）
+    query = security.filter_sales_finance_data_by_scope(query, current_user, db, Invoice, 'owner_id')
 
     if keyword:
         query = query.filter(Invoice.invoice_code.contains(keyword))
@@ -3125,6 +3494,83 @@ def get_revenue_forecast(
     return ResponseModel(code=200, message="success", data={"forecast": forecast})
 
 
+@router.get("/statistics/prediction", response_model=ResponseModel)
+def get_sales_prediction(
+    *,
+    db: Session = Depends(deps.get_db),
+    days: int = Query(90, ge=30, le=365, description="预测天数（30/60/90）"),
+    method: str = Query("moving_average", description="预测方法：moving_average/exponential_smoothing"),
+    customer_id: Optional[int] = Query(None, description="客户ID筛选"),
+    owner_id: Optional[int] = Query(None, description="负责人ID筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 6.3: 销售预测增强
+    使用移动平均法或指数平滑法进行收入预测
+    """
+    from app.services.sales_prediction_service import SalesPredictionService
+    
+    service = SalesPredictionService(db)
+    prediction = service.predict_revenue(
+        days=days,
+        method=method,
+        customer_id=customer_id,
+        owner_id=owner_id,
+    )
+    
+    return ResponseModel(
+        code=200,
+        message="success",
+        data=prediction
+    )
+
+
+@router.get("/opportunities/{opp_id}/win-probability", response_model=ResponseModel)
+def get_opportunity_win_probability(
+    *,
+    db: Session = Depends(deps.get_db),
+    opp_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 6.3: 商机赢单概率预测
+    基于商机阶段、金额、历史赢单率
+    """
+    from app.services.sales_prediction_service import SalesPredictionService
+    
+    service = SalesPredictionService(db)
+    probability = service.predict_win_probability(opportunity_id=opp_id)
+    
+    return ResponseModel(
+        code=200,
+        message="success",
+        data=probability
+    )
+
+
+@router.get("/statistics/prediction/accuracy", response_model=ResponseModel)
+def get_prediction_accuracy(
+    *,
+    db: Session = Depends(deps.get_db),
+    days_back: int = Query(90, ge=30, le=365, description="评估时间段（天数）"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 6.3: 预测准确度评估
+    对比历史预测值和实际值
+    """
+    from app.services.sales_prediction_service import SalesPredictionService
+    
+    service = SalesPredictionService(db)
+    accuracy = service.evaluate_prediction_accuracy(days_back=days_back)
+    
+    return ResponseModel(
+        code=200,
+        message="success",
+        data=accuracy
+    )
+
+
 @router.get("/contracts/{contract_id}/deliverables", response_model=List[ContractDeliverableResponse])
 def get_contract_deliverables(
     *,
@@ -3674,10 +4120,15 @@ def update_quote(
 ) -> Any:
     """
     更新报价
+    Issue 7.2: 已集成操作权限检查
     """
     quote = db.query(Quote).filter(Quote.id == quote_id).first()
     if not quote:
         raise HTTPException(status_code=404, detail="报价不存在")
+
+    # Issue 7.2: 检查编辑权限
+    if not security.check_sales_edit_permission(current_user, db, quote.created_by, quote.owner_id):
+        raise HTTPException(status_code=403, detail="您没有权限编辑此报价")
 
     update_data = quote_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -4092,10 +4543,15 @@ def update_contract(
 ) -> Any:
     """
     更新合同
+    Issue 7.2: 已集成操作权限检查
     """
     contract = db.query(Contract).filter(Contract.id == contract_id).first()
     if not contract:
         raise HTTPException(status_code=404, detail="合同不存在")
+
+    # Issue 7.2: 检查编辑权限
+    if not security.check_sales_edit_permission(current_user, db, contract.created_by, contract.owner_id):
+        raise HTTPException(status_code=403, detail="您没有权限编辑此合同")
 
     update_data = contract_in.model_dump(exclude_unset=True)
     
@@ -4773,6 +5229,61 @@ def get_o2c_pipeline(
 # ==================== 回款管理 ====================
 
 
+@router.post("/payment-plans/{plan_id}/adjust", response_model=ResponseModel)
+def adjust_payment_plan(
+    *,
+    db: Session = Depends(deps.get_db),
+    plan_id: int,
+    new_date: date = Query(..., description="新的收款日期"),
+    reason: str = Query(..., description="调整原因"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 7.3: 手动调整收款计划
+    记录调整历史并发送通知
+    """
+    from app.services.payment_adjustment_service import PaymentAdjustmentService
+    
+    service = PaymentAdjustmentService(db)
+    result = service.manual_adjust_payment_plan(
+        plan_id=plan_id,
+        new_date=new_date,
+        reason=reason,
+        adjusted_by=current_user.id,
+    )
+    
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("message", "调整失败"))
+    
+    return ResponseModel(
+        code=200,
+        message=result.get("message", "收款计划已调整"),
+        data=result
+    )
+
+
+@router.get("/payment-plans/{plan_id}/adjustment-history", response_model=ResponseModel)
+def get_payment_adjustment_history(
+    *,
+    db: Session = Depends(deps.get_db),
+    plan_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 7.3: 获取收款计划调整历史
+    """
+    from app.services.payment_adjustment_service import PaymentAdjustmentService
+    
+    service = PaymentAdjustmentService(db)
+    history = service.get_adjustment_history(plan_id)
+    
+    return ResponseModel(
+        code=200,
+        message="success",
+        data={"history": history}
+    )
+
+
 @router.get("/payments", response_model=PaginatedResponse)
 def get_payment_records(
     *,
@@ -4789,8 +5300,12 @@ def get_payment_records(
 ) -> Any:
     """
     获取回款记录列表（基于发票）
+    Issue 7.1: 已集成数据权限过滤（财务和销售总监可以看到所有收款数据）
     """
     query = db.query(Invoice).filter(Invoice.status == "ISSUED")
+    
+    # Issue 7.1: 应用财务数据权限过滤（财务和销售总监可以看到所有收款数据）
+    query = security.filter_sales_finance_data_by_scope(query, current_user, db, Invoice, 'owner_id')
     
     if contract_id:
         query = query.filter(Invoice.contract_id == contract_id)
@@ -5612,6 +6127,438 @@ def get_payment_plans(
         page=page,
         page_size=page_size,
         pages=(total + page_size - 1) // page_size
+    )
+
+
+# ==================== 销售团队管理与业绩排名 ====================
+
+
+@router.get("/team", response_model=ResponseModel)
+def get_sales_team(
+    *,
+    db: Session = Depends(deps.get_db),
+    department_id: Optional[int] = Query(None, description="部门ID筛选"),
+    region: Optional[str] = Query(None, description="区域关键字筛选"),
+    start_date: Optional[date] = Query(None, description="统计开始日期"),
+    end_date: Optional[date] = Query(None, description="统计结束日期"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 6.4: 获取销售团队列表
+    返回销售团队成员信息，包括角色、负责区域等
+    """
+    normalized_start, normalized_end = _normalize_date_range(start_date, end_date)
+    users = _get_visible_sales_users(db, current_user, department_id, region)
+    department_names = _build_department_name_map(db, users)
+    team_members = _collect_sales_team_members(db, users, department_names, normalized_start, normalized_end)
+    
+    return ResponseModel(
+        code=200,
+        message="success",
+        data={
+            "team_members": team_members,
+            "total_count": len(team_members),
+            "filters": {
+                "start_date": normalized_start.isoformat(),
+                "end_date": normalized_end.isoformat(),
+                "department_id": department_id,
+                "region": region,
+            },
+        }
+    )
+
+
+@router.get("/team/export")
+def export_sales_team(
+    *,
+    db: Session = Depends(deps.get_db),
+    department_id: Optional[int] = Query(None, description="部门ID筛选"),
+    region: Optional[str] = Query(None, description="区域关键字筛选"),
+    start_date: Optional[date] = Query(None, description="统计开始日期"),
+    end_date: Optional[date] = Query(None, description="统计结束日期"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """导出销售团队数据为CSV"""
+    normalized_start, normalized_end = _normalize_date_range(start_date, end_date)
+    users = _get_visible_sales_users(db, current_user, department_id, region)
+    department_names = _build_department_name_map(db, users)
+    team_members = _collect_sales_team_members(db, users, department_names, normalized_start, normalized_end)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "成员ID", "姓名", "角色", "部门", "区域", "邮箱", "电话",
+        "线索数量", "商机数量", "合同数量", "合同金额", "回款金额",
+        "月度目标", "月度完成", "月度完成率(%)",
+        "年度目标", "年度完成", "年度完成率(%)",
+        "客户总数", "本期新增客户",
+    ])
+
+    for member in team_members:
+        writer.writerow([
+            member.get("user_id"),
+            member.get("user_name"),
+            member.get("role"),
+            member.get("department_name") or "",
+            member.get("region") or "",
+            member.get("email") or "",
+            member.get("phone") or "",
+            member.get("lead_count") or 0,
+            member.get("opportunity_count") or 0,
+            member.get("contract_count") or 0,
+            member.get("contract_amount") or 0,
+            member.get("collection_amount") or 0,
+            member.get("monthly_target") or 0,
+            member.get("monthly_actual") or 0,
+            member.get("monthly_completion_rate") or 0,
+            member.get("year_target") or 0,
+            member.get("year_actual") or 0,
+            member.get("year_completion_rate") or 0,
+            member.get("customer_total") or 0,
+            member.get("new_customers") or 0,
+        ])
+
+    output.seek(0)
+    filename = f"sales-team-{normalized_start.strftime('%Y%m%d')}-{normalized_end.strftime('%Y%m%d')}.csv"
+    return StreamingResponse(
+        iter([output.getvalue().encode("utf-8-sig")]),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        },
+    )
+
+
+@router.get("/team/ranking", response_model=ResponseModel)
+def get_sales_team_ranking(
+    *,
+    db: Session = Depends(deps.get_db),
+    ranking_type: str = Query("contract_amount", description="排名类型：lead_count/opportunity_count/contract_amount/collection_amount"),
+    start_date: Optional[date] = Query(None, description="开始日期"),
+    end_date: Optional[date] = Query(None, description="结束日期"),
+    department_id: Optional[int] = Query(None, description="部门ID筛选"),
+    region: Optional[str] = Query(None, description="区域关键字筛选"),
+    limit: int = Query(20, ge=1, le=100, description="返回数量"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 6.4: 销售业绩排名
+    支持按线索、商机、合同、回款排名
+    """
+    normalized_start, normalized_end = _normalize_date_range(start_date, end_date)
+    start_datetime = datetime.combine(normalized_start, datetime.min.time())
+    end_datetime = datetime.combine(normalized_end, datetime.max.time())
+
+    users = _get_visible_sales_users(db, current_user, department_id, region)
+    department_names = _build_department_name_map(db, users)
+    
+    rankings = []
+    for user in users:
+        stats = {
+            "user_id": user.id,
+            "user_name": user.real_name or user.username,
+            "username": user.username,
+            "role": user.role,
+            "department_id": user.department_id,
+            "department_name": department_names.get(user.department_id),
+        }
+        
+        stats["region"] = stats["department_name"] or user.department or "未分配"
+        
+        lead_query = db.query(Lead).filter(Lead.owner_id == user.id)
+        lead_query = lead_query.filter(Lead.created_at >= start_datetime)
+        lead_query = lead_query.filter(Lead.created_at <= end_datetime)
+        stats["lead_count"] = lead_query.count()
+        
+        opp_query = db.query(Opportunity).filter(Opportunity.owner_id == user.id)
+        opp_query = opp_query.filter(Opportunity.created_at >= start_datetime)
+        opp_query = opp_query.filter(Opportunity.created_at <= end_datetime)
+        stats["opportunity_count"] = opp_query.count()
+        
+        contract_query = db.query(Contract).filter(Contract.owner_id == user.id)
+        contract_query = contract_query.filter(Contract.created_at >= start_datetime)
+        contract_query = contract_query.filter(Contract.created_at <= end_datetime)
+        contracts = contract_query.all()
+        stats["contract_count"] = len(contracts)
+        stats["contract_amount"] = float(sum([c.contract_amount or 0 for c in contracts]))
+        
+        invoice_query = db.query(Invoice).join(Contract).filter(Contract.owner_id == user.id)
+        invoice_query = invoice_query.filter(Invoice.paid_date.isnot(None))
+        invoice_query = invoice_query.filter(Invoice.paid_date >= normalized_start)
+        invoice_query = invoice_query.filter(Invoice.paid_date <= normalized_end)
+        invoices = invoice_query.filter(Invoice.payment_status.in_(["PAID", "PARTIAL"])).all()
+        stats["collection_amount"] = float(sum([inv.paid_amount or 0 for inv in invoices]))
+        
+        rankings.append(stats)
+    
+    # 根据排名类型排序
+    valid_ranking_types = ["lead_count", "opportunity_count", "contract_amount", "collection_amount"]
+    if ranking_type not in valid_ranking_types:
+        ranking_type = "contract_amount"
+    
+    rankings.sort(key=lambda x: x.get(ranking_type, 0), reverse=True)
+    
+    # 添加排名
+    for idx, ranking in enumerate(rankings[:limit], 1):
+        ranking["rank"] = idx
+        ranking["value"] = ranking.get(ranking_type, 0)
+    
+    return ResponseModel(
+        code=200,
+        message="success",
+        data={
+            "ranking_type": ranking_type,
+            "start_date": start_date.isoformat() if start_date else None,
+            "end_date": end_date.isoformat() if end_date else None,
+            "rankings": rankings[:limit],
+            "total_count": len(rankings)
+        }
+    )
+
+
+# ==================== 销售目标管理 ====================
+
+
+@router.get("/targets", response_model=PaginatedResponse)
+def get_sales_targets(
+    *,
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    target_scope: Optional[str] = Query(None, description="目标范围筛选：PERSONAL/TEAM/DEPARTMENT"),
+    target_type: Optional[str] = Query(None, description="目标类型筛选"),
+    target_period: Optional[str] = Query(None, description="目标周期筛选：MONTHLY/QUARTERLY/YEARLY"),
+    period_value: Optional[str] = Query(None, description="周期值筛选：2025-01/2025-Q1/2025"),
+    user_id: Optional[int] = Query(None, description="用户ID筛选"),
+    department_id: Optional[int] = Query(None, description="部门ID筛选"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 6.5: 获取销售目标列表
+    支持多种筛选条件，并根据用户角色返回可见的目标
+    """
+    from app.models.organization import Department
+    
+    query = db.query(SalesTarget)
+    
+    # 根据用户角色确定可见范围
+    if current_user.role in ['sales_director', '销售总监']:
+        # 销售总监可以看到所有目标
+        pass
+    elif current_user.role in ['sales_manager', '销售经理']:
+        # 销售经理可以看到自己部门的目标
+        if current_user.department_id:
+            query = query.filter(
+                or_(
+                    SalesTarget.department_id == current_user.department_id,
+                    SalesTarget.user_id == current_user.id
+                )
+            )
+        else:
+            query = query.filter(SalesTarget.user_id == current_user.id)
+    else:
+        # 其他角色只能看到自己的目标
+        query = query.filter(SalesTarget.user_id == current_user.id)
+    
+    # 应用筛选条件
+    if target_scope:
+        query = query.filter(SalesTarget.target_scope == target_scope)
+    if target_type:
+        query = query.filter(SalesTarget.target_type == target_type)
+    if target_period:
+        query = query.filter(SalesTarget.target_period == target_period)
+    if period_value:
+        query = query.filter(SalesTarget.period_value == period_value)
+    if user_id:
+        query = query.filter(SalesTarget.user_id == user_id)
+    if department_id:
+        query = query.filter(SalesTarget.department_id == department_id)
+    if status:
+        query = query.filter(SalesTarget.status == status)
+    
+    total = query.count()
+    offset = (page - 1) * page_size
+    targets = query.order_by(desc(SalesTarget.created_at)).offset(offset).limit(page_size).all()
+
+    team_service = SalesTeamService(db)
+    
+    # 计算实际完成值和完成率
+    items = []
+    for target in targets:
+        actual_value, completion_rate = team_service.calculate_target_performance(target)
+        
+        # 获取用户/部门名称
+        user_name = None
+        if target.user_id:
+            user = db.query(User).filter(User.id == target.user_id).first()
+            user_name = user.real_name or user.username if user else None
+        
+        department_name = None
+        if target.department_id:
+            dept = db.query(Department).filter(Department.id == target.department_id).first()
+            department_name = dept.dept_name if dept else None
+        
+        items.append({
+            "id": target.id,
+            "target_scope": target.target_scope,
+            "user_id": target.user_id,
+            "department_id": target.department_id,
+            "team_id": target.team_id,
+            "target_type": target.target_type,
+            "target_period": target.target_period,
+            "period_value": target.period_value,
+            "target_value": float(target.target_value),
+            "description": target.description,
+            "status": target.status,
+            "created_by": target.created_by,
+            "actual_value": float(actual_value),
+            "completion_rate": completion_rate,
+            "user_name": user_name,
+            "department_name": department_name,
+            "created_at": target.created_at,
+            "updated_at": target.updated_at,
+        })
+    
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
+    )
+@router.post("/targets", response_model=SalesTargetResponse, status_code=201)
+def create_sales_target(
+    *,
+    db: Session = Depends(deps.get_db),
+    target_data: SalesTargetCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 6.5: 创建销售目标
+    """
+    # 验证目标范围和数据
+    if target_data.target_scope == "PERSONAL" and not target_data.user_id:
+        raise HTTPException(status_code=400, detail="个人目标必须指定用户ID")
+    if target_data.target_scope == "DEPARTMENT" and not target_data.department_id:
+        raise HTTPException(status_code=400, detail="部门目标必须指定部门ID")
+    
+    # 创建目标
+    target = SalesTarget(
+        target_scope=target_data.target_scope,
+        user_id=target_data.user_id,
+        department_id=target_data.department_id,
+        team_id=target_data.team_id,
+        target_type=target_data.target_type,
+        target_period=target_data.target_period,
+        period_value=target_data.period_value,
+        target_value=target_data.target_value,
+        description=target_data.description,
+        status=target_data.status or "ACTIVE",
+        created_by=current_user.id,
+    )
+    
+    db.add(target)
+    db.commit()
+    db.refresh(target)
+    
+    # 获取用户/部门名称
+    user_name = None
+    if target.user_id:
+        user = db.query(User).filter(User.id == target.user_id).first()
+        user_name = user.real_name or user.username if user else None
+    
+    department_name = None
+    if target.department_id:
+        from app.models.organization import Department
+        dept = db.query(Department).filter(Department.id == target.department_id).first()
+        department_name = dept.dept_name if dept else None
+    
+    return SalesTargetResponse(
+        id=target.id,
+        target_scope=target.target_scope,
+        user_id=target.user_id,
+        department_id=target.department_id,
+        team_id=target.team_id,
+        target_type=target.target_type,
+        target_period=target.target_period,
+        period_value=target.period_value,
+        target_value=target.target_value,
+        description=target.description,
+        status=target.status,
+        created_by=target.created_by,
+        actual_value=None,
+        completion_rate=None,
+        user_name=user_name,
+        department_name=department_name,
+        created_at=target.created_at,
+        updated_at=target.updated_at,
+    )
+
+
+@router.put("/targets/{target_id}", response_model=SalesTargetResponse)
+def update_sales_target(
+    *,
+    db: Session = Depends(deps.get_db),
+    target_id: int,
+    target_data: SalesTargetUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 6.5: 更新销售目标
+    """
+    target = db.query(SalesTarget).filter(SalesTarget.id == target_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="目标不存在")
+    
+    # 权限检查：只能修改自己创建的目标或自己部门的目标
+    if target.created_by != current_user.id:
+        if current_user.role not in ['sales_director', '销售总监']:
+            if target.department_id != current_user.department_id:
+                raise HTTPException(status_code=403, detail="无权修改此目标")
+    
+    # 更新字段
+    if target_data.target_value is not None:
+        target.target_value = target_data.target_value
+    if target_data.description is not None:
+        target.description = target_data.description
+    if target_data.status is not None:
+        target.status = target_data.status
+    
+    db.commit()
+    db.refresh(target)
+    
+    # 获取用户/部门名称
+    user_name = None
+    if target.user_id:
+        user = db.query(User).filter(User.id == target.user_id).first()
+        user_name = user.real_name or user.username if user else None
+    
+    department_name = None
+    if target.department_id:
+        from app.models.organization import Department
+        dept = db.query(Department).filter(Department.id == target.department_id).first()
+        department_name = dept.dept_name if dept else None
+    
+    return SalesTargetResponse(
+        id=target.id,
+        target_scope=target.target_scope,
+        user_id=target.user_id,
+        department_id=target.department_id,
+        team_id=target.team_id,
+        target_type=target.target_type,
+        target_period=target.target_period,
+        period_value=target.period_value,
+        target_value=target.target_value,
+        description=target.description,
+        status=target.status,
+        created_by=target.created_by,
+        actual_value=None,
+        completion_rate=None,
+        user_name=user_name,
+        department_name=department_name,
+        created_at=target.created_at,
+        updated_at=target.updated_at,
     )
 
 

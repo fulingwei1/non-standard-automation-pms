@@ -1,13 +1,19 @@
 from typing import Any, List, Optional, Dict
-from fastapi import APIRouter, Depends, HTTPException, Query
+from datetime import datetime
+from decimal import Decimal
+import io
+
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
+import pandas as pd
 
 from app.api import deps
 from app.core.config import settings
 from app.core import security
 from app.models.user import User
 from app.models.organization import Department, Employee
+from app.models.staff_matching import HrEmployeeProfile, HrTagDict, HrEmployeeTagEvaluation
 from app.schemas.organization import (
     DepartmentCreate,
     DepartmentUpdate,
@@ -302,3 +308,267 @@ def update_employee(
     db.commit()
     db.refresh(employee)
     return employee
+
+
+# ==================== 员工批量导入 ====================
+
+def _clean_name(name) -> Optional[str]:
+    """清理姓名中的特殊字符"""
+    if pd.isna(name):
+        return None
+    return str(name).replace('\n', '').strip()
+
+
+def _clean_phone(phone) -> Optional[str]:
+    """清理电话号码"""
+    if pd.isna(phone):
+        return None
+    phone_str = str(phone)
+    if 'e' in phone_str.lower() or '.' in phone_str:
+        try:
+            phone_str = str(int(float(phone)))
+        except:
+            pass
+    return phone_str.strip()
+
+
+def _get_department_name(row, dept_cols: List[str]) -> Optional[str]:
+    """组合部门名称"""
+    parts = []
+    for col in dept_cols:
+        val = row.get(col)
+        if pd.notna(val) and str(val).strip() not in ['/', 'NaN', '']:
+            parts.append(str(val).strip())
+    return '-'.join(parts) if parts else None
+
+
+def _is_active_employee(status) -> bool:
+    """判断是否在职"""
+    if pd.isna(status):
+        return True
+    status_str = str(status).strip()
+    if status_str in ['离职', '已离职']:
+        return False
+    return True
+
+
+def _generate_employee_code(index: int, existing_codes: set) -> str:
+    """生成员工编码"""
+    code = f"EMP{index:04d}"
+    while code in existing_codes:
+        index += 1
+        code = f"EMP{index:04d}"
+    return code
+
+
+@router.post("/employees/import")
+async def import_employees_from_excel(
+    file: UploadFile = File(..., description="Excel文件（支持企业微信导出格式）"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Dict[str, Any]:
+    """
+    从Excel文件批量导入员工数据
+
+    支持的Excel格式：
+    - 企业微信导出的通讯录
+    - 人事系统导出的员工信息表
+
+    必需列：姓名
+    可选列：一级部门、二级部门、三级部门、部门、职务、联系方式、手机、在职离职状态
+
+    系统会自动：
+    - 跳过已存在的员工（按姓名+部门判断）
+    - 更新已存在员工的信息
+    - 为新员工生成工号
+    - 创建员工档案
+    """
+    # 验证文件类型
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="请上传Excel文件（.xlsx或.xls格式）")
+
+    try:
+        # 读取Excel文件
+        contents = await file.read()
+        df = pd.read_excel(io.BytesIO(contents))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"读取Excel文件失败: {str(e)}")
+
+    # 检查必需列
+    columns = df.columns.tolist()
+    name_col = None
+    for col in ['姓名', '名字', 'name', 'Name', '员工姓名']:
+        if col in columns:
+            name_col = col
+            break
+
+    if not name_col:
+        raise HTTPException(status_code=400, detail="Excel中必须包含'姓名'列")
+
+    # 识别部门列
+    dept_cols = []
+    for col in ['一级部门', '二级部门', '三级部门']:
+        if col in columns:
+            dept_cols.append(col)
+    if not dept_cols and '部门' in columns:
+        dept_cols = ['部门']
+
+    # 识别其他列
+    position_col = next((c for c in ['职务', '岗位', '职位', 'position'] if c in columns), None)
+    phone_col = next((c for c in ['联系方式', '手机', '电话', 'phone', '手机号'] if c in columns), None)
+    status_col = next((c for c in ['在职离职状态', '状态', '在职状态'] if c in columns), None)
+
+    # 获取现有员工
+    existing_employees = db.query(Employee).all()
+    existing_map = {(e.name, e.department): e for e in existing_employees}
+    existing_codes = {e.employee_code for e in existing_employees}
+
+    # 获取管理员用户ID用于评估
+    evaluator_id = current_user.id
+
+    # 获取标签字典
+    tags = db.query(HrTagDict).filter(HrTagDict.is_active == True).all()
+    tag_dict = {tag.tag_name: tag for tag in tags}
+
+    now = datetime.now()
+    today = now.date()
+
+    imported_count = 0
+    updated_count = 0
+    skipped_count = 0
+    errors = []
+
+    for idx, row in df.iterrows():
+        try:
+            name = _clean_name(row.get(name_col))
+            if not name:
+                skipped_count += 1
+                continue
+
+            department = _get_department_name(row, dept_cols) if dept_cols else None
+            position = str(row.get(position_col, '')).strip() if position_col and pd.notna(row.get(position_col)) else None
+            phone = _clean_phone(row.get(phone_col)) if phone_col else None
+            is_active = _is_active_employee(row.get(status_col)) if status_col else True
+
+            key = (name, department)
+
+            if key in existing_map:
+                # 更新现有员工
+                employee = existing_map[key]
+                if phone:
+                    employee.phone = phone
+                if position:
+                    employee.role = position
+                employee.is_active = is_active
+                updated_count += 1
+            else:
+                # 创建新员工
+                employee_code = _generate_employee_code(len(existing_codes) + 1, existing_codes)
+                existing_codes.add(employee_code)
+
+                employee = Employee(
+                    employee_code=employee_code,
+                    name=name,
+                    department=department,
+                    role=position,
+                    phone=phone,
+                    is_active=is_active
+                )
+                db.add(employee)
+                db.flush()
+                existing_map[key] = employee
+                imported_count += 1
+
+                # 创建员工档案
+                profile = HrEmployeeProfile(
+                    employee_id=employee.id,
+                    skill_tags=[],
+                    domain_tags=[],
+                    attitude_tags=[],
+                    character_tags=[],
+                    special_tags=[],
+                    current_workload_pct=Decimal('0'),
+                    total_projects=0,
+                    profile_updated_at=now
+                )
+                db.add(profile)
+
+                # 根据职位自动添加技能标签
+                if position and is_active:
+                    skill_mappings = {
+                        'PLC': ['PLC编程'],
+                        '测试': ['ICT测试', 'FCT测试'],
+                        '机械': ['机械设计', '3D建模'],
+                        '电气': ['电气原理图'],
+                        '视觉': ['视觉系统'],
+                        '客服': ['故障排除', '现场经验'],
+                        '装配': ['装配调试'],
+                        'HMI': ['HMI开发'],
+                        '硬件': ['电气原理图'],
+                        '软件': ['PLC编程', 'HMI开发'],
+                    }
+
+                    matched_tags = set()
+                    for keyword, tag_names in skill_mappings.items():
+                        if keyword in position:
+                            for tag_name in tag_names:
+                                if tag_name in tag_dict:
+                                    matched_tags.add(tag_name)
+
+                    for tag_name in matched_tags:
+                        tag = tag_dict.get(tag_name)
+                        if tag:
+                            eval_record = HrEmployeeTagEvaluation(
+                                employee_id=employee.id,
+                                tag_id=tag.id,
+                                score=3,
+                                evidence=f'根据职位 "{position}" 自动匹配',
+                                evaluator_id=evaluator_id,
+                                evaluate_date=today,
+                                is_valid=True
+                            )
+                            db.add(eval_record)
+
+        except Exception as e:
+            errors.append(f"第{idx + 2}行处理失败: {str(e)}")
+            continue
+
+    db.commit()
+
+    return {
+        "success": True,
+        "message": f"导入完成：新增 {imported_count} 人，更新 {updated_count} 人，跳过 {skipped_count} 条",
+        "imported": imported_count,
+        "updated": updated_count,
+        "skipped": skipped_count,
+        "errors": errors[:10] if errors else []  # 只返回前10条错误
+    }
+
+
+@router.get("/employees/import/template")
+async def download_import_template(
+    current_user: User = Depends(security.get_current_active_user),
+) -> Dict[str, Any]:
+    """
+    获取员工导入模板说明
+
+    返回导入模板的列说明，用户可以参考此格式准备数据
+    """
+    return {
+        "template_columns": [
+            {"name": "姓名", "required": True, "description": "员工姓名（必填）"},
+            {"name": "一级部门", "required": False, "description": "一级部门名称"},
+            {"name": "二级部门", "required": False, "description": "二级部门名称"},
+            {"name": "三级部门", "required": False, "description": "三级部门名称"},
+            {"name": "职务", "required": False, "description": "职务/岗位名称"},
+            {"name": "联系方式", "required": False, "description": "手机号码"},
+            {"name": "在职离职状态", "required": False, "description": "在职/离职/试用期等"},
+        ],
+        "supported_formats": [".xlsx", ".xls"],
+        "notes": [
+            "系统会根据 姓名+部门 判断员工是否已存在",
+            "已存在的员工会更新其信息，不会重复创建",
+            "支持直接导入企业微信导出的通讯录Excel",
+            "部门会自动按 一级部门-二级部门-三级部门 格式组合"
+        ]
+    }
