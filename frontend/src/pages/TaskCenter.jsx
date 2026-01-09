@@ -27,6 +27,7 @@ import {
   Award,
   FileText,
   BookOpen,
+  ClipboardList,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -1112,6 +1113,19 @@ export default function TaskCenter() {
                 </div>
                 <p className="text-xs text-slate-400 text-left">
                   查看和编辑月度工作总结
+                </p>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-auto p-4 flex flex-col items-start gap-2 hover:bg-surface-2/50 transition-colors"
+                onClick={() => navigate('/work-log')}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <ClipboardList className="w-5 h-5 text-indigo-400" />
+                  <span className="font-medium">工作日志</span>
+                </div>
+                <p className="text-xs text-slate-400 text-left">
+                  记录每日工作内容，@提及项目或设备
                 </p>
               </Button>
               <Button

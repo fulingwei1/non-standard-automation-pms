@@ -213,7 +213,7 @@ export default function QualificationAssessmentList() {
                 <SelectValue placeholder="评估类型" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部</SelectItem>
+                <SelectItem value="all">全部</SelectItem>
                 <SelectItem value="ANNUAL">年度评估</SelectItem>
                 <SelectItem value="PROMOTION">晋升评估</SelectItem>
                 <SelectItem value="PERIODIC">定期评估</SelectItem>
@@ -227,7 +227,7 @@ export default function QualificationAssessmentList() {
                 <SelectValue placeholder="评估结果" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部</SelectItem>
+                <SelectItem value="all">全部</SelectItem>
                 <SelectItem value="PASS">通过</SelectItem>
                 <SelectItem value="PARTIAL">部分通过</SelectItem>
                 <SelectItem value="FAIL">未通过</SelectItem>

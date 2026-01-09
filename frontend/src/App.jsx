@@ -14,6 +14,8 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import ProjectList from './pages/ProjectList'
 import ProjectDetail from './pages/ProjectDetail'
+import ProjectWorkspace from './pages/ProjectWorkspace'
+import ProjectContributionReport from './pages/ProjectContributionReport'
 import ProjectBoard from './pages/ProjectBoard'
 import ProjectGantt from './pages/ProjectGantt'
 import WBSTemplateManagement from './pages/WBSTemplateManagement'
@@ -108,6 +110,7 @@ import KitCheck from './pages/KitCheck'
 import LeadManagement from './pages/LeadManagement'
 import OpportunityManagement from './pages/OpportunityManagement'
 import CustomerList from './pages/CustomerList'
+import Customer360 from './pages/Customer360'
 import OpportunityBoard from './pages/OpportunityBoard'
 import LeadAssessment from './pages/LeadAssessment'
 import TechnicalAssessment from './pages/TechnicalAssessment'
@@ -134,6 +137,7 @@ import CostAccounting from './pages/CostAccounting'
 import PaymentApproval from './pages/PaymentApproval'
 import ProjectSettlement from './pages/ProjectSettlement'
 import FinancialReports from './pages/FinancialReports'
+import ExecutiveDashboard from './pages/ExecutiveDashboard'
 import HRManagerDashboard from './pages/HRManagerDashboard'
 import AdministrativeManagerWorkstation from './pages/AdministrativeManagerWorkstation'
 import ContractList from './pages/ContractList'
@@ -204,7 +208,7 @@ import CustomerManagement from './pages/CustomerManagement'
 import SupplierManagementData from './pages/SupplierManagementData'
 import DepartmentManagement from './pages/DepartmentManagement'
 import AlertCenter from './pages/AlertCenter'
-import AlertRuleManagement from './pages/AlertRuleManagement'
+import AlertRuleManagement from './pages/AlertRuleConfig'
 import AlertDetail from './pages/AlertDetail'
 import AlertStatistics from './pages/AlertStatistics'
 import AlertSubscription from './pages/AlertSubscription'
@@ -244,6 +248,21 @@ import EmployeeProfileList from './pages/EmployeeProfileList'
 import EmployeeProfileDetail from './pages/EmployeeProfileDetail'
 import ProjectStaffingNeed from './pages/ProjectStaffingNeed'
 import AIStaffMatching from './pages/AIStaffMatching'
+
+// Management Rhythm Pages
+import ManagementRhythmDashboard from './pages/ManagementRhythmDashboard'
+import MeetingMap from './pages/MeetingMap'
+import StrategicMeetingManagement from './pages/StrategicMeetingManagement'
+import StrategicMeetingDetail from './pages/StrategicMeetingDetail'
+import MeetingReports from './pages/MeetingReports'
+
+// Culture Wall Pages
+import CultureWall from './pages/CultureWall'
+
+// Work Log Pages
+import WorkCenter from './pages/WorkCenter'
+import WorkLog from './pages/WorkLog'
+import WorkLogConfig from './pages/WorkLogConfig'
 
 // Role-based dashboard redirect mapping
 const roleDashboardMap = {
@@ -496,6 +515,13 @@ function App() {
           <Route path="/operation" element={<OperationDashboard />} />
           <Route path="/strategy-analysis" element={<StrategyAnalysis />} />
           <Route path="/key-decisions" element={<KeyDecisions />} />
+          <Route path="/management-rhythm-dashboard" element={<ManagementRhythmDashboard />} />
+          <Route path="/meeting-map" element={<MeetingMap />} />
+          <Route path="/strategic-meetings" element={<StrategicMeetingManagement />} />
+          <Route path="/strategic-meetings/:id" element={<StrategicMeetingDetail />} />
+          <Route path="/meeting-reports" element={<MeetingReports />} />
+          <Route path="/meeting-reports/:id" element={<MeetingReports />} />
+          <Route path="/culture-wall" element={<CultureWall />} />
           <Route path="/shipments" element={<Shipments />} />
           <Route path="/pmc/delivery-plan" element={<DeliveryManagement />} />
           <Route path="/pmc/delivery-orders" element={<DeliveryManagement />} />
@@ -508,6 +534,8 @@ function App() {
           <Route path="/board" element={<ProjectBoard />} />
           <Route path="/projects" element={<ProjectList />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
+          <Route path="/projects/:id/workspace" element={<ProjectWorkspace />} />
+          <Route path="/projects/:id/contributions" element={<ProjectContributionReport />} />
           <Route path="/projects/:id/gantt" element={<ProjectGantt />} />
           <Route path="/projects/:id/tasks" element={<ProjectTaskList />} />
           <Route path="/projects/:id/machines" element={<MachineManagement />} />
@@ -564,6 +592,7 @@ function App() {
           <Route path="/payment-approval" element={<PaymentApproval />} />
           <Route path="/settlement" element={<ProjectSettlement />} />
           <Route path="/financial-reports" element={<FinancialReports />} />
+          <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
 
           {/* HR Management */}
           <Route path="/hr-manager-dashboard" element={<HRManagerDashboard />} />
@@ -926,8 +955,11 @@ function App() {
           <Route path="/staff-matching/matching" element={<AIStaffMatching />} />
 
           {/* Personal Center */}
+          <Route path="/work-center" element={<WorkCenter />} />
           <Route path="/notifications" element={<NotificationCenter />} />
           <Route path="/timesheet" element={<Timesheet />} />
+          <Route path="/work-log" element={<WorkLog />} />
+          <Route path="/work-log/config" element={<WorkLogConfig />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/punch-in" element={<PunchIn />} />
 
@@ -939,6 +971,7 @@ function App() {
           
           {/* Master Data Management */}
           <Route path="/customer-management" element={<CustomerManagement />} />
+          <Route path="/customers/:id/360" element={<Customer360 />} />
           <Route path="/supplier-management-data" element={<SupplierManagementData />} />
           <Route path="/department-management" element={<DepartmentManagement />} />
 

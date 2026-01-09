@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Plus,
@@ -39,6 +40,7 @@ import { formatDate, cn } from '../lib/utils';
 import { customerApi } from '../services/api';
 
 export default function CustomerManagement() {
+  const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -308,7 +310,7 @@ export default function CustomerManagement() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleView360(customer.id)}
+                                onClick={() => navigate(`/customers/${customer.id}/360`)}
                                 title="客户360视图"
                               >
                                 <BarChart3 className="h-4 w-4 text-blue-600" />

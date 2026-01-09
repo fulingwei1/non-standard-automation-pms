@@ -2,7 +2,7 @@ from typing import Any, List, Optional, Tuple, Dict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Query, Body, Path, status, UploadFile, File
 from fastapi.responses import StreamingResponse
 import io
 from sqlalchemy.orm import Session, joinedload
@@ -4910,7 +4910,7 @@ def get_gate_check_result(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    target_stage: str = Query(..., description="目标阶段（S2-S9）"),
+    target_stage: str = Path(..., description="目标阶段（S2-S9）"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """

@@ -129,7 +129,7 @@ class BomItemAssemblyAttrsBase(BaseModel):
     can_postpone: bool = Field(default=False, description="是否可后补")
     has_substitute: bool = Field(default=False, description="是否有替代料")
     substitute_material_id: Optional[int] = Field(None, description="替代物料ID")
-    install_sequence: int = Field(default=0, ge=0, description="安装顺序")
+    stage_order: int = Field(default=0, ge=0, description="阶段内排序")
     remark: Optional[str] = Field(None, description="备注")
 
 
@@ -151,7 +151,7 @@ class BomItemAssemblyAttrsUpdate(BaseModel):
     can_postpone: Optional[bool] = None
     has_substitute: Optional[bool] = None
     substitute_material_id: Optional[int] = None
-    install_sequence: Optional[int] = Field(None, ge=0)
+    stage_order: Optional[int] = Field(None, ge=0)
     remark: Optional[str] = None
 
 

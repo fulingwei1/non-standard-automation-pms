@@ -57,11 +57,11 @@ CREATE TABLE IF NOT EXISTS technical_reviews (
     FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
-CREATE INDEX idx_review_no ON technical_reviews(review_no);
-CREATE INDEX idx_review_project ON technical_reviews(project_id);
-CREATE INDEX idx_review_type ON technical_reviews(review_type);
-CREATE INDEX idx_review_status ON technical_reviews(status);
-CREATE INDEX idx_review_scheduled_date ON technical_reviews(scheduled_date);
+CREATE INDEX IF NOT EXISTS idx_tech_review_no ON technical_reviews(review_no);
+CREATE INDEX IF NOT EXISTS idx_tech_review_project ON technical_reviews(project_id);
+CREATE INDEX IF NOT EXISTS idx_tech_review_type ON technical_reviews(review_type);
+CREATE INDEX IF NOT EXISTS idx_tech_review_status ON technical_reviews(status);
+CREATE INDEX IF NOT EXISTS idx_tech_review_scheduled_date ON technical_reviews(scheduled_date);
 
 -- ============================================
 -- 2. 评审参与人表
@@ -87,9 +87,9 @@ CREATE TABLE IF NOT EXISTS review_participants (
     FOREIGN KEY (delegate_id) REFERENCES users(id)
 );
 
-CREATE INDEX idx_participant_review ON review_participants(review_id);
-CREATE INDEX idx_participant_user ON review_participants(user_id);
-CREATE INDEX idx_participant_role ON review_participants(role);
+CREATE INDEX IF NOT EXISTS idx_review_mat_participant_review ON review_participants(review_id);
+CREATE INDEX IF NOT EXISTS idx_review_mat_participant_user ON review_participants(user_id);
+CREATE INDEX IF NOT EXISTS idx_review_mat_participant_role ON review_participants(role);
 
 -- ============================================
 -- 3. 评审材料表
@@ -113,8 +113,8 @@ CREATE TABLE IF NOT EXISTS review_materials (
     FOREIGN KEY (upload_by) REFERENCES users(id)
 );
 
-CREATE INDEX idx_material_review ON review_materials(review_id);
-CREATE INDEX idx_material_type ON review_materials(material_type);
+CREATE INDEX IF NOT EXISTS idx_review_mat_material_review ON review_materials(review_id);
+CREATE INDEX IF NOT EXISTS idx_review_mat_material_type ON review_materials(material_type);
 
 -- ============================================
 -- 4. 评审检查项记录表
@@ -142,8 +142,8 @@ CREATE TABLE IF NOT EXISTS review_checklist_records (
     FOREIGN KEY (checker_id) REFERENCES users(id)
 );
 
-CREATE INDEX idx_checklist_review ON review_checklist_records(review_id);
-CREATE INDEX idx_checklist_result ON review_checklist_records(result);
+CREATE INDEX IF NOT EXISTS idx_review_mat_checklist_review ON review_checklist_records(review_id);
+CREATE INDEX IF NOT EXISTS idx_review_mat_checklist_result ON review_checklist_records(result);
 
 -- ============================================
 -- 5. 评审问题表
@@ -182,12 +182,12 @@ CREATE TABLE IF NOT EXISTS review_issues (
     FOREIGN KEY (verifier_id) REFERENCES users(id)
 );
 
-CREATE INDEX idx_issue_no ON review_issues(issue_no);
-CREATE INDEX idx_issue_review ON review_issues(review_id);
-CREATE INDEX idx_issue_level ON review_issues(issue_level);
-CREATE INDEX idx_issue_status ON review_issues(status);
-CREATE INDEX idx_issue_assignee ON review_issues(assignee_id);
-CREATE INDEX idx_issue_deadline ON review_issues(deadline);
+CREATE INDEX IF NOT EXISTS idx_review_mat_issue_no ON review_issues(issue_no);
+CREATE INDEX IF NOT EXISTS idx_review_mat_issue_review ON review_issues(review_id);
+CREATE INDEX IF NOT EXISTS idx_review_mat_issue_level ON review_issues(issue_level);
+CREATE INDEX IF NOT EXISTS idx_review_mat_issue_status ON review_issues(status);
+CREATE INDEX IF NOT EXISTS idx_review_mat_issue_assignee ON review_issues(assignee_id);
+CREATE INDEX IF NOT EXISTS idx_review_mat_issue_deadline ON review_issues(deadline);
 
 
 

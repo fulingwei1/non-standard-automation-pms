@@ -128,6 +128,22 @@ export default function AssemblyKitBoard() {
     }
   }
 
+  const handleGenerateSuggestions = async () => {
+    try {
+      setLoading(true)
+      const res = await assemblyKitApi.generateSuggestions({ scope: 'WEEKLY' })
+      console.log('排产建议生成成功:', res.data)
+      if (res.data?.suggestions) {
+        alert(`已生成 ${res.data.suggestions.length} 条排产建议`)
+        fetchDashboardData()
+      }
+    } catch (error) {
+      console.error('生成排产建议失败:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const fetchAlerts = async () => {
     try {
       const params = { page_size: 20 }
@@ -231,6 +247,10 @@ export default function AssemblyKitBoard() {
           <Button variant="outline" onClick={() => { fetchDashboardData(); fetchAlerts(); }}>
             <RefreshCw className="w-4 h-4 mr-2" />
             刷新
+          </Button>
+          <Button variant="outline" onClick={handleGenerateSuggestions} disabled={loading}>
+            <Calendar className="w-4 h-4 mr-2" />
+            生成排产建议
           </Button>
         </div>
       </div>
@@ -462,6 +482,33 @@ export default function AssemblyKitBoard() {
                       <span>优先级得分: <strong>{suggestion.priority_score}</strong></span>
                       <span>齐套率: <strong className={getKitRateColor(suggestion.current_kit_rate)}>{suggestion.current_kit_rate}%</strong></span>
                     </div>
+                    {suggestion.score_factors && (
+                      <div className="text-xs text-slate-500 mb-2 p-2 bg-white rounded">
+                        <div className="font-medium mb-1">评分详情：</div>
+                        <div className="space-y-1">
+                          {Object.entries(suggestion.score_factors).map(([key, factor]) => (
+                            <div key={key} className="flex justify-between">
+                              <span>{factor.description || key}:</span>
+                              <span className="font-medium">{factor.score}/{factor.max}分</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {suggestion.resource_allocation && (
+                      <div className="text-xs text-slate-500 mb-2 p-2 bg-white rounded">
+                        <div className="font-medium mb-1">资源情况：</div>
+                        <div className="space-y-1">
+                          <div>可用工位: {suggestion.resource_allocation.available_workstations || 0}个</div>
+                          <div>可用人员: {suggestion.resource_allocation.available_workers || 0}人</div>
+                          {suggestion.resource_allocation.conflicts && suggestion.resource_allocation.conflicts.length > 0 && (
+                            <div className="text-red-500">
+                              资源冲突: {suggestion.resource_allocation.conflicts.length}个
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                     {suggestion.reason && (
                       <div className="text-sm text-slate-500 mb-3 p-2 bg-white rounded">
                         {suggestion.reason}

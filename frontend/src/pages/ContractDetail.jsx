@@ -3,7 +3,8 @@
  * Shows contract information, payment tracking, documents, and actions
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   FileText,
@@ -27,6 +28,8 @@ import {
   Paperclip,
   Eye,
   Printer,
+  Loader2,
+  ArrowLeft,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -47,6 +50,7 @@ import {
 } from '../components/ui'
 import { cn, formatCurrency, formatDate } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
+import { contractApi } from '../services/api'
 
 // Mock contract detail data
 const mockContractDetail = {
@@ -387,9 +391,33 @@ const MilestoneTimeline = ({ milestones }) => {
 }
 
 export default function ContractDetail() {
-  const [contract] = useState(mockContractDetail)
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [loading, setLoading] = useState(true)
+  const [contract, setContract] = useState(mockContractDetail)
   const [activeTab, setActiveTab] = useState('overview') // overview | payments | deliverables | milestones | documents | notes
   const [showEditDialog, setShowEditDialog] = useState(false)
+
+  // Load contract data from API with fallback to mock data
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const res = await contractApi.get(id)
+        if (res.data) {
+          setContract(res.data)
+        }
+      } catch (err) {
+        console.log('Contract detail API unavailable, using mock data')
+      }
+      setLoading(false)
+    }
+    if (id) {
+      fetchData()
+    } else {
+      setLoading(false)
+    }
+  }, [id])
 
   const statusConfig = {
     draft: { label: '草稿', color: 'bg-slate-500/20 text-slate-400' },

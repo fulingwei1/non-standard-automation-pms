@@ -5,7 +5,7 @@
 -- 说明: 为问题表新增问题原因、责任工程师、库存损失和额外工时字段
 -- ============================================
 
-PRAGMA foreign_keys = ON;
+-- PRAGMA foreign_keys = ON;  -- Disabled for migration
 
 -- 问题原因和责任工程师字段扩展
 ALTER TABLE issues 

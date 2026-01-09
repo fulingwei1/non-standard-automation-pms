@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能驱动 · 精准交付 | 非标自动化AI项目管理系统</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Orbitron:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --deep-space: #0A1628;
+            --midnight: #0D1B2A;
+            --ocean-deep: #1B263B;
+            --cyber-blue: #00D4FF;
+            --electric-cyan: #00F5FF;
+            --neon-pulse: #00B4D8;
+            --silver-mist: #C0C0C0;
+            --pearl: #E8E8E8;
+            --warning-amber: #FF9F1C;
+            --success-emerald: #00C48C;
+            --danger-coral: #FF6B6B;
+            --purple-glow: #7B68EE;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--deep-space);
+            color: var(--pearl);
+            overflow: hidden;
+            min-height: 100vh;
+        }
+
+        /* Circuit Pattern Background */
+        .circuit-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.1;
+            background-image:
+                radial-gradient(circle at 25% 25%, rgba(0,212,255,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(0,180,216,0.1) 0%, transparent 50%),
+                linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px),
+                linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+            animation: bgPulse 8s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { opacity: 0.08; }
+            50% { opacity: 0.15; }
+        }
+
+        /* Floating Particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: var(--cyber-blue);
+            border-radius: 50%;
+            animation: floatUp 20s infinite;
+            opacity: 0.5;
+            box-shadow: 0 0 6px var(--cyber-blue);
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 0.5; transform: scale(1); }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100px) scale(0); opacity: 0; }
+        }
+
+        /* Presentation Container */
+        .presentation {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        /* Individual Slides */
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 50px 70px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(60px) scale(0.98);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(180deg, var(--deep-space) 0%, var(--midnight) 100%);
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0) scale(1);
+        }
+
+        .slide.prev {
+            transform: translateX(-60px) scale(0.98);
+        }
+
+        /* Slide Animations */
+        .slide.active .slide-title { animation: slideUp 0.6s ease-out 0.1s both; }
+        .slide.active .slide-subtitle { animation: slideUp 0.6s ease-out 0.2s both; }
+        .slide.active .slide-content { animation: fadeIn 0.6s ease-out 0.3s both; }
+        .slide.active .animate-item { animation: slideUp 0.5s ease-out both; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(0,212,255,0.3); }
+            50% { box-shadow: 0 0 40px rgba(0,212,255,0.6); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Typography */
+        .slide-title {
+            font-family: 'Orbitron', 'Noto Sans SC', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            background: linear-gradient(135deg, #fff 0%, var(--cyber-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .slide-subtitle {
+            font-size: 1.2rem;
+            font-weight: 300;
+            color: var(--silver-mist);
+            text-align: center;
+            margin-bottom: 2.5rem;
+            letter-spacing: 0.2em;
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 1300px;
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+            padding-right: 10px;
+        }
+
+        .slide-content::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .slide-content::-webkit-scrollbar-track {
+            background: rgba(0,212,255,0.1);
+            border-radius: 2px;
+        }
+
+        .slide-content::-webkit-scrollbar-thumb {
+            background: var(--cyber-blue);
+            border-radius: 2px;
+        }
+
+        /* Cover Slide */
+        .cover-slide {
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(0,212,255,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(0,180,216,0.1) 0%, transparent 40%),
+                radial-gradient(ellipse at 50% 50%, rgba(123,104,238,0.05) 0%, transparent 60%),
+                linear-gradient(180deg, var(--deep-space) 0%, var(--midnight) 100%);
+        }
+
+        .cover-logo {
+            width: 100px;
+            height: 100px;
+            border: 2px solid var(--cyber-blue);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            background: rgba(0,212,255,0.08);
+            animation: glowPulse 3s ease-in-out infinite, float 4s ease-in-out infinite;
+        }
+
+        .cover-logo svg {
+            width: 50px;
+            height: 50px;
+            fill: var(--cyber-blue);
+        }
+
+        .cover-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff 0%, var(--cyber-blue) 50%, var(--electric-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.1em;
+        }
+
+        .cover-tagline {
+            font-size: 1.6rem;
+            font-weight: 300;
+            color: var(--silver-mist);
+            text-align: center;
+            letter-spacing: 0.4em;
+            margin-bottom: 0.8rem;
+        }
+
+        .cover-slogan {
+            font-size: 1.1rem;
+            color: var(--neon-pulse);
+            text-align: center;
+            padding: 0.8rem 2rem;
+            border: 1px solid rgba(0,212,255,0.3);
+            border-radius: 50px;
+            background: rgba(0,212,255,0.05);
+            margin-top: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Section Divider */
+        .section-divider {
+            background:
+                radial-gradient(ellipse at 50% 50%, rgba(0,212,255,0.2) 0%, transparent 60%),
+                linear-gradient(180deg, var(--deep-space) 0%, var(--ocean-deep) 100%);
+        }
+
+        .section-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 6rem;
+            font-weight: 900;
+            color: rgba(0,212,255,0.15);
+            position: absolute;
+            top: 20%;
+            left: 10%;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, var(--cyber-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        /* Navigation */
+        .nav-dots {
+            position: fixed;
+            right: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-dot {
+            width: 10px;
+            height: 10px;
+            border: 2px solid var(--cyber-blue);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: transparent;
+        }
+
+        .nav-dot:hover {
+            background: rgba(0,212,255,0.3);
+            transform: scale(1.3);
+        }
+
+        .nav-dot.active {
+            background: var(--cyber-blue);
+            box-shadow: 0 0 12px var(--cyber-blue);
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--cyber-blue), var(--electric-cyan));
+            z-index: 100;
+            transition: width 0.4s ease;
+            box-shadow: 0 0 15px var(--cyber-blue);
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 25px;
+            left: 25px;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.9rem;
+            color: var(--cyber-blue);
+            z-index: 100;
+        }
+
+        .slide-counter span { color: var(--silver-mist); }
+
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 45px;
+            height: 45px;
+            border: 2px solid rgba(0,212,255,0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s ease;
+            background: rgba(10,22,40,0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .nav-arrow:hover {
+            border-color: var(--cyber-blue);
+            background: rgba(0,212,255,0.1);
+            box-shadow: 0 0 20px rgba(0,212,255,0.3);
+        }
+
+        .nav-arrow.prev { left: 25px; }
+        .nav-arrow.next { right: 70px; }
+        .nav-arrow svg { width: 18px; height: 18px; fill: var(--cyber-blue); }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: linear-gradient(135deg, rgba(27,38,59,0.8) 0%, rgba(13,27,42,0.9) 100%);
+            border: 1px solid rgba(0,212,255,0.15);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--cyber-blue), var(--electric-cyan));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0,212,255,0.4);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3), 0 0 20px rgba(0,212,255,0.1);
+        }
+
+        .card:hover::before { transform: scaleX(1); }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: rgba(0,212,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(0,212,255,0.2);
+        }
+
+        .card-icon svg { width: 24px; height: 24px; fill: var(--cyber-blue); }
+
+        .card h3 {
+            font-size: 1.1rem;
+            color: var(--pearl);
+            margin-bottom: 0.6rem;
+            font-weight: 600;
+        }
+
+        .card p {
+            font-size: 0.9rem;
+            color: var(--silver-mist);
+            line-height: 1.5;
+        }
+
+        /* Pain Point Cards */
+        .pain-card {
+            background: linear-gradient(135deg, rgba(255,107,107,0.08) 0%, rgba(27,38,59,0.8) 100%);
+            border: 1px solid rgba(255,107,107,0.2);
+        }
+
+        .pain-card:hover { border-color: rgba(255,107,107,0.5); }
+
+        .pain-number {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(255,107,107,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--danger-coral);
+            margin-bottom: 0.8rem;
+        }
+
+        /* Success Cards */
+        .success-card {
+            background: linear-gradient(135deg, rgba(0,196,140,0.08) 0%, rgba(27,38,59,0.8) 100%);
+            border: 1px solid rgba(0,196,140,0.2);
+            text-align: center;
+        }
+
+        .success-card:hover { border-color: rgba(0,196,140,0.5); }
+
+        .success-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: var(--success-emerald);
+            margin-bottom: 0.3rem;
+        }
+
+        .success-unit { font-size: 1.2rem; color: var(--success-emerald); }
+
+        /* Timeline */
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            padding: 0 10px;
+            margin: 2rem 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 28px;
+            left: 50px;
+            right: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--cyber-blue), var(--neon-pulse), var(--success-emerald));
+            border-radius: 2px;
+        }
+
+        .timeline-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item:hover { transform: translateY(-5px); }
+
+        .timeline-circle {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--midnight);
+            border: 3px solid var(--cyber-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--cyber-blue);
+            margin-bottom: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item:hover .timeline-circle {
+            background: var(--cyber-blue);
+            color: var(--deep-space);
+            box-shadow: 0 0 25px var(--cyber-blue);
+        }
+
+        .timeline-label {
+            font-size: 0.75rem;
+            color: var(--silver-mist);
+            text-align: center;
+            max-width: 70px;
+        }
+
+        /* Architecture Layers */
+        .arch-layer {
+            display: flex;
+            gap: 12px;
+            padding: 1.2rem;
+            background: rgba(27,38,59,0.5);
+            border: 1px solid rgba(0,212,255,0.15);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .arch-layer:hover {
+            border-color: var(--cyber-blue);
+            transform: translateX(8px);
+        }
+
+        .arch-label {
+            width: 100px;
+            flex-shrink: 0;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            color: var(--cyber-blue);
+            padding-right: 1rem;
+            border-right: 2px solid rgba(0,212,255,0.2);
+            display: flex;
+            align-items: center;
+        }
+
+        .arch-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .arch-item {
+            padding: 0.4rem 0.8rem;
+            background: rgba(0,212,255,0.08);
+            border: 1px solid rgba(0,212,255,0.2);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: var(--pearl);
+            transition: all 0.3s ease;
+        }
+
+        .arch-item:hover {
+            background: rgba(0,212,255,0.15);
+            border-color: var(--cyber-blue);
+        }
+
+        /* AI Brain */
+        .ai-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 50px;
+        }
+
+        .ai-core {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,212,255,0.25) 0%, rgba(0,212,255,0.08) 50%, transparent 70%);
+            border: 3px solid var(--cyber-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: brainPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes brainPulse {
+            0%, 100% { box-shadow: 0 0 25px rgba(0,212,255,0.3), inset 0 0 25px rgba(0,212,255,0.1); }
+            50% { box-shadow: 0 0 50px rgba(0,212,255,0.5), inset 0 0 40px rgba(0,212,255,0.2); }
+        }
+
+        .ai-core svg { width: 60px; height: 60px; fill: var(--cyber-blue); }
+
+        .ai-features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .ai-feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.9rem 1.2rem;
+            background: rgba(27,38,59,0.5);
+            border: 1px solid rgba(0,212,255,0.15);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .ai-feature:hover {
+            border-color: var(--cyber-blue);
+            background: rgba(0,212,255,0.08);
+        }
+
+        .ai-feature-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: rgba(0,212,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .ai-feature-icon svg { width: 18px; height: 18px; fill: var(--cyber-blue); }
+
+        .ai-feature span { font-size: 0.9rem; color: var(--pearl); }
+
+        /* Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.9rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(0,212,255,0.1);
+        }
+
+        .data-table th {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            color: var(--cyber-blue);
+            background: rgba(0,212,255,0.05);
+            font-weight: 500;
+        }
+
+        .data-table td {
+            font-size: 0.9rem;
+            color: var(--silver-mist);
+        }
+
+        .data-table tr:hover td { background: rgba(0,212,255,0.03); }
+
+        .check { color: var(--success-emerald); }
+        .cross { color: var(--danger-coral); }
+
+        /* TOC */
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+        }
+
+        .toc-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.2rem;
+            background: rgba(27,38,59,0.5);
+            border: 1px solid rgba(0,212,255,0.15);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toc-item:hover {
+            border-color: var(--cyber-blue);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .toc-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(0,212,255,0.1);
+            border: 1px solid var(--cyber-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            color: var(--cyber-blue);
+            flex-shrink: 0;
+        }
+
+        .toc-text { font-size: 0.95rem; color: var(--pearl); }
+
+        /* Contact */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 200px;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(0,212,255,0.1);
+        }
+
+        .contact-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            background: rgba(0,212,255,0.1);
+            border: 1px solid rgba(0,212,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .contact-icon svg { width: 20px; height: 20px; fill: var(--cyber-blue); }
+
+        .contact-text {
+            font-size: 1rem;
+            color: var(--pearl);
+        }
+
+        .contact-text span {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--silver-mist);
+            margin-top: 0.2rem;
+        }
+
+        .qr-code {
+            width: 180px;
+            height: 180px;
+            background: #fff;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 15px;
+        }
+
+        .qr-placeholder {
+            width: 130px;
+            height: 130px;
+            background:
+                linear-gradient(45deg, var(--deep-space) 25%, transparent 25%),
+                linear-gradient(-45deg, var(--deep-space) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, var(--deep-space) 75%),
+                linear-gradient(-45deg, transparent 75%, var(--deep-space) 75%);
+            background-size: 16px 16px;
+            background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+            border-radius: 8px;
+        }
+
+        .qr-label {
+            font-size: 0.75rem;
+            color: var(--deep-space);
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        /* Keyboard Hint */
+        .keyboard-hint {
+            position: fixed;
+            bottom: 25px;
+            right: 110px;
+            font-size: 0.75rem;
+            color: var(--silver-mist);
+            opacity: 0.4;
+            z-index: 100;
+        }
+
+        .keyboard-hint kbd {
+            padding: 2px 6px;
+            background: rgba(0,212,255,0.1);
+            border: 1px solid rgba(0,212,255,0.2);
+            border-radius: 3px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            margin: 0 2px;
+        }
+
+        /* Comparison */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .comparison-side {
+            padding: 1.5rem;
+            border-radius: 12px;
+        }
+
+        .comparison-old {
+            background: rgba(100,100,100,0.1);
+            border: 1px solid rgba(100,100,100,0.2);
+        }
+
+        .comparison-new {
+            background: rgba(0,212,255,0.08);
+            border: 1px solid rgba(0,212,255,0.2);
+        }
+
+        .comparison-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .comparison-old .comparison-title { color: var(--silver-mist); }
+        .comparison-new .comparison-title { color: var(--cyber-blue); }
+
+        .comparison-list {
+            list-style: none;
+        }
+
+        .comparison-list li {
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .comparison-old li { color: var(--silver-mist); }
+        .comparison-new li { color: var(--pearl); }
+
+        /* Flow */
+        .flow-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 1.5rem 0;
+        }
+
+        .flow-step {
+            padding: 0.8rem 1.2rem;
+            background: rgba(0,212,255,0.1);
+            border: 1px solid rgba(0,212,255,0.3);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: var(--pearl);
+            text-align: center;
+        }
+
+        .flow-arrow {
+            color: var(--cyber-blue);
+            font-size: 1.2rem;
+        }
+
+        /* Version Comparison */
+        .version-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .version-card {
+            background: rgba(27,38,59,0.6);
+            border: 1px solid rgba(0,212,255,0.15);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .version-card.recommended {
+            border-color: var(--cyber-blue);
+            background: rgba(0,212,255,0.08);
+        }
+
+        .version-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+
+        .version-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            color: var(--cyber-blue);
+            margin-bottom: 1rem;
+        }
+
+        .version-features {
+            list-style: none;
+            text-align: left;
+        }
+
+        .version-features li {
+            padding: 0.5rem 0;
+            font-size: 0.85rem;
+            color: var(--silver-mist);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .recommended-badge {
+            background: var(--cyber-blue);
+            color: var(--deep-space);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        /* Case Study */
+        .case-card {
+            background: rgba(27,38,59,0.6);
+            border: 1px solid rgba(0,212,255,0.15);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .case-info h4 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--cyber-blue);
+            margin-bottom: 1rem;
+        }
+
+        .case-info p {
+            font-size: 0.9rem;
+            color: var(--silver-mist);
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .case-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .case-metric {
+            background: rgba(0,196,140,0.1);
+            border: 1px solid rgba(0,196,140,0.2);
+            border-radius: 8px;
+            padding: 0.8rem;
+            text-align: center;
+        }
+
+        .case-metric-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            color: var(--success-emerald);
+        }
+
+        .case-metric-label {
+            font-size: 0.75rem;
+            color: var(--silver-mist);
+            margin-top: 0.3rem;
+        }
+
+        .case-quote {
+            grid-column: 1 / -1;
+            font-style: italic;
+            color: var(--neon-pulse);
+            padding: 1rem;
+            border-left: 3px solid var(--cyber-blue);
+            background: rgba(0,212,255,0.05);
+            border-radius: 0 8px 8px 0;
+            margin-top: 1rem;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 1.5rem 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1.2rem;
+            background: rgba(27,38,59,0.5);
+            border: 1px solid rgba(0,212,255,0.15);
+            border-radius: 12px;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: var(--cyber-blue);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--silver-mist);
+            margin-top: 0.3rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .slide { padding: 40px 50px; }
+            .cover-title { font-size: 3rem; }
+            .slide-title { font-size: 2.2rem; }
+            .comparison { grid-template-columns: 1fr; }
+            .version-grid { grid-template-columns: 1fr; }
+            .case-card { grid-template-columns: 1fr; }
+            .contact-grid { grid-template-columns: 1fr; }
+            .ai-container { flex-direction: column; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .slide { padding: 30px; }
+            .nav-dots { display: none; }
+            .timeline { flex-wrap: wrap; gap: 15px; }
+            .timeline::before { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="circuit-bg"></div>
+    <div class="particles" id="particles"></div>
+
+    <div class="presentation" id="presentation">
+
+        <!-- Slide 1: Cover -->
+        <section class="slide cover-slide active" data-slide="1">
+            <div class="cover-logo">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            </div>
+            <h1 class="cover-title">智能驱动 · 精准交付</h1>
+            <p class="cover-tagline">非标自动化测试设备</p>
+            <p class="slide-subtitle" style="margin-bottom: 0; letter-spacing: 0.3em;">全生命周期 AI 项目管理系统</p>
+            <div class="cover-slogan">让复杂项目变得可控、可预测、可信任</div>
+        </section>
+
+        <!-- Slide 2: TOC -->
+        <section class="slide" data-slide="2">
+            <h2 class="slide-title">内容导览</h2>
+            <p class="slide-subtitle">CONTENTS</p>
+            <div class="slide-content">
+                <div class="toc-grid">
+                    <div class="toc-item" onclick="goToSlide(3)"><div class="toc-number">01</div><div class="toc-text">行业洞察与挑战</div></div>
+                    <div class="toc-item" onclick="goToSlide(7)"><div class="toc-number">02</div><div class="toc-text">系统架构总览</div></div>
+                    <div class="toc-item" onclick="goToSlide(11)"><div class="toc-number">03</div><div class="toc-text">核心功能详解</div></div>
+                    <div class="toc-item" onclick="goToSlide(17)"><div class="toc-number">04</div><div class="toc-text">AI能力与技术亮点</div></div>
+                    <div class="toc-item" onclick="goToSlide(21)"><div class="toc-number">05</div><div class="toc-text">客户价值与案例</div></div>
+                    <div class="toc-item" onclick="goToSlide(25)"><div class="toc-number">06</div><div class="toc-text">实施路径与服务</div></div>
+                    <div class="toc-item" onclick="goToSlide(28)"><div class="toc-number">07</div><div class="toc-text">合作展望</div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 3: Section - Industry Insights -->
+        <section class="slide section-divider" data-slide="3">
+            <div class="section-number">01</div>
+            <h2 class="section-title">行业洞察与挑战</h2>
+            <p class="slide-subtitle">非标自动化行业的机遇与痛点</p>
+        </section>
+
+        <!-- Slide 4: Market Background -->
+        <section class="slide" data-slide="4">
+            <h2 class="slide-title">非标自动化行业的黄金时代</h2>
+            <p class="slide-subtitle">MARKET TRENDS</p>
+            <div class="slide-content">
+                <div class="stats-row">
+                    <div class="stat-item animate-item" style="animation-delay: 0.1s">
+                        <div class="stat-value">5000亿</div>
+                        <div class="stat-label">全球智能制造市场规模（美元）</div>
+                    </div>
+                    <div class="stat-item animate-item" style="animation-delay: 0.2s">
+                        <div class="stat-value">15%+</div>
+                        <div class="stat-label">中国市场年复合增长率</div>
+                    </div>
+                    <div class="stat-item animate-item" style="animation-delay: 0.3s">
+                        <div class="stat-value">3个月</div>
+                        <div class="stat-label">客户期望交付周期</div>
+                    </div>
+                    <div class="stat-item animate-item" style="animation-delay: 0.4s">
+                        <div class="stat-value">&lt;30%</div>
+                        <div class="stat-label">设备标准化率</div>
+                    </div>
+                </div>
+                <div class="card-grid" style="margin-top: 1.5rem;">
+                    <div class="card animate-item" style="animation-delay: 0.5s">
+                        <div class="card-icon"><svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg></div>
+                        <h3>新能源汽车</h3>
+                        <p>产业爆发式增长，BMS/ECU测试需求激增</p>
+                    </div>
+                    <div class="card animate-item" style="animation-delay: 0.6s">
+                        <div class="card-icon"><svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg></div>
+                        <h3>消费电子</h3>
+                        <p>产品迭代加速，柔性测试设备需求旺盛</p>
+                    </div>
+                    <div class="card animate-item" style="animation-delay: 0.7s">
+                        <div class="card-icon"><svg viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg></div>
+                        <h3>半导体</h3>
+                        <p>国产化进程提速，高精度检测设备需求</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 5: Pain Points Overview -->
+        <section class="slide" data-slide="5">
+            <h2 class="slide-title">非标项目的"复杂性困局"</h2>
+            <p class="slide-subtitle">高度定制化 × 紧迫交付 × 多专业协同 = 管理复杂度指数级上升</p>
+            <div class="slide-content">
+                <div class="stats-row">
+                    <div class="stat-item"><div class="stat-value">3-5</div><div class="stat-label">专业团队协作</div></div>
+                    <div class="stat-item"><div class="stat-value">200+</div><div class="stat-label">任务节点</div></div>
+                    <div class="stat-item"><div class="stat-value">50+</div><div class="stat-label">变更请求</div></div>
+                    <div class="stat-item"><div class="stat-value">1000+</div><div class="stat-label">物料SKU</div></div>
+                </div>
+                <div class="card-grid">
+                    <div class="card pain-card">
+                        <div class="pain-number">01</div>
+                        <h3>需求变更频繁</h3>
+                        <p>变更信息散落在微信/邮件，版本混乱，返工成本占10-25%</p>
+                    </div>
+                    <div class="card pain-card">
+                        <div class="pain-number">02</div>
+                        <h3>多团队协同低效</h3>
+                        <p>机械改了电气不知道，70%返工源于信息不同步</p>
+                    </div>
+                    <div class="card pain-card">
+                        <div class="pain-number">03</div>
+                        <h3>进度不透明</h3>
+                        <p>周会汇报信息滞后3-5天，项目延期率高达40-60%</p>
+                    </div>
+                    <div class="card pain-card">
+                        <div class="pain-number">04</div>
+                        <h3>问题追溯困难</h3>
+                        <p>FAT/SAT问题无法快速定位，知识无法沉淀传承</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 6: Solution Intro -->
+        <section class="slide section-divider" data-slide="6">
+            <h2 class="section-title">从"救火"走向"掌控"</h2>
+            <p class="slide-subtitle" style="max-width: 600px; line-height: 1.8;">
+                深耕非标自动化行业，基于1000+项目经验<br>
+                打造专为非标自动化"量身定制"的AI驱动项目管理系统
+            </p>
+        </section>
+
+        <!-- Slide 7: Section - System Architecture -->
+        <section class="slide section-divider" data-slide="7">
+            <div class="section-number">02</div>
+            <h2 class="section-title">系统架构总览</h2>
+            <p class="slide-subtitle">四层架构，覆盖全生命周期</p>
+        </section>
+
+        <!-- Slide 8: System Architecture -->
+        <section class="slide" data-slide="8">
+            <h2 class="slide-title">系统架构</h2>
+            <p class="slide-subtitle">SYSTEM ARCHITECTURE</p>
+            <div class="slide-content">
+                <div class="arch-layer animate-item" style="animation-delay: 0.1s">
+                    <div class="arch-label">客户层</div>
+                    <div class="arch-items">
+                        <span class="arch-item">客户 Portal</span>
+                        <span class="arch-item">移动端 APP</span>
+                        <span class="arch-item">数据大屏</span>
+                        <span class="arch-item">第三方系统集成</span>
+                    </div>
+                </div>
+                <div class="arch-layer animate-item" style="animation-delay: 0.2s">
+                    <div class="arch-label">业务层</div>
+                    <div class="arch-items">
+                        <span class="arch-item">销售管理</span>
+                        <span class="arch-item">项目管理</span>
+                        <span class="arch-item">生产管理</span>
+                        <span class="arch-item">采购管理</span>
+                        <span class="arch-item">售后服务</span>
+                    </div>
+                </div>
+                <div class="arch-layer animate-item" style="animation-delay: 0.3s">
+                    <div class="arch-label">智能层</div>
+                    <div class="arch-items">
+                        <span class="arch-item">WBS 智能拆解</span>
+                        <span class="arch-item">风险预警引擎</span>
+                        <span class="arch-item">资源优化</span>
+                        <span class="arch-item">知识图谱</span>
+                        <span class="arch-item">智能问答</span>
+                    </div>
+                </div>
+                <div class="arch-layer animate-item" style="animation-delay: 0.4s">
+                    <div class="arch-label">数据层</div>
+                    <div class="arch-items">
+                        <span class="arch-item">项目数据</span>
+                        <span class="arch-item">物料数据</span>
+                        <span class="arch-item">工时数据</span>
+                        <span class="arch-item">质量数据</span>
+                        <span class="arch-item">客户数据</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 9: Project Lifecycle -->
+        <section class="slide" data-slide="9">
+            <h2 class="slide-title">项目全生命周期</h2>
+            <p class="slide-subtitle">覆盖从需求到质保的九大阶段</p>
+            <div class="slide-content">
+                <div class="timeline">
+                    <div class="timeline-item"><div class="timeline-circle">S1</div><div class="timeline-label">需求进入</div></div>
+                    <div class="timeline-item"><div class="timeline-circle">S2</div><div class="timeline-label">方案设计</div></div>
+                    <div class="timeline-item"><div class="timeline-circle">S3</div><div class="timeline-label">采购备料</div></div>
+                    <div class="timeline-item"><div class="timeline-circle">S4</div><div class="timeline-label">加工制造</div></div>
+                    <div class="timeline-item"><div class="timeline-circle">S5</div><div class="timeline-label">装配调试</div></div>
+                    <div class="timeline-item"><div class="timeline-circle">S6</div><div class="timeline-label">出厂验收</div></div>
+                    <div class="timeline-item"><div class="timeline-circle">S7</div><div class="timeline-label">包装发运</div></div>
+                    <div class="timeline-item"><div class="timeline-circle">S8</div><div class="timeline-label">现场安装</div></div>
+                    <div class="timeline-item"><div class="timeline-circle">S9</div><div class="timeline-label">质保结项</div></div>
+                </div>
+                <table class="data-table" style="margin-top: 1.5rem;">
+                    <thead><tr><th>阶段</th><th>核心交付物</th><th>关键管控点</th></tr></thead>
+                    <tbody>
+                        <tr><td>S1 需求进入</td><td>需求规格书</td><td>需求冻结确认</td></tr>
+                        <tr><td>S2 方案设计</td><td>3D设计图、BOM</td><td>设计评审通过</td></tr>
+                        <tr><td>S5 装配调试</td><td>整机调试OK</td><td>调试问题闭环</td></tr>
+                        <tr><td>S6 出厂验收</td><td>FAT报告</td><td>客户签字确认</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Slide 10: VS Traditional -->
+        <section class="slide" data-slide="10">
+            <h2 class="slide-title">告别 Excel + 微信 的时代</h2>
+            <p class="slide-subtitle">COMPARISON</p>
+            <div class="slide-content">
+                <div class="comparison">
+                    <div class="comparison-side comparison-old">
+                        <div class="comparison-title"><span class="cross">✗</span> 传统方式</div>
+                        <ul class="comparison-list">
+                            <li><span class="cross">✗</span> Excel手工排期，经验依赖</li>
+                            <li><span class="cross">✗</span> 周会汇报，信息滞后</li>
+                            <li><span class="cross">✗</span> 微信群+邮件，信息分散</li>
+                            <li><span class="cross">✗</span> 口头通知，容易遗漏</li>
+                            <li><span class="cross">✗</span> 靠经验，事后补救</li>
+                            <li><span class="cross">✗</span> 存个人电脑，离职流失</li>
+                        </ul>
+                    </div>
+                    <div class="comparison-side comparison-new">
+                        <div class="comparison-title"><span class="check">✓</span> 本系统</div>
+                        <ul class="comparison-list">
+                            <li><span class="check">✓</span> AI智能拆解，模板复用</li>
+                            <li><span class="check">✓</span> 实时看板，自动预警</li>
+                            <li><span class="check">✓</span> 统一平台，@通知到人</li>
+                            <li><span class="check">✓</span> 流程审批，自动通知</li>
+                            <li><span class="check">✓</span> AI预测，提前干预</li>
+                            <li><span class="check">✓</span> 统一知识库，持续积累</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 11: Section - Core Features -->
+        <section class="slide section-divider" data-slide="11">
+            <div class="section-number">03</div>
+            <h2 class="section-title">核心功能详解</h2>
+            <p class="slide-subtitle">八大功能模块，全流程覆盖</p>
+        </section>
+
+        <!-- Slide 12: Module Overview -->
+        <section class="slide" data-slide="12">
+            <h2 class="slide-title">功能模块全景图</h2>
+            <p class="slide-subtitle">CORE MODULES</p>
+            <div class="slide-content">
+                <div class="card-grid">
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg></div><h3>销售管理</h3><p>线索 · 商机 · 报价 · 合同全流程</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg></div><h3>项目管理</h3><p>WBS拆解 · 甘特图 · 里程碑 · 验收</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg></div><h3>生产管理</h3><p>排程 · 工单 · 物料齐套 · 报工</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M18 6h-2c0-2.21-1.79-4-4-4S8 3.79 8 6H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6-2c1.1 0 2 .9 2 2h-4c0-1.1.9-2 2-2zm6 16H6V8h2v2c0 .55.45 1 1 1s1-.45 1-1V8h4v2c0 .55.45 1 1 1s1-.45 1-1V8h2v12z"/></svg></div><h3>采购管理</h3><p>BOM驱动 · 订单 · 供应商 · 到货</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg></div><h3>验收管理</h3><p>FAT · SAT · 问题追踪 · 报告生成</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg></div><h3>预警系统</h3><p>风险雷达 · 智能预警 · 健康度评估</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div><h3>变更管理</h3><p>ECN流程 · 影响评估 · 多级审批</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div><h3>客户门户</h3><p>进度查询 · 在线验收 · 自助服务</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 13: Sales Module -->
+        <section class="slide" data-slide="13">
+            <h2 class="slide-title">销售管理模块</h2>
+            <p class="slide-subtitle">从线索到签单，商机不流失</p>
+            <div class="slide-content">
+                <div class="flow-container">
+                    <div class="flow-step">线索收集</div><span class="flow-arrow">→</span>
+                    <div class="flow-step">客户360°</div><span class="flow-arrow">→</span>
+                    <div class="flow-step">商机跟进</div><span class="flow-arrow">→</span>
+                    <div class="flow-step">智能报价</div><span class="flow-arrow">→</span>
+                    <div class="flow-step">合同签约</div>
+                </div>
+                <div class="card-grid" style="margin-top: 1.5rem;">
+                    <div class="card success-card"><div class="success-number">30<span class="success-unit">%</span></div><p>线索转化率提升</p></div>
+                    <div class="card success-card"><div class="success-number">50<span class="success-unit">%</span></div><p>报价效率提升</p></div>
+                    <div class="card success-card"><div class="success-number">40<span class="success-unit">%</span></div><p>销售预测准确率提升</p></div>
+                    <div class="card success-card"><div class="success-number">60<span class="success-unit">%</span></div><p>合同审批周期缩短</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 14: Project Module -->
+        <section class="slide" data-slide="14">
+            <h2 class="slide-title">项目管理模块</h2>
+            <p class="slide-subtitle">从立项到交付，全程可控</p>
+            <div class="slide-content">
+                <div class="card-grid">
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></div><h3>AI智能WBS拆解</h3><p>输入需求自动生成任务树，基于知识库全面覆盖，工时精准预估</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M19 4H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM5 18V6h14v12H5zm2-7h2v5H7v-5zm4-3h2v8h-2V8zm4 5h2v3h-2v-3z"/></svg></div><h3>实时甘特图</h3><p>任务拖拽排期，依赖关系连线，关键路径高亮，进度偏差预警</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg></div><h3>AI风险雷达</h3><p>进度/成本/质量/资源四维风险识别，提前2周预警，智能建议</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div><h3>多专业协同</h3><p>机/电/软任务关联，一处变更相关方通知，@通知到人</p></div>
+                </div>
+                <div class="stats-row" style="margin-top: 1rem;">
+                    <div class="stat-item"><div class="stat-value">25%</div><div class="stat-label">交付周期缩短</div></div>
+                    <div class="stat-item"><div class="stat-value">40%</div><div class="stat-label">延期项目减少</div></div>
+                    <div class="stat-item"><div class="stat-value">100%</div><div class="stat-label">项目可见度</div></div>
+                    <div class="stat-item"><div class="stat-value">500+</div><div class="stat-label">行业模板库</div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 15: Production & Procurement -->
+        <section class="slide" data-slide="15">
+            <h2 class="slide-title">生产与采购管理</h2>
+            <p class="slide-subtitle">从图纸到产品，降本增效</p>
+            <div class="slide-content">
+                <div class="comparison">
+                    <div class="comparison-side comparison-new" style="border-color: rgba(0,196,140,0.3); background: rgba(0,196,140,0.05);">
+                        <div class="comparison-title" style="color: var(--success-emerald);">生产管理</div>
+                        <ul class="comparison-list">
+                            <li><span class="check">✓</span> 智能生产排程，瓶颈识别</li>
+                            <li><span class="check">✓</span> 工单全程追踪，移动端报工</li>
+                            <li><span class="check">✓</span> 物料齐套检查，缺料预警</li>
+                            <li><span class="check">✓</span> 效率提升20%，齐套率95%+</li>
+                        </ul>
+                    </div>
+                    <div class="comparison-side comparison-new" style="border-color: rgba(123,104,238,0.3); background: rgba(123,104,238,0.05);">
+                        <div class="comparison-title" style="color: var(--purple-glow);">采购管理</div>
+                        <ul class="comparison-list">
+                            <li><span class="check">✓</span> BOM驱动采购需求</li>
+                            <li><span class="check">✓</span> 供应商全生命周期管理</li>
+                            <li><span class="check">✓</span> 长周期件提前预警</li>
+                            <li><span class="check">✓</span> 采购周期缩短30%</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 16: Customer Portal -->
+        <section class="slide" data-slide="16">
+            <h2 class="slide-title">客户专属 Portal</h2>
+            <p class="slide-subtitle">透明可信，自助便捷</p>
+            <div class="slide-content">
+                <div class="card-grid">
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div><h3>项目进度实时可见</h3><p>当前阶段、进度百分比、里程碑状态、关键任务一目了然</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg></div><h3>交付物在线查看</h3><p>3D/2D图纸预览、测试视频、验收文档、操作手册</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg></div><h3>FAT远程验收</h3><p>多机位直播、实时互动、在线签批，差旅成本降低70%</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 9h-2V5h2v6zm0 4h-2v-2h2v2z"/></svg></div><h3>问题反馈与跟踪</h3><p>在线提交工单、实时状态更新、历史问题查询、满意度评价</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 17: Section - AI Capabilities -->
+        <section class="slide section-divider" data-slide="17">
+            <div class="section-number">04</div>
+            <h2 class="section-title">AI能力与技术亮点</h2>
+            <p class="slide-subtitle">智能赋能，行业专属</p>
+        </section>
+
+        <!-- Slide 18: AI Brain -->
+        <section class="slide" data-slide="18">
+            <h2 class="slide-title">AI 赋能智能项目管理</h2>
+            <p class="slide-subtitle">ARTIFICIAL INTELLIGENCE</p>
+            <div class="slide-content">
+                <div class="ai-container">
+                    <div class="ai-core">
+                        <svg viewBox="0 0 24 24"><path d="M21 10.12h-6.78l2.74-2.82c-2.73-2.7-7.15-2.8-9.88-.1-2.73 2.71-2.73 7.08 0 9.79 2.73 2.71 7.15 2.71 9.88 0C18.32 15.65 19 14.08 19 12.1h2c0 1.98-.88 4.55-2.64 6.29-3.51 3.48-9.21 3.48-12.72 0-3.5-3.47-3.53-9.11-.02-12.58 3.51-3.47 9.14-3.47 12.65 0L21 3v7.12zM12.5 8v4.25l3.5 2.08-.72 1.21L11 13V8h1.5z"/></svg>
+                    </div>
+                    <div class="ai-features">
+                        <div class="ai-feature"><div class="ai-feature-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></div><span>WBS 智能拆解</span></div>
+                        <div class="ai-feature"><div class="ai-feature-icon"><svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg></div><span>风险预警引擎</span></div>
+                        <div class="ai-feature"><div class="ai-feature-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div><span>资源优化推荐</span></div>
+                        <div class="ai-feature"><div class="ai-feature-icon"><svg viewBox="0 0 24 24"><path d="M17.5 14.33C18.29 13.5 19.42 13 20.5 13v-2c-1.76 0-3.4.75-4.57 2.03C14.85 12 13.52 11 12 11c-2.22 0-4 1.79-4 4v7h2v-7c0-1.1.9-2 2-2s2 .9 2 2v7h2v-4.03c.52 1.21 1.69 2.03 3 2.03v-2c-.83 0-1.5-.67-1.5-1.5v-2.17z"/></svg></div><span>非标知识图谱</span></div>
+                        <div class="ai-feature"><div class="ai-feature-icon"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg></div><span>智能问答助手</span></div>
+                        <div class="ai-feature"><div class="ai-feature-icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg></div><span>数据洞察分析</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 19: Knowledge Graph -->
+        <section class="slide" data-slide="19">
+            <h2 class="slide-title">非标行业知识图谱</h2>
+            <p class="slide-subtitle">KNOWLEDGE GRAPH</p>
+            <div class="slide-content">
+                <div class="card-grid">
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"/></svg></div><h3>设备知识库</h3><p>500+ 典型设备类型<br>10000+ 标准模块<br>零部件关系图谱</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M22 11V3h-7v3H9V3H2v8h7V8h2v10h4v3h7v-8h-7v3h-2V8h2v3z"/></svg></div><h3>工艺知识库</h3><p>测试工艺流程<br>调试经验总结<br>故障处理方案</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1 0-2 .9-2 2v3.01c0 .72.43 1.34 1 1.69V20c0 1.1 1.1 2 2 2h14c.9 0 2-.9 2-2V8.7c.57-.35 1-.97 1-1.69V4c0-1.1-1-2-2-2zm-5 12H9v-2h6v2zm5-7H4V4h16v3z"/></svg></div><h3>物料知识库</h3><p>物料属性信息<br>替代物料关系<br>供应商信息</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg></div><h3>项目经验库</h3><p>历史项目数据<br>工时基准<br>风险案例</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 20: Tech Stack -->
+        <section class="slide" data-slide="20">
+            <h2 class="slide-title">技术架构与安全</h2>
+            <p class="slide-subtitle">企业级保障</p>
+            <div class="slide-content">
+                <div class="comparison">
+                    <div class="comparison-side comparison-new">
+                        <div class="comparison-title">技术栈</div>
+                        <ul class="comparison-list">
+                            <li><span class="check">✓</span> 前端：React + TypeScript</li>
+                            <li><span class="check">✓</span> 后端：FastAPI (Python)</li>
+                            <li><span class="check">✓</span> 数据库：MySQL + Redis</li>
+                            <li><span class="check">✓</span> AI：大语言模型 + 知识图谱</li>
+                            <li><span class="check">✓</span> 云原生架构，弹性扩展</li>
+                        </ul>
+                    </div>
+                    <div class="comparison-side comparison-new" style="border-color: rgba(0,196,140,0.3); background: rgba(0,196,140,0.05);">
+                        <div class="comparison-title" style="color: var(--success-emerald);">安全保障</div>
+                        <ul class="comparison-list">
+                            <li><span class="check">✓</span> RBAC权限 + 多因素认证</li>
+                            <li><span class="check">✓</span> HTTPS/TLS + AES-256加密</li>
+                            <li><span class="check">✓</span> 每日备份 + 异地容灾</li>
+                            <li><span class="check">✓</span> ISO 27001 + 等保三级</li>
+                            <li><span class="check">✓</span> 99.9% 可用性保障</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 21: Section - Customer Value -->
+        <section class="slide section-divider" data-slide="21">
+            <div class="section-number">05</div>
+            <h2 class="section-title">客户价值与案例</h2>
+            <p class="slide-subtitle">量化收益，真实案例</p>
+        </section>
+
+        <!-- Slide 22: Value Summary -->
+        <section class="slide" data-slide="22">
+            <h2 class="slide-title">为您创造的价值</h2>
+            <p class="slide-subtitle">CUSTOMER VALUE</p>
+            <div class="slide-content">
+                <div class="card-grid">
+                    <div class="card success-card"><div class="success-number">25<span class="success-unit">%</span></div><h3>交付更快</h3><p>项目交付周期缩短<br>AI驱动项目规划，实时风险预警</p></div>
+                    <div class="card success-card"><div class="success-number">35<span class="success-unit">%</span></div><h3>成本更低</h3><p>项目变更成本降低<br>流程化变更管理，影响范围可评估</p></div>
+                    <div class="card success-card"><div class="success-number">5<span class="success-unit">%↓</span></div><h3>质量更优</h3><p>返工率降低至5%以下<br>信息实时同步，版本可追溯</p></div>
+                    <div class="card success-card"><div class="success-number">82<span class="success-unit">+</span></div><h3>客户更满意</h3><p>客户NPS提升至82+<br>项目透明可见，自助服务便捷</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 23: Case Study 1 -->
+        <section class="slide" data-slide="23">
+            <h2 class="slide-title">案例：某汽车电子企业</h2>
+            <p class="slide-subtitle">新能源汽车电子 · 年产能5000台设备</p>
+            <div class="slide-content">
+                <div class="case-card">
+                    <div class="case-info">
+                        <h4>客户挑战</h4>
+                        <p>项目多、变更频繁、交付压力大</p>
+                        <h4 style="margin-top: 1rem;">解决方案</h4>
+                        <p>部署项目管理系统，对接现有ERP/PLM，培训80+用户</p>
+                    </div>
+                    <div class="case-metrics">
+                        <div class="case-metric"><div class="case-metric-value">16→12周</div><div class="case-metric-label">交付周期</div></div>
+                        <div class="case-metric"><div class="case-metric-value">40%→10%</div><div class="case-metric-label">延期率</div></div>
+                        <div class="case-metric"><div class="case-metric-value">↓35%</div><div class="case-metric-label">变更成本</div></div>
+                        <div class="case-metric"><div class="case-metric-value">75→90</div><div class="case-metric-label">满意度</div></div>
+                    </div>
+                    <div class="case-quote">"这套系统真正理解我们非标行业的痛点"</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 24: Case Study 2 -->
+        <section class="slide" data-slide="24">
+            <h2 class="slide-title">案例：某半导体设备企业</h2>
+            <p class="slide-subtitle">半导体封测设备 · 高端定制设备供应商</p>
+            <div class="slide-content">
+                <div class="case-card">
+                    <div class="case-info">
+                        <h4>客户挑战</h4>
+                        <p>技术复杂、多方协同、知识沉淀难</p>
+                        <h4 style="margin-top: 1rem;">解决方案</h4>
+                        <p>知识库建设、多专业协同看板、文档版本管理</p>
+                    </div>
+                    <div class="case-metrics">
+                        <div class="case-metric"><div class="case-metric-value">↑50%</div><div class="case-metric-label">设计评审效率</div></div>
+                        <div class="case-metric"><div class="case-metric-value">↓90%</div><div class="case-metric-label">版本错误</div></div>
+                        <div class="case-metric"><div class="case-metric-value">3→1月</div><div class="case-metric-label">新人上手周期</div></div>
+                        <div class="case-metric"><div class="case-metric-value">10%→60%</div><div class="case-metric-label">知识复用率</div></div>
+                    </div>
+                    <div class="case-quote">"终于不怕老员工离职了，经验都沉淀在系统里"</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 25: Section - Implementation -->
+        <section class="slide section-divider" data-slide="25">
+            <div class="section-number">06</div>
+            <h2 class="section-title">实施路径与服务</h2>
+            <p class="slide-subtitle">专业实施，持续服务</p>
+        </section>
+
+        <!-- Slide 26: Implementation Path -->
+        <section class="slide" data-slide="26">
+            <h2 class="slide-title">实施路径</h2>
+            <p class="slide-subtitle">标准8周上线</p>
+            <div class="slide-content">
+                <div class="timeline">
+                    <div class="timeline-item"><div class="timeline-circle">1-2周</div><div class="timeline-label">需求调研<br>业务梳理</div></div>
+                    <div class="timeline-item"><div class="timeline-circle">3-4周</div><div class="timeline-label">系统配置<br>定制开发</div></div>
+                    <div class="timeline-item"><div class="timeline-circle">5-6周</div><div class="timeline-label">数据迁移<br>试运行</div></div>
+                    <div class="timeline-item"><div class="timeline-circle">7-8周</div><div class="timeline-label">培训上线<br>运维支持</div></div>
+                </div>
+                <table class="data-table" style="margin-top: 1.5rem;">
+                    <thead><tr><th>阶段</th><th>内容</th><th>交付物</th></tr></thead>
+                    <tbody>
+                        <tr><td>需求调研</td><td>业务流程梳理、需求确认</td><td>需求规格书</td></tr>
+                        <tr><td>系统配置</td><td>参数配置、模板定制</td><td>系统环境</td></tr>
+                        <tr><td>数据迁移</td><td>历史数据导入、基础数据</td><td>数据验收报告</td></tr>
+                        <tr><td>培训上线</td><td>用户培训、试运行</td><td>培训手册、上线报告</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Slide 27: Service Guarantee -->
+        <section class="slide" data-slide="27">
+            <h2 class="slide-title">服务保障体系</h2>
+            <p class="slide-subtitle">SERVICE GUARANTEE</p>
+            <div class="slide-content">
+                <div class="card-grid">
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div><h3>实施服务</h3><p>专业实施顾问<br>项目经理负责制<br>定期项目汇报</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg></div><h3>培训服务</h3><p>管理员培训<br>用户培训<br>在线培训课程</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57-.35-.11-.74-.03-1.02.24l-2.2 2.2c-2.83-1.44-5.15-3.75-6.59-6.59l2.2-2.21c.28-.26.36-.65.25-1C8.7 6.45 8.5 5.25 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1z"/></svg></div><h3>技术支持</h3><p>7×24小时热线<br>远程技术支持<br>2小时响应承诺</p></div>
+                    <div class="card"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg></div><h3>持续服务</h3><p>季度业务回顾<br>系统优化建议<br>新功能培训</p></div>
+                </div>
+                <div class="stats-row" style="margin-top: 1.5rem;">
+                    <div class="stat-item"><div class="stat-value">99.9%</div><div class="stat-label">系统可用性</div></div>
+                    <div class="stat-item"><div class="stat-value">2小时</div><div class="stat-label">问题响应</div></div>
+                    <div class="stat-item"><div class="stat-value">24小时</div><div class="stat-label">重大问题解决</div></div>
+                    <div class="stat-item"><div class="stat-value">30天</div><div class="stat-label">数据可恢复</div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 28: Section - Cooperation -->
+        <section class="slide section-divider" data-slide="28">
+            <div class="section-number">07</div>
+            <h2 class="section-title">合作展望</h2>
+            <p class="slide-subtitle">灵活合作，共创价值</p>
+        </section>
+
+        <!-- Slide 29: Product Versions -->
+        <section class="slide" data-slide="29">
+            <h2 class="slide-title">产品版本与定价</h2>
+            <p class="slide-subtitle">PRODUCT VERSIONS</p>
+            <div class="slide-content">
+                <div class="version-grid">
+                    <div class="version-card">
+                        <div class="version-name">标准版</div>
+                        <ul class="version-features">
+                            <li><span class="check">✓</span> 项目管理</li>
+                            <li><span class="cross">-</span> 销售管理</li>
+                            <li><span class="cross">-</span> 生产管理</li>
+                            <li><span class="cross">-</span> 客户Portal</li>
+                            <li><span class="check">✓</span> 基础AI能力</li>
+                            <li>SaaS部署 / 20用户</li>
+                        </ul>
+                    </div>
+                    <div class="version-card recommended">
+                        <div class="recommended-badge">推荐</div>
+                        <div class="version-name">专业版</div>
+                        <ul class="version-features">
+                            <li><span class="check">✓</span> 项目管理</li>
+                            <li><span class="check">✓</span> 销售管理</li>
+                            <li><span class="check">✓</span> 生产管理</li>
+                            <li><span class="check">✓</span> 客户Portal</li>
+                            <li><span class="check">✓</span> 完整AI能力</li>
+                            <li>SaaS/私有化 / 100用户</li>
+                        </ul>
+                    </div>
+                    <div class="version-card">
+                        <div class="version-name">企业版</div>
+                        <ul class="version-features">
+                            <li><span class="check">✓</span> 全部功能</li>
+                            <li><span class="check">✓</span> AI能力+定制</li>
+                            <li><span class="check">✓</span> 深度系统集成</li>
+                            <li><span class="check">✓</span> 私有化部署</li>
+                            <li><span class="check">✓</span> 不限用户数</li>
+                            <li>专属服务团队</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 30: Contact -->
+        <section class="slide" data-slide="30">
+            <h2 class="slide-title">开启数字化之旅</h2>
+            <p class="slide-subtitle">让复杂项目从"救火"走向"掌控"</p>
+            <div class="slide-content">
+                <div class="contact-grid">
+                    <div>
+                        <div class="contact-item">
+                            <div class="contact-icon"><svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></div>
+                            <div class="contact-text">400-XXX-XXXX<span>服务热线（工作日 9:00-18:00）</span></div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-icon"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></div>
+                            <div class="contact-text">sales@company.com<span>商务合作邮箱</span></div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div>
+                            <div class="contact-text">www.company.com<span>官方网站</span></div>
+                        </div>
+                    </div>
+                    <div class="qr-code">
+                        <div class="qr-placeholder"></div>
+                        <div class="qr-label">扫码预约演示</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav-dots" id="navDots"></div>
+    <div class="nav-arrow prev" onclick="prevSlide()"><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></div>
+    <div class="nav-arrow next" onclick="nextSlide()"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
+    <div class="progress-bar" id="progressBar"></div>
+    <div class="slide-counter"><span id="currentSlide">01</span> / <span id="totalSlides">30</span></div>
+    <div class="keyboard-hint"><kbd>←</kbd> <kbd>→</kbd> 切换</div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = document.querySelectorAll('.slide').length;
+
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 25; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        function createNavDots() {
+            const container = document.getElementById('navDots');
+            for (let i = 1; i <= totalSlides; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'nav-dot' + (i === 1 ? ' active' : '');
+                dot.onclick = () => goToSlide(i);
+                container.appendChild(dot);
+            }
+        }
+
+        function updateSlide() {
+            const slides = document.querySelectorAll('.slide');
+            const dots = document.querySelectorAll('.nav-dot');
+
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active', 'prev');
+                if (index + 1 === currentSlide) {
+                    slide.classList.add('active');
+                } else if (index + 1 < currentSlide) {
+                    slide.classList.add('prev');
+                }
+            });
+
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index + 1 === currentSlide);
+            });
+
+            document.getElementById('progressBar').style.width = (currentSlide / totalSlides) * 100 + '%';
+            document.getElementById('currentSlide').textContent = String(currentSlide).padStart(2, '0');
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) { currentSlide++; updateSlide(); }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) { currentSlide--; updateSlide(); }
+        }
+
+        function goToSlide(num) {
+            currentSlide = num;
+            updateSlide();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+            else if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+            else if (e.key === 'Home') { e.preventDefault(); goToSlide(1); }
+            else if (e.key === 'End') { e.preventDefault(); goToSlide(totalSlides); }
+        });
+
+        let touchStartX = 0;
+        document.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; });
+        document.addEventListener('touchend', (e) => {
+            const diff = touchStartX - e.changedTouches[0].screenX;
+            if (Math.abs(diff) > 50) { diff > 0 ? nextSlide() : prevSlide(); }
+        });
+
+        createParticles();
+        createNavDots();
+        document.getElementById('totalSlides').textContent = String(totalSlides).padStart(2, '0');
+    </script>
+</body>
+</html>

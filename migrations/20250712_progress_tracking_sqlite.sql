@@ -1,7 +1,7 @@
 -- Progress tracking module migration (SQLite)
 -- Targets: WBS templates, tasks, dependencies, progress logs, baselines
 
-PRAGMA foreign_keys = ON;
+-- PRAGMA foreign_keys = ON;  -- Disabled for migration
 BEGIN;
 
 -- WBS templates

@@ -275,7 +275,7 @@ export default function ShortageReportNew() {
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px]">
                     {materials.length === 0 ? (
-                      <SelectItem value="" disabled>
+                      <SelectItem value="__disabled__" disabled>
                         {searchKeyword ? '未找到匹配的物料' : '暂无物料数据'}
                       </SelectItem>
                     ) : (

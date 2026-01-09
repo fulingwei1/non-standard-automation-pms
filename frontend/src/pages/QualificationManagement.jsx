@@ -350,7 +350,7 @@ export default function QualificationManagement() {
                     <SelectValue placeholder="筛选角色类型" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">全部</SelectItem>
+                    <SelectItem value="all">全部</SelectItem>
                     <SelectItem value="ENGINEER">工程师</SelectItem>
                     <SelectItem value="SALES">销售</SelectItem>
                     <SelectItem value="CUSTOMER_SERVICE">客服</SelectItem>
@@ -365,7 +365,7 @@ export default function QualificationManagement() {
                     <SelectValue placeholder="状态" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">全部</SelectItem>
+                    <SelectItem value="all">全部</SelectItem>
                     <SelectItem value="true">启用</SelectItem>
                     <SelectItem value="false">停用</SelectItem>
                   </SelectContent>
@@ -504,7 +504,7 @@ export default function QualificationManagement() {
                     <SelectValue placeholder="筛选岗位类型" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">全部</SelectItem>
+                    <SelectItem value="all">全部</SelectItem>
                     <SelectItem value="ENGINEER">工程师</SelectItem>
                     <SelectItem value="SALES">销售</SelectItem>
                     <SelectItem value="CUSTOMER_SERVICE">客服</SelectItem>
@@ -578,7 +578,7 @@ export default function QualificationManagement() {
                     <SelectValue placeholder="筛选岗位类型" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">全部</SelectItem>
+                    <SelectItem value="all">全部</SelectItem>
                     <SelectItem value="ENGINEER">工程师</SelectItem>
                     <SelectItem value="SALES">销售</SelectItem>
                     <SelectItem value="CUSTOMER_SERVICE">客服</SelectItem>
@@ -593,7 +593,7 @@ export default function QualificationManagement() {
                     <SelectValue placeholder="状态" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">全部</SelectItem>
+                    <SelectItem value="all">全部</SelectItem>
                     <SelectItem value="PENDING">待认证</SelectItem>
                     <SelectItem value="APPROVED">已认证</SelectItem>
                     <SelectItem value="EXPIRED">已过期</SelectItem>

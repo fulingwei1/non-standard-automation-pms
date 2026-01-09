@@ -3,7 +3,7 @@
  * Features: Inventory management, purchase orders, supplier management, low stock alerts
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
@@ -48,6 +48,7 @@ import {
 import { cn, formatCurrency, formatDate } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { SimpleBarChart, MonthlyTrendChart, CategoryBreakdownCard } from '../components/administrative/StatisticsCharts'
+import { adminApi } from '../services/api'
 
 // Mock data
 const mockSupplies = [
@@ -108,22 +109,43 @@ export default function OfficeSuppliesManagement() {
   const [searchText, setSearchText] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [loading, setLoading] = useState(false)
+  const [supplies, setSupplies] = useState(mockSupplies)
+
+  // Fetch data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const res = await adminApi.supplies.list()
+        if (res.data?.items) {
+          setSupplies(res.data.items)
+        } else if (Array.isArray(res.data)) {
+          setSupplies(res.data)
+        }
+      } catch (err) {
+        console.log('Office supplies API unavailable, using mock data')
+      }
+      setLoading(false)
+    }
+    fetchData()
+  }, [])
 
   const filteredSupplies = useMemo(() => {
-    return mockSupplies.filter(item => {
+    return supplies.filter(item => {
       const matchSearch = item.name.toLowerCase().includes(searchText.toLowerCase())
       const matchCategory = categoryFilter === 'all' || item.category === categoryFilter
       const matchStatus = statusFilter === 'all' || item.status === statusFilter
       return matchSearch && matchCategory && matchStatus
     })
-  }, [searchText, categoryFilter, statusFilter])
+  }, [supplies, searchText, categoryFilter, statusFilter])
 
   const stats = useMemo(() => {
-    const totalItems = mockSupplies.length
-    const lowStockItems = mockSupplies.filter(s => s.status === 'low').length
-    const totalValue = mockSupplies.reduce((sum, s) => sum + s.totalValue, 0)
+    const totalItems = supplies.length
+    const lowStockItems = supplies.filter(s => s.status === 'low').length
+    const totalValue = supplies.reduce((sum, s) => sum + s.totalValue, 0)
     return { totalItems, lowStockItems, totalValue }
-  }, [])
+  }, [supplies])
 
   return (
     <motion.div
@@ -220,8 +242,8 @@ export default function OfficeSuppliesManagement() {
                 <CategoryBreakdownCard
                   title="库存价值"
                   data={[
-                    { label: '办公耗材', value: mockSupplies.filter(s => s.category === '办公耗材').reduce((sum, s) => sum + s.totalValue, 0), color: '#3b82f6' },
-                    { label: '办公文具', value: mockSupplies.filter(s => s.category === '办公文具').reduce((sum, s) => sum + s.totalValue, 0), color: '#10b981' },
+                    { label: '办公耗材', value: supplies.filter(s => s.category === '办公耗材').reduce((sum, s) => sum + s.totalValue, 0), color: '#3b82f6' },
+                    { label: '办公文具', value: supplies.filter(s => s.category === '办公文具').reduce((sum, s) => sum + s.totalValue, 0), color: '#10b981' },
                   ]}
                   total={stats.totalValue}
                   formatValue={formatCurrency}
@@ -440,7 +462,7 @@ export default function OfficeSuppliesManagement() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {mockSupplies.map((item) => (
+                {supplies.map((item) => (
                   <div
                     key={item.id}
                     className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50"

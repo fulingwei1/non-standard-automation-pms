@@ -29,7 +29,6 @@ import {
   X,
   RefreshCw,
   Download,
-  CheckSquare,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -924,14 +923,14 @@ export default function ECNManagement() {
               <div>
                 <label className="text-sm font-medium mb-2 block">项目</label>
                 <Select
-                  value={newECN.project_id?.toString() || ''}
-                  onValueChange={(val) => setNewECN({ ...newECN, project_id: val ? parseInt(val) : null })}
+                  value={newECN.project_id?.toString() || '__none__'}
+                  onValueChange={(val) => setNewECN({ ...newECN, project_id: val && val !== '__none__' ? parseInt(val) : null })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="选择项目" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">无</SelectItem>
+                    <SelectItem value="__none__">无</SelectItem>
                     {projects.map((proj) => (
                       <SelectItem key={proj.id} value={proj.id.toString()}>
                         {proj.project_name}
@@ -1802,14 +1801,14 @@ export default function ECNManagement() {
               <div>
                 <label className="text-sm font-medium mb-2 block">选择物料</label>
                 <Select
-                  value={materialForm.material_id?.toString() || ''}
+                  value={$?.toString() || '__none__'}
                   onValueChange={(val) => handleMaterialSelect(parseInt(val))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="选择物料（可选）" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">手动输入</SelectItem>
+                    <SelectItem value="__empty__">手动输入</SelectItem>
                     {materials.map((mat) => (
                       <SelectItem key={mat.id} value={mat.id.toString()}>
                         {mat.material_code} - {mat.material_name}
@@ -1963,7 +1962,7 @@ export default function ECNManagement() {
               <div>
                 <label className="text-sm font-medium mb-2 block">选择订单</label>
                 <Select
-                  value={orderForm.order_id?.toString() || ''}
+                  value={$?.toString() || '__none__'}
                   onValueChange={(val) => {
                     const order = purchaseOrders.find(o => o.id === parseInt(val))
                     if (order) {
@@ -1979,7 +1978,7 @@ export default function ECNManagement() {
                     <SelectValue placeholder="选择订单（可选）" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">手动输入</SelectItem>
+                    <SelectItem value="__empty__">手动输入</SelectItem>
                     {purchaseOrders
                       .filter(o => orderForm.order_type === 'PURCHASE' || o.order_type === orderForm.order_type)
                       .map((order) => (
@@ -2017,7 +2016,7 @@ export default function ECNManagement() {
                     <SelectValue placeholder="选择处理方式" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">无</SelectItem>
+                    <SelectItem value="__none__">无</SelectItem>
                     <SelectItem value="CANCEL">取消订单</SelectItem>
                     <SelectItem value="MODIFY">修改订单</SelectItem>
                     <SelectItem value="DELAY">延期交付</SelectItem>

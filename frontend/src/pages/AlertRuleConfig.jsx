@@ -473,7 +473,7 @@ export default function AlertRuleConfig() {
           <EmptyState
             icon={Settings}
             title="暂无预警规则"
-            description="点击"新建规则"按钮创建第一个预警规则"
+            description="点击「新建规则」按钮创建第一个预警规则"
           />
         ) : (
           <motion.div

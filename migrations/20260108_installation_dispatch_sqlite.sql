@@ -1,7 +1,7 @@
 -- Installation Dispatch module migration (SQLite)
 -- Creates installation_dispatch_orders table
 
-PRAGMA foreign_keys = ON;
+-- PRAGMA foreign_keys = ON;  -- Disabled for migration
 BEGIN;
 
 -- Installation Dispatch Orders Table

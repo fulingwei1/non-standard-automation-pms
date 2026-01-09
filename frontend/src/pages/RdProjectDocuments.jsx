@@ -281,7 +281,7 @@ export default function RdProjectDocuments() {
                 <SelectValue placeholder="文档类型" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部类型</SelectItem>
+                <SelectItem value="all">全部类型</SelectItem>
                 {Object.entries(docTypeMap).map(([key, value]) => (
                   <SelectItem key={key} value={key}>
                     {value.label}

@@ -3,7 +3,7 @@
  * Features: Expense statistics, budget analysis, expense trends, category breakdown
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
   DollarSign,
@@ -19,6 +19,7 @@ import {
   Building2,
   Coffee,
   Printer,
+  Loader2,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -43,9 +44,10 @@ import {
   TrendComparisonCard,
   CategoryBreakdownCard,
 } from '../components/administrative/StatisticsCharts'
+import { adminApi } from '../services/api'
 
 // Mock data
-const mockExpenseStats = {
+const expenseStats = {
   monthlyBudget: 500000,
   monthlySpent: 385000,
   budgetUtilization: 77,
@@ -54,7 +56,7 @@ const mockExpenseStats = {
   trend: -8.3,
 }
 
-const mockCategoryExpenses = [
+const categoryExpenses = [
   { category: '办公用品', amount: 45000, percentage: 11.7, icon: Package, color: 'text-blue-400' },
   { category: '车辆费用', amount: 28000, percentage: 7.3, icon: Car, color: 'text-cyan-400' },
   { category: '固定资产', amount: 120000, percentage: 31.2, icon: Building2, color: 'text-purple-400' },
@@ -63,7 +65,7 @@ const mockCategoryExpenses = [
   { category: '其他费用', amount: 152000, percentage: 39.5, icon: DollarSign, color: 'text-slate-400' },
 ]
 
-const mockMonthlyTrend = [
+const monthlyTrend = [
   { month: '2024-07', amount: 380000 },
   { month: '2024-08', amount: 395000 },
   { month: '2024-09', amount: 410000 },
@@ -73,11 +75,32 @@ const mockMonthlyTrend = [
 ]
 
 export default function AdministrativeExpenses() {
+  const [loading, setLoading] = useState(true)
+  const [expenseStats, setExpenseStats] = useState(expenseStats)
+  const [categoryExpenses, setCategoryExpenses] = useState(categoryExpenses)
+  const [monthlyTrend, setMonthlyTrend] = useState(monthlyTrend)
   const [periodFilter, setPeriodFilter] = useState('month')
 
+  // Load data from API with fallback to mock data
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const statsRes = await adminApi.expenses.getStatistics({ period: periodFilter })
+        if (statsRes.data) {
+          setExpenseStats(statsRes.data)
+        }
+      } catch (err) {
+        console.log('Expense statistics API unavailable, using mock data')
+      }
+      setLoading(false)
+    }
+    fetchData()
+  }, [periodFilter])
+
   const totalExpenses = useMemo(() => {
-    return mockCategoryExpenses.reduce((sum, item) => sum + item.amount, 0)
-  }, [])
+    return categoryExpenses.reduce((sum, item) => sum + item.amount, 0)
+  }, [categoryExpenses])
 
   return (
     <motion.div
@@ -116,7 +139,7 @@ export default function AdministrativeExpenses() {
               <div>
                 <p className="text-sm text-slate-400">月度预算</p>
                 <p className="text-2xl font-bold text-white mt-1">
-                  {formatCurrency(mockExpenseStats.monthlyBudget)}
+                  {formatCurrency(expenseStats.monthlyBudget)}
                 </p>
               </div>
               <DollarSign className="h-8 w-8 text-blue-400" />
@@ -129,7 +152,7 @@ export default function AdministrativeExpenses() {
               <div>
                 <p className="text-sm text-slate-400">已使用</p>
                 <p className="text-2xl font-bold text-amber-400 mt-1">
-                  {formatCurrency(mockExpenseStats.monthlySpent)}
+                  {formatCurrency(expenseStats.monthlySpent)}
                 </p>
               </div>
               <BarChart3 className="h-8 w-8 text-amber-400" />
@@ -142,7 +165,7 @@ export default function AdministrativeExpenses() {
               <div>
                 <p className="text-sm text-slate-400">剩余预算</p>
                 <p className="text-2xl font-bold text-emerald-400 mt-1">
-                  {formatCurrency(mockExpenseStats.remainingBudget)}
+                  {formatCurrency(expenseStats.remainingBudget)}
                 </p>
               </div>
               <TrendingUp className="h-8 w-8 text-emerald-400" />
@@ -155,18 +178,18 @@ export default function AdministrativeExpenses() {
               <div>
                 <p className="text-sm text-slate-400">使用率</p>
                 <p className="text-2xl font-bold text-cyan-400 mt-1">
-                  {mockExpenseStats.budgetUtilization}%
+                  {expenseStats.budgetUtilization}%
                 </p>
                 <div className="flex items-center gap-1 mt-1">
-                  {mockExpenseStats.trend < 0 ? (
+                  {expenseStats.trend < 0 ? (
                     <>
                       <TrendingDown className="w-3 h-3 text-emerald-400" />
-                      <span className="text-xs text-emerald-400">{Math.abs(mockExpenseStats.trend)}%</span>
+                      <span className="text-xs text-emerald-400">{Math.abs(expenseStats.trend)}%</span>
                     </>
                   ) : (
                     <>
                       <TrendingUp className="w-3 h-3 text-red-400" />
-                      <span className="text-xs text-red-400">+{mockExpenseStats.trend}%</span>
+                      <span className="text-xs text-red-400">+{expenseStats.trend}%</span>
                     </>
                   )}
                   <span className="text-xs text-slate-500 ml-1">vs 上月</span>
@@ -189,26 +212,26 @@ export default function AdministrativeExpenses() {
               <div>
                 <p className="text-sm text-slate-400">月度预算</p>
                 <p className="text-3xl font-bold text-white mt-1">
-                  {formatCurrency(mockExpenseStats.monthlyBudget)}
+                  {formatCurrency(expenseStats.monthlyBudget)}
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-sm text-slate-400">已使用</p>
                 <p className="text-3xl font-bold text-amber-400 mt-1">
-                  {formatCurrency(mockExpenseStats.monthlySpent)}
+                  {formatCurrency(expenseStats.monthlySpent)}
                 </p>
               </div>
             </div>
             <Progress
-              value={mockExpenseStats.budgetUtilization}
+              value={expenseStats.budgetUtilization}
               className="h-4 bg-slate-700/50"
             />
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-400">
-                使用率: {mockExpenseStats.budgetUtilization}%
+                使用率: {expenseStats.budgetUtilization}%
               </span>
               <span className="text-slate-400">
-                剩余: {formatCurrency(mockExpenseStats.remainingBudget)}
+                剩余: {formatCurrency(expenseStats.remainingBudget)}
               </span>
             </div>
           </div>
@@ -231,7 +254,7 @@ export default function AdministrativeExpenses() {
             </CardHeader>
             <CardContent>
               <SimplePieChart
-                data={mockCategoryExpenses.map((item, index) => ({
+                data={categoryExpenses.map((item, index) => ({
                   label: item.category,
                   value: item.amount,
                   color: index === 0 ? '#3b82f6' : 
@@ -253,7 +276,7 @@ export default function AdministrativeExpenses() {
             <CardContent>
               <CategoryBreakdownCard
                 title="本月费用分类"
-                data={mockCategoryExpenses.map((item, index) => ({
+                data={categoryExpenses.map((item, index) => ({
                   label: item.category,
                   value: item.amount,
                   color: index === 0 ? '#3b82f6' : 
@@ -270,7 +293,7 @@ export default function AdministrativeExpenses() {
 
           {/* Category Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {mockCategoryExpenses.map((item, index) => {
+            {categoryExpenses.map((item, index) => {
               const Icon = item.icon
               return (
                 <Card key={index}>
@@ -308,7 +331,7 @@ export default function AdministrativeExpenses() {
             </CardHeader>
             <CardContent>
               <MonthlyTrendChart
-                data={mockMonthlyTrend}
+                data={monthlyTrend}
                 valueKey="amount"
                 labelKey="month"
                 height={200}
@@ -320,19 +343,19 @@ export default function AdministrativeExpenses() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <TrendComparisonCard
               title="本月费用"
-              current={mockExpenseStats.monthlySpent}
-              previous={mockExpenseStats.lastMonthSpent}
+              current={expenseStats.monthlySpent}
+              previous={expenseStats.lastMonthSpent}
               formatValue={formatCurrency}
             />
             <TrendComparisonCard
               title="预算使用率"
-              current={mockExpenseStats.budgetUtilization}
+              current={expenseStats.budgetUtilization}
               previous={85}
               unit="%"
             />
             <TrendComparisonCard
               title="剩余预算"
-              current={mockExpenseStats.remainingBudget}
+              current={expenseStats.remainingBudget}
               previous={80000}
               formatValue={formatCurrency}
             />
@@ -345,8 +368,8 @@ export default function AdministrativeExpenses() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockCategoryExpenses.slice(0, 3).map((item, index) => {
-                  const trendData = mockMonthlyTrend.map(month => ({
+                {categoryExpenses.slice(0, 3).map((item, index) => {
+                  const trendData = monthlyTrend.map(month => ({
                     label: month.month,
                     value: Math.floor(month.amount * (item.percentage / 100)),
                   }))
@@ -382,7 +405,7 @@ export default function AdministrativeExpenses() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockCategoryExpenses.flatMap((category, catIndex) => {
+                {categoryExpenses.flatMap((category, catIndex) => {
                   // 模拟每个分类下的明细
                   const detailCount = Math.floor(category.amount / 5000) || 1
                   return Array.from({ length: Math.min(detailCount, 5) }, (_, i) => ({

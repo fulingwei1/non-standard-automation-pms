@@ -679,7 +679,7 @@ export default function PurchaseMaterialCostManagement() {
                     <SelectValue placeholder="选择供应商" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">无</SelectItem>
+                    <SelectItem value="__none__">无</SelectItem>
                     {suppliers.map(s => (
                       <SelectItem key={s.id} value={s.id.toString()}>
                         {s.supplier_name}

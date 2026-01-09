@@ -72,6 +72,23 @@ export const financialCostApi = {
     deleteCost: (id) => api.delete(`/projects/financial-costs/${id}`),
 };
 
+export const projectWorkspaceApi = {
+    getWorkspace: (projectId) => api.get(`/projects/${projectId}/workspace`),
+    getBonuses: (projectId) => api.get(`/projects/${projectId}/bonuses`),
+    getMeetings: (projectId, params) => api.get(`/projects/${projectId}/meetings`, { params }),
+    linkMeeting: (projectId, meetingId, isPrimary) => api.post(`/projects/${projectId}/meetings/${meetingId}/link`, null, { params: { is_primary: isPrimary } }),
+    getIssues: (projectId, params) => api.get(`/projects/${projectId}/issues`, { params }),
+    getSolutions: (projectId, params) => api.get(`/projects/${projectId}/solutions`, { params }),
+};
+
+export const projectContributionApi = {
+    getContributions: (projectId, params) => api.get(`/projects/${projectId}/contributions`, { params }),
+    rateMember: (projectId, userId, data) => api.post(`/projects/${projectId}/contributions/${userId}/rate`, data),
+    getReport: (projectId, params) => api.get(`/projects/${projectId}/contributions/report`, { params }),
+    getUserContributions: (userId, params) => api.get(`/users/${userId}/project-contributions`, { params }),
+    calculate: (projectId, period) => api.post(`/projects/${projectId}/contributions/calculate`, null, { params: { period } }),
+};
+
 export const projectApi = {
     list: (params) => api.get('/projects/', { params }),
     get: (id) => api.get(`/projects/${id}`),
@@ -133,6 +150,11 @@ export const memberApi = {
     list: (projectId) => api.get('/members/', { params: { project_id: projectId } }),
     add: (data) => api.post('/members/', data),
     remove: (id) => api.delete(`/members/${id}`),
+    batchAdd: (projectId, data) => api.post(`/projects/${projectId}/members/batch`, data),
+    checkConflicts: (projectId, userId, params) => api.get(`/projects/${projectId}/members/conflicts`, { params: { user_id: userId, ...params } }),
+    getDeptUsers: (projectId, deptId) => api.get(`/projects/${projectId}/members/from-dept/${deptId}`),
+    notifyDeptManager: (projectId, memberId) => api.post(`/projects/${projectId}/members/${memberId}/notify-dept-manager`),
+    update: (memberId, data) => api.put(`/project-members/${memberId}`, data),
 };
 
 export const costApi = {
@@ -152,17 +174,20 @@ export const documentApi = {
 
 export const authApi = {
     login: (formData) => {
-        // FastAPI的OAuth2PasswordRequestForm需要multipart/form-data格式
-        const formDataObj = new FormData();
+        // FastAPI的OAuth2PasswordRequestForm需要application/x-www-form-urlencoded格式
         if (formData instanceof URLSearchParams) {
-            for (const [key, value] of formData.entries()) {
-                formDataObj.append(key, value);
-            }
-        } else {
-            // 如果已经是FormData，直接使用
-            return api.post('/auth/login', formData);
+            return api.post('/auth/login', formData.toString(), {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+            });
         }
-        return api.post('/auth/login', formDataObj);
+        // 如果已经是FormData，使用multipart/form-data
+        return api.post('/auth/login', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
     },
     me: () => api.get('/auth/me'),
     refresh: () => api.post('/auth/refresh'),
@@ -1566,6 +1591,16 @@ export const assemblyKitApi = {
     executeAnalysis: (data) => api.post('/assembly/analysis', data),
     getAnalysisDetail: (readinessId) => api.get(`/assembly/analysis/${readinessId}`),
     getProjectReadiness: (projectId, params) => api.get(`/assembly/projects/${projectId}/assembly-readiness`, { params }),
+    
+    // 智能推荐
+    getRecommendations: (bomId) => api.get(`/assembly/bom/${bomId}/assembly-attrs/recommendations`),
+    smartRecommend: (bomId, data) => api.post(`/assembly/bom/${bomId}/assembly-attrs/smart-recommend`, data),
+    
+    // 排产建议
+    generateSuggestions: (params) => api.post('/assembly/suggestions/generate', null, { params }),
+    
+    // 优化建议
+    getOptimizationSuggestions: (readinessId) => api.get(`/assembly/analysis/${readinessId}/optimize`),
 
     // 缺料预警
     getShortageAlerts: (params) => api.get('/assembly/shortage-alerts', { params }),
@@ -1677,4 +1712,224 @@ export const projectRoleApi = {
 
     // 项目角色概览
     getOverview: (projectId) => api.get(`/project-roles/projects/${projectId}/overview`),
+};
+
+// Administrative APIs (行政管理)
+export const adminApi = {
+    // 行政审批
+    approvals: {
+        list: (params) => api.get('/admin/approvals', { params }),
+        get: (id) => api.get(`/admin/approvals/${id}`),
+        approve: (id, data) => api.put(`/admin/approvals/${id}/approve`, data),
+        reject: (id, data) => api.put(`/admin/approvals/${id}/reject`, data),
+        getStatistics: (params) => api.get('/admin/approvals/statistics', { params }),
+    },
+
+    // 费用报销
+    expenses: {
+        list: (params) => api.get('/admin/expenses', { params }),
+        get: (id) => api.get(`/admin/expenses/${id}`),
+        create: (data) => api.post('/admin/expenses', data),
+        update: (id, data) => api.put(`/admin/expenses/${id}`, data),
+        submit: (id) => api.put(`/admin/expenses/${id}/submit`),
+        approve: (id, data) => api.put(`/admin/expenses/${id}/approve`, data),
+        reject: (id, data) => api.put(`/admin/expenses/${id}/reject`, data),
+        getStatistics: (params) => api.get('/admin/expenses/statistics', { params }),
+    },
+
+    // 请假管理
+    leave: {
+        list: (params) => api.get('/admin/leave', { params }),
+        get: (id) => api.get(`/admin/leave/${id}`),
+        create: (data) => api.post('/admin/leave', data),
+        update: (id, data) => api.put(`/admin/leave/${id}`, data),
+        approve: (id, data) => api.put(`/admin/leave/${id}/approve`, data),
+        reject: (id, data) => api.put(`/admin/leave/${id}/reject`, data),
+        cancel: (id) => api.put(`/admin/leave/${id}/cancel`),
+        getStatistics: (params) => api.get('/admin/leave/statistics', { params }),
+        getBalance: (userId) => api.get(`/admin/leave/balance/${userId}`),
+    },
+
+    // 考勤管理
+    attendance: {
+        list: (params) => api.get('/admin/attendance', { params }),
+        get: (id) => api.get(`/admin/attendance/${id}`),
+        clockIn: (data) => api.post('/admin/attendance/clock-in', data),
+        clockOut: (data) => api.post('/admin/attendance/clock-out', data),
+        getMyRecords: (params) => api.get('/admin/attendance/my-records', { params }),
+        getStatistics: (params) => api.get('/admin/attendance/statistics', { params }),
+        exportReport: (params) => api.get('/admin/attendance/export', { params, responseType: 'blob' }),
+    },
+
+    // 办公用品
+    supplies: {
+        list: (params) => api.get('/admin/supplies', { params }),
+        get: (id) => api.get(`/admin/supplies/${id}`),
+        request: (data) => api.post('/admin/supplies/request', data),
+        approve: (id, data) => api.put(`/admin/supplies/${id}/approve`, data),
+        reject: (id, data) => api.put(`/admin/supplies/${id}/reject`, data),
+        getInventory: () => api.get('/admin/supplies/inventory'),
+    },
+
+    // 车辆管理
+    vehicles: {
+        list: (params) => api.get('/admin/vehicles', { params }),
+        get: (id) => api.get(`/admin/vehicles/${id}`),
+        request: (data) => api.post('/admin/vehicles/request', data),
+        approve: (id, data) => api.put(`/admin/vehicles/${id}/approve`, data),
+        reject: (id, data) => api.put(`/admin/vehicles/${id}/reject`, data),
+        getAvailable: (date) => api.get('/admin/vehicles/available', { params: { date } }),
+    },
+
+    // 会议室管理
+    meetingRooms: {
+        list: (params) => api.get('/admin/meeting-rooms', { params }),
+        get: (id) => api.get(`/admin/meeting-rooms/${id}`),
+        book: (data) => api.post('/admin/meeting-rooms/book', data),
+        cancel: (id) => api.put(`/admin/meeting-rooms/${id}/cancel`),
+        getAvailable: (date, time) => api.get('/admin/meeting-rooms/available', { params: { date, time } }),
+    },
+
+    // 仪表板
+    getDashboard: (params) => api.get('/admin/dashboard', { params }),
+};
+
+// Management Rhythm APIs - 管理节律
+export const managementRhythmApi = {
+    // 节律配置
+    configs: {
+        list: (params) => api.get('/management-rhythm/configs', { params }),
+        get: (id) => api.get(`/management-rhythm/configs/${id}`),
+        create: (data) => api.post('/management-rhythm/configs', data),
+        update: (id, data) => api.put(`/management-rhythm/configs/${id}`, data),
+    },
+
+    // 战略会议
+    meetings: {
+        list: (params) => api.get('/strategic-meetings', { params }),
+        get: (id) => api.get(`/strategic-meetings/${id}`),
+        create: (data) => api.post('/strategic-meetings', data),
+        update: (id, data) => api.put(`/strategic-meetings/${id}`, data),
+        updateMinutes: (id, data) => api.put(`/strategic-meetings/${id}/minutes`, data),
+    },
+
+    // 会议行动项
+    actionItems: {
+        list: (meetingId, params) => api.get(`/strategic-meetings/${meetingId}/action-items`, { params }),
+        create: (meetingId, data) => api.post(`/strategic-meetings/${meetingId}/action-items`, data),
+        update: (meetingId, itemId, data) => api.put(`/strategic-meetings/${meetingId}/action-items/${itemId}`, data),
+    },
+
+    // 节律仪表盘
+    dashboard: {
+        get: () => api.get('/management-rhythm/dashboard'),
+    },
+
+    // 会议地图
+    meetingMap: {
+        get: (params) => api.get('/meeting-map', { params }),
+        calendar: (params) => api.get('/meeting-map/calendar', { params }),
+        statistics: (params) => api.get('/meeting-map/statistics', { params }),
+    },
+
+    // 战略结构模板
+    getStrategicStructureTemplate: () => api.get('/management-rhythm/strategic-structure-template'),
+
+    // 会议报告
+    reports: {
+        list: (params) => api.get('/meeting-reports', { params }),
+        get: (id) => api.get(`/meeting-reports/${id}`),
+        generate: (data) => api.post('/meeting-reports/generate', data),
+        exportDocx: (id) => api.get(`/meeting-reports/${id}/export-docx`, { responseType: 'blob' }),
+    },
+};
+
+// Culture Wall APIs - 文化墙
+export const cultureWallApi = {
+    // 文化墙汇总
+    summary: {
+        get: () => api.get('/culture-wall/summary'),
+    },
+
+    // 文化墙内容
+    contents: {
+        list: (params) => api.get('/culture-wall/contents', { params }),
+        get: (id) => api.get(`/culture-wall/contents/${id}`),
+        create: (data) => api.post('/culture-wall/contents', data),
+        update: (id, data) => api.put(`/culture-wall/contents/${id}`, data),
+    },
+
+    // 个人目标
+    goals: {
+        list: (params) => api.get('/personal-goals', { params }),
+        create: (data) => api.post('/personal-goals', data),
+        update: (id, data) => api.put(`/personal-goals/${id}`, data),
+    },
+};
+
+// Financial Reports APIs - 财务报表
+export const financialReportApi = {
+    // 综合财务数据
+    getSummary: (params) => api.get('/finance/summary', { params }),
+    // 损益表
+    getProfitLoss: (params) => api.get('/finance/profit-loss', { params }),
+    // 现金流量表
+    getCashFlow: (params) => api.get('/finance/cash-flow', { params }),
+    // 预算执行
+    getBudgetExecution: (params) => api.get('/finance/budget-execution', { params }),
+    // 成本分析
+    getCostAnalysis: (params) => api.get('/finance/cost-analysis', { params }),
+    // 项目盈利分析
+    getProjectProfitability: (params) => api.get('/finance/project-profitability', { params }),
+    // 月度趋势
+    getMonthlyTrend: (params) => api.get('/finance/monthly-trend', { params }),
+    // 导出报表
+    exportReport: (params) => api.get('/finance/export', { params, responseType: 'blob' }),
+};
+
+// Work Log APIs - 工作日志
+export const workLogApi = {
+    list: (params) => api.get('/work-logs', { params }),
+    get: (id) => api.get(`/work-logs/${id}`),
+    create: (data) => api.post('/work-logs', data),
+    update: (id, data) => api.put(`/work-logs/${id}`, data),
+    delete: (id) => api.delete(`/work-logs/${id}`),
+    getMentionOptions: () => api.get('/work-logs/mentions/options'),
+    // 配置相关（管理员）
+    getConfig: () => api.get('/work-logs/config'),
+    listConfigs: () => api.get('/work-logs/config/list'),
+    createConfig: (data) => api.post('/work-logs/config', data),
+    updateConfig: (id, data) => api.put(`/work-logs/config/${id}`, data),
+};
+
+// Report Center APIs - 报表中心
+export const reportCenterApi = {
+    // 报表配置
+    getRoles: () => api.get('/reports/roles'),
+    getTypes: () => api.get('/reports/types'),
+    getRoleReportMatrix: () => api.get('/reports/role-report-matrix'),
+    // 报表生成
+    generate: (data) => api.post('/reports/generate', data),
+    preview: (reportType, params) => api.get(`/reports/preview/${reportType}`, { params }),
+    compareRoles: (data) => api.post('/reports/compare-roles', data),
+    // 报表导出
+    exportReport: (data) => api.post('/reports/export', data),
+    exportDirect: (params) => api.post('/reports/export-direct', null, { params }),
+    download: (reportId) => api.get(`/reports/download/${reportId}`, { responseType: 'blob' }),
+    // 报表模板
+    getTemplates: (params) => api.get('/reports/templates', { params }),
+    applyTemplate: (data) => api.post('/reports/templates/apply', data),
+    // BI 报表
+    getDeliveryRate: (params) => api.get('/reports/delivery-rate', { params }),
+    getHealthDistribution: () => api.get('/reports/health-distribution'),
+    getUtilization: (params) => api.get('/reports/utilization', { params }),
+    getSupplierPerformance: (params) => api.get('/reports/supplier-performance', { params }),
+    getExecutiveDashboard: () => api.get('/reports/dashboard/executive'),
+    // 研发费用报表
+    getRdAuxiliaryLedger: (params) => api.get('/reports/rd-auxiliary-ledger', { params }),
+    getRdDeductionDetail: (params) => api.get('/reports/rd-deduction-detail', { params }),
+    getRdHighTech: (params) => api.get('/reports/rd-high-tech', { params }),
+    getRdIntensity: (params) => api.get('/reports/rd-intensity', { params }),
+    getRdPersonnel: (params) => api.get('/reports/rd-personnel', { params }),
+    exportRdReport: (params) => api.get('/reports/rd-export', { params, responseType: 'blob' }),
 };

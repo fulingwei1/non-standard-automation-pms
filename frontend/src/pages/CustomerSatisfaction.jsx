@@ -839,7 +839,7 @@ function CreateSurveyDialog({ onClose, onSubmit }) {
                     <SelectValue placeholder={loadingTemplates ? "加载模板中..." : "选择调查模板"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">不使用模板</SelectItem>
+                    <SelectItem value="__none__">不使用模板</SelectItem>
                     {templates.map((template) => (
                       <SelectItem key={template.id} value={template.id.toString()}>
                         {template.template_name} ({template.survey_type})

@@ -4,7 +4,7 @@
  * Core Functions: Strategic decision-making, Major approvals, Overall monitoring
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
@@ -39,6 +39,7 @@ import {
   Eye,
   ArrowRight,
   ClipboardCheck,
+  Loader2,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -52,6 +53,7 @@ import {
 } from '../components/ui'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
+import { pmoApi, salesStatisticsApi, projectApi } from '../services/api'
 
 // Mock data for chairman dashboard
 const mockCompanyStats = {
@@ -344,6 +346,65 @@ const mockPendingApprovals = [
   },
 ]
 
+// 重点项目
+const mockKeyProjects = [
+  {
+    id: 1,
+    project_code: 'P2025-001',
+    project_name: '新能源汽车BMS测试设备',
+    customer_name: '某大型汽车集团',
+    health: 'H1',
+    progress: 72,
+    current_stage: 'S4',
+    contract_amount: 8500000,
+    planned_end_date: '2025-03-15',
+  },
+  {
+    id: 2,
+    project_code: 'P2025-002',
+    project_name: 'EOL全自动化检测线',
+    customer_name: '东莞XX电子',
+    health: 'H2',
+    progress: 55,
+    current_stage: 'S3',
+    contract_amount: 5200000,
+    planned_end_date: '2025-04-20',
+  },
+  {
+    id: 3,
+    project_code: 'P2025-003',
+    project_name: 'ICT高精度测试系统',
+    customer_name: '惠州XX电池',
+    health: 'H1',
+    progress: 85,
+    current_stage: 'S5',
+    contract_amount: 3800000,
+    planned_end_date: '2025-02-28',
+  },
+  {
+    id: 4,
+    project_code: 'P2024-089',
+    project_name: '老化测试设备升级',
+    customer_name: '深圳XX科技',
+    health: 'H3',
+    progress: 40,
+    current_stage: 'S3',
+    contract_amount: 2500000,
+    planned_end_date: '2025-03-30',
+  },
+  {
+    id: 5,
+    project_code: 'P2025-005',
+    project_name: '视觉检测自动化线',
+    customer_name: '广州XX制造',
+    health: 'H1',
+    progress: 90,
+    current_stage: 'S6',
+    contract_amount: 4200000,
+    planned_end_date: '2025-02-15',
+  },
+]
+
 // 最近项目
 const mockRecentProjects = [
   {
@@ -435,6 +496,39 @@ const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg, size =
 }
 
 export default function ChairmanWorkstation() {
+  const [loading, setLoading] = useState(true)
+  const [companyStats, setCompanyStats] = useState(mockCompanyStats)
+  const [pendingApprovals, setPendingApprovals] = useState(mockPendingApprovals)
+  const [keyProjects, setKeyProjects] = useState(mockKeyProjects)
+  const [departmentPerformance, setDepartmentPerformance] = useState(mockDepartmentPerformance)
+
+  // Load data from API with fallback to mock data
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const dashboardRes = await pmoApi.dashboard()
+        if (dashboardRes.data) {
+          setCompanyStats(prev => ({ ...prev, ...dashboardRes.data }))
+        }
+      } catch (err) {
+        console.log('PMO dashboard API unavailable, using mock data')
+      }
+
+      try {
+        const projectsRes = await projectApi.list({ status: 'active', limit: 10 })
+        if (projectsRes.data?.items) {
+          setKeyProjects(projectsRes.data.items.slice(0, 5))
+        }
+      } catch (err) {
+        console.log('Projects API unavailable')
+      }
+
+      setLoading(false)
+    }
+    fetchData()
+  }, [])
+
   return (
     <motion.div
       variants={staggerContainer}
@@ -445,7 +539,7 @@ export default function ChairmanWorkstation() {
       {/* Page Header */}
       <PageHeader
         title="董事长工作台"
-        description={`年度营收目标: ${formatCurrency(mockCompanyStats.yearTarget)} | 已完成: ${formatCurrency(mockCompanyStats.totalRevenue)} (${mockCompanyStats.yearProgress.toFixed(1)}%)`}
+        description={`年度营收目标: ${formatCurrency(companyStats.yearTarget)} | 已完成: ${formatCurrency(companyStats.totalRevenue)} (${companyStats.yearProgress.toFixed(1)}%)`}
         actions={
           <motion.div variants={fadeIn}>
             <Button className="flex items-center gap-2">
@@ -465,9 +559,9 @@ export default function ChairmanWorkstation() {
       >
         <StatCard
           title="年度营收"
-          value={formatCurrency(mockCompanyStats.totalRevenue)}
-          subtitle={`目标: ${formatCurrency(mockCompanyStats.yearTarget)}`}
-          trend={mockCompanyStats.revenueGrowth}
+          value={formatCurrency(companyStats.totalRevenue)}
+          subtitle={`目标: ${formatCurrency(companyStats.yearTarget)}`}
+          trend={companyStats.revenueGrowth}
           icon={DollarSign}
           color="text-amber-400"
           bg="bg-amber-500/10"
@@ -475,8 +569,8 @@ export default function ChairmanWorkstation() {
         />
         <StatCard
           title="净利润"
-          value={formatCurrency(mockCompanyStats.profit)}
-          subtitle={`利润率: ${mockCompanyStats.profitMargin}%`}
+          value={formatCurrency(companyStats.profit)}
+          subtitle={`利润率: ${companyStats.profitMargin}%`}
           trend={15.2}
           icon={TrendingUp}
           color="text-emerald-400"
@@ -484,33 +578,33 @@ export default function ChairmanWorkstation() {
         />
         <StatCard
           title="活跃项目"
-          value={mockCompanyStats.activeProjects}
-          subtitle={`总计 ${mockCompanyStats.totalProjects} 个`}
-          trend={mockCompanyStats.projectGrowth}
+          value={companyStats.activeProjects}
+          subtitle={`总计 ${companyStats.totalProjects} 个`}
+          trend={companyStats.projectGrowth}
           icon={Briefcase}
           color="text-blue-400"
           bg="bg-blue-500/10"
         />
         <StatCard
           title="客户总数"
-          value={mockCompanyStats.totalCustomers}
-          subtitle={`本月新增 ${mockCompanyStats.newCustomersThisMonth}`}
-          trend={mockCompanyStats.customerGrowth}
+          value={companyStats.totalCustomers}
+          subtitle={`本月新增 ${companyStats.newCustomersThisMonth}`}
+          trend={companyStats.customerGrowth}
           icon={Building2}
           color="text-purple-400"
           bg="bg-purple-500/10"
         />
         <StatCard
           title="应收账款"
-          value={formatCurrency(mockCompanyStats.accountsReceivable)}
-          subtitle={`逾期 ${formatCurrency(mockCompanyStats.overdueReceivable)}`}
+          value={formatCurrency(companyStats.accountsReceivable)}
+          subtitle={`逾期 ${formatCurrency(companyStats.overdueReceivable)}`}
           icon={CreditCard}
           color="text-red-400"
           bg="bg-red-500/10"
         />
         <StatCard
           title="回款率"
-          value={`${mockCompanyStats.collectionRate}%`}
+          value={`${companyStats.collectionRate}%`}
           subtitle="回款完成率"
           icon={Receipt}
           color="text-cyan-400"
@@ -580,26 +674,26 @@ export default function ChairmanWorkstation() {
                     <div>
                       <p className="text-sm text-slate-400">年度营收目标</p>
                       <p className="text-3xl font-bold text-white mt-1">
-                        {formatCurrency(mockCompanyStats.yearTarget)}
+                        {formatCurrency(companyStats.yearTarget)}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-slate-400">已完成</p>
                       <p className="text-3xl font-bold text-emerald-400 mt-1">
-                        {formatCurrency(mockCompanyStats.totalRevenue)}
+                        {formatCurrency(companyStats.totalRevenue)}
                       </p>
                     </div>
                   </div>
                   <Progress
-                    value={mockCompanyStats.yearProgress}
+                    value={companyStats.yearProgress}
                     className="h-4 bg-slate-700/50"
                   />
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-400">
-                      完成率: {mockCompanyStats.yearProgress.toFixed(1)}%
+                      完成率: {companyStats.yearProgress.toFixed(1)}%
                     </span>
                     <span className="text-slate-400">
-                      剩余: {formatCurrency(mockCompanyStats.yearTarget - mockCompanyStats.totalRevenue)}
+                      剩余: {formatCurrency(companyStats.yearTarget - companyStats.totalRevenue)}
                     </span>
                   </div>
                 </div>
@@ -810,7 +904,7 @@ export default function ChairmanWorkstation() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {mockDepartmentPerformance.map((dept) => (
+                  {departmentPerformance.map((dept) => (
                     <div
                       key={dept.id}
                       className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors"
@@ -947,12 +1041,12 @@ export default function ChairmanWorkstation() {
                     待审批事项
                   </CardTitle>
                   <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-                    {mockPendingApprovals.length}
+                    {pendingApprovals.length}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {mockPendingApprovals.map((item) => (
+                {pendingApprovals.map((item) => (
                   <Link
                     key={item.id}
                     to="/approvals"
@@ -1088,11 +1182,11 @@ export default function ChairmanWorkstation() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-400">项目按时交付率</span>
                     <span className="font-semibold text-emerald-400">
-                      {mockCompanyStats.onTimeDeliveryRate}%
+                      {companyStats.onTimeDeliveryRate}%
                     </span>
                   </div>
                   <Progress
-                    value={mockCompanyStats.onTimeDeliveryRate}
+                    value={companyStats.onTimeDeliveryRate}
                     className="h-2 bg-slate-700/50"
                   />
                 </div>
@@ -1100,11 +1194,11 @@ export default function ChairmanWorkstation() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-400">质量合格率</span>
                     <span className="font-semibold text-emerald-400">
-                      {mockCompanyStats.qualityPassRate}%
+                      {companyStats.qualityPassRate}%
                     </span>
                   </div>
                   <Progress
-                    value={mockCompanyStats.qualityPassRate}
+                    value={companyStats.qualityPassRate}
                     className="h-2 bg-slate-700/50"
                   />
                 </div>
@@ -1112,11 +1206,11 @@ export default function ChairmanWorkstation() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-400">产能利用率</span>
                     <span className="font-semibold text-blue-400">
-                      {mockCompanyStats.productionCapacity}%
+                      {companyStats.productionCapacity}%
                     </span>
                   </div>
                   <Progress
-                    value={mockCompanyStats.productionCapacity}
+                    value={companyStats.productionCapacity}
                     className="h-2 bg-slate-700/50"
                   />
                 </div>
@@ -1124,13 +1218,13 @@ export default function ChairmanWorkstation() {
                   <div className="grid grid-cols-2 gap-3 text-center">
                     <div>
                       <div className="text-2xl font-bold text-white">
-                        {mockCompanyStats.totalEmployees}
+                        {companyStats.totalEmployees}
                       </div>
                       <div className="text-xs text-slate-400 mt-1">员工总数</div>
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-white">
-                        {mockCompanyStats.departments}
+                        {companyStats.departments}
                       </div>
                       <div className="text-xs text-slate-400 mt-1">部门数量</div>
                     </div>

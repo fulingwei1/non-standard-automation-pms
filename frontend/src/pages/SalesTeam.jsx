@@ -3,7 +3,7 @@
  * Features: Team member management, Performance tracking, Target assignment, Team analytics
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Users,
@@ -50,6 +50,7 @@ import {
 } from '../components/ui'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
+import { salesStatisticsApi } from '../services/api'
 
 // Mock team data
 const mockTeamMembers = [
@@ -183,14 +184,35 @@ export default function SalesTeam() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedMember, setSelectedMember] = useState(null)
   const [showMemberDialog, setShowMemberDialog] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [teamMembers, setTeamMembers] = useState(mockTeamMembers)
+
+  // Fetch data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const res = await salesStatisticsApi.getBySalesperson()
+        if (res.data?.items) {
+          setTeamMembers(res.data.items)
+        } else if (Array.isArray(res.data)) {
+          setTeamMembers(res.data)
+        }
+      } catch (err) {
+        console.log('Sales team API unavailable, using mock data')
+      }
+      setLoading(false)
+    }
+    fetchData()
+  }, [])
 
   const filteredMembers = useMemo(() => {
-    if (!searchTerm) return mockTeamMembers
-    return mockTeamMembers.filter(member =>
+    if (!searchTerm) return teamMembers
+    return teamMembers.filter(member =>
       member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.role.toLowerCase().includes(searchTerm.toLowerCase())
     )
-  }, [searchTerm])
+  }, [teamMembers, searchTerm])
 
   const handleViewMember = (member) => {
     setSelectedMember(member)

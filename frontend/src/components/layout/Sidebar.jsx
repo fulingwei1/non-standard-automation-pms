@@ -170,9 +170,11 @@ const defaultNavGroups = [
   {
     label: '个人中心',
     items: [
+      { name: '工作中心', path: '/work-center', icon: 'LayoutDashboard', badge: null },
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '5' },
       { name: '岗位打卡', path: '/punch-in', icon: 'Clock' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '工作日志', path: '/work-log', icon: 'ClipboardList' },
       { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
@@ -227,10 +229,12 @@ const engineerNavGroups = [
   {
     label: '个人中心',
     items: [
+      { name: '工作中心', path: '/work-center', icon: 'LayoutDashboard', badge: null },
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '5' },
       { name: '我的绩效', path: '/personal/my-performance', icon: 'Award' },
       { name: '我的奖金', path: '/personal/my-bonus', icon: 'DollarSign' },
       { name: '月度总结', path: '/personal/monthly-summary', icon: 'FileText' },
+      { name: '工作日志', path: '/work-log', icon: 'ClipboardList' },
       { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
@@ -275,8 +279,10 @@ const pmcNavGroups = [
   {
     label: '个人中心',
     items: [
+      { name: '工作中心', path: '/work-center', icon: 'LayoutDashboard', badge: null },
       { name: '通知中心', path: '/notifications', icon: 'Bell' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '工作日志', path: '/work-log', icon: 'ClipboardList' },
       { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
@@ -310,6 +316,7 @@ const buyerNavGroups = [
   {
     label: '个人中心',
     items: [
+      { name: '工作中心', path: '/work-center', icon: 'LayoutDashboard', badge: null },
       { name: '通知中心', path: '/notifications', icon: 'Bell' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
       { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
@@ -360,6 +367,7 @@ const generalManagerNavGroups = [
   {
     label: '个人中心',
     items: [
+      { name: '工作中心', path: '/work-center', icon: 'LayoutDashboard', badge: null },
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '5' },
       { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
@@ -475,6 +483,7 @@ const productionManagerNavGroups = [
   {
     label: '个人中心',
     items: [
+      { name: '工作中心', path: '/work-center', icon: 'LayoutDashboard', badge: null },
       { name: '通知中心', path: '/notifications', icon: 'Bell' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
       { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
@@ -503,6 +512,7 @@ const assemblerNavGroups = [
   {
     label: '个人中心',
     items: [
+      { name: '工作中心', path: '/work-center', icon: 'LayoutDashboard', badge: null },
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '5' },
       { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
@@ -890,6 +900,7 @@ function getNavGroupsForRole(role, isSuperuser = false) {
             { name: '付款审批', path: '/payment-approval', icon: 'ClipboardCheck' },
             { name: '项目结算', path: '/settlement', icon: 'FileText' },
             { name: '财务报表', path: '/financial-reports', icon: 'BarChart3' },
+            { name: '决策驾驶舱', path: '/executive-dashboard', icon: 'Gauge' },
           ],
         },
         {

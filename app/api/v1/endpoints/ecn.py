@@ -4,7 +4,7 @@
 包含：ECN基础管理、评估、审批、执行、追溯
 """
 
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 

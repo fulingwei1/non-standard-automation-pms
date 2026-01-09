@@ -82,4 +82,7 @@ export {
   TableCell,
   TableCaption,
 } from './table'
+export { Alert, AlertTitle, AlertDescription } from './alert'
+export { Checkbox } from './checkbox'
+export { Switch } from './switch'
 

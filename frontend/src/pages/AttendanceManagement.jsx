@@ -3,7 +3,7 @@
  * Features: Attendance records, statistics, leave management, overtime tracking
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Search,
@@ -36,6 +36,7 @@ import {
 import { cn } from '../lib/utils'
 import { staggerContainer } from '../lib/animations'
 import { SimpleBarChart, MonthlyTrendChart, TrendComparisonCard } from '../components/administrative/StatisticsCharts'
+import { adminApi } from '../services/api'
 
 // Mock data
 const mockAttendanceStats = [
@@ -111,15 +112,36 @@ const mockLeaveApplications = [
 export default function AttendanceManagement() {
   const [searchText, setSearchText] = useState('')
   const [dateFilter, setDateFilter] = useState('today')
+  const [loading, setLoading] = useState(false)
+  const [attendanceStats, setAttendanceStats] = useState(mockAttendanceStats)
+
+  // Fetch data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const res = await adminApi.attendance.list({ date: dateFilter })
+        if (res.data?.items) {
+          setAttendanceStats(res.data.items)
+        } else if (Array.isArray(res.data)) {
+          setAttendanceStats(res.data)
+        }
+      } catch (err) {
+        console.log('Attendance API unavailable, using mock data')
+      }
+      setLoading(false)
+    }
+    fetchData()
+  }, [dateFilter])
 
   const overallStats = useMemo(() => {
-    const total = mockAttendanceStats.reduce((sum, s) => sum + s.total, 0)
-    const present = mockAttendanceStats.reduce((sum, s) => sum + s.present, 0)
-    const leave = mockAttendanceStats.reduce((sum, s) => sum + s.leave, 0)
-    const late = mockAttendanceStats.reduce((sum, s) => sum + s.late, 0)
+    const total = attendanceStats.reduce((sum, s) => sum + s.total, 0)
+    const present = attendanceStats.reduce((sum, s) => sum + s.present, 0)
+    const leave = attendanceStats.reduce((sum, s) => sum + s.leave, 0)
+    const late = attendanceStats.reduce((sum, s) => sum + s.late, 0)
     const attendanceRate = total > 0 ? (present / total) * 100 : 0
     return { total, present, leave, late, attendanceRate }
-  }, [])
+  }, [attendanceStats])
 
   return (
     <motion.div
@@ -215,7 +237,7 @@ export default function AttendanceManagement() {
 
         <TabsContent value="statistics" className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
-            {mockAttendanceStats.map((stat, index) => (
+            {attendanceStats.map((stat, index) => (
               <Card key={index}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">

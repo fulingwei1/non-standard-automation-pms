@@ -145,7 +145,7 @@ export default function MobileWorkerTaskList() {
             <SelectValue placeholder="全部状态" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">全部状态</SelectItem>
+            <SelectItem value="all">全部状态</SelectItem>
             <SelectItem value="ASSIGNED">待开工</SelectItem>
             <SelectItem value="STARTED">已开始</SelectItem>
             <SelectItem value="IN_PROGRESS">进行中</SelectItem>

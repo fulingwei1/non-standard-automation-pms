@@ -119,6 +119,65 @@ class Issue(Base, TimestampMixin):
         return f'<Issue {self.issue_no}: {self.title}>'
 
 
+class SolutionTemplate(Base, TimestampMixin):
+    """解决方案模板表"""
+    __tablename__ = 'solution_templates'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
+    template_name = Column(String(200), nullable=False, comment='模板名称')
+    template_code = Column(String(50), unique=True, comment='模板编码')
+    
+    # 关联信息
+    issue_type = Column(String(20), comment='问题类型')
+    category = Column(String(20), comment='问题分类')
+    severity = Column(String(20), comment='严重程度')
+    
+    # 解决方案内容
+    solution = Column(Text, nullable=False, comment='解决方案模板')
+    solution_steps = Column(JSON, comment='解决步骤（JSON数组）')
+    # 示例结构: [
+    #   {"step": 1, "description": "步骤1描述", "expected_result": "预期结果"},
+    #   {"step": 2, "description": "步骤2描述", "expected_result": "预期结果"}
+    # ]
+    
+    # 适用场景
+    applicable_scenarios = Column(Text, comment='适用场景描述')
+    prerequisites = Column(Text, comment='前置条件')
+    precautions = Column(Text, comment='注意事项')
+    
+    # 标签和分类
+    tags = Column(JSON, comment='标签（JSON数组）')
+    keywords = Column(JSON, comment='关键词（JSON数组，用于搜索）')
+    
+    # 统计信息
+    usage_count = Column(Integer, default=0, comment='使用次数')
+    success_rate = Column(Numeric(5, 2), comment='成功率（%）')
+    avg_resolution_time = Column(Numeric(10, 2), comment='平均解决时间（小时）')
+    
+    # 来源信息
+    source_issue_id = Column(Integer, ForeignKey('issues.id'), comment='来源问题ID（从哪个问题提取的模板）')
+    created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
+    created_by_name = Column(String(50), comment='创建人姓名')
+    
+    # 状态
+    is_active = Column(Boolean, default=True, comment='是否启用')
+    is_public = Column(Boolean, default=True, comment='是否公开（所有项目可用）')
+    
+    # 关系
+    source_issue = relationship('Issue', foreign_keys=[source_issue_id])
+    creator = relationship('User', foreign_keys=[created_by])
+    
+    __table_args__ = (
+        Index('idx_solution_template_type', 'issue_type'),
+        Index('idx_solution_template_category', 'category'),
+        Index('idx_solution_template_code', 'template_code'),
+        {'comment': '解决方案模板表'}
+    )
+    
+    def __repr__(self):
+        return f'<SolutionTemplate {self.template_code}: {self.template_name}>'
+
+
 class IssueFollowUpRecord(Base, TimestampMixin):
     """问题跟进记录表（通用问题管理）"""
     __tablename__ = 'issue_follow_up_records'

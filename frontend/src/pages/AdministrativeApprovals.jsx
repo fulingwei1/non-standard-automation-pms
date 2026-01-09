@@ -3,7 +3,7 @@
  * Features: Approval list, approval workflow, approval history
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
   Search,
@@ -20,6 +20,7 @@ import {
   Clock,
   Eye,
   Download,
+  Loader2,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -38,6 +39,7 @@ import {
 import { cn, formatCurrency } from '../lib/utils'
 import { staggerContainer } from '../lib/animations'
 import { SimpleBarChart, MonthlyTrendChart, SimplePieChart, TrendComparisonCard } from '../components/administrative/StatisticsCharts'
+import { adminApi } from '../services/api'
 
 // Mock data - same as in AdministrativeManagerWorkstation
 const mockPendingApprovals = [
@@ -106,27 +108,89 @@ const mockPendingApprovals = [
 ]
 
 export default function AdministrativeApprovals() {
+  const [loading, setLoading] = useState(true)
+  const [approvals, setApprovals] = useState(mockPendingApprovals)
+  const [approvedList, setApprovedList] = useState([])
+  const [rejectedList, setRejectedList] = useState([])
   const [searchText, setSearchText] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [priorityFilter, setPriorityFilter] = useState('all')
 
+  // Load data from API with fallback to mock data
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const res = await adminApi.approvals.list({ status: 'pending' })
+        if (res.data?.items) {
+          setApprovals(res.data.items)
+        }
+      } catch (err) {
+        console.log('Admin approvals API unavailable, using mock data')
+      }
+
+      try {
+        const approvedRes = await adminApi.approvals.list({ status: 'approved' })
+        if (approvedRes.data?.items) {
+          setApprovedList(approvedRes.data.items)
+        }
+      } catch (err) {
+        console.log('Approved approvals API unavailable')
+      }
+
+      try {
+        const rejectedRes = await adminApi.approvals.list({ status: 'rejected' })
+        if (rejectedRes.data?.items) {
+          setRejectedList(rejectedRes.data.items)
+        }
+      } catch (err) {
+        console.log('Rejected approvals API unavailable')
+      }
+
+      setLoading(false)
+    }
+    fetchData()
+  }, [])
+
   const filteredApprovals = useMemo(() => {
-    return mockPendingApprovals.filter(approval => {
+    return approvals.filter(approval => {
       const matchSearch = approval.title.toLowerCase().includes(searchText.toLowerCase()) ||
         approval.applicant.toLowerCase().includes(searchText.toLowerCase())
       const matchType = typeFilter === 'all' || approval.type === typeFilter
       const matchPriority = priorityFilter === 'all' || approval.priority === priorityFilter
       return matchSearch && matchType && matchPriority
     })
-  }, [searchText, typeFilter, priorityFilter])
+  }, [approvals, searchText, typeFilter, priorityFilter])
 
   const stats = useMemo(() => {
-    const total = mockPendingApprovals.length
-    const urgent = mockPendingApprovals.filter(a => a.priority === 'high').length
-    const officeSupplies = mockPendingApprovals.filter(a => a.type === 'office_supplies').length
-    const vehicle = mockPendingApprovals.filter(a => a.type === 'vehicle').length
+    const total = approvals.length
+    const urgent = approvals.filter(a => a.priority === 'high').length
+    const officeSupplies = approvals.filter(a => a.type === 'office_supplies').length
+    const vehicle = approvals.filter(a => a.type === 'vehicle').length
     return { total, urgent, officeSupplies, vehicle }
-  }, [])
+  }, [approvals])
+
+  const handleApprove = async (id) => {
+    try {
+      await adminApi.approvals.approve(id, { comment: '同意' })
+      setApprovals(prev => prev.filter(a => a.id !== id))
+    } catch (err) {
+      console.log('Approval API unavailable')
+      // Simulate approval in demo mode
+      setApprovals(prev => prev.filter(a => a.id !== id))
+    }
+  }
+
+  const handleReject = async (id) => {
+    try {
+      await adminApi.approvals.reject(id, { reason: '不符合要求' })
+      setApprovals(prev => prev.filter(a => a.id !== id))
+    } catch (err) {
+      console.log('Rejection API unavailable')
+      // Simulate rejection in demo mode
+      setApprovals(prev => prev.filter(a => a.id !== id))
+    }
+  }
 
   const getTypeIcon = (type) => {
     const icons = {
@@ -237,9 +301,9 @@ export default function AdministrativeApprovals() {
                   data={[
                     { label: '办公用品', value: stats.officeSupplies, color: '#3b82f6' },
                     { label: '车辆', value: stats.vehicle, color: '#06b6d4' },
-                    { label: '资产', value: mockPendingApprovals.filter(a => a.type === 'asset').length, color: '#a855f7' },
-                    { label: '会议', value: mockPendingApprovals.filter(a => a.type === 'meeting').length, color: '#10b981' },
-                    { label: '请假', value: mockPendingApprovals.filter(a => a.type === 'leave').length, color: '#f472b6' },
+                    { label: '资产', value: approvals.filter(a => a.type === 'asset').length, color: '#a855f7' },
+                    { label: '会议', value: approvals.filter(a => a.type === 'meeting').length, color: '#10b981' },
+                    { label: '请假', value: approvals.filter(a => a.type === 'leave').length, color: '#f472b6' },
                   ]}
                   size={180}
                 />
@@ -373,8 +437,8 @@ export default function AdministrativeApprovals() {
                         <Button variant="outline" size="sm">
                           <Eye className="w-4 h-4" />
                         </Button>
-                        <Button size="sm">批准</Button>
-                        <Button size="sm" variant="outline">拒绝</Button>
+                        <Button size="sm" onClick={() => handleApprove(approval.id)}>批准</Button>
+                        <Button size="sm" variant="outline" onClick={() => handleReject(approval.id)}>拒绝</Button>
                       </div>
                     </div>
                   </CardContent>

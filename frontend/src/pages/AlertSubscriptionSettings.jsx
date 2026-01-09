@@ -305,7 +305,7 @@ export default function AlertSubscriptionSettings() {
           <EmptyState
             icon={Bell}
             title="暂无订阅配置"
-            description="点击"新建订阅"按钮创建第一个订阅配置"
+            description="点击「新建订阅」按钮创建第一个订阅配置"
           />
         ) : (
           <motion.div
@@ -491,7 +491,7 @@ export default function AlertSubscriptionSettings() {
                       <SelectValue placeholder="选择项目（空表示全部）" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">全部项目</SelectItem>
+                      <SelectItem value="all">全部项目</SelectItem>
                       {projects.map(project => (
                         <SelectItem key={project.id} value={project.id.toString()}>
                           {project.project_name || project.project_code}

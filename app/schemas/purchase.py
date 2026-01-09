@@ -268,6 +268,4 @@ class PurchaseRequestGeneratedOrder(BaseSchema):
     amount_with_tax: Decimal
 
 
-PurchaseRequestResponse.update_forward_refs(
-    PurchaseRequestGeneratedOrder=PurchaseRequestGeneratedOrder
-)
+PurchaseRequestResponse.model_rebuild()

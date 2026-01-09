@@ -129,8 +129,6 @@ export default function SalesFunnel() {
   }, [timeRange, ownerId, customerId, industry])
 
   const maxCount = Math.max(...funnelData.map((d) => d.count), 1)
-
-  const maxCount = Math.max(...funnelData.map((d) => d.count), 1)
   
   const handleStageClick = (stage) => {
     setSelectedStage(stage)
