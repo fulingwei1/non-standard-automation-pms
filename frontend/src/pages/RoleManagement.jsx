@@ -9,6 +9,10 @@ import {
   Shield,
   Users,
   Key,
+  Menu,
+  ChevronDown,
+  ChevronRight,
+  Check,
 } from 'lucide-react';
 import { PageHeader } from '../components/layout';
 import {
@@ -33,6 +37,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { cn } from '../lib/utils';
 import { fadeIn, staggerContainer } from '../lib/animations';
 import { roleApi } from '../services/api';
+import { allMenuGroups, buildNavGroupsFromSelection, extractMenuIdsFromNavGroups } from '../lib/allMenuItems';
 
 export default function RoleManagement() {
   const [roles, setRoles] = useState([]);
@@ -42,6 +47,7 @@ export default function RoleManagement() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
+  const [showMenuDialog, setShowMenuDialog] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -59,6 +65,11 @@ export default function RoleManagement() {
 
   const [editRole, setEditRole] = useState(null);
   const [selectedPermissionIds, setSelectedPermissionIds] = useState([]);
+
+  // 菜单配置相关状态
+  const [selectedMenuIds, setSelectedMenuIds] = useState([]);
+  const [expandedGroups, setExpandedGroups] = useState({});
+  const [savingMenu, setSavingMenu] = useState(false);
 
   // 加载角色列表
   const loadRoles = async () => {
@@ -187,6 +198,89 @@ export default function RoleManagement() {
     }
   };
 
+  // 菜单配置相关函数
+  const handleConfigureMenu = async (id) => {
+    try {
+      const response = await roleApi.getNavGroups(id);
+      const data = response.data;
+      setSelectedRole({
+        id: data.role_id,
+        role_code: data.role_code,
+        role_name: data.role_name,
+      });
+
+      // 从现有导航组提取选中的菜单ID
+      const menuIds = extractMenuIdsFromNavGroups(data.nav_groups || []);
+      setSelectedMenuIds(menuIds);
+
+      // 默认展开所有分组
+      const expanded = {};
+      allMenuGroups.forEach(group => {
+        expanded[group.id] = true;
+      });
+      setExpandedGroups(expanded);
+
+      setShowMenuDialog(true);
+    } catch (error) {
+      alert('获取角色菜单配置失败: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleSaveMenuConfig = async () => {
+    setSavingMenu(true);
+    try {
+      // 根据选中的菜单ID构建导航组
+      const navGroups = buildNavGroupsFromSelection(selectedMenuIds);
+      await roleApi.updateNavGroups(selectedRole.id, navGroups);
+      setShowMenuDialog(false);
+      alert('菜单配置保存成功！用户重新登录后将看到新的菜单。');
+      loadRoles();
+    } catch (error) {
+      alert('保存菜单配置失败: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setSavingMenu(false);
+    }
+  };
+
+  const toggleMenuGroup = (groupId) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
+  };
+
+  const toggleMenuItem = (itemId) => {
+    setSelectedMenuIds(prev => {
+      if (prev.includes(itemId)) {
+        return prev.filter(id => id !== itemId);
+      } else {
+        return [...prev, itemId];
+      }
+    });
+  };
+
+  const toggleGroupAll = (group) => {
+    const groupItemIds = group.items.map(item => item.id);
+    const allSelected = groupItemIds.every(id => selectedMenuIds.includes(id));
+
+    if (allSelected) {
+      // 取消选中该分组的所有菜单
+      setSelectedMenuIds(prev => prev.filter(id => !groupItemIds.includes(id)));
+    } else {
+      // 选中该分组的所有菜单
+      setSelectedMenuIds(prev => [...new Set([...prev, ...groupItemIds])]);
+    }
+  };
+
+  const selectAllMenus = () => {
+    const allIds = allMenuGroups.flatMap(group => group.items.map(item => item.id));
+    setSelectedMenuIds(allIds);
+  };
+
+  const clearAllMenus = () => {
+    setSelectedMenuIds([]);
+  };
+
   // 按模块分组权限
   const permissionsByModule = permissions.reduce((acc, perm) => {
     const module = perm.module || '其他';
@@ -206,7 +300,7 @@ export default function RoleManagement() {
     >
       <PageHeader
         title="角色管理"
-        description="管理系统角色，包括创建、编辑、分配权限等操作。"
+        description="管理系统角色，包括创建、编辑、分配权限和菜单配置等操作。"
         actions={
           <Button onClick={() => setShowCreateDialog(true)}>
             <Plus className="mr-2 h-4 w-4" /> 新增角色
@@ -284,11 +378,12 @@ export default function RoleManagement() {
                             )}
                           </td>
                           <td className="px-4 py-2 text-sm">
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-1">
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleViewDetail(role.id)}
+                                title="查看详情"
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
@@ -297,6 +392,7 @@ export default function RoleManagement() {
                                 size="sm"
                                 onClick={() => handleEdit(role.id)}
                                 disabled={role.is_system}
+                                title="编辑角色"
                               >
                                 <Edit3 className="h-4 w-4" />
                               </Button>
@@ -305,8 +401,18 @@ export default function RoleManagement() {
                                 size="sm"
                                 onClick={() => handleAssignPermissions(role.id)}
                                 disabled={role.is_system}
+                                title="分配API权限"
                               >
                                 <Key className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleConfigureMenu(role.id)}
+                                title="配置菜单"
+                                className="text-blue-600 hover:text-blue-700"
+                              >
+                                <Menu className="h-4 w-4" />
                               </Button>
                             </div>
                           </td>
@@ -498,7 +604,7 @@ export default function RoleManagement() {
       <Dialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
         <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>分配权限 - {selectedRole?.role_name}</DialogTitle>
+            <DialogTitle>分配API权限 - {selectedRole?.role_name}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {Object.entries(permissionsByModule).map(([module, modulePermissions]) => (
@@ -536,6 +642,108 @@ export default function RoleManagement() {
               取消
             </Button>
             <Button onClick={handleSavePermissions}>保存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Menu Configuration Dialog */}
+      <Dialog open={showMenuDialog} onOpenChange={setShowMenuDialog}>
+        <DialogContent className="sm:max-w-[800px] max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>配置菜单权限 - {selectedRole?.role_name}</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex items-center justify-between py-2 border-b">
+            <div className="text-sm text-muted-foreground">
+              已选择 <span className="font-semibold text-foreground">{selectedMenuIds.length}</span> 个菜单项
+            </div>
+            <div className="flex space-x-2">
+              <Button variant="outline" size="sm" onClick={selectAllMenus}>
+                全选
+              </Button>
+              <Button variant="outline" size="sm" onClick={clearAllMenus}>
+                清空
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto py-4 space-y-2">
+            {allMenuGroups.map((group) => {
+              const groupItemIds = group.items.map(item => item.id);
+              const selectedCount = groupItemIds.filter(id => selectedMenuIds.includes(id)).length;
+              const allSelected = selectedCount === groupItemIds.length;
+              const someSelected = selectedCount > 0 && selectedCount < groupItemIds.length;
+
+              return (
+                <div key={group.id} className="border rounded-lg">
+                  {/* 分组标题 */}
+                  <div
+                    className="flex items-center justify-between p-3 bg-muted/50 cursor-pointer hover:bg-muted"
+                    onClick={() => toggleMenuGroup(group.id)}
+                  >
+                    <div className="flex items-center space-x-2">
+                      {expandedGroups[group.id] ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                      <span className="font-medium">{group.label}</span>
+                      <Badge variant="secondary" className="text-xs">
+                        {selectedCount}/{groupItemIds.length}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={allSelected}
+                          ref={(el) => {
+                            if (el) el.indeterminate = someSelected;
+                          }}
+                          onChange={() => toggleGroupAll(group)}
+                          className="rounded"
+                        />
+                        <span className="text-sm text-muted-foreground">全选</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* 菜单项列表 */}
+                  {expandedGroups[group.id] && (
+                    <div className="p-3 grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {group.items.map((item) => (
+                        <label
+                          key={item.id}
+                          className={cn(
+                            "flex items-center space-x-2 p-2 rounded border cursor-pointer transition-colors",
+                            selectedMenuIds.includes(item.id)
+                              ? "bg-primary/10 border-primary"
+                              : "hover:bg-muted"
+                          )}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedMenuIds.includes(item.id)}
+                            onChange={() => toggleMenuItem(item.id)}
+                            className="rounded"
+                          />
+                          <span className="text-sm">{item.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <DialogFooter className="border-t pt-4">
+            <Button variant="outline" onClick={() => setShowMenuDialog(false)}>
+              取消
+            </Button>
+            <Button onClick={handleSaveMenuConfig} disabled={savingMenu}>
+              {savingMenu ? '保存中...' : '保存配置'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -580,7 +788,7 @@ export default function RoleManagement() {
                   </p>
                 </div>
                 <div className="col-span-2">
-                  <Label className="text-muted-foreground">权限列表</Label>
+                  <Label className="text-muted-foreground">API权限列表</Label>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {selectedRole.permissions && selectedRole.permissions.length > 0 ? (
                       selectedRole.permissions.map((perm, idx) => (
@@ -604,4 +812,3 @@ export default function RoleManagement() {
     </motion.div>
   );
 }
-
