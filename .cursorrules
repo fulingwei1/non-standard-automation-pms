@@ -1,0 +1,404 @@
+# 非标自动化项目管理系统 - Cursor AI 开发规则
+
+## 项目概述
+这是一个非标自动化项目管理系统，前端使用 React 19 + Vite + Tailwind CSS，后端使用 FastAPI + SQLAlchemy。
+
+---
+
+## 通用规则
+
+### 语言规范
+- 代码标识符使用英文
+- 注释和文档使用中文
+- 日期格式统一使用 `YYYY-MM-DD`
+- 货币值使用 `Numeric(14, 2)` 精度
+
+### 代码质量
+- 禁止提交包含 ESLint error 的代码
+- 禁止提交包含 TypeScript 类型错误的代码
+- 每个文件不超过 500 行，超过需要拆分
+- 函数不超过 50 行，超过需要重构
+
+---
+
+## 前端规则 (React)
+
+### 1. 导入管理 - 禁止未使用的导入
+
+❌ 错误示例：
+```javascript
+import { useState, useEffect, useMemo, useCallback } from 'react'  // 只用了 useState
+import { cn, formatDate, formatCurrency } from '../lib/utils'       // 只用了 formatDate
+const navigate = useNavigate()  // 从未使用
+```
+
+✅ 正确做法：
+```javascript
+// 只导入实际使用的
+import { useState } from 'react'
+import { formatDate } from '../lib/utils'
+```
+
+**规则**: 写完代码后，必须检查并删除所有未使用的导入和变量。
+
+### 2. React Hooks 规则
+
+#### 2.1 Hook 必须在组件顶层调用
+
+❌ 错误示例：
+```javascript
+function Component({ data }) {
+  if (!data) return null           // 条件返回
+  const result = useMemo(() => {}) // Hook 在条件返回后调用
+}
+```
+
+✅ 正确做法：
+```javascript
+function Component({ data }) {
+  const result = useMemo(() => {   // Hook 在顶层
+    if (!data) return null
+    return processData(data)
+  }, [data])
+
+  if (!data) return null           // 条件返回在 Hook 之后
+}
+```
+
+#### 2.2 useEffect 依赖必须完整
+
+❌ 错误示例：
+```javascript
+useEffect(() => {
+  loadData()
+}, [])  // 缺少 loadData 依赖
+```
+
+✅ 正确做法：
+```javascript
+// 方法1: 添加依赖
+useEffect(() => {
+  loadData()
+}, [loadData])
+
+// 方法2: 将函数定义在 useEffect 内部
+useEffect(() => {
+  const loadData = async () => {
+    // ...
+  }
+  loadData()
+}, [dependencies])
+
+// 方法3: 使用 useCallback 包装
+const loadData = useCallback(async () => {
+  // ...
+}, [dependencies])
+
+useEffect(() => {
+  loadData()
+}, [loadData])
+```
+
+#### 2.3 避免在依赖数组中创建新对象
+
+❌ 错误示例：
+```javascript
+const padding = { top: 20, right: 20 }  // 每次渲染都是新对象
+const result = useMemo(() => {}, [padding])  // padding 总是变化
+```
+
+✅ 正确做法：
+```javascript
+const padding = useMemo(() => ({ top: 20, right: 20 }), [])
+const result = useMemo(() => {}, [padding])
+```
+
+### 3. 状态管理规则
+
+#### 3.1 声明的状态必须使用
+
+❌ 错误示例：
+```javascript
+const [loading, setLoading] = useState(false)  // loading 从未读取
+const [error, setError] = useState(null)       // error 从未显示
+
+// 只调用了 setter
+setLoading(true)
+setError(null)
+```
+
+✅ 正确做法：
+```javascript
+const [loading, setLoading] = useState(false)
+const [error, setError] = useState(null)
+
+// 必须在 UI 中使用
+if (loading) return <LoadingSpinner />
+if (error) return <ErrorMessage error={error} />
+```
+
+#### 3.2 不要预先声明"可能用到"的状态
+
+❌ 错误示例：
+```javascript
+// 复制粘贴的"标准模板"
+const [data, setData] = useState([])
+const [loading, setLoading] = useState(false)
+const [error, setError] = useState(null)
+const [page, setPage] = useState(1)
+const [total, setTotal] = useState(0)
+const [filters, setFilters] = useState({})
+// 实际只用了 data
+```
+
+✅ 正确做法：
+```javascript
+// 只声明实际需要的状态
+const [data, setData] = useState([])
+```
+
+### 4. 组件结构规范
+
+```javascript
+// 推荐的组件结构顺序
+function MyComponent({ prop1, prop2 }) {
+  // 1. Hooks（useState, useEffect, 自定义 hooks）
+  const [state, setState] = useState()
+
+  // 2. 派生状态（useMemo）
+  const derivedValue = useMemo(() => {}, [])
+
+  // 3. 回调函数（useCallback）
+  const handleClick = useCallback(() => {}, [])
+
+  // 4. 副作用（useEffect）
+  useEffect(() => {}, [])
+
+  // 5. 条件渲染的早期返回
+  if (!data) return <Loading />
+
+  // 6. JSX 渲染
+  return <div>...</div>
+}
+```
+
+### 5. 页面模板 - 最小化原则
+
+新建页面时，使用最小化模板，按需添加：
+
+```javascript
+import { useState, useEffect } from 'react'
+import { PageHeader } from '../components/layout'
+
+export default function NewPage() {
+  // 只添加实际需要的状态和逻辑
+
+  return (
+    <div className="space-y-6">
+      <PageHeader title="页面标题" />
+      {/* 内容 */}
+    </div>
+  )
+}
+```
+
+---
+
+## 后端规则 (Python/FastAPI)
+
+### 1. 导入必须显式
+
+❌ 错误示例：
+```python
+# 缺少导入
+def func() -> Dict[str, Any]:  # Dict 未导入
+    today_str = today.strftime("%Y-%m-%d")  # today 未定义
+```
+
+✅ 正确做法：
+```python
+from typing import Dict, Any
+from datetime import date
+
+def func() -> Dict[str, Any]:
+    today_str = date.today().strftime("%Y-%m-%d")
+```
+
+### 2. 常用导入模板
+
+```python
+# 类型提示
+from typing import List, Dict, Any, Optional
+
+# 日期时间
+from datetime import date, datetime, timedelta
+
+# 数值
+from decimal import Decimal
+
+# FastAPI
+from fastapi import APIRouter, Depends, HTTPException, status, Body, Query, Path
+
+# SQLAlchemy
+from sqlalchemy.orm import Session
+from sqlalchemy import and_, or_, func
+
+# 项目内部
+from app.api.deps import get_db
+from app.models.base import get_db_session
+```
+
+### 3. API 端点规范
+
+```python
+@router.get("/{item_id}", response_model=ItemResponse)
+async def get_item(
+    item_id: int = Path(..., description="项目ID"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ItemResponse:
+    """
+    获取项目详情
+
+    - **item_id**: 项目的唯一标识符
+    """
+    item = db.query(Item).filter(Item.id == item_id).first()
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="项目不存在"
+        )
+    return item
+```
+
+### 4. 模型定义规范
+
+```python
+class MyModel(Base, TimestampMixin):
+    __tablename__ = "my_table"
+    __table_args__ = (
+        Index("idx_my_table_field", "field"),
+        {"comment": "表注释"},
+    )
+
+    id = Column(Integer, primary_key=True, comment="主键ID")
+    name = Column(String(100), nullable=False, comment="名称")
+    status = Column(String(20), default="ACTIVE", comment="状态")
+    is_active = Column(Boolean, default=True, comment="是否有效")
+
+    # 关系定义
+    items = relationship("Item", back_populates="parent")
+```
+
+---
+
+## 文件命名规范
+
+### 前端
+- 页面组件: `PascalCase.jsx` (如 `ProjectList.jsx`)
+- 工具函数: `camelCase.js` (如 `formatDate.js`)
+- 样式文件: `kebab-case.css` (如 `project-list.css`)
+- 常量文件: `SCREAMING_SNAKE_CASE.js` (如 `API_ENDPOINTS.js`)
+
+### 后端
+- 模块文件: `snake_case.py` (如 `project_service.py`)
+- 模型文件: 单数形式 (如 `project.py` 而非 `projects.py`)
+- 路由文件: 复数形式 (如 `projects.py`)
+
+---
+
+## 代码审查清单
+
+提交代码前必须确认：
+
+### 前端
+- [ ] 所有导入的模块都被使用
+- [ ] 所有声明的变量都被使用
+- [ ] useEffect 依赖数组完整
+- [ ] Hook 在组件顶层调用
+- [ ] 没有条件调用 Hook
+- [ ] `npm run lint` 无错误
+- [ ] `npm run build` 成功
+
+### 后端
+- [ ] 所有导入都被使用
+- [ ] 类型提示完整
+- [ ] `flake8` 检查通过
+- [ ] API 有适当的错误处理
+- [ ] 数据库操作有事务保护
+
+---
+
+## 禁止的模式
+
+### 1. 禁止复制粘贴整个页面作为模板
+每个页面应该从零开始，只添加需要的内容。
+
+### 2. 禁止"以后可能用到"的代码
+```javascript
+// ❌ 不要这样
+const [feature1, setFeature1] = useState()  // TODO: 以后实现
+const [feature2, setFeature2] = useState()  // 预留
+```
+
+### 3. 禁止忽略 ESLint 警告
+```javascript
+// ❌ 不要这样
+// eslint-disable-next-line
+const unused = 'value'
+```
+
+### 4. 禁止空的 catch 块
+```javascript
+// ❌ 不要这样
+try {
+  await api.call()
+} catch (e) {
+  // 忽略错误
+}
+
+// ✅ 正确做法
+try {
+  await api.call()
+} catch (e) {
+  console.error('API 调用失败:', e)
+  // 或者向用户显示错误
+}
+```
+
+---
+
+## AI 助手指南
+
+当 AI 助手帮助编写代码时：
+
+1. **生成最小化代码**: 只生成实际需要的导入和变量
+2. **完整的 Hook 依赖**: 确保 useEffect/useMemo/useCallback 依赖完整
+3. **显式导入**: Python 代码必须显式导入所有使用的类型和模块
+4. **错误处理**: 必须包含适当的错误处理和用户反馈
+5. **代码清理**: 生成代码后，检查并删除任何未使用的部分
+
+---
+
+## 项目特定约定
+
+### 项目编码格式
+- 项目编码: `PJyymmddxxx` (如 `PJ250708001`)
+- 机台编码: `PNxxx` (如 `PN001`)
+
+### 项目阶段 (S1-S9)
+- S1: 需求进入
+- S2: 方案设计
+- S3: 采购备料
+- S4: 加工制造
+- S5: 装配调试
+- S6: 出厂验收 (FAT)
+- S7: 包装发运
+- S8: 现场安装 (SAT)
+- S9: 质保结项
+
+### 健康度状态
+- H1: 正常（绿色）
+- H2: 有风险（黄色）
+- H3: 阻塞（红色）
+- H4: 已完结（灰色）
