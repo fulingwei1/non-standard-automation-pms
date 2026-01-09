@@ -201,7 +201,6 @@ export default function UserManagement() {
       });
       setDepartments(Array.from(deptSet).sort());
     } catch (error) {
-      console.error('加载用户列表失败:', error);
       alert('加载用户列表失败: ' + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -215,7 +214,6 @@ export default function UserManagement() {
       const data = response.data;
       setRoles(data.items || []);
     } catch (error) {
-      console.error('加载角色列表失败:', error);
     }
   };
 

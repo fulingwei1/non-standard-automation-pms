@@ -327,7 +327,6 @@ export default function SalesWorkstation() {
             const projectData = projectResponse.data || projectResponse
             return transformProject(projectData)
           } catch (err) {
-            console.error(`Failed to load project ${projectId}:`, err)
             return null
           }
         })
@@ -354,7 +353,6 @@ export default function SalesWorkstation() {
         newCustomers: newCustomerCount,
       })
     } catch (err) {
-      console.error('Failed to load sales statistics:', err)
       setError(err.response?.data?.detail || err.message || '加载销售数据失败')
       setStats({ ...DEFAULT_STATS })
       setFunnelData(null)
@@ -396,14 +394,12 @@ export default function SalesWorkstation() {
               })
             }
           } catch (err) {
-            console.error('Failed to load quote approval status:', err)
           }
         })
       )
 
       setTodos([...taskTodos, ...approvalTodos])
     } catch (err) {
-      console.error('Failed to load todos:', err)
       setTodos([])
     }
   }, [])

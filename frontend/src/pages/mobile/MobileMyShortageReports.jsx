@@ -64,7 +64,6 @@ export default function MobileMyShortageReports() {
       // 这里应该根据当前登录用户筛选，暂时显示所有
       setReports(allReports)
     } catch (error) {
-      console.error('Failed to fetch reports:', error)
     } finally {
       setLoading(false)
     }

@@ -143,7 +143,6 @@ export default function PurchaseRequestDetail() {
           setRequest(data)
         }
       } catch (err) {
-        console.error('Failed to load request:', err)
         setError(err.response?.data?.detail || '加载失败')
       } finally {
         setLoading(false)
@@ -174,7 +173,6 @@ export default function PurchaseRequestDetail() {
         navigate('/purchase-requests')
       }
     } catch (err) {
-      console.error('Failed to delete request:', err)
       toast.error(err.response?.data?.detail || '删除失败')
     }
   }
@@ -197,7 +195,6 @@ export default function PurchaseRequestDetail() {
         setRequest(res.data?.data || res.data)
       }
     } catch (err) {
-      console.error('Failed to submit request:', err)
       toast.error(err.response?.data?.detail || '提交失败')
     }
   }
@@ -215,7 +212,6 @@ export default function PurchaseRequestDetail() {
         setRequest(res.data?.data || res.data)
       }
     } catch (err) {
-      console.error('Failed to generate orders:', err)
       toast.error(err.response?.data?.detail || '生成采购订单失败')
     } finally {
       setGenerating(false)
@@ -245,7 +241,6 @@ export default function PurchaseRequestDetail() {
         setRequest(res.data?.data || res.data)
       }
     } catch (err) {
-      console.error('Failed to approve request:', err)
       toast.error(err.response?.data?.detail || '审批失败')
     }
   }

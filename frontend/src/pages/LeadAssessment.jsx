@@ -317,7 +317,6 @@ export default function LeadAssessment() {
         setTotal(response.data.total || 0)
       }
     } catch (error) {
-      console.error('加载线索列表失败:', error)
       // 如果API失败，使用mock数据作为fallback
       setLeads(mockLeads)
       setTotal(mockLeads.length)
@@ -426,7 +425,6 @@ export default function LeadAssessment() {
       // 刷新列表
       loadLeads()
     } catch (err) {
-      console.error('Failed to create lead:', err)
       alert('创建线索失败，请重试')
     }
   }
@@ -489,7 +487,6 @@ export default function LeadAssessment() {
       setSelectedLead(null)
       setAssessmentScores({})
     } catch (error) {
-      console.error('保存评估失败:', error)
       alert('保存评估失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -507,7 +504,6 @@ export default function LeadAssessment() {
           setShowDetailDialog(true)
         }
       } catch (error) {
-        console.error('加载线索详情失败:', error)
         setSelectedLead(lead)
         setShowDetailDialog(true)
       }

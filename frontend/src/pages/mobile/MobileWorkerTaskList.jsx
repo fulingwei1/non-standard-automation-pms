@@ -69,7 +69,6 @@ export default function MobileWorkerTaskList() {
         setTasks(myTasks)
       }
     } catch (error) {
-      console.error('Failed to fetch tasks:', error)
     } finally {
       setLoading(false)
     }

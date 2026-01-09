@@ -132,7 +132,6 @@ export default function BomAssemblyAttrs() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch projects:', error)
     }
   }
 
@@ -141,7 +140,6 @@ export default function BomAssemblyAttrs() {
       const res = await bomApi.list({ project_id: selectedProject, page_size: 100 })
       setBoms(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch BOMs:', error)
       setBoms([])
     }
   }
@@ -151,7 +149,6 @@ export default function BomAssemblyAttrs() {
       const res = await assemblyKitApi.getStages()
       setStages(res.data || res || [])
     } catch (error) {
-      console.error('Failed to fetch stages:', error)
     }
   }
 
@@ -160,7 +157,6 @@ export default function BomAssemblyAttrs() {
       const res = await assemblyKitApi.getTemplates()
       setTemplates(res.data || res || [])
     } catch (error) {
-      console.error('Failed to fetch templates:', error)
     }
   }
 
@@ -179,7 +175,6 @@ export default function BomAssemblyAttrs() {
       setEditedAttrs(initialEdits)
       setHasChanges(false)
     } catch (error) {
-      console.error('Failed to fetch assembly attrs:', error)
       setAssemblyAttrs([])
     } finally {
       setLoading(false)
@@ -205,16 +200,13 @@ export default function BomAssemblyAttrs() {
       const items = Object.values(editedAttrs).filter(attr => attr.assembly_stage)
 
       if (items.length === 0) {
-        console.error('没有需要保存的配置')
         return
       }
 
       await assemblyKitApi.batchSetAssemblyAttrs(selectedBom, { items })
-      console.log('保存成功')
       setHasChanges(false)
       fetchBomAssemblyAttrs()
     } catch (error) {
-      console.error('保存失败:', error)
     } finally {
       setLoading(false)
     }
@@ -224,11 +216,9 @@ export default function BomAssemblyAttrs() {
     try {
       setLoading(true)
       const res = await assemblyKitApi.autoAssignAttrs(selectedBom, { bom_id: parseInt(selectedBom), overwrite })
-      console.log(res.message || '自动分配完成')
       setAutoAssignDialogOpen(false)
       fetchBomAssemblyAttrs()
     } catch (error) {
-      console.error('自动分配失败:', error)
     } finally {
       setLoading(false)
     }
@@ -239,12 +229,10 @@ export default function BomAssemblyAttrs() {
       setLoading(true)
       // 先获取推荐结果预览
       const previewRes = await assemblyKitApi.getRecommendations(selectedBom)
-      console.log('推荐结果预览:', previewRes.data)
       
       // 询问用户是否应用推荐
       if (window.confirm(`智能推荐完成，共推荐 ${previewRes.data?.total || 0} 项。是否应用推荐结果？`)) {
         const res = await assemblyKitApi.smartRecommend(selectedBom, { bom_id: parseInt(selectedBom), overwrite })
-        console.log(res.message || '智能推荐完成')
         if (res.data?.recommendation_stats) {
           const stats = res.data.recommendation_stats
           const statsText = Object.entries(stats)
@@ -266,7 +254,6 @@ export default function BomAssemblyAttrs() {
         fetchBomAssemblyAttrs()
       }
     } catch (error) {
-      console.error('智能推荐失败:', error)
     } finally {
       setLoading(false)
     }
@@ -274,7 +261,6 @@ export default function BomAssemblyAttrs() {
 
   const handleApplyTemplate = async () => {
     if (!selectedTemplate) {
-      console.error('请选择模板')
       return
     }
     try {
@@ -284,11 +270,9 @@ export default function BomAssemblyAttrs() {
         template_id: parseInt(selectedTemplate),
         overwrite
       })
-      console.log(res.message || '模板套用完成')
       setTemplateDialogOpen(false)
       fetchBomAssemblyAttrs()
     } catch (error) {
-      console.error('模板套用失败:', error)
     } finally {
       setLoading(false)
     }

@@ -298,7 +298,6 @@ export default function ECNDetail() {
       setLogs(logsRes.data || [])
       setEvaluationSummary(summaryRes.data)
     } catch (error) {
-      console.error('Failed to fetch ECN detail:', error)
     } finally {
       setLoading(false)
     }

@@ -221,7 +221,6 @@ export default function CustomerCommunication() {
       
       setCommunications(transformedCommunications)
     } catch (err) {
-      console.error('Failed to load communications:', err)
       setError(err.response?.data?.detail || err.message || '加载沟通记录失败')
       // 如果是演示账号，使用 mock 数据
       const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
@@ -264,7 +263,6 @@ export default function CustomerCommunication() {
         }, {}),
       })
     } catch (err) {
-      console.error('Failed to load statistics:', err)
     }
   }, [communications])
 
@@ -352,7 +350,6 @@ export default function CustomerCommunication() {
       await loadCommunications()
       await loadStatistics()
     } catch (error) {
-      console.error('Failed to create communication:', error)
       toast.error('创建失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
     }
   }
@@ -385,7 +382,6 @@ export default function CustomerCommunication() {
       await loadCommunications()
       await loadStatistics()
     } catch (error) {
-      console.error('Failed to update communication:', error)
       toast.error('更新失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
     }
   }
@@ -445,7 +441,6 @@ export default function CustomerCommunication() {
       
       toast.success(`成功导出 ${commsToExport.length} 条沟通记录`)
     } catch (error) {
-      console.error('Failed to export communications:', error)
       toast.error('导出失败: ' + (error.message || '请稍后重试'))
     }
   }

@@ -48,7 +48,6 @@ export default function ResourceOverview() {
       const data = res.data || res
       setResourceData(data)
     } catch (err) {
-      console.error('Failed to fetch resource overview:', err)
     } finally {
       setLoading(false)
     }

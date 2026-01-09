@@ -130,7 +130,6 @@ export default function TechnicalReviewList() {
       const projects = response.data?.items || response.items || []
       setProjectList(projects)
     } catch (error) {
-      console.error('Failed to fetch projects:', error)
     }
   }
 
@@ -151,7 +150,6 @@ export default function TechnicalReviewList() {
       setReviews(data.items || [])
       setTotal(data.total || 0)
     } catch (error) {
-      console.error('Failed to fetch reviews:', error)
       // 使用模拟数据
       setReviews([])
     } finally {
@@ -166,7 +164,6 @@ export default function TechnicalReviewList() {
       setDeleteDialog({ open: false, review: null })
       fetchReviews()
     } catch (error) {
-      console.error('Failed to delete review:', error)
       alert('删除失败：' + (error.response?.data?.detail || error.message))
     }
   }

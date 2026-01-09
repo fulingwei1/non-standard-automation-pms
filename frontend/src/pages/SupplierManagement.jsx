@@ -672,7 +672,6 @@ function CreateSupplierDialog({ onClose, onSuccess }) {
       await supplierApi.create(formData)
       onSuccess()
     } catch (error) {
-      console.error('Failed to create supplier:', error)
       toast.error('创建失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)

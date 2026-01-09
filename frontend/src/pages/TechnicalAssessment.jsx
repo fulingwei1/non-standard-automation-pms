@@ -87,7 +87,6 @@ export default function TechnicalAssessment() {
         setAssessment(assessments[0]) // 显示最新的评估
       }
     } catch (error) {
-      console.error('加载评估失败:', error)
     } finally {
       setLoading(false)
     }
@@ -107,7 +106,6 @@ export default function TechnicalAssessment() {
         alert('技术评估申请已提交')
       }
     } catch (error) {
-      console.error('申请评估失败:', error)
       alert('申请评估失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -134,7 +132,6 @@ export default function TechnicalAssessment() {
       await loadAssessment() // 重新加载评估列表
       alert('技术评估完成')
     } catch (error) {
-      console.error('执行评估失败:', error)
       alert('执行评估失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setEvaluating(false)

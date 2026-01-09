@@ -127,7 +127,6 @@ export default function AttendanceManagement() {
           setAttendanceStats(res.data)
         }
       } catch (err) {
-        console.log('Attendance API unavailable, using mock data')
       }
       setLoading(false)
     }

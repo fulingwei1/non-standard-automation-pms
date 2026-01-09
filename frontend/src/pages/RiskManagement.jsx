@@ -153,7 +153,6 @@ export default function RiskManagement() {
       const data = res.data || res
       setProject(data)
     } catch (err) {
-      console.error('Failed to fetch project:', err)
       setError(err.response?.data?.detail || err.message || '加载项目信息失败')
     }
   }
@@ -174,7 +173,6 @@ export default function RiskManagement() {
       const data = res.data || res
       setRisks(Array.isArray(data) ? data : [])
     } catch (err) {
-      console.error('Failed to fetch risks:', err)
       setError(err.response?.data?.detail || err.message || '加载风险数据失败')
       setRisks([])
     } finally {
@@ -199,7 +197,6 @@ export default function RiskManagement() {
         setProjectList([])
       }
     } catch (err) {
-      console.error('Failed to fetch projects:', err)
       setProjectList([])
     }
   }
@@ -210,7 +207,6 @@ export default function RiskManagement() {
       setCreateDialogOpen(false)
       fetchRisks()
     } catch (err) {
-      console.error('Failed to create risk:', err)
       alert('创建失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -221,7 +217,6 @@ export default function RiskManagement() {
       setAssessDialog({ open: false, riskId: null })
       fetchRisks()
     } catch (err) {
-      console.error('Failed to assess risk:', err)
       alert('评估失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -232,7 +227,6 @@ export default function RiskManagement() {
       setResponseDialog({ open: false, riskId: null })
       fetchRisks()
     } catch (err) {
-      console.error('Failed to update response:', err)
       alert('更新失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -243,7 +237,6 @@ export default function RiskManagement() {
       setStatusDialog({ open: false, riskId: null })
       fetchRisks()
     } catch (err) {
-      console.error('Failed to update status:', err)
       alert('更新失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -254,7 +247,6 @@ export default function RiskManagement() {
       setCloseDialog({ open: false, riskId: null })
       fetchRisks()
     } catch (err) {
-      console.error('Failed to close risk:', err)
       alert('关闭失败: ' + (err.response?.data?.detail || err.message))
     }
   }

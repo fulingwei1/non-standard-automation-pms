@@ -99,7 +99,6 @@ export default function MaterialList() {
       const materialList = res.data?.items || res.data || []
       setMaterials(materialList)
     } catch (error) {
-      console.error('物料列表 API 调用失败:', error)
       setError(error)
       setMaterials(null) // 清空数据
     } finally {
@@ -111,7 +110,6 @@ export default function MaterialList() {
       const res = await materialApi.categories.list()
       setCategories(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('物料分类 API 调用失败:', error)
       // 分类失败不影响主数据加载，只记录错误
       setCategories([])
     }
@@ -121,7 +119,6 @@ export default function MaterialList() {
       const res = await supplierApi.list({ page_size: 1000 })
       setSuppliers(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('供应商 API 调用失败:', error)
       // 供应商失败不影响主数据加载，只记录错误
       setSuppliers([])
     }
@@ -146,7 +143,6 @@ export default function MaterialList() {
       })
       fetchMaterials()
     } catch (error) {
-      console.error('Failed to create material:', error)
       alert('创建物料失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -156,7 +152,6 @@ export default function MaterialList() {
       setSelectedMaterial(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
-      console.error('Failed to fetch material detail:', error)
     }
   }
   const filteredMaterials = useMemo(() => {

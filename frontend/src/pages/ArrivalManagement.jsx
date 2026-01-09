@@ -94,7 +94,6 @@ export default function ArrivalManagement() {
       const receiptList = res.data?.items || res.data || []
       setReceipts(receiptList)
     } catch (error) {
-      console.error('Failed to fetch receipts:', error)
     } finally {
       setLoading(false)
     }
@@ -109,7 +108,6 @@ export default function ArrivalManagement() {
       setReceiptItems(itemsRes.data || itemsRes || [])
       setShowDetailDialog(true)
     } catch (error) {
-      console.error('Failed to fetch receipt detail:', error)
     }
   }
   const handleReceive = async () => {
@@ -123,7 +121,6 @@ export default function ArrivalManagement() {
         fetchReceiptDetail(selectedReceipt.id)
       }
     } catch (error) {
-      console.error('Failed to receive:', error)
       alert('收货失败: ' + (error.response?.data?.detail || error.message))
     }
   }

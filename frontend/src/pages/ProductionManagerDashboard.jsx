@@ -304,7 +304,6 @@ export default function ProductionManagerDashboard() {
         })
       }
     } catch (err) {
-      console.error('Failed to load dashboard:', err)
       setError(err.response?.data?.detail || err.message || '加载仪表板数据失败')
     } finally {
       setLoading(false)
@@ -365,7 +364,6 @@ export default function ProductionManagerDashboard() {
         setDailyError('该日期没有缺料日报数据')
       }
     } catch (err) {
-      console.error('Failed to load daily snapshots:', err)
       setDailyError(err.response?.data?.detail || err.message || '日报数据加载失败')
     }
   }, [])
@@ -390,7 +388,6 @@ export default function ProductionManagerDashboard() {
       }))
       setWorkshops(transformedWorkshops)
     } catch (err) {
-      console.error('Failed to load workshops:', err)
       setWorkshops([]) // 不再使用mock数据
     }
   }, [])
@@ -425,7 +422,6 @@ export default function ProductionManagerDashboard() {
       }))
       setProductionPlans(transformedPlans)
     } catch (err) {
-      console.error('Failed to load production plans:', err)
       setProductionPlans([]) // 不再使用mock数据
     }
   }, [filterStatus])
@@ -463,7 +459,6 @@ export default function ProductionManagerDashboard() {
       }))
       setWorkOrders(transformedOrders)
     } catch (err) {
-      console.error('Failed to load work orders:', err)
       setWorkOrders([]) // 不再使用mock数据
     }
   }, [filterStatus])
@@ -484,7 +479,6 @@ export default function ProductionManagerDashboard() {
       const rankings = response.data || response
       setWorkerRankings(Array.isArray(rankings) ? rankings : [])
     } catch (err) {
-      console.error('Failed to load worker rankings:', err)
       setWorkerRankings([])
     } finally {
       setRankingLoading(false)
@@ -499,7 +493,6 @@ export default function ProductionManagerDashboard() {
       const projects = response.data || response
       setInProductionProjects(Array.isArray(projects) ? projects : [])
     } catch (err) {
-      console.error('Failed to load in-production projects:', err)
       setInProductionProjects([])
     } finally {
       setProjectsLoading(false)
@@ -523,7 +516,6 @@ export default function ProductionManagerDashboard() {
       const items = data.items || data
       setMaterialSearchResults(Array.isArray(items) ? items : [])
     } catch (err) {
-      console.error('Failed to search materials:', err)
       setMaterialSearchResults([])
     } finally {
       setMaterialSearchLoading(false)
@@ -565,7 +557,6 @@ export default function ProductionManagerDashboard() {
       })
       setAlerts(normalized)
     } catch (err) {
-      console.error('Failed to load alerts:', err)
       setAlerts([])
     }
   }, [])

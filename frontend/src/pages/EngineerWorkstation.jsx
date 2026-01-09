@@ -507,7 +507,6 @@ export default function EngineerWorkstation() {
 
       setTasks(transformedTasks)
     } catch (err) {
-      console.error('Failed to load engineer tasks:', err)
       setError(err.response?.data?.detail || err.message || '加载任务列表失败')
       setTasks([]) // 不再使用mock数据，显示空列表
     } finally {

@@ -125,7 +125,6 @@ export default function AlertSubscriptionSettings() {
         setTotal(0)
       }
     } catch (err) {
-      console.error('Failed to load subscriptions:', err)
       setError(err.response?.data?.detail || err.message || '加载订阅列表失败')
       setSubscriptions([])
       setTotal(0)
@@ -144,7 +143,6 @@ export default function AlertSubscriptionSettings() {
         setProjects(data)
       }
     } catch (err) {
-      console.error('Failed to load projects:', err)
     }
   }, [])
 

@@ -139,7 +139,6 @@ export default function QuoteManagement() {
         setTotal(response.data.total || 0)
       }
     } catch (error) {
-      console.error('加载报价列表失败:', error)
     } finally {
       setLoading(false)
     }
@@ -152,7 +151,6 @@ export default function QuoteManagement() {
         setOpportunities(response.data.items)
       }
     } catch (error) {
-      console.error('加载商机列表失败:', error)
     }
   }
 
@@ -163,7 +161,6 @@ export default function QuoteManagement() {
         setCustomers(response.data.items)
       }
     } catch (error) {
-      console.error('加载客户列表失败:', error)
     }
   }
 
@@ -176,7 +173,6 @@ export default function QuoteManagement() {
         setQuoteTemplates(response.items)
       }
     } catch (error) {
-      console.error('加载报价模板失败:', error)
     }
   }
 
@@ -203,7 +199,6 @@ export default function QuoteManagement() {
         },
       }))
     } catch (error) {
-      console.error('应用报价模板失败:', error)
       alert('应用模板失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setTemplateLoading(false)
@@ -292,7 +287,6 @@ export default function QuoteManagement() {
       resetForm()
       loadQuotes()
     } catch (error) {
-      console.error('创建报价失败:', error)
       alert('创建报价失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -305,7 +299,6 @@ export default function QuoteManagement() {
       setSelectedQuote(null)
       loadQuotes()
     } catch (error) {
-      console.error('创建报价版本失败:', error)
       alert('创建报价版本失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -318,7 +311,6 @@ export default function QuoteManagement() {
       setSelectedQuote(null)
       loadQuotes()
     } catch (error) {
-      console.error('审批报价失败:', error)
       alert('审批报价失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -332,7 +324,6 @@ export default function QuoteManagement() {
       }
       setShowVersionsDialog(true)
     } catch (error) {
-      console.error('加载报价版本失败:', error)
     }
   }
 
@@ -350,11 +341,9 @@ export default function QuoteManagement() {
             setVersions(versionsResponse.data)
           }
         } catch (error) {
-          console.error('加载版本失败:', error)
         }
       }
     } catch (error) {
-      console.error('加载报价详情失败:', error)
       setSelectedQuote(quote)
       setShowDetailDialog(true)
     }
@@ -397,7 +386,6 @@ export default function QuoteManagement() {
         setShowEditDialog(true)
       }
     } catch (error) {
-      console.error('加载报价详情失败:', error)
       alert('加载报价详情失败')
     }
   }
@@ -411,7 +399,6 @@ export default function QuoteManagement() {
       setSelectedQuote(null)
       loadQuotes()
     } catch (error) {
-      console.error('更新报价失败:', error)
       alert('更新报价失败: ' + (error.response?.data?.detail || error.message))
     }
   }

@@ -283,7 +283,6 @@ export default function PaymentManagement() {
       setPayments(transformedPayments)
       setTotal(data.total || 0)
     } catch (error) {
-      console.error('加载回款列表失败:', error)
       // 如果API失败，使用mock数据作为fallback
       setPayments(mockPayments)
       setTotal(mockPayments.length)
@@ -369,7 +368,6 @@ export default function PaymentManagement() {
           '90+': { amount: parseFloat(data.days_over_90 || 0), count: data.days_over_90_count || 0 },
         })
       } catch (error) {
-        console.error('加载账龄分析失败:', error)
         // 使用本地计算作为fallback
         const now = new Date()
         const aging = {
@@ -421,7 +419,6 @@ export default function PaymentManagement() {
           setSelectedPayment(payment)
         }
       } catch (error) {
-        console.error('加载回款详情失败:', error)
         setSelectedPayment(payment)
       }
     } else {
@@ -447,7 +444,6 @@ export default function PaymentManagement() {
       setShowCollectionDialog(false)
       setSelectedPayment(null)
     } catch (error) {
-      console.error('登记回款失败:', error)
       alert('登记回款失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -466,9 +462,7 @@ export default function PaymentManagement() {
     } catch (error) {
       // axios timeout 或连接错误时，静默处理，使用空数据
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout') || error.message?.includes('Network Error')) {
-        console.log('回款提醒API超时或连接失败，使用空数据')
       } else {
-        console.error('加载回款提醒失败:', error)
       }
       setReminders([])
     } finally {
@@ -486,9 +480,7 @@ export default function PaymentManagement() {
     } catch (error) {
       // axios timeout 或连接错误时，静默处理，使用本地计算数据
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout') || error.message?.includes('Network Error')) {
-        console.log('统计分析API超时或连接失败，使用本地计算数据')
       } else {
-        console.error('加载统计分析失败:', error)
       }
       setStatistics(null)
     } finally {
@@ -522,7 +514,6 @@ export default function PaymentManagement() {
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
     } catch (error) {
-      console.error('导出回款记录失败:', error)
       alert('导出失败: ' + (error.response?.data?.detail || error.message))
     }
   }

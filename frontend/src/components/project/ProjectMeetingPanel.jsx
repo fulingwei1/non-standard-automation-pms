@@ -20,7 +20,6 @@ export default function ProjectMeetingPanel({ projectId }) {
       const response = await projectWorkspaceApi.getMeetings(projectId)
       setMeetingData(response.data)
     } catch (error) {
-      console.error('Failed to load meeting data:', error)
     } finally {
       setLoading(false)
     }

@@ -416,7 +416,6 @@ export default function ProcurementEngineerWorkstation() {
         const suppliersResponse = await supplierApi.list({ page: 1, page_size: 1 })
         suppliersCount = suppliersResponse.data?.total || suppliersResponse.data?.items?.length || 24
       } catch (err) {
-        console.error('Failed to load suppliers:', err)
       }
 
       const delayedOrders = transformedOrders.filter(o => o.daysLeft < 0 && o.arrivalStatus !== 'completed').length
@@ -483,7 +482,6 @@ export default function ProcurementEngineerWorkstation() {
       setTodos([...orderTodos, ...shortageTodos])
 
     } catch (err) {
-      console.error('Failed to load procurement data:', err)
       setError(err)
       setTodos([])
       setPurchaseOrders([])

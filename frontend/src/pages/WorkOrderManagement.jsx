@@ -117,7 +117,6 @@ export default function WorkOrderManagement() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch projects:', error)
     }
   }
   const fetchWorkOrders = async () => {
@@ -132,7 +131,6 @@ export default function WorkOrderManagement() {
       const orderList = res.data?.items || res.data || []
       setWorkOrders(orderList)
     } catch (error) {
-      console.error('Failed to fetch work orders:', error)
     } finally {
       setLoading(false)
     }
@@ -165,7 +163,6 @@ export default function WorkOrderManagement() {
       })
       fetchWorkOrders()
     } catch (error) {
-      console.error('Failed to create work order:', error)
       alert('创建工单失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -175,7 +172,6 @@ export default function WorkOrderManagement() {
       setSelectedOrder(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
-      console.error('Failed to fetch work order detail:', error)
     }
   }
   const handleAssign = async () => {
@@ -192,7 +188,6 @@ export default function WorkOrderManagement() {
         handleViewDetail(selectedOrder.id)
       }
     } catch (error) {
-      console.error('Failed to assign work order:', error)
       alert('派工失败: ' + (error.response?.data?.detail || error.message))
     }
   }

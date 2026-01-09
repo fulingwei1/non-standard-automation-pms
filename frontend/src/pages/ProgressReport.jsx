@@ -69,7 +69,6 @@ export default function ProgressReport() {
       const res = await projectApi.get(id)
       setProject(res.data || res)
     } catch (error) {
-      console.error('Failed to fetch project:', error)
     }
   }
   const fetchTasks = async () => {
@@ -85,7 +84,6 @@ export default function ProgressReport() {
       })
       setTaskProgress(progressMap)
     } catch (error) {
-      console.error('Failed to fetch tasks:', error)
     } finally {
       setLoading(false)
     }
@@ -102,7 +100,6 @@ export default function ProgressReport() {
       setProgressNote('')
       fetchTasks()
     } catch (error) {
-      console.error('Failed to update task progress:', error)
       alert('更新进度失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -123,7 +120,6 @@ export default function ProgressReport() {
       setReportContent('')
       setTaskProgress({})
     } catch (error) {
-      console.error('Failed to submit report:', error)
       alert('提交失败: ' + (error.response?.data?.detail || error.message))
     }
   }

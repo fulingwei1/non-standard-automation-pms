@@ -60,7 +60,6 @@ export function useApi(apiCall, options = {}) {
             if (onError) {
               onError(error)
             } else {
-              console.error('API call failed:', error)
             }
           },
         })

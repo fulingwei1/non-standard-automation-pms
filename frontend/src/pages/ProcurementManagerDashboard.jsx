@@ -386,7 +386,6 @@ export default function ProcurementManagerDashboard() {
         activeTeamMembers: 0,
       })
     } catch (err) {
-      console.error('Failed to load procurement statistics:', err)
       setError(err.message || '加载采购数据失败')
       setStats(mockStats) // Fallback
       setPendingApprovals(mockPendingApprovals) // Fallback

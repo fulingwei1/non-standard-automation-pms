@@ -174,7 +174,6 @@ export default function PurchaseOrderFromBOM() {
           setBoms(data?.items || data || [])
         }
       } catch (err) {
-        console.error('Failed to load BOMs:', err)
       }
     }
     loadBOMs()
@@ -194,7 +193,6 @@ export default function PurchaseOrderFromBOM() {
           setSuppliers(res.data?.items || res.data || [])
         }
       } catch (err) {
-        console.error('Failed to load suppliers:', err)
       }
     }
     loadSuppliers()
@@ -231,7 +229,6 @@ export default function PurchaseOrderFromBOM() {
         setStep(2)
       }
     } catch (err) {
-      console.error('Failed to generate preview:', err)
       setError(err.response?.data?.detail || '生成预览失败')
       toast.error(err.response?.data?.detail || '生成预览失败')
     } finally {
@@ -292,7 +289,6 @@ export default function PurchaseOrderFromBOM() {
         toast.success(`已创建${data.created_orders?.length || 0}个采购订单`)
       }
     } catch (err) {
-      console.error('Failed to create orders:', err)
       setError(err.response?.data?.detail || '创建订单失败')
       toast.error(err.response?.data?.detail || '创建订单失败')
     } finally {

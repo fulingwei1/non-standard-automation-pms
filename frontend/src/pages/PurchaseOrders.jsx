@@ -387,7 +387,6 @@ export default function PurchaseOrders() {
             itemCount = items.length
             receivedCount = items.filter(item => (item.received_qty || 0) > 0).length
           } catch (err) {
-            console.error(`Failed to load items for order ${order.id}:`, err)
           }
 
           // Determine status based on received quantity
@@ -436,7 +435,6 @@ export default function PurchaseOrders() {
 
       setOrders(transformedOrders)
     } catch (err) {
-      console.error('Failed to load purchase orders:', err)
       setError(err)
       setOrders([]) // 清空数据
     } finally {
@@ -472,7 +470,6 @@ export default function PurchaseOrders() {
         setSuppliers(suppliersData)
         setProjects(projectsData)
       } catch (err) {
-        console.error('Failed to load dropdown data:', err)
         // 下拉数据失败不影响主功能，只记录错误
         setSuppliers([])
         setProjects([])
@@ -529,7 +526,6 @@ export default function PurchaseOrders() {
         
         setSelectedOrder(updatedOrder)
       } catch (err) {
-        console.error('Failed to load order details:', err)
         setSelectedOrder(order)
       }
     } else {
@@ -589,7 +585,6 @@ export default function PurchaseOrders() {
             handleEditOrder(formattedOrder)
           })
           .catch(err => {
-            console.error('Failed to load order:', err)
             toast.error('加载订单失败')
           })
       }
@@ -635,7 +630,6 @@ export default function PurchaseOrders() {
       toast.success('订单已删除')
       loadOrders()
     } catch (err) {
-      console.error('Failed to delete order:', err)
       toast.error(err.response?.data?.detail || '删除订单失败')
     }
   }
@@ -651,7 +645,6 @@ export default function PurchaseOrders() {
       toast.success('订单已提交，等待审批')
       loadOrders()
     } catch (err) {
-      console.error('Failed to submit order:', err)
       toast.error(err.response?.data?.detail || '提交订单失败')
     }
   }
@@ -680,7 +673,6 @@ export default function PurchaseOrders() {
       setApprovingOrder(null)
       setApprovalNote('')
     } catch (err) {
-      console.error('Failed to approve order:', err)
       toast.error(err.response?.data?.detail || '审批订单失败')
     }
   }
@@ -732,7 +724,6 @@ export default function PurchaseOrders() {
       }
       loadOrders()
     } catch (err) {
-      console.error('Failed to save order:', err)
       toast.error(err.response?.data?.detail || '保存订单失败')
     }
   }

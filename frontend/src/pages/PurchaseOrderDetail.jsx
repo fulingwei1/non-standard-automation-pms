@@ -432,7 +432,6 @@ export default function PurchaseOrderDetail() {
         const receiptsResponse = await purchaseApi.goodsReceipts.list({ purchase_order_id: orderId })
         receipts = receiptsResponse.data?.items || receiptsResponse.data || []
       } catch (err) {
-        console.error('Failed to load receipts:', err)
       }
 
       // Transform backend data to frontend format
@@ -534,7 +533,6 @@ export default function PurchaseOrderDetail() {
 
       setPo(transformedPO)
     } catch (err) {
-      console.error('Failed to load purchase order:', err)
       if (isDemoAccount) {
         // For demo accounts, use mock data on error
         setPo(mockPO)

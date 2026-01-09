@@ -63,7 +63,6 @@ export default function ProjectBoard() {
         setProjects([])
       }
     } catch (err) {
-      console.error('Failed to fetch projects:', err)
       setError(err)
       setProjects([])
     } finally {

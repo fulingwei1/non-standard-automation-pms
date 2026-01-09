@@ -104,7 +104,6 @@ export default function RdCostReports() {
       const projectData = response.data?.data || response.data || response
       setProject(projectData)
     } catch (err) {
-      console.error('Failed to fetch project:', err)
     } finally {
       setLoading(false)
     }
@@ -142,7 +141,6 @@ export default function RdCostReports() {
       const data = response.data?.data || response.data || response
       setReportData(data)
     } catch (err) {
-      console.error('Failed to fetch report data:', err)
       setReportData(null)
     } finally {
       setLoading(false)

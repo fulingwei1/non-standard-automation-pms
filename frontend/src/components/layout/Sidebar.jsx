@@ -1115,7 +1115,6 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
     try {
       return user || JSON.parse(localStorage.getItem('user') || '{}')
     } catch (e) {
-      console.warn('Failed to parse user from localStorage:', e)
       return {}
     }
   }, [user])
@@ -1141,7 +1140,6 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
         }
       } catch (error) {
         // Silently fail and use default menu
-        console.warn('Failed to fetch dynamic menu, using default:', error)
       } finally {
         setMenuLoading(false)
       }

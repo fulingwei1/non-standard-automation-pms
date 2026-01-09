@@ -31,7 +31,6 @@ export default function SpecMatchCheck() {
       const response = await api.get('/technical-spec/match/records', { params })
       setMatchRecords(response.data.items || [])
     } catch (error) {
-      console.error('加载匹配记录失败:', error)
     } finally {
       setLoading(false)
     }
@@ -53,7 +52,6 @@ export default function SpecMatchCheck() {
       alert('匹配检查完成')
       loadMatchRecords()
     } catch (error) {
-      console.error('执行匹配检查失败:', error)
       alert('检查失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setChecking(false)

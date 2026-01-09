@@ -106,7 +106,6 @@ const EvaluationWeightConfig = () => {
       }
 
     } catch (err) {
-      console.error('加载权重配置失败:', err)
       setError(err.response?.data?.detail || '加载失败')
       // Fallback to default values (already set)
     } finally {
@@ -164,7 +163,6 @@ const EvaluationWeightConfig = () => {
       // 重新加载配置以更新历史记录
       await loadWeightConfig()
     } catch (err) {
-      console.error('保存权重配置失败:', err)
       alert('保存失败: ' + (err.response?.data?.detail || '请稍后重试'))
     } finally {
       setIsSaving(false)

@@ -160,7 +160,6 @@ export default function ProjectReviewList() {
       const data = res.data || res
       setProjectList(data.items || data || [])
     } catch (err) {
-      console.error('Failed to fetch projects:', err)
       // API 失败时使用 mock 数据
       setProjectList(mockProjectList)
     }
@@ -183,12 +182,7 @@ export default function ProjectReviewList() {
       setReviews(data.items || data || [])
       setTotal(data.total || data.length || 0)
     } catch (err) {
-      console.error('Failed to fetch reviews:', err)
       // API 调用失败时，使用 mock 数据让用户仍能看到界面
-      console.log('API 调用失败，使用 mock 数据展示界面', {
-        status: err.response?.status,
-        message: err.message
-      })
       setReviews(mockReviews)
       setTotal(mockReviews.length)
     } finally {
@@ -203,7 +197,6 @@ export default function ProjectReviewList() {
       setDeleteDialog({ open: false, review: null })
       fetchReviews()
     } catch (err) {
-      console.error('Failed to delete review:', err)
       alert('删除失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -213,7 +206,6 @@ export default function ProjectReviewList() {
       await projectReviewApi.publish(reviewId)
       fetchReviews()
     } catch (err) {
-      console.error('Failed to publish review:', err)
       alert('发布失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -223,7 +215,6 @@ export default function ProjectReviewList() {
       await projectReviewApi.archive(reviewId)
       fetchReviews()
     } catch (err) {
-      console.error('Failed to archive review:', err)
       alert('归档失败: ' + (err.response?.data?.detail || err.message))
     }
   }

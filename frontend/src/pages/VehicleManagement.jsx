@@ -113,7 +113,6 @@ export default function VehicleManagement() {
           setVehicles(res.data)
         }
       } catch (err) {
-        console.log('Vehicle API unavailable, using mock data')
       }
       setLoading(false)
     }

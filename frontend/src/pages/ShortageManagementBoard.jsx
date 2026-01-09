@@ -67,7 +67,6 @@ export default function ShortageManagementBoard() {
         })
       }
     } catch (error) {
-      console.error('Failed to fetch board data:', error)
       setBoardData({
         total_alerts: 0,
         critical_alerts: 0,
@@ -100,7 +99,6 @@ export default function ShortageManagementBoard() {
       const alertList = res.data?.items || res.data || []
       setAlerts(alertList)
     } catch (error) {
-      console.error('Failed to fetch alerts:', error)
     }
   }
   const fetchArrivals = async () => {
@@ -109,7 +107,6 @@ export default function ShortageManagementBoard() {
       const arrivalList = res.data?.items || res.data || []
       setArrivals(arrivalList)
     } catch (error) {
-      console.error('Failed to fetch arrivals:', error)
     } finally {
       setLoading(false)
     }

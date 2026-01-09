@@ -124,7 +124,6 @@ export default function ProjectStaffingNeed() {
         setNeeds(response.data.items);
       }
     } catch (error) {
-      console.error('加载人员需求失败:', error);
     } finally {
       setLoading(false);
     }
@@ -137,7 +136,6 @@ export default function ProjectStaffingNeed() {
         setProjects(response.data.items);
       }
     } catch (error) {
-      console.error('加载项目失败:', error);
     }
   }, []);
 
@@ -148,7 +146,6 @@ export default function ProjectStaffingNeed() {
         setTags(response.data.items);
       }
     } catch (error) {
-      console.error('加载标签失败:', error);
     }
   }, []);
 
@@ -232,7 +229,6 @@ export default function ProjectStaffingNeed() {
       setShowDialog(false);
       loadNeeds();
     } catch (error) {
-      console.error('保存失败:', error);
       // 本地更新用于演示
       const newNeed = editingNeed
         ? { ...editingNeed, ...formData, role_name: ROLE_OPTIONS.find(r => r.value === formData.role_code)?.label }
@@ -266,7 +262,6 @@ export default function ProjectStaffingNeed() {
       await staffMatchingApi.cancelStaffingNeed(need.id);
       loadNeeds();
     } catch (error) {
-      console.error('取消失败:', error);
       setNeeds(prev => prev.map(n => n.id === need.id ? { ...n, status: 'CANCELLED' } : n));
     }
   };

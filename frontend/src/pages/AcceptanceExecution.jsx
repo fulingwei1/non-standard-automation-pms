@@ -104,7 +104,6 @@ export default function AcceptanceExecution() {
       const res = await acceptanceApi.orders.get(id)
       setOrder(res.data || res)
     } catch (error) {
-      console.error('Failed to fetch order detail:', error)
     }
   }
   const fetchItems = async () => {
@@ -113,7 +112,6 @@ export default function AcceptanceExecution() {
       const itemList = res.data || res || []
       setItems(itemList)
     } catch (error) {
-      console.error('Failed to fetch items:', error)
     } finally {
       setLoading(false)
     }
@@ -124,7 +122,6 @@ export default function AcceptanceExecution() {
       const issueList = res.data || res || []
       setIssues(issueList)
     } catch (error) {
-      console.error('Failed to fetch issues:', error)
     }
   }
   const handleUpdateItem = async () => {
@@ -142,7 +139,6 @@ export default function AcceptanceExecution() {
       fetchItems()
       fetchOrderDetail()
     } catch (error) {
-      console.error('Failed to update item:', error)
       alert('更新检查项失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -163,7 +159,6 @@ export default function AcceptanceExecution() {
       })
       fetchIssues()
     } catch (error) {
-      console.error('Failed to create issue:', error)
       alert('创建问题失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -177,7 +172,6 @@ export default function AcceptanceExecution() {
       alert('验收完成')
       navigate('/acceptance-orders')
     } catch (error) {
-      console.error('Failed to complete acceptance:', error)
       alert('完成验收失败: ' + (error.response?.data?.detail || error.message))
     }
   }

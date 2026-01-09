@@ -119,7 +119,6 @@ export default function CultureWallCarousel({
       const summaryData = res.data || res
       setData(summaryData)
     } catch (err) {
-      console.error('Failed to fetch culture wall data:', err)
     } finally {
       setLoading(false)
     }

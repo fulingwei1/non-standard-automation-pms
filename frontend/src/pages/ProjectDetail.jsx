@@ -128,7 +128,6 @@ export default function ProjectDetail() {
         setDocuments(docsRes.data || [])
         setStatusLogs(logsRes.data?.items || logsRes.data || []) // Sprint 3.3
       } catch (err) {
-        console.error('Failed to fetch project details:', err)
       } finally {
         setLoading(false)
       }
@@ -231,7 +230,6 @@ export default function ProjectDetail() {
           setWorkspaceData(response.data)
           setDemoMode(false)
         } catch (error) {
-          console.error('Failed to load workspace data:', error)
           setWorkspaceError(error)
           // 如果项目不存在或加载失败，启用演示模式
           if (error.response?.status === 404 || error.response?.status === 403) {
@@ -886,7 +884,6 @@ export default function ProjectDetail() {
                           className="p-4 border rounded-lg hover:bg-white/[0.02] transition-colors cursor-pointer"
                           onClick={() => {
                             // TODO: 打开文档详情或下载
-                            console.log('View document:', doc.id)
                           }}
                         >
                           <div className="flex items-start gap-3">
@@ -931,7 +928,6 @@ export default function ProjectDetail() {
                   <SolutionLibrary
                     projectId={parseInt(id)}
                     onApplyTemplate={(template) => {
-                      console.log('Apply template:', template)
                     }}
                   />
                 </CardContent>
@@ -974,7 +970,6 @@ export default function ProjectDetail() {
                       size="sm"
                       onClick={() => {
                         // TODO: 打开添加成员对话框
-                        console.log('Add member')
                       }}
                     >
                       <Plus className="h-4 w-4 mr-2" />
@@ -1030,7 +1025,6 @@ export default function ProjectDetail() {
                                     alert('未发现时间冲突')
                                   }
                                 } catch (err) {
-                                  console.error('Failed to check conflicts:', err)
                                 }
                               }}
                             >

@@ -79,7 +79,6 @@ export default function WorkReportList() {
       const reportList = res.data?.items || res.data || []
       setReports(reportList)
     } catch (error) {
-      console.error('Failed to fetch reports:', error)
     } finally {
       setLoading(false)
     }
@@ -90,7 +89,6 @@ export default function WorkReportList() {
       setSelectedReport(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
-      console.error('Failed to fetch report detail:', error)
     }
   }
   const handleApprove = async (reportId) => {
@@ -102,7 +100,6 @@ export default function WorkReportList() {
         handleViewDetail(reportId)
       }
     } catch (error) {
-      console.error('Failed to approve report:', error)
       alert('审批失败: ' + (error.response?.data?.detail || error.message))
     }
   }

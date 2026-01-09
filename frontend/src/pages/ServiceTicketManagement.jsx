@@ -248,7 +248,6 @@ export default function ServiceTicketManagement() {
       
       setTickets(transformedTickets)
     } catch (err) {
-      console.error('Failed to load tickets:', err)
       setError(err.response?.data?.detail || err.message || '加载服务工单失败')
       setTickets([]) // 不再使用mock数据，显示空列表
     } finally {
@@ -270,7 +269,6 @@ export default function ServiceTicketManagement() {
         urgent: statsData.urgent || 0,
       })
     } catch (err) {
-      console.error('Failed to load statistics:', err)
       // Calculate from local tickets as fallback
       setStats({
         total: tickets.length,
@@ -439,7 +437,6 @@ export default function ServiceTicketManagement() {
       
       toast.success(`成功导出 ${ticketsToExport.length} 条工单记录`)
     } catch (error) {
-      console.error('Failed to export tickets:', error)
       toast.error('导出失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
     } finally {
       setExporting(false)
@@ -462,7 +459,6 @@ export default function ServiceTicketManagement() {
       await loadTickets()
       await loadStatistics()
     } catch (error) {
-      console.error('Failed to create ticket:', error)
       toast.error('创建失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
     } finally {
       setSubmitting(false)
@@ -479,7 +475,6 @@ export default function ServiceTicketManagement() {
       await loadTickets()
       await loadStatistics()
     } catch (error) {
-      console.error('Failed to assign ticket:', error)
       toast.error('分配失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
     } finally {
       setSubmitting(false)
@@ -509,7 +504,6 @@ export default function ServiceTicketManagement() {
       await loadTickets()
       await loadStatistics()
     } catch (error) {
-      console.error('Failed to close ticket:', error)
       toast.error('关闭失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
     } finally {
       setSubmitting(false)
@@ -554,7 +548,6 @@ export default function ServiceTicketManagement() {
               })
               successCount++
             } catch (err) {
-              console.error(`Failed to assign ticket ${ticketId}:`, err)
               failCount++
             }
           }
@@ -573,7 +566,6 @@ export default function ServiceTicketManagement() {
       await loadTickets()
       await loadStatistics()
     } catch (error) {
-      console.error('Failed to batch assign tickets:', error)
       toast.error('批量分配失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
     } finally {
       setSubmitting(false)
@@ -1707,7 +1699,6 @@ function AssignTicketDialog({ ticket, onClose, onSubmit }) {
           role: u.position || u.roles?.[0] || '工程师'
         })))
       } catch (err) {
-        console.error('Failed to load users:', err)
         // Fallback to empty list or mock data if needed
         setUsers([])
       } finally {
@@ -1886,7 +1877,6 @@ function BatchAssignDialog({ ticketCount, onClose, onSubmit }) {
           role: u.position || u.roles?.[0] || '工程师'
         })))
       } catch (err) {
-        console.error('Failed to load users:', err)
         setUsers([])
       } finally {
         setLoadingUsers(false)

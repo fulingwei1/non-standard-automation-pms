@@ -264,7 +264,6 @@ export default function PaymentApproval() {
         setPendingPayments(allPayments)
       }
     } catch (error) {
-      console.error('Failed to load pending payments:', error)
       // Use mock data as fallback
       setPendingPayments(mockPendingPayments)
     } finally {
@@ -317,7 +316,6 @@ export default function PaymentApproval() {
       // Reload pending payments
       await loadPendingPayments()
     } catch (error) {
-      console.error('Failed to approve/reject payment:', error)
       toast.error('审批失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)

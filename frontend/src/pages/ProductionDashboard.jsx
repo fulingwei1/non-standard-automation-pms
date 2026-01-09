@@ -46,7 +46,6 @@ export default function ProductionDashboard() {
       const data = res.data?.data || res.data || res
       setDashboardData(data)
     } catch (error) {
-      console.error('生产驾驶舱 API 调用失败:', error)
       setError(error)
       setDashboardData(null) // 清空数据
     } finally {

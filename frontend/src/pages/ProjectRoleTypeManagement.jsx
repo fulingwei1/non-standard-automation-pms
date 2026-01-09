@@ -118,7 +118,6 @@ export default function ProjectRoleTypeManagement() {
       const data = response.data;
       setRoleTypes(data.items || data || []);
     } catch (error) {
-      console.error('加载角色类型列表失败:', error);
       // Mock data for demo
       setRoleTypes([
         { id: 1, role_code: 'PM', role_name: '项目经理', role_category: 'MANAGEMENT', description: '负责项目整体规划、进度管控、资源协调和客户沟通', can_have_team: true, is_required: true, sort_order: 1, is_active: true },
@@ -192,7 +191,6 @@ export default function ProjectRoleTypeManagement() {
       resetForm();
       loadRoleTypes();
     } catch (error) {
-      console.error('创建角色类型失败:', error);
       alert('创建失败: ' + (error.response?.data?.detail || error.message));
     }
   };
@@ -205,7 +203,6 @@ export default function ProjectRoleTypeManagement() {
       resetForm();
       loadRoleTypes();
     } catch (error) {
-      console.error('更新角色类型失败:', error);
       alert('更新失败: ' + (error.response?.data?.detail || error.message));
     }
   };
@@ -217,7 +214,6 @@ export default function ProjectRoleTypeManagement() {
       setSelectedRoleType(null);
       loadRoleTypes();
     } catch (error) {
-      console.error('删除角色类型失败:', error);
       alert('删除失败: ' + (error.response?.data?.detail || error.message));
     }
   };
@@ -229,7 +225,6 @@ export default function ProjectRoleTypeManagement() {
       });
       loadRoleTypes();
     } catch (error) {
-      console.error('切换状态失败:', error);
       // Update locally for demo
       setRoleTypes(prev =>
         prev.map(rt =>

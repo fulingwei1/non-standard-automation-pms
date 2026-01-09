@@ -186,7 +186,6 @@ export default function PerformanceResults() {
           }
         }
       } catch (err) {
-        console.log('Performance results API unavailable, using mock data')
       }
       setLoading(false)
     }

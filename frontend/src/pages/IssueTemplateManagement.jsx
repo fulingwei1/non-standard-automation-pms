@@ -156,7 +156,6 @@ export default function IssueTemplateManagement() {
       const items = res.data?.items || res.data?.data?.items || res.data || []
       setTemplates(items)
     } catch (error) {
-      console.error('Failed to load templates:', error)
       setTemplates([])
     } finally {
       setLoading(false)
@@ -169,7 +168,6 @@ export default function IssueTemplateManagement() {
       const items = res.data?.items || res.data?.data?.items || res.data || []
       setProjects(items)
     } catch (error) {
-      console.error('Failed to load projects:', error)
     }
   }
 
@@ -179,7 +177,6 @@ export default function IssueTemplateManagement() {
       const items = res.data?.items || res.data?.data?.items || res.data || []
       setMachines(items)
     } catch (error) {
-      console.error('Failed to load machines:', error)
       setMachines([])
     }
   }
@@ -239,7 +236,6 @@ export default function IssueTemplateManagement() {
       setSelectedTemplate(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
-      console.error('Failed to fetch template detail:', error)
     }
   }
 
@@ -291,7 +287,6 @@ export default function IssueTemplateManagement() {
       setSelectedTemplate(null)
       await loadTemplates()
     } catch (error) {
-      console.error('Failed to save template:', error)
       alert('保存模板失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)
@@ -306,7 +301,6 @@ export default function IssueTemplateManagement() {
       setSelectedTemplate(null)
       await loadTemplates()
     } catch (error) {
-      console.error('Failed to delete template:', error)
       alert('删除模板失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)
@@ -335,7 +329,6 @@ export default function IssueTemplateManagement() {
       setSelectedTemplate(null)
       alert('问题创建成功')
     } catch (error) {
-      console.error('Failed to create issue from template:', error)
       alert('创建问题失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)

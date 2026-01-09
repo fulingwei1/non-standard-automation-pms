@@ -100,7 +100,6 @@ export default function CostTemplateManagement() {
       const items = res.data?.data?.items || res.data?.items || []
       setTemplates(items)
     } catch (error) {
-      console.error('加载模板列表失败:', error)
     } finally {
       setLoading(false)
     }
@@ -181,7 +180,6 @@ export default function CostTemplateManagement() {
       setShowEditDialog(false)
       setSelectedTemplate(null)
     } catch (error) {
-      console.error('保存模板失败:', error)
       alert('保存模板失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)
@@ -196,7 +194,6 @@ export default function CostTemplateManagement() {
       setShowDeleteDialog(false)
       setSelectedTemplate(null)
     } catch (error) {
-      console.error('删除模板失败:', error)
       alert('删除模板失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)

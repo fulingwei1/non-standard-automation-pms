@@ -110,7 +110,6 @@ export default function SalesReports() {
         setRegionalAnalysis([])
       }
     } catch (err) {
-      console.error('销售报表 API 调用失败:', err)
       setError(err)
       // 清空所有数据
       setMonthlySales(null)

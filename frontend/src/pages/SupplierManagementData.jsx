@@ -102,7 +102,6 @@ export default function SupplierManagementData() {
       setSuppliers(data.items || []);
       setTotal(data.total || 0);
     } catch (error) {
-      console.error('加载供应商列表失败:', error);
       alert('加载供应商列表失败: ' + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);

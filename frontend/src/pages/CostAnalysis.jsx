@@ -184,7 +184,6 @@ export default function CostAnalysis() {
         })
       }
     } catch (error) {
-      console.error('Failed to load cost analysis:', error)
       if (isDemoAccount) {
         setAnalysisData(mockCostAnalysis)
       }

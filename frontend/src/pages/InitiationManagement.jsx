@@ -97,7 +97,6 @@ export default function InitiationManagement() {
         setTotal(0)
       }
     } catch (err) {
-      console.error('Failed to fetch initiations:', err)
       setError(err.response?.data?.detail || err.message || '加载数据失败')
       setInitiations([])
       setTotal(0)
@@ -112,7 +111,6 @@ export default function InitiationManagement() {
       setCreateDialogOpen(false)
       fetchData()
     } catch (err) {
-      console.error('Failed to create initiation:', err)
       alert('创建失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -122,7 +120,6 @@ export default function InitiationManagement() {
       await pmoApi.initiations.submit(id)
       fetchData()
     } catch (err) {
-      console.error('Failed to submit initiation:', err)
       alert('提交失败: ' + (err.response?.data?.detail || err.message))
     }
   }

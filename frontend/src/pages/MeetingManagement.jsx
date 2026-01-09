@@ -133,7 +133,6 @@ export default function MeetingManagement() {
         setTotal(0)
       }
     } catch (err) {
-      console.error('Failed to fetch meetings:', err)
       setError(err.response?.data?.detail || err.message || '加载会议数据失败')
       setMeetings([])
       setTotal(0)
@@ -155,7 +154,6 @@ export default function MeetingManagement() {
         setProjectList([])
       }
     } catch (err) {
-      console.error('Failed to fetch projects:', err)
       setProjectList([])
     }
   }
@@ -166,7 +164,6 @@ export default function MeetingManagement() {
       setCreateDialogOpen(false)
       fetchData()
     } catch (err) {
-      console.error('Failed to create meeting:', err)
       alert('创建失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -177,7 +174,6 @@ export default function MeetingManagement() {
       setUpdateDialog({ open: false, meetingId: null })
       fetchData()
     } catch (err) {
-      console.error('Failed to update meeting:', err)
       alert('更新失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -188,7 +184,6 @@ export default function MeetingManagement() {
       setMinutesDialog({ open: false, meetingId: null })
       fetchData()
     } catch (err) {
-      console.error('Failed to update minutes:', err)
       alert('更新失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -742,7 +737,6 @@ function UpdateMeetingDialog({
         status: data.status || 'SCHEDULED',
       })
     } catch (err) {
-      console.error('Failed to fetch meeting:', err)
     } finally {
       setLoading(false)
     }

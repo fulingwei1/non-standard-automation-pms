@@ -67,7 +67,6 @@ export default function SubstitutionNew() {
       const res = await projectApi.list({ page: 1, page_size: 100 })
       setProjects(res.data.items || [])
     } catch (error) {
-      console.error('加载项目列表失败', error)
     }
   }
 
@@ -76,7 +75,6 @@ export default function SubstitutionNew() {
       const res = await materialApi.list({ page: 1, page_size: 200, is_active: true })
       setMaterials(res.data.items || res.data || [])
     } catch (error) {
-      console.error('加载物料列表失败', error)
     }
   }
 
@@ -124,7 +122,6 @@ export default function SubstitutionNew() {
       alert('物料替代申请创建成功！')
       navigate(`/shortage/substitutions/${res.data.id}`)
     } catch (error) {
-      console.error('创建物料替代申请失败', error)
       alert('创建失败：' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)

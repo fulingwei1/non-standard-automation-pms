@@ -151,7 +151,6 @@ export default function ExecutiveDashboard() {
         setTrendData(mockTrendData)
         setCostData(mockCostData)
       } catch (err) {
-        console.log('Dashboard API unavailable, using mock data')
         setTrendData(mockTrendData)
         setCostData(mockCostData)
         setUtilizationData(mockUtilizationData)
@@ -185,7 +184,6 @@ export default function ExecutiveDashboard() {
         setUtilizationData(utilizationRes.value.data.utilization_list)
       }
     } catch (err) {
-      console.error('刷新数据失败:', err)
     } finally {
       setRefreshing(false)
     }
@@ -221,7 +219,6 @@ export default function ExecutiveDashboard() {
         }
       }
     } catch (err) {
-      console.error('导出报表失败:', err)
       // 回退到客户端导出
       handleClientExport(format)
     } finally {
@@ -450,7 +447,7 @@ export default function ExecutiveDashboard() {
                     chartType="donut"
                     height={280}
                     title=""
-                    onHealthClick={(health) => console.log('Health clicked:', health)}
+                    onHealthClick={() => {}}
                   />
                 </CardContent>
               </Card>
@@ -512,7 +509,7 @@ export default function ExecutiveDashboard() {
                     chartType="structure"
                     height={280}
                     title=""
-                    onCategoryClick={(cat) => console.log('Category clicked:', cat)}
+                    onCategoryClick={() => {}}
                   />
                 </CardContent>
               </Card>
@@ -723,7 +720,7 @@ export default function ExecutiveDashboard() {
                     data={utilizationData.length > 0 ? utilizationData : mockUtilizationData}
                     chartType="bar"
                     height={350}
-                    onPersonClick={(person) => console.log('Person clicked:', person)}
+                    onPersonClick={() => {}}
                   />
                 </CardContent>
               </Card>

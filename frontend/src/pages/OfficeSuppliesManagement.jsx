@@ -124,7 +124,6 @@ export default function OfficeSuppliesManagement() {
           setSupplies(res.data)
         }
       } catch (err) {
-        console.log('Office supplies API unavailable, using mock data')
       }
       setLoading(false)
     }

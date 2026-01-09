@@ -88,7 +88,6 @@ export default function ShortageReportDetail() {
       const res = await shortageApi.reports.get(id)
       setReport(res.data)
     } catch (error) {
-      console.error('加载缺料上报详情失败', error)
     } finally {
       setLoading(false)
     }
@@ -101,7 +100,6 @@ export default function ShortageReportDetail() {
       await shortageApi.reports.confirm(id)
       await loadReport()
     } catch (error) {
-      console.error('确认失败', error)
       alert('确认失败：' + (error.response?.data?.detail || error.message))
     } finally {
       setActionLoading(false)
@@ -122,7 +120,6 @@ export default function ShortageReportDetail() {
       setHandleData({ solution_type: 'ARRIVAL', solution_note: '' })
       alert('处理成功！')
     } catch (error) {
-      console.error('处理失败', error)
       alert('处理失败：' + (error.response?.data?.detail || error.message))
     } finally {
       setActionLoading(false)
@@ -136,7 +133,6 @@ export default function ShortageReportDetail() {
       await shortageApi.reports.resolve(id)
       await loadReport()
     } catch (error) {
-      console.error('解决失败', error)
       alert('解决失败：' + (error.response?.data?.detail || error.message))
     } finally {
       setActionLoading(false)
@@ -187,7 +183,6 @@ export default function ShortageReportDetail() {
       setRejectReason('')
       alert('驳回成功！')
     } catch (error) {
-      console.error('驳回失败', error)
       alert('驳回失败：' + (error.response?.data?.detail || error.message))
     } finally {
       setActionLoading(false)

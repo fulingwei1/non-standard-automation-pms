@@ -121,7 +121,6 @@ export default function LessonsLearnedLibrary() {
       setLessons(data.items || data || [])
       setTotal(data.total || data.length || 0)
     } catch (err) {
-      console.error('Failed to fetch lessons:', err)
       setLessons([])
       setTotal(0)
     } finally {
@@ -136,7 +135,6 @@ export default function LessonsLearnedLibrary() {
       const data = res.data || res
       setStatistics(data)
     } catch (err) {
-      console.error('Failed to fetch statistics:', err)
     }
   }
 
@@ -146,7 +144,6 @@ export default function LessonsLearnedLibrary() {
       const data = res.data || res
       setCategories(data.categories || [])
     } catch (err) {
-      console.error('Failed to fetch categories:', err)
     }
   }
 

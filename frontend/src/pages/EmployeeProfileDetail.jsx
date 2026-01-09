@@ -90,7 +90,6 @@ export default function EmployeeProfileDetail() {
         if (evalRes.data?.items) setEvaluations(evalRes.data.items);
         if (perfRes.data?.items) setPerformance(perfRes.data.items);
       } catch (error) {
-        console.error('加载数据失败:', error);
       } finally {
         setLoading(false);
       }

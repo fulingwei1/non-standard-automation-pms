@@ -79,7 +79,6 @@ export default function ManagementRhythmDashboard() {
         task: data.task || null,
       })
     } catch (err) {
-      console.error('Failed to fetch dashboard data:', err)
     } finally {
       setLoading(false)
     }

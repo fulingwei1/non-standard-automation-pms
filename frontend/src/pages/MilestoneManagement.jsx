@@ -81,7 +81,6 @@ export default function MilestoneManagement() {
       const res = await projectApi.get(id)
       setProject(res.data || res)
     } catch (error) {
-      console.error('Failed to fetch project:', error)
     }
   }
   const fetchMilestones = async () => {
@@ -93,7 +92,6 @@ export default function MilestoneManagement() {
       const milestoneList = res.data || res || []
       setMilestones(milestoneList)
     } catch (error) {
-      console.error('Failed to fetch milestones:', error)
     } finally {
       setLoading(false)
     }
@@ -119,7 +117,6 @@ export default function MilestoneManagement() {
       })
       fetchMilestones()
     } catch (error) {
-      console.error('Failed to create milestone:', error)
       alert('创建里程碑失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -129,7 +126,6 @@ export default function MilestoneManagement() {
       await milestoneApi.complete(milestoneId)
       fetchMilestones()
     } catch (error) {
-      console.error('Failed to complete milestone:', error)
       alert('完成里程碑失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -139,7 +135,6 @@ export default function MilestoneManagement() {
       setSelectedMilestone(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
-      console.error('Failed to fetch milestone detail:', error)
     }
   }
   const getStatusIcon = (status) => {

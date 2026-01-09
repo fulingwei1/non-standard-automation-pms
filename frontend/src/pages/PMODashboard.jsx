@@ -77,7 +77,6 @@ export default function PMODashboard() {
       const res = await pmoApi.dashboard()
       setDashboardData(res.data)
     } catch (err) {
-      console.error('Failed to fetch PMO dashboard data:', err)
       setError(err)
       setDashboardData(null)
     } finally {

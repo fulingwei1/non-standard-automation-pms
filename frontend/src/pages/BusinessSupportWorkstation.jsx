@@ -658,7 +658,6 @@ export default function BusinessSupportWorkstation() {
         today_todos: data.today_todos || [],
       })
     } catch (err) {
-      console.error('Failed to load dashboard:', err)
       setError(err.response?.data?.detail || err.message || '加载工作台数据失败')
     } finally {
       setLoading(false)

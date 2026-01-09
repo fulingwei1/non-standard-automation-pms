@@ -432,7 +432,6 @@ export default function AdministrativeManagerWorkstation() {
           }))
         }
       } catch (err) {
-        console.error('Failed to load employee statistics:', err)
       }
 
       // Load department statistics
@@ -441,7 +440,6 @@ export default function AdministrativeManagerWorkstation() {
         const deptStats = deptRes.data || deptRes
         // Could use this for department-level stats
       } catch (err) {
-        console.error('Failed to load department statistics:', err)
       }
 
       // Load meetings
@@ -488,7 +486,6 @@ export default function AdministrativeManagerWorkstation() {
           meetingsThisWeek: thisWeekMeetings.length,
         }))
       } catch (err) {
-        console.error('Failed to load meetings:', err)
       }
 
       // Load pending approvals from various modules
@@ -515,7 +512,6 @@ export default function AdministrativeManagerWorkstation() {
             })
           })
         } catch (err) {
-          console.error('Failed to load ECN approvals:', err)
         }
 
         // Purchase request approvals
@@ -537,7 +533,6 @@ export default function AdministrativeManagerWorkstation() {
             })
           })
         } catch (err) {
-          console.error('Failed to load purchase request approvals:', err)
         }
 
         setPendingApprovals(allApprovals.slice(0, 5))
@@ -547,11 +542,9 @@ export default function AdministrativeManagerWorkstation() {
           urgentApprovals: allApprovals.filter(a => a.priority === 'urgent' || a.priority === 'high').length,
         }))
       } catch (err) {
-        console.error('Failed to load approvals:', err)
       }
 
     } catch (err) {
-      console.error('Failed to load dashboard data:', err)
       // 如果是演示账号，使用 mock 数据
       const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
       if (isDemoAccount) {

@@ -126,7 +126,6 @@ export default function SalesTarget() {
         setTargets(res.data.items)
       }
     } catch (err) {
-      console.error('Failed to load targets:', err)
       toast.error('加载目标列表失败')
     } finally {
       setLoading(false)
@@ -143,7 +142,6 @@ export default function SalesTarget() {
           setTeamMembers(res.data.team_members)
         }
       } catch (err) {
-        console.error('Failed to load team members:', err)
       }
     }
     loadTeamMembers()
@@ -184,7 +182,6 @@ export default function SalesTarget() {
       resetForm()
       loadTargets()
     } catch (err) {
-      console.error('Failed to create target:', err)
       toast.error(err.response?.data?.message || '创建目标失败')
     }
   }
@@ -203,7 +200,6 @@ export default function SalesTarget() {
       resetForm()
       loadTargets()
     } catch (err) {
-      console.error('Failed to update target:', err)
       toast.error(err.response?.data?.message || '更新目标失败')
     }
   }

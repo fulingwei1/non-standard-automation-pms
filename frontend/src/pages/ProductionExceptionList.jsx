@@ -115,7 +115,6 @@ export default function ProductionExceptionList() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch projects:', error)
     }
   }
   const fetchExceptions = async () => {
@@ -131,7 +130,6 @@ export default function ProductionExceptionList() {
       const excList = res.data?.items || res.data || []
       setExceptions(excList)
     } catch (error) {
-      console.error('Failed to fetch exceptions:', error)
     } finally {
       setLoading(false)
     }
@@ -159,7 +157,6 @@ export default function ProductionExceptionList() {
       })
       fetchExceptions()
     } catch (error) {
-      console.error('Failed to create exception:', error)
       alert('上报异常失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -169,7 +166,6 @@ export default function ProductionExceptionList() {
       setSelectedException(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
-      console.error('Failed to fetch exception detail:', error)
     }
   }
   const handleException = async () => {
@@ -186,7 +182,6 @@ export default function ProductionExceptionList() {
         handleViewDetail(selectedException.id)
       }
     } catch (error) {
-      console.error('Failed to handle exception:', error)
       alert('处理异常失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -199,7 +194,6 @@ export default function ProductionExceptionList() {
         handleViewDetail(excId)
       }
     } catch (error) {
-      console.error('Failed to close exception:', error)
       alert('关闭异常失败: ' + (error.response?.data?.detail || error.message))
     }
   }

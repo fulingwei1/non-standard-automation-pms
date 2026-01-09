@@ -23,7 +23,6 @@ export function useToast() {
     if (variant === 'destructive') {
       alert(`${title}: ${description}`)
     } else {
-      console.log(`${title}: ${description}`)
     }
   }, [])
 

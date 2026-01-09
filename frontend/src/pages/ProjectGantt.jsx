@@ -43,7 +43,6 @@ export default function ProjectGantt() {
       const res = await projectApi.get(id)
       setProject(res.data || res)
     } catch (error) {
-      console.error('Failed to fetch project:', error)
     }
   }
   const fetchGanttData = async () => {
@@ -53,7 +52,6 @@ export default function ProjectGantt() {
       const data = res.data || res || []
       setGanttData(data)
     } catch (error) {
-      console.error('Failed to fetch gantt data:', error)
     } finally {
       setLoading(false)
     }

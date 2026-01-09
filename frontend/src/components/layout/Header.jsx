@@ -30,7 +30,6 @@ export function Header({ sidebarCollapsed = false, user, onLogout }) {
       }
       return null
     } catch (e) {
-      console.warn('Failed to parse user from localStorage:', e)
       return null
     }
   }, [user])

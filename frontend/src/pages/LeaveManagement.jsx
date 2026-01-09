@@ -114,7 +114,6 @@ export default function LeaveManagement() {
           setLeaveApplications(res.data)
         }
       } catch (err) {
-        console.log('Leave API unavailable, using mock data')
       }
       setLoading(false)
     }

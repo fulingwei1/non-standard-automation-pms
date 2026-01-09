@@ -143,7 +143,6 @@ export default function PerformanceIndicators() {
           setIndicators(weightRes.data.indicators)
         }
       } catch (err) {
-        console.log('Weight config API unavailable, using mock data')
       }
       setLoading(false)
     }

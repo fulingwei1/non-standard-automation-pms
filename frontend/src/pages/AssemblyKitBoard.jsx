@@ -107,7 +107,6 @@ export default function AssemblyKitBoard() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch projects:', error)
     }
   }
 
@@ -121,7 +120,6 @@ export default function AssemblyKitBoard() {
       const res = await assemblyKitApi.dashboard(params)
       setDashboardData(res.data || res || null)
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error)
       setDashboardData(null)
     } finally {
       setLoading(false)
@@ -132,13 +130,11 @@ export default function AssemblyKitBoard() {
     try {
       setLoading(true)
       const res = await assemblyKitApi.generateSuggestions({ scope: 'WEEKLY' })
-      console.log('排产建议生成成功:', res.data)
       if (res.data?.suggestions) {
         alert(`已生成 ${res.data.suggestions.length} 条排产建议`)
         fetchDashboardData()
       }
     } catch (error) {
-      console.error('生成排产建议失败:', error)
     } finally {
       setLoading(false)
     }
@@ -153,7 +149,6 @@ export default function AssemblyKitBoard() {
       const res = await assemblyKitApi.getShortageAlerts(params)
       setAlerts(res.data || res || null)
     } catch (error) {
-      console.error('Failed to fetch alerts:', error)
     }
   }
 
@@ -163,34 +158,28 @@ export default function AssemblyKitBoard() {
       setAnalysisDetail(res.data || res)
       setDetailDialogOpen(true)
     } catch (error) {
-      console.error('获取详情失败:', error)
     }
   }
 
   const handleAcceptSuggestion = async (suggestionId) => {
     try {
       await assemblyKitApi.acceptSuggestion(suggestionId, {})
-      console.log('已接受排产建议')
       fetchDashboardData()
     } catch (error) {
-      console.error('操作失败:', error)
     }
   }
 
   const handleRejectSuggestion = async () => {
     if (!selectedSuggestion || !rejectReason.trim()) {
-      console.error('请填写拒绝原因')
       return
     }
     try {
       await assemblyKitApi.rejectSuggestion(selectedSuggestion.id, { reject_reason: rejectReason })
-      console.log('已拒绝排产建议')
       setRejectDialogOpen(false)
       setRejectReason('')
       setSelectedSuggestion(null)
       fetchDashboardData()
     } catch (error) {
-      console.error('操作失败:', error)
     }
   }
 

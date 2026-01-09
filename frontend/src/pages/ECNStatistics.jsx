@@ -114,7 +114,6 @@ export default function ECNStatistics() {
       const res = await ecnApi.getStatistics(params)
       setStatistics(res.data || res || {})
     } catch (error) {
-      console.error('Failed to fetch ECN statistics:', error)
       alert('获取统计信息失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)
@@ -245,7 +244,6 @@ export default function ECNStatistics() {
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
     } catch (error) {
-      console.error('导出失败:', error)
       alert('导出失败: ' + error.message)
     }
   }

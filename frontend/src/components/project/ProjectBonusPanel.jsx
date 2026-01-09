@@ -18,7 +18,6 @@ export default function ProjectBonusPanel({ projectId }) {
       const response = await projectWorkspaceApi.getBonuses(projectId)
       setBonusData(response.data)
     } catch (error) {
-      console.error('Failed to load bonus data:', error)
     } finally {
       setLoading(false)
     }

@@ -134,7 +134,6 @@ export default function DepartmentManagement() {
       const response = await orgApi.departments({ skip: 0, limit: 1000 });
       setDepartments(response.data || []);
     } catch (error) {
-      console.error('加载部门列表失败:', error);
       alert('加载部门列表失败: ' + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -148,7 +147,6 @@ export default function DepartmentManagement() {
       const response = await orgApi.departmentTree({ is_active: true });
       setDepartmentTree(response.data || []);
     } catch (error) {
-      console.error('加载部门树失败:', error);
       alert('加载部门树失败: ' + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);

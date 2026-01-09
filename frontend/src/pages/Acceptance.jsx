@@ -410,7 +410,6 @@ export default function Acceptance() {
             const issuesResponse = await acceptanceApi.issues.list(order.id)
             issues = issuesResponse.data || []
           } catch (err) {
-            console.error(`Failed to load issues for order ${order.id}:`, err)
           }
 
           // Load items for this order
@@ -436,7 +435,6 @@ export default function Acceptance() {
             })
             checklistCategories = Object.values(categoryMap)
           } catch (err) {
-            console.error(`Failed to load items for order ${order.id}:`, err)
           }
 
           return {
@@ -473,7 +471,6 @@ export default function Acceptance() {
 
       setAcceptances(transformedAcceptances)
     } catch (err) {
-      console.error('Failed to load acceptances:', err)
       let errorMessage = '加载验收单失败'
       if (err.response) {
         errorMessage = err.response.data?.detail || err.response.data?.message || errorMessage
@@ -548,7 +545,6 @@ export default function Acceptance() {
         
         setSelectedAcceptance(updatedAcceptance)
       } catch (err) {
-        console.error('Failed to load acceptance details:', err)
         setSelectedAcceptance(acceptance)
       }
     } else {

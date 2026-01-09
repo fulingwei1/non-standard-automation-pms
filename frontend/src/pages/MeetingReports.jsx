@@ -62,7 +62,6 @@ export default function MeetingReports() {
       setReports(data.items || [])
       setTotal(data.total || 0)
     } catch (err) {
-      console.error('Failed to fetch reports:', err)
     } finally {
       setLoading(false)
     }
@@ -75,7 +74,6 @@ export default function MeetingReports() {
       fetchReports()
       alert('报告生成成功')
     } catch (err) {
-      console.error('Failed to generate report:', err)
       alert('报告生成失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -287,7 +285,6 @@ export default function MeetingReports() {
                           window.URL.revokeObjectURL(url)
                           document.body.removeChild(a)
                         } catch (err) {
-                          console.error('Failed to export:', err)
                           alert('导出失败: ' + (err.response?.data?.detail || err.message))
                         }
                       }}

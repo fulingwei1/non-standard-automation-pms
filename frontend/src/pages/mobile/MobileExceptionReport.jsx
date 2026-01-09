@@ -68,7 +68,6 @@ export default function MobileExceptionReport() {
       const res = await productionApi.workOrders.get(workOrderId)
       setWorkOrder(res.data)
     } catch (error) {
-      console.error('Failed to fetch work order:', error)
     }
   }
 
@@ -130,7 +129,6 @@ export default function MobileExceptionReport() {
         navigate('/mobile/tasks')
       }, 1500)
     } catch (error) {
-      console.error('Failed to report exception:', error)
       setError('异常上报失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)

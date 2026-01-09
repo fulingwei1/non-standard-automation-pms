@@ -74,7 +74,6 @@ export default function ArrivalNew() {
       const res = await materialApi.list({ page: 1, page_size: 200, is_active: true })
       setMaterials(res.data.items || res.data || [])
     } catch (error) {
-      console.error('加载物料列表失败', error)
     }
   }
 
@@ -83,7 +82,6 @@ export default function ArrivalNew() {
       const res = await supplierApi.list({ page: 1, page_size: 100 })
       setSuppliers(res.data.items || res.data || [])
     } catch (error) {
-      console.error('加载供应商列表失败', error)
     }
   }
 
@@ -120,7 +118,6 @@ export default function ArrivalNew() {
       alert('到货跟踪创建成功！')
       navigate(`/shortage/arrivals/${res.data.id}`)
     } catch (error) {
-      console.error('创建到货跟踪失败', error)
       alert('创建失败：' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)

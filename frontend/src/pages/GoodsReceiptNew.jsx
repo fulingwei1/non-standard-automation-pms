@@ -131,7 +131,6 @@ export default function GoodsReceiptNew() {
         setOrderItems(itemsRes.data || itemsRes || [])
       }
     } catch (err) {
-      console.error('Failed to load order:', err)
       setError(err.response?.data?.detail || '加载采购订单失败')
     } finally {
       setLoading(false)
@@ -238,7 +237,6 @@ export default function GoodsReceiptNew() {
         navigate(`/purchases/receipts/${res.data?.id || res.id}`)
       }
     } catch (err) {
-      console.error('Failed to create receipt:', err)
       setError(err.response?.data?.detail || '创建收货单失败')
       toast.error(err.response?.data?.detail || '创建收货单失败')
     } finally {
@@ -560,7 +558,6 @@ function OrderSelectionForm({ onSelect }) {
           setOrders(data)
         }
       } catch (err) {
-        console.error('Failed to load orders:', err)
       } finally {
         setLoading(false)
       }

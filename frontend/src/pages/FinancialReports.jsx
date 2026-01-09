@@ -130,7 +130,6 @@ export default function FinancialReports() {
           setCashFlowData(cashFlowRes.value.data)
         }
       } catch (err) {
-        console.log('Financial reports API unavailable, using mock data')
       }
       setLoading(false)
     }

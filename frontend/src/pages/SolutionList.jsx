@@ -567,7 +567,6 @@ export default function SolutionList() {
         published: allSolutions.filter((s) => s.status === 'published').length,
       })
     } catch (err) {
-      console.error('Failed to load solutions:', err)
       setError(err.response?.data?.detail || err.message || '加载方案失败')
       setSolutions([])
     } finally {

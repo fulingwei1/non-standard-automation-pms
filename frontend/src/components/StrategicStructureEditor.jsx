@@ -88,7 +88,6 @@ export default function StrategicStructureEditor({ meetingId, initialData, onSav
         })
       }
     } catch (err) {
-      console.error('Failed to load template:', err)
       // 使用默认结构
       setStructure({
         vision: {},

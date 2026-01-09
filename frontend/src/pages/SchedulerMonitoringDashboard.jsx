@@ -92,7 +92,6 @@ export default function SchedulerMonitoringDashboard() {
         setServices(servicesRes.data.data?.services || [])
       }
     } catch (err) {
-      console.error('Failed to fetch scheduler data:', err)
       setError(err.message || '获取数据失败')
     } finally {
       setLoading(false)
@@ -204,7 +203,6 @@ export default function SchedulerMonitoringDashboard() {
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
     } catch (err) {
-      console.error('Failed to export Prometheus metrics:', err)
       alert('导出失败: ' + (err.message || '未知错误'))
     }
   }

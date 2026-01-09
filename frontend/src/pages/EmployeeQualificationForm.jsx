@@ -86,7 +86,6 @@ export default function EmployeeQualificationForm() {
         setLevels(response.data.data?.items || [])
       }
     } catch (error) {
-      console.error('加载等级列表失败:', error)
     }
   }
 
@@ -100,7 +99,6 @@ export default function EmployeeQualificationForm() {
         setEmployees(Array.isArray(response.data.data) ? response.data.data : [])
       }
     } catch (error) {
-      console.error('加载员工列表失败:', error)
       // 使用模拟数据作为降级方案
       setEmployees([
         { id: 1, name: '张三', employee_code: 'E001' },
@@ -122,7 +120,6 @@ export default function EmployeeQualificationForm() {
         setValue('valid_until', qualData.valid_until || '')
       }
     } catch (error) {
-      console.error('加载任职资格失败:', error)
     }
   }
 
@@ -133,7 +130,6 @@ export default function EmployeeQualificationForm() {
         setAssessments(response.data.data?.items || [])
       }
     } catch (error) {
-      console.error('加载评估历史失败:', error)
     }
   }
 
@@ -163,7 +159,6 @@ export default function EmployeeQualificationForm() {
         navigate('/qualifications')
       }
     } catch (error) {
-      console.error('保存失败:', error)
       toast.error(error.response?.data?.detail || '保存失败')
     } finally {
       setLoading(false)
@@ -189,7 +184,6 @@ export default function EmployeeQualificationForm() {
         setCompetencyModel(response.data.data)
       }
     } catch (error) {
-      console.error('加载能力模型失败:', error)
     }
   }
 

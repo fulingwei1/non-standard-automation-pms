@@ -60,7 +60,6 @@ export default function MyBonus() {
       const response = await bonusApi.getMyBonus()
       setBonusData(response.data)
     } catch (err) {
-      console.error('加载奖金数据失败:', err)
       setError(err.response?.data?.detail || err.message || '加载失败')
     } finally {
       setLoading(false)
@@ -80,7 +79,6 @@ export default function MyBonus() {
       })
       setStatistics(response.data)
     } catch (err) {
-      console.error('加载统计信息失败:', err)
     }
   }
 
@@ -133,7 +131,6 @@ export default function MyBonus() {
 
       toast.success('导出成功')
     } catch (error) {
-      console.error('导出失败:', error)
       toast.error('导出失败: ' + error.message)
     }
   }

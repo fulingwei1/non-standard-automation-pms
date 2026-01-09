@@ -345,7 +345,6 @@ function ApprovalDetailDialog({ approval, open, onOpenChange, onApprove, onRejec
         setApprovalHistory(historyRes.data || historyRes || [])
       }
     } catch (err) {
-      console.error('Failed to load approval details:', err)
     } finally {
       setLoadingHistory(false)
     }
@@ -627,7 +626,6 @@ export default function ApprovalCenter() {
           })
         })
       } catch (err) {
-        console.error('Failed to load ECN approvals:', err)
       }
       
       // Load Purchase Request approvals
@@ -658,7 +656,6 @@ export default function ApprovalCenter() {
           })
         })
       } catch (err) {
-        console.error('Failed to load purchase request approvals:', err)
       }
       
       // Load Purchase Order approvals
@@ -689,7 +686,6 @@ export default function ApprovalCenter() {
           })
         })
       } catch (err) {
-        console.error('Failed to load purchase order approvals:', err)
       }
       
       // Load Quote approvals (Sprint 2: New Approval Workflow)
@@ -703,7 +699,6 @@ export default function ApprovalCenter() {
           try {
             approvalStatus = await quoteApi.getApprovalStatus(quote.id)
           } catch (err) {
-            console.warn(`Failed to get approval status for quote ${quote.id}:`, err)
           }
           
           const status = approvalStatus?.status || 'PENDING'
@@ -731,7 +726,6 @@ export default function ApprovalCenter() {
           })
         }
       } catch (err) {
-        console.error('Failed to load quote approvals:', err)
       }
       
       // Load Contract approvals (Sprint 2: New Approval Workflow)
@@ -744,7 +738,6 @@ export default function ApprovalCenter() {
           try {
             approvalStatus = await contractApi.getApprovalStatus(contract.id)
           } catch (err) {
-            console.warn(`Failed to get approval status for contract ${contract.id}:`, err)
           }
           
           const status = approvalStatus?.status || 'PENDING'
@@ -772,7 +765,6 @@ export default function ApprovalCenter() {
           })
         }
       } catch (err) {
-        console.error('Failed to load contract approvals:', err)
       }
       
       // Load Invoice approvals (Sprint 2: New Approval Workflow)
@@ -785,7 +777,6 @@ export default function ApprovalCenter() {
           try {
             approvalStatus = await invoiceApi.getApprovalStatus(invoice.id)
           } catch (err) {
-            console.warn(`Failed to get approval status for invoice ${invoice.id}:`, err)
           }
           
           const status = approvalStatus?.status || 'PENDING'
@@ -813,7 +804,6 @@ export default function ApprovalCenter() {
           })
         }
       } catch (err) {
-        console.error('Failed to load invoice approvals:', err)
       }
       
       // Load Project Initiation approvals
@@ -842,12 +832,10 @@ export default function ApprovalCenter() {
           })
         })
       } catch (err) {
-        console.error('Failed to load initiation approvals:', err)
       }
       
       setApprovals(allApprovals)
     } catch (err) {
-      console.error('Failed to load approvals:', err)
       setError(err)
       setApprovals([])
     } finally {
@@ -922,7 +910,6 @@ export default function ApprovalCenter() {
       setApprovalComment('')
       await loadApprovals()
     } catch (err) {
-      console.error('Failed to approve:', err)
       const errorMessage = err.response?.data?.detail || err.message || '审批失败，请稍后重试'
       toast.error(errorMessage)
     }
@@ -977,7 +964,6 @@ export default function ApprovalCenter() {
       setApprovalComment('')
       await loadApprovals()
     } catch (err) {
-      console.error('Failed to reject:', err)
       const errorMessage = err.response?.data?.detail || err.message || '驳回失败，请稍后重试'
       toast.error(errorMessage)
     }

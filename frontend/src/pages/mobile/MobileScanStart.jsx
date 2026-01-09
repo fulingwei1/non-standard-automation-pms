@@ -57,7 +57,6 @@ export default function MobileScanStart() {
       
       setWorkOrder(order)
     } catch (error) {
-      console.error('Failed to fetch work order:', error)
       setError('查找工单失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)
@@ -89,7 +88,6 @@ export default function MobileScanStart() {
       
       setWorkOrder(order)
     } catch (error) {
-      console.error('Failed to scan work order:', error)
       setError('查找工单失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)
@@ -111,7 +109,6 @@ export default function MobileScanStart() {
         navigate('/mobile/tasks')
       }, 1500)
     } catch (error) {
-      console.error('Failed to start work:', error)
       setError('开工失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)

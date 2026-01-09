@@ -523,7 +523,6 @@ export default function CustomerServiceDashboard() {
       })
 
     } catch (err) {
-      console.error('Failed to load customer service data:', err)
       setError(err.message || '加载数据失败')
       // Keep mock data as fallback
     } finally {

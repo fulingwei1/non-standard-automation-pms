@@ -93,7 +93,6 @@ export default function MaterialRequisitionList() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch projects:', error)
     }
   }
   const fetchRequisitions = async () => {
@@ -107,7 +106,6 @@ export default function MaterialRequisitionList() {
       const reqList = res.data?.items || res.data || []
       setRequisitions(reqList)
     } catch (error) {
-      console.error('Failed to fetch requisitions:', error)
     } finally {
       setLoading(false)
     }
@@ -128,7 +126,6 @@ export default function MaterialRequisitionList() {
       })
       fetchRequisitions()
     } catch (error) {
-      console.error('Failed to create requisition:', error)
       alert('创建领料单失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -138,7 +135,6 @@ export default function MaterialRequisitionList() {
       setSelectedRequisition(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
-      console.error('Failed to fetch requisition detail:', error)
     }
   }
   const handleApprove = async () => {
@@ -155,7 +151,6 @@ export default function MaterialRequisitionList() {
         handleViewDetail(selectedRequisition.id)
       }
     } catch (error) {
-      console.error('Failed to approve requisition:', error)
       alert('审批失败: ' + (error.response?.data?.detail || error.message))
     }
   }

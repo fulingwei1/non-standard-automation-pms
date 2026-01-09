@@ -407,7 +407,6 @@ export default function GeneralManagerWorkstation() {
         const salesResponse = await salesStatisticsApi.performance({ start_date: startDate, end_date: endDate })
         monthlyRevenue = salesResponse.data?.total_contract_amount || 0
       } catch (err) {
-        console.error('Failed to load sales stats:', err)
       }
 
       try {
@@ -416,7 +415,6 @@ export default function GeneralManagerWorkstation() {
         totalContracts = contractsData.length
         activeContracts = contractsData.filter(c => c.status === 'SIGNED' || c.status === 'EXECUTING').length
       } catch (err) {
-        console.error('Failed to load contracts:', err)
       }
 
       // Load production statistics
@@ -428,7 +426,6 @@ export default function GeneralManagerWorkstation() {
         productionCapacity = productionData.capacity_utilization || 0
         qualityPassRate = productionData.pass_rate || 0
       } catch (err) {
-        console.error('Failed to load production stats:', err)
       }
 
       // Calculate financial metrics (simplified)
@@ -499,7 +496,6 @@ export default function GeneralManagerWorkstation() {
           })
         })
       } catch (err) {
-        console.error('Failed to load ECN approvals:', err)
       }
 
       // Purchase request approvals
@@ -522,7 +518,6 @@ export default function GeneralManagerWorkstation() {
           })
         })
       } catch (err) {
-        console.error('Failed to load purchase request approvals:', err)
       }
 
       // PMO initiation approvals
@@ -545,7 +540,6 @@ export default function GeneralManagerWorkstation() {
           })
         })
       } catch (err) {
-        console.error('Failed to load PMO initiation approvals:', err)
       }
 
       // Contract approvals
@@ -568,7 +562,6 @@ export default function GeneralManagerWorkstation() {
           })
         })
       } catch (err) {
-        console.error('Failed to load contract approvals:', err)
       }
 
       // Sort by priority and time, take top 5
@@ -594,11 +587,9 @@ export default function GeneralManagerWorkstation() {
         // Transform department statistics if available
         // For now, we'll keep using mock data structure but could enhance this
       } catch (err) {
-        console.error('Failed to load department statistics:', err)
       }
 
     } catch (err) {
-      console.error('Failed to load dashboard:', err)
       setError(err)
       setBusinessStats(null)
       setPendingApprovals([])

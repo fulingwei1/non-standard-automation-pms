@@ -45,7 +45,6 @@ export default function AlertSubscription() {
         { id: 2, alert_type: 'PO_DELIVERY', min_level: 'CRITICAL', is_active: true },
       ])
     } catch (error) {
-      console.error('Failed to load subscriptions:', error)
     }
   }
 
@@ -62,7 +61,6 @@ export default function AlertSubscription() {
       // Save subscriptions
       // TODO: Call API to save subscriptions
     } catch (error) {
-      console.error('Failed to save subscriptions:', error)
     }
   }
 

@@ -93,7 +93,6 @@ export default function AlertDetail() {
       setActions(actionsRes.data.actions || [])
       setError(null)
     } catch (err) {
-      console.error('Failed to load alert:', err)
       setError(err)
     } finally {
       setLoading(false)
@@ -106,7 +105,6 @@ export default function AlertDetail() {
       await loadAlert()
       toast.success('预警已确认')
     } catch (error) {
-      console.error('Failed to acknowledge:', error)
       toast.error('确认失败，请稍后重试')
     }
   }
@@ -117,7 +115,6 @@ export default function AlertDetail() {
       await loadAlert()
       toast.success('预警已标记为已解决')
     } catch (error) {
-      console.error('Failed to resolve:', error)
       toast.error('操作失败，请稍后重试')
     }
   }
@@ -128,7 +125,6 @@ export default function AlertDetail() {
       toast.success('预警已关闭')
       navigate('/alerts')
     } catch (error) {
-      console.error('Failed to close:', error)
       toast.error('关闭失败，请稍后重试')
     }
   }

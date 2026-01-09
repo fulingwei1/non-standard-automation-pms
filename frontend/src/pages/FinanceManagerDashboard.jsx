@@ -585,7 +585,6 @@ export default function FinanceManagerDashboard() {
       })
 
     } catch (err) {
-      console.error('Failed to load financial data:', err)
       setError(err.message || '加载财务数据失败')
     } finally {
       setLoading(false)

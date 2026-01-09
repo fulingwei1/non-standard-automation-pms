@@ -96,7 +96,6 @@ export default function ProjectClosureManagement() {
       const data = res.data || res
       setProject(data)
     } catch (err) {
-      console.error('Failed to fetch project:', err)
     }
   }
 
@@ -111,7 +110,6 @@ export default function ProjectClosureManagement() {
       if (err.response?.status === 404) {
         setClosure(null)
       } else {
-        console.error('Failed to fetch closure:', err)
       }
     } finally {
       setLoading(false)
@@ -128,7 +126,6 @@ export default function ProjectClosureManagement() {
       const data = res.data || res
       setProjectList(data.items || data || [])
     } catch (err) {
-      console.error('Failed to fetch projects:', err)
       setProjectList([])
     }
   }
@@ -139,7 +136,6 @@ export default function ProjectClosureManagement() {
       setCreateDialogOpen(false)
       fetchClosure()
     } catch (err) {
-      console.error('Failed to create closure:', err)
       alert('创建失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -150,7 +146,6 @@ export default function ProjectClosureManagement() {
       setReviewDialog({ open: false, closureId: null })
       fetchClosure()
     } catch (err) {
-      console.error('Failed to review closure:', err)
       alert('评审失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -161,7 +156,6 @@ export default function ProjectClosureManagement() {
       setLessonsDialog({ open: false, closureId: null })
       fetchClosure()
     } catch (err) {
-      console.error('Failed to update lessons:', err)
       alert('更新失败: ' + (err.response?.data?.detail || err.message))
     }
   }

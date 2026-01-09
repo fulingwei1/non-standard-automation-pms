@@ -51,7 +51,6 @@ export default function TechnicalSpecManagement() {
       const response = await api.get('/technical-spec/requirements', { params })
       setRequirements(response.data.items || [])
     } catch (error) {
-      console.error('加载规格要求失败:', error)
     } finally {
       setLoading(false)
     }
@@ -64,7 +63,6 @@ export default function TechnicalSpecManagement() {
       resetForm()
       loadRequirements()
     } catch (error) {
-      console.error('创建规格要求失败:', error)
       alert('创建失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -76,7 +74,6 @@ export default function TechnicalSpecManagement() {
       resetForm()
       loadRequirements()
     } catch (error) {
-      console.error('更新规格要求失败:', error)
       alert('更新失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -88,7 +85,6 @@ export default function TechnicalSpecManagement() {
       await api.delete(`/technical-spec/requirements/${id}`)
       loadRequirements()
     } catch (error) {
-      console.error('删除规格要求失败:', error)
       alert('删除失败: ' + (error.response?.data?.detail || error.message))
     }
   }

@@ -102,7 +102,6 @@ export default function Documents() {
       const projectList = data.items || data || []
       setProjects(projectList)
     } catch (err) {
-      console.error('Failed to load projects:', err)
     }
   }, [])
 
@@ -138,7 +137,6 @@ export default function Documents() {
         setDocuments(allDocs)
       }
     } catch (err) {
-      console.error('Failed to load documents:', err)
       const errorMessage = err.response?.data?.detail || err.message || '加载文档失败'
       setError(errorMessage)
       
@@ -205,7 +203,6 @@ export default function Documents() {
       setUploadDescription('')
       await loadDocuments()
     } catch (err) {
-      console.error('Failed to upload file:', err)
       const errorMessage = err.response?.data?.detail || err.message || '上传失败，请稍后重试'
       toast.error(errorMessage)
     } finally {
@@ -227,7 +224,6 @@ export default function Documents() {
         toast.error('无法获取下载链接')
       }
     } catch (err) {
-      console.error('Failed to download file:', err)
       toast.error('下载失败，请稍后重试')
     }
   }

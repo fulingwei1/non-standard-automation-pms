@@ -48,7 +48,6 @@ export default function MobileScanShortage() {
       // 跳转到上报表单页，带上工单ID
       navigate(`/mobile/shortage-report?workOrderId=${order.id}`)
     } catch (error) {
-      console.error('Failed to scan work order:', error)
       setError('查找工单失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)

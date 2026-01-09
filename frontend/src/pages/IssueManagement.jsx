@@ -247,7 +247,6 @@ export default function IssueManagement() {
         setIssues([])
       }
     } catch (err) {
-      console.error('Failed to load issues:', err)
       // 更详细的错误信息
       let errorMessage = '加载问题列表失败'
       if (err.response) {
@@ -281,7 +280,6 @@ export default function IssueManagement() {
         overdue: stats.overdue || 0,
       })
     } catch (err) {
-      console.error('Failed to load statistics:', err)
       // Calculate from local issues as fallback
       setStatistics({
         total: issues.length,
@@ -338,7 +336,6 @@ export default function IssueManagement() {
       await loadIssues()
       setShowCreate(false)
     } catch (err) {
-      console.error('Failed to create issue:', err)
       alert('创建问题失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -350,7 +347,6 @@ export default function IssueManagement() {
       setShowDetail(false)
       setSelectedIssue(null)
     } catch (err) {
-      console.error('Failed to update issue:', err)
       alert('更新问题失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -364,7 +360,6 @@ export default function IssueManagement() {
         setSelectedIssue(updated.data || updated)
       }
     } catch (err) {
-      console.error('Failed to assign issue:', err)
       alert('分配问题失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -378,7 +373,6 @@ export default function IssueManagement() {
         setSelectedIssue(updated.data || updated)
       }
     } catch (err) {
-      console.error('Failed to resolve issue:', err)
       alert('解决问题失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -392,7 +386,6 @@ export default function IssueManagement() {
         setSelectedIssue(updated.data || updated)
       }
     } catch (err) {
-      console.error('Failed to change issue status:', err)
       alert('更新问题状态失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -407,7 +400,6 @@ export default function IssueManagement() {
       }
       alert('问题已关闭')
     } catch (err) {
-      console.error('Failed to close issue:', err)
       alert('关闭问题失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -422,7 +414,6 @@ export default function IssueManagement() {
       }
       alert('问题已取消')
     } catch (err) {
-      console.error('Failed to cancel issue:', err)
       alert('取消问题失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -440,7 +431,6 @@ export default function IssueManagement() {
       }
       alert('问题已删除')
     } catch (err) {
-      console.error('Failed to delete issue:', err)
       alert('删除问题失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -455,7 +445,6 @@ export default function IssueManagement() {
       }
       alert('问题验证完成')
     } catch (err) {
-      console.error('Failed to verify issue:', err)
       alert('验证问题失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -466,7 +455,6 @@ export default function IssueManagement() {
       await loadIssues()
       alert(`成功批量分配 ${issueIds.length} 个问题`)
     } catch (err) {
-      console.error('Failed to batch assign:', err)
       alert('批量分配失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -477,7 +465,6 @@ export default function IssueManagement() {
       await loadIssues()
       alert(`成功批量变更 ${issueIds.length} 个问题状态`)
     } catch (err) {
-      console.error('Failed to batch change status:', err)
       alert('批量状态变更失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -488,7 +475,6 @@ export default function IssueManagement() {
       await loadIssues()
       alert(`成功批量关闭 ${issueIds.length} 个问题`)
     } catch (err) {
-      console.error('Failed to batch close:', err)
       alert('批量关闭失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -511,7 +497,6 @@ export default function IssueManagement() {
       link.remove()
       alert('导出成功')
     } catch (err) {
-      console.error('Failed to export:', err)
       alert('导出失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -522,7 +507,6 @@ export default function IssueManagement() {
       await loadIssues()
       alert('导入成功')
     } catch (err) {
-      console.error('Failed to import:', err)
       alert('导入失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -1030,7 +1014,6 @@ function IssueDetailDialog({
       const data = response.data?.data || response.data || response
       setFollowUps(Array.isArray(data) ? data : [])
     } catch (err) {
-      console.error('Failed to load follow-ups:', err)
       setFollowUps([])
     } finally {
       setLoadingFollowUps(false)
@@ -1044,7 +1027,6 @@ function IssueDetailDialog({
       const data = response.data?.data || response.data || response
       setRelatedIssues(Array.isArray(data) ? data : [])
     } catch (err) {
-      console.error('Failed to load related issues:', err)
       setRelatedIssues([])
     } finally {
       setLoadingRelated(false)
@@ -1189,7 +1171,6 @@ function CreateIssueDialog({ onClose, onSubmit }) {
         const templatesData = response.data?.items || response.data || []
         setTemplates(templatesData)
       } catch (err) {
-        console.error('Failed to load templates:', err)
       } finally {
         setLoadingTemplates(false)
       }
@@ -1237,7 +1218,6 @@ function CreateIssueDialog({ onClose, onSubmit }) {
       const newIssue = response.data || response
       onSubmit(newIssue)
     } catch (err) {
-      console.error('Failed to create issue from template:', err)
       alert('从模板创建问题失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -1437,7 +1417,6 @@ function IssueBoardView({ issues, onIssueClick, onStatusChange, onRefresh }) {
         await onRefresh()
       }
     } catch (error) {
-      console.error('Failed to update issue status:', error)
       // 恢复原状态
       setLocalIssues(issues)
       alert('更新问题状态失败: ' + (error.response?.data?.detail || error.message))
@@ -1617,7 +1596,6 @@ function IssueStatisticsView() {
       })
       setTrendData(response.data?.trend || response.trend || [])
     } catch (err) {
-      console.error('Failed to load trend data:', err)
     }
   }
 
@@ -1630,7 +1608,6 @@ function IssueStatisticsView() {
       })
       setCauseData(response.data || response)
     } catch (err) {
-      console.error('Failed to load cause analysis:', err)
     }
   }
 
@@ -1639,7 +1616,6 @@ function IssueStatisticsView() {
       const response = await issueApi.getStatistics({})
       setStatistics(response.data?.data || response.data || response)
     } catch (err) {
-      console.error('Failed to load statistics:', err)
     }
   }
 
@@ -1651,7 +1627,6 @@ function IssueStatisticsView() {
       })
       setEngineerStats(response.data?.engineers || response.engineers || [])
     } catch (err) {
-      console.error('Failed to load engineer statistics:', err)
     }
   }
 

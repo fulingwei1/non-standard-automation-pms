@@ -26,7 +26,6 @@ export default function ProjectIssuePanel({ projectId }) {
       setIssues(issuesRes.data?.issues || [])
       setSolutions(solutionsRes.data)
     } catch (error) {
-      console.error('Failed to load issue data:', error)
     } finally {
       setLoading(false)
     }

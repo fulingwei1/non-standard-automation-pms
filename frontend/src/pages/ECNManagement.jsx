@@ -280,7 +280,6 @@ export default function ECNManagement() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch projects:', error)
     }
   }
 
@@ -297,7 +296,6 @@ export default function ECNManagement() {
       const ecnList = res.data?.items || res.data || []
       setEcns(ecnList)
     } catch (error) {
-      console.error('Failed to fetch ECNs:', error)
     } finally {
       setLoading(false)
     }
@@ -327,7 +325,6 @@ export default function ECNManagement() {
       setLogs(logsRes.data || [])
       setEvaluationSummary(summaryRes.data)
     } catch (error) {
-      console.error('Failed to fetch ECN detail:', error)
     }
   }
 
@@ -365,7 +362,6 @@ export default function ECNManagement() {
       })
       fetchECNs()
     } catch (error) {
-      console.error('Failed to create ECN:', error)
       alert('创建ECN失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -379,7 +375,6 @@ export default function ECNManagement() {
         await fetchECNDetail(ecnId)
       }
     } catch (error) {
-      console.error('Failed to submit ECN:', error)
       alert('提交失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -409,7 +404,6 @@ export default function ECNManagement() {
       })
       await fetchECNDetail(selectedECN.id)
     } catch (error) {
-      console.error('Failed to create evaluation:', error)
       alert('创建评估失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -420,7 +414,6 @@ export default function ECNManagement() {
       await ecnApi.submitEvaluation(evalId)
       await fetchECNDetail(selectedECN.id)
     } catch (error) {
-      console.error('Failed to submit evaluation:', error)
       alert('提交评估失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -430,7 +423,6 @@ export default function ECNManagement() {
       await ecnApi.approve(approvalId, comment)
       await fetchECNDetail(selectedECN.id)
     } catch (error) {
-      console.error('Failed to approve:', error)
       alert('审批失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -444,7 +436,6 @@ export default function ECNManagement() {
       await ecnApi.reject(approvalId, reason)
       await fetchECNDetail(selectedECN.id)
     } catch (error) {
-      console.error('Failed to reject:', error)
       alert('驳回失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -469,7 +460,6 @@ export default function ECNManagement() {
       })
       await fetchECNDetail(selectedECN.id)
     } catch (error) {
-      console.error('Failed to create task:', error)
       alert('创建任务失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -479,7 +469,6 @@ export default function ECNManagement() {
       await ecnApi.updateTaskProgress(taskId, { progress_pct: progress })
       await fetchECNDetail(selectedECN.id)
     } catch (error) {
-      console.error('Failed to update task progress:', error)
       alert('更新任务进度失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -490,7 +479,6 @@ export default function ECNManagement() {
       await ecnApi.completeTask(taskId, { completion_note: '任务已完成' })
       await fetchECNDetail(selectedECN.id)
     } catch (error) {
-      console.error('Failed to complete task:', error)
       alert('完成任务失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -547,7 +535,6 @@ export default function ECNManagement() {
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
     } catch (error) {
-      console.error('导出失败:', error)
       alert('导出失败: ' + error.message)
     } finally {
       setExporting(false)
@@ -1464,7 +1451,6 @@ export default function ECNManagement() {
                               alert('BOM同步成功')
                               await fetchECNDetail(selectedECN.id)
                             } catch (error) {
-                              console.error('Failed to sync to BOM:', error)
                               alert('BOM同步失败: ' + (error.response?.data?.detail || error.message))
                             }
                           }}
@@ -1500,7 +1486,6 @@ export default function ECNManagement() {
                               alert('项目同步成功')
                               await fetchECNDetail(selectedECN.id)
                             } catch (error) {
-                              console.error('Failed to sync to project:', error)
                               alert('项目同步失败: ' + (error.response?.data?.detail || error.message))
                             }
                           }}
@@ -1536,7 +1521,6 @@ export default function ECNManagement() {
                               alert('采购同步成功')
                               await fetchECNDetail(selectedECN.id)
                             } catch (error) {
-                              console.error('Failed to sync to purchase:', error)
                               alert('采购同步失败: ' + (error.response?.data?.detail || error.message))
                             }
                           }}

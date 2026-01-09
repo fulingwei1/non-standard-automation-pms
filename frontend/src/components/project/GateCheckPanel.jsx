@@ -65,7 +65,6 @@ export default function GateCheckPanel({ projectId, currentStage, onAdvance }) {
       const response = await projectApi.getGateCheckResult(projectId, stage)
       setGateCheckResult(response.data)
     } catch (err) {
-      console.error('Failed to load gate check result:', err)
       toast.error('无法加载阶段门校验结果')
     } finally {
       setLoading(false)
@@ -96,7 +95,6 @@ export default function GateCheckPanel({ projectId, currentStage, onAdvance }) {
         toast.error(response.data?.gate_check_result?.message || '阶段门校验未通过')
       }
     } catch (err) {
-      console.error('Failed to advance stage:', err)
       toast.error(err.response?.data?.detail || '无法推进项目阶段')
     }
   }

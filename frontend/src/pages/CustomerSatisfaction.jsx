@@ -238,7 +238,6 @@ export default function CustomerSatisfaction() {
       
       setSurveys(transformedSurveys)
     } catch (err) {
-      console.error('Failed to load surveys:', err)
       setError(err.response?.data?.detail || err.message || '加载满意度调查失败')
       setSurveys([]) // 不再使用mock数据，显示空列表
     } finally {
@@ -260,7 +259,6 @@ export default function CustomerSatisfaction() {
         responseRate: statsData.response_rate || 0,
       })
     } catch (err) {
-      console.error('Failed to load statistics:', err)
       // Calculate from local surveys as fallback
       const completed = surveys.filter(s => s.status === '已完成')
       const totalScores = completed.reduce((sum, s) => sum + (s.overall_score || 0), 0)
@@ -325,7 +323,6 @@ export default function CustomerSatisfaction() {
       await loadSurveys()
       await loadStatistics()
     } catch (error) {
-      console.error('Failed to create survey:', error)
       toast.error('创建失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
     }
   }
@@ -337,7 +334,6 @@ export default function CustomerSatisfaction() {
       await loadSurveys()
       await loadStatistics()
     } catch (error) {
-      console.error('Failed to send survey:', error)
       toast.error('发送失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
     }
   }
@@ -390,7 +386,6 @@ export default function CustomerSatisfaction() {
       
       toast.success(`成功导出 ${surveysToExport.length} 条调查记录`)
     } catch (error) {
-      console.error('Failed to export surveys:', error)
       toast.error('导出失败: ' + (error.message || '请稍后重试'))
     }
   }
@@ -776,7 +771,6 @@ function CreateSurveyDialog({ onClose, onSubmit }) {
       const templatesData = response.data?.items || response.data || []
       setTemplates(templatesData)
     } catch (error) {
-      console.error('Failed to load templates:', error)
       setTemplates([])
     } finally {
       setLoadingTemplates(false)
@@ -804,7 +798,6 @@ function CreateSurveyDialog({ onClose, onSubmit }) {
       }))
       toast.success(`已应用模板: ${template.template_name}`)
     } catch (error) {
-      console.error('Failed to load template:', error)
       toast.error('加载模板失败')
     }
   }

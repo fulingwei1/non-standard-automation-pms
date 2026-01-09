@@ -96,7 +96,6 @@ export default function WorkshopManagement() {
       const res = await userApi.list({ page_size: 1000 })
       setManagers(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch managers:', error)
     }
   }
 
@@ -111,7 +110,6 @@ export default function WorkshopManagement() {
       const workshopList = res.data?.items || res.data || []
       setWorkshops(workshopList)
     } catch (error) {
-      console.error('Failed to fetch workshops:', error)
     } finally {
       setLoading(false)
     }
@@ -128,7 +126,6 @@ export default function WorkshopManagement() {
       resetForm()
       fetchWorkshops()
     } catch (error) {
-      console.error('Failed to create workshop:', error)
       alert('创建车间失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -141,7 +138,6 @@ export default function WorkshopManagement() {
       resetForm()
       fetchWorkshops()
     } catch (error) {
-      console.error('Failed to update workshop:', error)
       alert('更新车间失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -152,7 +148,6 @@ export default function WorkshopManagement() {
       setSelectedWorkshop(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
-      console.error('Failed to fetch workshop detail:', error)
     }
   }
 

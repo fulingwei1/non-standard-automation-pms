@@ -54,7 +54,6 @@ export default function KitRateBoard() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch projects:', error)
     }
   }
   const fetchDashboardData = async () => {
@@ -65,7 +64,6 @@ export default function KitRateBoard() {
       const res = await purchaseApi.kitRate.dashboard(params)
       setDashboardData(res.data || res || null)
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error)
       setDashboardData(null) // 不再使用mock数据，显示空状态
     } finally {
       setLoading(false)

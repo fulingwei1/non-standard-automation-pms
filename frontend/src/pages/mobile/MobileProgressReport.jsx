@@ -56,7 +56,6 @@ export default function MobileProgressReport() {
         report_note: '',
       })
     } catch (error) {
-      console.error('Failed to fetch work order:', error)
       setError('获取工单信息失败')
     }
   }
@@ -90,7 +89,6 @@ export default function MobileProgressReport() {
         navigate('/mobile/tasks')
       }, 1500)
     } catch (error) {
-      console.error('Failed to report progress:', error)
       setError('进度上报失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)

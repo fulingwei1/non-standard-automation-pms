@@ -301,7 +301,6 @@ export default function NotificationCenter() {
       setNotifications(formattedNotifications)
       setTotal(data.total || formattedNotifications.length)
     } catch (err) {
-      console.error('Failed to load notifications:', err)
       setError(err.response?.data?.detail || err.message || '加载通知失败')
       // 如果是演示账号，使用 mock 数据
       const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
@@ -324,7 +323,6 @@ export default function NotificationCenter() {
       const data = response.data || response
       setUnreadCount(data.unread_count || 0)
     } catch (err) {
-      console.error('Failed to load unread count:', err)
     }
   }, [])
 
@@ -345,7 +343,6 @@ export default function NotificationCenter() {
       await loadNotifications()
       await loadUnreadCount()
     } catch (err) {
-      console.error('Failed to mark notification as read:', err)
     }
   }
 
@@ -355,7 +352,6 @@ export default function NotificationCenter() {
       await loadNotifications()
       await loadUnreadCount()
     } catch (err) {
-      console.error('Failed to mark all as read:', err)
     }
   }
 
@@ -365,7 +361,6 @@ export default function NotificationCenter() {
       await loadNotifications()
       await loadUnreadCount()
     } catch (err) {
-      console.error('Failed to delete notification:', err)
     }
   }
 

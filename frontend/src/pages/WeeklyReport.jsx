@@ -84,7 +84,6 @@ export default function WeeklyReport() {
       const data = res.data || res
       setReportData(data)
     } catch (err) {
-      console.error('Failed to fetch weekly report:', err)
     } finally {
       setLoading(false)
     }

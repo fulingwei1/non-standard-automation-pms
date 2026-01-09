@@ -118,7 +118,6 @@ export default function SchedulerConfigManagement() {
         setConfigs(res.data.data?.items || [])
       }
     } catch (err) {
-      console.error('Failed to fetch configs:', err)
       setError(err)
     } finally {
       setLoading(false)
@@ -140,7 +139,6 @@ export default function SchedulerConfigManagement() {
         await fetchConfigs()
       }
     } catch (err) {
-      console.error('Failed to sync configs:', err)
       toast.error('配置同步失败: ' + (err.response?.data?.detail || err.message))
     } finally {
       setSyncing(false)
@@ -175,7 +173,6 @@ export default function SchedulerConfigManagement() {
         await fetchConfigs()
       }
     } catch (err) {
-      console.error('Failed to update config:', err)
       toast.error('更新配置失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -194,7 +191,6 @@ export default function SchedulerConfigManagement() {
         await fetchConfigs()
       }
     } catch (err) {
-      console.error('Failed to toggle enabled:', err)
       toast.error('操作失败: ' + (err.response?.data?.detail || err.message))
     }
   }

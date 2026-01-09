@@ -91,7 +91,6 @@ export default function RoleManagement() {
       setRoles(data.items || []);
       setTotal(data.total || 0);
     } catch (error) {
-      console.error('加载角色列表失败:', error);
       alert('加载角色列表失败: ' + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -104,7 +103,6 @@ export default function RoleManagement() {
       const response = await roleApi.permissions();
       setPermissions(response.data || []);
     } catch (error) {
-      console.error('加载权限列表失败:', error);
     }
   };
 

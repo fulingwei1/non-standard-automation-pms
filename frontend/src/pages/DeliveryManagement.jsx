@@ -127,7 +127,6 @@ export default function DeliveryManagement() {
         })
       }
     } catch (err) {
-      console.error('Failed to load delivery statistics:', err)
     }
   }, [])
 
@@ -162,7 +161,6 @@ export default function DeliveryManagement() {
       setDeliveryOrders(Array.isArray(items) ? items : [])
       setTotal(totalCount)
     } catch (err) {
-      console.error('Failed to load delivery orders:', err)
       setError('加载发货订单失败')
       setDeliveryOrders([])
     } finally {
@@ -754,7 +752,6 @@ function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
       const items = data?.items || data?.data?.items || []
       setSalesOrders(Array.isArray(items) ? items : [])
     } catch (err) {
-      console.error('Failed to load sales orders:', err)
       setSalesOrders([])
     } finally {
       setLoading(false)
@@ -843,7 +840,6 @@ function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
         setError(response?.data?.message || '创建发货单失败')
       }
     } catch (err) {
-      console.error('Failed to create delivery order:', err)
       setError(err?.response?.data?.detail || err?.message || '创建发货单失败')
     } finally {
       setSubmitting(false)

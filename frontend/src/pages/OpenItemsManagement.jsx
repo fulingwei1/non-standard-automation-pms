@@ -87,7 +87,6 @@ export default function OpenItemsManagement() {
       })
       setItems(response.data.items || response.data || [])
     } catch (error) {
-      console.error('加载未决事项失败:', error)
     } finally {
       setLoading(false)
     }
@@ -113,7 +112,6 @@ export default function OpenItemsManagement() {
       })
       await loadItems()
     } catch (error) {
-      console.error('创建未决事项失败:', error)
       alert('创建失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -125,7 +123,6 @@ export default function OpenItemsManagement() {
       await technicalAssessmentApi.closeOpenItem(itemId)
       await loadItems()
     } catch (error) {
-      console.error('关闭未决事项失败:', error)
       alert('关闭失败: ' + (error.response?.data?.detail || error.message))
     }
   }

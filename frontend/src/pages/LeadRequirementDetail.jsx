@@ -77,9 +77,7 @@ export default function LeadRequirementDetail() {
     } catch (error) {
       if (error.response?.status === 404) {
         // 需求详情不存在，使用默认值
-        console.log('需求详情不存在，将创建新的')
       } else {
-        console.error('加载需求详情失败:', error)
       }
     } finally {
       setLoading(false)
@@ -103,7 +101,6 @@ export default function LeadRequirementDetail() {
       alert('需求详情已保存')
       await loadRequirement() // 重新加载
     } catch (error) {
-      console.error('保存失败:', error)
       alert('保存失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setSaving(false)

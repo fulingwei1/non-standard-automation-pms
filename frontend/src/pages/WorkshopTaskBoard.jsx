@@ -52,7 +52,6 @@ export default function WorkshopTaskBoard() {
       const res = await productionApi.taskBoard(workshopId)
       setBoardData(res.data || res)
     } catch (error) {
-      console.error('Failed to fetch board data:', error)
     } finally {
       setLoading(false)
     }

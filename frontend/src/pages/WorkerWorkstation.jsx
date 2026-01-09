@@ -139,7 +139,6 @@ export default function WorkerWorkstation() {
       try {
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
         if (!currentUser.id) {
-          console.warn('无法获取当前用户信息')
           return
         }
         
@@ -152,12 +151,10 @@ export default function WorkerWorkstation() {
           setWorkerId(worker.id)
         } else {
           const message = '当前用户未关联工人信息，无法查看工单'
-          console.warn(message)
           setError(message)
           toast.warning(message)
         }
       } catch (error) {
-        console.error('Failed to fetch worker id:', error)
         const message = '获取工人信息失败: ' + (error.response?.data?.detail || error.message)
         setError(message)
         toast.error(message)
@@ -238,7 +235,6 @@ export default function WorkerWorkstation() {
         setMyWorkOrders(activeOrders)
       }
     } catch (error) {
-      console.error('Failed to fetch my work orders:', error)
       setMyWorkOrders([])
       const message = '获取工单列表失败: ' + (error.response?.data?.detail || error.message)
       setError(message)
@@ -260,7 +256,6 @@ export default function WorkerWorkstation() {
       })
       setMyReports(reports)
     } catch (error) {
-      console.error('Failed to fetch my reports:', error)
       toast.error('获取报工记录失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -295,7 +290,6 @@ export default function WorkerWorkstation() {
       
       return order
     } catch (error) {
-      console.error('Failed to scan work order:', error)
       toast.error('查找工单失败: ' + (error.response?.data?.detail || error.message))
       return null
     }
@@ -316,7 +310,6 @@ export default function WorkerWorkstation() {
       await fetchMyReports()
       toast.success('开工成功')
     } catch (error) {
-      console.error('Failed to start work:', error)
       toast.error('开工失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setSubmitting(false)
@@ -339,7 +332,6 @@ export default function WorkerWorkstation() {
       await fetchMyReports()
       toast.success('开工成功')
     } catch (error) {
-      console.error('Failed to start work:', error)
       toast.error('开工失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setSubmitting(false)
@@ -394,7 +386,6 @@ export default function WorkerWorkstation() {
       
       toast.success(`识别完成：完成数量 ${Math.min(mockRecognizedQty, planQty)}（模拟数据）`)
     } catch (error) {
-      console.error('Failed to recognize photo:', error)
       toast.error('图片识别失败，请手动输入数量')
     } finally {
       setRecognizing(false)
@@ -466,7 +457,6 @@ export default function WorkerWorkstation() {
       await fetchMyReports()
       toast.success('进度上报成功')
     } catch (error) {
-      console.error('Failed to report progress:', error)
       toast.error('进度上报失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setSubmitting(false)
@@ -563,7 +553,6 @@ export default function WorkerWorkstation() {
       await fetchMyReports()
       toast.success('完工报工成功')
     } catch (error) {
-      console.error('Failed to complete work:', error)
       toast.error('完工报工失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setSubmitting(false)

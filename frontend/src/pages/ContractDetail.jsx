@@ -408,7 +408,6 @@ export default function ContractDetail() {
           setContract(res.data)
         }
       } catch (err) {
-        console.log('Contract detail API unavailable, using mock data')
       }
       setLoading(false)
     }

@@ -188,7 +188,6 @@ export default function PerformanceManagement() {
           }
         }
       } catch (err) {
-        console.log('Dashboard API unavailable, using mock data')
       }
 
       try {
@@ -206,7 +205,6 @@ export default function PerformanceManagement() {
           setPendingTasks(tasks)
         }
       } catch (err) {
-        console.log('Evaluation tasks API unavailable, using mock data')
       }
 
       try {
@@ -222,7 +220,6 @@ export default function PerformanceManagement() {
           }
         }
       } catch (err) {
-        console.log('My performance API unavailable, using mock data')
       }
 
       setLoading(false)

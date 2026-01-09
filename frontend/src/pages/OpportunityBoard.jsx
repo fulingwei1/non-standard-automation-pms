@@ -329,7 +329,6 @@ export default function OpportunityBoard() {
       })
       setOwners(Array.from(ownerSet).sort())
     } catch (error) {
-      console.error('加载商机列表失败:', error)
       // 如果API失败，使用mock数据作为fallback
       setOpportunities(mockOpportunities)
       const ownerSet = new Set()
@@ -365,7 +364,6 @@ export default function OpportunityBoard() {
       // Reload opportunities
       await loadOpportunities()
     } catch (err) {
-      console.error('Failed to update opportunity stage:', err)
       // Show error toast
       alert('更新商机阶段失败：' + (err.response?.data?.detail || err.message))
     }
@@ -445,7 +443,6 @@ export default function OpportunityBoard() {
           setSelectedOpportunity(opportunity)
         }
       } catch (error) {
-        console.error('加载商机详情失败:', error)
         setSelectedOpportunity(opportunity)
       }
     } else {

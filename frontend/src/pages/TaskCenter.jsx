@@ -647,7 +647,6 @@ export default function TaskCenter() {
         const data = response.data || response
         setProjects(data.items || data || [])
       } catch (err) {
-        console.error('Failed to load projects:', err)
         setProjects([])
       }
     }
@@ -726,7 +725,6 @@ export default function TaskCenter() {
       
       setTasks(transformedTasks)
     } catch (err) {
-      console.error('Failed to load tasks:', err)
       setError(err.response?.data?.detail || err.message || '加载任务失败')
       setTasks([]) // 不再使用mock数据，显示空列表
     } finally {
@@ -789,7 +787,6 @@ export default function TaskCenter() {
       // Refresh tasks list
       await loadTasks()
     } catch (err) {
-      console.error('Failed to update task status:', err)
       alert('更新任务状态失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -822,7 +819,6 @@ export default function TaskCenter() {
         })
       )
     } catch (err) {
-      console.error('Failed to update task step:', err)
       alert('更新任务步骤失败: ' + (err.response?.data?.detail || err.message))
     }
   }

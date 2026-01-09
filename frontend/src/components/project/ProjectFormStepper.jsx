@@ -148,7 +148,6 @@ export default function ProjectFormStepper({
             setPmStats(statsMap)
           }
         } catch (err) {
-          console.error('Failed to load form options:', err)
           toast.error('无法加载客户和员工数据')
         }
       }
@@ -201,7 +200,6 @@ export default function ProjectFormStepper({
       }
     } catch (err) {
       // 忽略错误，可能是网络问题
-      console.error('Code validation error:', err)
     } finally {
       setValidatingCode(false)
     }
@@ -224,7 +222,6 @@ export default function ProjectFormStepper({
         }))
         toast.success(`已应用模板：${template.template_name}`)
       } catch (err) {
-        console.error('Failed to parse template config:', err)
       }
     }
   }
@@ -238,7 +235,6 @@ export default function ProjectFormStepper({
       localStorage.setItem(draftKey, JSON.stringify(formData))
       toast.success('表单数据已保存为草稿')
     } catch (err) {
-      console.error('Failed to save draft:', err)
     } finally {
       setSavingDraft(false)
     }
@@ -254,7 +250,6 @@ export default function ProjectFormStepper({
           const draftData = JSON.parse(draft)
           setFormData((prev) => ({ ...prev, ...draftData }))
         } catch (err) {
-          console.error('Failed to load draft:', err)
         }
       }
     }
@@ -330,7 +325,6 @@ export default function ProjectFormStepper({
       }
       onOpenChange(false)
     } catch (err) {
-      console.error('Failed to submit form:', err)
       toast.error(err.response?.data?.detail || '无法创建项目，请稍后重试')
     } finally {
       setLoading(false)

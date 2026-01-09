@@ -113,7 +113,6 @@ export default function LeadManagement() {
         setTotal(response.data.total || 0)
       }
     } catch (error) {
-      console.error('加载线索列表失败:', error)
     } finally {
       setLoading(false)
     }
@@ -127,7 +126,6 @@ export default function LeadManagement() {
         setCustomers(response.data.items)
       }
     } catch (error) {
-      console.error('加载客户列表失败:', error)
     }
   }
 
@@ -177,7 +175,6 @@ export default function LeadManagement() {
       })
       loadLeads()
     } catch (error) {
-      console.error('创建线索失败:', error)
       alert('创建线索失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -191,7 +188,6 @@ export default function LeadManagement() {
       setSelectedLead(null)
       loadLeads()
     } catch (error) {
-      console.error('更新线索失败:', error)
       alert('更新线索失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -221,7 +217,6 @@ export default function LeadManagement() {
       loadLeads()
       alert('线索已成功转为商机')
     } catch (error) {
-      console.error('转商机失败:', error)
       alert('转商机失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -237,7 +232,6 @@ export default function LeadManagement() {
         setFollowUps(response.data)
       }
     } catch (error) {
-      console.error('加载跟进记录失败:', error)
       setFollowUps([])
     }
   }
@@ -261,7 +255,6 @@ export default function LeadManagement() {
       }
       loadLeads() // 刷新列表
     } catch (error) {
-      console.error('添加跟进记录失败:', error)
       alert('添加跟进记录失败: ' + (error.response?.data?.detail || error.message))
     }
   }

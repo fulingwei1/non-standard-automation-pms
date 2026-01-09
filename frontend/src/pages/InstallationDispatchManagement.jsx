@@ -156,7 +156,6 @@ export default function InstallationDispatchManagement() {
       const res = await userApi.list({ page_size: 1000 })
       setUsers(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch users:', error)
     }
   }
 
@@ -165,7 +164,6 @@ export default function InstallationDispatchManagement() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch projects:', error)
     }
   }
 
@@ -174,7 +172,6 @@ export default function InstallationDispatchManagement() {
       const res = await machineApi.list({ project_id: projectId, page_size: 1000 })
       setMachines(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch machines:', error)
       setMachines([])
     }
   }
@@ -193,7 +190,6 @@ export default function InstallationDispatchManagement() {
       const orderList = res.data?.items || res.data || []
       setOrders(orderList)
     } catch (error) {
-      console.error('Failed to fetch orders:', error)
       toast.error('加载派工单失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)
@@ -205,7 +201,6 @@ export default function InstallationDispatchManagement() {
       const res = await installationDispatchApi.statistics()
       setStats(res.data || {})
     } catch (error) {
-      console.error('Failed to fetch statistics:', error)
     }
   }
 
@@ -249,7 +244,6 @@ export default function InstallationDispatchManagement() {
       fetchStatistics()
       toast.success(`成功派工 ${selectedOrders.size} 个派工单`)
     } catch (error) {
-      console.error('Failed to assign orders:', error)
       toast.error('派工失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -293,7 +287,6 @@ export default function InstallationDispatchManagement() {
       fetchStatistics()
       toast.success('创建派工单成功')
     } catch (error) {
-      console.error('Failed to create order:', error)
       toast.error('创建失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -304,7 +297,6 @@ export default function InstallationDispatchManagement() {
       setSelectedOrder(res.data)
       setShowDetailDialog(true)
     } catch (error) {
-      console.error('Failed to fetch order detail:', error)
       toast.error('加载详情失败')
     }
   }
@@ -318,7 +310,6 @@ export default function InstallationDispatchManagement() {
       fetchOrders()
       fetchStatistics()
     } catch (error) {
-      console.error('Failed to start order:', error)
       toast.error('开始任务失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -334,7 +325,6 @@ export default function InstallationDispatchManagement() {
       handleViewDetail(selectedOrder.id)
       fetchOrders()
     } catch (error) {
-      console.error('Failed to update progress:', error)
       toast.error('更新进度失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -349,7 +339,6 @@ export default function InstallationDispatchManagement() {
       fetchOrders()
       fetchStatistics()
     } catch (error) {
-      console.error('Failed to complete order:', error)
       toast.error('完成任务失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -363,7 +352,6 @@ export default function InstallationDispatchManagement() {
       fetchOrders()
       fetchStatistics()
     } catch (error) {
-      console.error('Failed to assign order:', error)
       toast.error('派工失败: ' + (error.response?.data?.detail || error.message))
     }
   }

@@ -76,7 +76,6 @@ export default function WorkLog() {
         users: data.users || [],
       })
     } catch (error) {
-      console.error('Failed to fetch mention options:', error)
     }
   }
   
@@ -95,7 +94,6 @@ export default function WorkLog() {
       setWorkLogs(data.items || [])
       setTotal(data.total || 0)
     } catch (error) {
-      console.error('Failed to fetch work logs:', error)
     } finally {
       setLoading(false)
     }
@@ -134,7 +132,6 @@ export default function WorkLog() {
       resetForm()
       fetchWorkLogs()
     } catch (error) {
-      console.error('Failed to submit work log:', error)
       alert('提交失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -170,7 +167,6 @@ export default function WorkLog() {
       alert('删除成功')
       fetchWorkLogs()
     } catch (error) {
-      console.error('Failed to delete work log:', error)
       alert('删除失败: ' + (error.response?.data?.detail || error.message))
     }
   }

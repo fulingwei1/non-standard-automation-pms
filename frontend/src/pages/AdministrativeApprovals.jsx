@@ -126,7 +126,6 @@ export default function AdministrativeApprovals() {
           setApprovals(res.data.items)
         }
       } catch (err) {
-        console.log('Admin approvals API unavailable, using mock data')
       }
 
       try {
@@ -135,7 +134,6 @@ export default function AdministrativeApprovals() {
           setApprovedList(approvedRes.data.items)
         }
       } catch (err) {
-        console.log('Approved approvals API unavailable')
       }
 
       try {
@@ -144,7 +142,6 @@ export default function AdministrativeApprovals() {
           setRejectedList(rejectedRes.data.items)
         }
       } catch (err) {
-        console.log('Rejected approvals API unavailable')
       }
 
       setLoading(false)
@@ -175,7 +172,6 @@ export default function AdministrativeApprovals() {
       await adminApi.approvals.approve(id, { comment: '同意' })
       setApprovals(prev => prev.filter(a => a.id !== id))
     } catch (err) {
-      console.log('Approval API unavailable')
       // Simulate approval in demo mode
       setApprovals(prev => prev.filter(a => a.id !== id))
     }
@@ -186,7 +182,6 @@ export default function AdministrativeApprovals() {
       await adminApi.approvals.reject(id, { reason: '不符合要求' })
       setApprovals(prev => prev.filter(a => a.id !== id))
     } catch (err) {
-      console.log('Rejection API unavailable')
       // Simulate rejection in demo mode
       setApprovals(prev => prev.filter(a => a.id !== id))
     }

@@ -55,25 +55,21 @@ export default function PermissionManagement() {
     try {
       // 检查token是否存在
       const token = localStorage.getItem('token');
-      console.log('[权限管理] 开始加载权限列表...');
-      console.log('[权限管理] Token检查:', token ? (token.startsWith('demo_token_') ? '演示账号token' : `真实token (${token.substring(0, 30)}...)`) : '❌ 未找到token');
+      ? '演示账号token' : `真实token (${token.substring(0, 30)}...)`) : '❌ 未找到token');
       
       if (!token) {
-        console.error('[权限管理] ❌ 未找到token，请重新登录');
         alert('未找到认证token，请重新登录');
         window.location.href = '/';
         return;
       }
       
       if (token.startsWith('demo_token_')) {
-        console.warn('[权限管理] ⚠️ 这是演示账号token，不会发送到后端');
         // 不直接返回，而是设置一个状态来显示友好的提示界面
         setPermissions([]);
         setLoading(false);
         return;
       }
       
-      console.log('[权限管理] ✅ Token存在，发送请求...');
       let response;
       if (filterModule !== 'all') {
         // 如果指定了模块，需要传递module参数
@@ -81,22 +77,13 @@ export default function PermissionManagement() {
       } else {
         response = await roleApi.permissions();
       }
-      console.log('[权限管理] ✅ 成功获取权限列表:', response.data?.length || 0, '条');
       setPermissions(response.data || []);
     } catch (error) {
-      console.error('[权限管理] ❌ 加载权限列表失败:', error);
       const errorDetail = error.response?.data?.detail || error.message;
       const statusCode = error.response?.status;
-      console.error('[权限管理] 错误详情:', {
-        status: statusCode,
-        detail: errorDetail,
-        message: error.message,
-        response: error.response?.data
-      });
       
       // 如果是认证错误，提示重新登录
       if (statusCode === 401 || statusCode === 403 || errorDetail?.includes('Not authenticated') || errorDetail?.includes('认证') || errorDetail?.includes('无效的认证凭据')) {
-        console.error('[权限管理] 认证失败，清除token并跳转登录页');
         alert('认证失败，请重新登录');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -120,7 +107,6 @@ export default function PermissionManagement() {
       const response = await roleApi.list({ page_size: 1000 });
       setRoles(response.data.items || []);
     } catch (error) {
-      console.error('加载角色列表失败:', error);
     }
   };
 
@@ -128,7 +114,6 @@ export default function PermissionManagement() {
     // 演示账号不加载数据
     const token = localStorage.getItem('token');
     if (token && token.startsWith('demo_token_')) {
-      console.log('[权限管理] 演示账号，跳过数据加载');
       return;
     }
     loadPermissions();
@@ -193,12 +178,10 @@ export default function PermissionManagement() {
             rolesWithPermission.push(role);
           }
         } catch (error) {
-          console.warn(`获取角色 ${role.id} 详情失败:`, error);
         }
       }
       setPermissionRoles(rolesWithPermission);
     } catch (error) {
-      console.error('加载权限关联角色失败:', error);
       setPermissionRoles([]);
     }
   };

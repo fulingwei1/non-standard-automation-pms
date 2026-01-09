@@ -543,7 +543,6 @@ export default function HRManagerDashboard() {
       setEmployees(filtered)
       setError(null)
     } catch (error) {
-      console.error('加载员工列表失败:', error)
       setError(error.response?.data?.detail || error.message || '加载员工列表失败')
       setEmployees([])
     } finally {
@@ -556,7 +555,6 @@ export default function HRManagerDashboard() {
       const response = await departmentApi.list({})
       setDepartments(response.data || [])
     } catch (error) {
-      console.error('加载部门列表失败:', error)
       // 部门加载失败不影响主流程，使用空数组
       setDepartments([])
     }
@@ -602,7 +600,6 @@ export default function HRManagerDashboard() {
       URL.revokeObjectURL(url)
       toast.success('报表导出成功')
     } catch (error) {
-      console.error('导出失败:', error)
       toast.error('导出失败: ' + error.message)
     }
   }
@@ -642,7 +639,6 @@ export default function HRManagerDashboard() {
       URL.revokeObjectURL(url)
       toast.success('员工列表导出成功')
     } catch (error) {
-      console.error('导出失败:', error)
       toast.error('导出失败: ' + error.message)
     }
   }
@@ -659,7 +655,6 @@ export default function HRManagerDashboard() {
       await navigator.clipboard.writeText(url)
       toast.success('链接已复制到剪贴板')
     } catch (error) {
-      console.error('分享失败:', error)
       toast.error('分享失败: ' + error.message)
     }
   }
@@ -1597,7 +1592,6 @@ export default function HRManagerDashboard() {
                                     setSelectedEmployee(response.data)
                                     setShowEmployeeDialog(true)
                                   } catch (error) {
-                                    console.error('加载员工详情失败:', error)
                                     // 如果API失败，使用列表中的数据
                                     setSelectedEmployee(employee)
                                     setShowEmployeeDialog(true)

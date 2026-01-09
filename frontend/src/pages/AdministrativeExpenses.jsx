@@ -91,7 +91,6 @@ export default function AdministrativeExpenses() {
           setExpenseStats(statsRes.data)
         }
       } catch (err) {
-        console.log('Expense statistics API unavailable, using mock data')
       }
       setLoading(false)
     }

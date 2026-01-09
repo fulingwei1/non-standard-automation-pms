@@ -98,7 +98,6 @@ export default function ProjectTaskList() {
       const res = await projectApi.get(id)
       setProject(res.data || res)
     } catch (error) {
-      console.error('Failed to fetch project:', error)
     }
   }
   const fetchTasks = async () => {
@@ -113,7 +112,6 @@ export default function ProjectTaskList() {
       const taskList = res.data?.items || res.data || []
       setTasks(taskList)
     } catch (error) {
-      console.error('Failed to fetch tasks:', error)
     } finally {
       setLoading(false)
     }
@@ -123,7 +121,6 @@ export default function ProjectTaskList() {
       const res = await progressApi.reports.getSummary(id)
       setSummary(res.data || res)
     } catch (error) {
-      console.error('Failed to fetch summary:', error)
     }
   }
   const handleCreateTask = async () => {
@@ -145,7 +142,6 @@ export default function ProjectTaskList() {
       fetchTasks()
       fetchSummary()
     } catch (error) {
-      console.error('Failed to create task:', error)
       alert('创建任务失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -155,7 +151,6 @@ export default function ProjectTaskList() {
       setSelectedTask(res.data || res)
       setShowTaskDetail(true)
     } catch (error) {
-      console.error('Failed to fetch task detail:', error)
     }
   }
   const filteredTasks = useMemo(() => {

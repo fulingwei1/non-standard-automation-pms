@@ -55,7 +55,6 @@ export default function AIClarificationChat() {
         setCurrentRound(maxRound + 1)
       }
     } catch (error) {
-      console.error('加载澄清记录失败:', error)
     } finally {
       setLoading(false)
     }
@@ -88,7 +87,6 @@ export default function AIClarificationChat() {
       setQuestions('')
       await loadClarifications()
     } catch (error) {
-      console.error('创建澄清失败:', error)
       alert('创建失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setSending(false)
@@ -115,7 +113,6 @@ export default function AIClarificationChat() {
       setAnswers({})
       await loadClarifications()
     } catch (error) {
-      console.error('提交回答失败:', error)
       alert('提交失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setSending(false)

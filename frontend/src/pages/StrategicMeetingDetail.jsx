@@ -35,7 +35,6 @@ export default function StrategicMeetingDetail() {
       const data = res.data || res
       setMeeting(data)
     } catch (err) {
-      console.error('Failed to fetch meeting:', err)
     } finally {
       setLoading(false)
     }
@@ -53,7 +52,6 @@ export default function StrategicMeetingDetail() {
       }))
       alert('战略结构已保存')
     } catch (err) {
-      console.error('Failed to save structure:', err)
       alert('保存失败: ' + (err.response?.data?.detail || err.message))
     }
   }

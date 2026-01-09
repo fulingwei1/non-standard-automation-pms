@@ -49,7 +49,6 @@ export default function MobileMaterialRequisition() {
       const res = await productionApi.workOrders.get(workOrderId)
       setWorkOrder(res.data)
     } catch (error) {
-      console.error('Failed to fetch work order:', error)
     }
   }
 
@@ -59,7 +58,6 @@ export default function MobileMaterialRequisition() {
       const materialsList = res.data?.items || res.data || []
       setMaterials(materialsList)
     } catch (error) {
-      console.error('Failed to fetch materials:', error)
     }
   }
 
@@ -120,7 +118,6 @@ export default function MobileMaterialRequisition() {
         navigate('/mobile/tasks')
       }, 1500)
     } catch (error) {
-      console.error('Failed to create requisition:', error)
       setError('领料申请失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)

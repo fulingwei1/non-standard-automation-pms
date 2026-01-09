@@ -52,7 +52,6 @@ export default function RdCostSummary() {
       const projectData = response.data?.data || response.data || response
       setProject(projectData)
     } catch (err) {
-      console.error('Failed to fetch project:', err)
     } finally {
       setLoading(false)
     }
@@ -64,7 +63,6 @@ export default function RdCostSummary() {
       const data = response.data?.data || response.data || response
       setCostSummary(data)
     } catch (err) {
-      console.error('Failed to fetch cost summary:', err)
     }
   }
 
@@ -74,7 +72,6 @@ export default function RdCostSummary() {
       const data = response.data?.data || response.data || response
       setTimesheetSummary(data)
     } catch (err) {
-      console.error('Failed to fetch timesheet summary:', err)
     }
   }
 

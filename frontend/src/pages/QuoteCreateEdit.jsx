@@ -82,7 +82,6 @@ export default function QuoteCreateEdit() {
       const res = await opportunityApi.list({ page_size: 1000, stage: 'PROPOSING' })
       setOpportunities(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch opportunities:', error)
     }
   }
   const fetchQuoteDetail = async () => {
@@ -117,7 +116,6 @@ export default function QuoteCreateEdit() {
         setItems(latestVersion.items || [])
       }
     } catch (error) {
-      console.error('Failed to fetch quote detail:', error)
     } finally {
       setLoading(false)
     }
@@ -204,7 +202,6 @@ export default function QuoteCreateEdit() {
       alert(isEdit ? '保存成功' : '创建成功')
       navigate('/sales/quotes')
     } catch (error) {
-      console.error('Failed to save quote:', error)
       alert('保存失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)

@@ -62,7 +62,6 @@ export default function MilestoneRateReport() {
       const res = await projectApi.get(selectedProjectId)
       setProject(res.data || res)
     } catch (error) {
-      console.error('Failed to fetch project:', error)
     }
   }
 
@@ -73,7 +72,6 @@ export default function MilestoneRateReport() {
       const data = res.data || res || {}
       setReportData(data)
     } catch (error) {
-      console.error('Failed to fetch milestone rate data:', error)
     } finally {
       setLoading(false)
     }

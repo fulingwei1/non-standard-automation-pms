@@ -452,7 +452,6 @@ export default function ManufacturingDirectorDashboard() {
         }
       }
     } catch (err) {
-      console.error('Failed to load daily snapshots:', err)
       setDailyError(err.response?.data?.detail || err.message || '日报数据加载失败')
     } finally {
       setLoadingDaily(false)
@@ -512,7 +511,6 @@ export default function ManufacturingDirectorDashboard() {
         })
       }
     } catch (err) {
-      console.error('Failed to load statistics:', err)
     } finally {
       setLoadingStats(false)
     }

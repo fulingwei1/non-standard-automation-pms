@@ -101,7 +101,6 @@ export default function LeadDetail() {
       const res = await leadApi.get(id)
       setLead(res.data || res)
     } catch (error) {
-      console.error('Failed to fetch lead detail:', error)
     } finally {
       setLoading(false)
     }
@@ -112,7 +111,6 @@ export default function LeadDetail() {
       const followUpList = res.data || res || []
       setFollowUps(followUpList)
     } catch (error) {
-      console.error('Failed to fetch follow-ups:', error)
     }
   }
   const fetchCustomers = async () => {
@@ -120,7 +118,6 @@ export default function LeadDetail() {
       const res = await customerApi.list({ page_size: 1000 })
       setCustomers(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch customers:', error)
     }
   }
   const handleCreateFollowUp = async () => {
@@ -140,7 +137,6 @@ export default function LeadDetail() {
       fetchFollowUps()
       fetchLeadDetail()
     } catch (error) {
-      console.error('Failed to create follow-up:', error)
       alert('创建跟进记录失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -154,7 +150,6 @@ export default function LeadDetail() {
       alert('转换成功')
       navigate(`/opportunities/${res.data?.id || res.id}`)
     } catch (error) {
-      console.error('Failed to convert lead:', error)
       const errorMsg = error.response?.data?.detail || error.message
       if (errorMsg.includes('G1阶段门验证失败')) {
         if (confirm(errorMsg + '\n\n是否跳过验证继续转换？')) {

@@ -181,7 +181,6 @@ export default function WorkCenter() {
 
 
     } catch (error) {
-      console.error('Failed to fetch work center data:', error)
     } finally {
       setLoading(false)
     }

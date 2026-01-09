@@ -86,7 +86,6 @@ export default function ArrivalDetail() {
         setReceiveQty(String(res.data.expected_qty))
       }
     } catch (error) {
-      console.error('加载到货跟踪详情失败', error)
     } finally {
       setLoading(false)
     }
@@ -97,7 +96,6 @@ export default function ArrivalDetail() {
       const res = await shortageApi.arrivals.getFollowUps(id, { page: 1, page_size: 50 })
       setFollowUps(res.data.items || [])
     } catch (error) {
-      console.error('加载跟催记录失败', error)
     }
   }
 
@@ -112,7 +110,6 @@ export default function ArrivalDetail() {
       setShowReceiveDialog(false)
       await loadArrival()
     } catch (error) {
-      console.error('确认收货失败', error)
       alert('确认收货失败：' + (error.response?.data?.detail || error.message))
     } finally {
       setActionLoading(false)
@@ -140,7 +137,6 @@ export default function ArrivalDetail() {
       await loadFollowUps()
       await loadArrival()
     } catch (error) {
-      console.error('创建跟催记录失败', error)
       alert('创建跟催记录失败：' + (error.response?.data?.detail || error.message))
     } finally {
       setActionLoading(false)
@@ -154,7 +150,6 @@ export default function ArrivalDetail() {
       await shortageApi.arrivals.updateStatus(id, status)
       await loadArrival()
     } catch (error) {
-      console.error('更新状态失败', error)
       alert('更新状态失败：' + (error.response?.data?.detail || error.message))
     } finally {
       setActionLoading(false)

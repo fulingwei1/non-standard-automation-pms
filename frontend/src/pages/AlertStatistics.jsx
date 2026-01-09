@@ -62,7 +62,6 @@ function ResponseMetricsSection({ dateRange, selectedProject }) {
       const data = res.data || res
       setMetrics(data)
     } catch (err) {
-      console.error('Failed to load response metrics:', err)
       setMetrics(null)
     } finally {
       setLoading(false)
@@ -349,7 +348,6 @@ export default function AlertStatistics() {
       const data = res.data || res
       setStats(data)
     } catch (err) {
-      console.error('Failed to load statistics:', err)
       const errorMessage = err.response?.data?.detail || err.message || '加载统计数据失败'
       setError(errorMessage)
     }
@@ -371,7 +369,6 @@ export default function AlertStatistics() {
       const data = res.data || res
       setTrends(data)
     } catch (err) {
-      console.error('Failed to load trends:', err)
       const errorMessage = err.response?.data?.detail || err.message || '加载趋势数据失败'
       setError(errorMessage)
       // 如果是演示账号，设置空数据而不是显示错误
@@ -487,7 +484,6 @@ export default function AlertStatistics() {
       window.URL.revokeObjectURL(url)
       toast.success('Excel导出成功')
     } catch (error) {
-      console.error('Failed to export Excel:', error)
       toast.error(error.response?.data?.detail || '导出失败，请稍后重试')
     }
   }
@@ -514,7 +510,6 @@ export default function AlertStatistics() {
       window.URL.revokeObjectURL(url)
       toast.success('PDF导出成功')
     } catch (error) {
-      console.error('Failed to export PDF:', error)
       toast.error(error.response?.data?.detail || '导出失败，请稍后重试')
     }
   }
@@ -948,7 +943,6 @@ function EfficiencyMetricsSection({ dateRange, selectedProject }) {
       const data = res.data || res
       setMetrics(data)
     } catch (err) {
-      console.error('Failed to load efficiency metrics:', err)
       setMetrics(null)
     } finally {
       setLoading(false)

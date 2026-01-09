@@ -66,7 +66,6 @@ export default function PerformanceRanking() {
           }
         }
       } catch (err) {
-        console.log('Performance ranking API unavailable, using mock data')
       }
       setLoading(false)
     }

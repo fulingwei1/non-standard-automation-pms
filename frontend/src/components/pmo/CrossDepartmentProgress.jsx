@@ -22,7 +22,6 @@ export function CrossDepartmentProgress({ projectId }) {
         setData(response.data)
         setError(null)
       } catch (err) {
-        console.error('Failed to fetch cross-department progress:', err)
         setError(err.response?.data?.detail || err.message || '加载失败')
       } finally {
         setLoading(false)

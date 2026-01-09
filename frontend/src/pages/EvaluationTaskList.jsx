@@ -36,7 +36,6 @@ const EvaluationTaskList = () => {
       try {
         return JSON.parse(userStr)
       } catch (e) {
-        console.error('解析用户信息失败:', e)
       }
     }
     return {
@@ -59,7 +58,6 @@ const EvaluationTaskList = () => {
       })
       setTasks(response.data.tasks || [])
     } catch (err) {
-      console.error('加载评价任务失败:', err)
       setError(err.response?.data?.detail || '加载失败')
       // Fallback to mock data
       setTasks(mockEvaluationTasks)

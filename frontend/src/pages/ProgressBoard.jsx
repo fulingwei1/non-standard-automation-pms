@@ -49,7 +49,6 @@ export default function ProgressBoard() {
       const res = await projectApi.get(id)
       setProject(res.data || res)
     } catch (error) {
-      console.error('Failed to fetch project:', error)
     }
   }
   const fetchDashboardData = async () => {
@@ -63,21 +62,18 @@ export default function ProgressBoard() {
           .getForecast(id)
           .then(response => response.data || response)
           .catch(err => {
-            console.warn('Failed to fetch forecast data:', err)
             return null
           }),
         progressApi.analytics
           .checkDependencies(id)
           .then(response => response.data || response)
           .catch(err => {
-            console.warn('Failed to fetch dependency data:', err)
             return null
           }),
       ])
       setForecastData(forecastRes)
       setDependencyData(dependencyRes)
     } catch (error) {
-      console.error('Failed to fetch board data:', error)
       setErrorMessage('看板数据加载失败，请稍后重试。')
     } finally {
       setLoading(false)

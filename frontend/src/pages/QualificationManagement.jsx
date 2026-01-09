@@ -107,7 +107,6 @@ export default function QualificationManagement() {
       }
       await loadStats()
     } catch (error) {
-      console.error('加载数据失败:', error)
       toast.error('加载数据失败，请稍后重试')
     } finally {
       setLoading(false)
@@ -125,7 +124,6 @@ export default function QualificationManagement() {
         setLevels(response.data.data?.items || [])
       }
     } catch (error) {
-      console.error('加载等级列表失败:', error)
     }
   }
 
@@ -148,7 +146,6 @@ export default function QualificationManagement() {
         }))
       }
     } catch (error) {
-      console.error('加载能力模型失败:', error)
     }
   }
 
@@ -171,7 +168,6 @@ export default function QualificationManagement() {
         }))
       }
     } catch (error) {
-      console.error('加载员工任职资格失败:', error)
     }
   }
 
@@ -191,7 +187,6 @@ export default function QualificationManagement() {
         pending_certifications: qualificationsRes.data?.data?.total || 0,
       })
     } catch (error) {
-      console.error('加载统计数据失败:', error)
     }
   }
 
@@ -865,7 +860,6 @@ export default function QualificationManagement() {
       document.body.removeChild(link)
       toast.success('导出成功')
     } catch (error) {
-      console.error('导出失败:', error)
       toast.error('导出失败')
     }
   }
@@ -902,7 +896,6 @@ export default function QualificationManagement() {
       document.body.removeChild(link)
       toast.success('导出成功')
     } catch (error) {
-      console.error('导出失败:', error)
       toast.error('导出失败')
     }
   }

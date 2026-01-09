@@ -340,7 +340,6 @@ function ProtectedRoute({ children }) {
       role = user.role
     } catch (e) {
       // Ignore parse errors, but clear invalid user data
-      console.warn('Invalid user data in localStorage:', e)
       localStorage.removeItem('user')
       return children
     }
@@ -384,7 +383,6 @@ function MainLayout({ children, onLogout }) {
         return JSON.parse(userStr)
       }
     } catch (e) {
-      console.warn('Failed to parse user from localStorage:', e)
     }
     return null
   })
@@ -400,7 +398,6 @@ function MainLayout({ children, onLogout }) {
           setUser(null)
         }
       } catch (e) {
-        console.warn('Failed to parse user from localStorage:', e)
         setUser(null)
       }
     }

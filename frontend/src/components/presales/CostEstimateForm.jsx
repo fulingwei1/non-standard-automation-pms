@@ -127,7 +127,6 @@ export default function CostEstimateForm({ bidding, onSave, onCancel }) {
         })
       }
     } catch (err) {
-      console.error('Failed to save cost estimate:', err)
       alert('保存失败：' + (err.response?.data?.detail || err.message))
     } finally {
       setIsSubmitting(false)
@@ -182,7 +181,6 @@ export default function CostEstimateForm({ bidding, onSave, onCancel }) {
         })
       }
     } catch (err) {
-      console.error('Failed to submit cost estimate:', err)
       alert('提交失败：' + (err.response?.data?.detail || err.message))
       setIsSubmitting(false)
     }

@@ -578,7 +578,6 @@ export default function KnowledgeBase() {
             })
           })
         } catch (err) {
-          console.error('Failed to load templates:', err)
         }
       }
 
@@ -612,7 +611,6 @@ export default function KnowledgeBase() {
             })
           })
         } catch (err) {
-          console.error('Failed to load solutions:', err)
         }
       }
 
@@ -658,7 +656,6 @@ export default function KnowledgeBase() {
             }
           })
         } catch (err) {
-          console.error('Failed to load knowledge base articles:', err)
         }
       }
 
@@ -670,7 +667,6 @@ export default function KnowledgeBase() {
 
       setDocuments(allDocuments)
     } catch (err) {
-      console.error('Failed to load documents:', err)
       setError(err.response?.data?.detail || err.message || '加载知识库失败')
       // Keep existing documents on error, don't reset to mock
     } finally {

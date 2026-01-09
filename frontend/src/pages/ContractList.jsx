@@ -219,7 +219,6 @@ export default function ContractList() {
           setContracts(res.data?.items || res.data)
         }
       } catch (err) {
-        console.log('Contract API unavailable, using mock data')
       }
       setLoading(false)
     }

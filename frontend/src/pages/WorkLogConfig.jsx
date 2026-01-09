@@ -71,7 +71,6 @@ export default function WorkLogConfig() {
       const data = res.data?.data || res.data || {}
       setConfigs(data.items || [])
     } catch (error) {
-      console.error('Failed to fetch configs:', error)
     } finally {
       setLoading(false)
     }
@@ -83,7 +82,6 @@ export default function WorkLogConfig() {
       const data = res.data?.data || res.data || {}
       setUsers(data.items || data || [])
     } catch (error) {
-      console.error('Failed to fetch users:', error)
     }
   }
   
@@ -93,7 +91,6 @@ export default function WorkLogConfig() {
       const data = res.data?.data || res.data || {}
       setDepartments(data.items || data || [])
     } catch (error) {
-      console.error('Failed to fetch departments:', error)
     }
   }
   
@@ -140,7 +137,6 @@ export default function WorkLogConfig() {
       setShowFormDialog(false)
       fetchConfigs()
     } catch (error) {
-      console.error('Failed to save config:', error)
       alert('保存失败: ' + (error.response?.data?.detail || error.message))
     }
   }

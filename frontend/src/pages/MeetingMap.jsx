@@ -56,7 +56,6 @@ export default function MeetingMap() {
       setByLevel(data.by_level || {})
       setByCycle(data.by_cycle || {})
     } catch (err) {
-      console.error('Failed to fetch meeting map:', err)
       setMeetings([])
     } finally {
       setLoading(false)

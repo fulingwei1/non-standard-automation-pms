@@ -79,23 +79,17 @@ export default function EmployeeProfileList() {
         params.employment_type = 'intern';
       }
 
-      console.log('[员工档案] 发起API请求, 参数:', params);
       const response = await staffMatchingApi.getProfiles(params);
-      console.log('[员工档案] API响应:', response);
       // API 直接返回数组，不是 items 包装
       const data = response.data || response;
-      console.log('[员工档案] 解析后数据:', data, '是否数组:', Array.isArray(data));
+      );
       if (Array.isArray(data)) {
-        console.log('[员工档案] 设置数据, 数量:', data.length);
         setProfiles(data);
       } else if (data?.items) {
-        console.log('[员工档案] 设置items数据, 数量:', data.items.length);
         setProfiles(data.items);
       } else {
-        console.warn('[员工档案] 数据格式不正确:', data);
       }
     } catch (error) {
-      console.error('[员工档案] 加载失败:', error.response?.status, error.response?.data, error.message);
     } finally {
       setLoading(false);
     }
@@ -161,7 +155,6 @@ export default function EmployeeProfileList() {
         }, 1000);
       }
     } catch (error) {
-      console.error('上传失败:', error);
       setUploadResult({
         success: false,
         message: error.response?.data?.detail || error.message || '上传失败，请重试'

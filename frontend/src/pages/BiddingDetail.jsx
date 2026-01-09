@@ -348,7 +348,6 @@ export default function BiddingDetail() {
 
       setBidding(transformedBidding)
     } catch (err) {
-      console.error('Failed to load bidding detail:', err)
       setError(err.response?.data?.detail || err.message || '加载投标详情失败')
     } finally {
       setLoading(false)

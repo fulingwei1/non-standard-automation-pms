@@ -92,7 +92,6 @@ export default function WBSTemplateManagement() {
       const res = await progressApi.wbsTemplates.list(params)
       setTemplates(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch templates:', error)
       setTemplates([]) // 不再使用mock数据，显示空列表
     } finally {
       setLoading(false)
@@ -103,7 +102,6 @@ export default function WBSTemplateManagement() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch projects:', error)
     }
   }
   const fetchTemplateTasks = async (templateId) => {
@@ -111,7 +109,6 @@ export default function WBSTemplateManagement() {
       const res = await progressApi.wbsTemplates.getTasks(templateId)
       setTemplateTasks(res.data || [])
     } catch (error) {
-      console.error('Failed to fetch template tasks:', error)
       setTemplateTasks([]) // 不再使用mock数据，显示空列表
     }
   }
@@ -135,7 +132,6 @@ export default function WBSTemplateManagement() {
       })
       fetchTemplates()
     } catch (error) {
-      console.error('Failed to create template:', error)
       alert('创建模板失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -151,7 +147,6 @@ export default function WBSTemplateManagement() {
       alert('WBS初始化成功')
       navigate(`/projects/${selectedProject}`)
     } catch (error) {
-      console.error('Failed to init WBS:', error)
       alert('初始化WBS失败: ' + (error.response?.data?.detail || error.message))
     }
   }

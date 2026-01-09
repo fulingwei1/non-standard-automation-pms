@@ -513,7 +513,6 @@ export default function ChairmanWorkstation() {
           setCompanyStats(prev => ({ ...prev, ...dashboardRes.data }))
         }
       } catch (err) {
-        console.log('PMO dashboard API unavailable, using mock data')
       }
 
       try {
@@ -522,7 +521,6 @@ export default function ChairmanWorkstation() {
           setKeyProjects(projectsRes.data.items.slice(0, 5))
         }
       } catch (err) {
-        console.log('Projects API unavailable')
       }
 
       setLoading(false)

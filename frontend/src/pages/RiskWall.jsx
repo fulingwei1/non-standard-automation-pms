@@ -81,7 +81,6 @@ export default function RiskWall() {
       const data = res.data || res
       setRiskData(data)
     } catch (err) {
-      console.error('Failed to fetch risk wall data:', err)
     } finally {
       setLoading(false)
     }

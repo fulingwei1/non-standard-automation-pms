@@ -57,7 +57,6 @@ export default function ProjectWorkspace() {
       const response = await projectWorkspaceApi.getWorkspace(id)
       setWorkspaceData(response.data)
     } catch (error) {
-      console.error('Failed to load workspace data:', error)
     } finally {
       setLoading(false)
     }
@@ -258,7 +257,6 @@ export default function ProjectWorkspace() {
             projectId={id}
             onApplyTemplate={(template) => {
               // TODO: 实现应用模板逻辑
-              console.log('Apply template:', template)
             }}
           />
         </TabsContent>

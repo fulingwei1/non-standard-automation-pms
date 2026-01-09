@@ -183,7 +183,6 @@ export default function ServiceKnowledgeBase() {
       
       setArticles(transformedArticles)
     } catch (err) {
-      console.error('Failed to load articles:', err)
       setError(err.response?.data?.detail || err.message || '加载知识库文章失败')
       setArticles([]) // 不再使用mock数据，显示空列表
     } finally {
@@ -204,7 +203,6 @@ export default function ServiceKnowledgeBase() {
         totalViews: statsData.total_views || 0,
       })
     } catch (err) {
-      console.error('Failed to load statistics:', err)
       // Calculate from local articles as fallback
       setStats({
         total: articles.length,
@@ -263,7 +261,6 @@ export default function ServiceKnowledgeBase() {
       await loadArticles()
       await loadStatistics()
     } catch (error) {
-      console.error('Failed to create article:', error)
       toast.error('创建失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
     }
   }
@@ -276,7 +273,6 @@ export default function ServiceKnowledgeBase() {
       await loadArticles()
       await loadStatistics()
     } catch (error) {
-      console.error('Failed to update article:', error)
       toast.error('更新失败，请稍后重试')
     }
   }
@@ -290,7 +286,6 @@ export default function ServiceKnowledgeBase() {
       await loadArticles()
       await loadStatistics()
     } catch (error) {
-      console.error('Failed to delete article:', error)
       toast.error('删除失败，请稍后重试')
     }
   }

@@ -557,7 +557,6 @@ export default function PresalesWorkstation() {
       ])
 
     } catch (err) {
-      console.error('Failed to load presales data:', err)
       setError(err.response?.data?.detail || err.message || '加载数据失败')
       // 不再使用mock数据，使用空数据
       setTodoTasks([])
@@ -641,7 +640,6 @@ export default function PresalesWorkstation() {
       setShowCostForm(false)
       setSelectedCostTask(null)
     } catch (err) {
-      console.error('Failed to save cost estimation:', err)
       alert('保存失败：' + (err.response?.data?.detail || err.message || '未知错误'))
     }
   }
@@ -668,7 +666,6 @@ export default function PresalesWorkstation() {
       setShowFeasibilityForm(false)
       setSelectedFeasibilityTask(null)
     } catch (err) {
-      console.error('Failed to save feasibility assessment:', err)
       alert('保存失败：' + (err.response?.data?.detail || err.message || '未知错误'))
     }
   }

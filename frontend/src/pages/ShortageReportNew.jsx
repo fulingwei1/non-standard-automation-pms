@@ -74,7 +74,6 @@ export default function ShortageReportNew() {
       const res = await projectApi.list({ page: 1, page_size: 100 })
       setProjects(res.data.items || [])
     } catch (error) {
-      console.error('加载项目列表失败', error)
     }
   }
 
@@ -103,7 +102,6 @@ export default function ShortageReportNew() {
       
       setMaterials(filteredMaterials)
     } catch (error) {
-      console.error('加载物料列表失败', error)
       setMaterials([])
     }
   }
@@ -146,7 +144,6 @@ export default function ShortageReportNew() {
       alert('缺料上报创建成功！')
       navigate(`/shortage/reports/${res.data.id}`)
     } catch (error) {
-      console.error('创建缺料上报失败', error)
       alert('创建失败：' + (error.response?.data?.detail || error.message))
     } finally {
       setLoading(false)

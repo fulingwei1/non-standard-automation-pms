@@ -808,7 +808,6 @@ export default function MaterialAnalysis() {
             order_no: order.order_no,
           })))
         } catch (err) {
-          console.error(`Failed to load items for order ${order.id}:`, err)
         }
       }
 
@@ -874,7 +873,6 @@ export default function MaterialAnalysis() {
             })
           }
         } catch (err) {
-          console.error(`Failed to load material status for project ${project.id}:`, err)
           // Fallback to manual calculation if API fails
           try {
             const machinesResponse = await projectApi.getMachines(project.id)
@@ -889,7 +887,6 @@ export default function MaterialAnalysis() {
                   allBomItems.push(...bom.items)
                 }
               } catch (err) {
-                console.error(`Failed to load BOM for machine ${machine.id}:`, err)
               }
             }
 
@@ -921,7 +918,6 @@ export default function MaterialAnalysis() {
               })
             }
           } catch (fallbackErr) {
-            console.error(`Fallback calculation also failed for project ${project.id}:`, fallbackErr)
           }
         }
       }
@@ -929,7 +925,6 @@ export default function MaterialAnalysis() {
       // Always use mock data for demonstration (for development/testing)
       // In production, you can change this to only use mock data when no real data is available
       if (projectMaterialsData.length === 0) {
-        console.log('No project data loaded, using mock data for demonstration')
         setProjectMaterials(mockProjectMaterials)
       } else {
         // For demonstration, merge real data with mock data, or use mock data only
@@ -938,9 +933,7 @@ export default function MaterialAnalysis() {
         // Or use real data: setProjectMaterials(projectMaterialsData)
       }
     } catch (err) {
-      console.error('Failed to load project materials:', err)
       // Always use mock data on error for demonstration
-      console.log('Using mock data due to error for demonstration')
       setProjectMaterials(mockProjectMaterials)
       setError(null)
     } finally {
@@ -1018,7 +1011,6 @@ export default function MaterialAnalysis() {
       
       setTrendData(formattedTrend)
     } catch (err) {
-      console.error('Failed to load trend data:', err)
       // Fallback to mock data on error
       const days = trendPeriod === 'day' ? 7 : trendPeriod === 'week' ? 4 : 6
       const baseRate = overallReadyRate
@@ -1115,13 +1107,11 @@ export default function MaterialAnalysis() {
             })
           }
         } catch (err) {
-          console.error(`Failed to load process analysis for project ${project.id}:`, err)
         }
       }
 
       // If no process data loaded, generate mock process data from projectMaterials
       if (processData.length === 0 && projectMaterials.length > 0) {
-        console.log('No process analysis data loaded, generating mock data from projects')
         processData = projectMaterials.map((project, index) => {
           // Generate mock stage kit rates
           const stages = ['FRAME', 'MECH', 'ELECTRIC', 'WIRING', 'DEBUG', 'COSMETIC']
@@ -1166,10 +1156,8 @@ export default function MaterialAnalysis() {
       
       setProcessAnalysisData(processData)
     } catch (err) {
-      console.error('Failed to load process analysis:', err)
       // Generate mock process data from projectMaterials on error
       if (projectMaterials.length > 0) {
-        console.log('Generating mock process data due to error')
         const mockProcessData = projectMaterials.map((project, index) => {
           const stages = ['FRAME', 'MECH', 'ELECTRIC', 'WIRING', 'DEBUG', 'COSMETIC']
           const stageKitRates = stages.map((stage, stageIndex) => {

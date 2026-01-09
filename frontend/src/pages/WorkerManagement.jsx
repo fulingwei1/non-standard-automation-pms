@@ -85,7 +85,6 @@ export default function WorkerManagement() {
       const workerList = res.data?.items || res.data || []
       setWorkers(workerList)
     } catch (error) {
-      console.error('Failed to fetch workers:', error)
     } finally {
       setLoading(false)
     }
@@ -102,7 +101,6 @@ export default function WorkerManagement() {
       resetForm()
       fetchWorkers()
     } catch (error) {
-      console.error('Failed to create worker:', error)
       alert('创建工人失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -115,7 +113,6 @@ export default function WorkerManagement() {
       resetForm()
       fetchWorkers()
     } catch (error) {
-      console.error('Failed to update worker:', error)
       alert('更新工人失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -126,7 +123,6 @@ export default function WorkerManagement() {
       setSelectedWorker(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
-      console.error('Failed to fetch worker detail:', error)
     }
   }
 

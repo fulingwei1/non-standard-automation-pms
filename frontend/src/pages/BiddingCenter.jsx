@@ -846,7 +846,6 @@ export default function BiddingCenter() {
 
       setBiddings(transformedTenders)
     } catch (err) {
-      console.error('Failed to load tenders:', err)
       setError(err.response?.data?.detail || err.message || '加载投标项目失败')
       setBiddings([])
     } finally {

@@ -114,7 +114,6 @@ export default function OpportunityManagement() {
         setTotal(response.data.total || 0)
       }
     } catch (error) {
-      console.error('加载商机列表失败:', error)
     } finally {
       setLoading(false)
     }
@@ -127,7 +126,6 @@ export default function OpportunityManagement() {
         setCustomers(response.data.items)
       }
     } catch (error) {
-      console.error('加载客户列表失败:', error)
     }
   }
 
@@ -146,7 +144,6 @@ export default function OpportunityManagement() {
       resetForm()
       loadOpportunities()
     } catch (error) {
-      console.error('创建商机失败:', error)
       alert('创建商机失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -159,7 +156,6 @@ export default function OpportunityManagement() {
       setSelectedOpp(null)
       loadOpportunities()
     } catch (error) {
-      console.error('更新商机失败:', error)
       alert('更新商机失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -172,7 +168,6 @@ export default function OpportunityManagement() {
       setSelectedOpp(null)
       loadOpportunities()
     } catch (error) {
-      console.error('提交阶段门失败:', error)
       alert('提交阶段门失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -234,7 +229,6 @@ export default function OpportunityManagement() {
         setShowDetailDialog(true)
       }
     } catch (error) {
-      console.error('加载商机详情失败:', error)
       setSelectedOpp(opp)
       setShowDetailDialog(true)
     }

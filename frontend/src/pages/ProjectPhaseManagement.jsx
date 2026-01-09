@@ -104,7 +104,6 @@ export default function ProjectPhaseManagement() {
       const data = res.data || res
       setProject(data)
     } catch (err) {
-      console.error('Failed to fetch project:', err)
       setError(err.response?.data?.detail || err.message || '加载项目信息失败')
     }
   }
@@ -118,7 +117,6 @@ export default function ProjectPhaseManagement() {
       const data = res.data || res
       setPhases(Array.isArray(data) ? data : [])
     } catch (err) {
-      console.error('Failed to fetch phases:', err)
       setError(err.response?.data?.detail || err.message || '加载阶段数据失败')
       setPhases([])
     } finally {
@@ -139,7 +137,6 @@ export default function ProjectPhaseManagement() {
         setProjectList([])
       }
     } catch (err) {
-      console.error('Failed to fetch projects:', err)
       setProjectList([])
     }
   }
@@ -150,7 +147,6 @@ export default function ProjectPhaseManagement() {
       setEntryCheckDialog({ open: false, phaseId: null })
       fetchPhases()
     } catch (err) {
-      console.error('Failed to entry check:', err)
       alert('入口检查失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -161,7 +157,6 @@ export default function ProjectPhaseManagement() {
       setExitCheckDialog({ open: false, phaseId: null })
       fetchPhases()
     } catch (err) {
-      console.error('Failed to exit check:', err)
       alert('出口检查失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -172,7 +167,6 @@ export default function ProjectPhaseManagement() {
       setReviewDialog({ open: false, phaseId: null })
       fetchPhases()
     } catch (err) {
-      console.error('Failed to review:', err)
       alert('评审失败: ' + (err.response?.data?.detail || err.message))
     }
   }
@@ -183,7 +177,6 @@ export default function ProjectPhaseManagement() {
       setAdvanceDialog({ open: false, phaseId: null })
       fetchPhases()
     } catch (err) {
-      console.error('Failed to advance:', err)
       alert('推进失败: ' + (err.response?.data?.detail || err.message))
     }
   }

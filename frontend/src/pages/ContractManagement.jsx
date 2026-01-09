@@ -127,7 +127,6 @@ export default function ContractManagement() {
         setTotal(response.data.total || 0)
       }
     } catch (error) {
-      console.error('加载合同列表失败:', error)
     } finally {
       setLoading(false)
     }
@@ -140,7 +139,6 @@ export default function ContractManagement() {
         setOpportunities(response.data.items)
       }
     } catch (error) {
-      console.error('加载商机列表失败:', error)
     }
   }
 
@@ -151,7 +149,6 @@ export default function ContractManagement() {
         setCustomers(response.data.items)
       }
     } catch (error) {
-      console.error('加载客户列表失败:', error)
     }
   }
 
@@ -164,7 +161,6 @@ export default function ContractManagement() {
         setContractTemplates(response.items)
       }
     } catch (error) {
-      console.error('加载合同模板失败:', error)
     }
   }
 
@@ -186,7 +182,6 @@ export default function ContractManagement() {
           : prev.acceptance_summary,
       }))
     } catch (error) {
-      console.error('应用合同模板失败:', error)
       alert('应用合同模板失败: ' + (error.response?.data?.detail || error.message))
     } finally {
       setContractTemplateLoading(false)
@@ -275,7 +270,6 @@ export default function ContractManagement() {
       resetForm()
       loadContracts()
     } catch (error) {
-      console.error('创建合同失败:', error)
       alert('创建合同失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -288,7 +282,6 @@ export default function ContractManagement() {
       setSelectedContract(null)
       loadContracts()
     } catch (error) {
-      console.error('合同签订失败:', error)
       alert('合同签订失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -302,7 +295,6 @@ export default function ContractManagement() {
       alert('项目创建成功！项目ID: ' + (response.data?.data?.project_id || ''))
       loadContracts()
     } catch (error) {
-      console.error('创建项目失败:', error)
       alert('创建项目失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -353,7 +345,6 @@ export default function ContractManagement() {
         setShowDetailDialog(true)
       }
     } catch (error) {
-      console.error('加载合同详情失败:', error)
       setSelectedContract(contract)
       setShowDetailDialog(true)
     }
@@ -1057,7 +1048,6 @@ export default function ContractManagement() {
                   setSelectedContract(null)
                   loadContracts()
                 } catch (error) {
-                  console.error('更新合同失败:', error)
                   alert('更新合同失败: ' + (error.response?.data?.detail || error.message))
                 }
               }}

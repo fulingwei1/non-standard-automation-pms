@@ -67,7 +67,6 @@ const MonthlySummary = () => {
       const response = await performanceApi.getMonthlySummaryHistory()
       setHistory(response.data || [])
     } catch (err) {
-      console.error('加载历史记录失败:', err)
       // 使用 Mock 数据作为fallback
       setHistory([
         {
@@ -122,7 +121,6 @@ const MonthlySummary = () => {
       setIsDraft(false)
       alert('草稿已保存')
     } catch (err) {
-      console.error('保存草稿失败:', err)
       setError(err.response?.data?.detail || '保存草稿失败，请稍后重试')
       alert('保存草稿失败: ' + (err.response?.data?.detail || '请稍后重试'))
     } finally {
@@ -161,7 +159,6 @@ const MonthlySummary = () => {
       // 跳转到我的绩效页面
       navigate('/performance/my-performance')
     } catch (err) {
-      console.error('提交失败:', err)
       setError(err.response?.data?.detail || '提交失败，请稍后重试')
       alert('提交失败: ' + (err.response?.data?.detail || '请稍后重试'))
     } finally {

@@ -79,7 +79,6 @@ export default function QualificationLevelForm() {
         setValue('is_active', levelData.is_active)
       }
     } catch (error) {
-      console.error('加载等级失败:', error)
       toast.error('加载等级信息失败')
     }
   }
@@ -96,7 +95,6 @@ export default function QualificationLevelForm() {
       }
       navigate('/qualifications')
     } catch (error) {
-      console.error('保存失败:', error)
       toast.error(error.response?.data?.detail || '保存失败')
     } finally {
       setLoading(false)

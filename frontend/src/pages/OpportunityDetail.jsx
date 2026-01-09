@@ -87,7 +87,6 @@ export default function OpportunityDetail() {
       const res = await opportunityApi.get(id)
       setOpportunity(res.data || res)
     } catch (error) {
-      console.error('Failed to fetch opportunity detail:', error)
     } finally {
       setLoading(false)
     }
@@ -107,7 +106,6 @@ export default function OpportunityDetail() {
       fetchOpportunityDetail()
       alert('阶段门提交成功')
     } catch (error) {
-      console.error('Failed to submit gate:', error)
       alert('提交阶段门失败: ' + (error.response?.data?.detail || error.message))
     }
   }

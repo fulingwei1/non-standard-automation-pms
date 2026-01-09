@@ -84,7 +84,6 @@ export default function Customer360() {
       loadSatisfactionSurveys()
       loadServiceRecords()
     } catch (err) {
-      console.error('Failed to load customer 360:', err)
       setError(err.response?.data?.detail || err.message || '加载客户360视图失败')
     } finally {
       setLoading(false)
@@ -161,7 +160,6 @@ export default function Customer360() {
       const data = response.data?.items || response.data || response || []
       setSatisfactionSurveys(data)
     } catch (err) {
-      console.error('Failed to load satisfaction surveys:', err)
       setSatisfactionSurveys([])
     } finally {
       setLoadingSatisfaction(false)
@@ -177,7 +175,6 @@ export default function Customer360() {
       const data = response.data?.items || response.data || response || []
       setServiceRecords(data)
     } catch (err) {
-      console.error('Failed to load service records:', err)
       setServiceRecords([])
     } finally {
       setLoadingService(false)

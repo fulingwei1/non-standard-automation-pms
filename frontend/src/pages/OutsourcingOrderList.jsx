@@ -98,7 +98,6 @@ export default function OutsourcingOrderList() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch projects:', error)
     }
   }
   const fetchOrders = async () => {
@@ -112,7 +111,6 @@ export default function OutsourcingOrderList() {
       const orderList = res.data?.items || res.data || []
       setOrders(orderList)
     } catch (error) {
-      console.error('Failed to fetch orders:', error)
     } finally {
       setLoading(false)
     }
@@ -138,7 +136,6 @@ export default function OutsourcingOrderList() {
       })
       fetchOrders()
     } catch (error) {
-      console.error('Failed to create order:', error)
       alert('创建外协订单失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -148,7 +145,6 @@ export default function OutsourcingOrderList() {
       setSelectedOrder(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
-      console.error('Failed to fetch order detail:', error)
     }
   }
   const filteredOrders = useMemo(() => {

@@ -30,7 +30,6 @@ export function ProtectedRoute({
   const userStr = localStorage.getItem('user')
 
   if (!userStr) {
-    console.warn('ProtectedRoute: No user in localStorage, redirecting to', redirectTo)
     return <Navigate to={redirectTo} replace />
   }
 
@@ -42,29 +41,22 @@ export function ProtectedRoute({
     user = JSON.parse(userStr)
     role = user.role
     isSuperuser = user.is_superuser === true || user.isSuperuser === true
-    console.log('ProtectedRoute: User role =', role, ', isSuperuser =', isSuperuser, ', permissionName =', permissionName)
   } catch (e) {
-    console.warn('Invalid user data in localStorage:', e)
     localStorage.removeItem('user')
     return <Navigate to={redirectTo} replace />
   }
 
   // 超级管理员绕过所有权限检查
   if (isSuperuser) {
-    console.log('ProtectedRoute: Superuser bypass, rendering children')
     return children
   }
 
   // 管理员角色也应该绕过权限检查
   if (role === 'admin' || role === 'super_admin' || role === '管理员' || role === '系统管理员') {
-    console.log('ProtectedRoute: Admin role bypass, rendering children')
     return children
   }
 
   const hasPermission = checkPermission ? checkPermission(role) : true
-  console.log('ProtectedRoute: checkPermission result =', hasPermission)
-  console.log('ProtectedRoute: role =', role, ', role type =', typeof role)
-  console.log('ProtectedRoute: permissionName =', permissionName)
 
   if (!role || !hasPermission) {
     return (

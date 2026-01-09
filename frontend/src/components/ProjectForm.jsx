@@ -34,7 +34,6 @@ const ProjectForm = ({ isOpen, onClose, onSubmit, initialData = {} }) => {
                     setCustomers(custRes.data);
                     setEmployees(empRes.data);
                 } catch (err) {
-                    console.error('Failed to load form options:', err);
                 }
             };
             loadOptions();

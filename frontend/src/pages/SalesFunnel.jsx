@@ -111,7 +111,6 @@ export default function SalesFunnel() {
       
       setFunnelData(transformedData)
     } catch (error) {
-      console.error('Failed to load funnel data:', error)
       // Mock data as fallback
       setFunnelData([
         { stage: 'leads', label: '线索', count: 120, value: 0, conversion: 100 },

@@ -157,7 +157,6 @@ const MyPerformance = () => {
       const response = await performanceApi.getMyPerformance()
       setPerformanceData(response.data)
     } catch (err) {
-      console.error('加载绩效数据失败:', err)
       setError(err.response?.data?.detail || '加载失败')
       // Fallback to mock data
       setPerformanceData({

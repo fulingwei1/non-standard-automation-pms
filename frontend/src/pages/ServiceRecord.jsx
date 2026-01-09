@@ -217,7 +217,6 @@ export default function ServiceRecord() {
       
       setRecords(transformedRecords)
     } catch (err) {
-      console.error('Failed to load records:', err)
       setError(err.response?.data?.detail || err.message || '加载服务记录失败')
       // 如果是演示账号，使用 mock 数据
       const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
@@ -249,7 +248,6 @@ export default function ServiceRecord() {
         totalHours: records.reduce((sum, r) => sum + (r.service_duration || 0), 0),
       })
     } catch (err) {
-      console.error('Failed to load statistics:', err)
     }
   }, [records])
 
@@ -302,7 +300,6 @@ export default function ServiceRecord() {
         photos: updatedRecord.photos || [],
       })
     } catch (error) {
-      console.error('Failed to load record details:', error)
       setSelectedRecord(record)
     }
     setShowDetailDialog(true)
@@ -355,7 +352,6 @@ export default function ServiceRecord() {
             await serviceApi.records.uploadPhoto(recordId, photo.file, photo.description)
             successCount++
           } catch (error) {
-            console.error(`Failed to upload photo ${photo.name}:`, error)
             failCount++
           }
         }
@@ -373,7 +369,6 @@ export default function ServiceRecord() {
       await loadRecords()
       await loadStatistics()
     } catch (error) {
-      console.error('Failed to create record:', error)
       toast.error('创建失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
     }
   }
@@ -412,7 +407,6 @@ export default function ServiceRecord() {
       await loadRecords()
       await loadStatistics()
     } catch (error) {
-      console.error('Failed to update record:', error)
       toast.error('更新失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
     }
   }
@@ -424,7 +418,6 @@ export default function ServiceRecord() {
       toast.success('服务报告生成成功')
       // 可以下载报告或在新窗口打开
     } catch (error) {
-      console.error('Failed to generate report:', error)
       toast.error('报告生成失败，请稍后重试')
     }
   }
@@ -482,7 +475,6 @@ export default function ServiceRecord() {
       
       toast.success(`成功导出 ${recordsToExport.length} 条服务记录`)
     } catch (error) {
-      console.error('Failed to export records:', error)
       toast.error('导出失败: ' + (error.message || '请稍后重试'))
     }
   }
@@ -884,7 +876,6 @@ function CreateRecordDialog({ onClose, onSubmit }) {
         toast.success(`已添加 ${uploadedPhotos.length} 张照片（将在创建记录后上传）`)
       }
     } catch (error) {
-      console.error('Failed to process photos:', error)
       toast.error('照片处理失败: ' + error.message)
     }
   }
@@ -1175,7 +1166,6 @@ function RecordDetailDialog({ record, onClose, onUpdate, onGenerateReport }) {
           await serviceApi.records.uploadPhoto(recordId, file)
           successCount++
         } catch (error) {
-          console.error(`Failed to upload photo ${file.name}:`, error)
           failCount++
         }
       }
@@ -1194,7 +1184,6 @@ function RecordDetailDialog({ record, onClose, onUpdate, onGenerateReport }) {
         toast.warning(`${failCount} 张照片上传失败`)
       }
     } catch (error) {
-      console.error('Failed to upload photos:', error)
       toast.error('照片上传失败: ' + error.message)
     } finally {
       setUploadingPhotos(false)
@@ -1219,7 +1208,6 @@ function RecordDetailDialog({ record, onClose, onUpdate, onGenerateReport }) {
         photos: updatedRecord.photos || [],
       })
     } catch (error) {
-      console.error('Failed to delete photo:', error)
       toast.error('照片删除失败: ' + (error.response?.data?.detail || error.message))
     }
   }

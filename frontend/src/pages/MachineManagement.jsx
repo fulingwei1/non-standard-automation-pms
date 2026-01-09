@@ -133,7 +133,6 @@ export default function MachineManagement() {
       const res = await projectApi.get(id)
       setProject(res.data || res)
     } catch (error) {
-      console.error('Failed to fetch project:', error)
     }
   }
   const fetchMachines = async () => {
@@ -147,7 +146,6 @@ export default function MachineManagement() {
       const machineList = res.data?.items || res.data || []
       setMachines(machineList)
     } catch (error) {
-      console.error('Failed to fetch machines:', error)
     } finally {
       setLoading(false)
     }
@@ -174,7 +172,6 @@ export default function MachineManagement() {
       })
       fetchMachines()
     } catch (error) {
-      console.error('Failed to create machine:', error)
       alert('创建机台失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -187,7 +184,6 @@ export default function MachineManagement() {
       // 加载文档
       fetchMachineDocuments(machineId)
     } catch (error) {
-      console.error('Failed to fetch machine detail:', error)
     }
   }
 
@@ -198,7 +194,6 @@ export default function MachineManagement() {
       const data = res.data?.data || res.data || {}
       setMachineDocuments(data)
     } catch (error) {
-      console.error('Failed to fetch machine documents:', error)
       setMachineDocuments(null)
     } finally {
       setLoadingDocuments(false)
@@ -244,7 +239,6 @@ export default function MachineManagement() {
       // 重新加载文档
       fetchMachineDocuments(selectedMachine.id)
     } catch (error) {
-      console.error('Failed to upload document:', error)
       const errorMessage = error.response?.data?.detail || error.message || '上传失败'
       // 如果是权限错误，提供更友好的提示
       if (error.response?.status === 403) {
@@ -267,7 +261,6 @@ export default function MachineManagement() {
       link.remove()
       window.URL.revokeObjectURL(url)
     } catch (error) {
-      console.error('Failed to download document:', error)
       const errorMessage = error.response?.data?.detail || error.message || '下载失败'
       // 如果是权限错误，提供更友好的提示
       if (error.response?.status === 403) {
@@ -692,7 +685,6 @@ export default function MachineManagement() {
                                               alert(`该文档共有 ${versionList.length} 个版本：\n\n${versionInfo}`)
                                             }
                                           } catch (error) {
-                                            console.error('Failed to fetch versions:', error)
                                             const errorMessage = error.response?.data?.detail || error.message || '获取版本失败'
                                             if (error.response?.status === 403) {
                                               alert(`获取版本失败：${errorMessage}\n\n如需查看此文档版本，请联系管理员分配相应角色权限。`)

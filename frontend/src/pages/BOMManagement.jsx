@@ -120,7 +120,6 @@ export default function BOMManagement() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch projects:', error)
     }
   }
   const fetchMachines = async (projId) => {
@@ -128,7 +127,6 @@ export default function BOMManagement() {
       const res = await machineApi.list({ project_id: projId })
       setMachines(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch machines:', error)
     }
   }
   const fetchBOMs = async () => {
@@ -143,7 +141,6 @@ export default function BOMManagement() {
       const bomList = res.data?.items || res.data || []
       setBoms(bomList)
     } catch (error) {
-      console.error('Failed to fetch BOMs:', error)
     } finally {
       setLoading(false)
     }
@@ -160,7 +157,6 @@ export default function BOMManagement() {
       setVersions(versionsRes.data || versionsRes || [])
       setShowBomDetail(true)
     } catch (error) {
-      console.error('Failed to fetch BOM detail:', error)
     }
   }
   const handleCreateBOM = async () => {
@@ -174,7 +170,6 @@ export default function BOMManagement() {
       setNewBom({ bom_name: '', machine_id: null, version: '1.0', remark: '' })
       fetchBOMs()
     } catch (error) {
-      console.error('Failed to create BOM:', error)
       alert('创建BOM失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -187,7 +182,6 @@ export default function BOMManagement() {
       fetchBOMDetail(selectedBom.id)
       fetchBOMs()
     } catch (error) {
-      console.error('Failed to release BOM:', error)
       alert('发布BOM失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -200,7 +194,6 @@ export default function BOMManagement() {
       fetchBOMDetail(selectedBom.id)
       alert('导入成功')
     } catch (error) {
-      console.error('Failed to import BOM:', error)
       alert('导入失败: ' + (error.response?.data?.detail || error.message))
     }
   }
@@ -215,7 +208,6 @@ export default function BOMManagement() {
       link.click()
       link.remove()
     } catch (error) {
-      console.error('Failed to export BOM:', error)
       alert('导出失败: ' + (error.response?.data?.detail || error.message))
     }
   }

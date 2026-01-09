@@ -269,7 +269,6 @@ export default function SalesDirectorWorkstation() {
           setPendingApprovals(approvalsRes.data.items)
         }
       } catch (err) {
-        console.error('Failed to load sales director data:', err)
         setError(err)
         setOverallStats(null)
         setTeamPerformance([])

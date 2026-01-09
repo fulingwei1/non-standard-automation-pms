@@ -83,7 +83,6 @@ export default function ArrivalTrackingList() {
       const supplierList = data?.items || (Array.isArray(data) ? data : [])
       setSuppliers(supplierList)
     } catch (error) {
-      console.error('Failed to fetch suppliers:', error)
       setSuppliers([])
     }
   }
@@ -136,7 +135,6 @@ export default function ArrivalTrackingList() {
         setArrivals(arrivalList)
       }
     } catch (error) {
-      console.error('Failed to fetch arrivals:', error)
       if (isDemoAccount) {
         // Use mock data on error for demo accounts
         setArrivals([
@@ -165,7 +163,6 @@ export default function ArrivalTrackingList() {
       setSelectedArrival(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
-      console.error('Failed to fetch arrival detail:', error)
     }
   }
   const filteredArrivals = useMemo(() => {

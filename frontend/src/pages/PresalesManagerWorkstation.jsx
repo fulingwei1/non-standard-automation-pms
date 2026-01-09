@@ -362,7 +362,6 @@ export default function PresalesManagerWorkstation() {
           teamSize = usersResponse.data.total
         }
       } catch (err) {
-        console.error('Failed to get team size:', err)
       }
 
       // Get response time stats (for avgSolutionTime)
@@ -373,7 +372,6 @@ export default function PresalesManagerWorkstation() {
           avgSolutionTime = parseFloat(responseTimeResponse.data.data.completion_time.avg_completion_hours.toFixed(1))
         }
       } catch (err) {
-        console.error('Failed to get response time stats:', err)
       }
 
       // Calculate solution quality from solutions
@@ -394,7 +392,6 @@ export default function PresalesManagerWorkstation() {
           }
         }
       } catch (err) {
-        console.error('Failed to calculate solution quality:', err)
       }
 
       // Load team performance
@@ -414,7 +411,6 @@ export default function PresalesManagerWorkstation() {
           }))
         }
       } catch (err) {
-        console.error('Failed to load team performance:', err)
       }
 
       setOverallStats({
@@ -432,7 +428,6 @@ export default function PresalesManagerWorkstation() {
       setPendingReviews(reviews)
       setTeamPerformance(teamPerformanceData.length > 0 ? teamPerformanceData : [])
     } catch (err) {
-      console.error('Failed to load dashboard:', err)
       setError(err.response?.data?.detail || err.message || '加载工作台数据失败')
     } finally {
       setLoading(false)

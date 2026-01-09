@@ -113,7 +113,6 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
       const response = await projectRoleApi.getOverview(projectId);
       setRoleOverview(response.data || []);
     } catch (error) {
-      console.error('加载项目角色概览失败:', error);
       // Mock data for demo
       setRoleOverview([
         {
@@ -181,7 +180,6 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
       const response = await userApi.list({ page: 1, page_size: 100, is_active: true });
       setUsers(response.data?.items || []);
     } catch (error) {
-      console.error('加载用户列表失败:', error);
       // Mock users
       setUsers([
         { id: 1, real_name: '张三', username: 'zhangsan', department: '项目部' },
@@ -218,7 +216,6 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
       setShowConfigDialog(false);
       loadRoleOverview();
     } catch (error) {
-      console.error('保存配置失败:', error);
       // Update locally for demo
       setShowConfigDialog(false);
     }
@@ -245,7 +242,6 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
       setShowAssignDialog(false);
       loadRoleOverview();
     } catch (error) {
-      console.error('指定负责人失败:', error);
       alert('指定失败: ' + (error.response?.data?.detail || error.message));
     }
   };
@@ -257,7 +253,6 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
       await projectRoleApi.leads.delete(projectId, lead.id);
       loadRoleOverview();
     } catch (error) {
-      console.error('移除负责人失败:', error);
     }
   };
 
@@ -288,7 +283,6 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
         remark: '',
       });
     } catch (error) {
-      console.error('添加团队成员失败:', error);
     }
   };
 
@@ -298,7 +292,6 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
       await projectRoleApi.team.remove(projectId, selectedLead.id, memberId);
       loadRoleOverview();
     } catch (error) {
-      console.error('移除团队成员失败:', error);
     }
   };
 

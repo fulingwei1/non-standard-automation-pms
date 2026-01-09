@@ -99,7 +99,6 @@ export default function Dashboard() {
 
         setRecentProjects(projects.slice(0, 5))
       } catch (err) {
-        console.error('Failed to fetch dashboard data:', err)
         // Use empty arrays on error - don't crash the UI
         setStats({
           totalProjects: 0,

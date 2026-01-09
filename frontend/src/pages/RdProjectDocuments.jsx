@@ -122,7 +122,6 @@ export default function RdProjectDocuments() {
       const projectData = response.data?.data || response.data || response
       setProject(projectData)
     } catch (err) {
-      console.error('Failed to fetch project:', err)
     } finally {
       setLoading(false)
     }
@@ -151,7 +150,6 @@ export default function RdProjectDocuments() {
         setDocuments(Array.isArray(data) ? data : [])
       }
     } catch (err) {
-      console.error('Failed to fetch documents:', err)
       setDocuments([])
     }
   }

@@ -605,7 +605,6 @@ export default function SalesTeam() {
           : []
         setDepartmentOptions([{ label: '全部', value: '' }, ...options])
       } catch (err) {
-        console.error('获取部门列表失败:', err)
       }
     }
     fetchDepartments()
@@ -738,7 +737,6 @@ export default function SalesTeam() {
       setUsingMockData(false)
       triggerAutoRefreshToast()
     } catch (err) {
-      console.error('Failed to fetch sales team data:', err)
       const fallbackMembers = mockTeamMembers.map(transformTeamMember)
       setTeamMembers(fallbackMembers)
       setTeamStats(calculateTeamStats(fallbackMembers, null))
@@ -786,7 +784,6 @@ export default function SalesTeam() {
         const payload = res.data?.data || res.data || res
         setRankingData(payload.rankings || [])
       } catch (err) {
-        console.error('Failed to fetch ranking data:', err)
         setRankingData([])
       } finally {
         setRankingLoading(false)
@@ -843,7 +840,6 @@ export default function SalesTeam() {
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
     } catch (err) {
-      console.error('导出销售团队数据失败:', err)
     } finally {
       setExporting(false)
     }

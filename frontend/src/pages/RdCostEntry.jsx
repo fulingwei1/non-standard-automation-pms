@@ -77,7 +77,6 @@ export default function RdCostEntry() {
       const projectData = response.data?.data || response.data || response
       setProject(projectData)
     } catch (err) {
-      console.error('Failed to fetch project:', err)
     } finally {
       setLoading(false)
     }
@@ -89,7 +88,6 @@ export default function RdCostEntry() {
       const data = response.data?.data || response.data || response
       setCostTypes(Array.isArray(data) ? data : [])
     } catch (err) {
-      console.error('Failed to fetch cost types:', err)
       setCostTypes([])
     }
   }
@@ -100,7 +98,6 @@ export default function RdCostEntry() {
       const data = response.data || response
       setCosts(data.items || data || [])
     } catch (err) {
-      console.error('Failed to fetch costs:', err)
       setCosts([])
     }
   }

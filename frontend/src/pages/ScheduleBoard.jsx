@@ -300,7 +300,6 @@ function ScheduleCalendarView({ projects, onProjectClick }) {
         const data = response.data || response
         setCalendarData(data.calendar || [])
       } catch (err) {
-        console.error('Failed to fetch calendar data:', err)
         setCalendarData([])
       } finally {
         setLoading(false)
@@ -536,7 +535,6 @@ function ScheduleGanttView({ projects, onProjectClick }) {
         const data = response.data || response
         setGanttData(data.resources || [])
       } catch (err) {
-        console.error('Failed to fetch gantt data:', err)
         setGanttData([])
       } finally {
         setLoading(false)
@@ -826,7 +824,6 @@ export default function ScheduleBoard() {
                         m.status === 'IN_PROGRESS' ? 'in_progress' : 'pending',
               }))
             } catch (err) {
-              console.error(`Failed to load milestones for project ${projectId}:`, err)
             }
             
             // Load resources/workload for this project
@@ -840,7 +837,6 @@ export default function ScheduleBoard() {
                 resources = []
               }
             } catch (err) {
-              console.error(`Failed to load resources for project ${projectId}:`, err)
             }
             
             return {
@@ -864,7 +860,6 @@ export default function ScheduleBoard() {
         
         setProjects(transformedProjects)
       } catch (err) {
-        console.error('Failed to fetch projects:', err)
         // 如果是演示账号，使用 mock 数据
         const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
         if (isDemoAccount) {
@@ -1032,7 +1027,6 @@ export default function ScheduleBoard() {
             onProjectClick={(event) => {
               if (event.plan_id) {
                 // Navigate to production plan or project
-                console.log('Clicked plan:', event)
               }
             }}
           />

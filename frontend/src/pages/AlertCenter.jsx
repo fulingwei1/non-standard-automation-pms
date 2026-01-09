@@ -240,7 +240,6 @@ export default function AlertCenter() {
       
       setProjects(transformedProjects)
     } catch (error) {
-      console.error('Failed to load projects:', error)
       // 如果是演示账号，使用 mock 数据
       const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
       if (isDemoAccount) {
@@ -296,7 +295,6 @@ export default function AlertCenter() {
         setTotal(0)
       }
     } catch (err) {
-      console.error('Failed to load alerts:', err)
       let errorMessage = '加载预警列表失败'
       if (err.response) {
         errorMessage = err.response.data?.detail || err.response.data?.message || errorMessage
@@ -340,7 +338,6 @@ export default function AlertCenter() {
         })
       }
     } catch (error) {
-      console.error('Failed to load statistics:', error)
       // 如果是演示账号，使用 mock 数据
       const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
       if (isDemoAccount) {
@@ -444,7 +441,6 @@ export default function AlertCenter() {
       await loadStatistics()
       toast.success('预警已确认')
     } catch (error) {
-      console.error('Failed to acknowledge alert:', error)
       toast.error('确认失败，请稍后重试')
       // Update local state on error
       setAlerts((prev) =>
@@ -471,7 +467,6 @@ export default function AlertCenter() {
       setResolveResult('')
       toast.success('预警已标记为已解决')
     } catch (error) {
-      console.error('Failed to resolve alert:', error)
       toast.error('操作失败，请稍后重试')
     }
   }, [loadAlerts, loadStatistics])
@@ -490,7 +485,6 @@ export default function AlertCenter() {
       setCloseReason('')
       toast.success('预警已关闭')
     } catch (error) {
-      console.error('Failed to close alert:', error)
       toast.error('关闭失败，请稍后重试')
     }
   }, [loadAlerts, loadStatistics])
@@ -592,7 +586,6 @@ export default function AlertCenter() {
       setSelectedAlerts(new Set())
       toast.success(`已批量确认 ${count} 条预警`)
     } catch (error) {
-      console.error('Failed to batch acknowledge:', error)
       toast.error('批量确认失败，请稍后重试')
     }
   }, [selectedAlerts, loadAlerts, loadStatistics])
@@ -623,7 +616,6 @@ export default function AlertCenter() {
       window.URL.revokeObjectURL(url)
       toast.success('Excel导出成功')
     } catch (error) {
-      console.error('Failed to export Excel:', error)
       toast.error('导出失败，请稍后重试')
     }
   }
@@ -651,7 +643,6 @@ export default function AlertCenter() {
       window.URL.revokeObjectURL(url)
       toast.success('PDF导出成功')
     } catch (error) {
-      console.error('Failed to export PDF:', error)
       toast.error('导出失败，请稍后重试')
     }
   }
@@ -683,7 +674,6 @@ export default function AlertCenter() {
       document.body.removeChild(link)
       toast.success('导出成功')
     } catch (error) {
-      console.error('Failed to export:', error)
       toast.error('导出失败，请稍后重试')
     }
   }

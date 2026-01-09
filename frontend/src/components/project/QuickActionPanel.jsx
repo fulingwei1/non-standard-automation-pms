@@ -57,7 +57,6 @@ export default function QuickActionPanel({ project, onRefresh }) {
         toast.info(response.data?.message || '当前不满足自动流转条件')
       }
     } catch (err) {
-      console.error('Failed to check auto transition:', err)
       toast.error(err.response?.data?.detail || '无法检查自动流转')
     } finally {
       setLoading(false)
