@@ -72,7 +72,7 @@ const demoAccountGroups = [
     accounts: [
       { roleCode: 'chairman', icon: Crown, color: 'from-amber-500 to-orange-600' },
       { roleCode: 'gm', icon: Award, color: 'from-blue-500 to-indigo-600' },
-      { roleCode: 'super_admin', icon: Shield, color: 'from-violet-500 to-purple-600', isRealAccount: true },
+      { roleCode: 'super_admin', icon: Shield, color: 'from-violet-500 to-purple-600' },
     ],
   },
   {
@@ -90,7 +90,7 @@ const demoAccountGroups = [
     label: '项目管理',
     accounts: [
       { roleCode: 'project_dept_manager', icon: Briefcase, color: 'from-blue-500 to-indigo-600' },
-      { roleCode: 'demo_pm_liu', icon: ClipboardList, color: 'from-amber-500 to-orange-500', isRealAccount: true },
+      { roleCode: 'demo_pm_liu', icon: ClipboardList, color: 'from-amber-500 to-orange-500' },
       { roleCode: 'pmc', icon: BarChart3, color: 'from-teal-500 to-emerald-500' },
     ],
   },
@@ -152,7 +152,8 @@ export default function Login({ onLoginSuccess }) {
     const isDemoAccount = demoUser && (password === 'admin123' || password === 'demo123')
 
     // 真实数据库账号列表（这些账号必须使用真实API，不能fallback）
-    const realDatabaseAccounts = ['demo_pm_liu']
+    // 暂时清空，所有账号都可以使用演示模式登录
+    const realDatabaseAccounts = []
     const isRealAccount = realDatabaseAccounts.includes(username)
 
     try {
@@ -371,22 +372,15 @@ export default function Login({ onLoginSuccess }) {
     }
   }
 
-  const handleDemoLogin = (roleCode, isRealAccount = false) => {
-    if (isRealAccount && roleCode === 'super_admin') {
-      // 真实管理员账号
-      setUsername('admin')
-      setPassword('Admin@123456')
+  const handleDemoLogin = (roleCode) => {
+    // 所有账号都使用演示模式
+    const demoUser = DEMO_USERS[roleCode]
+    if (demoUser) {
+      setUsername(demoUser.username)
+      setPassword('admin123')
       setError('') // 清除之前的错误信息
     } else {
-      // 演示账号
-      const demoUser = DEMO_USERS[roleCode]
-      if (demoUser) {
-        setUsername(demoUser.username)
-        setPassword('admin123')
-        setError('') // 清除之前的错误信息
-      } else {
-        console.warn(`未找到角色 ${roleCode} 的演示用户`)
-      }
+      console.warn(`未找到角色 ${roleCode} 的演示用户`)
     }
   }
 
@@ -718,12 +712,11 @@ export default function Login({ onLoginSuccess }) {
                       {group.accounts.map((account, i) => {
                         const roleInfo = getRoleInfo(account.roleCode)
                         const Icon = account.icon
-                        const isRealAccount = account.isRealAccount || false
                         return (
                     <button
                             key={i}
                             type="button"
-                            onClick={() => handleDemoLogin(account.roleCode, isRealAccount)}
+                            onClick={() => handleDemoLogin(account.roleCode)}
                             className={cn(
                               'flex items-center gap-3 px-4 py-3 rounded-xl',
                               'bg-white border border-gray-200',
@@ -731,8 +724,7 @@ export default function Login({ onLoginSuccess }) {
                               'hover:border-gray-300 hover:shadow-md',
                               'hover:-translate-y-0.5',
                               'transition-all duration-200',
-                              'group relative overflow-hidden',
-                              isRealAccount && 'border-2 border-red-200 hover:border-red-300'
+                              'group relative overflow-hidden'
                             )}
                           >
                             <div className="absolute inset-0 bg-gradient-to-br from-transparent to-gray-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
