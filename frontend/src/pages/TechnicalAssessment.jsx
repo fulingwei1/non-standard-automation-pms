@@ -87,6 +87,7 @@ export default function TechnicalAssessment() {
         setAssessment(assessments[0]) // 显示最新的评估
       }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

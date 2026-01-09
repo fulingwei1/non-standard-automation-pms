@@ -88,6 +88,7 @@ export default function ShortageReportDetail() {
       const res = await shortageApi.reports.get(id)
       setReport(res.data)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

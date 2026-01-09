@@ -124,6 +124,7 @@ export default function ProjectStaffingNeed() {
         setNeeds(response.data.items);
       }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false);
     }
@@ -136,6 +137,7 @@ export default function ProjectStaffingNeed() {
         setProjects(response.data.items);
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }, []);
 
@@ -146,6 +148,7 @@ export default function ProjectStaffingNeed() {
         setTags(response.data.items);
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }, []);
 

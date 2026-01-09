@@ -103,6 +103,7 @@ export default function ReceivableManagement() {
         }
       }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -118,6 +119,7 @@ export default function ReceivableManagement() {
         setAgingData(response.data)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -177,6 +179,7 @@ export default function ReceivableManagement() {
         setSummary(response.data)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

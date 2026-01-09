@@ -156,6 +156,7 @@ export default function InstallationDispatchManagement() {
       const res = await userApi.list({ page_size: 1000 })
       setUsers(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -164,6 +165,7 @@ export default function InstallationDispatchManagement() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -201,6 +203,7 @@ export default function InstallationDispatchManagement() {
       const res = await installationDispatchApi.statistics()
       setStats(res.data || {})
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

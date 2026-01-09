@@ -74,6 +74,7 @@ export default function RdProjectWorklogs() {
       const projectData = response.data?.data || response.data || response
       setProject(projectData)
     } catch (err) {
+      console.error('操作失败:', err)
     } finally {
       setLoading(false)
     }

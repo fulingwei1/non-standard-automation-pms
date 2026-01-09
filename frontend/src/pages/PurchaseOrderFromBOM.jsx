@@ -174,7 +174,8 @@ export default function PurchaseOrderFromBOM() {
           setBoms(data?.items || data || [])
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
     }
     loadBOMs()
   }, [isDemoAccount])
@@ -193,7 +194,8 @@ export default function PurchaseOrderFromBOM() {
           setSuppliers(res.data?.items || res.data || [])
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
     }
     loadSuppliers()
   }, [isDemoAccount])

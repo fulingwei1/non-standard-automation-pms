@@ -362,7 +362,8 @@ export default function PresalesManagerWorkstation() {
           teamSize = usersResponse.data.total
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       // Get response time stats (for avgSolutionTime)
       let avgSolutionTime = 5.2 // default
@@ -372,7 +373,8 @@ export default function PresalesManagerWorkstation() {
           avgSolutionTime = parseFloat(responseTimeResponse.data.data.completion_time.avg_completion_hours.toFixed(1))
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       // Calculate solution quality from solutions
       // Quality can be based on review status, approval rate, etc.
@@ -392,7 +394,8 @@ export default function PresalesManagerWorkstation() {
           }
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       // Load team performance
       let teamPerformanceData = []
@@ -411,7 +414,8 @@ export default function PresalesManagerWorkstation() {
           }))
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       setOverallStats({
         teamSize,

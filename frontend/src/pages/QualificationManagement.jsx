@@ -124,6 +124,7 @@ export default function QualificationManagement() {
         setLevels(response.data.data?.items || [])
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -146,6 +147,7 @@ export default function QualificationManagement() {
         }))
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -168,6 +170,7 @@ export default function QualificationManagement() {
         }))
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -187,6 +190,7 @@ export default function QualificationManagement() {
         pending_certifications: qualificationsRes.data?.data?.total || 0,
       })
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

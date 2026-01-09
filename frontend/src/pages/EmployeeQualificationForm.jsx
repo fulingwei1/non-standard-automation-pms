@@ -86,6 +86,7 @@ export default function EmployeeQualificationForm() {
         setLevels(response.data.data?.items || [])
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -120,6 +121,7 @@ export default function EmployeeQualificationForm() {
         setValue('valid_until', qualData.valid_until || '')
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -130,6 +132,7 @@ export default function EmployeeQualificationForm() {
         setAssessments(response.data.data?.items || [])
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -184,6 +187,7 @@ export default function EmployeeQualificationForm() {
         setCompetencyModel(response.data.data)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

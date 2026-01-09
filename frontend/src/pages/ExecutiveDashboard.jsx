@@ -184,6 +184,7 @@ export default function ExecutiveDashboard() {
         setUtilizationData(utilizationRes.value.data.utilization_list)
       }
     } catch (err) {
+      console.error('操作失败:', err)
     } finally {
       setRefreshing(false)
     }

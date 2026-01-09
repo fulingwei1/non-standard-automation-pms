@@ -96,7 +96,8 @@ export default function QuoteCostAnalysis() {
           const structureRes = await quoteApi.getCostStructure(id, currentVersion.id)
           setCostStructure(structureRes.data?.data || structureRes.data)
         } catch (e) {
-        }
+      console.error('操作失败:', e)
+    }
       }
       
       // Load cost trend
@@ -104,8 +105,10 @@ export default function QuoteCostAnalysis() {
         const trendRes = await quoteApi.getCostTrend(id, {})
         setCostTrend(trendRes.data?.data || trendRes.data)
       } catch (e) {
-      }
+      console.error('操作失败:', e)
+    }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -118,6 +121,7 @@ export default function QuoteCostAnalysis() {
       })
       setComparison(res.data?.data || res.data)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   

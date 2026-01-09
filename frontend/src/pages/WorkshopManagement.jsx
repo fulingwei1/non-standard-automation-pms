@@ -96,6 +96,7 @@ export default function WorkshopManagement() {
       const res = await userApi.list({ page_size: 1000 })
       setManagers(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -110,6 +111,7 @@ export default function WorkshopManagement() {
       const workshopList = res.data?.items || res.data || []
       setWorkshops(workshopList)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -148,6 +150,7 @@ export default function WorkshopManagement() {
       setSelectedWorkshop(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

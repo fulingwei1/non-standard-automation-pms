@@ -737,6 +737,7 @@ function UpdateMeetingDialog({
         status: data.status || 'SCHEDULED',
       })
     } catch (err) {
+      console.error('操作失败:', err)
     } finally {
       setLoading(false)
     }

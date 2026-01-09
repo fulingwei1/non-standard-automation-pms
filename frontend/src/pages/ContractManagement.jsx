@@ -127,6 +127,7 @@ export default function ContractManagement() {
         setTotal(response.data.total || 0)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -139,6 +140,7 @@ export default function ContractManagement() {
         setOpportunities(response.data.items)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -149,6 +151,7 @@ export default function ContractManagement() {
         setCustomers(response.data.items)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -161,6 +164,7 @@ export default function ContractManagement() {
         setContractTemplates(response.items)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

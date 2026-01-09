@@ -389,6 +389,7 @@ export default function InvoiceManagement() {
         setContracts(response.data.items)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

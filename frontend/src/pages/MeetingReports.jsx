@@ -62,6 +62,7 @@ export default function MeetingReports() {
       setReports(data.items || [])
       setTotal(data.total || 0)
     } catch (err) {
+      console.error('操作失败:', err)
     } finally {
       setLoading(false)
     }

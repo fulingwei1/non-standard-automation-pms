@@ -54,6 +54,7 @@ export default function KitRateBoard() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchDashboardData = async () => {

@@ -79,6 +79,7 @@ export default function WorkReportList() {
       const reportList = res.data?.items || res.data || []
       setReports(reportList)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -89,6 +90,7 @@ export default function WorkReportList() {
       setSelectedReport(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const handleApprove = async (reportId) => {

@@ -68,6 +68,7 @@ export default function MobileExceptionReport() {
       const res = await productionApi.workOrders.get(workOrderId)
       setWorkOrder(res.data)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

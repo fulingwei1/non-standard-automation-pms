@@ -127,7 +127,8 @@ export default function AttendanceManagement() {
           setAttendanceStats(res.data)
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
       setLoading(false)
     }
     fetchData()

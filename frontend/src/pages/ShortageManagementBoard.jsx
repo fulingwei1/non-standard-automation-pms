@@ -99,6 +99,7 @@ export default function ShortageManagementBoard() {
       const alertList = res.data?.items || res.data || []
       setAlerts(alertList)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchArrivals = async () => {
@@ -107,6 +108,7 @@ export default function ShortageManagementBoard() {
       const arrivalList = res.data?.items || res.data || []
       setArrivals(arrivalList)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

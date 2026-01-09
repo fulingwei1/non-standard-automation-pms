@@ -578,7 +578,8 @@ export default function KnowledgeBase() {
             })
           })
         } catch (err) {
-        }
+      console.error('操作失败:', err)
+    }
       }
 
       // Load solutions (published/approved ones)
@@ -611,7 +612,8 @@ export default function KnowledgeBase() {
             })
           })
         } catch (err) {
-        }
+      console.error('操作失败:', err)
+    }
       }
 
       // Load knowledge base articles from service API
@@ -656,7 +658,8 @@ export default function KnowledgeBase() {
             }
           })
         } catch (err) {
-        }
+      console.error('操作失败:', err)
+    }
       }
 
       // Merge with mock data for competitors category (no API yet)

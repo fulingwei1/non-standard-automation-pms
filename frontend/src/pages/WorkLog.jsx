@@ -76,6 +76,7 @@ export default function WorkLog() {
         users: data.users || [],
       })
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   
@@ -94,6 +95,7 @@ export default function WorkLog() {
       setWorkLogs(data.items || [])
       setTotal(data.total || 0)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

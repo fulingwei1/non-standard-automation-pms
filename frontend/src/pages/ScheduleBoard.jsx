@@ -824,7 +824,8 @@ export default function ScheduleBoard() {
                         m.status === 'IN_PROGRESS' ? 'in_progress' : 'pending',
               }))
             } catch (err) {
-            }
+      console.error('操作失败:', err)
+    }
             
             // Load resources/workload for this project
             let resources = []
@@ -837,7 +838,8 @@ export default function ScheduleBoard() {
                 resources = []
               }
             } catch (err) {
-            }
+      console.error('操作失败:', err)
+    }
             
             return {
               id: p.project_code || p.id,

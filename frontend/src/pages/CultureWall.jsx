@@ -95,6 +95,7 @@ export default function CultureWall() {
       const summaryData = res.data || res
       setData(summaryData)
     } catch (err) {
+      console.error('操作失败:', err)
     } finally {
       setLoading(false)
     }

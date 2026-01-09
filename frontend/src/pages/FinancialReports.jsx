@@ -130,7 +130,8 @@ export default function FinancialReports() {
           setCashFlowData(cashFlowRes.value.data)
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
       setLoading(false)
     }
     fetchData()

@@ -84,6 +84,7 @@ export default function WeeklyReport() {
       const data = res.data || res
       setReportData(data)
     } catch (err) {
+      console.error('操作失败:', err)
     } finally {
       setLoading(false)
     }

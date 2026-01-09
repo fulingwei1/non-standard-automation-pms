@@ -101,6 +101,7 @@ export default function AcceptanceTemplateManagement() {
       const templateList = res.data?.items || res.data || []
       setTemplates(templateList)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -112,6 +113,7 @@ export default function AcceptanceTemplateManagement() {
       const items = res.data || res || []
       setTemplateItems(items)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -137,6 +139,7 @@ export default function AcceptanceTemplateManagement() {
       await fetchTemplateItems(templateId)
       setShowDetailDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

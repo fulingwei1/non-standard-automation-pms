@@ -323,6 +323,7 @@ export default function NotificationCenter() {
       const data = response.data || response
       setUnreadCount(data.unread_count || 0)
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }, [])
 
@@ -343,6 +344,7 @@ export default function NotificationCenter() {
       await loadNotifications()
       await loadUnreadCount()
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }
 
@@ -352,6 +354,7 @@ export default function NotificationCenter() {
       await loadNotifications()
       await loadUnreadCount()
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }
 
@@ -361,6 +364,7 @@ export default function NotificationCenter() {
       await loadNotifications()
       await loadUnreadCount()
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }
 

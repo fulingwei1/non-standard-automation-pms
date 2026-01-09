@@ -81,6 +81,7 @@ export default function MilestoneManagement() {
       const res = await projectApi.get(id)
       setProject(res.data || res)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchMilestones = async () => {
@@ -92,6 +93,7 @@ export default function MilestoneManagement() {
       const milestoneList = res.data || res || []
       setMilestones(milestoneList)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -135,6 +137,7 @@ export default function MilestoneManagement() {
       setSelectedMilestone(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const getStatusIcon = (status) => {

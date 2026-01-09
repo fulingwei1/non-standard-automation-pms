@@ -214,6 +214,7 @@ export default function UserManagement() {
       const data = response.data;
       setRoles(data.items || []);
     } catch (error) {
+      console.error('操作失败:', error)
     }
   };
 

@@ -49,6 +49,7 @@ export default function MobileMaterialRequisition() {
       const res = await productionApi.workOrders.get(workOrderId)
       setWorkOrder(res.data)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -58,6 +59,7 @@ export default function MobileMaterialRequisition() {
       const materialsList = res.data?.items || res.data || []
       setMaterials(materialsList)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

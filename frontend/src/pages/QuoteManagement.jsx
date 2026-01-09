@@ -139,6 +139,7 @@ export default function QuoteManagement() {
         setTotal(response.data.total || 0)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -151,6 +152,7 @@ export default function QuoteManagement() {
         setOpportunities(response.data.items)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -161,6 +163,7 @@ export default function QuoteManagement() {
         setCustomers(response.data.items)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -173,6 +176,7 @@ export default function QuoteManagement() {
         setQuoteTemplates(response.items)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -324,6 +328,7 @@ export default function QuoteManagement() {
       }
       setShowVersionsDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -341,7 +346,8 @@ export default function QuoteManagement() {
             setVersions(versionsResponse.data)
           }
         } catch (error) {
-        }
+      console.error('操作失败:', error)
+    }
       }
     } catch (error) {
       setSelectedQuote(quote)

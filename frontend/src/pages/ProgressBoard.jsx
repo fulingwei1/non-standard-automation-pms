@@ -49,6 +49,7 @@ export default function ProgressBoard() {
       const res = await projectApi.get(id)
       setProject(res.data || res)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchDashboardData = async () => {

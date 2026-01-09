@@ -91,7 +91,8 @@ export default function AdministrativeExpenses() {
           setExpenseStats(statsRes.data)
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
       setLoading(false)
     }
     fetchData()

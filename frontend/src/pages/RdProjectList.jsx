@@ -239,6 +239,7 @@ function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories = [] }) 
       })
       onOpenChange(false)
     } catch (err) {
+      console.error('操作失败:', err)
     } finally {
       setLoading(false)
     }
@@ -448,6 +449,7 @@ export default function RdProjectList() {
       const data = response.data?.data || response.data || []
       setCategories(data)
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }
 

@@ -101,6 +101,7 @@ export default function LeadDetail() {
       const res = await leadApi.get(id)
       setLead(res.data || res)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -111,6 +112,7 @@ export default function LeadDetail() {
       const followUpList = res.data || res || []
       setFollowUps(followUpList)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchCustomers = async () => {
@@ -118,6 +120,7 @@ export default function LeadDetail() {
       const res = await customerApi.list({ page_size: 1000 })
       setCustomers(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const handleCreateFollowUp = async () => {

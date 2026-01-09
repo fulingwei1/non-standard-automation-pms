@@ -105,6 +105,7 @@ export default function KitCheck() {
         setTotal(res.data.data.pagination?.total || 0)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -118,6 +119,7 @@ export default function KitCheck() {
         setDetailData(res.data.data)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setDetailLoading(false)
     }

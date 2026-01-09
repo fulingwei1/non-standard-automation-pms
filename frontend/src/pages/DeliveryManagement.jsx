@@ -127,6 +127,7 @@ export default function DeliveryManagement() {
         })
       }
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }, [])
 

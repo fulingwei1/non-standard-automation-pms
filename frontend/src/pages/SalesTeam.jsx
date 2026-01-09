@@ -605,7 +605,8 @@ export default function SalesTeam() {
           : []
         setDepartmentOptions([{ label: '全部', value: '' }, ...options])
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
     }
     fetchDepartments()
   }, [])
@@ -840,6 +841,7 @@ export default function SalesTeam() {
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
     } catch (err) {
+      console.error('操作失败:', err)
     } finally {
       setExporting(false)
     }

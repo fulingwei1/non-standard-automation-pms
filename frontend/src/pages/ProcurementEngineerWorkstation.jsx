@@ -416,7 +416,8 @@ export default function ProcurementEngineerWorkstation() {
         const suppliersResponse = await supplierApi.list({ page: 1, page_size: 1 })
         suppliersCount = suppliersResponse.data?.total || suppliersResponse.data?.items?.length || 24
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       const delayedOrders = transformedOrders.filter(o => o.daysLeft < 0 && o.arrivalStatus !== 'completed').length
       const inTransitOrders = transformedOrders.filter(o => o.arrivalStatus === 'in_transit').length

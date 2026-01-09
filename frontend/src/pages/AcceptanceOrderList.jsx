@@ -102,6 +102,7 @@ export default function AcceptanceOrderList() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchOrders = async () => {
@@ -116,6 +117,7 @@ export default function AcceptanceOrderList() {
       const orderList = res.data?.items || res.data || []
       setOrders(orderList)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -147,6 +149,7 @@ export default function AcceptanceOrderList() {
       setSelectedOrder(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const handleStart = async (orderId) => {

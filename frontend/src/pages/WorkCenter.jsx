@@ -181,6 +181,7 @@ export default function WorkCenter() {
 
 
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

@@ -186,7 +186,8 @@ export default function PerformanceResults() {
           }
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
       setLoading(false)
     }
     fetchResults()

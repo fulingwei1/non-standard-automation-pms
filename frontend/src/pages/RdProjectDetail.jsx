@@ -112,9 +112,11 @@ export default function RdProjectDetail() {
           const linkedRes = await projectApi.get(projectData.linked_project_id)
           setLinkedProject(linkedRes.data?.data || linkedRes.data || linkedRes)
         } catch (err) {
-        }
+      console.error('操作失败:', err)
+    }
       }
     } catch (err) {
+      console.error('操作失败:', err)
     } finally {
       setLoading(false)
     }
@@ -136,6 +138,7 @@ export default function RdProjectDetail() {
       const data = response.data?.data || response.data || response
       setCostSummary(data)
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }
 
@@ -145,6 +148,7 @@ export default function RdProjectDetail() {
       const data = response.data?.data || response.data || response
       setTimesheetSummary(data)
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }
 

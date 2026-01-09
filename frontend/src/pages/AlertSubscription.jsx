@@ -45,6 +45,7 @@ export default function AlertSubscription() {
         { id: 2, alert_type: 'PO_DELIVERY', min_level: 'CRITICAL', is_active: true },
       ])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

@@ -121,6 +121,7 @@ export default function PurchaseMaterialCostManagement() {
         setShowReminderDialog(true)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   
@@ -145,6 +146,7 @@ export default function PurchaseMaterialCostManagement() {
       const items = res.data?.data?.items || res.data?.items || []
       setCosts(items)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -156,6 +158,7 @@ export default function PurchaseMaterialCostManagement() {
       const items = res.data?.data?.items || res.data?.items || []
       setSuppliers(items)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   

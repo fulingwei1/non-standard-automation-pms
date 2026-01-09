@@ -48,6 +48,7 @@ export default function ResourceOverview() {
       const data = res.data || res
       setResourceData(data)
     } catch (err) {
+      console.error('操作失败:', err)
     } finally {
       setLoading(false)
     }

@@ -142,7 +142,8 @@ export default function SalesTarget() {
           setTeamMembers(res.data.team_members)
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
     }
     loadTeamMembers()
   }, [])

@@ -87,6 +87,7 @@ export default function OpenItemsManagement() {
       })
       setItems(response.data.items || response.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

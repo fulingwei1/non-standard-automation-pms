@@ -72,6 +72,7 @@ export default function MobileShortageReport() {
         machine_id: order.machine_id,
       }))
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -81,6 +82,7 @@ export default function MobileShortageReport() {
       const materialsList = res.data?.items || res.data || []
       setMaterials(materialsList)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

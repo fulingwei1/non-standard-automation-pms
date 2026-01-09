@@ -84,6 +84,7 @@ export default function MaterialDemandSummary() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchDemands = async () => {
@@ -107,6 +108,7 @@ export default function MaterialDemandSummary() {
         total_projects: totalProjects,
       })
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -118,6 +120,7 @@ export default function MaterialDemandSummary() {
       setVsStockData(res.data || res)
       setShowVsStockDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const handleGeneratePR = async () => {

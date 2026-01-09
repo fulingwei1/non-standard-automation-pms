@@ -432,7 +432,8 @@ export default function PurchaseOrderDetail() {
         const receiptsResponse = await purchaseApi.goodsReceipts.list({ purchase_order_id: orderId })
         receipts = receiptsResponse.data?.items || receiptsResponse.data || []
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       // Transform backend data to frontend format
       const transformedPO = {

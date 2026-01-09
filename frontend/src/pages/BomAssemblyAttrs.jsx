@@ -132,6 +132,7 @@ export default function BomAssemblyAttrs() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -149,6 +150,7 @@ export default function BomAssemblyAttrs() {
       const res = await assemblyKitApi.getStages()
       setStages(res.data || res || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -157,6 +159,7 @@ export default function BomAssemblyAttrs() {
       const res = await assemblyKitApi.getTemplates()
       setTemplates(res.data || res || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -207,6 +210,7 @@ export default function BomAssemblyAttrs() {
       setHasChanges(false)
       fetchBomAssemblyAttrs()
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -219,6 +223,7 @@ export default function BomAssemblyAttrs() {
       setAutoAssignDialogOpen(false)
       fetchBomAssemblyAttrs()
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -254,6 +259,7 @@ export default function BomAssemblyAttrs() {
         fetchBomAssemblyAttrs()
       }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -273,6 +279,7 @@ export default function BomAssemblyAttrs() {
       setTemplateDialogOpen(false)
       fetchBomAssemblyAttrs()
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

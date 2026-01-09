@@ -86,6 +86,7 @@ export default function ShortageReportList() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchReports = async () => {
@@ -100,6 +101,7 @@ export default function ShortageReportList() {
       const reportList = res.data?.items || res.data || []
       setReports(reportList)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -110,6 +112,7 @@ export default function ShortageReportList() {
       setSelectedReport(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const handleConfirm = async (reportId) => {

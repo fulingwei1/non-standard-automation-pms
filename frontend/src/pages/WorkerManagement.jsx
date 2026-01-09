@@ -85,6 +85,7 @@ export default function WorkerManagement() {
       const workerList = res.data?.items || res.data || []
       setWorkers(workerList)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -123,6 +124,7 @@ export default function WorkerManagement() {
       setSelectedWorker(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

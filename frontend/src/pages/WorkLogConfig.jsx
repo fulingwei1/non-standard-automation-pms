@@ -71,6 +71,7 @@ export default function WorkLogConfig() {
       const data = res.data?.data || res.data || {}
       setConfigs(data.items || [])
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -82,6 +83,7 @@ export default function WorkLogConfig() {
       const data = res.data?.data || res.data || {}
       setUsers(data.items || data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   
@@ -91,6 +93,7 @@ export default function WorkLogConfig() {
       const data = res.data?.data || res.data || {}
       setDepartments(data.items || data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   

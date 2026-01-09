@@ -89,6 +89,7 @@ export default function StrategicMeetingManagement() {
         setProjects(data)
       }
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }
 

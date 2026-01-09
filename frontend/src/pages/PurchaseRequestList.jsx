@@ -243,7 +243,8 @@ export default function PurchaseRequestList() {
           setProjects(res.data?.items || res.data || [])
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
     }
     loadProjects()
   }, [isDemoAccount])

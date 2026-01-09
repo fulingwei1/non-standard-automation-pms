@@ -128,7 +128,8 @@ export default function ProjectDetail() {
         setDocuments(docsRes.data || [])
         setStatusLogs(logsRes.data?.items || logsRes.data || []) // Sprint 3.3
       } catch (err) {
-      } finally {
+      console.error('操作失败:', err)
+    } finally {
         setLoading(false)
       }
     }
@@ -1025,7 +1026,8 @@ export default function ProjectDetail() {
                                     alert('未发现时间冲突')
                                   }
                                 } catch (err) {
-                                }
+      console.error('操作失败:', err)
+    }
                               }}
                             >
                               <AlertTriangle className="h-4 w-4" />

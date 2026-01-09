@@ -222,7 +222,8 @@ export default function ProjectFormStepper({
         }))
         toast.success(`已应用模板：${template.template_name}`)
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
     }
   }
   
@@ -235,6 +236,7 @@ export default function ProjectFormStepper({
       localStorage.setItem(draftKey, JSON.stringify(formData))
       toast.success('表单数据已保存为草稿')
     } catch (err) {
+      console.error('操作失败:', err)
     } finally {
       setSavingDraft(false)
     }
@@ -250,7 +252,8 @@ export default function ProjectFormStepper({
           const draftData = JSON.parse(draft)
           setFormData((prev) => ({ ...prev, ...draftData }))
         } catch (err) {
-        }
+      console.error('操作失败:', err)
+    }
       }
     }
   }, [open, initialData.id])

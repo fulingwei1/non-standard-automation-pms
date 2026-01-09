@@ -120,6 +120,7 @@ export default function ExceptionManagement() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchExceptions = async () => {
@@ -179,6 +180,7 @@ export default function ExceptionManagement() {
       setSelectedException(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const handleException = async () => {

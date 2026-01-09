@@ -345,6 +345,7 @@ function ApprovalDetailDialog({ approval, open, onOpenChange, onApprove, onRejec
         setApprovalHistory(historyRes.data || historyRes || [])
       }
     } catch (err) {
+      console.error('操作失败:', err)
     } finally {
       setLoadingHistory(false)
     }
@@ -626,7 +627,8 @@ export default function ApprovalCenter() {
           })
         })
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
       
       // Load Purchase Request approvals
       try {
@@ -656,7 +658,8 @@ export default function ApprovalCenter() {
           })
         })
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
       
       // Load Purchase Order approvals
       try {
@@ -686,7 +689,8 @@ export default function ApprovalCenter() {
           })
         })
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
       
       // Load Quote approvals (Sprint 2: New Approval Workflow)
       try {
@@ -699,7 +703,8 @@ export default function ApprovalCenter() {
           try {
             approvalStatus = await quoteApi.getApprovalStatus(quote.id)
           } catch (err) {
-          }
+      console.error('操作失败:', err)
+    }
           
           const status = approvalStatus?.status || 'PENDING'
           const currentStep = approvalStatus?.current_step
@@ -726,7 +731,8 @@ export default function ApprovalCenter() {
           })
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
       
       // Load Contract approvals (Sprint 2: New Approval Workflow)
       try {
@@ -738,7 +744,8 @@ export default function ApprovalCenter() {
           try {
             approvalStatus = await contractApi.getApprovalStatus(contract.id)
           } catch (err) {
-          }
+      console.error('操作失败:', err)
+    }
           
           const status = approvalStatus?.status || 'PENDING'
           const currentStep = approvalStatus?.current_step
@@ -765,7 +772,8 @@ export default function ApprovalCenter() {
           })
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
       
       // Load Invoice approvals (Sprint 2: New Approval Workflow)
       try {
@@ -777,7 +785,8 @@ export default function ApprovalCenter() {
           try {
             approvalStatus = await invoiceApi.getApprovalStatus(invoice.id)
           } catch (err) {
-          }
+      console.error('操作失败:', err)
+    }
           
           const status = approvalStatus?.status || 'PENDING'
           const currentStep = approvalStatus?.current_step
@@ -804,7 +813,8 @@ export default function ApprovalCenter() {
           })
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
       
       // Load Project Initiation approvals
       try {
@@ -832,7 +842,8 @@ export default function ApprovalCenter() {
           })
         })
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
       
       setApprovals(allApprovals)
     } catch (err) {

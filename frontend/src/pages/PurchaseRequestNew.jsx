@@ -111,7 +111,8 @@ export default function PurchaseRequestNew() {
           setProjects(res.data?.items || res.data || [])
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
     }
     loadProjects()
   }, [isDemoAccount])
@@ -149,7 +150,8 @@ export default function PurchaseRequestNew() {
           }
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
     }
     loadMachines()
   }, [formData.project_id, isDemoAccount])
@@ -165,7 +167,8 @@ export default function PurchaseRequestNew() {
           setMaterials(res.data?.items || res.data || [])
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
     }
     loadMaterials()
   }, [isDemoAccount])
@@ -181,7 +184,8 @@ export default function PurchaseRequestNew() {
           setSuppliers(res.data?.items || res.data || [])
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
     }
     loadSuppliers()
   }, [isDemoAccount])

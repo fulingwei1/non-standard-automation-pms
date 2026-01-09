@@ -26,6 +26,7 @@ export default function ProjectContributionReport() {
       const response = await projectContributionApi.getReport(id, { period })
       setReport(response.data)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

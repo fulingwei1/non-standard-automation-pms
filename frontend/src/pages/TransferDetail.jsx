@@ -86,6 +86,7 @@ export default function TransferDetail() {
         setExecutionData((prev) => ({ ...prev, actual_qty: String(res.data.transfer_qty) }))
       }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

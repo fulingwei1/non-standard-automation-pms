@@ -96,6 +96,7 @@ export default function ProjectClosureManagement() {
       const data = res.data || res
       setProject(data)
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }
 

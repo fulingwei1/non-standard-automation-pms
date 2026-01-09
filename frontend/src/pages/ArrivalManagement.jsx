@@ -94,6 +94,7 @@ export default function ArrivalManagement() {
       const receiptList = res.data?.items || res.data || []
       setReceipts(receiptList)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -108,6 +109,7 @@ export default function ArrivalManagement() {
       setReceiptItems(itemsRes.data || itemsRes || [])
       setShowDetailDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const handleReceive = async () => {

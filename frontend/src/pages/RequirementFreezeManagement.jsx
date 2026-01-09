@@ -72,6 +72,7 @@ export default function RequirementFreezeManagement() {
       )
       setFreezes(response.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

@@ -78,6 +78,7 @@ export default function DispatchManagement() {
       const res = await productionApi.workshops.list({ page_size: 1000 })
       setWorkshops(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchWorkers = async () => {
@@ -97,6 +98,7 @@ export default function DispatchManagement() {
       const orderList = res.data?.items || res.data || []
       setWorkOrders(orderList)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

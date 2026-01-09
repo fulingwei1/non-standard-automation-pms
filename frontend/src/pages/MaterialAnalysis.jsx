@@ -808,7 +808,8 @@ export default function MaterialAnalysis() {
             order_no: order.order_no,
           })))
         } catch (err) {
-        }
+      console.error('操作失败:', err)
+    }
       }
 
       // Load material status for each project using dedicated API
@@ -887,7 +888,8 @@ export default function MaterialAnalysis() {
                   allBomItems.push(...bom.items)
                 }
               } catch (err) {
-              }
+      console.error('操作失败:', err)
+    }
             }
 
             if (allBomItems.length > 0) {
@@ -918,7 +920,8 @@ export default function MaterialAnalysis() {
               })
             }
           } catch (fallbackErr) {
-          }
+      console.error('操作失败:', fallbackErr)
+    }
         }
       }
 
@@ -1107,7 +1110,8 @@ export default function MaterialAnalysis() {
             })
           }
         } catch (err) {
-        }
+      console.error('操作失败:', err)
+    }
       }
 
       // If no process data loaded, generate mock process data from projectMaterials

@@ -163,6 +163,7 @@ export default function ArrivalTrackingList() {
       setSelectedArrival(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const filteredArrivals = useMemo(() => {

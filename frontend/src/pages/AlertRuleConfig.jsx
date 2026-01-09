@@ -203,6 +203,7 @@ export default function AlertRuleConfig() {
       const data = response.data || response
       setTemplates(Array.isArray(data) ? data : [])
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }, [])
 

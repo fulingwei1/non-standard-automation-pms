@@ -157,14 +157,16 @@ export default function QuoteCostManagement() {
         const checkRes = await quoteApi.checkCost(id)
         setCostCheck(checkRes.data?.data || checkRes.data)
       } catch (e) {
-      }
+      console.error('操作失败:', e)
+    }
       
       // Load approval history
       try {
         const historyRes = await quoteApi.getCostApprovalHistory(id)
         setApprovalHistory(historyRes.data?.data || historyRes.data || [])
       } catch (e) {
-      }
+      console.error('操作失败:', e)
+    }
       
       // Load cost templates
       try {
@@ -172,8 +174,10 @@ export default function QuoteCostManagement() {
         const templates = templatesRes.data?.data?.items || templatesRes.data?.items || []
         setCostTemplates(templates)
       } catch (e) {
-      }
+      console.error('操作失败:', e)
+    }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

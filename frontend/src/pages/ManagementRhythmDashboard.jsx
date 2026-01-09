@@ -79,6 +79,7 @@ export default function ManagementRhythmDashboard() {
         task: data.task || null,
       })
     } catch (err) {
+      console.error('操作失败:', err)
     } finally {
       setLoading(false)
     }

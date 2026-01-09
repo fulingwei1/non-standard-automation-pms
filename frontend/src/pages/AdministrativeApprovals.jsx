@@ -126,7 +126,8 @@ export default function AdministrativeApprovals() {
           setApprovals(res.data.items)
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       try {
         const approvedRes = await adminApi.approvals.list({ status: 'approved' })
@@ -134,7 +135,8 @@ export default function AdministrativeApprovals() {
           setApprovedList(approvedRes.data.items)
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       try {
         const rejectedRes = await adminApi.approvals.list({ status: 'rejected' })
@@ -142,7 +144,8 @@ export default function AdministrativeApprovals() {
           setRejectedList(rejectedRes.data.items)
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       setLoading(false)
     }

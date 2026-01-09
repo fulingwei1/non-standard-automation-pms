@@ -59,6 +59,7 @@ export default function DelayReasonsReport() {
       const res = await projectApi.get(selectedProjectId)
       setProject(res.data || res)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -69,6 +70,7 @@ export default function DelayReasonsReport() {
       const data = res.data || res || {}
       setReportData(data)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

@@ -143,6 +143,7 @@ export default function AlertSubscriptionSettings() {
         setProjects(data)
       }
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }, [])
 

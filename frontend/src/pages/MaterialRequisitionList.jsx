@@ -93,6 +93,7 @@ export default function MaterialRequisitionList() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchRequisitions = async () => {
@@ -106,6 +107,7 @@ export default function MaterialRequisitionList() {
       const reqList = res.data?.items || res.data || []
       setRequisitions(reqList)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -135,6 +137,7 @@ export default function MaterialRequisitionList() {
       setSelectedRequisition(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const handleApprove = async () => {

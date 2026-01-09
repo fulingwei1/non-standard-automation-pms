@@ -102,6 +102,7 @@ export default function WBSTemplateManagement() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchTemplateTasks = async (templateId) => {

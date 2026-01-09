@@ -188,7 +188,8 @@ export default function PerformanceManagement() {
           }
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       try {
         // Fetch evaluation tasks for current user
@@ -205,7 +206,8 @@ export default function PerformanceManagement() {
           setPendingTasks(tasks)
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       try {
         // Fetch my performance for recent results
@@ -220,7 +222,8 @@ export default function PerformanceManagement() {
           }
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       setLoading(false)
     }

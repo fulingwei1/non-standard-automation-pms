@@ -81,6 +81,7 @@ export default function MaterialRequisitionDetail() {
       const res = await productionApi.materialRequisitions.get(id)
       setRequisition(res.data || res)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -93,6 +94,7 @@ export default function MaterialRequisitionDetail() {
         setItems(requisition.items)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

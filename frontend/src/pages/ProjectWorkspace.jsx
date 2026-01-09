@@ -57,6 +57,7 @@ export default function ProjectWorkspace() {
       const response = await projectWorkspaceApi.getWorkspace(id)
       setWorkspaceData(response.data)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

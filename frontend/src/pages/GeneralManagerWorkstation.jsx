@@ -407,7 +407,8 @@ export default function GeneralManagerWorkstation() {
         const salesResponse = await salesStatisticsApi.performance({ start_date: startDate, end_date: endDate })
         monthlyRevenue = salesResponse.data?.total_contract_amount || 0
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       try {
         const contractsResponse = await contractApi.list({ page: 1, page_size: 100 })
@@ -415,7 +416,8 @@ export default function GeneralManagerWorkstation() {
         totalContracts = contractsData.length
         activeContracts = contractsData.filter(c => c.status === 'SIGNED' || c.status === 'EXECUTING').length
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       // Load production statistics
       let productionCapacity = 0
@@ -426,7 +428,8 @@ export default function GeneralManagerWorkstation() {
         productionCapacity = productionData.capacity_utilization || 0
         qualityPassRate = productionData.pass_rate || 0
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       // Calculate financial metrics (simplified)
       const yearTarget = 150000000 // Default target
@@ -496,7 +499,8 @@ export default function GeneralManagerWorkstation() {
           })
         })
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       // Purchase request approvals
       try {
@@ -518,7 +522,8 @@ export default function GeneralManagerWorkstation() {
           })
         })
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       // PMO initiation approvals
       try {
@@ -540,7 +545,8 @@ export default function GeneralManagerWorkstation() {
           })
         })
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       // Contract approvals
       try {
@@ -562,7 +568,8 @@ export default function GeneralManagerWorkstation() {
           })
         })
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       // Sort by priority and time, take top 5
       allApprovals.sort((a, b) => {
@@ -587,7 +594,8 @@ export default function GeneralManagerWorkstation() {
         // Transform department statistics if available
         // For now, we'll keep using mock data structure but could enhance this
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
     } catch (err) {
       setError(err)

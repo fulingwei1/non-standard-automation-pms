@@ -152,6 +152,7 @@ export default function MaterialList() {
       setSelectedMaterial(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const filteredMaterials = useMemo(() => {

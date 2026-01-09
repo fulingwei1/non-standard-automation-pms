@@ -125,6 +125,7 @@ export default function TechnicalReviewDetail() {
       const data = response.data || response
       setProjects(data.items || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -134,6 +135,7 @@ export default function TechnicalReviewDetail() {
       const data = response.data || response
       setUsers(data.items || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

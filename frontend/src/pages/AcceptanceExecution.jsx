@@ -104,6 +104,7 @@ export default function AcceptanceExecution() {
       const res = await acceptanceApi.orders.get(id)
       setOrder(res.data || res)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchItems = async () => {
@@ -112,6 +113,7 @@ export default function AcceptanceExecution() {
       const itemList = res.data || res || []
       setItems(itemList)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -122,6 +124,7 @@ export default function AcceptanceExecution() {
       const issueList = res.data || res || []
       setIssues(issueList)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const handleUpdateItem = async () => {

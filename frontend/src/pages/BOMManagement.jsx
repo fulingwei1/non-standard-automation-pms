@@ -120,6 +120,7 @@ export default function BOMManagement() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchMachines = async (projId) => {
@@ -127,6 +128,7 @@ export default function BOMManagement() {
       const res = await machineApi.list({ project_id: projId })
       setMachines(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchBOMs = async () => {
@@ -141,6 +143,7 @@ export default function BOMManagement() {
       const bomList = res.data?.items || res.data || []
       setBoms(bomList)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -157,6 +160,7 @@ export default function BOMManagement() {
       setVersions(versionsRes.data || versionsRes || [])
       setShowBomDetail(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const handleCreateBOM = async () => {

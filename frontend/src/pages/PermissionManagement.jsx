@@ -107,6 +107,7 @@ export default function PermissionManagement() {
       const response = await roleApi.list({ page_size: 1000 });
       setRoles(response.data.items || []);
     } catch (error) {
+      console.error('操作失败:', error)
     }
   };
 
@@ -178,7 +179,8 @@ export default function PermissionManagement() {
             rolesWithPermission.push(role);
           }
         } catch (error) {
-        }
+      console.error('操作失败:', error)
+    }
       }
       setPermissionRoles(rolesWithPermission);
     } catch (error) {

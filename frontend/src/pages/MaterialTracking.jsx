@@ -414,7 +414,8 @@ export default function MaterialTracking() {
           const items = itemsResponse.data || []
           allPurchaseItems.push(...items)
         } catch (err) {
-        }
+      console.error('操作失败:', err)
+    }
       }
 
       // Transform materials data
@@ -478,7 +479,8 @@ export default function MaterialTracking() {
         const res = await materialApi.categories.list()
         setCategories(res.data?.items || res.data || [])
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
     }
     loadCategories()
   }, [])

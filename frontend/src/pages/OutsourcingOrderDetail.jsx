@@ -79,6 +79,7 @@ export default function OutsourcingOrderDetail() {
       const res = await outsourcingApi.orders.get(id)
       setOrder(res.data || res)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -89,6 +90,7 @@ export default function OutsourcingOrderDetail() {
       const deliveryList = res.data?.items || res.data || []
       setDeliveries(deliveryList)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchInspections = async () => {
@@ -97,6 +99,7 @@ export default function OutsourcingOrderDetail() {
       const inspectionList = res.data?.items || res.data || []
       setInspections(inspectionList)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchProgressLogs = async () => {
@@ -105,6 +108,7 @@ export default function OutsourcingOrderDetail() {
       const progressList = res.data || res || []
       setProgressLogs(progressList)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   if (loading) {

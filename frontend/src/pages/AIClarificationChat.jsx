@@ -55,6 +55,7 @@ export default function AIClarificationChat() {
         setCurrentRound(maxRound + 1)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

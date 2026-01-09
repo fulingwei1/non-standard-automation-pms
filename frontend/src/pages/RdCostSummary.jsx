@@ -52,6 +52,7 @@ export default function RdCostSummary() {
       const projectData = response.data?.data || response.data || response
       setProject(projectData)
     } catch (err) {
+      console.error('操作失败:', err)
     } finally {
       setLoading(false)
     }
@@ -63,6 +64,7 @@ export default function RdCostSummary() {
       const data = response.data?.data || response.data || response
       setCostSummary(data)
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }
 
@@ -72,6 +74,7 @@ export default function RdCostSummary() {
       const data = response.data?.data || response.data || response
       setTimesheetSummary(data)
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }
 

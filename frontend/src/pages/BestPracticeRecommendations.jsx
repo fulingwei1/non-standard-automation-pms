@@ -94,6 +94,7 @@ export default function BestPracticeRecommendations() {
       setProjectType(data.project_type || '')
       setCurrentStage(data.stage || '')
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }
 

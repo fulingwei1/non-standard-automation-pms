@@ -74,6 +74,7 @@ export default function ArrivalNew() {
       const res = await materialApi.list({ page: 1, page_size: 200, is_active: true })
       setMaterials(res.data.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -82,6 +83,7 @@ export default function ArrivalNew() {
       const res = await supplierApi.list({ page: 1, page_size: 100 })
       setSuppliers(res.data.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

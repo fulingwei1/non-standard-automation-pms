@@ -511,6 +511,7 @@ export default function ManufacturingDirectorDashboard() {
         })
       }
     } catch (err) {
+      console.error('操作失败:', err)
     } finally {
       setLoadingStats(false)
     }

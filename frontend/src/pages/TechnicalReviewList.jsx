@@ -130,6 +130,7 @@ export default function TechnicalReviewList() {
       const projects = response.data?.items || response.items || []
       setProjectList(projects)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

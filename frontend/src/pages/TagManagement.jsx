@@ -90,6 +90,7 @@ export default function TagManagement() {
         setTags(grouped);
       }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false);
     }

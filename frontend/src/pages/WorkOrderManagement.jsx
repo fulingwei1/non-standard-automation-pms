@@ -117,6 +117,7 @@ export default function WorkOrderManagement() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchWorkOrders = async () => {
@@ -131,6 +132,7 @@ export default function WorkOrderManagement() {
       const orderList = res.data?.items || res.data || []
       setWorkOrders(orderList)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -172,6 +174,7 @@ export default function WorkOrderManagement() {
       setSelectedOrder(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const handleAssign = async () => {

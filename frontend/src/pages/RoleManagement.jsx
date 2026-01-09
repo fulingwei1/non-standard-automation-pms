@@ -103,6 +103,7 @@ export default function RoleManagement() {
       const response = await roleApi.permissions();
       setPermissions(response.data || []);
     } catch (error) {
+      console.error('操作失败:', error)
     }
   };
 

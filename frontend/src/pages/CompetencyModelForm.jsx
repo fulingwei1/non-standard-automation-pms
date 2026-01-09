@@ -76,6 +76,7 @@ export default function CompetencyModelForm() {
         setLevels(response.data.data?.items || [])
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

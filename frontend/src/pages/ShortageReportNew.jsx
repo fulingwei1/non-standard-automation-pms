@@ -74,6 +74,7 @@ export default function ShortageReportNew() {
       const res = await projectApi.list({ page: 1, page_size: 100 })
       setProjects(res.data.items || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

@@ -115,6 +115,7 @@ export default function ProductionExceptionList() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchExceptions = async () => {
@@ -130,6 +131,7 @@ export default function ProductionExceptionList() {
       const excList = res.data?.items || res.data || []
       setExceptions(excList)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -166,6 +168,7 @@ export default function ProductionExceptionList() {
       setSelectedException(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const handleException = async () => {

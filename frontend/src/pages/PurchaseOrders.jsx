@@ -387,7 +387,8 @@ export default function PurchaseOrders() {
             itemCount = items.length
             receivedCount = items.filter(item => (item.received_qty || 0) > 0).length
           } catch (err) {
-          }
+      console.error('操作失败:', err)
+    }
 
           // Determine status based on received quantity
           let frontendStatus = mapBackendStatusToFrontend(order.status)

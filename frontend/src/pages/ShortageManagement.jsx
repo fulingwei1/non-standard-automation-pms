@@ -124,6 +124,7 @@ export default function ShortageManagement() {
       const res = await shortageApi.statistics.dashboard()
       setDashboardData(res.data.data)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -140,6 +141,7 @@ export default function ShortageManagement() {
       setReports(res.data.items || [])
       setTotal(res.data.total || 0)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -157,6 +159,7 @@ export default function ShortageManagement() {
       const res = await shortageApi.arrivals.list(params)
       setArrivals(res.data.items || [])
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -168,6 +171,7 @@ export default function ShortageManagement() {
       const res = await shortageApi.substitutions.list({ page: 1, page_size: 20 })
       setSubstitutions(res.data.items || [])
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -179,6 +183,7 @@ export default function ShortageManagement() {
       const res = await shortageApi.transfers.list({ page: 1, page_size: 20 })
       setTransfers(res.data.items || [])
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

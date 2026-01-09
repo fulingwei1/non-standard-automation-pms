@@ -98,6 +98,7 @@ export default function ProjectTaskList() {
       const res = await projectApi.get(id)
       setProject(res.data || res)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchTasks = async () => {
@@ -112,6 +113,7 @@ export default function ProjectTaskList() {
       const taskList = res.data?.items || res.data || []
       setTasks(taskList)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -121,6 +123,7 @@ export default function ProjectTaskList() {
       const res = await progressApi.reports.getSummary(id)
       setSummary(res.data || res)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const handleCreateTask = async () => {
@@ -151,6 +154,7 @@ export default function ProjectTaskList() {
       setSelectedTask(res.data || res)
       setShowTaskDetail(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const filteredTasks = useMemo(() => {

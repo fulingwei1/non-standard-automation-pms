@@ -1171,7 +1171,8 @@ function CreateIssueDialog({ onClose, onSubmit }) {
         const templatesData = response.data?.items || response.data || []
         setTemplates(templatesData)
       } catch (err) {
-      } finally {
+      console.error('操作失败:', err)
+    } finally {
         setLoadingTemplates(false)
       }
     }
@@ -1596,6 +1597,7 @@ function IssueStatisticsView() {
       })
       setTrendData(response.data?.trend || response.trend || [])
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }
 
@@ -1608,6 +1610,7 @@ function IssueStatisticsView() {
       })
       setCauseData(response.data || response)
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }
 
@@ -1616,6 +1619,7 @@ function IssueStatisticsView() {
       const response = await issueApi.getStatistics({})
       setStatistics(response.data?.data || response.data || response)
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }
 
@@ -1627,6 +1631,7 @@ function IssueStatisticsView() {
       })
       setEngineerStats(response.data?.engineers || response.engineers || [])
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }
 

@@ -133,6 +133,7 @@ export default function MachineManagement() {
       const res = await projectApi.get(id)
       setProject(res.data || res)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchMachines = async () => {
@@ -146,6 +147,7 @@ export default function MachineManagement() {
       const machineList = res.data?.items || res.data || []
       setMachines(machineList)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -184,6 +186,7 @@ export default function MachineManagement() {
       // 加载文档
       fetchMachineDocuments(machineId)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

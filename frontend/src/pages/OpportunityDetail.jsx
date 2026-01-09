@@ -87,6 +87,7 @@ export default function OpportunityDetail() {
       const res = await opportunityApi.get(id)
       setOpportunity(res.data || res)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

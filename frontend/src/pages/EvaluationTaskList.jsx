@@ -36,7 +36,8 @@ const EvaluationTaskList = () => {
       try {
         return JSON.parse(userStr)
       } catch (e) {
-      }
+      console.error('操作失败:', e)
+    }
     }
     return {
       id: 1,

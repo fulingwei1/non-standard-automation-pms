@@ -52,6 +52,7 @@ export default function WorkshopTaskBoard() {
       const res = await productionApi.taskBoard(workshopId)
       setBoardData(res.data || res)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

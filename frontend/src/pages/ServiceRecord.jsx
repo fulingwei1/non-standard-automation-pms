@@ -248,6 +248,7 @@ export default function ServiceRecord() {
         totalHours: records.reduce((sum, r) => sum + (r.service_duration || 0), 0),
       })
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }, [records])
 

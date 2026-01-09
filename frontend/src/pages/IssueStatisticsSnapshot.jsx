@@ -94,6 +94,7 @@ export default function IssueStatisticsSnapshot() {
       setSelectedSnapshot(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

@@ -79,6 +79,7 @@ export default function ECNTypeManagement() {
       const res = await ecnApi.getEcnTypes({ is_active: null })
       setEcnTypes(res.data || res || [])
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

@@ -102,6 +102,7 @@ export default function Documents() {
       const projectList = data.items || data || []
       setProjects(projectList)
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }, [])
 

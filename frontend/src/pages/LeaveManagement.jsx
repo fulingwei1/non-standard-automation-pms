@@ -114,7 +114,8 @@ export default function LeaveManagement() {
           setLeaveApplications(res.data)
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
       setLoading(false)
     }
     fetchData()

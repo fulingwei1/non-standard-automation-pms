@@ -558,7 +558,8 @@ function OrderSelectionForm({ onSelect }) {
           setOrders(data)
         }
       } catch (err) {
-      } finally {
+      console.error('操作失败:', err)
+    } finally {
         setLoading(false)
       }
     }

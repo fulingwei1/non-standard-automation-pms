@@ -263,6 +263,7 @@ export default function CustomerCommunication() {
         }, {}),
       })
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }, [communications])
 

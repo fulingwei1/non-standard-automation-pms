@@ -35,6 +35,7 @@ export default function StrategicMeetingDetail() {
       const data = res.data || res
       setMeeting(data)
     } catch (err) {
+      console.error('操作失败:', err)
     } finally {
       setLoading(false)
     }

@@ -104,6 +104,7 @@ export default function ProductionPlanList() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchWorkshops = async () => {
@@ -111,6 +112,7 @@ export default function ProductionPlanList() {
       const res = await productionApi.workshops.list({ page_size: 1000 })
       setWorkshops(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchPlans = async () => {
@@ -126,6 +128,7 @@ export default function ProductionPlanList() {
       const planList = res.data?.items || res.data || []
       setPlans(planList)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -159,6 +162,7 @@ export default function ProductionPlanList() {
       setSelectedPlan(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const handlePublish = async (planId) => {

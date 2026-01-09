@@ -66,7 +66,8 @@ export default function PerformanceRanking() {
           }
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
       setLoading(false)
     }
     fetchRankings()

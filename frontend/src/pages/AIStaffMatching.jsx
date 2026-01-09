@@ -181,6 +181,7 @@ export default function AIStaffMatching() {
         setStaffingNeeds(response.data.items);
       }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false);
     }
@@ -195,6 +196,7 @@ export default function AIStaffMatching() {
         setMatchingHistory(response.data.items);
       }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setHistoryLoading(false);
     }
@@ -282,6 +284,7 @@ export default function AIStaffMatching() {
       });
       loadMatchingHistory();
     } catch (error) {
+      console.error('操作失败:', error)
     }
     setShowRejectDialog(false);
   };

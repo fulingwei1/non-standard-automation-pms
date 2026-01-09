@@ -219,7 +219,8 @@ export default function ContractList() {
           setContracts(res.data?.items || res.data)
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
       setLoading(false)
     }
     fetchData()

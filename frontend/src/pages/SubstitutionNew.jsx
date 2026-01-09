@@ -67,6 +67,7 @@ export default function SubstitutionNew() {
       const res = await projectApi.list({ page: 1, page_size: 100 })
       setProjects(res.data.items || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -75,6 +76,7 @@ export default function SubstitutionNew() {
       const res = await materialApi.list({ page: 1, page_size: 200, is_active: true })
       setMaterials(res.data.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

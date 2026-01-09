@@ -82,6 +82,7 @@ export default function QuoteCreateEdit() {
       const res = await opportunityApi.list({ page_size: 1000, stage: 'PROPOSING' })
       setOpportunities(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
   const fetchQuoteDetail = async () => {
@@ -116,6 +117,7 @@ export default function QuoteCreateEdit() {
         setItems(latestVersion.items || [])
       }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

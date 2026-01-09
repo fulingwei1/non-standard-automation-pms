@@ -410,7 +410,8 @@ export default function Acceptance() {
             const issuesResponse = await acceptanceApi.issues.list(order.id)
             issues = issuesResponse.data || []
           } catch (err) {
-          }
+      console.error('操作失败:', err)
+    }
 
           // Load items for this order
           let items = []
@@ -435,7 +436,8 @@ export default function Acceptance() {
             })
             checklistCategories = Object.values(categoryMap)
           } catch (err) {
-          }
+      console.error('操作失败:', err)
+    }
 
           return {
             id: order.order_no || order.id?.toString(),

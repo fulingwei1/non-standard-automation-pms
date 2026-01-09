@@ -34,7 +34,8 @@ const ProjectForm = ({ isOpen, onClose, onSubmit, initialData = {} }) => {
                     setCustomers(custRes.data);
                     setEmployees(empRes.data);
                 } catch (err) {
-                }
+      console.error('操作失败:', err)
+    }
             };
             loadOptions();
         }

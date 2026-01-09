@@ -51,6 +51,7 @@ export default function TechnicalSpecManagement() {
       const response = await api.get('/technical-spec/requirements', { params })
       setRequirements(response.data.items || [])
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

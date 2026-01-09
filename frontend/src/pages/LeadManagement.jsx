@@ -113,6 +113,7 @@ export default function LeadManagement() {
         setTotal(response.data.total || 0)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -126,6 +127,7 @@ export default function LeadManagement() {
         setCustomers(response.data.items)
       }
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

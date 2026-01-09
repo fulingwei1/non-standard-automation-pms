@@ -92,6 +92,7 @@ export default function SalesTemplateCenter() {
       setContractTemplates(contractRes.data?.items || contractRes.items || []);
       setRuleSets(ruleRes.data?.items || ruleRes.items || []);
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false);
     }

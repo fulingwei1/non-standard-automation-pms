@@ -86,6 +86,7 @@ export default function ArrivalDetail() {
         setReceiveQty(String(res.data.expected_qty))
       }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -96,6 +97,7 @@ export default function ArrivalDetail() {
       const res = await shortageApi.arrivals.getFollowUps(id, { page: 1, page_size: 50 })
       setFollowUps(res.data.items || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

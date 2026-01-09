@@ -107,6 +107,7 @@ export default function AssemblyKitBoard() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -135,6 +136,7 @@ export default function AssemblyKitBoard() {
         fetchDashboardData()
       }
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }
@@ -149,6 +151,7 @@ export default function AssemblyKitBoard() {
       const res = await assemblyKitApi.getShortageAlerts(params)
       setAlerts(res.data || res || null)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -158,6 +161,7 @@ export default function AssemblyKitBoard() {
       setAnalysisDetail(res.data || res)
       setDetailDialogOpen(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -166,6 +170,7 @@ export default function AssemblyKitBoard() {
       await assemblyKitApi.acceptSuggestion(suggestionId, {})
       fetchDashboardData()
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -180,6 +185,7 @@ export default function AssemblyKitBoard() {
       setSelectedSuggestion(null)
       fetchDashboardData()
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

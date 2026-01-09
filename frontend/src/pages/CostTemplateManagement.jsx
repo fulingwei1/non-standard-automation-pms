@@ -100,6 +100,7 @@ export default function CostTemplateManagement() {
       const items = res.data?.data?.items || res.data?.items || []
       setTemplates(items)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

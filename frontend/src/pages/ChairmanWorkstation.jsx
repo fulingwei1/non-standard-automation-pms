@@ -513,7 +513,8 @@ export default function ChairmanWorkstation() {
           setCompanyStats(prev => ({ ...prev, ...dashboardRes.data }))
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       try {
         const projectsRes = await projectApi.list({ status: 'active', limit: 10 })
@@ -521,7 +522,8 @@ export default function ChairmanWorkstation() {
           setKeyProjects(projectsRes.data.items.slice(0, 5))
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       setLoading(false)
     }

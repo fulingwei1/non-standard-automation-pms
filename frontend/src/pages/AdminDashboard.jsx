@@ -370,7 +370,8 @@ export default function AdminDashboard() {
           setStats(response.data.data)
         }
       } catch (error) {
-      } finally {
+      console.error('操作失败:', error)
+    } finally {
         setLoading(false)
       }
     }

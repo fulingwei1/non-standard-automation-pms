@@ -143,7 +143,8 @@ export default function PerformanceIndicators() {
           setIndicators(weightRes.data.indicators)
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
       setLoading(false)
     }
     fetchIndicators()

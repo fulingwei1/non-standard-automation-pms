@@ -26,6 +26,7 @@ export default function ProjectIssuePanel({ projectId }) {
       setIssues(issuesRes.data?.issues || [])
       setSolutions(solutionsRes.data)
     } catch (error) {
+      console.error('操作失败:', error)
     } finally {
       setLoading(false)
     }

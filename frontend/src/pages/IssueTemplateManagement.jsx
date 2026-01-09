@@ -168,6 +168,7 @@ export default function IssueTemplateManagement() {
       const items = res.data?.items || res.data?.data?.items || res.data || []
       setProjects(items)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 
@@ -236,6 +237,7 @@ export default function IssueTemplateManagement() {
       setSelectedTemplate(res.data || res)
       setShowDetailDialog(true)
     } catch (error) {
+      console.error('操作失败:', error)
     }
   }
 

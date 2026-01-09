@@ -432,7 +432,8 @@ export default function AdministrativeManagerWorkstation() {
           }))
         }
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       // Load department statistics
       try {
@@ -440,7 +441,8 @@ export default function AdministrativeManagerWorkstation() {
         const deptStats = deptRes.data || deptRes
         // Could use this for department-level stats
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       // Load meetings
       try {
@@ -486,7 +488,8 @@ export default function AdministrativeManagerWorkstation() {
           meetingsThisWeek: thisWeekMeetings.length,
         }))
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
       // Load pending approvals from various modules
       try {
@@ -512,7 +515,8 @@ export default function AdministrativeManagerWorkstation() {
             })
           })
         } catch (err) {
-        }
+      console.error('操作失败:', err)
+    }
 
         // Purchase request approvals
         try {
@@ -533,7 +537,8 @@ export default function AdministrativeManagerWorkstation() {
             })
           })
         } catch (err) {
-        }
+      console.error('操作失败:', err)
+    }
 
         setPendingApprovals(allApprovals.slice(0, 5))
         setStats(prev => ({
@@ -542,7 +547,8 @@ export default function AdministrativeManagerWorkstation() {
           urgentApprovals: allApprovals.filter(a => a.priority === 'urgent' || a.priority === 'high').length,
         }))
       } catch (err) {
-      }
+      console.error('操作失败:', err)
+    }
 
     } catch (err) {
       // 如果是演示账号，使用 mock 数据

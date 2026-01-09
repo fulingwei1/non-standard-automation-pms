@@ -135,6 +135,7 @@ export default function LessonsLearnedLibrary() {
       const data = res.data || res
       setStatistics(data)
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }
 
@@ -144,6 +145,7 @@ export default function LessonsLearnedLibrary() {
       const data = res.data || res
       setCategories(data.categories || [])
     } catch (err) {
+      console.error('操作失败:', err)
     }
   }
 
