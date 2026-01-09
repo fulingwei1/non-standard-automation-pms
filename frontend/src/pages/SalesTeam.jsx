@@ -3,7 +3,7 @@
  * Features: Team member management, Performance tracking, Target assignment, Team analytics
  */
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -28,6 +28,7 @@ import {
   Activity,
   Download,
   Filter,
+  RefreshCw,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -540,6 +541,16 @@ const calculateTeamStats = (members, summary) => {
   }
 }
 
+const formatAutoRefreshTime = (value) => {
+  if (!value) return ''
+  return value.toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  })
+}
+
 export default function SalesTeam() {
   const navigate = useNavigate()
   const defaultRange = useMemo(() => getDefaultDateRange(), [])
@@ -552,6 +563,8 @@ export default function SalesTeam() {
   const [usingMockData, setUsingMockData] = useState(false)
   const [departmentOptions, setDepartmentOptions] = useState([{ label: '全部', value: '' }])
   const [regionOptions, setRegionOptions] = useState([])
+  const [lastAutoRefreshAt, setLastAutoRefreshAt] = useState(null)
+  const [highlightAutoRefresh, setHighlightAutoRefresh] = useState(false)
   const [filters, setFilters] = useState({
     departmentId: '',
     region: '',
@@ -564,6 +577,7 @@ export default function SalesTeam() {
   const [rankingData, setRankingData] = useState([])
   const [showRanking, setShowRanking] = useState(false)
   const [rankingLoading, setRankingLoading] = useState(false)
+  const autoRefreshTimerRef = useRef(null)
 
   useEffect(() => {
     if (filters.startDate && filters.endDate) {
@@ -595,6 +609,37 @@ export default function SalesTeam() {
       }
     }
     fetchDepartments()
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (autoRefreshTimerRef.current) {
+        clearTimeout(autoRefreshTimerRef.current)
+      }
+    }
+  }, [])
+
+  const updateRegionOptions = useCallback((members) => {
+    const options = Array.from(
+      new Set(
+        members
+          .map((member) => (member.region || '').trim())
+          .filter(Boolean)
+      )
+    ).sort((a, b) => a.localeCompare(b, 'zh-Hans-CN'))
+    setRegionOptions(options)
+  }, [])
+
+  const triggerAutoRefreshToast = useCallback(() => {
+    const refreshTime = new Date()
+    setLastAutoRefreshAt(refreshTime)
+    setHighlightAutoRefresh(true)
+    if (autoRefreshTimerRef.current) {
+      clearTimeout(autoRefreshTimerRef.current)
+    }
+    autoRefreshTimerRef.current = setTimeout(() => {
+      setHighlightAutoRefresh(false)
+    }, 2400)
   }, [])
 
   const fetchTeamData = useCallback(async () => {
@@ -645,13 +690,7 @@ export default function SalesTeam() {
       }
 
       setTeamMembers(normalizedMembers)
-      setRegionOptions((prev) => {
-        const merged = new Set(prev)
-        normalizedMembers.forEach((member) => {
-          if (member.region) merged.add(member.region)
-        })
-        return Array.from(merged)
-      })
+      updateRegionOptions(normalizedMembers)
 
       const summaryRaw = summaryRes.status === 'fulfilled'
         ? summaryRes.value.data?.data || summaryRes.value.data || summaryRes.value || {}
@@ -697,23 +736,28 @@ export default function SalesTeam() {
 
       setTeamStats(calculateTeamStats(normalizedMembers, enrichedSummary))
       setUsingMockData(false)
+      triggerAutoRefreshToast()
     } catch (err) {
       console.error('Failed to fetch sales team data:', err)
       const fallbackMembers = mockTeamMembers.map(transformTeamMember)
       setTeamMembers(fallbackMembers)
       setTeamStats(calculateTeamStats(fallbackMembers, null))
-      setRegionOptions((prev) => {
-        const backup = new Set(prev)
-        fallbackMembers.forEach((member) => {
-          if (member.region) backup.add(member.region)
-        })
-        return Array.from(backup)
-      })
+      updateRegionOptions(fallbackMembers)
       setUsingMockData(true)
+      triggerAutoRefreshToast()
     } finally {
       setLoading(false)
     }
-  }, [filters.departmentId, filters.region, filters.startDate, filters.endDate, dateError, defaultRange])
+  }, [
+    filters.departmentId,
+    filters.region,
+    filters.startDate,
+    filters.endDate,
+    dateError,
+    defaultRange,
+    triggerAutoRefreshToast,
+    updateRegionOptions,
+  ])
 
   useEffect(() => {
     fetchTeamData()
@@ -944,11 +988,28 @@ export default function SalesTeam() {
                 />
               </div>
             </div>
-            <div className="flex flex-wrap gap-2 text-xs text-slate-400">
+            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
               <Button variant="ghost" size="sm" onClick={handleResetFilters}>
                 重置筛选
               </Button>
-              <div>筛选更新后自动刷新数据</div>
+              <div
+                className={cn(
+                  'flex items-center gap-1 transition-colors',
+                  highlightAutoRefresh ? 'text-emerald-400' : 'text-slate-400'
+                )}
+              >
+                <RefreshCw className={cn('w-3 h-3', highlightAutoRefresh && 'animate-spin')} />
+                {lastAutoRefreshAt ? (
+                  <>
+                    <span>已自动刷新</span>
+                    <span className="text-slate-500">
+                      ({formatAutoRefreshTime(lastAutoRefreshAt)})
+                    </span>
+                  </>
+                ) : (
+                  <span>筛选更新后自动刷新数据</span>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
