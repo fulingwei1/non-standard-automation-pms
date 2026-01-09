@@ -437,32 +437,20 @@ export function getNavForRole(role) {
     ],
     sales_director: [
       {
-        label: '销售工作',
+        label: '团队管理',
         items: [
           { name: '销售总监工作台', path: '/sales-director-dashboard', icon: 'LayoutDashboard' },
+          { name: '销售团队管理', path: '/sales/team', icon: 'Users' },
+          { name: '团队业绩排名', path: '/sales/team/ranking', icon: 'Award' },
+        ],
+      },
+      {
+        label: '销售监控',
+        items: [
+          { name: '销售统计', path: '/sales/statistics', icon: 'BarChart3' },
+          { name: '销售漏斗', path: '/sales/funnel', icon: 'Target' },
           { name: '客户管理', path: '/customers', icon: 'Building2' },
           { name: '商机看板', path: '/opportunities', icon: 'Target' },
-        ],
-      },
-      {
-        label: '销售管理',
-        items: [
-          { name: '线索评估', path: '/lead-assessment', icon: 'Target' },
-          { name: '报价管理', path: '/sales/quotes', icon: 'Calculator' },
-          { name: '合同管理', path: '/sales/contracts', icon: 'FileCheck' },
-          { name: '模板与CPQ', path: '/sales/templates', icon: 'Layers' },
-          { name: '技术评审', path: '/technical-reviews', icon: 'FileCheck' },
-          { name: '应收账款', path: '/sales/receivables', icon: 'CreditCard' },
-          { name: '回款跟踪', path: '/payments', icon: 'CreditCard' },
-          { name: '销售统计', path: '/sales/statistics', icon: 'BarChart3' },
-        ],
-      },
-      {
-        label: '项目跟踪',
-        items: [
-          { name: '项目进度', path: '/sales-projects', icon: 'Briefcase' },
-          { name: '项目看板', path: '/board', icon: 'Kanban' },
-          { name: '项目列表', path: '/projects', icon: 'List' },
         ],
       },
       {
@@ -471,6 +459,13 @@ export function getNavForRole(role) {
           { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck' },
           { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
           { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
+        ],
+      },
+      {
+        label: '项目跟踪',
+        items: [
+          { name: '项目看板', path: '/board', icon: 'Kanban' },
+          { name: '项目列表', path: '/projects', icon: 'Briefcase' },
         ],
       },
       {
@@ -484,7 +479,7 @@ export function getNavForRole(role) {
     ],
     sales_manager: [
       {
-        label: '销售管理',
+        label: '销售工作',
         items: [
           { name: '销售工作台', path: '/sales-dashboard', icon: 'LayoutDashboard' },
           { name: '客户管理', path: '/sales/customers', icon: 'Building2' },
@@ -492,16 +487,42 @@ export function getNavForRole(role) {
         ],
       },
       {
-        label: '项目概览',
+        label: '销售业务',
         items: [
+          { name: '线索评估', path: '/lead-assessment', icon: 'Target' },
+          { name: '报价管理', path: '/sales/quotes', icon: 'Calculator' },
+          { name: '合同管理', path: '/sales/contracts', icon: 'FileCheck' },
+          { name: '回款跟踪', path: '/payments', icon: 'CreditCard' },
+          { name: '应收账款', path: '/sales/receivables', icon: 'CreditCard' },
+        ],
+      },
+      {
+        label: '团队管理',
+        items: [
+          { name: '团队业绩', path: '/sales/team/performance', icon: 'Users' },
+          { name: '团队统计', path: '/sales/statistics', icon: 'BarChart3' },
+        ],
+      },
+      {
+        label: '项目跟踪',
+        items: [
+          { name: '项目进度', path: '/sales-projects', icon: 'Briefcase' },
           { name: '项目看板', path: '/board', icon: 'Kanban' },
           { name: '项目列表', path: '/projects', icon: 'Briefcase' },
+        ],
+      },
+      {
+        label: '审批与监控',
+        items: [
+          { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck' },
+          { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
         ],
       },
       {
         label: '个人中心',
         items: [
           { name: '通知中心', path: '/notifications', icon: 'Bell' },
+          { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
           { name: '个人设置', path: '/settings', icon: 'Settings' },
         ],
       },
