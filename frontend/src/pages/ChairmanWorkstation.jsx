@@ -53,392 +53,60 @@ import {
 } from '../components/ui'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
-import { pmoApi, salesStatisticsApi, projectApi } from '../services/api'
+import { pmoApi, salesStatisticsApi, projectApi, reportCenterApi } from '../services/api'
 import CultureWallCarousel from '../components/culture/CultureWallCarousel'
+import { ApiIntegrationError } from '../components/ui'
 
-// Mock data for chairman dashboard
-const mockCompanyStats = {
-  // Financial metrics
-  totalRevenue: 125000000,
-  yearTarget: 150000000,
-  yearProgress: 83.3,
-  monthlyRevenue: 12500000,
-  monthlyTarget: 12500000,
-  monthlyProgress: 100,
-  profit: 25000000,
-  profitMargin: 20,
-  totalCost: 100000000,
-  
-  // Sales metrics
-  totalContracts: 156,
-  activeContracts: 42,
-  pendingContracts: 8,
-  totalCustomers: 245,
-  newCustomersThisMonth: 18,
-  salesTeamSize: 28,
-  
-  // Project metrics
-  totalProjects: 68,
-  activeProjects: 42,
-  completedProjects: 26,
-  onTimeDeliveryRate: 88.5,
-  projectHealthGood: 32,
-  projectHealthWarning: 8,
-  projectHealthCritical: 2,
-  
-  // Operations metrics
-  totalEmployees: 186,
-  activeEmployees: 178,
-  departments: 8,
-  productionCapacity: 85,
-  qualityPassRate: 96.2,
-  
-  // Financial health
-  accountsReceivable: 28500000,
-  overdueReceivable: 3500000,
-  collectionRate: 87.7,
-  cashFlow: 18500000,
-  
-  // Growth metrics
-  revenueGrowth: 18.5,
-  customerGrowth: 12.3,
-  projectGrowth: 15.8,
-}
+// Mock data for chairman dashboard - 已移除，使用真实API
+// const mockCompanyStats = {
+//   // Financial metrics
+//   totalRevenue: 125000000,
+//   yearTarget: 150000000,
+//   yearProgress: 83.3,
+//   monthlyRevenue: 12500000,
+//   monthlyTarget: 12500000,
+//   monthlyProgress: 100,
+//   profit: 25000000,
+//   profitMargin: 20,
+//   totalCost: 100000000,
+//   
+//   // Sales metrics
+//   totalContracts: 156,
+//   activeContracts: 42,
+//   pendingContracts: 8,
+//   totalCustomers: 245,
+//   newCustomersThisMonth: 18,
+//   salesTeamSize: 28,
+//   
+//   // Project metrics
+//   totalProjects: 68,
+//   activeProjects: 42,
+//   completedProjects: 26,
+//   onTimeDeliveryRate: 88.5,
+//   projectHealthGood: 32,
+//   projectHealthWarning: 8,
+//   projectHealthCritical: 2,
+//   
+//   // Operations metrics
+//   totalEmployees: 186,
+//   activeEmployees: 178,
+//   departments: 8,
+//   productionCapacity: 85,
+//   qualityPassRate: 96.2,
+//   
+//   // Financial health
+//   accountsReceivable: 28500000,
+//   overdueReceivable: 3500000,
+//   collectionRate: 87.7,
+//   cashFlow: 18500000,
+//   
+//   // Growth metrics
+//   revenueGrowth: 18.5,
+//   customerGrowth: 12.3,
+//   projectGrowth: 15.8,
+// }
 
-const mockDepartmentPerformance = [
-  {
-    id: 1,
-    name: '销售部',
-    manager: '刘总监',
-    revenue: 125000000,
-    target: 150000000,
-    achievement: 83.3,
-    projects: 42,
-    employees: 28,
-    status: 'good',
-  },
-  {
-    id: 2,
-    name: '项目部',
-    manager: '孙经理',
-    revenue: 0,
-    target: 0,
-    achievement: 0,
-    projects: 42,
-    onTimeRate: 88.5,
-    employees: 35,
-    status: 'good',
-  },
-  {
-    id: 3,
-    name: '技术开发部',
-    manager: '周经理',
-    revenue: 0,
-    target: 0,
-    achievement: 0,
-    projects: 38,
-    innovation: 12,
-    employees: 45,
-    status: 'excellent',
-  },
-  {
-    id: 4,
-    name: '生产部',
-    manager: '王经理',
-    revenue: 0,
-    target: 0,
-    achievement: 0,
-    projects: 35,
-    output: 28,
-    employees: 52,
-    status: 'good',
-  },
-  {
-    id: 5,
-    name: '采购部',
-    manager: '陈经理',
-    revenue: 0,
-    target: 0,
-    achievement: 0,
-    orders: 156,
-    costSavings: 850000,
-    employees: 8,
-    status: 'good',
-  },
-  {
-    id: 6,
-    name: '质量部',
-    manager: '李经理',
-    revenue: 0,
-    target: 0,
-    achievement: 0,
-    inspections: 156,
-    passRate: 96.2,
-    employees: 12,
-    status: 'excellent',
-  },
-]
-
-const mockKeyDecisions = [
-  {
-    id: 1,
-    type: 'investment',
-    title: '新生产基地投资决策',
-    amount: 50000000,
-    department: '制造中心',
-    submitter: '制造总监',
-    submitTime: '2025-01-05',
-    priority: 'high',
-    status: 'pending',
-  },
-  {
-    id: 2,
-    type: 'contract',
-    title: '重大合同审批',
-    customer: '某大型汽车集团',
-    amount: 8500000,
-    department: '销售部',
-    submitter: '销售总监',
-    submitTime: '2025-01-06',
-    priority: 'high',
-    status: 'pending',
-  },
-  {
-    id: 3,
-    type: 'strategy',
-    title: '2025年度战略规划',
-    department: '总经理办公室',
-    submitter: '总经理',
-    submitTime: '2025-01-03',
-    priority: 'high',
-    status: 'reviewing',
-  },
-  {
-    id: 4,
-    type: 'personnel',
-    title: '高级人才招聘',
-    position: '技术总监',
-    department: '技术开发部',
-    submitter: 'HR部门',
-    submitTime: '2025-01-04',
-    priority: 'medium',
-    status: 'pending',
-  },
-]
-
-const mockStrategicMetrics = [
-  {
-    label: '市场占有率',
-    value: 12.5,
-    unit: '%',
-    trend: 2.3,
-    target: 15,
-    color: 'text-blue-400',
-  },
-  {
-    label: '客户满意度',
-    value: 92.8,
-    unit: '%',
-    trend: 1.2,
-    target: 95,
-    color: 'text-emerald-400',
-  },
-  {
-    label: '员工满意度',
-    value: 88.5,
-    unit: '%',
-    trend: -0.5,
-    target: 90,
-    color: 'text-amber-400',
-  },
-  {
-    label: '研发投入占比',
-    value: 8.5,
-    unit: '%',
-    trend: 0.8,
-    target: 10,
-    color: 'text-purple-400',
-  },
-]
-
-// 月度营收趋势数据
-const mockMonthlyRevenue = [
-  { month: '7月', revenue: 9800000, target: 10000000 },
-  { month: '8月', revenue: 10500000, target: 11000000 },
-  { month: '9月', revenue: 11200000, target: 11500000 },
-  { month: '10月', revenue: 10800000, target: 12000000 },
-  { month: '11月', revenue: 11800000, target: 12500000 },
-  { month: '12月', revenue: 12500000, target: 12500000 },
-]
-
-// 项目健康度分布
-const mockProjectHealthDistribution = [
-  { health: 'H1', label: '正常', count: 32, color: 'emerald', percentage: 76.2 },
-  { health: 'H2', label: '关注', count: 8, color: 'amber', percentage: 19.0 },
-  { health: 'H3', label: '预警', count: 2, color: 'red', percentage: 4.8 },
-]
-
-// 风险预警项目
-const mockRiskProjects = [
-  {
-    id: 1,
-    projectCode: 'P2025-001',
-    projectName: 'BMS测试设备项目',
-    customer: '深圳XX科技',
-    health: 'H3',
-    issue: '物料延期，影响交付',
-    delayDays: 15,
-    riskLevel: 'high',
-  },
-  {
-    id: 2,
-    projectCode: 'P2024-089',
-    projectName: 'EOL自动化线体',
-    customer: '东莞XX电子',
-    health: 'H2',
-    issue: '技术难点未解决',
-    delayDays: 8,
-    riskLevel: 'medium',
-  },
-  {
-    id: 3,
-    projectCode: 'P2025-012',
-    projectName: 'ICT测试设备',
-    customer: '惠州XX电池',
-    health: 'H2',
-    issue: '客户需求变更',
-    delayDays: 5,
-    riskLevel: 'medium',
-  },
-]
-
-// 待审批事项
-const mockPendingApprovals = [
-  {
-    id: 1,
-    type: 'contract',
-    title: '重大合同审批',
-    customer: '某大型汽车集团',
-    amount: 8500000,
-    department: '销售部',
-    submitter: '销售总监',
-    submitTime: '2025-01-06 10:30',
-    priority: 'high',
-  },
-  {
-    id: 2,
-    type: 'investment',
-    title: '新生产基地投资',
-    amount: 50000000,
-    department: '制造中心',
-    submitter: '制造总监',
-    submitTime: '2025-01-05 14:20',
-    priority: 'high',
-  },
-  {
-    id: 3,
-    type: 'budget',
-    title: '年度预算调整',
-    amount: 12000000,
-    department: '财务部',
-    submitter: '财务总监',
-    submitTime: '2025-01-04 16:45',
-    priority: 'medium',
-  },
-]
-
-// 重点项目
-const mockKeyProjects = [
-  {
-    id: 1,
-    project_code: 'P2025-001',
-    project_name: '新能源汽车BMS测试设备',
-    customer_name: '某大型汽车集团',
-    health: 'H1',
-    progress: 72,
-    current_stage: 'S4',
-    contract_amount: 8500000,
-    planned_end_date: '2025-03-15',
-  },
-  {
-    id: 2,
-    project_code: 'P2025-002',
-    project_name: 'EOL全自动化检测线',
-    customer_name: '东莞XX电子',
-    health: 'H2',
-    progress: 55,
-    current_stage: 'S3',
-    contract_amount: 5200000,
-    planned_end_date: '2025-04-20',
-  },
-  {
-    id: 3,
-    project_code: 'P2025-003',
-    project_name: 'ICT高精度测试系统',
-    customer_name: '惠州XX电池',
-    health: 'H1',
-    progress: 85,
-    current_stage: 'S5',
-    contract_amount: 3800000,
-    planned_end_date: '2025-02-28',
-  },
-  {
-    id: 4,
-    project_code: 'P2024-089',
-    project_name: '老化测试设备升级',
-    customer_name: '深圳XX科技',
-    health: 'H3',
-    progress: 40,
-    current_stage: 'S3',
-    contract_amount: 2500000,
-    planned_end_date: '2025-03-30',
-  },
-  {
-    id: 5,
-    project_code: 'P2025-005',
-    project_name: '视觉检测自动化线',
-    customer_name: '广州XX制造',
-    health: 'H1',
-    progress: 90,
-    current_stage: 'S6',
-    contract_amount: 4200000,
-    planned_end_date: '2025-02-15',
-  },
-]
-
-// 最近项目
-const mockRecentProjects = [
-  {
-    id: 1,
-    projectCode: 'P2025-015',
-    projectName: 'BMS测试设备项目',
-    customer: '深圳XX科技',
-    health: 'H1',
-    progress: 65,
-    stage: 'S4',
-    plannedEndDate: '2025-03-15',
-  },
-  {
-    id: 2,
-    projectCode: 'P2025-014',
-    projectName: 'EOL自动化线体',
-    customer: '东莞XX电子',
-    health: 'H2',
-    progress: 45,
-    stage: 'S3',
-    plannedEndDate: '2025-04-20',
-  },
-  {
-    id: 3,
-    projectCode: 'P2025-013',
-    projectName: 'ICT测试设备',
-    customer: '惠州XX电池',
-    health: 'H1',
-    progress: 78,
-    stage: 'S5',
-    plannedEndDate: '2025-02-28',
-  },
-]
+// Mock data removed - 使用真实API
 
 const formatCurrency = (value) => {
   if (value >= 100000000) {
@@ -498,37 +166,127 @@ const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg, size =
 
 export default function ChairmanWorkstation() {
   const [loading, setLoading] = useState(true)
-  const [companyStats, setCompanyStats] = useState(mockCompanyStats)
-  const [pendingApprovals, setPendingApprovals] = useState(mockPendingApprovals)
-  const [keyProjects, setKeyProjects] = useState(mockKeyProjects)
-  const [departmentPerformance, setDepartmentPerformance] = useState(mockDepartmentPerformance)
+  const [error, setError] = useState(null)
+  const [companyStats, setCompanyStats] = useState(null)
+  const [pendingApprovals, setPendingApprovals] = useState([])
+  const [keyProjects, setKeyProjects] = useState([])
+  const [departmentPerformance, setDepartmentPerformance] = useState([])
+  const [monthlyRevenue, setMonthlyRevenue] = useState([])
+  const [riskProjects, setRiskProjects] = useState([])
+  const [projectHealthDistribution, setProjectHealthDistribution] = useState([])
 
-  // Load data from API with fallback to mock data
+  // Load data from API
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
       try {
-        const dashboardRes = await pmoApi.dashboard()
-        if (dashboardRes.data) {
-          setCompanyStats(prev => ({ ...prev, ...dashboardRes.data }))
-        }
-      } catch (err) {
-        console.log('PMO dashboard API unavailable, using mock data')
-      }
+        setLoading(true)
+        setError(null)
 
-      try {
-        const projectsRes = await projectApi.list({ status: 'active', limit: 10 })
+        // 获取基础仪表板数据
+        const [dashboardRes, projectsRes] = await Promise.all([
+          pmoApi.dashboard(),
+          projectApi.list({ page: 1, page_size: 10 })
+        ])
+
+        if (dashboardRes.data) {
+          setCompanyStats(dashboardRes.data)
+        }
         if (projectsRes.data?.items) {
           setKeyProjects(projectsRes.data.items.slice(0, 5))
+          
+          // 筛选风险项目（健康度为 H2 或 H3）
+          const riskProjectsData = projectsRes.data.items.filter(
+            p => p.health === 'H2' || p.health === 'H3'
+          )
+          setRiskProjects(riskProjectsData)
+        }
+
+        // 获取项目健康度分布
+        try {
+          const healthRes = await reportCenterApi.getHealthDistribution()
+          if (healthRes.data) {
+            setProjectHealthDistribution(healthRes.data)
+          }
+        } catch (err) {
+          console.error('Failed to load health distribution:', err)
+        }
+
+        // 获取风险墙数据
+        try {
+          const riskWallRes = await pmoApi.riskWall()
+          if (riskWallRes.data?.projects) {
+            setRiskProjects(riskWallRes.data.projects)
+          }
+        } catch (err) {
+          console.error('Failed to load risk wall:', err)
+        }
+
+        // 获取月度营收数据（从销售统计 API）
+        try {
+          const now = new Date()
+          const startDate = new Date(now.getFullYear(), now.getMonth() - 5, 1)
+          const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+          const salesRes = await salesStatisticsApi.performance({
+            start_date: startDate.toISOString().split('T')[0],
+            end_date: endDate.toISOString().split('T')[0],
+          })
+          if (salesRes.data?.monthly_data) {
+            setMonthlyRevenue(salesRes.data.monthly_data)
+          }
+        } catch (err) {
+          console.error('Failed to load monthly revenue:', err)
+        }
+
+        // 获取部门绩效数据（从 PMO dashboard）
+        if (dashboardRes.data?.departments) {
+          setDepartmentPerformance(dashboardRes.data.departments)
         }
       } catch (err) {
-        console.log('Projects API unavailable')
+        console.error('Failed to load chairman dashboard:', err)
+        setError(err)
+        setCompanyStats(null)
+        setKeyProjects([])
+        setPendingApprovals([])
+        setDepartmentPerformance([])
+        setMonthlyRevenue([])
+        setRiskProjects([])
+        setProjectHealthDistribution([])
+      } finally {
+        setLoading(false)
       }
-
-      setLoading(false)
     }
     fetchData()
   }, [])
+
+  // Show error state
+  if (error && !companyStats) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="董事长工作台" description="企业战略总览、经营决策支持" />
+        <ApiIntegrationError
+          error={error}
+          apiEndpoint="/api/v1/pmo/dashboard"
+          onRetry={() => {
+            const fetchData = async () => {
+              try {
+                setLoading(true)
+                setError(null)
+                const dashboardRes = await pmoApi.dashboard()
+                if (dashboardRes.data) {
+                  setCompanyStats(dashboardRes.data)
+                }
+              } catch (err) {
+                setError(err)
+              } finally {
+                setLoading(false)
+              }
+            }
+            fetchData()
+          }}
+        />
+      </div>
+    )
+  }
 
   return (
     <motion.div
@@ -540,7 +298,7 @@ export default function ChairmanWorkstation() {
       {/* Page Header */}
       <PageHeader
         title="董事长工作台"
-        description={`年度营收目标: ${formatCurrency(companyStats.yearTarget)} | 已完成: ${formatCurrency(companyStats.totalRevenue)} (${companyStats.yearProgress.toFixed(1)}%)`}
+        description={companyStats ? `年度营收目标: ${formatCurrency(companyStats.yearTarget || 0)} | 已完成: ${formatCurrency(companyStats.totalRevenue || 0)} (${(companyStats.yearProgress || 0).toFixed(1)}%)` : '企业战略总览、经营决策支持'}
         actions={
           <motion.div variants={fadeIn}>
             <Button className="flex items-center gap-2">
@@ -570,6 +328,7 @@ export default function ChairmanWorkstation() {
       </motion.div>
 
       {/* Key Financial Metrics - 6 column grid */}
+      {companyStats && (
       <motion.div
         variants={staggerContainer}
         initial="hidden"
@@ -578,9 +337,9 @@ export default function ChairmanWorkstation() {
       >
         <StatCard
           title="年度营收"
-          value={formatCurrency(companyStats.totalRevenue)}
-          subtitle={`目标: ${formatCurrency(companyStats.yearTarget)}`}
-          trend={companyStats.revenueGrowth}
+          value={formatCurrency(companyStats.totalRevenue || 0)}
+          subtitle={`目标: ${formatCurrency(companyStats.yearTarget || 0)}`}
+          trend={companyStats.revenueGrowth || 0}
           icon={DollarSign}
           color="text-amber-400"
           bg="bg-amber-500/10"
@@ -588,8 +347,8 @@ export default function ChairmanWorkstation() {
         />
         <StatCard
           title="净利润"
-          value={formatCurrency(companyStats.profit)}
-          subtitle={`利润率: ${companyStats.profitMargin}%`}
+          value={formatCurrency(companyStats.profit || 0)}
+          subtitle={`利润率: ${companyStats.profitMargin || 0}%`}
           trend={15.2}
           icon={TrendingUp}
           color="text-emerald-400"
@@ -597,41 +356,43 @@ export default function ChairmanWorkstation() {
         />
         <StatCard
           title="活跃项目"
-          value={companyStats.activeProjects}
-          subtitle={`总计 ${companyStats.totalProjects} 个`}
-          trend={companyStats.projectGrowth}
+          value={companyStats.activeProjects || 0}
+          subtitle={`总计 ${companyStats.totalProjects || 0} 个`}
+          trend={companyStats.projectGrowth || 0}
           icon={Briefcase}
           color="text-blue-400"
           bg="bg-blue-500/10"
         />
         <StatCard
           title="客户总数"
-          value={companyStats.totalCustomers}
-          subtitle={`本月新增 ${companyStats.newCustomersThisMonth}`}
-          trend={companyStats.customerGrowth}
+          value={companyStats.totalCustomers || 0}
+          subtitle={`本月新增 ${companyStats.newCustomersThisMonth || 0}`}
+          trend={companyStats.customerGrowth || 0}
           icon={Building2}
           color="text-purple-400"
           bg="bg-purple-500/10"
         />
         <StatCard
           title="应收账款"
-          value={formatCurrency(companyStats.accountsReceivable)}
-          subtitle={`逾期 ${formatCurrency(companyStats.overdueReceivable)}`}
+          value={formatCurrency(companyStats.accountsReceivable || 0)}
+          subtitle={`逾期 ${formatCurrency(companyStats.overdueReceivable || 0)}`}
           icon={CreditCard}
           color="text-red-400"
           bg="bg-red-500/10"
         />
         <StatCard
           title="回款率"
-          value={`${companyStats.collectionRate}%`}
+          value={`${companyStats.collectionRate || 0}%`}
           subtitle="回款完成率"
           icon={Receipt}
           color="text-cyan-400"
           bg="bg-cyan-500/10"
         />
       </motion.div>
+      )}
 
       {/* Main Content Grid */}
+      {companyStats && (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Strategic Target & Operating Target */}
         <div className="lg:col-span-2 space-y-6">
@@ -646,33 +407,11 @@ export default function ChairmanWorkstation() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
-                  {mockStrategicMetrics.map((metric, index) => (
-                    <div key={index} className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-400">{metric.label}</span>
-                        <div className="flex items-center gap-2">
-                          {metric.trend > 0 ? (
-                            <ArrowUpRight className="w-3 h-3 text-emerald-400" />
-                          ) : metric.trend < 0 ? (
-                            <ArrowDownRight className="w-3 h-3 text-red-400" />
-                          ) : null}
-                          <span className={cn('font-semibold', metric.color)}>
-                            {metric.value}{metric.unit}
-                          </span>
-                        </div>
-                      </div>
-                      <Progress
-                        value={(metric.value / metric.target) * 100}
-                        className="h-2 bg-slate-700/50"
-                      />
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-500">目标: {metric.target}{metric.unit}</span>
-                        <span className="text-slate-500">
-                          {metric.trend > 0 ? '+' : ''}{metric.trend}%
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                  {/* Strategic metrics - 需要从API获取数据 */}
+                  {}
+                  <div className="text-center py-8 text-slate-500">
+                    <p>战略目标数据需要从API获取</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -693,26 +432,26 @@ export default function ChairmanWorkstation() {
                     <div>
                       <p className="text-sm text-slate-400">年度营收目标</p>
                       <p className="text-3xl font-bold text-white mt-1">
-                        {formatCurrency(companyStats.yearTarget)}
+                        {formatCurrency(companyStats.yearTarget || 0)}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-slate-400">已完成</p>
                       <p className="text-3xl font-bold text-emerald-400 mt-1">
-                        {formatCurrency(companyStats.totalRevenue)}
+                        {formatCurrency(companyStats.totalRevenue || 0)}
                       </p>
                     </div>
                   </div>
                   <Progress
-                    value={companyStats.yearProgress}
+                    value={companyStats.yearProgress || 0}
                     className="h-4 bg-slate-700/50"
                   />
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-400">
-                      完成率: {companyStats.yearProgress.toFixed(1)}%
+                      完成率: {(companyStats.yearProgress || 0).toFixed(1)}%
                     </span>
                     <span className="text-slate-400">
-                      剩余: {formatCurrency(companyStats.yearTarget - companyStats.totalRevenue)}
+                      剩余: {formatCurrency((companyStats.yearTarget || 0) - (companyStats.totalRevenue || 0))}
                     </span>
                   </div>
                 </div>
@@ -738,40 +477,56 @@ export default function ChairmanWorkstation() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {mockMonthlyRevenue.map((item, index) => {
-                    const achievement = (item.revenue / item.target) * 100
-                    return (
-                      <div key={index} className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-slate-400">{item.month}</span>
-                          <div className="flex items-center gap-3">
-                            <span className="text-slate-400 text-xs">
-                              目标: {formatCurrency(item.target)}
-                            </span>
-                            <span className="font-semibold text-white">
-                              {formatCurrency(item.revenue)}
-                            </span>
-                            <span className={cn(
-                              'text-xs font-medium',
-                              achievement >= 100 ? 'text-emerald-400' :
-                              achievement >= 90 ? 'text-amber-400' : 'text-red-400'
-                            )}>
-                              {achievement.toFixed(1)}%
-                            </span>
+                  {monthlyRevenue.length > 0 ? (
+                    monthlyRevenue.map((item, index) => {
+                      const revenue = item.revenue || item.amount || 0
+                      const target = item.target || item.target_amount || 0
+                      const month = item.month || item.period || `第${index + 1}月`
+                      const achievement = target > 0 ? (revenue / target) * 100 : 0
+                      return (
+                        <div key={index} className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-slate-400">{month}</span>
+                            <div className="flex items-center gap-3">
+                              {target > 0 && (
+                                <span className="text-slate-400 text-xs">
+                                  目标: {formatCurrency(target)}
+                                </span>
+                              )}
+                              <span className="font-semibold text-white">
+                                {formatCurrency(revenue)}
+                              </span>
+                              {target > 0 && (
+                                <span className={cn(
+                                  'text-xs font-medium',
+                                  achievement >= 100 ? 'text-emerald-400' :
+                                  achievement >= 90 ? 'text-amber-400' : 'text-red-400'
+                                )}>
+                                  {achievement.toFixed(1)}%
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        <Progress
-                          value={Math.min(achievement, 100)}
-                          className={cn(
-                            "h-2 bg-slate-700/50",
-                            achievement >= 100 && "bg-emerald-500/20",
-                            achievement >= 90 && achievement < 100 && "bg-amber-500/20",
-                            achievement < 90 && "bg-red-500/20"
+                          {target > 0 && (
+                            <Progress
+                              value={Math.min(achievement, 100)}
+                              className={cn(
+                                "h-2 bg-slate-700/50",
+                                achievement >= 100 && "bg-emerald-500/20",
+                                achievement >= 90 && achievement < 100 && "bg-amber-500/20",
+                                achievement < 90 && "bg-red-500/20"
+                              )}
+                            />
                           )}
-                        />
-                      </div>
-                    )
-                  })}
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <div className="text-center py-8 text-slate-500">
+                      <TrendingUp className="h-12 w-12 mx-auto mb-3 text-slate-500/50" />
+                      <p className="text-sm">月度营收数据需要从API获取</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -795,43 +550,57 @@ export default function ChairmanWorkstation() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {mockProjectHealthDistribution.map((item) => (
-                    <div key={item.health} className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <div className={cn(
-                            'w-3 h-3 rounded-full',
-                            item.color === 'emerald' && 'bg-emerald-500',
-                            item.color === 'amber' && 'bg-amber-500',
-                            item.color === 'red' && 'bg-red-500'
-                          )} />
-                          <span className="text-slate-300">{item.label}</span>
+                  {projectHealthDistribution.length > 0 ? (
+                    projectHealthDistribution.map((item) => {
+                      const health = item.health || item.health_status || 'H1'
+                      const label = item.label || (health === 'H1' ? '正常' : health === 'H2' ? '关注' : '预警')
+                      const count = item.count || item.project_count || 0
+                      const percentage = item.percentage || item.percentage || 0
+                      const color = item.color || (health === 'H1' ? 'emerald' : health === 'H2' ? 'amber' : 'red')
+                      return (
+                        <div key={health} className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <div className={cn(
+                                'w-3 h-3 rounded-full',
+                                color === 'emerald' && 'bg-emerald-500',
+                                color === 'amber' && 'bg-amber-500',
+                                color === 'red' && 'bg-red-500'
+                              )} />
+                              <span className="text-slate-300">{label}</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-slate-400 text-xs">
+                                {count} 个项目
+                              </span>
+                              <span className={cn(
+                                'font-semibold',
+                                color === 'emerald' && 'text-emerald-400',
+                                color === 'amber' && 'text-amber-400',
+                                color === 'red' && 'text-red-400'
+                              )}>
+                                {percentage.toFixed(1)}%
+                              </span>
+                            </div>
+                          </div>
+                          <Progress
+                            value={percentage}
+                            className={cn(
+                              "h-2 bg-slate-700/50",
+                              color === 'emerald' && "bg-emerald-500/20",
+                              color === 'amber' && "bg-amber-500/20",
+                              color === 'red' && "bg-red-500/20"
+                            )}
+                          />
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-slate-400 text-xs">
-                            {item.count} 个项目
-                          </span>
-                          <span className={cn(
-                            'font-semibold',
-                            item.color === 'emerald' && 'text-emerald-400',
-                            item.color === 'amber' && 'text-amber-400',
-                            item.color === 'red' && 'text-red-400'
-                          )}>
-                            {item.percentage}%
-                          </span>
-                        </div>
-                      </div>
-                      <Progress
-                        value={item.percentage}
-                        className={cn(
-                          "h-2 bg-slate-700/50",
-                          item.color === 'emerald' && "bg-emerald-500/20",
-                          item.color === 'amber' && "bg-amber-500/20",
-                          item.color === 'red' && "bg-red-500/20"
-                        )}
-                      />
+                      )
+                    })
+                  ) : (
+                    <div className="text-center py-8 text-slate-500">
+                      <PieChart className="h-12 w-12 mx-auto mb-3 text-slate-500/50" />
+                      <p className="text-sm">项目健康度数据需要从API获取</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -847,54 +616,70 @@ export default function ChairmanWorkstation() {
                     风险预警项目
                   </CardTitle>
                   <Badge variant="outline" className="bg-red-500/20 text-red-400 border-red-500/30">
-                    {mockRiskProjects.length}
+                    {riskProjects.length}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {mockRiskProjects.map((project) => (
-                    <Link
-                      key={project.id}
-                      to={`/projects/${project.id}`}
-                      className="block p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-red-500/50 transition-colors cursor-pointer group"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-mono text-slate-400">
-                              {project.projectCode}
-                            </span>
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                'text-xs',
-                                project.health === 'H3' && 'bg-red-500/20 text-red-400 border-red-500/30',
-                                project.health === 'H2' && 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                  {riskProjects.length > 0 ? (
+                    riskProjects.map((project) => {
+                      const projectCode = project.project_code || project.projectCode || project.id
+                      const projectName = project.project_name || project.projectName || project.name
+                      const customer = project.customer_name || project.customer || ''
+                      const health = project.health || 'H2'
+                      const issue = project.issue || project.risk_description || '需要关注'
+                      const delayDays = project.delay_days || project.delayDays || 0
+                      return (
+                        <Link
+                          key={project.id}
+                          to={`/projects/${project.id}`}
+                          className="block p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-red-500/50 transition-colors cursor-pointer group"
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-xs font-mono text-slate-400">
+                                  {projectCode}
+                                </span>
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    'text-xs',
+                                    health === 'H3' && 'bg-red-500/20 text-red-400 border-red-500/30',
+                                    health === 'H2' && 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                                  )}
+                                >
+                                  {health === 'H3' ? '预警' : '关注'}
+                                </Badge>
+                              </div>
+                              <p className="font-medium text-white text-sm group-hover:text-red-400 transition-colors">
+                                {projectName}
+                              </p>
+                              {customer && (
+                                <p className="text-xs text-slate-400 mt-1">{customer}</p>
                               )}
-                            >
-                              {project.health === 'H3' ? '预警' : '关注'}
-                            </Badge>
-                            {project.riskLevel === 'high' && (
-                              <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
-                                高风险
-                              </Badge>
-                            )}
+                            </div>
                           </div>
-                          <p className="font-medium text-white text-sm group-hover:text-red-400 transition-colors">
-                            {project.projectName}
-                          </p>
-                          <p className="text-xs text-slate-400 mt-1">{project.customer}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between text-xs mt-2">
-                        <span className="text-slate-400">{project.issue}</span>
-                        <span className="font-medium text-red-400">
-                          延期 {project.delayDays} 天
-                        </span>
-                      </div>
-                    </Link>
-                  ))}
+                          {issue && (
+                            <div className="flex items-center justify-between text-xs mt-2">
+                              <span className="text-slate-400">{issue}</span>
+                              {delayDays > 0 && (
+                                <span className="font-medium text-red-400">
+                                  延期 {delayDays} 天
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </Link>
+                      )
+                    })
+                  ) : (
+                    <div className="text-center py-8 text-slate-500">
+                      <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-emerald-500/50" />
+                      <p className="text-sm">暂无风险预警项目</p>
+                    </div>
+                  )}
                   <Button variant="outline" className="w-full mt-3" asChild>
                     <Link to="/alerts">
                       查看全部预警 <ArrowRight className="w-3 h-3 ml-2" />
@@ -923,57 +708,77 @@ export default function ChairmanWorkstation() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {departmentPerformance.map((dept) => (
-                    <div
-                      key={dept.id}
-                      className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className={cn(
-                            'w-10 h-10 rounded-lg flex items-center justify-center',
-                            dept.status === 'excellent' && 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/10',
-                            dept.status === 'good' && 'bg-gradient-to-br from-blue-500/20 to-blue-600/10',
-                            dept.status === 'warning' && 'bg-gradient-to-br from-amber-500/20 to-amber-600/10',
-                          )}>
-                            <Building2 className={cn(
-                              'h-5 w-5',
-                              dept.status === 'excellent' && 'text-emerald-400',
-                              dept.status === 'good' && 'text-blue-400',
-                              dept.status === 'warning' && 'text-amber-400',
-                            )} />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-white">{dept.name}</span>
-                              <Badge variant="outline" className="text-xs bg-slate-700/40">
-                                {dept.manager}
-                              </Badge>
+                  {departmentPerformance.length > 0 ? (
+                    departmentPerformance.map((dept) => {
+                      const deptName = dept.name || dept.department_name || ''
+                      const manager = dept.manager || dept.manager_name || ''
+                      const employees = dept.employees || dept.employee_count || 0
+                      const projects = dept.projects || dept.project_count || dept.orders || dept.inspections || 0
+                      const revenue = dept.revenue || dept.total_revenue || 0
+                      const achievement = dept.achievement || dept.achievement_rate || 0
+                      const status = dept.status || (achievement >= 90 ? 'excellent' : achievement >= 70 ? 'good' : 'warning')
+                      return (
+                        <div
+                          key={dept.id || dept.department_id}
+                          className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors"
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className={cn(
+                                'w-10 h-10 rounded-lg flex items-center justify-center',
+                                status === 'excellent' && 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/10',
+                                status === 'good' && 'bg-gradient-to-br from-blue-500/20 to-blue-600/10',
+                                status === 'warning' && 'bg-gradient-to-br from-amber-500/20 to-amber-600/10',
+                              )}>
+                                <Building2 className={cn(
+                                  'h-5 w-5',
+                                  status === 'excellent' && 'text-emerald-400',
+                                  status === 'good' && 'text-blue-400',
+                                  status === 'warning' && 'text-amber-400',
+                                )} />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-white">{deptName}</span>
+                                  {manager && (
+                                    <Badge variant="outline" className="text-xs bg-slate-700/40">
+                                      {manager}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="text-xs text-slate-400 mt-1">
+                                  {employees} 人 · {projects} 项工作
+                                </div>
+                              </div>
                             </div>
-                            <div className="text-xs text-slate-400 mt-1">
-                              {dept.employees} 人 · {dept.projects || dept.orders || dept.inspections} 项工作
-                            </div>
+                            {revenue > 0 && (
+                              <div className="text-right">
+                                <div className="text-lg font-bold text-white">
+                                  {formatCurrency(revenue)}
+                                </div>
+                                {achievement > 0 && (
+                                  <div className="text-xs text-slate-400">
+                                    完成率: {achievement.toFixed(1)}%
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
+                          {achievement > 0 && (
+                            <Progress
+                              value={achievement}
+                              className="h-1.5 bg-slate-700/50"
+                            />
+                          )}
                         </div>
-                        {dept.revenue > 0 && (
-                          <div className="text-right">
-                            <div className="text-lg font-bold text-white">
-                              {formatCurrency(dept.revenue)}
-                            </div>
-                            <div className="text-xs text-slate-400">
-                              完成率: {dept.achievement.toFixed(1)}%
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      {dept.achievement > 0 && (
-                        <Progress
-                          value={dept.achievement}
-                          className="h-1.5 bg-slate-700/50"
-                        />
-                      )}
+                      )
+                    })
+                  ) : (
+                    <div className="text-center py-8 text-slate-500">
+                      <Users className="h-12 w-12 mx-auto mb-3 text-slate-500/50" />
+                      <p className="text-sm">部门绩效数据需要从API获取</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -992,65 +797,19 @@ export default function ChairmanWorkstation() {
                     重大决策事项
                   </CardTitle>
                   <Badge variant="outline" className="bg-amber-500/20 text-amber-400 border-amber-500/30">
-                    {mockKeyDecisions.length}
+                    {/* Key decisions count - 需要从API获取 */}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {mockKeyDecisions.map((item) => (
-                  <div
-                    key={item.id}
-                    className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              'text-xs',
-                              item.type === 'investment' && 'bg-red-500/20 text-red-400 border-red-500/30',
-                              item.type === 'contract' && 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-                              item.type === 'strategy' && 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-                              item.type === 'personnel' && 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
-                            )}
-                          >
-                            {item.type === 'investment' ? '投资' : 
-                             item.type === 'contract' ? '合同' :
-                             item.type === 'strategy' ? '战略' : '人事'}
-                          </Badge>
-                          {item.priority === 'high' && (
-                            <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
-                              紧急
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="font-medium text-white text-sm">{item.title}</p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          {item.department} · {item.submitter}
-                        </p>
-                      </div>
-                    </div>
-                    {item.amount && (
-                      <div className="flex items-center justify-between text-xs mt-2">
-                        <span className="text-slate-400">{item.submitTime}</span>
-                        <span className="font-medium text-amber-400">
-                          {formatCurrency(item.amount)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-                <Button variant="outline" className="w-full mt-3" asChild>
-                  <Link to="/key-decisions">
-                    查看全部事项 <ArrowRight className="w-3 h-3 ml-2" />
-                  </Link>
-                </Button>
+                {/* Key decisions - 需要从API获取数据 */}
+                <div className="text-center py-8 text-slate-500">
+                  <p>暂无重大决策事项</p>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
 
-          {/* Pending Approvals */}
           <motion.div variants={fadeIn}>
             <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
               <CardHeader>
@@ -1135,7 +894,7 @@ export default function ChairmanWorkstation() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {mockRecentProjects.map((project) => (
+                  {keyProjects.length > 0 ? keyProjects.map((project) => (
                     <Link
                       key={project.id}
                       to={`/projects/${project.id}`}
@@ -1145,43 +904,47 @@ export default function ChairmanWorkstation() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-xs font-mono text-slate-400">
-                              {project.projectCode}
+                              {project.project_code || project.projectCode || project.id}
                             </span>
                             <Badge
                               variant="outline"
                               className={cn(
                                 'text-xs',
-                                project.health === 'H1' && 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-                                project.health === 'H2' && 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                                (project.health === 'H1' || project.health_status === 'H1') && 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+                                (project.health === 'H2' || project.health_status === 'H2') && 'bg-amber-500/20 text-amber-400 border-amber-500/30'
                               )}
                             >
-                              {project.health === 'H1' ? '正常' : '关注'}
+                              {(project.health === 'H1' || project.health_status === 'H1') ? '正常' : '关注'}
                             </Badge>
                           </div>
                           <p className="font-medium text-white text-sm group-hover:text-cyan-400 transition-colors">
-                            {project.projectName}
+                            {project.project_name || project.projectName || project.name}
                           </p>
-                          <p className="text-xs text-slate-400 mt-1">{project.customer}</p>
+                          <p className="text-xs text-slate-400 mt-1">{project.customer_name || project.customer || ''}</p>
                         </div>
                       </div>
                       <div className="space-y-2 mt-3">
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-slate-400">进度</span>
-                          <span className="text-white font-medium">{project.progress}%</span>
+                          <span className="text-white font-medium">{project.progress || 0}%</span>
                         </div>
                         <Progress
-                          value={project.progress}
+                          value={project.progress || 0}
                           className="h-1.5 bg-slate-700/50"
                         />
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-400">阶段: {project.stage}</span>
+                          <span className="text-slate-400">阶段: {project.current_stage || project.stage || ''}</span>
                           <span className="text-slate-400">
-                            {project.plannedEndDate}
+                            {project.planned_end_date || project.plannedEndDate || ''}
                           </span>
                         </div>
                       </div>
                     </Link>
-                  ))}
+                  )) : (
+                    <div className="text-center py-8 text-slate-500">
+                      <p>暂无项目数据</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1201,11 +964,11 @@ export default function ChairmanWorkstation() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-400">项目按时交付率</span>
                     <span className="font-semibold text-emerald-400">
-                      {companyStats.onTimeDeliveryRate}%
+                      {companyStats.onTimeDeliveryRate || 0}%
                     </span>
                   </div>
                   <Progress
-                    value={companyStats.onTimeDeliveryRate}
+                    value={companyStats.onTimeDeliveryRate || 0}
                     className="h-2 bg-slate-700/50"
                   />
                 </div>
@@ -1213,11 +976,11 @@ export default function ChairmanWorkstation() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-400">质量合格率</span>
                     <span className="font-semibold text-emerald-400">
-                      {companyStats.qualityPassRate}%
+                      {companyStats.qualityPassRate || 0}%
                     </span>
                   </div>
                   <Progress
-                    value={companyStats.qualityPassRate}
+                    value={companyStats.qualityPassRate || 0}
                     className="h-2 bg-slate-700/50"
                   />
                 </div>
@@ -1254,6 +1017,7 @@ export default function ChairmanWorkstation() {
           </motion.div>
         </div>
       </div>
+      )}
     </motion.div>
   )
 }

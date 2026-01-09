@@ -51,7 +51,7 @@ const layerConfig = {
   },
 }
 
-export default function StrategicStructureEditor({ meetingId, initialData, onSave, readOnly = false }) {
+export default function StrategicStructureEditor({ initialData, onSave, readOnly = false }) {
   const [structure, setStructure] = useState(initialData || {})
   const [expandedLayers, setExpandedLayers] = useState({
     vision: true,

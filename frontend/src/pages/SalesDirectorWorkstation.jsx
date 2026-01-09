@@ -420,53 +420,14 @@ export default function SalesDirectorWorkstation() {
               <CardContent>
                 <div className="space-y-4">
                   {/* Sales funnel - 需要从API获取数据 */}
-                  {/* {Object.entries(mockSalesFunnel).map(([stage, data], index) => {
-                    const stageNames = {
-                      inquiry: '询价阶段',
-                      qualification: '需求确认',
-                      proposal: '方案报价',
-                      negotiation: '商务谈判',
-                      closed: '签约成交',
-                    }
-                    return (
-                      <div key={stage} className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2">
-                            <div className={cn(
-                              'w-2 h-2 rounded-full',
-                              index === 0 && 'bg-blue-500',
-                              index === 1 && 'bg-cyan-500',
-                              index === 2 && 'bg-amber-500',
-                              index === 3 && 'bg-orange-500',
-                              index === 4 && 'bg-emerald-500'
-                            )} />
-                            <span className="text-slate-300">{stageNames[stage]}</span>
-                            <Badge variant="outline" className="text-xs bg-slate-700/40">
-                              {data.count} 个
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-slate-400 text-xs">
-                              转化率: {data.conversion}%
-                            </span>
-                            <span className="text-white font-medium">
-                              {formatCurrency(data.amount)}
-                            </span>
-                          </div>
-                        </div>
-                        <Progress
-                          value={data.conversion}
-                          className="h-2 bg-slate-700/50"
-                        />
-                      </div>
-                    )
-                  })}
+                  <div className="text-center py-8 text-slate-500">
+                    <p>销售漏斗数据需要从API获取</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
 
-          {/* Team Performance */}
           <motion.div variants={fadeIn}>
             <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
               <CardHeader>
@@ -623,40 +584,7 @@ export default function SalesDirectorWorkstation() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {/* Top customers - 需要从API获取数据 */}
-                {/* {mockTopCustomers.map((customer, index) => (
-                  <div
-                    key={customer.id}
-                    className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className={cn(
-                          'w-6 h-6 rounded flex items-center justify-center text-xs font-bold text-white',
-                          index === 0 && 'bg-gradient-to-br from-amber-500 to-orange-500',
-                          index === 1 && 'bg-gradient-to-br from-blue-500 to-cyan-500',
-                          index === 2 && 'bg-gradient-to-br from-purple-500 to-pink-500',
-                          index === 3 && 'bg-gradient-to-br from-slate-500 to-gray-600',
-                        )}>
-                          {index + 1}
-                        </div>
-                        <div>
-                          <p className="font-medium text-white text-sm">{customer.name}</p>
-                          <p className="text-xs text-slate-400 mt-0.5">
-                            {customer.projectCount} 个项目
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">
-                        累计: {formatCurrency(customer.totalAmount)}
-                      </span>
-                      <span className="text-emerald-400 font-medium">
-                        本年: {formatCurrency(customer.thisYear)}
-                      </span>
-                    </div>
-                  </div>
-                ))} */}
+                {}
                 <div className="text-center py-8 text-slate-500">
                   <p>重点客户数据需要从API获取</p>
                 </div>
@@ -665,6 +593,7 @@ export default function SalesDirectorWorkstation() {
           </motion.div>
         </div>
       </div>
+      )}
 
       {/* Year Progress */}
       {overallStats && (

@@ -4,7 +4,6 @@
  */
 
 import { Line, Column, Gauge } from '@ant-design/plots'
-import { useMemo } from 'react'
 
 /**
  * DeliveryRateChart - 交付准时率图表

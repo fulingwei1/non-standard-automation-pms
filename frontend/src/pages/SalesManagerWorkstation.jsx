@@ -4,7 +4,7 @@
  * Core Functions: Team management, Performance monitoring, Contract approval, Customer relationship
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   TrendingUp,
@@ -42,12 +42,14 @@ import {
   Badge,
   Progress,
 } from '../components/ui'
-import { cn } from '../lib/utils'
+import { cn, formatCurrency } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { SalesFunnel, CustomerCard, PaymentTimeline } from '../components/sales'
+import { salesStatisticsApi, salesApi } from '../services/api'
+import { ApiIntegrationError } from '../components/ui'
 
-// Mock data for sales manager dashboard (department level)
-const mockDeptStats = {
+// Mock data - 已移除，使用真实API
+/* const mockDeptStats = {
   monthlyTarget: 2000000,
   monthlyAchieved: 1680000,
   achievementRate: 84,
@@ -64,9 +66,9 @@ const mockDeptStats = {
   pendingPayment: 850000,
   overduePayment: 120000,
   collectionRate: 88.5,
-}
+} */
 
-const mockTeamMembers = [
+/* const mockTeamMembers = [
   {
     id: 1,
     name: '张销售',
@@ -111,9 +113,9 @@ const mockTeamMembers = [
     newCustomers: 2,
     status: 'excellent',
   },
-]
+] */
 
-const mockSalesFunnel = {
+/* const mockSalesFunnel = {
   inquiry: { count: 45, amount: 5600000, conversion: 100 },
   qualification: { count: 32, amount: 4200000, conversion: 71.1 },
   proposal: { count: 20, amount: 3200000, conversion: 62.5 },
@@ -152,9 +154,9 @@ const mockPendingApprovals = [
     submitTime: '2026-01-06 16:45',
     priority: 'high',
   },
-]
+] */
 
-const mockTopCustomers = [
+/* const mockTopCustomers = [
   {
     id: 1,
     name: '深圳XX科技有限公司',
@@ -191,24 +193,13 @@ const mockTopCustomers = [
     opportunityCount: 2,
     totalAmount: 800000,
   },
-]
+] */
 
-const mockPayments = [
+/* const mockPayments = [
   { id: 1, type: 'progress', projectName: 'EOL项目进度款', amount: 150000, dueDate: '2026-01-08', status: 'pending' },
   { id: 2, type: 'deposit', projectName: 'BMS项目签约款', amount: 200000, dueDate: '2026-01-15', paidDate: '2026-01-05', status: 'paid' },
   { id: 3, type: 'acceptance', projectName: 'ICT项目验收款', amount: 180000, dueDate: '2026-01-20', status: 'pending' },
-]
-
-const formatCurrency = (value) => {
-  if (value >= 10000) {
-    return `¥${(value / 10000).toFixed(1)}万`
-  }
-  return new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency: 'CNY',
-    minimumFractionDigits: 0,
-  }).format(value)
-}
+] */
 
 const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg }) => {
   return (
@@ -262,6 +253,111 @@ const priorityConfig = {
 
 export default function SalesManagerWorkstation() {
   const [selectedPeriod, setSelectedPeriod] = useState('month')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [deptStats, setDeptStats] = useState(null)
+  const [teamMembers, setTeamMembers] = useState([])
+  const [salesFunnel, setSalesFunnel] = useState({})
+  const [pendingApprovals, setPendingApprovals] = useState([])
+  const [topCustomers, setTopCustomers] = useState([])
+  const [payments, setPayments] = useState([])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const [statsRes, teamRes, funnelRes, approvalsRes, customersRes, paymentsRes] = await Promise.all([
+          salesStatisticsApi.getDepartmentStats().catch(() => ({ data: null })),
+          salesStatisticsApi.exportTeam().catch(() => ({ data: null })),
+          salesApi.getFunnel().catch(() => ({ data: null })),
+          salesApi.getPendingApprovals().catch(() => ({ data: null })),
+          salesApi.getTopCustomers({ limit: 5 }).catch(() => ({ data: null })),
+          salesApi.getPaymentSchedule({ limit: 5 }).catch(() => ({ data: null })),
+        ])
+
+        if (statsRes?.data) {
+          setDeptStats({
+            monthlyTarget: statsRes.data.monthly_target || 0,
+            monthlyAchieved: statsRes.data.monthly_achieved || 0,
+            achievementRate: statsRes.data.achievement_rate || 0,
+            yearTarget: statsRes.data.year_target || 0,
+            yearAchieved: statsRes.data.year_achieved || 0,
+            yearProgress: statsRes.data.year_progress || 0,
+            teamSize: statsRes.data.team_size || 0,
+            activeContracts: statsRes.data.active_contracts || 0,
+            pendingApprovals: statsRes.data.pending_approvals || 0,
+            totalCustomers: statsRes.data.total_customers || 0,
+            newCustomersThisMonth: statsRes.data.new_customers_this_month || 0,
+            activeOpportunities: statsRes.data.active_opportunities || 0,
+            hotOpportunities: statsRes.data.hot_opportunities || 0,
+            pendingPayment: statsRes.data.pending_payment || 0,
+            overduePayment: statsRes.data.overdue_payment || 0,
+            collectionRate: statsRes.data.collection_rate || 0,
+          })
+        }
+
+        if (teamRes?.data) {
+          setTeamMembers(teamRes.data.items || teamRes.data || [])
+        }
+
+        if (funnelRes?.data) {
+          setSalesFunnel(funnelRes.data)
+        }
+
+        if (approvalsRes?.data) {
+          setPendingApprovals(approvalsRes.data.items || approvalsRes.data || [])
+        }
+
+        if (customersRes?.data) {
+          setTopCustomers(customersRes.data.items || customersRes.data || [])
+        }
+
+        if (paymentsRes?.data) {
+          setPayments(paymentsRes.data.items || paymentsRes.data || [])
+        }
+      } catch (err) {
+        console.error('Failed to load sales manager dashboard:', err)
+        setError(err)
+        setDeptStats(null)
+        setTeamMembers([])
+        setSalesFunnel({})
+        setPendingApprovals([])
+        setTopCustomers([])
+        setPayments([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [selectedPeriod])
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="销售经理工作台" description="部门级销售管理仪表板" />
+        <div className="text-center py-16 text-slate-400">加载中...</div>
+      </div>
+    )
+  }
+
+  if (error && !deptStats) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="销售经理工作台" description="部门级销售管理仪表板" />
+        <ApiIntegrationError
+          error={error}
+          apiEndpoint="/api/v1/sales/statistics/department"
+          onRetry={() => {
+            setError(null)
+            setLoading(true)
+          }}
+        />
+      </div>
+    )
+  }
 
   return (
     <motion.div
@@ -273,7 +369,7 @@ export default function SalesManagerWorkstation() {
       {/* Page Header */}
       <PageHeader
         title="销售经理工作台"
-        description={`部门目标: ${formatCurrency(mockDeptStats.monthlyTarget)} | 已完成: ${formatCurrency(mockDeptStats.monthlyAchieved)} (${mockDeptStats.achievementRate}%)`}
+        description={deptStats ? `部门目标: ${formatCurrency(deptStats.monthlyTarget || 0)} | 已完成: ${formatCurrency(deptStats.monthlyAchieved || 0)} (${deptStats.achievementRate || 0}%)` : '部门级销售管理仪表板'}
         actions={
           <motion.div variants={fadeIn} className="flex gap-2">
             <Button variant="outline" className="flex items-center gap-2">
@@ -293,35 +389,37 @@ export default function SalesManagerWorkstation() {
         variants={staggerContainer}
         className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
       >
-        <StatCard
-          title="本月签约"
-          value={formatCurrency(mockDeptStats.monthlyAchieved)}
-          subtitle={`目标: ${formatCurrency(mockDeptStats.monthlyTarget)}`}
-          trend={12.5}
-          icon={DollarSign}
-          color="text-amber-400"
-          bg="bg-amber-500/10"
-        />
-        <StatCard
-          title="完成率"
-          value={`${mockDeptStats.achievementRate}%`}
-          subtitle="本月目标达成"
-          icon={Target}
+        {deptStats && (
+          <>
+            <StatCard
+              title="本月签约"
+              value={formatCurrency(deptStats.monthlyAchieved || 0)}
+              subtitle={`目标: ${formatCurrency(deptStats.monthlyTarget || 0)}`}
+              trend={12.5}
+              icon={DollarSign}
+              color="text-amber-400"
+              bg="bg-amber-500/10"
+            />
+            <StatCard
+              title="完成率"
+              value={`${deptStats.achievementRate || 0}%`}
+              subtitle="本月目标达成"
+              icon={Target}
           color="text-emerald-400"
           bg="bg-emerald-500/10"
         />
         <StatCard
           title="团队规模"
-          value={mockDeptStats.teamSize}
-          subtitle={`活跃成员 ${mockDeptStats.teamSize}`}
+          value={deptStats?.teamSize || 0}
+          subtitle={`活跃成员 ${deptStats?.teamSize || 0}`}
           icon={Users}
           color="text-blue-400"
           bg="bg-blue-500/10"
         />
         <StatCard
           title="活跃客户"
-          value={mockDeptStats.totalCustomers}
-          subtitle={`本月新增 ${mockDeptStats.newCustomersThisMonth}`}
+          value={deptStats?.totalCustomers || 0}
+          subtitle={`本月新增 ${deptStats?.newCustomersThisMonth || 0}`}
           trend={6.2}
           icon={Building2}
           color="text-purple-400"
@@ -329,20 +427,22 @@ export default function SalesManagerWorkstation() {
         />
         <StatCard
           title="待回款"
-          value={formatCurrency(mockDeptStats.pendingPayment)}
-          subtitle={`逾期 ${formatCurrency(mockDeptStats.overduePayment)}`}
+          value={formatCurrency(deptStats?.pendingPayment || 0)}
+          subtitle={`逾期 ${formatCurrency(deptStats?.overduePayment || 0)}`}
           icon={CreditCard}
           color="text-red-400"
           bg="bg-red-500/10"
         />
         <StatCard
           title="待审批"
-          value={mockDeptStats.pendingApprovals}
+          value={deptStats?.pendingApprovals || 0}
           subtitle="项待处理"
           icon={AlertTriangle}
           color="text-amber-400"
           bg="bg-amber-500/10"
         />
+        </>
+      )}
       </motion.div>
 
       {/* Main Content Grid */}
@@ -359,13 +459,14 @@ export default function SalesManagerWorkstation() {
                     销售漏斗分析
                   </CardTitle>
                   <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-                    {mockDeptStats.activeOpportunities} 个商机
+                    {deptStats?.activeOpportunities || 0} 个商机
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
+                {Object.keys(salesFunnel).length > 0 ? (
                 <div className="space-y-4">
-                  {Object.entries(mockSalesFunnel).map(([stage, data], index) => {
+                  {Object.entries(salesFunnel).map(([stage, data], index) => {
                     const stageNames = {
                       inquiry: '询价阶段',
                       qualification: '需求确认',
@@ -407,6 +508,11 @@ export default function SalesManagerWorkstation() {
                     )
                   })}
                 </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <p>销售漏斗数据需要从API获取</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -426,8 +532,9 @@ export default function SalesManagerWorkstation() {
                 </div>
               </CardHeader>
               <CardContent>
+                {teamMembers.length > 0 ? (
                 <div className="space-y-4">
-                  {mockTeamMembers.map((member, index) => (
+                  {teamMembers.map((member, index) => (
                     <div
                       key={member.id}
                       className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors"
@@ -445,22 +552,22 @@ export default function SalesManagerWorkstation() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-white">{member.name}</span>
+                              <span className="font-medium text-white">{member.name || member.user_name || 'N/A'}</span>
                               <Badge variant="outline" className="text-xs bg-slate-700/40">
-                                {member.role}
+                                {member.role || member.user_role || 'N/A'}
                               </Badge>
                             </div>
                             <div className="text-xs text-slate-400 mt-1">
-                              {member.activeProjects} 个项目 · {member.newCustomers} 个新客户
+                              {member.active_projects || member.activeProjects || 0} 个项目 · {member.new_customers || member.newCustomers || 0} 个新客户
                             </div>
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="text-lg font-bold text-white">
-                            {formatCurrency(member.monthlyAchieved)}
+                            {formatCurrency(member.monthly_achieved || member.monthlyAchieved || 0)}
                           </div>
                           <div className="text-xs text-slate-400">
-                            目标: {formatCurrency(member.monthlyTarget)}
+                            目标: {formatCurrency(member.monthly_target || member.monthlyTarget || 0)}
                           </div>
                         </div>
                       </div>
@@ -469,21 +576,26 @@ export default function SalesManagerWorkstation() {
                           <span className="text-slate-400">完成率</span>
                           <span className={cn(
                             'font-medium',
-                            member.achievementRate >= 90 ? 'text-emerald-400' :
-                            member.achievementRate >= 70 ? 'text-amber-400' :
+                            (member.achievement_rate || member.achievementRate || 0) >= 90 ? 'text-emerald-400' :
+                            (member.achievement_rate || member.achievementRate || 0) >= 70 ? 'text-amber-400' :
                             'text-red-400'
                           )}>
-                            {member.achievementRate}%
+                            {member.achievement_rate || member.achievementRate || 0}%
                           </span>
                         </div>
                         <Progress
-                          value={member.achievementRate}
+                          value={member.achievement_rate || member.achievementRate || 0}
                           className="h-1.5 bg-slate-700/50"
                         />
                       </div>
                     </div>
                   ))}
                 </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <p>团队成员数据需要从API获取</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -501,12 +613,13 @@ export default function SalesManagerWorkstation() {
                     待审批事项
                   </CardTitle>
                   <Badge variant="outline" className="bg-amber-500/20 text-amber-400 border-amber-500/30">
-                    {mockPendingApprovals.length}
+                    {pendingApprovals.length}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {mockPendingApprovals.map((item) => {
+                {pendingApprovals.length > 0 ? (
+                pendingApprovals.map((item) => {
                   const typeInfo = typeConfig[item.type]
                   const priorityInfo = priorityConfig[item.priority]
                   return (
@@ -543,7 +656,12 @@ export default function SalesManagerWorkstation() {
                       </div>
                     </div>
                   )
-                })}
+                })
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <p>待审批事项数据需要从API获取</p>
+                  </div>
+                )}
                 <Button variant="outline" className="w-full mt-3">
                   查看全部审批
                 </Button>
@@ -566,7 +684,8 @@ export default function SalesManagerWorkstation() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {mockTopCustomers.map((customer) => (
+                {topCustomers.length > 0 ? (
+                topCustomers.map((customer) => (
                   <CustomerCard
                     key={customer.id}
                     customer={customer}
@@ -575,7 +694,12 @@ export default function SalesManagerWorkstation() {
                       // Handle customer click if needed
                     }}
                   />
-                ))}
+                ))
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <p>重点客户数据需要从API获取</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -595,7 +719,13 @@ export default function SalesManagerWorkstation() {
                 </div>
               </CardHeader>
               <CardContent>
-                <PaymentTimeline payments={mockPayments} compact />
+                {payments.length > 0 ? (
+                  <PaymentTimeline payments={payments} compact />
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <p>回款计划数据需要从API获取</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -603,6 +733,7 @@ export default function SalesManagerWorkstation() {
       </div>
 
       {/* Year Progress */}
+      {deptStats && (
       <motion.div variants={fadeIn}>
         <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
           <CardHeader>
@@ -617,32 +748,33 @@ export default function SalesManagerWorkstation() {
                 <div>
                   <p className="text-sm text-slate-400">年度目标</p>
                   <p className="text-2xl font-bold text-white mt-1">
-                    {formatCurrency(mockDeptStats.yearTarget)}
+                    {formatCurrency(deptStats.yearTarget || 0)}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-slate-400">已完成</p>
                   <p className="text-2xl font-bold text-emerald-400 mt-1">
-                    {formatCurrency(mockDeptStats.yearAchieved)}
+                    {formatCurrency(deptStats.yearAchieved || 0)}
                   </p>
                 </div>
               </div>
               <Progress
-                value={mockDeptStats.yearProgress}
+                value={deptStats.yearProgress || 0}
                 className="h-3 bg-slate-700/50"
               />
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-400">
-                  完成率: {mockDeptStats.yearProgress}%
+                  完成率: {deptStats.yearProgress || 0}%
                 </span>
                 <span className="text-slate-400">
-                  剩余: {formatCurrency(mockDeptStats.yearTarget - mockDeptStats.yearAchieved)}
+                  剩余: {formatCurrency((deptStats.yearTarget || 0) - (deptStats.yearAchieved || 0))}
                 </span>
               </div>
             </div>
           </CardContent>
         </Card>
       </motion.div>
+      )}
     </motion.div>
   )
 }

@@ -59,470 +59,44 @@ import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { productionApi, shortageApi, serviceApi, materialApi, businessSupportApi } from '../services/api'
 import CultureWallCarousel from '../components/culture/CultureWallCarousel'
+import { ApiIntegrationError } from '../components/ui'
 
-// Mock data - Overall manufacturing center stats
-const mockManufacturingStats = {
-  // Production Department
-  production: {
-    inProductionProjects: 12,
-    todayOutput: 8,
-    completionRate: 85.5,
-    onTimeDeliveryRate: 92.3,
-    totalWorkers: 45,
-    activeWorkers: 42,
-    totalWorkstations: 28,
-    activeWorkstations: 25,
-    workshopLoad: 78.5,
-  },
-  // Customer Service Department
-  customerService: {
-    activeCases: 18,
-    resolvedToday: 5,
-    pendingCases: 8,
-    avgResponseTime: 2.5, // hours
-    customerSatisfaction: 94.5,
-    onSiteServices: 3,
-    totalEngineers: 12,
-    activeEngineers: 10,
-  },
-  // Warehouse Department
-  warehouse: {
-    totalItems: 1250,
-    inStockItems: 1180,
-    lowStockItems: 15,
-    outOfStockItems: 5,
-    inventoryTurnover: 8.5,
-    warehouseUtilization: 82.3,
-    pendingInbound: 8,
-    pendingOutbound: 12,
-  },
-  // Shipping Department
-  shipping: {
-    pendingShipments: 6,
-    shippedToday: 4,
-    inTransit: 8,
-    deliveredThisWeek: 28,
-    onTimeShippingRate: 96.5,
-    avgShippingTime: 3.2, // days
-    totalOrders: 42,
-  },
-}
+// Mock data - Overall manufacturing center stats - 已移除，使用真实API
 
-// Mock workshops data
-const mockWorkshops = [
-  {
-    id: 1,
-    name: '机加车间',
-    currentLoad: 75,
-    activeWorkstations: 8,
-    totalWorkstations: 10,
-    activeWorkers: 14,
-    workers: 15,
-    todayOutput: 3,
-    status: 'normal',
-  },
-  {
-    id: 2,
-    name: '装配车间',
-    currentLoad: 90,
-    activeWorkstations: 12,
-    totalWorkstations: 12,
-    activeWorkers: 18,
-    workers: 20,
-    todayOutput: 5,
-    status: 'warning',
-  },
-  {
-    id: 3,
-    name: '调试车间',
-    currentLoad: 50,
-    activeWorkstations: 5,
-    totalWorkstations: 6,
-    activeWorkers: 10,
-    workers: 10,
-    todayOutput: 0,
-    status: 'normal',
-  },
-]
 
-// Mock production plans pending approval
-const mockPendingApprovals = [
-  {
-    id: 1,
-    type: 'production_plan',
-    planCode: 'MPS-2025-003',
-    projectName: '视觉检测设备',
-    workshop: '装配车间',
-    startDate: '2025-02-01',
-    endDate: '2025-03-15',
-    priority: 'high',
-    submitter: '生产部经理',
-    submitTime: '2025-01-06 09:30',
-    status: 'pending',
-  },
-  {
-    id: 2,
-    type: 'resource_allocation',
-    title: '人员调配申请',
-    department: '生产部',
-    request: '从装配车间调配3人到调试车间',
-    submitter: '生产部经理',
-    submitTime: '2025-01-06 11:20',
-    priority: 'medium',
-    status: 'pending',
-  },
-  {
-    id: 3,
-    type: 'warehouse_expansion',
-    title: '仓储扩容申请',
-    department: '仓储部',
-    request: '新增500平米仓储面积',
-    amount: 500000,
-    submitter: '仓储部经理',
-    submitTime: '2025-01-05 16:45',
-    priority: 'low',
-    status: 'pending',
-  },
-]
+// Mock workshops data - 已移除，使用真实API
 
-// Mock customer service cases
-const mockServiceCases = [
-  {
-    id: 1,
-    projectCode: 'PJ250108001',
-    projectName: 'BMS老化测试设备',
-    customer: '深圳XX科技',
-    type: '故障维修',
-    priority: 'high',
-    status: 'in_progress',
-    assignedEngineer: '钱工',
-    reportedAt: '2025-01-06 08:30',
-    responseTime: 1.5,
-  },
-  {
-    id: 2,
-    projectCode: 'PJ250106002',
-    projectName: 'EOL功能测试设备',
-    customer: '东莞XX电子',
-    type: '现场调试',
-    priority: 'medium',
-    status: 'pending',
-    assignedEngineer: null,
-    reportedAt: '2025-01-06 10:15',
-    responseTime: null,
-  },
-  {
-    id: 3,
-    projectCode: 'PJ250103003',
-    projectName: 'ICT在线测试设备',
-    customer: '惠州XX电池',
-    type: '技术咨询',
-    priority: 'low',
-    status: 'resolved',
-    assignedEngineer: '孙工',
-    reportedAt: '2025-01-05 14:20',
-    resolvedAt: '2025-01-05 16:30',
-    responseTime: 2.1,
-  },
-]
 
-// Mock warehouse alerts
-const mockWarehouseAlerts = [
-  {
-    id: 1,
-    type: 'low_stock',
-    item: '导轨 20mm x 500mm',
-    currentStock: 5,
-    minStock: 10,
-    status: 'warning',
-  },
-  {
-    id: 2,
-    type: 'out_of_stock',
-    item: '气缸 SMC CDM2B25-50',
-    currentStock: 0,
-    minStock: 5,
-    status: 'critical',
-  },
-  {
-    id: 3,
-    type: 'pending_inbound',
-    item: '钣金件组件 x50套',
-    expectedDate: '2025-01-08',
-    status: 'pending',
-  },
-]
+// Mock production plans pending approval - 已移除，使用真实API
 
-// Mock shipping orders
-const mockShippingOrders = [
-  {
-    id: 1,
-    orderNo: 'SO-2025-0018',
-    projectCode: 'PJ250108001',
-    projectName: 'BMS老化测试设备',
-    customer: '深圳XX科技',
-    destination: '深圳',
-    status: 'pending',
-    plannedShipDate: '2025-01-08',
-    priority: 'high',
-  },
-  {
-    id: 2,
-    orderNo: 'SO-2025-0019',
-    projectCode: 'PJ250106002',
-    projectName: 'EOL功能测试设备',
-    customer: '东莞XX电子',
-    destination: '东莞',
-    status: 'in_transit',
-    shippedDate: '2025-01-05',
-    estimatedArrival: '2025-01-08',
-  },
-  {
-    id: 3,
-    orderNo: 'SO-2025-0020',
-    projectCode: 'PJ250103003',
-    projectName: 'ICT在线测试设备',
-    customer: '惠州XX电池',
-    destination: '惠州',
-    status: 'delivered',
-    deliveredDate: '2025-01-04',
-  },
-]
 
-const formatCurrency = (value) => {
-  if (value >= 10000) {
-    return `¥${(value / 10000).toFixed(1)}万`
-  }
-  return new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency: 'CNY',
-    minimumFractionDigits: 0,
-  }).format(value)
-}
+// Mock customer service cases - 已移除，使用真实API
 
-const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg }) => {
-  return (
-    <motion.div
-      variants={fadeIn}
-      className="relative overflow-hidden rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-5 backdrop-blur transition-all hover:border-slate-600/80 hover:shadow-lg"
-    >
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm text-slate-400 mb-2">{title}</p>
-          <p className={cn('text-2xl font-bold mb-1', color)}>{value}</p>
-          {subtitle && (
-            <p className="text-xs text-slate-500">{subtitle}</p>
-          )}
-          {trend && (
-            <div className="flex items-center gap-1 mt-2">
-              {trend > 0 ? (
-                <>
-                  <ArrowUpRight className="w-3 h-3 text-emerald-400" />
-                  <span className="text-xs text-emerald-400">+{trend}%</span>
-                </>
-              ) : (
-                <>
-                  <ArrowDownRight className="w-3 h-3 text-red-400" />
-                  <span className="text-xs text-red-400">{trend}%</span>
-                </>
-              )}
-              <span className="text-xs text-slate-500 ml-1">vs 上月</span>
-            </div>
-          )}
-        </div>
-        <div className={cn('rounded-lg p-3 bg-opacity-20', bg)}>
-          <Icon className={cn('h-6 w-6', color)} />
-        </div>
-      </div>
-      <div className="absolute right-0 bottom-0 h-20 w-20 rounded-full bg-gradient-to-br from-purple-500/10 to-transparent blur-2xl opacity-30" />
-    </motion.div>
-  )
-}
+
+// Mock warehouse alerts - 已移除，使用真实API
+
+
+// Mock shipping orders - 已移除，使用真实API
 
 export default function ManufacturingDirectorDashboard() {
-  const [productionStats, setProductionStats] = useState(mockManufacturingStats.production)
-  const [workshopCards, setWorkshopCards] = useState(mockWorkshops)
+  // 状态定义
+  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedTab, setSelectedTab] = useState('overview')
+  const [productionStats, setProductionStats] = useState(null)
+  const [serviceStats, setServiceStats] = useState(null)
+  const [warehouseStats, setWarehouseStats] = useState(null)
+  const [shippingStats, setShippingStats] = useState({
+    pendingShipments: 0,
+    shippedToday: 0,
+    onTimeShippingRate: 0,
+    inTransit: 0,
+    avgShippingTime: 0,
+  })
+  const [workshopCards, setWorkshopCards] = useState([])
+  const [dailyError, setDailyError] = useState(null)
   const [productionDaily, setProductionDaily] = useState(null)
   const [shortageDaily, setShortageDaily] = useState(null)
   const [loadingDaily, setLoadingDaily] = useState(false)
-  const [dailyError, setDailyError] = useState(null)
-  const [selectedDate, setSelectedDate] = useState('')
-  const formattedDate = selectedDate || ''
-  const [serviceStats, setServiceStats] = useState(mockManufacturingStats.customerService)
-  const [warehouseStats, setWarehouseStats] = useState(mockManufacturingStats.warehouse)
-  const [shippingStats, setShippingStats] = useState(mockManufacturingStats.shipping)
-  const [loadingStats, setLoadingStats] = useState(false)
-
-  const fetchProductionDaily = useCallback(async (dateFilter) => {
-    if (!dateFilter) {
-      const res = await productionApi.reports.latestDaily()
-      return res?.data?.data ?? res?.data
-    }
-    const res = await productionApi.reports.daily({
-      page: 1,
-      page_size: 100,
-      start_date: dateFilter,
-      end_date: dateFilter,
-    })
-    const payload = res?.data ?? res
-    const items = payload?.items || []
-    if (!items.length) {
-      return null
-    }
-    const normalized = items.map((item) => ({
-      id: item.id,
-      report_date: item.report_date,
-      workshop_id: item.workshop_id,
-      workshop_name: item.workshop_name,
-      plan_qty: item.plan_qty,
-      completed_qty: item.completed_qty,
-      completion_rate: item.completion_rate ?? 0,
-      plan_hours: item.plan_hours ?? 0,
-      actual_hours: item.actual_hours ?? 0,
-      overtime_hours: item.overtime_hours ?? 0,
-      efficiency: item.efficiency ?? 0,
-      should_attend: item.should_attend ?? 0,
-      actual_attend: item.actual_attend ?? 0,
-      summary: item.summary,
-    }))
-    const overall = normalized.find((report) => !report.workshop_id) || null
-    const workshops = normalized.filter((report) => report.workshop_id)
-    return {
-      date: dateFilter,
-      overall,
-      workshops,
-    }
-  }, [])
-
-  const fetchShortageDaily = useCallback(async (dateFilter) => {
-    if (!dateFilter) {
-      const res = await shortageApi.statistics.latestDailyReport()
-      return res?.data?.data ?? res?.data
-    }
-    const res = await shortageApi.statistics.dailyReportByDate(dateFilter)
-    return res?.data?.data ?? res?.data
-  }, [])
-
-  const loadDailySnapshots = useCallback(async (dateFilter) => {
-    try {
-      setLoadingDaily(true)
-      setDailyError(null)
-      const [prodData, shortageData] = await Promise.all([
-        fetchProductionDaily(dateFilter),
-        fetchShortageDaily(dateFilter),
-      ])
-      if (prodData) {
-        setProductionDaily(prodData)
-        if (prodData.overall) {
-          setProductionStats((prev) => ({
-            ...prev,
-            todayOutput: prodData.overall.completed_qty ?? prev.todayOutput,
-            completionRate: prodData.overall.completion_rate ?? prev.completionRate,
-            totalWorkers: prodData.overall.should_attend ?? prev.totalWorkers,
-            activeWorkers: prodData.overall.actual_attend ?? prev.activeWorkers,
-            workshopLoad: prodData.overall.efficiency ?? prev.workshopLoad,
-          }))
-        }
-        if (Array.isArray(prodData.workshops) && prodData.workshops.length > 0) {
-          const transformed = prodData.workshops.map((ws) => ({
-            id: ws.workshop_id || ws.id || ws.workshop_name || 'workshop',
-            name: ws.workshop_name || '车间',
-            currentLoad: Math.round(ws.efficiency || ws.completion_rate || 0),
-            activeWorkstations: ws.active_workstations || 0,
-            totalWorkstations: ws.total_workstations || 0,
-            activeWorkers: ws.actual_attend || 0,
-            workers: ws.should_attend || 0,
-            todayOutput: ws.completed_qty || 0,
-            status: (ws.completion_rate || 0) < 75 ? 'warning' : 'normal',
-          }))
-          setWorkshopCards(transformed)
-        }
-      } else {
-        setProductionDaily(null)
-        if (dateFilter) {
-          setDailyError('该日期没有生产日报数据')
-        }
-      }
-      if (shortageData) {
-        setShortageDaily(shortageData)
-      } else {
-        setShortageDaily(null)
-        if (dateFilter) {
-          setDailyError((prev) => prev ?? '该日期没有缺料日报数据')
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load daily snapshots:', err)
-      setDailyError(err.response?.data?.detail || err.message || '日报数据加载失败')
-    } finally {
-      setLoadingDaily(false)
-    }
-  }, [fetchProductionDaily, fetchShortageDaily])
-
-  useEffect(() => {
-    loadDailySnapshots(formattedDate || null)
-  }, [formattedDate, loadDailySnapshots])
-
-  // Load service, warehouse, shipping statistics
-  const loadStatistics = useCallback(async () => {
-    try {
-      setLoadingStats(true)
-      const [serviceRes, warehouseRes, shippingRes] = await Promise.all([
-        serviceApi.dashboardStatistics().catch(() => ({ data: null })),
-        materialApi.warehouse.statistics().catch(() => ({ data: null })),
-        businessSupportApi.deliveryOrders.statistics().catch(() => ({ data: null })),
-      ])
-      
-      if (serviceRes?.data) {
-        setServiceStats({
-          activeCases: serviceRes.data.active_cases || 0,
-          resolvedToday: serviceRes.data.resolved_today || 0,
-          pendingCases: serviceRes.data.pending_cases || 0,
-          avgResponseTime: serviceRes.data.avg_response_time || 0,
-          customerSatisfaction: serviceRes.data.customer_satisfaction || 0,
-          onSiteServices: serviceRes.data.on_site_services || 0,
-          totalEngineers: serviceRes.data.total_engineers || 0,
-          activeEngineers: serviceRes.data.active_engineers || 0,
-        })
-      }
-      
-      if (warehouseRes?.data) {
-        setWarehouseStats({
-          totalItems: warehouseRes.data.total_items || 0,
-          inStockItems: warehouseRes.data.in_stock_items || 0,
-          lowStockItems: warehouseRes.data.low_stock_items || 0,
-          outOfStockItems: warehouseRes.data.out_of_stock_items || 0,
-          inventoryTurnover: warehouseRes.data.inventory_turnover || 0,
-          warehouseUtilization: warehouseRes.data.warehouse_utilization || 0,
-          pendingInbound: warehouseRes.data.pending_inbound || 0,
-          pendingOutbound: warehouseRes.data.pending_outbound || 0,
-        })
-      }
-      
-      if (shippingRes?.data?.data) {
-        const shipping = shippingRes.data.data
-        setShippingStats({
-          pendingShipments: shipping.pending_shipments || 0,
-          shippedToday: shipping.shipped_today || 0,
-          inTransit: shipping.in_transit || 0,
-          deliveredThisWeek: shipping.delivered_this_week || 0,
-          onTimeShippingRate: shipping.on_time_shipping_rate || 0,
-          avgShippingTime: shipping.avg_shipping_time || 0,
-          totalOrders: shipping.total_orders || 0,
-        })
-      }
-    } catch (err) {
-      console.error('Failed to load statistics:', err)
-    } finally {
-      setLoadingStats(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    loadStatistics()
-  }, [loadStatistics])
-
-  const [selectedTab, setSelectedTab] = useState('overview')
 
   return (
     <motion.div
@@ -531,7 +105,6 @@ export default function ManufacturingDirectorDashboard() {
       animate="visible"
       className="space-y-6"
     >
-      {/* Page Header */}
       <PageHeader
         title="制造总监工作台"
         description="制造中心全面管理 | 生产计划审批 | 资源协调"
@@ -743,6 +316,7 @@ export default function ManufacturingDirectorDashboard() {
 
 
       {/* Key Statistics - 8 column grid for 4 departments */}
+      {(productionStats || serviceStats || warehouseStats || shippingStats) && (
       <motion.div
         variants={staggerContainer}
         initial="hidden"
@@ -750,61 +324,73 @@ export default function ManufacturingDirectorDashboard() {
         className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8"
       >
         {/* Production Department Stats */}
-        <StatCard
-          title="生产项目"
-          value={productionStats.inProductionProjects}
-          subtitle={`今日产出 ${productionStats.todayOutput}`}
-          trend={5.2}
-          icon={Factory}
-          color="text-blue-400"
-          bg="bg-blue-500/10"
-        />
-        <StatCard
-          title="完成率"
-          value={`${productionStats.completionRate}%`}
-          subtitle="生产完成率"
-          icon={Target}
-          color="text-emerald-400"
-          bg="bg-emerald-500/10"
-        />
+        {productionStats && (
+          <>
+            <StatCard
+              title="生产项目"
+              value={productionStats.inProductionProjects || 0}
+              subtitle={`今日产出 ${productionStats.todayOutput || 0}`}
+              trend={5.2}
+              icon={Factory}
+              color="text-blue-400"
+              bg="bg-blue-500/10"
+            />
+            <StatCard
+              title="完成率"
+              value={`${productionStats.completionRate || 0}%`}
+              subtitle="生产完成率"
+              icon={Target}
+              color="text-emerald-400"
+              bg="bg-emerald-500/10"
+            />
+          </>
+        )}
 
         {/* Customer Service Department Stats */}
-        <StatCard
-          title="服务案例"
-          value={serviceStats.activeCases}
-          subtitle={`今日解决 ${serviceStats.resolvedToday}`}
-          trend={8.5}
-          icon={Headphones}
-          color="text-purple-400"
-          bg="bg-purple-500/10"
-        />
-        <StatCard
-          title="满意度"
-          value={`${serviceStats.customerSatisfaction.toFixed(1)}%`}
-          subtitle="客户满意度"
-          icon={Award}
-          color="text-amber-400"
-          bg="bg-amber-500/10"
-        />
+        {serviceStats && (
+          <>
+            <StatCard
+              title="服务案例"
+              value={serviceStats.activeCases || 0}
+              subtitle={`今日解决 ${serviceStats.resolvedToday || 0}`}
+              trend={8.5}
+              icon={Headphones}
+              color="text-purple-400"
+              bg="bg-purple-500/10"
+            />
+            <StatCard
+              title="满意度"
+              value={`${(serviceStats.customerSatisfaction || 0).toFixed(1)}%`}
+              subtitle="客户满意度"
+              icon={Award}
+              color="text-amber-400"
+              bg="bg-amber-500/10"
+            />
+          </>
+        )}
 
         {/* Warehouse Department Stats */}
-        <StatCard
-          title="库存SKU"
-          value={warehouseStats.totalItems}
-          subtitle={`在库 ${warehouseStats.inStockItems}`}
-          trend={-2.3}
-          icon={Warehouse}
-          color="text-cyan-400"
-          bg="bg-cyan-500/10"
-        />
-        <StatCard
-          title="周转率"
-          value={`${warehouseStats.inventoryTurnover.toFixed(1)}x`}
-          subtitle="库存周转"
-          icon={Activity}
-          color="text-indigo-400"
-          bg="bg-indigo-500/10"
-        />
+        {warehouseStats && (
+          <>
+            <StatCard
+              title="库存SKU"
+              value={warehouseStats.totalItems || 0}
+              subtitle={`在库 ${warehouseStats.inStockItems || 0}`}
+              trend={-2.3}
+              icon={Warehouse}
+              color="text-cyan-400"
+              bg="bg-cyan-500/10"
+            />
+            <StatCard
+              title="周转率"
+              value={`${(warehouseStats.inventoryTurnover || 0).toFixed(1)}x`}
+              subtitle="库存周转"
+              icon={Activity}
+              color="text-indigo-400"
+              bg="bg-indigo-500/10"
+            />
+          </>
+        )}
 
         {/* Shipping Department Stats */}
         <StatCard
@@ -825,6 +411,7 @@ export default function ManufacturingDirectorDashboard() {
           bg="bg-green-500/10"
         />
       </motion.div>
+      )}
 
       {/* Main Content Tabs */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
@@ -841,6 +428,7 @@ export default function ManufacturingDirectorDashboard() {
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Production Overview */}
+            {productionStats && (
             <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -853,22 +441,22 @@ export default function ManufacturingDirectorDashboard() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-400">车间负荷</span>
                     <span className="text-white font-semibold">
-                      {productionStats.workshopLoad}%
+                      {productionStats.workshopLoad || 0}%
                     </span>
                   </div>
-                  <Progress value={productionStats.workshopLoad} className="h-2" />
+                  <Progress value={productionStats.workshopLoad || 0} className="h-2" />
                 </div>
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
                   <div>
                     <p className="text-xs text-slate-400 mb-1">在岗人员</p>
                     <p className="text-lg font-semibold text-white">
-                      {productionStats.activeWorkers}/{productionStats.totalWorkers}
+                      {productionStats.activeWorkers || 0}/{productionStats.totalWorkers || 0}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400 mb-1">在用工位</p>
                     <p className="text-lg font-semibold text-white">
-                      {productionStats.activeWorkstations}/{productionStats.totalWorkstations}
+                      {productionStats.activeWorkstations || 0}/{productionStats.totalWorkstations || 0}
                     </p>
                   </div>
                 </div>
@@ -878,8 +466,10 @@ export default function ManufacturingDirectorDashboard() {
                 </Button>
               </CardContent>
             </Card>
+            )}
 
             {/* Customer Service Overview */}
+            {serviceStats && (
             <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -892,7 +482,7 @@ export default function ManufacturingDirectorDashboard() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-400">平均响应时间</span>
                     <span className="text-white font-semibold">
-                      {serviceStats.avgResponseTime.toFixed(1)} 小时
+                      {(serviceStats.avgResponseTime || 0).toFixed(1)} 小时
                     </span>
                   </div>
                   <Progress value={95} className="h-2" />
@@ -901,13 +491,13 @@ export default function ManufacturingDirectorDashboard() {
                   <div>
                     <p className="text-xs text-slate-400 mb-1">待处理</p>
                     <p className="text-lg font-semibold text-white">
-                      {serviceStats.pendingCases}
+                      {serviceStats.pendingCases || 0}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400 mb-1">在岗工程师</p>
                     <p className="text-lg font-semibold text-white">
-                      {serviceStats.activeEngineers}/{serviceStats.totalEngineers}
+                      {serviceStats.activeEngineers || 0}/{serviceStats.totalEngineers || 0}
                     </p>
                   </div>
                 </div>
@@ -917,8 +507,10 @@ export default function ManufacturingDirectorDashboard() {
                 </Button>
               </CardContent>
             </Card>
+            )}
 
             {/* Warehouse & Shipping Overview */}
+            {warehouseStats && shippingStats && (
             <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -931,14 +523,14 @@ export default function ManufacturingDirectorDashboard() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-400">仓储利用率</span>
                     <span className="text-white font-semibold">
-                      {warehouseStats.warehouseUtilization.toFixed(1)}%
+                      {(warehouseStats.warehouseUtilization || 0).toFixed(1)}%
                     </span>
                   </div>
-                  <Progress value={warehouseStats.warehouseUtilization} className="h-2" />
+                  <Progress value={warehouseStats.warehouseUtilization || 0} className="h-2" />
                   <div className="flex items-center justify-between text-sm pt-2 border-t border-white/10">
                     <span className="text-slate-400">在途订单</span>
                     <span className="text-white font-semibold">
-                      {shippingStats.inTransit}
+                      {shippingStats.inTransit || 0}
                     </span>
                   </div>
                 </div>
@@ -946,13 +538,13 @@ export default function ManufacturingDirectorDashboard() {
                   <div>
                     <p className="text-xs text-slate-400 mb-1">待入库</p>
                     <p className="text-lg font-semibold text-white">
-                      {warehouseStats.pendingInbound}
+                      {warehouseStats.pendingInbound || 0}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400 mb-1">待出库</p>
                     <p className="text-lg font-semibold text-white">
-                      {warehouseStats.pendingOutbound}
+                      {warehouseStats.pendingOutbound || 0}
                     </p>
                   </div>
                 </div>
@@ -962,6 +554,7 @@ export default function ManufacturingDirectorDashboard() {
                 </Button>
               </CardContent>
             </Card>
+            )}
           </div>
 
           {/* Pending Approvals Quick View */}
@@ -973,57 +566,21 @@ export default function ManufacturingDirectorDashboard() {
                   待审批事项
                 </CardTitle>
                 <Badge variant="outline" className="bg-amber-500/20 text-amber-400 border-amber-500/30">
-                  {mockPendingApprovals.length}
+                  {/* 待审批事项数量 - 需要从API获取 */}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {mockPendingApprovals.slice(0, 3).map((item) => (
-                  <div
-                    key={item.id}
-                    className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              'text-xs',
-                              item.type === 'production_plan' && 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-                              item.type === 'resource_allocation' && 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-                              item.type === 'warehouse_expansion' && 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
-                            )}
-                          >
-                            {item.type === 'production_plan' ? '生产计划' : 
-                             item.type === 'resource_allocation' ? '资源调配' : '仓储扩容'}
-                          </Badge>
-                          {item.priority === 'high' && (
-                            <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
-                              紧急
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="font-medium text-white text-sm">
-                          {item.projectName || item.title}
-                        </p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          {item.submitter} · {item.submitTime.split(' ')[1]}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <Button variant="outline" className="w-full mt-3">
-                  查看全部审批
-                </Button>
+                {/* 待审批事项 - 需要从API获取数据 */}
+                <div className="text-center py-8 text-slate-500">
+                  <p>待审批事项数据需要从API获取</p>
+                </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Production Department Tab */}
         <TabsContent value="production" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Workshop Load */}
@@ -1138,58 +695,13 @@ export default function ManufacturingDirectorDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {mockServiceCases.map((caseItem) => (
-                  <div
-                    key={caseItem.id}
-                    className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              'text-xs',
-                              caseItem.priority === 'high' && 'bg-red-500/20 text-red-400 border-red-500/30',
-                              caseItem.priority === 'medium' && 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-                              caseItem.priority === 'low' && 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                            )}
-                          >
-                            {caseItem.type}
-                          </Badge>
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              'text-xs',
-                              caseItem.status === 'resolved' && 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-                              caseItem.status === 'in_progress' && 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-                              caseItem.status === 'pending' && 'bg-slate-500/20 text-slate-400 border-slate-500/30'
-                            )}
-                          >
-                            {caseItem.status === 'resolved' ? '已解决' : 
-                             caseItem.status === 'in_progress' ? '处理中' : '待处理'}
-                          </Badge>
-                        </div>
-                        <p className="font-medium text-white text-sm">{caseItem.projectName}</p>
-                        <p className="text-xs text-slate-400 mt-1">{caseItem.customer}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between text-xs mt-2">
-                      <span className="text-slate-400">
-                        {caseItem.assignedEngineer ? `工程师: ${caseItem.assignedEngineer}` : '待分配'}
-                      </span>
-                      {caseItem.responseTime && (
-                        <span className="text-slate-400">
-                          响应: {caseItem.responseTime} 小时
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                {/* 服务案例 - 需要从API获取数据 */}
+                <div className="text-center text-slate-400 py-8">
+                  <Headphones className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>服务案例数据加载中...</p>
+                </div>
               </CardContent>
             </Card>
-
-            {/* Service Stats */}
             <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -1202,7 +714,7 @@ export default function ManufacturingDirectorDashboard() {
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm text-slate-400">客户满意度</p>
                     <p className="text-lg font-bold text-white">
-                      {serviceStats.customerSatisfaction.toFixed(1)}%
+                      {(serviceStats?.customerSatisfaction || 0).toFixed(1)}%
                     </p>
                   </div>
                   <Progress value={serviceStats.customerSatisfaction} className="h-2" />
@@ -1240,46 +752,13 @@ export default function ManufacturingDirectorDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {mockWarehouseAlerts.map((alert) => (
-                  <div
-                    key={alert.id}
-                    className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              'text-xs',
-                              alert.status === 'critical' && 'bg-red-500/20 text-red-400 border-red-500/30',
-                              alert.status === 'warning' && 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-                              alert.status === 'pending' && 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                            )}
-                          >
-                            {alert.type === 'low_stock' ? '低库存' : 
-                             alert.type === 'out_of_stock' ? '缺货' : '待入库'}
-                          </Badge>
-                        </div>
-                        <p className="font-medium text-white text-sm">{alert.item}</p>
-                        {alert.currentStock !== undefined && (
-                          <p className="text-xs text-slate-400 mt-1">
-                            当前库存: {alert.currentStock} | 最低库存: {alert.minStock}
-                          </p>
-                        )}
-                        {alert.expectedDate && (
-                          <p className="text-xs text-slate-400 mt-1">
-                            预计到货: {alert.expectedDate}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                {/* 仓库预警 - 需要从API获取数据 */}
+                <div className="text-center text-slate-400 py-8">
+                  <AlertTriangle className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>仓库预警数据加载中...</p>
+                </div>
               </CardContent>
             </Card>
-
-            {/* Warehouse Stats */}
             <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -1292,7 +771,7 @@ export default function ManufacturingDirectorDashboard() {
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm text-slate-400">仓储利用率</p>
                     <p className="text-lg font-bold text-white">
-                      {warehouseStats.warehouseUtilization.toFixed(1)}%
+                      {(warehouseStats?.warehouseUtilization || 0).toFixed(1)}%
                     </p>
                   </div>
                   <Progress value={warehouseStats.warehouseUtilization} className="h-2" />
@@ -1330,51 +809,12 @@ export default function ManufacturingDirectorDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {mockShippingOrders.map((order) => (
-                  <div
-                    key={order.id}
-                    className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              'text-xs',
-                              order.status === 'delivered' && 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-                              order.status === 'in_transit' && 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-                              order.status === 'pending' && 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                            )}
-                          >
-                            {order.status === 'delivered' ? '已送达' : 
-                             order.status === 'in_transit' ? '运输中' : '待发货'}
-                          </Badge>
-                          {order.priority === 'high' && (
-                            <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
-                              紧急
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="font-medium text-white text-sm">{order.projectName}</p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          {order.orderNo} · {order.customer} · {order.destination}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between text-xs mt-2">
-                      <span className="text-slate-400">
-                        {order.status === 'pending' && `计划发货: ${order.plannedShipDate}`}
-                        {order.status === 'in_transit' && `预计到达: ${order.estimatedArrival}`}
-                        {order.status === 'delivered' && `送达时间: ${order.deliveredDate}`}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                {/* 发货订单 - 需要从API获取数据 */}
+                <div className="text-center py-8 text-slate-500">
+                  <p>发货订单数据需要从API获取</p>
+                </div>
               </CardContent>
             </Card>
-
-            {/* Shipping Stats */}
             <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -1383,31 +823,39 @@ export default function ManufacturingDirectorDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm text-slate-400">准时发货率</p>
-                    <p className="text-lg font-bold text-white">
-                      {shippingStats.onTimeShippingRate.toFixed(1)}%
-                    </p>
+                {shippingStats ? (
+                  <>
+                    <div className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm text-slate-400">准时发货率</p>
+                        <p className="text-lg font-bold text-white">
+                          {(shippingStats.onTimeShippingRate || 0).toFixed(1)}%
+                        </p>
+                      </div>
+                      <Progress value={shippingStats.onTimeShippingRate || 0} className="h-2" />
+                    </div>
+                    <div className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm text-slate-400">平均发货时间</p>
+                        <p className="text-lg font-bold text-white">
+                          {(shippingStats.avgShippingTime || 0).toFixed(1)} 天
+                        </p>
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm text-slate-400">在途订单</p>
+                        <p className="text-lg font-bold text-white">
+                          {shippingStats.inTransit || 0}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <p>发货数据需要从API获取</p>
                   </div>
-                  <Progress value={shippingStats.onTimeShippingRate} className="h-2" />
-                </div>
-                <div className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm text-slate-400">平均发货时间</p>
-                    <p className="text-lg font-bold text-white">
-                      {shippingStats.avgShippingTime.toFixed(1)} 天
-                    </p>
-                  </div>
-                </div>
-                <div className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm text-slate-400">在途订单</p>
-                    <p className="text-lg font-bold text-white">
-                      {shippingStats.inTransit}
-                    </p>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -1423,12 +871,13 @@ export default function ManufacturingDirectorDashboard() {
                   待审批事项
                 </CardTitle>
                 <Badge variant="outline" className="bg-amber-500/20 text-amber-400 border-amber-500/30">
-                  {mockPendingApprovals.length}
+                  {/* 待审批事项数量 - 需要从API获取 */}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {mockPendingApprovals.map((item) => (
+              {/* 待审批事项 - 需要从API获取数据 */}
+              {/* {mockPendingApprovals.map((item) => (
                 <div
                   key={item.id}
                   className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"
@@ -1482,7 +931,10 @@ export default function ManufacturingDirectorDashboard() {
                     </div>
                   </div>
                 </div>
-              ))}
+              ))} */}
+                <div className="text-center py-8 text-slate-500">
+                  <p>待审批事项数据需要从API获取</p>
+                </div>
             </CardContent>
           </Card>
         </TabsContent>

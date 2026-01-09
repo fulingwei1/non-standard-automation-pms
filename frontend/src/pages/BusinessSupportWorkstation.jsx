@@ -1,12 +1,4 @@
-/**
- * Business Support Workstation - Professional demonstration page
- * Features: Contract management, Document processing, Payment tracking, Tender management
- * Core Functions: Customer filing, Bidding, Contract review, Order processing, Invoice management,
- * Payment collection, Acceptance management, Report statistics, Document archiving
- * 
- * Design: Following the Business Support Module UI/UX Design Guide
- * Version: v1.0
- */
+
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'

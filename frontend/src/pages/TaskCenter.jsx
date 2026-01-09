@@ -966,7 +966,6 @@ export default function TaskCenter() {
           </Card>
         ))}
       </motion.div>
-      )}
 
       {/* Filters */}
       {!error && (
@@ -1090,8 +1089,6 @@ export default function TaskCenter() {
           </p>
         </motion.div>
       )}
-      )}
     </motion.div>
   )
 }
-

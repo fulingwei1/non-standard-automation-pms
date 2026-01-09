@@ -152,8 +152,8 @@ export default function Login({ onLoginSuccess }) {
     const isDemoAccount = demoUser && (password === 'admin123' || password === 'demo123')
 
     // 真实数据库账号列表（这些账号必须使用真实API，不能fallback）
-    // 暂时清空，所有账号都可以使用演示模式登录
-    const realDatabaseAccounts = []
+    // admin 账号必须使用真实API
+    const realDatabaseAccounts = ['admin', 'tanzhangbin', 'yaohong', 'changxiong', 'jijianjun']
     const isRealAccount = realDatabaseAccounts.includes(username)
 
     try {

@@ -4,7 +4,6 @@
  */
 
 import { Pie, Column, DualAxes, Waterfall } from '@ant-design/plots'
-import { useMemo } from 'react'
 import { formatCurrency } from '../../../lib/utils'
 
 /**

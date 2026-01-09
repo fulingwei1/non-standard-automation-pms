@@ -54,162 +54,14 @@ import {
 } from '../components/ui'
 import { cn } from '../lib/utils'
 import { productionApi, shortageApi, projectApi, materialApi, alertApi } from '../services/api'
+import { ApiIntegrationError } from '../components/ui'
 
-// Mock data
-const mockProductionStats = {
-  inProductionProjects: 12,
-  todayOutput: 8,
-  completionRate: 85.5,
-  onTimeDeliveryRate: 92.3,
-  totalWorkers: 45,
-  activeWorkers: 42,
-  totalWorkstations: 28,
-  activeWorkstations: 25,
-}
+// Mock data - 已移除，使用真实API
 
-const mockWorkshops = [
-  {
-    id: 1,
-    name: '机加车间',
-    type: 'MACHINING',
-    capacity: 100,
-    currentLoad: 75,
-    activeWorkstations: 8,
-    totalWorkstations: 10,
-    workers: 15,
-    activeWorkers: 14,
-    todayOutput: 3,
-    status: 'normal',
-  },
-  {
-    id: 2,
-    name: '装配车间',
-    type: 'ASSEMBLY',
-    capacity: 80,
-    currentLoad: 90,
-    activeWorkstations: 12,
-    totalWorkstations: 12,
-    workers: 20,
-    activeWorkers: 18,
-    todayOutput: 5,
-    status: 'warning',
-  },
-  {
-    id: 3,
-    name: '调试车间',
-    type: 'DEBUGGING',
-    capacity: 60,
-    currentLoad: 50,
-    activeWorkstations: 5,
-    totalWorkstations: 6,
-    workers: 10,
-    activeWorkers: 10,
-    todayOutput: 0,
-    status: 'normal',
-  },
-]
 
-const mockProductionPlans = [
-  {
-    id: 1,
-    planCode: 'MPS-2025-001',
-    projectCode: 'PJ250708001',
-    projectName: 'BMS老化测试设备',
-    workshop: '装配车间',
-    startDate: '2025-01-15',
-    endDate: '2025-02-28',
-    status: 'executing',
-    progress: 65,
-    priority: 'high',
-    workOrders: 15,
-    completedOrders: 10,
-  },
-  {
-    id: 2,
-    planCode: 'MPS-2025-002',
-    projectCode: 'PJ250708002',
-    projectName: 'ICT测试设备',
-    workshop: '机加车间',
-    startDate: '2025-01-20',
-    endDate: '2025-03-10',
-    status: 'executing',
-    progress: 45,
-    priority: 'normal',
-    workOrders: 20,
-    completedOrders: 9,
-  },
-  {
-    id: 3,
-    planCode: 'MPS-2025-003',
-    projectCode: 'PJ250708003',
-    projectName: '视觉检测设备',
-    workshop: '装配车间',
-    startDate: '2025-02-01',
-    endDate: '2025-03-15',
-    status: 'approved',
-    progress: 0,
-    priority: 'high',
-    workOrders: 12,
-    completedOrders: 0,
-  },
-]
 
-const mockWorkOrders = [
-  {
-    id: 1,
-    orderCode: 'WO-2025-001',
-    projectCode: 'PJ250708001',
-    projectName: 'BMS老化测试设备',
-    workshop: '装配车间',
-    workstation: '工位A-01',
-    type: 'ASSEMBLY',
-    priority: 'high',
-    status: 'started',
-    assignedWorker: '张师傅',
-    plannedStart: '2025-01-15',
-    plannedEnd: '2025-01-20',
-    actualStart: '2025-01-15',
-    progress: 75,
-    quantity: 1,
-    completedQuantity: 0.75,
-  },
-  {
-    id: 2,
-    orderCode: 'WO-2025-002',
-    projectCode: 'PJ250708001',
-    projectName: 'BMS老化测试设备',
-    workshop: '装配车间',
-    workstation: '工位A-02',
-    type: 'ASSEMBLY',
-    priority: 'high',
-    status: 'started',
-    assignedWorker: '李师傅',
-    plannedStart: '2025-01-16',
-    plannedEnd: '2025-01-22',
-    actualStart: '2025-01-16',
-    progress: 60,
-    quantity: 1,
-    completedQuantity: 0.6,
-  },
-  {
-    id: 3,
-    orderCode: 'WO-2025-003',
-    projectCode: 'PJ250708002',
-    projectName: 'ICT测试设备',
-    workshop: '机加车间',
-    workstation: '工位B-01',
-    type: 'MACHINING',
-    priority: 'normal',
-    status: 'assigned',
-    assignedWorker: '王师傅',
-    plannedStart: '2025-01-20',
-    plannedEnd: '2025-01-25',
-    actualStart: null,
-    progress: 0,
-    quantity: 5,
-    completedQuantity: 0,
-  },
-]
+
+
 
 export default function ProductionManagerDashboard() {
   const [selectedTab, setSelectedTab] = useState('overview')
@@ -958,7 +810,11 @@ export default function ProductionManagerDashboard() {
               <div className="text-center py-8 text-slate-400">加载中...</div>
             )}
             {error && (
-              <div className="text-center py-8 text-red-400">{error}</div>
+              <ApiIntegrationError
+                error={error}
+                apiEndpoint="/api/v1/production/dashboard"
+                onRetry={loadDashboard}
+              />
             )}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* 车间负荷 */}

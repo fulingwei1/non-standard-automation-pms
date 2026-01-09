@@ -420,7 +420,7 @@ class WorkOrder(Base, TimestampMixin):
     workstation_id = Column(Integer, ForeignKey('workstation.id'), nullable=True, comment='工位ID')
     
     # 物料相关
-    material_id = Column(Integer, ForeignKey('material.id'), nullable=True, comment='物料ID')
+    material_id = Column(Integer, ForeignKey('materials.id'), nullable=True, comment='物料ID')
     material_name = Column(String(200), nullable=True, comment='物料名称')
     specification = Column(String(200), nullable=True, comment='规格型号')
     drawing_no = Column(String(100), nullable=True, comment='图纸编号')
@@ -622,7 +622,7 @@ class MaterialRequisitionItem(Base, TimestampMixin):
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
     requisition_id = Column(Integer, ForeignKey('material_requisition.id'), nullable=False, comment='领料单ID')
-    material_id = Column(Integer, ForeignKey('material.id'), nullable=False, comment='物料ID')
+    material_id = Column(Integer, ForeignKey('materials.id'), nullable=False, comment='物料ID')
     
     request_qty = Column(Numeric(14, 4), nullable=False, comment='申请数量')
     approved_qty = Column(Numeric(14, 4), nullable=True, comment='批准数量')

@@ -167,7 +167,7 @@ export function useChartData(fetchFn, deps = [], options = {}) {
             setLoading(false)
             return
           }
-        } catch (e) {
+        } catch {
           // 缓存解析失败，继续获取
         }
       }

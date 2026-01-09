@@ -238,12 +238,13 @@ export default function WorkLogConfig() {
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">用户（可选）</label>
                   <Select
-                    value={$?.toString() || '__none__'}
+                    value={formData.user_id ? formData.user_id.toString() : '__none__'}
                     onValueChange={(value) => {
+                      const normalizedValue = value === '__none__' ? null : parseInt(value, 10)
                       setFormData({
                         ...formData,
-                        user_id: value ? parseInt(value) : null,
-                        department_id: value ? null : formData.department_id,
+                        user_id: normalizedValue,
+                        department_id: normalizedValue ? null : formData.department_id,
                       })
                     }}
                   >
@@ -264,12 +265,13 @@ export default function WorkLogConfig() {
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">部门（可选）</label>
                   <Select
-                    value={$?.toString() || '__none__'}
+                    value={formData.department_id ? formData.department_id.toString() : '__none__'}
                     onValueChange={(value) => {
+                      const normalizedValue = value === '__none__' ? null : parseInt(value, 10)
                       setFormData({
                         ...formData,
-                        department_id: value ? parseInt(value) : null,
-                        user_id: value ? null : formData.user_id,
+                        department_id: normalizedValue,
+                        user_id: normalizedValue ? null : formData.user_id,
                       })
                     }}
                     disabled={!!formData.user_id}

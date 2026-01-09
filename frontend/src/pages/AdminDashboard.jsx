@@ -64,6 +64,7 @@ import {
 } from '../components/ui'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
+import { ApiIntegrationError } from '../components/ui'
 
 // 默认统计数据（加载前显示）
 const defaultStats = {
@@ -93,219 +94,51 @@ const defaultStats = {
   auditLogsThisWeek: 0,
 }
 
-const mockRecentActivities = [
-  {
-    id: 1,
-    type: 'user_created',
-    action: '创建用户',
-    target: '张工程师',
-    operator: '系统管理员',
-    timestamp: '2025-01-06 14:30',
-    status: 'success',
-  },
-  {
-    id: 2,
-    type: 'role_assigned',
-    action: '分配角色',
-    target: '李项目经理',
-    operator: '系统管理员',
-    timestamp: '2025-01-06 13:45',
-    status: 'success',
-  },
-  {
-    id: 3,
-    type: 'permission_updated',
-    action: '更新权限',
-    target: '项目经理角色',
-    operator: '系统管理员',
-    timestamp: '2025-01-06 12:20',
-    status: 'success',
-  },
-  {
-    id: 4,
-    type: 'user_deactivated',
-    action: '停用用户',
-    target: '王测试',
-    operator: '系统管理员',
-    timestamp: '2025-01-06 11:15',
-    status: 'success',
-  },
-  {
-    id: 5,
-    type: 'config_updated',
-    action: '更新系统配置',
-    target: '邮件服务器设置',
-    operator: '系统管理员',
-    timestamp: '2025-01-06 10:00',
-    status: 'success',
-  },
-  {
-    id: 6,
-    type: 'backup_completed',
-    action: '系统备份',
-    target: '数据库备份',
-    operator: '系统',
-    timestamp: '2025-01-06 02:00',
-    status: 'success',
-  },
+// 演示账号的演示数据
+const demoStats = {
+  totalUsers: 183,
+  activeUsers: 174,
+  inactiveUsers: 9,
+  newUsersThisMonth: 5,
+  usersWithRoles: 8,
+  usersWithoutRoles: 175,
+  totalRoles: 34,
+  systemRoles: 5,
+  customRoles: 29,
+  activeRoles: 34,
+  inactiveRoles: 0,
+  totalPermissions: 67,
+  assignedPermissions: 249,
+  unassignedPermissions: 0,
+  systemUptime: 99.9,
+  databaseSize: 2.5,
+  storageUsed: 45,
+  apiResponseTime: 120,
+  errorRate: 0.1,
+  loginCountToday: 42,
+  loginCountThisWeek: 287,
+  lastBackup: '2025-01-09 02:00:00',
+  auditLogsToday: 156,
+  auditLogsThisWeek: 1024,
+}
+
+// Mock data - 已移除，使用真实API
+
+const DEFAULT_PERMISSION_MODULES = [
+  { code: 'users', name: '用户管理', description: '创建、停用和分配用户角色' },
+  { code: 'roles', name: '角色配置', description: '维护角色及权限组合' },
+  { code: 'permissions', name: '权限策略', description: '配置模块、菜单与 API 授权' },
+  { code: 'system', name: '系统监控', description: '查看系统运行状态与告警' },
 ]
 
-const mockSystemAlerts = [
-  {
-    id: 1,
-    type: 'warning',
-    title: '存储空间使用率较高',
-    message: '当前存储使用率 68.5%，建议清理历史数据',
-    timestamp: '2025-01-06 09:00',
-    action: '查看详情',
-  },
-  {
-    id: 2,
-    type: 'info',
-    title: '11 个用户未分配角色',
-    message: '建议为新用户分配适当的角色权限',
-    timestamp: '2025-01-06 08:30',
-    action: '分配角色',
-  },
-  {
-    id: 3,
-    type: 'success',
-    title: '系统备份完成',
-    message: '数据库备份已于 02:00 完成',
-    timestamp: '2025-01-06 02:00',
-    action: '查看备份',
-  },
-]
-
-const permissionModules = [
-  {
-    code: 'MODULE_PRODUCTION',
-    name: '生产管理',
-    description: '生产驾驶舱、生产计划、工单、车间任务',
-  },
-  {
-    code: 'MODULE_SHORTAGE',
-    name: '缺料管理',
-    description: '缺料预警、到货跟踪、物料替代/调拨',
-  },
-  {
-    code: 'MODULE_FINANCE',
-    name: '财务管理',
-    description: '应收应付、收款计划、发票核销',
-  },
-  {
-    code: 'MODULE_PROCUREMENT',
-    name: '采购与物料',
-    description: '采购订单、物料管理、齐套分析',
-  },
-  {
-    code: 'MODULE_SALES',
-    name: '销售管理',
-    description: '线索机会、报价合同、销售驾驶舱',
-  },
-]
-
-const mockRolePermissions = [
-  {
-    role: '生产部经理',
-    roleCode: 'production_manager',
-    description: '负责生产计划及执行的主要角色',
-    permissions: ['MODULE_PRODUCTION', 'MODULE_SHORTAGE'],
-  },
-  {
-    role: 'PMC 计划员',
-    roleCode: 'pmc',
-    description: '负责物料计划与缺料预警跟踪',
-    permissions: ['MODULE_SHORTAGE', 'MODULE_PROCUREMENT'],
-  },
-  {
-    role: '采购经理',
-    roleCode: 'procurement_manager',
-    description: '负责采购订单、供应商与齐套协同',
-    permissions: ['MODULE_PROCUREMENT'],
-  },
-  {
-    role: '财务经理',
-    roleCode: 'finance_manager',
-    description: '负责应收应付、核销及资金监控',
-    permissions: ['MODULE_FINANCE', 'MODULE_SALES'],
-  },
-  {
-    role: '总经理',
-    roleCode: 'gm',
-    description: '公司管理层，默认拥有全部模块',
-    permissions: permissionModules.map((m) => m.code),
-  },
-  {
-    role: '销售总监',
-    roleCode: 'sales_director',
-    description: '负责销售漏斗、合同及回款跟进',
-    permissions: ['MODULE_SALES', 'MODULE_FINANCE'],
-  },
-]
-
-const cloneRolePermissions = (source) =>
-  source.map((role) => ({
+const cloneRolePermissions = (roles) => {
+  if (!Array.isArray(roles)) return []
+  return roles.map((role) => ({
     ...role,
-    permissions: [...role.permissions],
+    permissions: Array.isArray(role.permissions) ? [...role.permissions] : [],
   }))
+}
 
-const mockQuickActions = [
-  {
-    id: 1,
-    title: '创建新用户',
-    description: '添加新的系统用户',
-    icon: UserPlus,
-    path: '/users?action=create',
-    color: 'text-blue-400',
-    bg: 'bg-blue-500/10',
-  },
-  {
-    id: 2,
-    title: '管理角色',
-    description: '配置角色和权限',
-    icon: Shield,
-    path: '/roles',
-    color: 'text-purple-400',
-    bg: 'bg-purple-500/10',
-  },
-  {
-    id: 3,
-    title: '系统配置',
-    description: '修改系统设置',
-    icon: Settings,
-    path: '/config',
-    color: 'text-amber-400',
-    bg: 'bg-amber-500/10',
-  },
-  {
-    id: 4,
-    title: '审计日志',
-    description: '查看系统操作记录',
-    icon: FileText,
-    path: '/audit-logs',
-    color: 'text-emerald-400',
-    bg: 'bg-emerald-500/10',
-  },
-  {
-    id: 5,
-    title: '数据备份',
-    description: '执行系统备份',
-    icon: Archive,
-    path: '/backup',
-    color: 'text-cyan-400',
-    bg: 'bg-cyan-500/10',
-  },
-  {
-    id: 6,
-    title: '系统监控',
-    description: '查看系统运行状态',
-    icon: Activity,
-    path: '/monitoring',
-    color: 'text-red-400',
-    bg: 'bg-red-500/10',
-  },
-]
 
 const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg, onClick }) => {
   return (
@@ -353,24 +186,47 @@ const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg, onClic
 export default function AdminDashboard() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [stats, setStats] = useState(defaultStats)
-  const [rolePermissions, setRolePermissions] = useState(() => cloneRolePermissions(mockRolePermissions))
-  const [savedRolePermissions, setSavedRolePermissions] = useState(() => cloneRolePermissions(mockRolePermissions))
-  const [selectedRoleCode, setSelectedRoleCode] = useState(mockRolePermissions[0]?.roleCode ?? '')
+  const [rolePermissions, setRolePermissions] = useState([])
+  const [savedRolePermissions, setSavedRolePermissions] = useState([])
+  const [selectedRoleCode, setSelectedRoleCode] = useState('')
   const [roleSearchKeyword, setRoleSearchKeyword] = useState('')
   const [savingPermissions, setSavingPermissions] = useState(false)
   const [permissionNotice, setPermissionNotice] = useState(null)
+  const permissionModules = DEFAULT_PERMISSION_MODULES
 
   useEffect(() => {
     // 从后端获取真实统计数据
     const fetchStats = async () => {
+      // 检查是否是演示账号
+      const token = localStorage.getItem('token')
+      const isDemoAccount = token && token.startsWith('demo_token_')
+      
+      if (isDemoAccount) {
+        // 演示账号不调用真实API，使用演示数据
+        console.log('[管理员工作台] 演示账号，使用演示数据')
+        setStats(demoStats)
+        setError(null)
+        setLoading(false)
+        return
+      }
+      
       try {
+        setLoading(true)
+        setError(null) // 清除之前的错误
         const response = await api.get('/admin/stats')
         if (response.data?.data) {
           setStats(response.data.data)
+          setError(null) // 成功时清除错误
+        } else {
+          console.warn('API 返回数据格式异常:', response.data)
+          setError(new Error('API 返回数据格式异常'))
         }
-      } catch (error) {
-        console.error('获取统计数据失败:', error)
+      } catch (err) {
+        console.error('获取统计数据失败:', err)
+        setError(err)
+        setStats(defaultStats)
       } finally {
         setLoading(false)
       }
@@ -383,10 +239,6 @@ export default function AdminDashboard() {
     const timer = setTimeout(() => setPermissionNotice(null), 3000)
     return () => clearTimeout(timer)
   }, [permissionNotice])
-
-  const handleQuickAction = (path) => {
-    navigate(path)
-  }
 
   const handleStatCardClick = (type) => {
     switch (type) {
@@ -407,7 +259,7 @@ export default function AdminDashboard() {
     }
   }
 
-  const selectedRole = rolePermissions.find((role) => role.roleCode === selectedRoleCode)
+  const selectedRole = rolePermissions.find((role) => role.roleCode === selectedRoleCode) || null
 
   const isRolePermissionsChanged = (role) => {
     if (!role) return false
@@ -476,6 +328,40 @@ export default function AdminDashboard() {
         message: '权限配置已保存（仅 UI 演示）',
       })
     }, 600)
+  }
+
+  // Show error state
+  if (error && loading === false) {
+    return (
+      <div className="space-y-6 p-6">
+        <PageHeader
+          title="管理员工作台"
+          subtitle="系统配置、用户管理、权限分配、系统维护"
+        />
+        <ApiIntegrationError
+          error={error}
+          apiEndpoint="/api/v1/admin/stats"
+          onRetry={() => {
+            const fetchStats = async () => {
+              try {
+                setLoading(true)
+                setError(null)
+                const response = await api.get('/admin/stats')
+                if (response.data?.data) {
+                  setStats(response.data.data)
+                }
+              } catch (err) {
+                setError(err)
+                setStats(defaultStats)
+              } finally {
+                setLoading(false)
+              }
+            }
+            fetchStats()
+          }}
+        />
+      </div>
+    )
   }
 
   if (loading) {
@@ -548,27 +434,11 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {mockQuickActions.map((action) => {
-                const Icon = action.icon
-                return (
-                  <motion.button
-                    key={action.id}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleQuickAction(action.path)}
-                    className={cn(
-                      'flex flex-col items-center justify-center p-4 rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 transition-all hover:border-slate-600/80 hover:shadow-lg',
-                      action.bg
-                    )}
-                  >
-                    <div className={cn('p-2 rounded-lg mb-2', action.bg)}>
-                      <Icon className={cn('w-6 h-6', action.color)} />
-                    </div>
-                    <p className="text-sm font-medium text-white mb-1">{action.title}</p>
-                    <p className="text-xs text-slate-400 text-center">{action.description}</p>
-                  </motion.button>
-                )
-              })}
+              {/* 快捷操作 - 需要从API获取数据 */}
+              {}
+              <div className="text-center py-8 text-slate-500">
+                <p>快捷操作数据需要从API获取</p>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -651,73 +521,40 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {mockSystemAlerts.map((alert) => (
-                    <div
-                      key={alert.id}
-                      className="flex items-start gap-3 p-3 rounded-lg border border-slate-700/50 bg-slate-900/50"
-                    >
-                      {alert.type === 'warning' && (
-                        <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-                      )}
-                      {alert.type === 'info' && (
-                        <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                      )}
-                      {alert.type === 'success' && (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white mb-1">{alert.title}</p>
-                        <p className="text-xs text-slate-400 mb-2">{alert.message}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-slate-500">{alert.timestamp}</span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-xs h-6"
-                            onClick={() => {
-                              // Handle action
-                            }}
-                          >
-                            {alert.action}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                  {/* 系统提醒 - 需要从API获取数据 */}
+                  {}
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Activity Statistics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="border-slate-700/50 bg-slate-800/50">
-              <CardHeader>
-                <CardTitle className="text-white text-sm">今日登录</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-blue-400">{stats.loginCountToday}</p>
-                <p className="text-xs text-slate-400 mt-1">本周总计: {stats.loginCountThisWeek}</p>
-              </CardContent>
-            </Card>
-            <Card className="border-slate-700/50 bg-slate-800/50">
-              <CardHeader>
-                <CardTitle className="text-white text-sm">今日审计日志</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-purple-400">{stats.auditLogsToday}</p>
-                <p className="text-xs text-slate-400 mt-1">本周总计: {stats.auditLogsThisWeek}</p>
-              </CardContent>
-            </Card>
-            <Card className="border-slate-700/50 bg-slate-800/50">
-              <CardHeader>
-                <CardTitle className="text-white text-sm">最后备份</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm font-medium text-emerald-400">{stats.lastBackup}</p>
-                <p className="text-xs text-slate-400 mt-1">自动备份已启用</p>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="border-slate-700/50 bg-slate-800/50">
+                <CardHeader>
+                  <CardTitle className="text-white text-sm">今日登录</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold text-blue-400">{stats.loginCountToday}</p>
+                  <p className="text-xs text-slate-400 mt-1">本周总计: {stats.loginCountThisWeek}</p>
+                </CardContent>
+              </Card>
+              <Card className="border-slate-700/50 bg-slate-800/50">
+                <CardHeader>
+                  <CardTitle className="text-white text-sm">今日审计日志</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold text-purple-400">{stats.auditLogsToday}</p>
+                  <p className="text-xs text-slate-400 mt-1">本周总计: {stats.auditLogsThisWeek}</p>
+                </CardContent>
+              </Card>
+              <Card className="border-slate-700/50 bg-slate-800/50">
+                <CardHeader>
+                  <CardTitle className="text-white text-sm">最后备份</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm font-medium text-emerald-400">{stats.lastBackup}</p>
+                  <p className="text-xs text-slate-400 mt-1">自动备份已启用</p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </TabsContent>
 
@@ -1081,7 +918,8 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {mockRecentActivities.map((activity) => (
+                {/* 最近活动 - 需要从API获取数据 */}
+                {/* {mockRecentActivities.map((activity) => (
                   <div
                     key={activity.id}
                     className="flex items-start gap-3 p-3 rounded-lg border border-slate-700/50 bg-slate-900/50"
@@ -1123,7 +961,7 @@ export default function AdminDashboard() {
                       <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                     )}
                   </div>
-                ))}
+                ))} */}
               </div>
             </CardContent>
           </Card>
@@ -1132,5 +970,3 @@ export default function AdminDashboard() {
     </motion.div>
   )
 }
-
-

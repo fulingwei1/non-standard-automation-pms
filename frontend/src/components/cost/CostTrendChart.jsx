@@ -4,7 +4,6 @@
  */
 
 import { useMemo } from 'react'
-import { formatDate } from '../../lib/utils'
 import { formatCurrency } from '../../lib/utils'
 
 export function CostTrendChart({ 
@@ -24,30 +23,23 @@ export function CostTrendChart({
     })
   }, [data])
   
-  if (sortedData.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full text-slate-400">
-        暂无数据
-      </div>
-    )
-  }
-  
   // Calculate value ranges for each metric
-  const priceValues = sortedData.map(d => d.total_price || 0)
-  const costValues = sortedData.map(d => d.total_cost || 0)
-  const marginValues = sortedData.map(d => d.gross_margin || 0)
+  const priceValues = useMemo(() => sortedData.map(d => d.total_price || 0), [sortedData])
+  const costValues = useMemo(() => sortedData.map(d => d.total_cost || 0), [sortedData])
+  const marginValues = useMemo(() => sortedData.map(d => d.gross_margin || 0), [sortedData])
   
-  const maxPrice = Math.max(...priceValues, 1)
-  const maxCost = Math.max(...costValues, 1)
-  const maxMargin = Math.max(...marginValues, 100)
-  const minMargin = Math.min(...marginValues, 0)
+  const maxPrice = useMemo(() => Math.max(...priceValues, 1), [priceValues])
+  const maxCost = useMemo(() => Math.max(...costValues, 1), [costValues])
+  const maxMargin = useMemo(() => Math.max(...marginValues, 100), [marginValues])
+  const minMargin = useMemo(() => Math.min(...marginValues, 0), [marginValues])
   
-  const padding = { top: 20, right: 40, bottom: 60, left: 60 }
-  const chartWidth = height * 1.5 // Make chart wider for better visibility
+  const padding = useMemo(() => ({ top: 20, right: 40, bottom: 60, left: 60 }), [])
+  const chartWidth = useMemo(() => height * 1.5, [height]) // Make chart wider for better visibility
   const chartHeight = height
   
   // Calculate points for each line
   const pricePoints = useMemo(() => {
+    if (sortedData.length === 0) return []
     return sortedData.map((item, index) => {
       const x = padding.left + (index / (sortedData.length - 1 || 1)) * (chartWidth - padding.left - padding.right)
       const y = padding.top + (1 - (item.total_price || 0) / maxPrice) * (chartHeight - padding.top - padding.bottom)
@@ -56,6 +48,7 @@ export function CostTrendChart({
   }, [sortedData, maxPrice, padding, chartWidth, chartHeight])
   
   const costPoints = useMemo(() => {
+    if (sortedData.length === 0) return []
     return sortedData.map((item, index) => {
       const x = padding.left + (index / (sortedData.length - 1 || 1)) * (chartWidth - padding.left - padding.right)
       const y = padding.top + (1 - (item.total_cost || 0) / maxCost) * (chartHeight - padding.top - padding.bottom)
@@ -64,6 +57,7 @@ export function CostTrendChart({
   }, [sortedData, maxCost, padding, chartWidth, chartHeight])
   
   const marginPoints = useMemo(() => {
+    if (sortedData.length === 0) return []
     const marginRange = maxMargin - minMargin || 100
     return sortedData.map((item, index) => {
       const x = padding.left + (index / (sortedData.length - 1 || 1)) * (chartWidth - padding.left - padding.right)
@@ -87,6 +81,15 @@ export function CostTrendChart({
     if (marginPoints.length === 0) return ''
     return marginPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
   }, [marginPoints])
+  
+  // Early return after all hooks
+  if (sortedData.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-slate-400">
+        暂无数据
+      </div>
+    )
+  }
   
   // Format Y-axis labels for price/cost
   const formatPriceLabel = (value) => {

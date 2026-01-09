@@ -49,9 +49,10 @@ import {
 } from '../components/ui'
 import { cn, formatCurrency, formatDate } from '../lib/utils'
 import { purchaseApi, supplierApi, progressApi } from '../services/api'
+import { ApiIntegrationError } from '../components/ui'
 
-// Mock statistics
-const mockStats = {
+// Mock statistics - 已移除，使用真实API
+/* const mockStats = {
   pendingApprovals: 12,
   inTransitOrders: 28,
   shortageAlerts: 5,
@@ -62,10 +63,9 @@ const mockStats = {
   costSavings: 125000,
   teamSize: 8,
   activeTeamMembers: 7,
-}
+} */
 
-// Mock pending approvals
-const mockPendingApprovals = [
+/* const mockPendingApprovals = [
   {
     id: 1,
     orderNo: 'PO-2025-0018',
@@ -110,10 +110,9 @@ const mockPendingApprovals = [
     priority: 'low',
     daysPending: 1,
   },
-]
+] */
 
-// Mock team members
-const mockTeamMembers = [
+/* const mockTeamMembers = [
   {
     id: 1,
     name: '陈采购',
@@ -158,10 +157,9 @@ const mockTeamMembers = [
     status: 'active',
     performance: 'warning',
   },
-]
+] */
 
-// Mock suppliers
-const mockSuppliers = [
+/* const mockSuppliers = [
   {
     id: 1,
     name: '深圳XX供应商',
@@ -210,10 +208,9 @@ const mockSuppliers = [
     status: 'active',
     lastOrder: '2024-12-28',
   },
-]
+] */
 
-// Mock cost analysis
-const mockCostAnalysis = {
+/* const mockCostAnalysis = {
   monthlyTrend: [
     { month: '8月', amount: 2200000 },
     { month: '9月', amount: 2450000 },
@@ -233,7 +230,7 @@ const mockCostAnalysis = {
     { project: 'ICT测试设备', amount: 380000, percentage: 13.3 },
     { project: '视觉检测设备', amount: 320000, percentage: 11.2 },
   ],
-}
+} */
 
 // Mock alerts
 const mockAlerts = [
@@ -319,7 +316,7 @@ export default function ProcurementManagerDashboard() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [stats, setStats] = useState(mockStats)
+  const [stats, setStats] = useState(null)
   const [pendingApprovals, setPendingApprovals] = useState([])
   const [suppliers, setSuppliers] = useState([])
 
@@ -387,10 +384,10 @@ export default function ProcurementManagerDashboard() {
       })
     } catch (err) {
       console.error('Failed to load procurement statistics:', err)
-      setError(err.message || '加载采购数据失败')
-      setStats(mockStats) // Fallback
-      setPendingApprovals(mockPendingApprovals) // Fallback
-      setSuppliers(mockSuppliers) // Fallback
+      setError(err)
+      setStats(null)
+      setPendingApprovals([])
+      setSuppliers([])
     } finally {
       setLoading(false)
     }
@@ -400,6 +397,23 @@ export default function ProcurementManagerDashboard() {
   useEffect(() => {
     loadStatistics()
   }, [loadStatistics])
+
+  // Show error state
+  if (error && !stats) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="采购经理仪表板"
+          description="团队管理、供应商管理、采购审批、成本分析、绩效监控"
+        />
+        <ApiIntegrationError
+          error={error}
+          apiEndpoint="/api/v1/purchase/orders"
+          onRetry={loadStatistics}
+        />
+      </div>
+    )
+  }
 
   const filteredApprovals = useMemo(() => {
     return pendingApprovals.filter(approval => {
@@ -433,7 +447,7 @@ export default function ProcurementManagerDashboard() {
                   <div>
                     <p className="text-sm text-slate-400 mb-1">待审批订单</p>
                     <p className="text-3xl font-bold text-white">
-                      {stats.pendingApprovals}
+                      {stats?.pendingApprovals || 0}
                     </p>
                   </div>
                   <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
@@ -459,7 +473,7 @@ export default function ProcurementManagerDashboard() {
                   <div>
                     <p className="text-sm text-slate-400 mb-1">在途订单</p>
                     <p className="text-3xl font-bold text-white">
-                      {stats.inTransitOrders}
+                      {stats?.inTransitOrders || 0}
                     </p>
                   </div>
                   <div className="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center">
@@ -485,7 +499,7 @@ export default function ProcurementManagerDashboard() {
                   <div>
                     <p className="text-sm text-slate-400 mb-1">缺料预警</p>
                     <p className="text-3xl font-bold text-white">
-                      {stats.shortageAlerts}
+                      {stats?.shortageAlerts || 0}
                     </p>
                   </div>
                   <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
@@ -511,7 +525,7 @@ export default function ProcurementManagerDashboard() {
                   <div>
                     <p className="text-sm text-slate-400 mb-1">在用供应商</p>
                     <p className="text-3xl font-bold text-white">
-                      {stats.activeSuppliers}
+                      {stats?.activeSuppliers || 0}
                     </p>
                   </div>
                   <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
@@ -538,9 +552,9 @@ export default function ProcurementManagerDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-sm text-slate-400">预算使用率</p>
-                  <p className="text-lg font-bold text-white">{stats.budgetUsed}%</p>
+                  <p className="text-lg font-bold text-white">{stats?.budgetUsed || 0}%</p>
                 </div>
-                <Progress value={stats.budgetUsed} className="h-2" />
+                <Progress value={stats?.budgetUsed || 0} className="h-2" />
               </CardContent>
             </Card>
           </motion.div>
@@ -554,9 +568,9 @@ export default function ProcurementManagerDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-sm text-slate-400">按期到货率</p>
-                  <p className="text-lg font-bold text-white">{stats.onTimeRate}%</p>
+                  <p className="text-lg font-bold text-white">{stats?.onTimeRate || 0}%</p>
                 </div>
-                <Progress value={stats.onTimeRate} className="h-2" />
+                <Progress value={stats?.onTimeRate || 0} className="h-2" />
               </CardContent>
             </Card>
           </motion.div>
@@ -572,7 +586,7 @@ export default function ProcurementManagerDashboard() {
                   <div>
                     <p className="text-sm text-slate-400 mb-1">本月采购额</p>
                     <p className="text-xl font-bold text-white">
-                      {formatCurrency(stats.monthlySpending)}
+                      {formatCurrency(stats?.monthlySpending || 0)}
                     </p>
                   </div>
                   <TrendingUp className="w-5 h-5 text-emerald-400" />
@@ -592,7 +606,7 @@ export default function ProcurementManagerDashboard() {
                   <div>
                     <p className="text-sm text-slate-400 mb-1">成本节省</p>
                     <p className="text-xl font-bold text-white">
-                      {formatCurrency(stats.costSavings)}
+                      {formatCurrency(stats?.costSavings || 0)}
                     </p>
                   </div>
                   <Award className="w-5 h-5 text-amber-400" />
@@ -905,7 +919,8 @@ export default function ProcurementManagerDashboard() {
           {/* Team Tab */}
           <TabsContent value="team" className="space-y-6">
             <div className="grid grid-cols-1 gap-4">
-              {mockTeamMembers.slice(0, 4).map((member, index) => (
+              {/* 团队成员 - 需要从API获取数据 */}
+              {/* {mockTeamMembers.slice(0, 4).map((member, index) => (
                 <motion.div
                   key={member.id}
                   initial={{ opacity: 0, y: 10 }}
@@ -960,7 +975,10 @@ export default function ProcurementManagerDashboard() {
                     </CardContent>
                   </Card>
                 </motion.div>
-              ))}
+              ))} */}
+              <div className="text-center py-8 text-slate-500">
+                <p>团队成员数据需要从API获取</p>
+              </div>
             </div>
           </TabsContent>
 
@@ -1063,39 +1081,10 @@ export default function ProcurementManagerDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockAlerts.map((alert, index) => (
-                    <motion.div
-                      key={alert.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="p-4 rounded-lg bg-surface-100 border border-white/5 hover:bg-white/[0.03] cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <Badge className={cn('text-xs', getAlertLevelColor(alert.level))}>
-                              {alert.level === 'critical' ? '严重' : alert.level === 'warning' ? '警告' : '提示'}
-                            </Badge>
-                            <span className="text-sm font-semibold text-white">{alert.title}</span>
-                            <span className="text-xs text-slate-400">{alert.createdAt}</span>
-                          </div>
-                          <p className="text-sm text-slate-300 mb-2">{alert.content}</p>
-                          <div className="flex items-center gap-4 text-xs text-slate-400">
-                            <span>{alert.projectCode}</span>
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <Badge className={cn(
-                            'text-xs',
-                            alert.status === 'pending' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'
-                          )}>
-                            {alert.status === 'pending' ? '待处理' : '处理中'}
-                          </Badge>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                  {/* 预警信息 - 需要从API获取数据 */}
+                  <div className="text-center py-8 text-slate-500">
+                    <p>预警信息数据需要从API获取</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>

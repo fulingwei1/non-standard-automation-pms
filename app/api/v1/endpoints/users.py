@@ -172,41 +172,81 @@ def read_users(
     - **department**: 部门筛选
     - **is_active**: 是否启用筛选
     """
-    query = db.query(User)
-    
-    # 关键词搜索
-    if keyword:
-        query = query.filter(
-            or_(
-                User.username.like(f"%{keyword}%"),
-                User.real_name.like(f"%{keyword}%"),
-                User.employee_no.like(f"%{keyword}%"),
-                User.email.like(f"%{keyword}%"),
+    try:
+        query = db.query(User)
+        
+        # 关键词搜索
+        if keyword:
+            query = query.filter(
+                or_(
+                    User.username.like(f"%{keyword}%"),
+                    User.real_name.like(f"%{keyword}%"),
+                    User.employee_no.like(f"%{keyword}%"),
+                    User.email.like(f"%{keyword}%"),
+                )
             )
+        
+        # 部门筛选
+        if department:
+            query = query.filter(User.department == department)
+        
+        # 启用状态筛选
+        if is_active is not None:
+            query = query.filter(User.is_active == is_active)
+        
+        # 计算总数
+        total = query.count()
+        
+        # 分页
+        offset = (page - 1) * page_size
+        users = query.order_by(User.created_at.desc()).offset(offset).limit(page_size).all()
+        
+        # 构建响应，添加错误处理
+        user_responses = []
+        for u in users:
+            try:
+                user_responses.append(_build_user_response(u))
+            except Exception as e:
+                # 如果某个用户构建失败，记录错误但继续处理其他用户
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"构建用户 {u.username} 响应失败: {e}", exc_info=True)
+                # 创建一个简化版本的响应
+                user_responses.append(UserResponse(
+                    id=u.id,
+                    username=u.username,
+                    employee_id=getattr(u, "employee_id", None),
+                    email=u.email or "",
+                    phone=u.phone or "",
+                    real_name=u.real_name or "",
+                    employee_no=u.employee_no or "",
+                    department=u.department or "",
+                    position=u.position or "",
+                    avatar=u.avatar,
+                    is_active=u.is_active,
+                    is_superuser=u.is_superuser,
+                    last_login_at=u.last_login_at,
+                    roles=[],
+                    role_ids=[],
+                    created_at=u.created_at,
+                    updated_at=u.updated_at,
+                ))
+        
+        return UserListResponse(
+            items=user_responses,
+            total=total,
+            page=page,
+            page_size=page_size,
+            pages=(total + page_size - 1) // page_size
         )
-    
-    # 部门筛选
-    if department:
-        query = query.filter(User.department == department)
-    
-    # 启用状态筛选
-    if is_active is not None:
-        query = query.filter(User.is_active == is_active)
-    
-    # 计算总数
-    total = query.count()
-    
-    # 分页
-    offset = (page - 1) * page_size
-    users = query.order_by(User.created_at.desc()).offset(offset).limit(page_size).all()
-    
-    return UserListResponse(
-        items=[_build_user_response(u) for u in users],
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"获取用户列表失败: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取用户列表失败: {str(e)}"
+        )
 
 
 @router.post("/", response_model=UserResponse)

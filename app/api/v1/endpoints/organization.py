@@ -12,7 +12,7 @@ from app.api import deps
 from app.core.config import settings
 from app.core import security
 from app.models.user import User
-from app.models.organization import Department, Employee
+from app.models.organization import Department, Employee, EmployeeHrProfile
 from app.models.staff_matching import HrEmployeeProfile, HrTagDict, HrEmployeeTagEvaluation
 from app.schemas.organization import (
     DepartmentCreate,
@@ -21,6 +21,10 @@ from app.schemas.organization import (
     EmployeeCreate,
     EmployeeUpdate,
     EmployeeResponse,
+    EmployeeHrProfileCreate,
+    EmployeeHrProfileUpdate,
+    EmployeeHrProfileResponse,
+    EmployeeWithHrProfileResponse,
 )
 from app.schemas.common import PaginatedResponse
 
@@ -571,4 +575,397 @@ async def download_import_template(
             "支持直接导入企业微信导出的通讯录Excel",
             "部门会自动按 一级部门-二级部门-三级部门 格式组合"
         ]
+    }
+
+
+# ==================== 人事档案 ====================
+
+
+@router.get("/hr-profiles")
+def get_hr_profiles(
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
+    keyword: Optional[str] = Query(None, description="搜索关键词（姓名/工号/部门）"),
+    dept_level1: Optional[str] = Query(None, description="一级部门筛选"),
+    employment_status: Optional[str] = Query(None, description="在职状态筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Dict[str, Any]:
+    """
+    获取人事档案列表（分页）
+    """
+    query = db.query(Employee).outerjoin(EmployeeHrProfile)
+
+    # 关键词搜索
+    if keyword:
+        query = query.filter(
+            or_(
+                Employee.name.contains(keyword),
+                Employee.employee_code.contains(keyword),
+                Employee.department.contains(keyword),
+            )
+        )
+
+    # 一级部门筛选
+    if dept_level1:
+        query = query.filter(EmployeeHrProfile.dept_level1 == dept_level1)
+
+    # 在职状态筛选
+    if employment_status:
+        query = query.filter(Employee.employment_status == employment_status)
+
+    total = query.count()
+    offset = (page - 1) * page_size
+    employees = query.order_by(Employee.created_at.desc()).offset(offset).limit(page_size).all()
+
+    # 转换为字典格式
+    items = []
+    for emp in employees:
+        profile = emp.hr_profile
+        item = {
+            "id": emp.id,
+            "employee_code": emp.employee_code,
+            "name": emp.name,
+            "department": emp.department,
+            "role": emp.role,
+            "phone": emp.phone,
+            "is_active": emp.is_active,
+            "employment_status": emp.employment_status,
+            "employment_type": emp.employment_type,
+            "id_card": emp.id_card,
+            "hr_profile": None
+        }
+        if profile:
+            item["hr_profile"] = {
+                "id": profile.id,
+                "dept_level1": profile.dept_level1,
+                "dept_level2": profile.dept_level2,
+                "dept_level3": profile.dept_level3,
+                "position": profile.position,
+                "job_level": profile.job_level,
+                "hire_date": str(profile.hire_date) if profile.hire_date else None,
+                "is_confirmed": profile.is_confirmed,
+                "gender": profile.gender,
+                "age": profile.age,
+                "ethnicity": profile.ethnicity,
+                "education_level": profile.education_level,
+                "graduate_school": profile.graduate_school,
+                "major": profile.major,
+            }
+        items.append(item)
+
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "pages": (total + page_size - 1) // page_size
+    }
+
+
+@router.get("/hr-profiles/{emp_id}", response_model=EmployeeWithHrProfileResponse)
+def get_hr_profile(
+    emp_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取指定员工的人事档案详情
+    """
+    employee = db.query(Employee).filter(Employee.id == emp_id).first()
+    if not employee:
+        raise HTTPException(status_code=404, detail="员工不存在")
+    return employee
+
+
+@router.put("/hr-profiles/{emp_id}", response_model=EmployeeHrProfileResponse)
+def update_hr_profile(
+    emp_id: int,
+    profile_in: EmployeeHrProfileUpdate,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    更新员工人事档案
+    """
+    employee = db.query(Employee).filter(Employee.id == emp_id).first()
+    if not employee:
+        raise HTTPException(status_code=404, detail="员工不存在")
+
+    # 获取或创建人事档案
+    profile = db.query(EmployeeHrProfile).filter(EmployeeHrProfile.employee_id == emp_id).first()
+    if not profile:
+        profile = EmployeeHrProfile(employee_id=emp_id)
+        db.add(profile)
+
+    # 更新字段
+    update_data = profile_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(profile, field, value)
+
+    db.commit()
+    db.refresh(profile)
+    return profile
+
+
+def _parse_date(date_val) -> Optional[datetime]:
+    """解析日期值"""
+    if pd.isna(date_val):
+        return None
+    if isinstance(date_val, datetime):
+        return date_val.date()
+    if isinstance(date_val, str):
+        date_str = str(date_val).strip()
+        if not date_str or date_str in ['/', 'NaN', '无试用期']:
+            return None
+        # 尝试多种日期格式
+        for fmt in ['%Y/%m/%d', '%Y-%m-%d', '%Y.%m.%d', '%Y年%m月%d日']:
+            try:
+                return datetime.strptime(date_str, fmt).date()
+            except:
+                pass
+    return None
+
+
+def _clean_str(val) -> Optional[str]:
+    """清理字符串值"""
+    if pd.isna(val):
+        return None
+    result = str(val).replace('\n', '').strip()
+    if result in ['/', 'NaN', '']:
+        return None
+    return result
+
+
+def _clean_decimal(val) -> Optional[Decimal]:
+    """清理数值"""
+    if pd.isna(val):
+        return None
+    try:
+        return Decimal(str(val))
+    except:
+        return None
+
+
+@router.post("/hr-profiles/import")
+async def import_hr_profiles(
+    file: UploadFile = File(..., description="人事档案Excel文件"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Dict[str, Any]:
+    """
+    批量导入人事档案数据
+
+    从Excel文件导入完整的人事档案信息，包括：
+    - 基本信息（姓名、部门、职务等）
+    - 入职信息（入职时间、转正日期、合同期限等）
+    - 个人信息（性别、年龄、民族、政治面貌等）
+    - 联系信息（地址、紧急联系人等）
+    - 教育背景（毕业院校、专业、学历等）
+    - 财务社保（银行卡、社保号、公积金号等）
+
+    系统会根据姓名匹配员工，已存在的员工会更新档案，不存在的会新建员工和档案。
+    """
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="请上传Excel文件（.xlsx或.xls格式）")
+
+    try:
+        contents = await file.read()
+        df = pd.read_excel(io.BytesIO(contents))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"读取Excel文件失败: {str(e)}")
+
+    # 检查必需列
+    if '姓名' not in df.columns:
+        raise HTTPException(status_code=400, detail="Excel中必须包含'姓名'列")
+
+    # 获取现有员工
+    existing_employees = db.query(Employee).all()
+    name_to_employee = {_clean_str(e.name): e for e in existing_employees}
+    existing_codes = {e.employee_code for e in existing_employees}
+
+    imported_count = 0
+    updated_count = 0
+    skipped_count = 0
+    errors = []
+
+    for idx, row in df.iterrows():
+        try:
+            name = _clean_str(row.get('姓名'))
+            if not name:
+                skipped_count += 1
+                continue
+
+            # 查找或创建员工
+            employee = name_to_employee.get(name)
+            if not employee:
+                # 创建新员工
+                code_idx = len(existing_codes) + 1
+                employee_code = f"EMP{code_idx:04d}"
+                while employee_code in existing_codes:
+                    code_idx += 1
+                    employee_code = f"EMP{code_idx:04d}"
+                existing_codes.add(employee_code)
+
+                # 组合部门名称
+                dept_parts = []
+                for col in ['一级部门', '二级部门', '三级部门']:
+                    val = _clean_str(row.get(col))
+                    if val:
+                        dept_parts.append(val)
+                department = '-'.join(dept_parts) if dept_parts else None
+
+                # 确定在职状态
+                status_val = _clean_str(row.get('在职离职状态'))
+                if status_val in ['离职', '已离职']:
+                    employment_status = 'resigned'
+                    is_active = False
+                elif status_val == '试用期':
+                    employment_status = 'active'
+                    is_active = True
+                else:
+                    employment_status = 'active'
+                    is_active = True
+
+                # 确定员工类型
+                is_confirmed = _clean_str(row.get('是否转正'))
+                if is_confirmed == '否' or status_val == '试用期':
+                    employment_type = 'probation'
+                else:
+                    employment_type = 'regular'
+
+                employee = Employee(
+                    employee_code=employee_code,
+                    name=name,
+                    department=department,
+                    role=_clean_str(row.get('职务')),
+                    phone=_clean_phone(row.get('联系方式')),
+                    is_active=is_active,
+                    employment_status=employment_status,
+                    employment_type=employment_type,
+                    id_card=_clean_str(row.get('身份证号')),
+                )
+                db.add(employee)
+                db.flush()
+                name_to_employee[name] = employee
+                imported_count += 1
+            else:
+                # 更新员工基本信息
+                if row.get('联系方式'):
+                    employee.phone = _clean_phone(row.get('联系方式'))
+                if row.get('身份证号'):
+                    employee.id_card = _clean_str(row.get('身份证号'))
+                updated_count += 1
+
+            # 创建或更新人事档案
+            profile = db.query(EmployeeHrProfile).filter(
+                EmployeeHrProfile.employee_id == employee.id
+            ).first()
+            if not profile:
+                profile = EmployeeHrProfile(employee_id=employee.id)
+                db.add(profile)
+
+            # 组织信息
+            profile.dept_level1 = _clean_str(row.get('一级部门'))
+            profile.dept_level2 = _clean_str(row.get('二级部门'))
+            profile.dept_level3 = _clean_str(row.get('三级部门'))
+            profile.direct_supervisor = _clean_str(row.get('直接上级'))
+            profile.position = _clean_str(row.get('职务'))
+            profile.job_level = _clean_str(row.get('级别'))
+
+            # 入职相关
+            profile.hire_date = _parse_date(row.get('入职时间'))
+            profile.probation_end_date = _parse_date(row.get('转正日期'))
+            profile.is_confirmed = _clean_str(row.get('是否转正')) == '是'
+            profile.contract_sign_date = _parse_date(row.get('签订日期'))
+            profile.contract_end_date = _parse_date(row.get('合同到期日'))
+
+            # 个人基本信息
+            profile.gender = _clean_str(row.get('性别'))
+            profile.birth_date = _parse_date(row.get('出生年月'))
+            age_val = row.get('年龄')
+            profile.age = int(age_val) if pd.notna(age_val) else None
+            profile.ethnicity = _clean_str(row.get('民族'))
+            profile.political_status = _clean_str(row.get('政治面貌'))
+            profile.marital_status = _clean_str(row.get('婚姻状况'))
+            profile.height_cm = _clean_decimal(row.get('身高cm'))
+            profile.weight_kg = _clean_decimal(row.get('体重kg'))
+            profile.native_place = _clean_str(row.get('籍贯'))
+
+            # 联系地址
+            profile.home_address = _clean_str(row.get('家庭住址'))
+            profile.current_address = _clean_str(row.get('目前住址'))
+            profile.emergency_contact = _clean_str(row.get('紧急\n联系人'))
+            profile.emergency_phone = _clean_str(row.get('紧急联系\n电话'))
+
+            # 教育背景
+            profile.graduate_school = _clean_str(row.get('毕业院校'))
+            profile.graduate_date = _clean_str(row.get('毕业时间'))
+            profile.major = _clean_str(row.get('所学专业'))
+            profile.education_level = _clean_str(row.get('文化\n程度'))
+            profile.foreign_language = _clean_str(row.get('外语\n程度'))
+            profile.hobbies = _clean_str(row.get('特长爱好'))
+
+            # 财务与社保
+            profile.bank_account = _clean_str(row.get('招商银行卡号/中国工商银行卡'))
+            profile.insurance_base = _clean_decimal(row.get('保险\n基数'))
+            profile.social_security_no = _clean_str(row.get('社保号'))
+            profile.housing_fund_no = _clean_str(row.get('公积金号'))
+
+            # 离职信息
+            profile.resignation_date = _parse_date(row.get('离职日期'))
+            profile.old_department = _clean_str(row.get('部门（旧）'))
+
+        except Exception as e:
+            errors.append(f"第{idx + 2}行处理失败: {str(e)}")
+            continue
+
+    db.commit()
+
+    return {
+        "success": True,
+        "message": f"导入完成：新增 {imported_count} 人，更新 {updated_count} 人，跳过 {skipped_count} 条",
+        "imported": imported_count,
+        "updated": updated_count,
+        "skipped": skipped_count,
+        "errors": errors[:10] if errors else []
+    }
+
+
+@router.get("/hr-profiles/statistics/overview")
+def get_hr_statistics(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Dict[str, Any]:
+    """
+    获取人事统计概览
+    """
+    # 总人数
+    total = db.query(Employee).filter(Employee.is_active == True).count()
+
+    # 按部门统计
+    dept_stats = db.query(
+        EmployeeHrProfile.dept_level1,
+        db.func.count(EmployeeHrProfile.id)
+    ).join(Employee).filter(Employee.is_active == True).group_by(
+        EmployeeHrProfile.dept_level1
+    ).all()
+
+    # 按在职状态统计
+    status_stats = db.query(
+        Employee.employment_status,
+        db.func.count(Employee.id)
+    ).group_by(Employee.employment_status).all()
+
+    # 试用期员工数
+    probation_count = db.query(Employee).filter(
+        Employee.is_active == True,
+        Employee.employment_type == 'probation'
+    ).count()
+
+    return {
+        "total_active": total,
+        "probation_count": probation_count,
+        "by_department": [{"department": d[0] or "未分配", "count": d[1]} for d in dept_stats],
+        "by_status": [{"status": s[0] or "未知", "count": s[1]} for s in status_stats],
     }

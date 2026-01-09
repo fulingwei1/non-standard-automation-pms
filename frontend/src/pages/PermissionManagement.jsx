@@ -319,7 +319,7 @@ export default function PermissionManagement() {
         </CardContent>
       </Card>
 
-      {/* 演示账号提示 */}
+      {}
       {isDemoAccount && (
         <Card className="border-amber-500/50 bg-amber-500/10">
           <CardContent className="pt-6">

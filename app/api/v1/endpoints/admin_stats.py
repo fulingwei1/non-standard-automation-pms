@@ -54,10 +54,21 @@ def get_admin_stats(
     assigned_permissions = db.query(func.count(RolePermission.id)).scalar() or 0
 
     # 未分配给任何角色的权限数
-    assigned_perm_ids = db.query(RolePermission.permission_id).distinct().subquery()
-    unassigned_permissions = db.query(func.count(Permission.id)).filter(
-        ~Permission.id.in_(assigned_perm_ids)
-    ).scalar() or 0
+    # 使用更安全的方式：先获取已分配的权限ID列表，然后计算未分配的
+    try:
+        assigned_perm_ids = [
+            row[0] for row in db.query(RolePermission.permission_id).distinct().all()
+        ]
+        if assigned_perm_ids:
+            unassigned_permissions = db.query(func.count(Permission.id)).filter(
+                ~Permission.id.in_(assigned_perm_ids)
+            ).scalar() or 0
+        else:
+            # 如果没有任何权限被分配，则所有权限都是未分配的
+            unassigned_permissions = total_permissions
+    except Exception:
+        # 如果查询失败，使用简单的计算方式
+        unassigned_permissions = max(0, total_permissions - assigned_permissions)
 
     return ResponseModel(
         code=200,

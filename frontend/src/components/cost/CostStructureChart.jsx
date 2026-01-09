@@ -14,32 +14,28 @@ export function CostStructureChart({
   // data格式: [{ category: '硬件成本', amount: 80000, percentage: 50 }, ...]
   
   const total = useMemo(() => {
+    if (!data || !Array.isArray(data)) return 0
     return data.reduce((sum, item) => sum + (item.amount || 0), 0)
   }, [data])
-  
-  if (!data || data.length === 0 || total === 0) {
-    return (
-      <div className="flex items-center justify-center" style={{ height: `${size}px` }}>
-        <div className="text-slate-400">暂无数据</div>
-      </div>
-    )
-  }
   
   const radius = size / 2 - 20
   const centerX = size / 2
   const centerY = size / 2
   
   const segments = useMemo(() => {
-    let currentAngle = -90 // Start from top
+    if (!data || !Array.isArray(data) || data.length === 0 || total === 0) {
+      return []
+    }
     
-    return data.map((item, index) => {
+    // Use reduce to accumulate angle without mutation
+    return data.reduce((acc, item, index) => {
       const amount = item.amount || 0
       const percentage = (amount / total) * 100
       const angle = (amount / total) * 360
       
-      const startAngle = currentAngle
-      const endAngle = currentAngle + angle
-      currentAngle = endAngle
+      // Calculate start angle from accumulated angle
+      const startAngle = acc.currentAngle
+      const endAngle = startAngle + angle
       
       const startAngleRad = (startAngle * Math.PI) / 180
       const endAngleRad = (endAngle * Math.PI) / 180
@@ -63,16 +59,31 @@ export function CostStructureChart({
       const color = `hsl(${hue}, 70%, 50%)`
       
       return {
-        pathData,
-        percentage,
-        color,
-        label: item.category,
-        amount,
-        startAngle,
-        endAngle,
+        segments: [
+          ...acc.segments,
+          {
+            pathData,
+            percentage,
+            color,
+            label: item.category,
+            amount,
+            startAngle,
+            endAngle,
+          },
+        ],
+        currentAngle: endAngle, // Update for next iteration
       }
-    })
+    }, { segments: [], currentAngle: -90 }).segments // Start from top (-90 degrees)
   }, [data, total, radius, centerX, centerY])
+  
+  // Early return after all hooks
+  if (!data || data.length === 0 || total === 0) {
+    return (
+      <div className="flex items-center justify-center" style={{ height: `${size}px` }}>
+        <div className="text-slate-400">暂无数据</div>
+      </div>
+    )
+  }
   
   return (
     <div className="flex items-center gap-8">

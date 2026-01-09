@@ -217,7 +217,8 @@ const ProjectForm = ({ isOpen, onClose, onSubmit, initialData = {} }) => {
                     opacity: 0.5;
                     cursor: not-allowed;
                 }
-            `}</style>
+            `}
+            </style>
         </div>
     );
 };

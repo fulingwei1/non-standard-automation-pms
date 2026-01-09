@@ -183,6 +183,13 @@ from .culture_wall_config import CultureWallConfig
 from .work_log import (
     WorkLog, WorkLogConfig, WorkLogMention
 )
+from .organization import (
+    Department, Employee, EmployeeHrProfile,
+    HrTransaction, EmployeeContract, ContractReminder, SalaryRecord
+)
+from .finance import (
+    FundingRound, Investor, FundingRecord, EquityStructure, FundingUsage
+)
 
 __all__ = [
     # Base
@@ -328,4 +335,9 @@ __all__ = [
     'CultureWallConfig',
     # Work Log
     'WorkLog', 'WorkLogConfig', 'WorkLogMention',
+    # Organization
+    'Department', 'Employee', 'EmployeeHrProfile',
+    'HrTransaction', 'EmployeeContract', 'ContractReminder', 'SalaryRecord',
+    # Finance
+    'FundingRound', 'Investor', 'FundingRecord', 'EquityStructure', 'FundingUsage',
 ]

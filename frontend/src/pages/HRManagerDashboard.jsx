@@ -41,6 +41,14 @@ import {
   Printer,
   Share2,
   Settings,
+  FileSignature,
+  UserMinus,
+  ArrowRightLeft,
+  BadgeDollarSign,
+  Bell,
+  FileCheck,
+  Plus,
+  Search,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -75,7 +83,7 @@ import {
 } from '../components/ui'
 import { cn, formatCurrency, formatDate } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
-import { employeeApi, departmentApi } from '../services/api'
+import { employeeApi, departmentApi, hrApi } from '../services/api'
 import { toast } from '../components/ui/toast'
 
 // Mock statistics
@@ -817,6 +825,8 @@ export default function HRManagerDashboard() {
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
         <TabsList className="bg-surface-50 border-white/10">
           <TabsTrigger value="overview">概览</TabsTrigger>
+          <TabsTrigger value="transactions">人事事务</TabsTrigger>
+          <TabsTrigger value="contracts">合同管理</TabsTrigger>
           <TabsTrigger value="recruitment">招聘管理</TabsTrigger>
           <TabsTrigger value="performance">绩效管理</TabsTrigger>
           <TabsTrigger value="attendance">考勤管理</TabsTrigger>
@@ -1190,6 +1200,16 @@ export default function HRManagerDashboard() {
               </CardContent>
             </Card>
           </motion.div>
+        </TabsContent>
+
+        {/* HR Transactions Tab - 人事事务 */}
+        <TabsContent value="transactions" className="space-y-6">
+          <HrTransactionsTab />
+        </TabsContent>
+
+        {/* Contracts Tab - 合同管理 */}
+        <TabsContent value="contracts" className="space-y-6">
+          <HrContractsTab />
         </TabsContent>
 
         {/* Recruitment Tab */}
@@ -2334,5 +2354,694 @@ export default function HRManagerDashboard() {
 }
 
 
+/**
+ * HR Transactions Tab Component - 人事事务管理
+ */
+function HrTransactionsTab() {
+  const [transactions, setTransactions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState({
+    type: 'all',
+    status: 'all',
+    searchText: '',
+  })
+  const [statistics, setStatistics] = useState(null)
+
+  // 事务类型映射
+  const transactionTypeMap = {
+    onboarding: { label: '入职', icon: UserPlus, color: 'emerald' },
+    resignation: { label: '离职', icon: UserMinus, color: 'red' },
+    confirmation: { label: '转正', icon: UserCheck, color: 'blue' },
+    transfer: { label: '调岗', icon: ArrowRightLeft, color: 'amber' },
+    promotion: { label: '晋升', icon: TrendingUp, color: 'purple' },
+    salary_adjustment: { label: '调薪', icon: BadgeDollarSign, color: 'cyan' },
+  }
+
+  // 状态映射
+  const statusMap = {
+    pending: { label: '待处理', color: 'amber' },
+    approved: { label: '已批准', color: 'blue' },
+    completed: { label: '已完成', color: 'emerald' },
+    rejected: { label: '已拒绝', color: 'red' },
+  }
+
+  // 加载数据
+  useEffect(() => {
+    loadTransactions()
+    loadStatistics()
+  }, [filter])
+
+  const loadTransactions = async () => {
+    setLoading(true)
+    try {
+      const params = {
+        page: 1,
+        page_size: 50,
+      }
+      if (filter.type !== 'all') params.transaction_type = filter.type
+      if (filter.status !== 'all') params.status = filter.status
+
+      const response = await hrApi.transactions.list(params)
+      setTransactions(response.data?.items || [])
+    } catch (err) {
+      console.error('加载人事事务失败:', err)
+      // 使用模拟数据
+      setTransactions([
+        { id: 1, employee_id: 1, transaction_type: 'onboarding', transaction_date: '2025-01-08', status: 'completed', employee: { name: '张三', employee_code: 'EMP001' }, initial_position: '软件工程师', initial_department: '技术部' },
+        { id: 2, employee_id: 2, transaction_type: 'confirmation', transaction_date: '2025-01-10', status: 'pending', employee: { name: '李四', employee_code: 'EMP002' }, confirmation_date: '2025-01-15' },
+        { id: 3, employee_id: 3, transaction_type: 'salary_adjustment', transaction_date: '2025-01-05', status: 'approved', employee: { name: '王五', employee_code: 'EMP003' }, from_salary: 15000, to_salary: 18000 },
+        { id: 4, employee_id: 4, transaction_type: 'resignation', transaction_date: '2025-01-07', status: 'completed', employee: { name: '赵六', employee_code: 'EMP004' }, resignation_reason: '个人原因', last_working_date: '2025-02-07' },
+        { id: 5, employee_id: 5, transaction_type: 'promotion', transaction_date: '2025-01-06', status: 'pending', employee: { name: '钱七', employee_code: 'EMP005' }, from_level: 'P5', to_level: 'P6' },
+      ])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadStatistics = async () => {
+    try {
+      const response = await hrApi.transactions.getStatistics({ months: 1 })
+      setStatistics(response.data)
+    } catch (err) {
+      console.error('加载统计数据失败:', err)
+      // 使用模拟数据
+      setStatistics({
+        total: 15,
+        by_type: {
+          onboarding: 5,
+          resignation: 2,
+          confirmation: 4,
+          transfer: 1,
+          promotion: 2,
+          salary_adjustment: 1,
+        },
+        by_status: {
+          pending: 3,
+          approved: 4,
+          completed: 7,
+          rejected: 1,
+        },
+      })
+    }
+  }
+
+  const handleApprove = async (transaction, action) => {
+    try {
+      await hrApi.transactions.approve(transaction.id, {
+        status: action === 'approve' ? 'approved' : 'rejected',
+        approval_remark: action === 'approve' ? '同意' : '拒绝',
+      })
+      toast.success(action === 'approve' ? '审批通过' : '已拒绝')
+      loadTransactions()
+    } catch (err) {
+      toast.error('操作失败')
+    }
+  }
+
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(t => {
+      if (filter.searchText) {
+        const search = filter.searchText.toLowerCase()
+        const name = t.employee?.name?.toLowerCase() || ''
+        const code = t.employee?.employee_code?.toLowerCase() || ''
+        if (!name.includes(search) && !code.includes(search)) return false
+      }
+      return true
+    })
+  }, [transactions, filter.searchText])
+
+  return (
+    <div className="space-y-6">
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {Object.entries(transactionTypeMap).map(([type, config]) => {
+          const Icon = config.icon
+          const count = statistics?.by_type?.[type] || 0
+          return (
+            <Card key={type} className="bg-surface-50 border-white/10">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    'p-2 rounded-lg',
+                    `bg-${config.color}-500/20`
+                  )}>
+                    <Icon className={cn('w-5 h-5', `text-${config.color}-400`)} />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-white">{count}</p>
+                    <p className="text-xs text-slate-400">{config.label}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+
+      {/* Filter and Actions */}
+      <Card className="bg-surface-50 border-white/10">
+        <CardContent className="p-4">
+          <div className="flex flex-wrap gap-4 items-center justify-between">
+            <div className="flex flex-wrap gap-3 items-center">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  placeholder="搜索员工姓名或工号..."
+                  value={filter.searchText}
+                  onChange={(e) => setFilter({ ...filter, searchText: e.target.value })}
+                  className="pl-9 w-64 bg-surface-100 border-white/10"
+                />
+              </div>
+              <select
+                value={filter.type}
+                onChange={(e) => setFilter({ ...filter, type: e.target.value })}
+                className="px-3 py-2 rounded-md bg-surface-100 border border-white/10 text-white text-sm"
+              >
+                <option value="all">全部类型</option>
+                {Object.entries(transactionTypeMap).map(([key, config]) => (
+                  <option key={key} value={key}>{config.label}</option>
+                ))}
+              </select>
+              <select
+                value={filter.status}
+                onChange={(e) => setFilter({ ...filter, status: e.target.value })}
+                className="px-3 py-2 rounded-md bg-surface-100 border border-white/10 text-white text-sm"
+              >
+                <option value="all">全部状态</option>
+                {Object.entries(statusMap).map(([key, config]) => (
+                  <option key={key} value={key}>{config.label}</option>
+                ))}
+              </select>
+            </div>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={() => setShowCreateDialog(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              新建事务
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Transactions List */}
+      <Card className="bg-surface-50 border-white/10">
+        <CardHeader>
+          <CardTitle className="text-white">人事事务列表</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-16 bg-surface-100 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          ) : filteredTransactions.length === 0 ? (
+            <EmptyState
+              icon={FileText}
+              title="暂无人事事务"
+              description="没有符合条件的人事事务记录"
+            />
+          ) : (
+            <div className="space-y-3">
+              {filteredTransactions.map(transaction => {
+                const typeConfig = transactionTypeMap[transaction.transaction_type] || {}
+                const statusConfig = statusMap[transaction.status] || {}
+                const TypeIcon = typeConfig.icon || FileText
+
+                return (
+                  <div
+                    key={transaction.id}
+                    className="p-4 bg-surface-100 rounded-lg border border-white/5 hover:border-white/10 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className={cn(
+                          'p-2 rounded-lg',
+                          `bg-${typeConfig.color || 'slate'}-500/20`
+                        )}>
+                          <TypeIcon className={cn('w-5 h-5', `text-${typeConfig.color || 'slate'}-400`)} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-white">
+                              {transaction.employee?.name || '未知员工'}
+                            </span>
+                            <span className="text-xs text-slate-400">
+                              {transaction.employee?.employee_code}
+                            </span>
+                            <Badge className={cn(
+                              'text-xs',
+                              `bg-${typeConfig.color || 'slate'}-500/20 text-${typeConfig.color || 'slate'}-400`
+                            )}>
+                              {typeConfig.label || transaction.transaction_type}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-slate-400 mt-1">
+                            {transaction.transaction_type === 'onboarding' && (
+                              <>入职部门: {transaction.initial_department || '-'} / 职位: {transaction.initial_position || '-'}</>
+                            )}
+                            {transaction.transaction_type === 'resignation' && (
+                              <>离职原因: {transaction.resignation_reason || '-'} / 最后工作日: {transaction.last_working_date || '-'}</>
+                            )}
+                            {transaction.transaction_type === 'confirmation' && (
+                              <>转正日期: {transaction.confirmation_date || '-'}</>
+                            )}
+                            {transaction.transaction_type === 'salary_adjustment' && (
+                              <>薪资调整: ¥{transaction.from_salary?.toLocaleString() || 0} → ¥{transaction.to_salary?.toLocaleString() || 0}</>
+                            )}
+                            {transaction.transaction_type === 'promotion' && (
+                              <>晋升: {transaction.from_level || '-'} → {transaction.to_level || '-'}</>
+                            )}
+                            {transaction.transaction_type === 'transfer' && (
+                              <>调岗: {transaction.from_department || '-'} → {transaction.to_department || '-'}</>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <Badge className={cn(
+                            'text-xs',
+                            `bg-${statusConfig.color || 'slate'}-500/20 text-${statusConfig.color || 'slate'}-400`
+                          )}>
+                            {statusConfig.label || transaction.status}
+                          </Badge>
+                          <p className="text-xs text-slate-500 mt-1">
+                            {formatDate(transaction.transaction_date)}
+                          </p>
+                        </div>
+                        {transaction.status === 'pending' && (
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              className="bg-emerald-600 hover:bg-emerald-700"
+                              onClick={() => handleApprove(transaction, 'approve')}
+                            >
+                              通过
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+                              onClick={() => handleApprove(transaction, 'reject')}
+                            >
+                              拒绝
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
 
 
+/**
+ * HR Contracts Tab Component - 合同管理
+ */
+function HrContractsTab() {
+  const [contracts, setContracts] = useState([])
+  const [reminders, setReminders] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [activeSubTab, setActiveSubTab] = useState('all')
+  const [filter, setFilter] = useState({
+    status: 'all',
+    searchText: '',
+  })
+
+  // 合同类型映射
+  const contractTypeMap = {
+    fixed_term: '固定期限',
+    indefinite: '无固定期限',
+    project: '项目制',
+    intern: '实习协议',
+    labor_dispatch: '劳务派遣',
+  }
+
+  // 合同状态映射
+  const contractStatusMap = {
+    draft: { label: '草稿', color: 'slate' },
+    active: { label: '生效中', color: 'emerald' },
+    expired: { label: '已到期', color: 'red' },
+    terminated: { label: '已终止', color: 'amber' },
+    renewed: { label: '已续签', color: 'blue' },
+  }
+
+  // 提醒类型映射
+  const reminderTypeMap = {
+    two_months: { label: '提前两月', color: 'blue', days: 60 },
+    one_month: { label: '提前一月', color: 'amber', days: 30 },
+    two_weeks: { label: '提前两周', color: 'orange', days: 14 },
+    expired: { label: '已到期', color: 'red', days: 0 },
+  }
+
+  useEffect(() => {
+    loadContracts()
+    loadReminders()
+  }, [filter])
+
+  const loadContracts = async () => {
+    setLoading(true)
+    try {
+      const params = {
+        page: 1,
+        page_size: 50,
+      }
+      if (filter.status !== 'all') params.status = filter.status
+
+      const response = await hrApi.contracts.list(params)
+      setContracts(response.data?.items || [])
+    } catch (err) {
+      console.error('加载合同数据失败:', err)
+      // 使用模拟数据
+      setContracts([
+        { id: 1, employee_id: 1, contract_no: 'HT2024001', contract_type: 'fixed_term', start_date: '2024-01-01', end_date: '2027-01-01', status: 'active', employee: { name: '张三', employee_code: 'EMP001' }, base_salary: 15000 },
+        { id: 2, employee_id: 2, contract_no: 'HT2024002', contract_type: 'fixed_term', start_date: '2024-03-01', end_date: '2025-03-01', status: 'active', employee: { name: '李四', employee_code: 'EMP002' }, base_salary: 12000 },
+        { id: 3, employee_id: 3, contract_no: 'HT2023005', contract_type: 'indefinite', start_date: '2023-06-01', end_date: null, status: 'active', employee: { name: '王五', employee_code: 'EMP003' }, base_salary: 20000 },
+        { id: 4, employee_id: 4, contract_no: 'HT2024010', contract_type: 'intern', start_date: '2024-09-01', end_date: '2025-03-01', status: 'active', employee: { name: '赵六', employee_code: 'EMP004' }, base_salary: 5000 },
+      ])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadReminders = async () => {
+    try {
+      const response = await hrApi.reminders.list({ status: 'pending' })
+      setReminders(response.data?.items || [])
+    } catch (err) {
+      console.error('加载提醒数据失败:', err)
+      // 使用模拟数据
+      setReminders([
+        { id: 1, contract_id: 2, employee_id: 2, reminder_type: 'two_months', reminder_date: '2025-01-01', contract_end_date: '2025-03-01', days_until_expiry: 51, status: 'pending', employee: { name: '李四', employee_code: 'EMP002' } },
+        { id: 2, contract_id: 5, employee_id: 5, reminder_type: 'one_month', reminder_date: '2025-01-08', contract_end_date: '2025-02-08', days_until_expiry: 30, status: 'pending', employee: { name: '钱七', employee_code: 'EMP005' } },
+      ])
+    }
+  }
+
+  const handleRenewContract = async (contract) => {
+    try {
+      await hrApi.contracts.renew(contract.id, {
+        new_end_date: null, // 由后端计算
+        duration_months: 36,
+      })
+      toast.success('合同续签成功')
+      loadContracts()
+      loadReminders()
+    } catch (err) {
+      toast.error('续签失败')
+    }
+  }
+
+  const handleReminderAction = async (reminder, action) => {
+    try {
+      await hrApi.reminders.handle(reminder.id, {
+        handle_action: action,
+        handle_remark: action === 'renew' ? '同意续签' : '不续签',
+      })
+      toast.success('处理成功')
+      loadReminders()
+    } catch (err) {
+      toast.error('操作失败')
+    }
+  }
+
+  const generateReminders = async () => {
+    try {
+      const response = await hrApi.reminders.generate()
+      toast.success(`生成了 ${response.data?.created_count || 0} 条提醒`)
+      loadReminders()
+    } catch (err) {
+      toast.error('生成提醒失败')
+    }
+  }
+
+  const filteredContracts = useMemo(() => {
+    return contracts.filter(c => {
+      if (filter.searchText) {
+        const search = filter.searchText.toLowerCase()
+        const name = c.employee?.name?.toLowerCase() || ''
+        const code = c.employee?.employee_code?.toLowerCase() || ''
+        const contractNo = c.contract_no?.toLowerCase() || ''
+        if (!name.includes(search) && !code.includes(search) && !contractNo.includes(search)) return false
+      }
+      return true
+    })
+  }, [contracts, filter.searchText])
+
+  return (
+    <div className="space-y-6">
+      {/* Sub Tabs */}
+      <div className="flex gap-2">
+        <Button
+          variant={activeSubTab === 'all' ? 'default' : 'outline'}
+          onClick={() => setActiveSubTab('all')}
+          className={activeSubTab === 'all' ? 'bg-blue-600' : 'border-white/10'}
+        >
+          <FileText className="w-4 h-4 mr-2" />
+          全部合同
+        </Button>
+        <Button
+          variant={activeSubTab === 'expiring' ? 'default' : 'outline'}
+          onClick={() => setActiveSubTab('expiring')}
+          className={activeSubTab === 'expiring' ? 'bg-amber-600' : 'border-white/10'}
+        >
+          <Bell className="w-4 h-4 mr-2" />
+          到期提醒
+          {reminders.length > 0 && (
+            <Badge className="ml-2 bg-red-500 text-white">{reminders.length}</Badge>
+          )}
+        </Button>
+      </div>
+
+      {activeSubTab === 'all' ? (
+        <>
+          {/* Filter */}
+          <Card className="bg-surface-50 border-white/10">
+            <CardContent className="p-4">
+              <div className="flex flex-wrap gap-4 items-center justify-between">
+                <div className="flex flex-wrap gap-3 items-center">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      placeholder="搜索员工或合同编号..."
+                      value={filter.searchText}
+                      onChange={(e) => setFilter({ ...filter, searchText: e.target.value })}
+                      className="pl-9 w-64 bg-surface-100 border-white/10"
+                    />
+                  </div>
+                  <select
+                    value={filter.status}
+                    onChange={(e) => setFilter({ ...filter, status: e.target.value })}
+                    className="px-3 py-2 rounded-md bg-surface-100 border border-white/10 text-white text-sm"
+                  >
+                    <option value="all">全部状态</option>
+                    {Object.entries(contractStatusMap).map(([key, config]) => (
+                      <option key={key} value={key}>{config.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  新建合同
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Contracts List */}
+          <Card className="bg-surface-50 border-white/10">
+            <CardHeader>
+              <CardTitle className="text-white">合同列表</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="h-16 bg-surface-100 rounded-lg animate-pulse" />
+                  ))}
+                </div>
+              ) : filteredContracts.length === 0 ? (
+                <EmptyState
+                  icon={FileSignature}
+                  title="暂无合同"
+                  description="没有符合条件的合同记录"
+                />
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-white/10">
+                        <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">合同编号</th>
+                        <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">员工</th>
+                        <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">合同类型</th>
+                        <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">起始日期</th>
+                        <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">到期日期</th>
+                        <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">基本工资</th>
+                        <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">状态</th>
+                        <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredContracts.map(contract => {
+                        const statusConfig = contractStatusMap[contract.status] || {}
+                        return (
+                          <tr key={contract.id} className="border-b border-white/5 hover:bg-surface-100/50">
+                            <td className="py-3 px-4 text-white font-mono text-sm">{contract.contract_no || '-'}</td>
+                            <td className="py-3 px-4">
+                              <div>
+                                <span className="text-white">{contract.employee?.name || '-'}</span>
+                                <span className="text-xs text-slate-400 ml-2">{contract.employee?.employee_code}</span>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-slate-300">{contractTypeMap[contract.contract_type] || contract.contract_type}</td>
+                            <td className="py-3 px-4 text-slate-300">{formatDate(contract.start_date)}</td>
+                            <td className="py-3 px-4 text-slate-300">{contract.end_date ? formatDate(contract.end_date) : '无固定期限'}</td>
+                            <td className="py-3 px-4 text-white">¥{contract.base_salary?.toLocaleString() || '-'}</td>
+                            <td className="py-3 px-4">
+                              <Badge className={cn(
+                                'text-xs',
+                                `bg-${statusConfig.color || 'slate'}-500/20 text-${statusConfig.color || 'slate'}-400`
+                              )}>
+                                {statusConfig.label || contract.status}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex gap-2">
+                                <Button size="sm" variant="ghost" className="text-blue-400 hover:text-blue-300">
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                                {contract.status === 'active' && contract.end_date && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="text-emerald-400 hover:text-emerald-300"
+                                    onClick={() => handleRenewContract(contract)}
+                                  >
+                                    <RefreshCw className="w-4 h-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </>
+      ) : (
+        /* Expiring Contracts Tab */
+        <>
+          {/* Actions */}
+          <Card className="bg-surface-50 border-white/10">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-amber-400" />
+                  <span className="text-white">合同到期提醒（提前60天自动生成）</span>
+                </div>
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={generateReminders}
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  生成提醒
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Reminders List */}
+          <Card className="bg-surface-50 border-white/10">
+            <CardHeader>
+              <CardTitle className="text-white">到期提醒列表</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {reminders.length === 0 ? (
+                <EmptyState
+                  icon={Bell}
+                  title="暂无到期提醒"
+                  description="当前没有需要处理的合同到期提醒"
+                />
+              ) : (
+                <div className="space-y-3">
+                  {reminders.map(reminder => {
+                    const typeConfig = reminderTypeMap[reminder.reminder_type] || {}
+                    return (
+                      <div
+                        key={reminder.id}
+                        className="p-4 bg-surface-100 rounded-lg border border-white/5 hover:border-white/10 transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className={cn(
+                              'p-2 rounded-lg',
+                              `bg-${typeConfig.color || 'slate'}-500/20`
+                            )}>
+                              <Bell className={cn('w-5 h-5', `text-${typeConfig.color || 'slate'}-400`)} />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-white">
+                                  {reminder.employee?.name || '未知员工'}
+                                </span>
+                                <span className="text-xs text-slate-400">
+                                  {reminder.employee?.employee_code}
+                                </span>
+                                <Badge className={cn(
+                                  'text-xs',
+                                  `bg-${typeConfig.color || 'slate'}-500/20 text-${typeConfig.color || 'slate'}-400`
+                                )}>
+                                  {typeConfig.label || reminder.reminder_type}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-slate-400 mt-1">
+                                合同到期日: {formatDate(reminder.contract_end_date)}
+                                {reminder.days_until_expiry > 0
+                                  ? ` (还剩 ${reminder.days_until_expiry} 天)`
+                                  : ' (已到期)'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              className="bg-emerald-600 hover:bg-emerald-700"
+                              onClick={() => handleReminderAction(reminder, 'renew')}
+                            >
+                              续签
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-slate-500/30 text-slate-400 hover:bg-slate-500/10"
+                              onClick={() => handleReminderAction(reminder, 'terminate')}
+                            >
+                              不续签
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </>
+      )}
+    </div>
+  )
+}

@@ -53,6 +53,7 @@ import {
   quoteApi,
   taskCenterApi,
 } from '../services/api'
+import { ApiIntegrationError } from '../components/ui'
 
 const DEFAULT_STATS = {
   monthlyTarget: 1200000,
@@ -420,6 +421,23 @@ export default function SalesWorkstation() {
 
   const toggleTodo = (id) => {
     setTodos(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t))
+  }
+
+  // Show error state
+  if (error && !funnelData && opportunities.length === 0) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="销售工作台"
+          description="销售业绩、商机管理、客户跟进"
+        />
+        <ApiIntegrationError
+          error={error}
+          apiEndpoint="/api/v1/sales/statistics/summary"
+          onRetry={loadStatistics}
+        />
+      </div>
+    )
   }
 
   return (

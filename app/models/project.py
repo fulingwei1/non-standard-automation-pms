@@ -722,7 +722,11 @@ class ProjectDocument(Base, TimestampMixin):
 
     # 关系
     project = relationship("Project", back_populates="documents")
-    rd_project = relationship("RdProject", foreign_keys=[rd_project_id])
+    rd_project = relationship(
+        "RdProject",
+        foreign_keys=[rd_project_id],
+        primaryjoin="ProjectDocument.rd_project_id == RdProject.id"
+    )
     machine = relationship("Machine")
 
     __table_args__ = (

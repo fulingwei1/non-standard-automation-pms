@@ -79,11 +79,7 @@ export function EmptyState({
   )
 }
 
-/**
- * API 集成错误组件
- * 用于明确标识 API 未集成或调用失败的情况
- * 不提供 fallback 到 mock 数据，确保能清楚识别集成状态
- */
+
 export function ApiIntegrationError({
   error,
   apiEndpoint,

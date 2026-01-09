@@ -53,9 +53,11 @@ import { taskCenterApi, progressApi, projectApi } from '../services/api'
 import GanttChart from '../components/engineer/GanttChart'
 import CalendarView from '../components/engineer/CalendarView'
 import TaskDetailPanel from '../components/engineer/TaskDetailPanel'
+import { ApiIntegrationError } from '../components/ui'
 
-// Mock task data for mechanical engineer
-const mockEngineerTasks = [
+// Mock task data for mechanical engineer - 已移除，使用真实API
+// const mockEngineerTasks = [
+/*
   {
     id: 'T001',
     title: 'Main frame 3D modeling',
@@ -250,7 +252,7 @@ const mockEngineerTasks = [
     reviewStatus: 'pending',
     notes: 'Prepare presentation materials',
   },
-]
+] */
 
 // Task type configs
 const taskTypeConfigs = {
@@ -585,6 +587,23 @@ export default function EngineerWorkstation() {
   const handleCloseDetail = () => {
     setDetailPanelOpen(false)
     setTimeout(() => setSelectedTask(null), 300)
+  }
+
+  // Show error state
+  if (error && tasks.length === 0) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="我的工作台"
+          description="机械设计任务管理 · 时间轴视图"
+        />
+        <ApiIntegrationError
+          error={error}
+          apiEndpoint="/api/v1/task-center/my-tasks"
+          onRetry={loadTasks}
+        />
+      </div>
+    )
   }
 
   if (loading) {

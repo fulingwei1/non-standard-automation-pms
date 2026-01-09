@@ -23,87 +23,10 @@ import { Badge } from '../components/ui/badge'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { notificationApi } from '../services/api'
+import { ApiIntegrationError } from '../components/ui'
 
-// Mock notification data
-const mockNotifications = [
-  {
-    id: 1,
-    type: 'alert',
-    title: '项目进度预警',
-    message: '项目 PJ250108001 当前进度落后计划 3 天，请关注',
-    timestamp: '2026-01-04 10:30',
-    read: false,
-    priority: 'high',
-    relatedId: 'PJ250108001',
-    relatedType: 'project',
-  },
-  {
-    id: 2,
-    type: 'task',
-    title: '新任务分配',
-    message: '您有一个新的设计任务：EOL测试设备机械结构设计',
-    timestamp: '2026-01-04 09:15',
-    read: false,
-    priority: 'medium',
-    relatedId: 'T001',
-    relatedType: 'task',
-  },
-  {
-    id: 3,
-    type: 'material',
-    title: '物料到货通知',
-    message: '采购订单 PO250103001 的物料已到货，请及时验收',
-    timestamp: '2026-01-04 08:00',
-    read: true,
-    priority: 'low',
-    relatedId: 'PO250103001',
-    relatedType: 'purchase',
-  },
-  {
-    id: 4,
-    type: 'approval',
-    title: '待审批事项',
-    message: '设计变更单 ECN-PJ250108001-02 等待您的审批',
-    timestamp: '2026-01-03 16:45',
-    read: false,
-    priority: 'high',
-    relatedId: 'ECN-PJ250108001-02',
-    relatedType: 'ecn',
-  },
-  {
-    id: 5,
-    type: 'system',
-    title: '系统维护通知',
-    message: '系统将于 2026-01-05 02:00-04:00 进行例行维护',
-    timestamp: '2026-01-03 14:00',
-    read: true,
-    priority: 'low',
-    relatedId: null,
-    relatedType: 'system',
-  },
-  {
-    id: 6,
-    type: 'milestone',
-    title: '里程碑即将到期',
-    message: '项目 PJ250105002 的"设计评审"里程碑将于 3 天后到期',
-    timestamp: '2026-01-03 10:30',
-    read: false,
-    priority: 'medium',
-    relatedId: 'PJ250105002',
-    relatedType: 'project',
-  },
-  {
-    id: 7,
-    type: 'material',
-    title: '缺料预警',
-    message: '项目 PJ250106003 存在 5 项关键物料缺料风险',
-    timestamp: '2026-01-02 15:20',
-    read: true,
-    priority: 'high',
-    relatedId: 'PJ250106003',
-    relatedType: 'project',
-  },
-]
+// Mock notification data - 已移除，使用真实API
+
 
 const notificationTypes = [
   { value: 'all', label: '全部', icon: Bell },
@@ -302,16 +225,9 @@ export default function NotificationCenter() {
       setTotal(data.total || formattedNotifications.length)
     } catch (err) {
       console.error('Failed to load notifications:', err)
-      setError(err.response?.data?.detail || err.message || '加载通知失败')
-      // 如果是演示账号，使用 mock 数据
-      const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-      if (isDemoAccount) {
-        setNotifications(mockNotifications)
-        setTotal(mockNotifications.length)
-      } else {
-        setNotifications([])
-        setTotal(0)
-      }
+      setError(err)
+      setNotifications([])
+      setTotal(0)
     } finally {
       setLoading(false)
     }
@@ -369,6 +285,22 @@ export default function NotificationCenter() {
     }
   }
 
+
+  // Show error state
+  if (error && notifications.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="container mx-auto px-4 py-6 space-y-6">
+          <PageHeader title="通知中心" description="查看系统通知和消息" />
+          <ApiIntegrationError
+            error={error}
+            apiEndpoint="/api/v1/notifications"
+            onRetry={loadNotifications}
+          />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">

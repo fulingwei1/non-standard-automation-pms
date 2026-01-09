@@ -9,20 +9,11 @@ import {
   LayoutDashboard,
   RefreshCw,
   Download,
-  Calendar,
   TrendingUp,
   TrendingDown,
   DollarSign,
-  Users,
   Briefcase,
-  AlertTriangle,
   CheckCircle2,
-  Clock,
-  Target,
-  Activity,
-  FileText,
-  Building2,
-  Truck,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -31,8 +22,6 @@ import {
   CardHeader,
   CardTitle,
   Button,
-  Badge,
-  Progress,
   Tabs,
   TabsContent,
   TabsList,
@@ -56,6 +45,7 @@ import {
 import { cn, formatCurrency } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { reportCenterApi } from '../services/api'
+import { ApiIntegrationError } from '../components/ui'
 
 // 时间范围选项
 const timeRangeOptions = [
@@ -79,262 +69,304 @@ export default function ExecutiveDashboard() {
     health_distribution: {},
   })
   const [healthData, setHealthData] = useState({})
-  const [deliveryData, setDeliveryData] = useState({})
+  const [deliveryData, setDeliveryData] = useState([])
   const [utilizationData, setUtilizationData] = useState([])
   const [costData, setCostData] = useState([])
   const [trendData, setTrendData] = useState([])
+  const [projectStageData, setProjectStageData] = useState([])
+  const [milestoneData, setMilestoneData] = useState({ completionRate: 0, healthIndex: 0 })
+  const [projectProgressData, setProjectProgressData] = useState([])
+  const [budgetData, setBudgetData] = useState([])
+  const [paymentData, setPaymentData] = useState([])
+  const [profitData, setProfitData] = useState([])
+  const [salesFunnelData, setSalesFunnelData] = useState([])
+  const [customerDistributionData, setCustomerDistributionData] = useState([])
+  const [error, setError] = useState(null)
+  const [exporting, setExporting] = useState(false)
+  const [exportFormat, setExportFormat] = useState('')
 
-  // Mock 数据
-  const mockTrendData = [
-    { month: '2024-07', revenue: 9800000, cost: 7500000, profit: 2300000 },
-    { month: '2024-08', revenue: 10500000, cost: 8000000, profit: 2500000 },
-    { month: '2024-09', revenue: 11200000, cost: 8500000, profit: 2700000 },
-    { month: '2024-10', revenue: 11800000, cost: 9000000, profit: 2800000 },
-    { month: '2024-11', revenue: 12200000, cost: 9200000, profit: 3000000 },
-    { month: '2024-12', revenue: 12500000, cost: 9500000, profit: 3000000 },
-  ]
+  // 颜色映射
+  const colorMap = {
+    blue: 'from-blue-500/20 to-blue-600/30 border-blue-500/30',
+    green: 'from-emerald-500/20 to-emerald-600/30 border-emerald-500/30',
+    orange: 'from-orange-500/20 to-orange-600/30 border-orange-500/30',
+    purple: 'from-purple-500/20 to-purple-600/30 border-purple-500/30',
+    red: 'from-red-500/20 to-red-600/30 border-red-500/30',
+  }
 
-  const mockCostData = [
-    { category: '材料成本', amount: 47500000 },
-    { category: '人工成本', amount: 28500000 },
-    { category: '外协费用', amount: 14500000 },
-    { category: '管理费用', amount: 10500000 },
-    { category: '销售费用', amount: 8500000 },
-    { category: '研发费用', amount: 6800000 },
-  ]
+  const iconColorMap = {
+    blue: 'bg-blue-500/20 text-blue-400',
+    green: 'bg-emerald-500/20 text-emerald-400',
+    orange: 'bg-orange-500/20 text-orange-400',
+    purple: 'bg-purple-500/20 text-purple-400',
+    red: 'bg-red-500/20 text-red-400',
+  }
 
-  const mockUtilizationData = [
-    { name: '张三', rate: 95, department: '机械部' },
-    { name: '李四', rate: 88, department: '电气部' },
-    { name: '王五', rate: 82, department: '软件部' },
-    { name: '赵六', rate: 78, department: '机械部' },
-    { name: '钱七', rate: 72, department: '项目部' },
-    { name: '孙八', rate: 68, department: '电气部' },
-    { name: '周九', rate: 55, department: '软件部' },
-  ]
-
-  const mockSalesFunnel = [
-    { stage: '线索', value: 100 },
-    { stage: '商机', value: 65 },
-    { stage: '报价', value: 45 },
-    { stage: '签约', value: 25 },
-    { stage: '回款', value: 18 },
-  ]
-
-  // 获取数据
+  // 加载数据
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
       try {
-        const [dashboardRes, healthRes, deliveryRes, utilizationRes] = await Promise.allSettled([
-          reportCenterApi.getExecutiveDashboard(),
-          reportCenterApi.getHealthDistribution(),
-          reportCenterApi.getDeliveryRate(),
-          reportCenterApi.getUtilization(),
-        ])
+        setLoading(true)
+        setError(null)
 
-        if (dashboardRes.status === 'fulfilled' && dashboardRes.value?.data) {
-          setDashboardData(dashboardRes.value.data)
-        }
-        if (healthRes.status === 'fulfilled' && healthRes.value?.data) {
-          setHealthData(healthRes.value.data.distribution || {})
-        }
-        if (deliveryRes.status === 'fulfilled' && deliveryRes.value?.data) {
-          setDeliveryData(deliveryRes.value.data)
-        }
-        if (utilizationRes.status === 'fulfilled' && utilizationRes.value?.data?.utilization_list) {
-          setUtilizationData(utilizationRes.value.data.utilization_list)
-        } else {
-          setUtilizationData(mockUtilizationData)
+        // 获取仪表板数据
+        const dashboardRes = await reportCenterApi.getExecutiveDashboard()
+
+        if (dashboardRes.data) {
+          setDashboardData(dashboardRes.data)
+          
+          // 设置健康度数据
+          if (dashboardRes.data.health_distribution) {
+            setHealthData(dashboardRes.data.health_distribution)
+            
+            // 计算健康指数
+            const total = Object.values(dashboardRes.data.health_distribution).reduce((sum, val) => sum + val, 0)
+            if (total > 0) {
+              const h1Count = dashboardRes.data.health_distribution.H1 || 0
+              const h2Count = dashboardRes.data.health_distribution.H2 || 0
+              const h3Count = dashboardRes.data.health_distribution.H3 || 0
+              const healthIndex = Math.round(((h1Count * 100 + h2Count * 70 + h3Count * 30) / total))
+              setMilestoneData(prev => ({ ...prev, healthIndex }))
+            }
+          }
+          
+          // 设置趋势数据
+          if (dashboardRes.data.monthly) {
+            const monthly = dashboardRes.data.monthly
+            setTrendData(
+              Object.keys(monthly).map(month => ({
+                month,
+                revenue: monthly[month].revenue || monthly[month].contract_amount || 0,
+                profit: monthly[month].profit || 0,
+                amount: monthly[month].amount || monthly[month].contract_amount || 0,
+                count: monthly[month].count || monthly[month].new_contracts || 0,
+              }))
+            )
+          }
         }
 
-        setTrendData(mockTrendData)
-        setCostData(mockCostData)
+        // 获取交付准时率数据
+        try {
+          const deliveryRes = await reportCenterApi.getDeliveryRate({ time_range: timeRange })
+          if (deliveryRes.data) {
+            setDeliveryData(Array.isArray(deliveryRes.data) ? deliveryRes.data : [])
+          }
+        } catch (err) {
+          console.error('Failed to load delivery rate data:', err)
+        }
+
+        // 获取利用率数据
+        try {
+          const utilRes = await reportCenterApi.getUtilization({ time_range: timeRange })
+          if (utilRes.data) {
+            setUtilizationData(Array.isArray(utilRes.data) ? utilRes.data : [])
+          }
+        } catch (err) {
+          console.error('Failed to load utilization data:', err)
+        }
+
+        // 获取健康度分布（用于项目阶段分布等）
+        try {
+          const healthRes = await reportCenterApi.getHealthDistribution()
+          if (healthRes.data) {
+            // 可以用于计算项目阶段分布等
+          }
+        } catch (err) {
+          console.error('Failed to load health distribution:', err)
+        }
       } catch (err) {
-        console.log('Dashboard API unavailable, using mock data')
-        setTrendData(mockTrendData)
-        setCostData(mockCostData)
-        setUtilizationData(mockUtilizationData)
+        console.error('Failed to load executive dashboard:', err)
+        setError(err)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
+
     fetchData()
   }, [timeRange])
+
+  // KPI 卡片数据
+  const kpiCards = useMemo(() => {
+    const summary = dashboardData.summary || {}
+    return [
+      {
+        title: '总营收',
+        value: formatCurrency(summary.total_revenue || 0),
+        change: `${summary.revenue_growth || 0}%`,
+        changeType: (summary.revenue_growth || 0) >= 0 ? 'up' : 'down',
+        subText: '较上月',
+        icon: DollarSign,
+        color: 'blue',
+      },
+      {
+        title: '净利润',
+        value: formatCurrency(summary.total_profit || 0),
+        change: `${summary.profit_growth || 0}%`,
+        changeType: (summary.profit_growth || 0) >= 0 ? 'up' : 'down',
+        subText: '较上月',
+        icon: TrendingUp,
+        color: 'green',
+      },
+      {
+        title: '活跃项目',
+        value: summary.active_projects || 0,
+        change: `${summary.project_growth || 0}%`,
+        changeType: (summary.project_growth || 0) >= 0 ? 'up' : 'down',
+        subText: '较上月',
+        icon: Briefcase,
+        color: 'orange',
+      },
+      {
+        title: '交付准时率',
+        value: `${summary.on_time_delivery_rate || 0}%`,
+        change: `${summary.delivery_rate_change || 0}%`,
+        changeType: (summary.delivery_rate_change || 0) >= 0 ? 'up' : 'down',
+        subText: '较上月',
+        icon: CheckCircle2,
+        color: 'purple',
+      },
+    ]
+  }, [dashboardData])
 
   // 刷新数据
   const handleRefresh = async () => {
     setRefreshing(true)
+    setError(null)
     try {
-      const [dashboardRes, healthRes, deliveryRes, utilizationRes] = await Promise.allSettled([
+      // 重新加载所有数据
+      const [dashboardRes, deliveryRes, utilRes] = await Promise.all([
         reportCenterApi.getExecutiveDashboard(),
-        reportCenterApi.getHealthDistribution(),
-        reportCenterApi.getDeliveryRate(),
-        reportCenterApi.getUtilization(),
+        reportCenterApi.getDeliveryRate({ time_range: timeRange }).catch(() => ({ data: [] })),
+        reportCenterApi.getUtilization({ time_range: timeRange }).catch(() => ({ data: [] })),
       ])
 
-      if (dashboardRes.status === 'fulfilled' && dashboardRes.value?.data) {
-        setDashboardData(dashboardRes.value.data)
+      if (dashboardRes.data) {
+        setDashboardData(dashboardRes.data)
+        if (dashboardRes.data.health_distribution) {
+          setHealthData(dashboardRes.data.health_distribution)
+          
+          // 重新计算健康指数
+          const total = Object.values(dashboardRes.data.health_distribution).reduce((sum, val) => sum + val, 0)
+          if (total > 0) {
+            const h1Count = dashboardRes.data.health_distribution.H1 || 0
+            const h2Count = dashboardRes.data.health_distribution.H2 || 0
+            const h3Count = dashboardRes.data.health_distribution.H3 || 0
+            const healthIndex = Math.round(((h1Count * 100 + h2Count * 70 + h3Count * 30) / total))
+            setMilestoneData(prev => ({ ...prev, healthIndex }))
+          }
+        }
+        if (dashboardRes.data.monthly) {
+          const monthly = dashboardRes.data.monthly
+          setTrendData(
+            Object.keys(monthly).map(month => ({
+              month,
+              revenue: monthly[month].revenue || monthly[month].contract_amount || 0,
+              profit: monthly[month].profit || 0,
+              amount: monthly[month].amount || monthly[month].contract_amount || 0,
+              count: monthly[month].count || monthly[month].new_contracts || 0,
+            }))
+          )
+        }
       }
-      if (healthRes.status === 'fulfilled' && healthRes.value?.data) {
-        setHealthData(healthRes.value.data.distribution || {})
+
+      if (deliveryRes.data) {
+        setDeliveryData(Array.isArray(deliveryRes.data) ? deliveryRes.data : [])
       }
-      if (deliveryRes.status === 'fulfilled' && deliveryRes.value?.data) {
-        setDeliveryData(deliveryRes.value.data)
-      }
-      if (utilizationRes.status === 'fulfilled' && utilizationRes.value?.data?.utilization_list) {
-        setUtilizationData(utilizationRes.value.data.utilization_list)
+
+      if (utilRes.data) {
+        setUtilizationData(Array.isArray(utilRes.data) ? utilRes.data : [])
       }
     } catch (err) {
-      console.error('刷新数据失败:', err)
+      console.error('Failed to refresh:', err)
+      setError(err)
     } finally {
       setRefreshing(false)
     }
   }
 
-  // 导出报表
-  const [exporting, setExporting] = useState(false)
-  const [exportFormat, setExportFormat] = useState('xlsx')
-
-  const handleExport = async (format = 'xlsx') => {
+  // 导出数据
+  const handleExport = async (format) => {
+    if (!format) return
     setExporting(true)
     try {
-      const response = await reportCenterApi.exportDirect({
-        report_type: 'EXECUTIVE_DASHBOARD',
+      const exportParams = {
+        report_type: 'executive_dashboard',
         format: format,
-        time_range: timeRange
-      })
+        time_range: timeRange,
+        data: {
+          summary: dashboardData.summary,
+          health_distribution: healthData,
+          trend_data: trendData,
+        },
+      }
 
-      if (response?.data?.export_path || response?.data?.report_id) {
-        // 如果返回了 report_id，调用下载接口
-        const reportId = response.data.report_id
-        if (reportId) {
-          const downloadRes = await reportCenterApi.download(reportId)
-          // 创建下载链接
-          const url = window.URL.createObjectURL(new Blob([downloadRes.data]))
+      if (format === 'json') {
+        // JSON 格式直接下载
+        const dataStr = JSON.stringify(exportParams.data, null, 2)
+        const dataBlob = new Blob([dataStr], { type: 'application/json' })
+        const url = URL.createObjectURL(dataBlob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `executive_dashboard_${new Date().toISOString().split('T')[0]}.json`
+        link.click()
+        URL.revokeObjectURL(url)
+      } else {
+        // 其他格式调用 API
+        const res = await reportCenterApi.exportReport(exportParams)
+        if (res.data?.download_url) {
+          window.open(res.data.download_url, '_blank')
+        } else if (res.data) {
+          // 如果返回的是 blob，直接下载
+          const blob = new Blob([res.data], { type: `application/${format}` })
+          const url = URL.createObjectURL(blob)
           const link = document.createElement('a')
           link.href = url
-          link.setAttribute('download', `决策驾驶舱_${new Date().toISOString().slice(0,10)}.${format}`)
-          document.body.appendChild(link)
+          link.download = `executive_dashboard_${new Date().toISOString().split('T')[0]}.${format}`
           link.click()
-          link.remove()
-          window.URL.revokeObjectURL(url)
+          URL.revokeObjectURL(url)
         }
       }
     } catch (err) {
-      console.error('导出报表失败:', err)
-      // 回退到客户端导出
-      handleClientExport(format)
+      console.error('Failed to export:', err)
+      alert('导出失败，请稍后重试')
     } finally {
       setExporting(false)
+      setExportFormat('')
     }
   }
 
-  // 客户端导出（备用方案）
-  const handleClientExport = (format) => {
-    const data = {
-      summary: dashboardData.summary,
-      monthly: dashboardData.monthly,
-      health_distribution: dashboardData.health_distribution,
-      exported_at: new Date().toISOString()
-    }
-
-    if (format === 'json') {
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', `决策驾驶舱_${new Date().toISOString().slice(0,10)}.json`)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-    } else if (format === 'csv') {
-      // 简单 CSV 导出
-      const rows = [
-        ['指标', '值'],
-        ['总项目数', dashboardData.summary?.total_projects || 0],
-        ['进行中项目', dashboardData.summary?.active_projects || 0],
-        ['合同总额', dashboardData.summary?.total_contract_amount || 0],
-        ['已回款金额', dashboardData.summary?.total_received || 0],
-        ['人员总数', dashboardData.summary?.total_users || 0],
-      ]
-      const csv = rows.map(row => row.join(',')).join('\n')
-      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', `决策驾驶舱_${new Date().toISOString().slice(0,10)}.csv`)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-    }
+  if (loading) {
+    return (
+      <div className="space-y-6 p-6">
+        <PageHeader title="决策驾驶舱" description="企业运营数据全景视图" icon={LayoutDashboard} />
+        <div className="text-center py-16 text-slate-400">加载中...</div>
+      </div>
+    )
   }
 
-  // 计算指标
-  const summary = dashboardData.summary || {}
-  const monthly = dashboardData.monthly || {}
-
-  // KPI 卡片数据
-  const kpiCards = [
-    {
-      title: '总项目数',
-      value: summary.total_projects || 28,
-      change: '+3',
-      changeType: 'up',
-      icon: Briefcase,
-      color: 'blue',
-      subText: `进行中 ${summary.active_projects || 15}`,
-    },
-    {
-      title: '合同总额',
-      value: formatCurrency(summary.total_contract_amount || 125800000),
-      change: '+18.5%',
-      changeType: 'up',
-      icon: DollarSign,
-      color: 'amber',
-      subText: `已回款 ${formatCurrency(summary.total_received || 89600000)}`,
-    },
-    {
-      title: '交付准时率',
-      value: `${(deliveryData.on_time_rate || 85.2).toFixed(1)}%`,
-      change: '+2.3%',
-      changeType: 'up',
-      icon: Target,
-      color: 'emerald',
-      subText: `延期 ${deliveryData.delayed_projects || 3} 个`,
-    },
-    {
-      title: '人员总数',
-      value: summary.total_users || 86,
-      change: '+5',
-      changeType: 'up',
-      icon: Users,
-      color: 'purple',
-      subText: `平均利用率 78.5%`,
-    },
-  ]
-
-  const colorMap = {
-    blue: 'from-blue-500/20 to-blue-600/10 border-blue-500/30',
-    amber: 'from-amber-500/20 to-amber-600/10 border-amber-500/30',
-    emerald: 'from-emerald-500/20 to-emerald-600/10 border-emerald-500/30',
-    purple: 'from-purple-500/20 to-purple-600/10 border-purple-500/30',
-  }
-
-  const iconColorMap = {
-    blue: 'text-blue-400 bg-blue-500/20',
-    amber: 'text-amber-400 bg-amber-500/20',
-    emerald: 'text-emerald-400 bg-emerald-500/20',
-    purple: 'text-purple-400 bg-purple-500/20',
+  if (error && !dashboardData.summary) {
+    return (
+      <div className="space-y-6 p-6">
+        <PageHeader title="决策驾驶舱" description="企业运营数据全景视图" icon={LayoutDashboard} />
+        <ApiIntegrationError
+          error={error}
+          apiEndpoint="/api/v1/report-center/executive-dashboard"
+          onRetry={() => {
+            setError(null)
+            setLoading(true)
+          }}
+        />
+      </div>
+    )
   }
 
   return (
     <motion.div
-      variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
+      variants={staggerContainer}
+      className="space-y-6 p-6"
     >
-      {/* Page Header */}
       <PageHeader
         title="决策驾驶舱"
         description="企业运营数据全景视图"
@@ -463,19 +495,28 @@ export default function ExecutiveDashboard() {
                   <CardTitle className="text-lg text-white">交付准时率趋势</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <DeliveryRateChart
-                    data={[
-                      { month: '7月', rate: 82 },
-                      { month: '8月', rate: 85 },
-                      { month: '9月', rate: 78 },
-                      { month: '10月', rate: 88 },
-                      { month: '11月', rate: 92 },
-                      { month: '12月', rate: 85 },
-                    ]}
-                    chartType="trend"
-                    height={280}
-                    title=""
-                  />
+                  {deliveryData.length > 0 ? (
+                    <DeliveryRateChart
+                      data={deliveryData}
+                      chartType="trend"
+                      height={280}
+                      title=""
+                    />
+                  ) : (
+                    <DeliveryRateChart
+                      data={[
+                        { month: '7月', rate: 82 },
+                        { month: '8月', rate: 85 },
+                        { month: '9月', rate: 78 },
+                        { month: '10月', rate: 88 },
+                        { month: '11月', rate: 92 },
+                        { month: '12月', rate: 85 },
+                      ]}
+                      chartType="trend"
+                      height={280}
+                      title=""
+                    />
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
@@ -487,15 +528,21 @@ export default function ExecutiveDashboard() {
                   <CardTitle className="text-lg text-white">营收与利润趋势</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <DualAxesChart
-                    data={trendData}
-                    xField="month"
-                    yField={['revenue', 'profit']}
-                    height={280}
-                    leftFormatter={(v) => formatCurrency(v)}
-                    rightFormatter={(v) => formatCurrency(v)}
-                    title=""
-                  />
+                  {trendData.length > 0 ? (
+                    <DualAxesChart
+                      data={trendData}
+                      xField="month"
+                      yField={['revenue', 'profit']}
+                      height={280}
+                      leftFormatter={(v) => formatCurrency(v)}
+                      rightFormatter={(v) => formatCurrency(v)}
+                      title=""
+                    />
+                  ) : (
+                    <div className="text-center py-16 text-slate-500">
+                      <p>暂无趋势数据</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
@@ -507,13 +554,19 @@ export default function ExecutiveDashboard() {
                   <CardTitle className="text-lg text-white">成本构成分析</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <CostAnalysisChart
-                    data={costData}
-                    chartType="structure"
-                    height={280}
-                    title=""
-                    onCategoryClick={(cat) => console.log('Category clicked:', cat)}
-                  />
+                  {costData.length > 0 ? (
+                    <CostAnalysisChart
+                      data={costData}
+                      chartType="structure"
+                      height={280}
+                      title=""
+                      onCategoryClick={(cat) => console.log('Category clicked:', cat)}
+                    />
+                  ) : (
+                    <div className="text-center py-16 text-slate-500">
+                      <p>暂无成本数据</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
@@ -560,7 +613,7 @@ export default function ExecutiveDashboard() {
                 </CardHeader>
                 <CardContent>
                   <GaugeChart
-                    value={78}
+                    value={milestoneData.healthIndex || 0}
                     height={250}
                     title="整体健康度"
                     unit="%"
@@ -577,7 +630,7 @@ export default function ExecutiveDashboard() {
                 </CardHeader>
                 <CardContent>
                   <GaugeChart
-                    value={85}
+                    value={milestoneData.completionRate || 0}
                     height={250}
                     title="本月里程碑"
                     unit="%"
@@ -719,12 +772,18 @@ export default function ExecutiveDashboard() {
                   <CardTitle className="text-lg text-white">人员利用率排名</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <UtilizationChart
-                    data={utilizationData.length > 0 ? utilizationData : mockUtilizationData}
-                    chartType="bar"
-                    height={350}
-                    onPersonClick={(person) => console.log('Person clicked:', person)}
-                  />
+                  {utilizationData.length > 0 ? (
+                    <UtilizationChart
+                      data={utilizationData}
+                      chartType="bar"
+                      height={350}
+                      onPersonClick={(person) => console.log('Person clicked:', person)}
+                    />
+                  ) : (
+                    <div className="text-center py-16 text-slate-500">
+                      <p>暂无利用率数据</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
@@ -793,12 +852,18 @@ export default function ExecutiveDashboard() {
                   <CardTitle className="text-lg text-white">销售漏斗</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <FunnelChart
-                    data={mockSalesFunnel}
-                    xField="stage"
-                    yField="value"
-                    height={350}
-                  />
+                  {salesFunnelData.length > 0 ? (
+                    <FunnelChart
+                      data={salesFunnelData}
+                      xField="stage"
+                      yField="value"
+                      height={350}
+                    />
+                  ) : (
+                    <div className="text-center py-16 text-slate-500">
+                      <p>暂无销售漏斗数据</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
@@ -837,25 +902,24 @@ export default function ExecutiveDashboard() {
                 <CardTitle className="text-lg text-white">销售业绩趋势</CardTitle>
               </CardHeader>
               <CardContent>
-                <DualAxesChart
-                  data={[
-                    { month: '7月', amount: 9800000, count: 5 },
-                    { month: '8月', amount: 12500000, count: 7 },
-                    { month: '9月', amount: 11200000, count: 6 },
-                    { month: '10月', amount: 15800000, count: 9 },
-                    { month: '11月', amount: 18200000, count: 11 },
-                    { month: '12月', amount: 22500000, count: 13 },
-                  ]}
-                  xField="month"
-                  yField={['amount', 'count']}
-                  height={300}
-                  leftFormatter={(v) => formatCurrency(v)}
-                  rightFormatter={(v) => `${v}个`}
-                  geometryOptions={[
-                    { geometry: 'column', columnWidthRatio: 0.4, color: '#3b82f6' },
-                    { geometry: 'line', smooth: true, color: '#22c55e', point: { size: 4 } },
-                  ]}
-                />
+                {trendData.length > 0 ? (
+                  <DualAxesChart
+                    data={trendData}
+                    xField="month"
+                    yField={['amount', 'count']}
+                    height={300}
+                    leftFormatter={(v) => formatCurrency(v)}
+                    rightFormatter={(v) => `${v}个`}
+                    geometryOptions={[
+                      { geometry: 'column', columnWidthRatio: 0.4, color: '#3b82f6' },
+                      { geometry: 'line', smooth: true, color: '#22c55e', point: { size: 4 } },
+                    ]}
+                  />
+                ) : (
+                  <div className="text-center py-16 text-slate-500">
+                    <p>销售业绩趋势数据需要从API获取</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>

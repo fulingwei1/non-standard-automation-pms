@@ -730,7 +730,7 @@ export default function ProjectDetail() {
                 </Card>
               </div>
 
-              {/* 演示模式提示 */}
+              {}
               {demoMode && (
                 <Card className="border-amber-500/50 bg-amber-500/10 mb-6">
                   <CardContent className="p-4">

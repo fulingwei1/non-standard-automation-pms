@@ -1130,6 +1130,13 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
       // Skip if no token (not logged in)
       const token = localStorage.getItem('token')
       if (!token) return
+      
+      // 如果是演示账号，不调用真实API，直接使用默认菜单
+      if (token.startsWith('demo_token_')) {
+        console.log('[Sidebar] 演示账号，使用默认菜单')
+        setMenuLoading(false)
+        return
+      }
 
       setMenuLoading(true)
       try {

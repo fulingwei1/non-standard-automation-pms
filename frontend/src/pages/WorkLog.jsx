@@ -158,8 +158,6 @@ export default function WorkLog() {
     setMentionedProjects(projects)
     setMentionedMachines(machines)
     setMentionedUsers(users)
-    
-    setShowEditDialog(true)
   }
   
   const handleDelete = async (id) => {

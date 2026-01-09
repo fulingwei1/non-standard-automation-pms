@@ -466,6 +466,18 @@ export const salesStatisticsApi = {
     predictionAccuracy: (params) => api.get('/sales/statistics/prediction/accuracy', { params }),
 };
 
+// Sales API (综合销售接口)
+export const salesApi = {
+    // 销售漏斗
+    getFunnel: (params) => api.get('/sales/statistics/funnel', { params }),
+    // 待审批订单
+    getPendingApprovals: (params) => api.get('/sales/approvals/pending', { params }),
+    // Top客户
+    getTopCustomers: (params) => api.get('/sales/customers/top', { params }),
+    // 付款计划
+    getPaymentSchedule: (params) => api.get('/sales/payments/schedule', { params }),
+};
+
 // Alert Management APIs
 export const alertApi = {
     // Alert Records
@@ -879,7 +891,7 @@ export const shortageApi = {
 
 export const productionApi = {
     dashboard: () => api.get('/production/dashboard'),
-    reports: {
+    dailyReports: {
         daily: (params) => api.get('/production-daily-reports', { params }),
         latestDaily: () => api.get('/production-daily-reports/latest'),
     },
@@ -968,10 +980,6 @@ export const materialApi = {
     },
     categories: {
         list: (params) => api.get('/materials/categories/', { params }),
-    },
-    search: (params) => api.get('/materials/search', { params }),
-    warehouse: {
-        statistics: () => api.get('/materials/warehouse/statistics'),
     },
 };
 
@@ -1323,6 +1331,45 @@ export const departmentApi = {
     update: (id, data) => api.put(`/departments/${id}`, data),
     delete: (id) => api.delete(`/departments/${id}`),
     getStatistics: (params) => api.get('/departments/statistics', { params }),
+};
+
+// HR Management APIs (人事管理)
+export const hrApi = {
+    // 人事事务
+    transactions: {
+        list: (params) => api.get('/hr/transactions', { params }),
+        get: (id) => api.get(`/hr/transactions/${id}`),
+        create: (data) => api.post('/hr/transactions', data),
+        approve: (id, data) => api.post(`/hr/transactions/${id}/approve`, data),
+        getStatistics: (params) => api.get('/hr/transactions/statistics', { params }),
+    },
+    // 合同管理
+    contracts: {
+        list: (params) => api.get('/hr/contracts', { params }),
+        get: (id) => api.get(`/hr/contracts/${id}`),
+        create: (data) => api.post('/hr/contracts', data),
+        update: (id, data) => api.put(`/hr/contracts/${id}`, data),
+        renew: (id, data) => api.post(`/hr/contracts/${id}/renew`, data),
+        getExpiring: (params) => api.get('/hr/contracts/expiring', { params }),
+    },
+    // 合同到期提醒
+    reminders: {
+        list: (params) => api.get('/hr/contract-reminders', { params }),
+        handle: (id, data) => api.put(`/hr/contract-reminders/${id}/handle`, data),
+        generate: () => api.post('/hr/contract-reminders/generate'),
+    },
+    // 仪表板
+    dashboard: {
+        overview: () => api.get('/hr/dashboard/overview'),
+        pendingConfirmations: (params) => api.get('/hr/dashboard/pending-confirmations', { params }),
+    },
+    // 人事档案
+    profiles: {
+        list: (params) => api.get('/org/hr-profiles', { params }),
+        get: (id) => api.get(`/org/hr-profiles/${id}`),
+        create: (data) => api.post('/org/hr-profiles', data),
+        update: (id, data) => api.put(`/org/hr-profiles/${id}`, data),
+    },
 };
 
 // Issue Template APIs

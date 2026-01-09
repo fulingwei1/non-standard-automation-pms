@@ -55,264 +55,9 @@ import { projectApi, salesStatisticsApi, productionApi, contractApi, invoiceApi,
 import CultureWallCarousel from '../components/culture/CultureWallCarousel'
 import { ApiIntegrationError } from '../components/ui'
 
-/* Mock data for general manager dashboard - 已移除，使用真实API
-const mockBusinessStats = {
-  // Financial metrics
-  monthlyRevenue: 12500000,
-  monthlyTarget: 12500000,
-  monthlyProgress: 100,
-  yearRevenue: 125000000,
-  yearTarget: 150000000,
-  yearProgress: 83.3,
-  profit: 25000000,
-  profitMargin: 20,
-  cost: 100000000,
 
-  // Project metrics
-  totalProjects: 68,
-  activeProjects: 42,
-  completedProjects: 26,
-  projectHealthGood: 32,
-  projectHealthWarning: 8,
-  projectHealthCritical: 2,
 
-  // Sales metrics
-  totalContracts: 156,
-  activeContracts: 42,
-  pendingApproval: 8,
-  totalCustomers: 245,
-  newCustomersThisMonth: 18,
-
-  // Operations metrics
-  productionCapacity: 85,
-  qualityPassRate: 96.2,
-  materialArrivalRate: 92.5,
-  onTimeDeliveryRate: 88.5,
-
-  // Financial health
-  accountsReceivable: 28500000,
-  overdueReceivable: 3500000,
-  collectionRate: 87.7,
-  cashFlow: 18500000,
-
-  // Team metrics
-  totalEmployees: 186,
-  activeEmployees: 178,
-  departments: 8,
-
-  // Growth metrics
-  revenueGrowth: 18.5,
-  customerGrowth: 12.3,
-  projectGrowth: 15.8,
-}
-*/
-
-const mockPendingApprovals = [
-  {
-    id: 1,
-    type: 'project',
-    title: '重大项目立项审批',
-    projectName: '某大型汽车电池测试线体',
-    amount: 8500000,
-    department: '销售部',
-    submitter: '销售总监',
-    submitTime: '2025-01-06 10:30',
-    priority: 'high',
-    status: 'pending',
-  },
-  {
-    id: 2,
-    type: 'contract',
-    title: '重大合同审批',
-    customer: '某大型汽车集团',
-    amount: 5200000,
-    department: '销售部',
-    submitter: '销售总监',
-    submitTime: '2025-01-06 14:20',
-    priority: 'high',
-    status: 'pending',
-  },
-  {
-    id: 3,
-    type: 'budget',
-    title: '年度预算调整',
-    department: '财务部',
-    amount: 5000000,
-    submitter: '财务总监',
-    submitTime: '2025-01-05 16:45',
-    priority: 'medium',
-    status: 'pending',
-  },
-  {
-    id: 4,
-    type: 'purchase',
-    title: '大型设备采购',
-    item: 'CNC加工中心',
-    amount: 2800000,
-    department: '生产部',
-    submitter: '生产部经理',
-    submitTime: '2025-01-06 09:15',
-    priority: 'high',
-    status: 'pending',
-  },
-  {
-    id: 5,
-    type: 'personnel',
-    title: '高级人才招聘',
-    position: '技术总监',
-    department: '技术开发部',
-    submitter: 'HR部门',
-    submitTime: '2025-01-04 11:30',
-    priority: 'medium',
-    status: 'pending',
-  },
-]
-
-const mockProjectHealth = [
-  {
-    id: 'PJ250108001',
-    name: 'BMS老化测试设备',
-    customer: '深圳XX科技',
-    stage: 'S5',
-    stageLabel: '装配调试',
-    progress: 78,
-    health: 'good',
-    dueDate: '2026-02-15',
-    amount: 850000,
-    risk: 'low',
-  },
-  {
-    id: 'PJ250106002',
-    name: 'EOL功能测试设备',
-    customer: '东莞XX电子',
-    stage: 'S4',
-    stageLabel: '加工制造',
-    progress: 65,
-    health: 'warning',
-    dueDate: '2026-01-20',
-    amount: 620000,
-    risk: 'medium',
-  },
-  {
-    id: 'PJ250103003',
-    name: 'ICT在线测试设备',
-    customer: '惠州XX电池',
-    stage: 'S3',
-    stageLabel: '采购备料',
-    progress: 45,
-    health: 'good',
-    dueDate: '2026-03-01',
-    amount: 450000,
-    risk: 'low',
-  },
-  {
-    id: 'PJ250102004',
-    name: 'AOI视觉检测系统',
-    customer: '某LED生产商',
-    stage: 'S6',
-    stageLabel: '出厂验收',
-    progress: 92,
-    health: 'critical',
-    dueDate: '2026-01-10',
-    amount: 380000,
-    risk: 'high',
-  },
-]
-
-const mockDepartmentStatus = [
-  {
-    id: 1,
-    name: '销售部',
-    manager: '刘总监',
-    projects: 42,
-    revenue: 125000000,
-    target: 150000000,
-    achievement: 83.3,
-    status: 'good',
-    issues: 2,
-  },
-  {
-    id: 2,
-    name: '项目部',
-    manager: '孙经理',
-    projects: 42,
-    onTimeRate: 88.5,
-    status: 'good',
-    issues: 1,
-  },
-  {
-    id: 3,
-    name: '技术开发部',
-    manager: '周经理',
-    projects: 38,
-    innovation: 12,
-    status: 'excellent',
-    issues: 0,
-  },
-  {
-    id: 4,
-    name: '生产部',
-    manager: '王经理',
-    projects: 35,
-    output: 28,
-    capacity: 85,
-    status: 'good',
-    issues: 3,
-  },
-  {
-    id: 5,
-    name: '采购部',
-    manager: '陈经理',
-    orders: 156,
-    arrivalRate: 92.5,
-    status: 'good',
-    issues: 1,
-  },
-  {
-    id: 6,
-    name: '质量部',
-    manager: '李经理',
-    inspections: 156,
-    passRate: 96.2,
-    status: 'excellent',
-    issues: 0,
-  },
-]
-
-const mockKeyMetrics = [
-  {
-    label: '项目按时交付率',
-    value: 88.5,
-    unit: '%',
-    target: 90,
-    trend: 2.3,
-    color: 'text-emerald-400',
-  },
-  {
-    label: '质量合格率',
-    value: 96.2,
-    unit: '%',
-    target: 95,
-    trend: 1.2,
-    color: 'text-emerald-400',
-  },
-  {
-    label: '物料到货及时率',
-    value: 92.5,
-    unit: '%',
-    target: 95,
-    trend: -0.5,
-    color: 'text-amber-400',
-  },
-  {
-    label: '客户满意度',
-    value: 92.8,
-    unit: '%',
-    target: 95,
-    trend: 1.5,
-    color: 'text-blue-400',
-  },
-]
+// Mock data removed - 使用真实API
 
 const formatCurrency = (value) => {
   if (value >= 100000000) {
@@ -375,6 +120,8 @@ export default function GeneralManagerWorkstation() {
   const [businessStats, setBusinessStats] = useState(null)
   const [pendingApprovals, setPendingApprovals] = useState([])
   const [projectHealth, setProjectHealth] = useState([])
+  const [departmentStatus, setDepartmentStatus] = useState([])
+  const [keyMetrics, setKeyMetrics] = useState([])
 
   // Load dashboard data
   const loadDashboard = useCallback(async () => {
@@ -440,7 +187,6 @@ export default function GeneralManagerWorkstation() {
 
       // Update stats
       setBusinessStats({
-        ...mockBusinessStats,
         monthlyRevenue,
         monthlyTarget: monthlyRevenue, // Use achieved as target for now
         monthlyProgress: 100,
@@ -457,8 +203,16 @@ export default function GeneralManagerWorkstation() {
         projectHealthCritical: healthCritical,
         totalContracts,
         activeContracts,
+        pendingApproval: 0, // Will be loaded from API
+        totalCustomers: 0, // Will be loaded from API
+        newCustomersThisMonth: 0, // Will be loaded from API
         productionCapacity,
         qualityPassRate,
+        onTimeDeliveryRate: 0, // Will be calculated from projects
+        materialArrivalRate: 0, // Will be loaded from API
+        revenueGrowth: 0, // Will be calculated
+        customerGrowth: 0, // Will be calculated
+        projectGrowth: 0, // Will be calculated
       })
 
       // Load project health data
@@ -591,11 +345,76 @@ export default function GeneralManagerWorkstation() {
       try {
         const deptRes = await departmentApi.getStatistics({})
         const deptStats = deptRes.data || deptRes
-        // Transform department statistics if available
-        // For now, we'll keep using mock data structure but could enhance this
+        if (deptStats?.departments || Array.isArray(deptStats)) {
+          const departments = deptStats.departments || deptStats
+          const transformedDepts = departments.map(dept => ({
+            id: dept.id || dept.department_id,
+            name: dept.name || dept.department_name || '',
+            manager: dept.manager || dept.manager_name || '',
+            projects: dept.projects || dept.project_count || 0,
+            revenue: dept.revenue || dept.total_revenue || 0,
+            target: dept.target || dept.revenue_target || 0,
+            achievement: dept.target > 0 ? ((dept.revenue || 0) / dept.target) * 100 : 0,
+            status: dept.status || (dept.achievement >= 90 ? 'excellent' : dept.achievement >= 70 ? 'good' : 'warning'),
+            issues: dept.issues || dept.issue_count || 0,
+            onTimeRate: dept.on_time_rate || dept.on_time_delivery_rate || 0,
+            arrivalRate: dept.arrival_rate || dept.material_arrival_rate || 0,
+            passRate: dept.pass_rate || dept.quality_pass_rate || 0,
+          }))
+          setDepartmentStatus(transformedDepts)
+        }
       } catch (err) {
         console.error('Failed to load department statistics:', err)
       }
+
+      // Calculate key metrics from business stats
+      const metrics = []
+      if (businessStats) {
+        // Calculate on-time delivery rate from projects
+        const onTimeProjects = projectsData.filter(p => {
+          if (!p.planned_end_date) return false
+          const plannedDate = new Date(p.planned_end_date)
+          const today = new Date()
+          return plannedDate >= today || p.stage === 'S9'
+        }).length
+        const onTimeRate = totalProjects > 0 ? (onTimeProjects / totalProjects) * 100 : 0
+
+        metrics.push(
+          {
+            label: '项目按时交付率',
+            value: onTimeRate,
+            unit: '%',
+            target: 90,
+            trend: 0, // Could be calculated from historical data
+            color: onTimeRate >= 90 ? 'text-emerald-400' : onTimeRate >= 80 ? 'text-amber-400' : 'text-red-400',
+          },
+          {
+            label: '质量合格率',
+            value: qualityPassRate,
+            unit: '%',
+            target: 95,
+            trend: 0,
+            color: qualityPassRate >= 95 ? 'text-emerald-400' : qualityPassRate >= 90 ? 'text-amber-400' : 'text-red-400',
+          },
+          {
+            label: '物料到货及时率',
+            value: 0, // Will be loaded from purchase API
+            unit: '%',
+            target: 95,
+            trend: 0,
+            color: 'text-amber-400',
+          },
+          {
+            label: '客户满意度',
+            value: 0, // Will be loaded from sales/customer API
+            unit: '%',
+            target: 95,
+            trend: 0,
+            color: 'text-blue-400',
+          }
+        )
+      }
+      setKeyMetrics(metrics)
 
     } catch (err) {
       console.error('Failed to load dashboard:', err)
@@ -622,7 +441,7 @@ export default function GeneralManagerWorkstation() {
       {/* Page Header */}
       <PageHeader
         title="总经理工作台"
-        description={loading ? '加载中...' : `年度营收目标: ${formatCurrency(businessStats.yearTarget)} | 已完成: ${formatCurrency(businessStats.yearRevenue)} (${businessStats.yearProgress.toFixed(1)}%)`}
+        description={loading ? '加载中...' : businessStats ? `年度营收目标: ${formatCurrency(businessStats.yearTarget || 0)} | 已完成: ${formatCurrency(businessStats.yearRevenue || 0)} (${(businessStats.yearProgress || 0).toFixed(1)}%)` : '企业经营总览、战略决策支持'}
         actions={
           <motion.div variants={fadeIn} className="flex gap-2">
             <Button variant="outline" className="flex items-center gap-2">
@@ -671,26 +490,28 @@ export default function GeneralManagerWorkstation() {
             </Card>
           ))
         ) : error ? (
-          <Card className="bg-red-500/10 border-red-500/30 col-span-6">
-            <CardContent className="p-4">
-              <p className="text-red-400 text-sm">{error}</p>
-            </CardContent>
-          </Card>
-        ) : (
+          <div className="col-span-6">
+            <ApiIntegrationError
+              error={error}
+              apiEndpoint="/api/v1/dashboard/general-manager"
+              onRetry={loadDashboard}
+            />
+          </div>
+        ) : businessStats ? (
           <>
             <StatCard
               title="本月营收"
-              value={formatCurrency(businessStats.monthlyRevenue)}
-              subtitle={`目标: ${formatCurrency(businessStats.monthlyTarget)}`}
-              trend={businessStats.revenueGrowth}
+              value={formatCurrency(businessStats.monthlyRevenue || 0)}
+              subtitle={`目标: ${formatCurrency(businessStats.monthlyTarget || 0)}`}
+              trend={businessStats.revenueGrowth || 0}
               icon={DollarSign}
               color="text-amber-400"
               bg="bg-amber-500/10"
             />
             <StatCard
               title="净利润"
-              value={formatCurrency(businessStats.profit)}
-              subtitle={`利润率: ${businessStats.profitMargin}%`}
+              value={formatCurrency(businessStats.profit || 0)}
+              subtitle={`利润率: ${businessStats.profitMargin || 0}%`}
               trend={15.2}
               icon={TrendingUp}
               color="text-emerald-400"
@@ -698,16 +519,16 @@ export default function GeneralManagerWorkstation() {
             />
             <StatCard
               title="进行中项目"
-              value={businessStats.activeProjects}
-              subtitle={`总计 ${businessStats.totalProjects} 个`}
-              trend={businessStats.projectGrowth}
+              value={businessStats.activeProjects || 0}
+              subtitle={`总计 ${businessStats.totalProjects || 0} 个`}
+              trend={businessStats.projectGrowth || 0}
               icon={Briefcase}
               color="text-blue-400"
               bg="bg-blue-500/10"
             />
             <StatCard
               title="待审批事项"
-              value={businessStats.pendingApproval}
+              value={businessStats.pendingApproval || 0}
               subtitle="需要处理"
               icon={ClipboardCheck}
               color="text-red-400"
@@ -715,7 +536,7 @@ export default function GeneralManagerWorkstation() {
             />
             <StatCard
               title="按时交付率"
-              value={`${businessStats.onTimeDeliveryRate}%`}
+              value={`${businessStats.onTimeDeliveryRate || 0}%`}
               subtitle="项目交付"
               icon={CheckCircle2}
               color="text-emerald-400"
@@ -723,18 +544,19 @@ export default function GeneralManagerWorkstation() {
             />
             <StatCard
               title="质量合格率"
-              value={`${businessStats.qualityPassRate}%`}
+              value={`${businessStats.qualityPassRate || 0}%`}
               subtitle="质量指标"
               icon={Award}
               color="text-cyan-400"
               bg="bg-cyan-500/10"
             />
           </>
-        )}
+        ) : null}
       </motion.div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {businessStats ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Year Progress & Project Health */}
         <div className="lg:col-span-2 space-y-6">
           {/* Year Progress */}
@@ -752,26 +574,26 @@ export default function GeneralManagerWorkstation() {
                     <div>
                       <p className="text-sm text-slate-400">年度营收目标</p>
                       <p className="text-3xl font-bold text-white mt-1">
-                        {formatCurrency(mockBusinessStats.yearTarget)}
+                        {formatCurrency(businessStats.yearTarget || 0)}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-slate-400">已完成</p>
                       <p className="text-3xl font-bold text-emerald-400 mt-1">
-                        {formatCurrency(mockBusinessStats.yearRevenue)}
+                        {formatCurrency(businessStats.yearRevenue || 0)}
                       </p>
                     </div>
                   </div>
                   <Progress
-                    value={mockBusinessStats.yearProgress}
+                    value={businessStats.yearProgress || 0}
                     className="h-4 bg-slate-700/50"
                   />
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-400">
-                      完成率: {mockBusinessStats.yearProgress.toFixed(1)}%
+                      完成率: {(businessStats.yearProgress || 0).toFixed(1)}%
                     </span>
                     <span className="text-slate-400">
-                      剩余: {formatCurrency(mockBusinessStats.yearTarget - mockBusinessStats.yearRevenue)}
+                      剩余: {formatCurrency((businessStats.yearTarget || 0) - (businessStats.yearRevenue || 0))}
                     </span>
                   </div>
                 </div>
@@ -790,33 +612,46 @@ export default function GeneralManagerWorkstation() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
-                  {mockKeyMetrics.map((metric, index) => (
-                    <div key={index} className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-400">{metric.label}</span>
-                        <div className="flex items-center gap-2">
-                          {metric.trend > 0 ? (
-                            <ArrowUpRight className="w-3 h-3 text-emerald-400" />
-                          ) : metric.trend < 0 ? (
-                            <ArrowDownRight className="w-3 h-3 text-red-400" />
-                          ) : null}
-                          <span className={cn('font-semibold', metric.color)}>
-                            {metric.value}{metric.unit}
-                          </span>
+                  {keyMetrics.length > 0 ? (
+                    keyMetrics.map((metric, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-slate-400">{metric.label}</span>
+                          <div className="flex items-center gap-2">
+                            {metric.trend > 0 ? (
+                              <ArrowUpRight className="w-3 h-3 text-emerald-400" />
+                            ) : metric.trend < 0 ? (
+                              <ArrowDownRight className="w-3 h-3 text-red-400" />
+                            ) : null}
+                            <span className={cn('font-semibold', metric.color)}>
+                              {metric.value.toFixed(1)}{metric.unit}
+                            </span>
+                          </div>
+                        </div>
+                        {metric.target > 0 && (
+                          <Progress
+                            value={Math.min((metric.value / metric.target) * 100, 100)}
+                            className="h-2 bg-slate-700/50"
+                          />
+                        )}
+                        <div className="flex items-center justify-between text-xs">
+                          {metric.target > 0 && (
+                            <span className="text-slate-500">目标: {metric.target}{metric.unit}</span>
+                          )}
+                          {metric.trend !== 0 && (
+                            <span className="text-slate-500">
+                              {metric.trend > 0 ? '+' : ''}{metric.trend}%
+                            </span>
+                          )}
                         </div>
                       </div>
-                      <Progress
-                        value={(metric.value / metric.target) * 100}
-                        className="h-2 bg-slate-700/50"
-                      />
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-500">目标: {metric.target}{metric.unit}</span>
-                        <span className="text-slate-500">
-                          {metric.trend > 0 ? '+' : ''}{metric.trend}%
-                        </span>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-2 text-center py-8 text-slate-500">
+                      <Target className="h-12 w-12 mx-auto mb-3 text-slate-500/50" />
+                      <p className="text-sm">关键指标数据需要从API获取</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -990,7 +825,8 @@ export default function GeneralManagerWorkstation() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {mockDepartmentStatus.map((dept) => (
+                {departmentStatus.length > 0 ? (
+                  departmentStatus.map((dept) => (
                   <div
                     key={dept.id}
                     className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors"
@@ -1040,12 +876,19 @@ export default function GeneralManagerWorkstation() {
                       />
                     )}
                   </div>
-                ))}
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <Building2 className="h-12 w-12 mx-auto mb-3 text-slate-500/50" />
+                    <p className="text-sm">部门状态数据需要从API获取</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
         </div>
       </div>
+      ) : null}
     </motion.div>
   )
 }
