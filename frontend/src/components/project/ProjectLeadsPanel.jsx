@@ -253,6 +253,8 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
       await projectRoleApi.leads.delete(projectId, lead.id);
       loadRoleOverview();
     } catch (error) {
+      console.error('移除负责人失败:', error);
+      alert('移除失败: ' + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -283,6 +285,8 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
         remark: '',
       });
     } catch (error) {
+      console.error('添加团队成员失败:', error);
+      alert('添加失败: ' + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -292,6 +296,8 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
       await projectRoleApi.team.remove(projectId, selectedLead.id, memberId);
       loadRoleOverview();
     } catch (error) {
+      console.error('移除团队成员失败:', error);
+      alert('移除失败: ' + (error.response?.data?.detail || error.message));
     }
   };
 

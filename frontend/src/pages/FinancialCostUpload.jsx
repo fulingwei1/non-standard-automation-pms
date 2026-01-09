@@ -93,11 +93,12 @@ export default function FinancialCostUpload() {
       const items = res.data?.data?.items || res.data?.items || []
       setCosts(items)
     } catch (error) {
+      console.error('加载成本数据失败:', error)
     } finally {
       setLoading(false)
     }
   }
-  
+
   const filterCosts = () => {
     let filtered = [...costs]
     

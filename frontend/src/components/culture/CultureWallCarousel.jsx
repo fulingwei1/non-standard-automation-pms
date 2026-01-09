@@ -119,6 +119,7 @@ export default function CultureWallCarousel({
       const summaryData = res.data || res
       setData(summaryData)
     } catch (err) {
+      console.error('加载文化墙数据失败:', err)
     } finally {
       setLoading(false)
     }

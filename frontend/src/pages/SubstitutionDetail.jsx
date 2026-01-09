@@ -74,6 +74,7 @@ export default function SubstitutionDetail() {
       const res = await shortageApi.substitutions.get(id)
       setSubstitution(res.data)
     } catch (error) {
+      console.error('加载替代详情失败:', error)
     } finally {
       setLoading(false)
     }
