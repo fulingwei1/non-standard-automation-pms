@@ -1,6 +1,7 @@
 import { AlertCircle, RefreshCw, XCircle } from 'lucide-react'
 import { Card, CardContent } from './card'
 import { Button } from './button'
+import { Badge } from './badge'
 import { cn } from '../../lib/utils'
 
 export function ErrorMessage({
@@ -73,6 +74,79 @@ export function EmptyState({
             {actionLabel}
           </Button>
         )}
+      </CardContent>
+    </Card>
+  )
+}
+
+/**
+ * API 集成错误组件
+ * 用于明确标识 API 未集成或调用失败的情况
+ * 不提供 fallback 到 mock 数据，确保能清楚识别集成状态
+ */
+export function ApiIntegrationError({
+  error,
+  apiEndpoint,
+  onRetry,
+  className,
+}) {
+  const errorMessage = error?.response?.data?.detail || 
+                      error?.message || 
+                      'API 调用失败'
+  
+  const statusCode = error?.response?.status
+  const statusText = error?.response?.statusText
+
+  return (
+    <Card className={cn('border-2 border-amber-500/30 bg-amber-500/5', className)}>
+      <CardContent className="p-6">
+        <div className="flex items-start gap-4">
+          <div className="flex-shrink-0">
+            <AlertCircle className="w-6 h-6 text-amber-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="text-lg font-semibold text-amber-400">
+                ⚠️ API 集成未完成
+              </h3>
+              {statusCode && (
+                <Badge variant="outline" className="text-xs">
+                  {statusCode} {statusText}
+                </Badge>
+              )}
+            </div>
+            
+            <p className="text-slate-300 mb-2">{errorMessage}</p>
+            
+            {apiEndpoint && (
+              <p className="text-xs text-slate-500 mb-3">
+                API 端点: <code className="bg-slate-800 px-1 py-0.5 rounded">{apiEndpoint}</code>
+              </p>
+            )}
+            
+            <div className="bg-slate-900/50 border border-slate-700 rounded p-3 mb-4">
+              <p className="text-xs text-amber-300 font-medium mb-1">
+                💡 说明
+              </p>
+              <p className="text-xs text-slate-400">
+                后端 API 端点可能未实现或不可用。此页面已移除 fallback 逻辑，
+                以确保能清楚识别 API 集成状态。
+              </p>
+            </div>
+            
+            {onRetry && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onRetry}
+                className="gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                重试
+              </Button>
+            )}
+          </div>
+        </div>
       </CardContent>
     </Card>
   )

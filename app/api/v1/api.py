@@ -123,6 +123,8 @@ api_router.include_router(staff_matching.router, prefix="/staff-matching", tags=
 api_router.include_router(project_roles.router, prefix="/project-roles", tags=["project-roles"])
 api_router.include_router(management_rhythm.router, prefix="", tags=["management-rhythm"])
 api_router.include_router(culture_wall.router, prefix="", tags=["culture-wall"])
+from app.api.v1.endpoints import culture_wall_config
+api_router.include_router(culture_wall_config.router, prefix="", tags=["culture-wall-config"])
 api_router.include_router(work_log.router, prefix="", tags=["work-log"])
 api_router.include_router(project_workspace.router, prefix="", tags=["project-workspace"])
 api_router.include_router(project_contributions.router, prefix="", tags=["project-contributions"])

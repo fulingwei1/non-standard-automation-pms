@@ -34,6 +34,7 @@ import {
   Button,
   Badge,
   Progress,
+  ApiIntegrationError,
 } from '../components/ui'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
@@ -88,42 +89,121 @@ export default function SalesReports() {
   const [selectedPeriod, setSelectedPeriod] = useState('month')
   const [selectedReport, setSelectedReport] = useState('overview')
   const [loading, setLoading] = useState(false)
-  const [monthlySales, setMonthlySales] = useState(mockMonthlySales)
-  const [customerAnalysis, setCustomerAnalysis] = useState(mockCustomerAnalysis)
-  const [productAnalysis, setProductAnalysis] = useState(mockProductAnalysis)
-  const [regionalAnalysis, setRegionalAnalysis] = useState(mockRegionalAnalysis)
+  const [error, setError] = useState(null)
+  const [monthlySales, setMonthlySales] = useState(null)
+  const [customerAnalysis, setCustomerAnalysis] = useState(null)
+  const [productAnalysis, setProductAnalysis] = useState(null)
+  const [regionalAnalysis, setRegionalAnalysis] = useState(null)
 
   // Fetch data from API
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true)
-      try {
-        const [monthlyRes, customerRes, productRes, regionalRes] = await Promise.allSettled([
-          salesStatisticsApi.getMonthlyTrend({ period: selectedPeriod }),
-          salesStatisticsApi.getByCustomer({ limit: 10 }),
-          salesStatisticsApi.getByProduct({ limit: 10 }),
-          salesStatisticsApi.getByRegion(),
-        ])
+  const fetchData = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const [monthlyRes, customerRes, productRes, regionalRes] = await Promise.allSettled([
+        salesStatisticsApi.getMonthlyTrend({ period: selectedPeriod }),
+        salesStatisticsApi.getByCustomer({ limit: 10 }),
+        salesStatisticsApi.getByProduct({ limit: 10 }),
+        salesStatisticsApi.getByRegion(),
+      ])
 
-        if (monthlyRes.status === 'fulfilled' && monthlyRes.value.data) {
-          setMonthlySales(monthlyRes.value.data)
-        }
-        if (customerRes.status === 'fulfilled' && customerRes.value.data) {
-          setCustomerAnalysis(customerRes.value.data)
-        }
-        if (productRes.status === 'fulfilled' && productRes.value.data) {
-          setProductAnalysis(productRes.value.data)
-        }
-        if (regionalRes.status === 'fulfilled' && regionalRes.value.data) {
-          setRegionalAnalysis(regionalRes.value.data)
-        }
-      } catch (err) {
-        console.log('Sales reports API unavailable, using mock data')
+      // 检查是否有失败的请求
+      const failedRequests = [monthlyRes, customerRes, productRes, regionalRes].filter(
+        res => res.status === 'rejected'
+      )
+
+      if (failedRequests.length > 0) {
+        // 使用第一个失败的错误
+        throw failedRequests[0].reason
       }
+
+      // 设置成功的数据
+      if (monthlyRes.status === 'fulfilled' && monthlyRes.value.data) {
+        setMonthlySales(monthlyRes.value.data)
+      } else {
+        setMonthlySales([])
+      }
+      
+      if (customerRes.status === 'fulfilled' && customerRes.value.data) {
+        setCustomerAnalysis(customerRes.value.data)
+      } else {
+        setCustomerAnalysis([])
+      }
+      
+      if (productRes.status === 'fulfilled' && productRes.value.data) {
+        setProductAnalysis(productRes.value.data)
+      } else {
+        setProductAnalysis([])
+      }
+      
+      if (regionalRes.status === 'fulfilled' && regionalRes.value.data) {
+        setRegionalAnalysis(regionalRes.value.data)
+      } else {
+        setRegionalAnalysis([])
+      }
+    } catch (err) {
+      console.error('销售报表 API 调用失败:', err)
+      setError(err)
+      // 清空所有数据
+      setMonthlySales(null)
+      setCustomerAnalysis(null)
+      setProductAnalysis(null)
+      setRegionalAnalysis(null)
+    } finally {
       setLoading(false)
     }
+  }
+
+  useEffect(() => {
     fetchData()
   }, [selectedPeriod])
+
+  // 如果有错误，显示错误组件
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="销售报表"
+          description="销售数据分析、业绩趋势、客户分析、产品分析"
+        />
+        <ApiIntegrationError
+          error={error}
+          apiEndpoint="/api/v1/sales/statistics/*"
+          onRetry={fetchData}
+        />
+      </div>
+    )
+  }
+
+  // 如果正在加载
+  if (loading || !monthlySales) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="销售报表"
+          description="销售数据分析、业绩趋势、客户分析、产品分析"
+        />
+        <div className="text-center py-16 text-slate-400">加载中...</div>
+      </div>
+    )
+  }
+
+  // 如果数据为空
+  if (monthlySales.length === 0) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="销售报表"
+          description="销售数据分析、业绩趋势、客户分析、产品分析"
+        />
+        <Card>
+          <CardContent className="p-12 text-center text-slate-500">
+            暂无数据
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   const currentMonth = monthlySales[monthlySales.length - 1]
   const avgAchievement = monthlySales.reduce((sum, m) => sum + (m.achieved / m.target * 100), 0) / monthlySales.length
@@ -234,7 +314,7 @@ export default function SalesReports() {
               <div>
                 <p className="text-sm text-slate-400">活跃客户</p>
                 <p className="text-2xl font-bold text-white mt-1">
-                  {customerAnalysis.length}
+                  {customerAnalysis?.length || 0}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">TOP客户数</p>
               </div>
@@ -295,7 +375,8 @@ export default function SalesReports() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {customerAnalysis.map((customer, index) => (
+                {customerAnalysis && customerAnalysis.length > 0 ? (
+                  customerAnalysis.map((customer, index) => (
                   <div
                     key={customer.name}
                     className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
@@ -330,7 +411,10 @@ export default function SalesReports() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-slate-500 text-sm">暂无客户数据</div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -347,7 +431,8 @@ export default function SalesReports() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {productAnalysis.map((product, index) => (
+                {productAnalysis && productAnalysis.length > 0 ? (
+                  productAnalysis.map((product, index) => (
                   <div
                     key={product.name}
                     className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
@@ -364,7 +449,10 @@ export default function SalesReports() {
                     </div>
                     <Progress value={product.ratio} className="h-1.5" />
                   </div>
-                ))}
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-slate-500 text-sm">暂无产品数据</div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -381,7 +469,8 @@ export default function SalesReports() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {regionalAnalysis.map((region, index) => (
+                {regionalAnalysis && regionalAnalysis.length > 0 ? (
+                  regionalAnalysis.map((region, index) => (
                   <div
                     key={region.region}
                     className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
@@ -405,7 +494,10 @@ export default function SalesReports() {
                       className="h-1.5 mt-2"
                     />
                   </div>
-                ))}
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-slate-500 text-sm">暂无区域数据</div>
+                )}
               </div>
             </CardContent>
           </Card>

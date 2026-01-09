@@ -29,6 +29,11 @@ import ProjectLeadsPanel from '../components/project/ProjectLeadsPanel'
 import GateCheckPanel from '../components/project/GateCheckPanel'
 import ProjectTimeline from '../components/project/ProjectTimeline'
 import QuickActionPanel from '../components/project/QuickActionPanel'
+import ProjectBonusPanel from '../components/project/ProjectBonusPanel'
+import ProjectMeetingPanel from '../components/project/ProjectMeetingPanel'
+import ProjectIssuePanel from '../components/project/ProjectIssuePanel'
+import SolutionLibrary from '../components/project/SolutionLibrary'
+import { projectWorkspaceApi } from '../services/api'
 import {
   ArrowLeft,
   Edit2,
@@ -48,6 +53,7 @@ import {
   Target,
   TrendingUp,
   AlertTriangle,
+  FolderOpen,
 } from 'lucide-react'
 
 // Tab data
@@ -56,6 +62,7 @@ const tabs = [
   { id: 'stages', name: '进度计划', icon: Clock },
   { id: 'machines', name: '设备列表', icon: Box },
   { id: 'team', name: '项目团队', icon: Users },
+  { id: 'workspace', name: '工作空间', icon: FolderOpen },
   { id: 'leads', name: '负责人', icon: UserCog },
   { id: 'finance', name: '财务/成本', icon: DollarSign },
   { id: 'docs', name: '文档中心', icon: FileText },
@@ -82,6 +89,10 @@ export default function ProjectDetail() {
   const [costs, setCosts] = useState([])
   const [documents, setDocuments] = useState([])
   const [statusLogs, setStatusLogs] = useState([]) // Sprint 3.3: 状态变更日志
+  const [workspaceData, setWorkspaceData] = useState(null) // 工作空间数据
+  const [workspaceLoading, setWorkspaceLoading] = useState(false) // 工作空间加载状态
+  const [workspaceError, setWorkspaceError] = useState(null) // 工作空间加载错误
+  const [demoMode, setDemoMode] = useState(false) // 演示模式
   const [activeTab, setActiveTab] = useState('overview')
 
   useEffect(() => {
@@ -125,6 +136,115 @@ export default function ProjectDetail() {
 
     fetchData()
   }, [id])
+
+  // 生成演示数据
+  const generateDemoWorkspaceData = () => {
+    const now = new Date()
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+    
+    return {
+      project: {
+        id: parseInt(id) || 1,
+        project_code: 'PJ250101001',
+        project_name: '演示项目 - 自动化测试设备',
+        stage: 'S5',
+        status: 'IN_PROGRESS',
+        health: 'H1',
+        progress_pct: 65.5,
+        contract_amount: 1500000,
+        pm_name: '张经理',
+      },
+      team: [
+        { user_id: 1, user_name: '张三', role_code: 'PM', allocation_pct: 100, start_date: '2025-01-01', end_date: '2025-06-30' },
+        { user_id: 2, user_name: '李四', role_code: 'ENGINEER', allocation_pct: 80, start_date: '2025-01-15', end_date: '2025-05-30' },
+        { user_id: 3, user_name: '王五', role_code: 'DESIGNER', allocation_pct: 60, start_date: '2025-02-01', end_date: '2025-04-30' },
+        { user_id: 4, user_name: '赵六', role_code: 'QA', allocation_pct: 50, start_date: '2025-03-01', end_date: '2025-05-30' },
+      ],
+      tasks: [
+        { id: 1, title: '机械结构设计', status: 'COMPLETED', assignee_name: '王五', progress: 100 },
+        { id: 2, title: '电气控制系统开发', status: 'IN_PROGRESS', assignee_name: '李四', progress: 75 },
+        { id: 3, title: '软件功能测试', status: 'IN_PROGRESS', assignee_name: '赵六', progress: 40 },
+        { id: 4, title: '设备组装调试', status: 'PENDING', assignee_name: '李四', progress: 0 },
+      ],
+      meetings: {
+        meetings: [
+          {
+            id: 1,
+            meeting_name: '项目启动会',
+            meeting_date: '2025-01-10',
+            rhythm_level: 'WEEKLY',
+            status: 'COMPLETED',
+            organizer_name: '张三',
+            minutes: '会议纪要内容：\n1. 项目目标确认\n2. 团队成员介绍\n3. 项目计划讨论\n4. 下一步行动项：\n   - 完成需求分析（负责人：李四，截止日期：2025-01-20）\n   - 准备技术方案（负责人：王五，截止日期：2025-01-25）',
+            has_minutes: true,
+          },
+          {
+            id: 2,
+            meeting_name: '周例会',
+            meeting_date: '2025-01-17',
+            rhythm_level: 'WEEKLY',
+            status: 'COMPLETED',
+            organizer_name: '张三',
+            minutes: '本周进展：\n1. 机械设计已完成80%\n2. 电气控制方案已确定\n3. 下周计划：开始软件开发',
+            has_minutes: true,
+          },
+        ],
+        statistics: {
+          total_meetings: 8,
+          completed_meetings: 6,
+          completion_rate: 75,
+          total_action_items: 12,
+        },
+      },
+      issues: {
+        issues: [
+          { id: 1, issue_no: 'ISS001', title: '传感器精度不足', status: 'RESOLVED', severity: 'MEDIUM', priority: 'HIGH', has_solution: true, assignee_name: '李四', report_date: '2025-01-15' },
+          { id: 2, issue_no: 'ISS002', title: '机械结构需要优化', status: 'IN_PROGRESS', severity: 'LOW', priority: 'MEDIUM', has_solution: false, assignee_name: '王五', report_date: '2025-01-20' },
+          { id: 3, issue_no: 'ISS003', title: '软件兼容性问题', status: 'OPEN', severity: 'HIGH', priority: 'HIGH', has_solution: false, assignee_name: '赵六', report_date: '2025-01-22' },
+        ],
+      },
+      documents: [
+        { id: 1, doc_name: '项目需求文档', doc_type: 'REQUIREMENT', version: '1.0', status: 'APPROVED', created_at: '2025-01-05' },
+        { id: 2, doc_name: '技术方案设计', doc_type: 'DESIGN', version: '2.1', status: 'APPROVED', created_at: '2025-01-12' },
+        { id: 3, doc_name: '测试计划', doc_type: 'TEST', version: '1.0', status: 'DRAFT', created_at: '2025-01-18' },
+        { id: 4, doc_name: '用户手册', doc_type: 'MANUAL', version: '0.5', status: 'DRAFT', created_at: '2025-01-20' },
+      ],
+    }
+  }
+
+  // 当切换到工作空间标签时，加载工作空间数据
+  useEffect(() => {
+    if (activeTab === 'workspace' && !workspaceData && !workspaceLoading) {
+      // 如果项目不存在，直接启用演示模式
+      if (!project) {
+        setDemoMode(true)
+        setWorkspaceData(generateDemoWorkspaceData())
+        return
+      }
+      
+      setWorkspaceLoading(true)
+      setWorkspaceError(null)
+      const fetchWorkspaceData = async () => {
+        try {
+          const response = await projectWorkspaceApi.getWorkspace(id)
+          setWorkspaceData(response.data)
+          setDemoMode(false)
+        } catch (error) {
+          console.error('Failed to load workspace data:', error)
+          setWorkspaceError(error)
+          // 如果项目不存在或加载失败，启用演示模式
+          if (error.response?.status === 404 || error.response?.status === 403) {
+            setDemoMode(true)
+            setWorkspaceData(generateDemoWorkspaceData())
+          }
+        } finally {
+          setWorkspaceLoading(false)
+        }
+      }
+      fetchWorkspaceData()
+    }
+  }, [activeTab, id, workspaceData, workspaceLoading, project])
 
   if (loading) {
     return (
@@ -542,7 +662,308 @@ export default function ProjectDetail() {
             </div>
           )}
 
-          {/* Team Tab */}
+          {/* Workspace Tab */}
+          {activeTab === 'workspace' && (
+            workspaceLoading ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <Skeleton key={i} className="h-24 rounded-xl" />
+                  ))}
+                </div>
+                <Skeleton className="h-96 rounded-xl" />
+              </div>
+            ) : workspaceData ? (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-slate-400 mb-1">项目进度</p>
+                        <p className="text-2xl font-bold text-white">
+                          {workspaceData.project?.progress_pct?.toFixed(1) || 0}%
+                        </p>
+                      </div>
+                      <TrendingUp className="h-8 w-8 text-primary" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-slate-400 mb-1">团队成员</p>
+                        <p className="text-2xl font-bold text-white">
+                          {workspaceData.team?.length || 0}
+                        </p>
+                      </div>
+                      <Users className="h-8 w-8 text-emerald-400" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-slate-400 mb-1">进行中任务</p>
+                        <p className="text-2xl font-bold text-white">
+                          {workspaceData.tasks?.filter(t => t.status === 'IN_PROGRESS').length || 0}
+                        </p>
+                      </div>
+                      <Activity className="h-8 w-8 text-indigo-400" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-slate-400 mb-1">待解决问题</p>
+                        <p className="text-2xl font-bold text-white">
+                          {workspaceData.issues?.issues?.filter(i => i.status === 'OPEN' || i.status === 'IN_PROGRESS').length || 0}
+                        </p>
+                      </div>
+                      <AlertTriangle className="h-8 w-8 text-amber-400" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* 演示模式提示 */}
+              {demoMode && (
+                <Card className="border-amber-500/50 bg-amber-500/10 mb-6">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <AlertTriangle className="h-5 w-5 text-amber-400" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-amber-400">演示模式</p>
+                        <p className="text-xs text-slate-400 mt-1">
+                          当前显示的是演示数据。创建项目后，将显示真实的项目工作空间数据。
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate('/projects')}
+                      >
+                        去创建项目
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* 项目成员名单 */}
+              {workspaceData.team && workspaceData.team.length > 0 && (
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Users className="h-5 w-5" />
+                        项目成员名单
+                      </h3>
+                      <Badge variant="outline">{workspaceData.team.length} 人</Badge>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {workspaceData.team.map((member) => (
+                        <div
+                          key={member.user_id}
+                          className="p-4 border rounded-lg hover:bg-white/[0.02] transition-colors"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <UserAvatar user={{ name: member.user_name }} size="sm" />
+                              <div>
+                                <p className="font-medium text-white">{member.user_name}</p>
+                                {member.role_code && (
+                                  <p className="text-xs text-slate-400">{member.role_code}</p>
+                                )}
+                              </div>
+                            </div>
+                            <Badge variant="outline" className="text-xs">
+                              {member.allocation_pct || 100}%
+                            </Badge>
+                          </div>
+                          {(member.start_date || member.end_date) && (
+                            <div className="flex items-center gap-2 text-xs text-slate-500 mt-2">
+                              {member.start_date && (
+                                <span>{formatDate(member.start_date)}</span>
+                              )}
+                              {member.start_date && member.end_date && (
+                                <span>~</span>
+                              )}
+                              {member.end_date && (
+                                <span>{formatDate(member.end_date)}</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ProjectBonusPanel projectId={parseInt(id)} />
+                <ProjectMeetingPanel projectId={parseInt(id)} />
+              </div>
+
+              <ProjectIssuePanel projectId={parseInt(id)} />
+
+              {/* 会议纪要详情 */}
+              {workspaceData.meetings?.meetings && workspaceData.meetings.meetings.length > 0 && (
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        会议纪要
+                      </h3>
+                    </div>
+                    <div className="space-y-4">
+                      {workspaceData.meetings.meetings
+                        .filter(m => m.minutes)
+                        .map((meeting) => (
+                          <div
+                            key={meeting.id}
+                            className="p-4 border rounded-lg hover:bg-white/[0.02] transition-colors"
+                          >
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h4 className="font-semibold text-white">{meeting.meeting_name}</h4>
+                                  <Badge variant="outline">{meeting.rhythm_level}</Badge>
+                                  {meeting.meeting_date && (
+                                    <span className="text-sm text-slate-400">
+                                      {formatDate(meeting.meeting_date)}
+                                    </span>
+                                  )}
+                                </div>
+                                {meeting.organizer_name && (
+                                  <p className="text-sm text-slate-400">组织者: {meeting.organizer_name}</p>
+                                )}
+                              </div>
+                              <Badge variant={meeting.status === 'COMPLETED' ? 'default' : 'secondary'}>
+                                {meeting.status}
+                              </Badge>
+                            </div>
+                            {meeting.minutes && (
+                              <div>
+                                <p className="text-sm font-medium text-slate-300 mb-1">会议纪要：</p>
+                                <div className="p-3 bg-white/[0.03] rounded-lg text-sm text-slate-300 whitespace-pre-wrap max-h-60 overflow-y-auto">
+                                  {meeting.minutes}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      {workspaceData.meetings.meetings.filter(m => m.minutes).length === 0 && (
+                        <div className="text-center py-8 text-slate-500">
+                          暂无会议纪要
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* 项目文档 */}
+              {workspaceData.documents && workspaceData.documents.length > 0 && (
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        项目资料文档
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {workspaceData.documents.map((doc) => (
+                        <div
+                          key={doc.id}
+                          className="p-4 border rounded-lg hover:bg-white/[0.02] transition-colors cursor-pointer"
+                          onClick={() => {
+                            // TODO: 打开文档详情或下载
+                            console.log('View document:', doc.id)
+                          }}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 rounded-lg bg-primary/20">
+                              <FileText className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-white truncate mb-1">{doc.doc_name}</p>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Badge variant="outline" className="text-xs">{doc.doc_type}</Badge>
+                                {doc.version && (
+                                  <span className="text-xs text-slate-400">v{doc.version}</span>
+                                )}
+                              </div>
+                              {doc.created_at && (
+                                <p className="text-xs text-slate-500 mt-2">
+                                  {formatDate(doc.created_at)}
+                                </p>
+                              )}
+                            </div>
+                            {doc.status && (
+                              <Badge 
+                                variant={doc.status === 'APPROVED' ? 'default' : 'secondary'}
+                                className="text-xs"
+                              >
+                                {doc.status}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">解决方案库</h3>
+                  </div>
+                  <SolutionLibrary
+                    projectId={parseInt(id)}
+                    onApplyTemplate={(template) => {
+                      console.log('Apply template:', template)
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+            ) : (
+              <div className="space-y-6">
+                <Card>
+                  <CardContent className="p-12 text-center">
+                    <div className="text-5xl mb-4">📁</div>
+                    <h3 className="text-lg font-semibold text-white mb-2">
+                      无法加载项目工作空间
+                    </h3>
+                    <p className="text-slate-400 mb-6">
+                      {workspaceError?.response?.status === 404 
+                        ? '项目不存在，已切换到演示模式' 
+                        : '加载失败，请稍后重试'}
+                    </p>
+                    <Button onClick={() => {
+                      setWorkspaceData(null)
+                      setWorkspaceLoading(false)
+                      setWorkspaceError(null)
+                    }}>
+                      重新加载
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            )
+          )}
+
+
           {activeTab === 'team' && (
             <div className="space-y-6">
               <Card>

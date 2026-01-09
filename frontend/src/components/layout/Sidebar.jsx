@@ -52,6 +52,8 @@ import {
   MessageSquare,
   Star,
   Layers,
+  Heart,
+  Key,
 } from 'lucide-react'
 
 // Icon mapping
@@ -99,6 +101,8 @@ const iconMap = {
   MessageSquare,
   Star,
   Layers,
+  Heart,
+  Key,
 }
 
 // Default navigation groups (for admin and general use)
@@ -192,6 +196,7 @@ const defaultNavGroups = [
     items: [
       { name: '用户管理', path: '/user-management', icon: 'Users' },
       { name: '角色管理', path: '/role-management', icon: 'Shield' },
+      { name: '权限管理', path: '/permission-management', icon: 'Key' },
       { name: '项目角色类型', path: '/project-role-types', icon: 'UserCog' },
     ],
     roles: ['admin', 'super_admin'], // 仅管理员可见
@@ -215,8 +220,15 @@ const engineerNavGroups = [
       { name: '工作台', path: '/workstation', icon: 'LayoutDashboard' },
       { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+    ],
+  },
+  {
+    label: '项目跟踪',
+    items: [
+      { name: '项目进度', path: '/sales-projects', icon: 'Briefcase' },
+      { name: '项目看板', path: '/board', icon: 'Kanban' },
+      { name: '项目列表', path: '/projects', icon: 'Briefcase' },
     ],
   },
   {
@@ -224,7 +236,6 @@ const engineerNavGroups = [
     items: [
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
@@ -350,7 +361,6 @@ const generalManagerNavGroups = [
       { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck', badge: '8' },
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
@@ -362,7 +372,6 @@ const generalManagerNavGroups = [
       { name: '齐套分析', path: '/material-analysis', icon: 'Package' },
       { name: '验收管理', path: '/acceptance', icon: 'ClipboardList' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
@@ -400,7 +409,6 @@ const chairmanNavGroups = [
       { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck', badge: '5' },
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
       { name: '决策事项', path: '/key-decisions', icon: 'Crown' },
     ],
   },
@@ -446,7 +454,6 @@ const deptManagerNavGroups = [
             { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck', badge: '2' },
             { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
             { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
           ],
         },
   {
@@ -478,7 +485,6 @@ const productionManagerNavGroups = [
       { name: '装配齐套', path: '/assembly-kit', icon: 'Wrench' },
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
@@ -503,11 +509,18 @@ const assemblerNavGroups = [
     ],
   },
   {
+    label: '项目跟踪',
+    items: [
+      { name: '项目进度', path: '/sales-projects', icon: 'Briefcase' },
+      { name: '项目看板', path: '/board', icon: 'Kanban' },
+      { name: '项目列表', path: '/projects', icon: 'Briefcase' },
+    ],
+  },
+  {
     label: '监控与预警',
     items: [
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
@@ -548,6 +561,7 @@ const salesNavGroups = [
     items: [
       { name: '项目进度', path: '/sales-projects', icon: 'Briefcase' },
       { name: '项目看板', path: '/board', icon: 'Kanban' },
+      { name: '项目列表', path: '/projects', icon: 'Briefcase' },
     ],
   },
   {
@@ -555,7 +569,6 @@ const salesNavGroups = [
     items: [
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
@@ -607,7 +620,6 @@ const businessSupportNavGroups = [
     items: [
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
@@ -697,7 +709,6 @@ const procurementManagerNavGroups = [
     items: [
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
@@ -738,7 +749,6 @@ const presalesNavGroups = [
     items: [
       { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
       { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
     ],
   },
   {
@@ -967,13 +977,13 @@ function getNavGroupsForRole(role, isSuperuser = false) {
             { name: '齐套分析', path: '/material-analysis', icon: 'Package' },
             { name: '预警中心', path: '/alerts', icon: 'AlertTriangle', badge: '3' },
             { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
           ],
         },
         {
           label: '个人中心',
           items: [
             { name: '通知中心', path: '/notifications', icon: 'Bell' },
+            { name: '企业文化墙', path: '/culture-wall', icon: 'Heart' },
             { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
             { name: '个人设置', path: '/settings', icon: 'Settings' },
           ],
@@ -990,7 +1000,6 @@ function getNavGroupsForRole(role, isSuperuser = false) {
             { name: '项目看板', path: '/board', icon: 'Kanban' },
             { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
             { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
           ],
         },
         {
@@ -998,7 +1007,6 @@ function getNavGroupsForRole(role, isSuperuser = false) {
           items: [
             { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
             { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
           ],
         },
         {
@@ -1026,7 +1034,6 @@ function getNavGroupsForRole(role, isSuperuser = false) {
             { name: '知识库', path: '/service-knowledge-base', icon: 'BookOpen' },
             { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
             { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
             { name: '工时填报', path: '/timesheet', icon: 'Clock' },
           ],
         },
@@ -1035,7 +1042,6 @@ function getNavGroupsForRole(role, isSuperuser = false) {
           items: [
             { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
             { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
           ],
         },
         {
@@ -1055,10 +1061,16 @@ function getNavGroupsForRole(role, isSuperuser = false) {
         {
           label: '团队管理',
           items: [
-            { name: '项目看板', path: '/board', icon: 'Kanban' },
             { name: '任务中心', path: '/tasks', icon: 'ListTodo' },
             { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
+          ],
+        },
+        {
+          label: '项目跟踪',
+          items: [
+            { name: '项目进度', path: '/sales-projects', icon: 'Briefcase' },
+            { name: '项目看板', path: '/board', icon: 'Kanban' },
+            { name: '项目列表', path: '/projects', icon: 'Briefcase' },
           ],
         },
         {
@@ -1066,7 +1078,6 @@ function getNavGroupsForRole(role, isSuperuser = false) {
           items: [
             { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
             { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
-      { name: '问题模板管理', path: '/issue-templates', icon: 'FileText' },
           ],
         },
         {

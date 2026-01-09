@@ -195,6 +195,63 @@ const mockPendingApprovals = [
   },
 ]
 
+const mockRecentActivities = [
+  {
+    id: 1,
+    type: 'contract_signed',
+    action: '合同签署',
+    target: 'BMS测试设备合同',
+    operator: '张销售',
+    timestamp: '2025-01-06 14:30',
+    status: 'success',
+  },
+  {
+    id: 2,
+    type: 'payment_received',
+    action: '收到回款',
+    target: '深圳XX科技 - ¥85万',
+    operator: '财务部',
+    timestamp: '2025-01-06 13:45',
+    status: 'success',
+  },
+  {
+    id: 3,
+    type: 'opportunity_created',
+    action: '新增商机',
+    target: 'EOL测试设备 - 东莞XX电子',
+    operator: '李销售',
+    timestamp: '2025-01-06 12:20',
+    status: 'success',
+  },
+  {
+    id: 4,
+    type: 'quotation_submitted',
+    action: '提交报价',
+    target: 'ICT测试设备 - 惠州XX电池',
+    operator: '王销售',
+    timestamp: '2025-01-06 11:15',
+    status: 'pending',
+  },
+  {
+    id: 5,
+    type: 'customer_visit',
+    action: '客户拜访',
+    target: '广州XX汽车零部件',
+    operator: '刘销售',
+    timestamp: '2025-01-06 10:00',
+    status: 'success',
+  },
+  {
+    id: 6,
+    type: 'contract_approved',
+    action: '合同审批通过',
+    target: 'BMS老化测试设备',
+    operator: '销售总监',
+    timestamp: '2025-01-06 09:30',
+    status: 'success',
+  },
+]
+
 const formatCurrency = (value) => {
   if (value >= 10000) {
     return `¥${(value / 10000).toFixed(1)}万`

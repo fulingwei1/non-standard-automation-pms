@@ -54,6 +54,7 @@ import {
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { pmoApi, salesStatisticsApi, projectApi } from '../services/api'
+import CultureWallCarousel from '../components/culture/CultureWallCarousel'
 
 // Mock data for chairman dashboard
 const mockCompanyStats = {
@@ -549,6 +550,24 @@ export default function ChairmanWorkstation() {
           </motion.div>
         }
       />
+
+      {/* 文化墙滚动播放 */}
+      <motion.div variants={fadeIn}>
+        <CultureWallCarousel
+          autoPlay={true}
+          interval={5000}
+          showControls={true}
+          showIndicators={true}
+          height="400px"
+          onItemClick={(item) => {
+            if (item.category === 'GOAL') {
+              window.location.href = '/personal-goals'
+            } else {
+              window.location.href = `/culture-wall?item=${item.id}`
+            }
+          }}
+        />
+      </motion.div>
 
       {/* Key Financial Metrics - 6 column grid */}
       <motion.div

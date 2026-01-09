@@ -55,7 +55,7 @@ import {
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { PaymentTimeline, PaymentStats } from '../components/sales'
-import { paymentApi, invoiceApi, receivableApi } from '../services/api'
+import { paymentApi, invoiceApi, receivableApi, paymentPlanApi } from '../services/api'
 
 // Payment type configuration
 const paymentTypes = {
@@ -218,6 +218,13 @@ export default function PaymentManagement() {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const pageSize = 20
+  
+  // 新增状态：回款提醒、统计分析
+  const [reminders, setReminders] = useState([])
+  const [remindersLoading, setRemindersLoading] = useState(false)
+  const [statistics, setStatistics] = useState(null)
+  const [statisticsLoading, setStatisticsLoading] = useState(false)
+  const [showReminders, setShowReminders] = useState(false)
 
   // Load payments from API
   const loadPayments = async () => {
@@ -445,6 +452,91 @@ export default function PaymentManagement() {
     }
   }
 
+  // 加载回款提醒
+  const loadReminders = async () => {
+    setRemindersLoading(true)
+    try {
+      const response = await paymentApi.getReminders({
+        page: 1,
+        page_size: 20,
+        days_before: 7,
+      })
+      const data = response.data || {}
+      setReminders(data.items || [])
+    } catch (error) {
+      // axios timeout 或连接错误时，静默处理，使用空数据
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout') || error.message?.includes('Network Error')) {
+        console.log('回款提醒API超时或连接失败，使用空数据')
+      } else {
+        console.error('加载回款提醒失败:', error)
+      }
+      setReminders([])
+    } finally {
+      setRemindersLoading(false)
+    }
+  }
+
+  // 加载统计分析
+  const loadStatistics = async () => {
+    setStatisticsLoading(true)
+    try {
+      const response = await paymentApi.getStatistics({})
+      const data = response.data || {}
+      setStatistics(data)
+    } catch (error) {
+      // axios timeout 或连接错误时，静默处理，使用本地计算数据
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout') || error.message?.includes('Network Error')) {
+        console.log('统计分析API超时或连接失败，使用本地计算数据')
+      } else {
+        console.error('加载统计分析失败:', error)
+      }
+      setStatistics(null)
+    } finally {
+      setStatisticsLoading(false)
+    }
+  }
+
+  // 导出回款记录
+  const handleExportPayments = async () => {
+    try {
+      const params = {
+        payment_status: selectedStatus !== 'all' ? selectedStatus.toUpperCase() : undefined,
+      }
+      
+      if (searchTerm) {
+        params.keyword = searchTerm
+      }
+
+      const response = await paymentApi.exportInvoices(params)
+      
+      // 创建下载链接
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `回款记录_${new Date().toISOString().split('T')[0]}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('导出回款记录失败:', error)
+      alert('导出失败: ' + (error.response?.data?.detail || error.message))
+    }
+  }
+
+  // 组件加载时获取提醒和统计（延迟加载，避免阻塞页面渲染）
+  useEffect(() => {
+    // 使用 setTimeout 延迟加载，确保页面先渲染
+    const timer = setTimeout(() => {
+      loadReminders()
+      loadStatistics()
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <motion.div
       variants={staggerContainer}
@@ -458,7 +550,11 @@ export default function PaymentManagement() {
         description="跟踪应收账款、管理开票和催收"
         actions={
           <motion.div variants={fadeIn} className="flex gap-2">
-            <Button variant="outline" className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={handleExportPayments}
+            >
               <Download className="w-4 h-4" />
               导出报表
             </Button>
@@ -474,6 +570,78 @@ export default function PaymentManagement() {
         }
       />
 
+      {/* 回款提醒卡片 */}
+      {reminders.length > 0 && (
+        <motion.div variants={fadeIn}>
+          <Card className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 border-amber-500/20">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-amber-400" />
+                  回款提醒
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowReminders(!showReminders)}
+                >
+                  {showReminders ? '收起' : '展开'}
+                </Button>
+              </div>
+            </CardHeader>
+            {showReminders && (
+              <CardContent>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {reminders.map((reminder) => (
+                    <div
+                      key={reminder.id}
+                      className={cn(
+                        "p-3 rounded-lg border",
+                        reminder.reminder_level === 'urgent' 
+                          ? "bg-red-500/10 border-red-500/20" 
+                          : reminder.reminder_level === 'warning'
+                          ? "bg-amber-500/10 border-amber-500/20"
+                          : "bg-blue-500/10 border-blue-500/20"
+                      )}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-white">
+                              {reminder.customer_name || '未知客户'}
+                            </span>
+                            <Badge
+                              variant={
+                                reminder.reminder_level === 'urgent' ? 'destructive' :
+                                reminder.reminder_level === 'warning' ? 'default' : 'secondary'
+                              }
+                            >
+                              {reminder.is_overdue 
+                                ? `逾期${reminder.overdue_days}天` 
+                                : `还有${reminder.days_until_due}天到期`}
+                            </Badge>
+                          </div>
+                          <div className="mt-1 text-sm text-slate-400">
+                            {reminder.contract_code && `合同：${reminder.contract_code} | `}
+                            {reminder.project_code && `项目：${reminder.project_code} | `}
+                            未收金额：¥{(reminder.unpaid_amount / 10000).toFixed(2)}万
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-medium text-white">
+                            {reminder.due_date}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        </motion.div>
+      )}
+
       {/* Stats Row */}
       <motion.div variants={fadeIn} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-emerald-500/10 to-green-500/5 border-emerald-500/20">
@@ -482,10 +650,14 @@ export default function PaymentManagement() {
               <div>
                 <p className="text-sm text-slate-400">已回款</p>
                 <p className="text-2xl font-bold text-emerald-400 mt-1">
-                  ¥{(stats.totalPaid / 10000).toFixed(0)}万
+                  ¥{statistics?.summary?.total_paid 
+                    ? (statistics.summary.total_paid / 10000).toFixed(0) 
+                    : (stats.totalPaid / 10000).toFixed(0)}万
                 </p>
                 <div className="flex items-center gap-1 mt-1">
-                  <span className="text-xs text-slate-500">{stats.paidCount}笔</span>
+                  <span className="text-xs text-slate-500">
+                    {statistics?.summary?.paid_count || stats.paidCount}笔
+                  </span>
                 </div>
               </div>
               <div className="p-2 bg-emerald-500/20 rounded-lg">
@@ -501,11 +673,17 @@ export default function PaymentManagement() {
               <div>
                 <p className="text-sm text-slate-400">待回款</p>
                 <p className="text-2xl font-bold text-blue-400 mt-1">
-                  ¥{(stats.totalPending / 10000).toFixed(0)}万
+                  ¥{statistics?.summary?.total_unpaid 
+                    ? (statistics.summary.total_unpaid / 10000).toFixed(0) 
+                    : (stats.totalPending / 10000).toFixed(0)}万
                 </p>
                 <div className="flex items-center gap-1 mt-1">
-                  <span className="text-xs text-slate-500">{stats.pendingCount}笔</span>
-                  <span className="text-xs text-amber-400">({stats.invoicedCount}已开票)</span>
+                  <span className="text-xs text-slate-500">
+                    {statistics?.summary?.pending_count || stats.pendingCount}笔
+                  </span>
+                  <span className="text-xs text-amber-400">
+                    ({statistics?.summary?.invoice_count || stats.invoicedCount}已开票)
+                  </span>
                 </div>
               </div>
               <div className="p-2 bg-blue-500/20 rounded-lg">
@@ -521,11 +699,15 @@ export default function PaymentManagement() {
               <div>
                 <p className="text-sm text-slate-400">已逾期</p>
                 <p className="text-2xl font-bold text-red-400 mt-1">
-                  ¥{(stats.totalOverdue / 10000).toFixed(0)}万
+                  ¥{statistics?.summary?.total_overdue 
+                    ? (statistics.summary.total_overdue / 10000).toFixed(0) 
+                    : (stats.totalOverdue / 10000).toFixed(0)}万
                 </p>
                 <div className="flex items-center gap-1 mt-1">
                   <AlertTriangle className="w-3 h-3 text-red-400" />
-                  <span className="text-xs text-red-400">{stats.overdueCount}笔需催收</span>
+                  <span className="text-xs text-red-400">
+                    {statistics?.summary?.overdue_count || stats.overdueCount}笔需催收
+                  </span>
                 </div>
               </div>
               <div className="p-2 bg-red-500/20 rounded-lg">
@@ -789,6 +971,45 @@ export default function PaymentManagement() {
               </CardHeader>
               <CardContent>
                 <PaymentStats payments={payments} />
+                
+                {/* 新增：统计分析数据 */}
+                {statistics && (
+                  <div className="mt-6 pt-6 border-t border-white/5">
+                    <h4 className="text-sm font-medium text-slate-400 mb-4">详细统计</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-slate-400">回款率</span>
+                        <span className="text-sm font-medium text-white">
+                          {statistics.summary?.collection_rate?.toFixed(2) || 0}%
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-slate-400">总开票金额</span>
+                        <span className="text-sm font-medium text-white">
+                          ¥{(statistics.summary?.total_invoiced / 10000 || 0).toFixed(2)}万
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-slate-400">总已收金额</span>
+                        <span className="text-sm font-medium text-emerald-400">
+                          ¥{(statistics.summary?.total_paid / 10000 || 0).toFixed(2)}万
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-slate-400">总未收金额</span>
+                        <span className="text-sm font-medium text-amber-400">
+                          ¥{(statistics.summary?.total_unpaid / 10000 || 0).toFixed(2)}万
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-slate-400">逾期金额</span>
+                        <span className="text-sm font-medium text-red-400">
+                          ¥{(statistics.summary?.total_overdue / 10000 || 0).toFixed(2)}万
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 {/* Type breakdown */}
                 <div className="mt-6 pt-6 border-t border-white/5">

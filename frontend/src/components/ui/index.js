@@ -56,7 +56,7 @@ export {
 } from './dropdown-menu'
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs'
 export { LoadingSpinner, LoadingCard, LoadingPage } from './LoadingSpinner'
-export { ErrorMessage, EmptyState } from './ErrorMessage'
+export { ErrorMessage, EmptyState, ApiIntegrationError } from './ErrorMessage'
 export { default as ErrorBoundary } from './ErrorBoundary'
 export { ToastContainer, useToast, toast } from './toast'
 export { FormField, FormTextarea, FormSelect } from './FormField'
@@ -83,7 +83,6 @@ export {
   TableCaption,
 } from './table'
 export { Alert, AlertTitle, AlertDescription, alertVariants } from './alert'
-export { Alert, AlertTitle, AlertDescription } from './alert'
 export { Checkbox } from './checkbox'
 export { Switch } from './switch'
 

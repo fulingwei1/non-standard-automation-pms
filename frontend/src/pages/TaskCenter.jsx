@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ListTodo,
@@ -15,7 +14,6 @@ import {
   Plus,
   ChevronRight,
   Flag,
-  User,
   Folder,
   Timer,
   MoreHorizontal,
@@ -23,11 +21,6 @@ import {
   Zap,
   Wrench,
   Package,
-  DollarSign,
-  Award,
-  FileText,
-  BookOpen,
-  ClipboardList,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -716,8 +709,6 @@ function TaskCard({ task, onStatusChange }) {
 }
 
 export default function TaskCenter() {
-  const navigate = useNavigate()
-  
   // Get current user role
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
   const role = currentUser?.role || 'admin'
@@ -1062,88 +1053,6 @@ export default function TaskCenter() {
             </CardContent>
           </Card>
         ))}
-      </motion.div>
-
-      {/* 个人事务 */}
-      <motion.div variants={fadeIn}>
-        <Card className="bg-surface-1/50">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <User className="w-5 h-5 text-accent" />
-              个人事务
-            </CardTitle>
-            <CardDescription>查看和管理您的个人相关信息</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button
-                variant="outline"
-                className="h-auto p-4 flex flex-col items-start gap-2 hover:bg-surface-2/50 transition-colors"
-                onClick={() => navigate('/personal/my-bonus')}
-              >
-                <div className="flex items-center gap-2 w-full">
-                  <DollarSign className="w-5 h-5 text-emerald-400" />
-                  <span className="font-medium">我的奖金</span>
-                </div>
-                <p className="text-xs text-slate-400 text-left">
-                  查看奖金计算记录、发放记录和统计信息
-                </p>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-auto p-4 flex flex-col items-start gap-2 hover:bg-surface-2/50 transition-colors"
-                onClick={() => navigate('/personal/my-performance')}
-              >
-                <div className="flex items-center gap-2 w-full">
-                  <Award className="w-5 h-5 text-blue-400" />
-                  <span className="font-medium">我的绩效</span>
-                </div>
-                <p className="text-xs text-slate-400 text-left">
-                  查看绩效评估结果和排名情况
-                </p>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-auto p-4 flex flex-col items-start gap-2 hover:bg-surface-2/50 transition-colors"
-                onClick={() => navigate('/personal/monthly-summary')}
-              >
-                <div className="flex items-center gap-2 w-full">
-                  <FileText className="w-5 h-5 text-purple-400" />
-                  <span className="font-medium">月度总结</span>
-                </div>
-                <p className="text-xs text-slate-400 text-left">
-                  查看和编辑月度工作总结
-                </p>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-auto p-4 flex flex-col items-start gap-2 hover:bg-surface-2/50 transition-colors"
-                onClick={() => navigate('/work-log')}
-              >
-                <div className="flex items-center gap-2 w-full">
-                  <ClipboardList className="w-5 h-5 text-indigo-400" />
-                  <span className="font-medium">工作日志</span>
-                </div>
-                <p className="text-xs text-slate-400 text-left">
-                  记录每日工作内容，@提及项目或设备
-                </p>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-auto p-4 flex flex-col items-start gap-2 hover:bg-surface-2/50 transition-colors"
-                onClick={() => navigate('/settings?section=knowledge')}
-              >
-                <div className="flex items-center gap-2 w-full">
-                  <BookOpen className="w-5 h-5 text-amber-400" />
-                  <span className="font-medium">知识管理</span>
-                </div>
-                <p className="text-xs text-slate-400 text-left">
-                  浏览知识库、我的收藏、最近浏览
-                </p>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </motion.div>
 
       {/* Filters */}

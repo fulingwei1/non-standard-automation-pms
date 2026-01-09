@@ -144,6 +144,7 @@ import ContractList from './pages/ContractList'
 import ContractDetail from './pages/ContractDetail'
 import PaymentManagement from './pages/PaymentManagement'
 import InvoiceManagement from './pages/InvoiceManagement'
+import PermissionDebug from './pages/PermissionDebug'
 import SalesProjectTrack from './pages/SalesProjectTrack'
 import SalesFunnel from './pages/SalesFunnel'
 import StrategyAnalysis from './pages/StrategyAnalysis'
@@ -203,6 +204,7 @@ import UserManagement from './pages/UserManagement'
 import RiskWall from './pages/RiskWall'
 import WeeklyReport from './pages/WeeklyReport'
 import RoleManagement from './pages/RoleManagement'
+import PermissionManagement from './pages/PermissionManagement'
 import ProjectRoleTypeManagement from './pages/ProjectRoleTypeManagement'
 import CustomerManagement from './pages/CustomerManagement'
 import SupplierManagementData from './pages/SupplierManagementData'
@@ -967,6 +969,7 @@ function App() {
           {/* System Management */}
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/role-management" element={<RoleManagement />} />
+          <Route path="/permission-management" element={<PermissionManagement />} />
           <Route path="/project-role-types" element={<ProjectRoleTypeManagement />} />
           <Route path="/scheduler-monitoring" element={<SchedulerMonitoringDashboard />} />
           
@@ -986,6 +989,9 @@ function App() {
           <Route path="/mobile/scan-shortage" element={<MobileScanShortage />} />
           <Route path="/mobile/shortage-report" element={<MobileShortageReport />} />
           <Route path="/mobile/my-shortage-reports" element={<MobileMyShortageReports />} />
+
+          {/* Debug Routes */}
+          <Route path="/debug/permissions" element={<PermissionDebug />} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

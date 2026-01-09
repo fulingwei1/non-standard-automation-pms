@@ -52,13 +52,15 @@ import {
   DialogBody,
   DialogFooter,
 } from '../components/ui/dialog'
+import { ApiIntegrationError } from '../components/ui'
 import { cn, formatCurrency } from '../lib/utils'
 import { fadeIn } from '../lib/animations'
 import { materialApi, supplierApi } from '../services/api'
 export default function MaterialList() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
-  const [materials, setMaterials] = useState([])
+  const [error, setError] = useState(null)
+  const [materials, setMaterials] = useState(null)
   const [categories, setCategories] = useState([])
   const [suppliers, setSuppliers] = useState([])
   // Filters
@@ -88,121 +90,18 @@ export default function MaterialList() {
   const fetchMaterials = async () => {
     try {
       setLoading(true)
-      const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-      
-      if (isDemoAccount) {
-        // Use mock data for demo accounts
-        setMaterials([
-          {
-            id: 1,
-            material_code: 'EL-02-03-0015',
-            material_name: '光电传感器 E3Z-D82',
-            specification: 'NPN',
-            category_id: 1,
-            category_name: '电气件',
-            unit: '个',
-            unit_price: 450.00,
-            supplier_id: 1,
-            supplier_name: '欧姆龙(上海)代理',
-            remark: '欧姆龙原厂',
-          },
-          {
-            id: 2,
-            material_code: 'ME-03-02-0008',
-            material_name: '精密导轨 HSR25',
-            specification: '1000mm',
-            category_id: 2,
-            category_name: '机械件',
-            unit: '根',
-            unit_price: 4200.00,
-            supplier_id: 2,
-            supplier_name: 'THK(深圳)销售',
-            remark: 'THK原厂',
-          },
-        ])
-      } else {
-        const params = {}
-        if (filterCategory && filterCategory !== 'all') params.category_id = filterCategory
-        if (filterSupplier && filterSupplier !== 'all') params.supplier_id = filterSupplier
-        if (searchKeyword) params.search = searchKeyword
-        const res = await materialApi.list(params)
-        const materialList = res.data?.items || res.data || []
-        setMaterials(materialList)
-      }
+      setError(null)
+      const params = {}
+      if (filterCategory && filterCategory !== 'all') params.category_id = filterCategory
+      if (filterSupplier && filterSupplier !== 'all') params.supplier_id = filterSupplier
+      if (searchKeyword) params.search = searchKeyword
+      const res = await materialApi.list(params)
+      const materialList = res.data?.items || res.data || []
+      setMaterials(materialList)
     } catch (error) {
-      console.error('Failed to fetch materials:', error)
-      // API 调用失败时，使用 mock 数据让用户仍能看到界面
-      console.log('API 调用失败，使用 mock 数据展示界面', {
-        status: error.response?.status,
-        message: error.message
-      })
-      setMaterials([
-        {
-          id: 1,
-          material_code: 'EL-02-03-0015',
-          material_name: '光电传感器 E3Z-D82',
-          specification: 'NPN',
-          category_id: 1,
-          category_name: '电气件',
-          unit: '个',
-          unit_price: 450.00,
-          supplier_id: 1,
-          supplier_name: '欧姆龙(上海)代理',
-          remark: '欧姆龙原厂',
-        },
-        {
-          id: 2,
-          material_code: 'ME-03-02-0008',
-          material_name: '精密导轨 HSR25',
-          specification: '1000mm',
-          category_id: 2,
-          category_name: '机械件',
-          unit: '根',
-          unit_price: 4200.00,
-          supplier_id: 2,
-          supplier_name: 'THK(深圳)销售',
-          remark: 'THK原厂',
-        },
-        {
-          id: 3,
-          material_code: 'EL-02-03-0018',
-          material_name: '接近传感器 E2E-X5',
-          specification: 'NPN NC',
-          category_id: 1,
-          category_name: '电气件',
-          unit: '个',
-          unit_price: 280.00,
-          supplier_id: 1,
-          supplier_name: '欧姆龙(上海)代理',
-          remark: '欧姆龙原厂',
-        },
-        {
-          id: 4,
-          material_code: 'PN-01-01-0005',
-          material_name: '气动气缸 CDJ2B16-50',
-          specification: '16mm x 50mm',
-          category_id: 3,
-          category_name: '气动件',
-          unit: '个',
-          unit_price: 320.00,
-          supplier_id: 3,
-          supplier_name: 'SMC(广州)销售',
-          remark: 'SMC原厂',
-        },
-        {
-          id: 5,
-          material_code: 'ST-01-02-0012',
-          material_name: '内六角螺丝 M4x12',
-          specification: '不锈钢304',
-          category_id: 4,
-          category_name: '标准件',
-          unit: '包',
-          unit_price: 25.00,
-          supplier_id: 4,
-          supplier_name: '紧固件商城',
-          remark: '100pcs/包',
-        },
-      ])
+      console.error('物料列表 API 调用失败:', error)
+      setError(error)
+      setMaterials(null) // 清空数据
     } finally {
       setLoading(false)
     }
@@ -212,15 +111,9 @@ export default function MaterialList() {
       const res = await materialApi.categories.list()
       setCategories(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch categories:', error)
-      // API 失败时使用 mock 数据
-      setCategories([
-        { id: 1, name: '电气件' },
-        { id: 2, name: '机械件' },
-        { id: 3, name: '气动件' },
-        { id: 4, name: '标准件' },
-        { id: 5, name: '电子件' },
-      ])
+      console.error('物料分类 API 调用失败:', error)
+      // 分类失败不影响主数据加载，只记录错误
+      setCategories([])
     }
   }
   const fetchSuppliers = async () => {
@@ -228,15 +121,9 @@ export default function MaterialList() {
       const res = await supplierApi.list({ page_size: 1000 })
       setSuppliers(res.data?.items || res.data || [])
     } catch (error) {
-      console.error('Failed to fetch suppliers:', error)
-      // API 失败时使用 mock 数据
-      setSuppliers([
-        { id: 1, supplier_name: '欧姆龙(上海)代理' },
-        { id: 2, supplier_name: 'THK(深圳)销售' },
-        { id: 3, supplier_name: 'SMC(广州)销售' },
-        { id: 4, supplier_name: '紧固件商城' },
-        { id: 5, supplier_name: '西门子官方授权' },
-      ])
+      console.error('供应商 API 调用失败:', error)
+      // 供应商失败不影响主数据加载，只记录错误
+      setSuppliers([])
     }
   }
   const handleCreateMaterial = async () => {
@@ -273,6 +160,8 @@ export default function MaterialList() {
     }
   }
   const filteredMaterials = useMemo(() => {
+    if (!materials || materials.length === 0) return []
+    
     return materials.filter(material => {
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase()
@@ -285,6 +174,25 @@ export default function MaterialList() {
       return true
     })
   }, [materials, searchKeyword])
+
+  // 如果有错误，显示错误组件
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="container mx-auto px-4 py-6 space-y-6">
+          <PageHeader
+            title="物料管理"
+            description="物料主数据管理，支持分类、供应商关联、价格管理"
+          />
+          <ApiIntegrationError
+            error={error}
+            apiEndpoint="/api/v1/materials"
+            onRetry={fetchMaterials}
+          />
+        </div>
+      </div>
+    )
+  }
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -350,6 +258,8 @@ export default function MaterialList() {
         <CardContent>
           {loading ? (
             <div className="text-center py-8 text-slate-400">加载中...</div>
+          ) : !materials ? (
+            <div className="text-center py-8 text-slate-400">暂无数据</div>
           ) : filteredMaterials.length === 0 ? (
             <div className="text-center py-8 text-slate-400">暂无物料数据</div>
           ) : (

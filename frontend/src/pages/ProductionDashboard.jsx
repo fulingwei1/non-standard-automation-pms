@@ -29,6 +29,7 @@ import {
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
 import { Progress } from '../components/ui/progress'
+import { ApiIntegrationError } from '../components/ui'
 import { cn, formatDate } from '../lib/utils'
 import { productionApi } from '../services/api'
 export default function ProductionDashboard() {
@@ -36,38 +37,6 @@ export default function ProductionDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [dashboardData, setDashboardData] = useState(null)
-  useEffect(() => {
-    fetchDashboardData()
-  }, [])
-  // Mock data for when API fails - matches page expected fields
-  const mockDashboardData = {
-    // 概览统计
-    total_workshops: 3,
-    total_workstations: 26,
-    active_workers: 45,
-    total_workers: 52,
-    total_equipment: 38,
-    // 工单统计
-    total_work_orders: 156,
-    pending_orders: 12,
-    in_progress_orders: 24,
-    completed_orders: 120,
-    // 今日统计
-    today_plan_qty: 48,
-    today_completed_qty: 36,
-    today_completion_rate: 75.0,
-    today_qualified_qty: 34,
-    today_pass_rate: 94.4,
-    today_actual_hours: 128.5,
-    // 设备状态
-    running_equipment: 28,
-    maintenance_equipment: 5,
-    fault_equipment: 2,
-    // 异常统计
-    open_exceptions: 8,
-    critical_exceptions: 2,
-  }
-
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
@@ -77,53 +46,31 @@ export default function ProductionDashboard() {
       const data = res.data?.data || res.data || res
       setDashboardData(data)
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error)
-      // API 调用失败时，使用 mock 数据让用户仍能看到界面
-      console.log('API 调用失败，使用 mock 数据展示界面', {
-        status: error.response?.status,
-        message: error.message
-      })
-      setDashboardData(mockDashboardData)
-      setError(null) // 清除错误，使用 mock 数据
+      console.error('生产驾驶舱 API 调用失败:', error)
+      setError(error)
+      setDashboardData(null) // 清空数据
     } finally {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchDashboardData()
+  }, [])
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         <div className="container mx-auto px-4 py-6">
+          <PageHeader
+            title="生产驾驶舱"
+            description="生产管理总览看板，实时监控生产状态"
+          />
           <div className="text-center py-16 text-slate-400">加载中...</div>
         </div>
       </div>
     )
   }
-  if (!dashboardData && !error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-        <div className="container mx-auto px-4 py-6 space-y-6">
-          <PageHeader
-            title="生产驾驶舱"
-            description="生产管理总览看板，实时监控生产状态"
-          />
-          <div className="text-center py-16">
-            <Factory className="w-16 h-16 mx-auto text-slate-600 mb-4" />
-            <h3 className="text-lg font-medium text-slate-400">暂无数据</h3>
-            <p className="text-sm text-slate-500 mt-1">请稍后重试或联系管理员</p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={fetchDashboardData}
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              刷新
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-  
+
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -132,19 +79,39 @@ export default function ProductionDashboard() {
             title="生产驾驶舱"
             description="生产管理总览看板，实时监控生产状态"
           />
-          <div className="text-center py-16">
-            <AlertTriangle className="w-16 h-16 mx-auto text-red-500 mb-4" />
-            <h3 className="text-lg font-medium text-red-400">加载失败</h3>
-            <p className="text-sm text-slate-400 mt-1">{error}</p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={fetchDashboardData}
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              重试
-            </Button>
-          </div>
+          <ApiIntegrationError
+            error={error}
+            apiEndpoint="/api/v1/production/dashboard"
+            onRetry={fetchDashboardData}
+          />
+        </div>
+      </div>
+    )
+  }
+
+  if (!dashboardData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="container mx-auto px-4 py-6 space-y-6">
+          <PageHeader
+            title="生产驾驶舱"
+            description="生产管理总览看板，实时监控生产状态"
+          />
+          <Card>
+            <CardContent className="p-12 text-center">
+              <Factory className="w-16 h-16 mx-auto text-slate-600 mb-4" />
+              <h3 className="text-lg font-medium text-slate-400">暂无数据</h3>
+              <p className="text-sm text-slate-500 mt-1">请稍后重试或联系管理员</p>
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={fetchDashboardData}
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                刷新
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     )

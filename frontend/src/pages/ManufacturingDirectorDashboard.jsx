@@ -58,6 +58,7 @@ import {
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { productionApi, shortageApi, serviceApi, materialApi, businessSupportApi } from '../services/api'
+import CultureWallCarousel from '../components/culture/CultureWallCarousel'
 
 // Mock data - Overall manufacturing center stats
 const mockManufacturingStats = {
@@ -547,6 +548,27 @@ export default function ManufacturingDirectorDashboard() {
           </motion.div>
         }
       />
+
+      {/* 文化墙滚动播放 */}
+      <motion.div variants={fadeIn}>
+        <CultureWallCarousel
+          autoPlay={true}
+          interval={5000}
+          showControls={true}
+          showIndicators={true}
+          height="400px"
+          onItemClick={(item) => {
+            // 点击项目时的处理，可以跳转到详情页或文化墙页面
+            if (item.category === 'GOAL') {
+              // 跳转到个人目标页面
+              window.location.href = '/personal-goals'
+            } else {
+              // 跳转到文化墙详情页
+              window.location.href = `/culture-wall?item=${item.id}`
+            }
+          }}
+        />
+      </motion.div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
         <div>

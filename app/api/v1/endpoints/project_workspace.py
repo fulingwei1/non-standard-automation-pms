@@ -143,8 +143,8 @@ def get_project_workspace(
                 'rhythm_level': m.rhythm_level,
                 'status': m.status,
                 'organizer_name': m.organizer_name,
+                'minutes': m.minutes,  # 只包含会议纪要内容
                 'has_minutes': bool(m.minutes),
-                'has_decisions': bool(m.decisions),
             }
             for m in meetings[:20]
         ],

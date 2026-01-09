@@ -177,6 +177,7 @@ from .management_rhythm import (
 from .culture_wall import (
     CultureWallContent, PersonalGoal, CultureWallReadRecord
 )
+from .culture_wall_config import CultureWallConfig
 from .work_log import (
     WorkLog, WorkLogConfig, WorkLogMention
 )
@@ -320,6 +321,7 @@ __all__ = [
     'MeetingReportConfig', 'ReportMetricDefinition',
     # Culture Wall
     'CultureWallContent', 'PersonalGoal', 'CultureWallReadRecord',
+    'CultureWallConfig',
     # Work Log
     'WorkLog', 'WorkLogConfig', 'WorkLogMention',
 ]

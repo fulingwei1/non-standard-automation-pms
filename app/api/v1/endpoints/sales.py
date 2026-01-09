@@ -3,8 +3,8 @@
 销售管理模块 API endpoints
 """
 
-from typing import Any, List, Optional
-from datetime import date, datetime
+from typing import Any, List, Optional, Dict
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -5231,6 +5231,387 @@ def get_receivables_summary(
             "partial_count": len([inv for inv in invoices if inv.payment_status == "PARTIAL"]),
             "pending_count": len([inv for inv in invoices if inv.payment_status == "PENDING"]),
         }
+    )
+
+
+@router.get("/payments/reminders", response_model=PaginatedResponse)
+def get_payment_reminders(
+    *,
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    days_before: int = Query(7, ge=0, description="提前提醒天数"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取回款提醒列表（即将到期和已逾期的回款）
+    """
+    today = date.today()
+    reminder_date = today + timedelta(days=days_before)
+    
+    query = db.query(Invoice).filter(
+        Invoice.status == "ISSUED",
+        Invoice.payment_status.in_(["PENDING", "PARTIAL"]),
+        Invoice.due_date.isnot(None),
+        Invoice.due_date <= reminder_date
+    )
+    
+    total = query.count()
+    offset = (page - 1) * page_size
+    invoices = query.order_by(Invoice.due_date).offset(offset).limit(page_size).all()
+    
+    items = []
+    for invoice in invoices:
+        contract = invoice.contract
+        unpaid = (invoice.total_amount or invoice.amount or Decimal("0")) - (invoice.paid_amount or Decimal("0"))
+        days_until_due = (invoice.due_date - today).days if invoice.due_date else None
+        is_overdue = days_until_due is not None and days_until_due < 0
+        
+        items.append({
+            "id": invoice.id,
+            "invoice_code": invoice.invoice_code,
+            "contract_id": invoice.contract_id,
+            "contract_code": contract.contract_code if contract else None,
+            "project_id": invoice.project_id,
+            "project_code": invoice.project.project_code if invoice.project else None,
+            "customer_id": contract.customer_id if contract else None,
+            "customer_name": contract.customer.customer_name if contract and contract.customer else None,
+            "unpaid_amount": float(unpaid),
+            "due_date": invoice.due_date,
+            "days_until_due": days_until_due,
+            "is_overdue": is_overdue,
+            "overdue_days": abs(days_until_due) if is_overdue else None,
+            "payment_status": invoice.payment_status,
+            "reminder_level": "urgent" if is_overdue else ("warning" if days_until_due is not None and days_until_due <= 3 else "normal"),
+        })
+    
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
+    )
+
+
+@router.get("/payments/statistics", response_model=ResponseModel)
+def get_payment_statistics(
+    *,
+    db: Session = Depends(deps.get_db),
+    start_date: Optional[date] = Query(None, description="开始日期"),
+    end_date: Optional[date] = Query(None, description="结束日期"),
+    customer_id: Optional[int] = Query(None, description="客户ID筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    回款统计分析
+    """
+    query = db.query(Invoice).filter(Invoice.status == "ISSUED")
+    
+    if customer_id:
+        query = query.join(Contract).filter(Contract.customer_id == customer_id)
+    
+    if start_date:
+        query = query.filter(Invoice.issue_date >= start_date)
+    
+    if end_date:
+        query = query.filter(Invoice.issue_date <= end_date)
+    
+    invoices = query.all()
+    
+    today = date.today()
+    
+    # 按月份统计
+    monthly_stats = {}
+    # 按客户统计
+    customer_stats = {}
+    # 按状态统计
+    status_stats = {
+        "PAID": {"count": 0, "amount": Decimal("0")},
+        "PARTIAL": {"count": 0, "amount": Decimal("0")},
+        "PENDING": {"count": 0, "amount": Decimal("0")},
+    }
+    
+    total_invoiced = Decimal("0")
+    total_paid = Decimal("0")
+    total_unpaid = Decimal("0")
+    total_overdue = Decimal("0")
+    
+    for invoice in invoices:
+        total = invoice.total_amount or invoice.amount or Decimal("0")
+        paid = invoice.paid_amount or Decimal("0")
+        unpaid = total - paid
+        
+        total_invoiced += total
+        total_paid += paid
+        total_unpaid += unpaid
+        
+        # 按月份统计
+        if invoice.issue_date:
+            month_key = invoice.issue_date.strftime("%Y-%m")
+            if month_key not in monthly_stats:
+                monthly_stats[month_key] = {"invoiced": Decimal("0"), "paid": Decimal("0"), "count": 0}
+            monthly_stats[month_key]["invoiced"] += total
+            monthly_stats[month_key]["paid"] += paid
+            monthly_stats[month_key]["count"] += 1
+        
+        # 按客户统计
+        if contract := invoice.contract:
+            customer_id_key = contract.customer_id
+            customer_name = contract.customer.customer_name if contract.customer else "未知客户"
+            if customer_id_key not in customer_stats:
+                customer_stats[customer_id_key] = {
+                    "customer_id": customer_id_key,
+                    "customer_name": customer_name,
+                    "invoiced": Decimal("0"),
+                    "paid": Decimal("0"),
+                    "unpaid": Decimal("0"),
+                    "count": 0
+                }
+            customer_stats[customer_id_key]["invoiced"] += total
+            customer_stats[customer_id_key]["paid"] += paid
+            customer_stats[customer_id_key]["unpaid"] += unpaid
+            customer_stats[customer_id_key]["count"] += 1
+        
+        # 按状态统计
+        status = invoice.payment_status or "PENDING"
+        if status in status_stats:
+            status_stats[status]["count"] += 1
+            status_stats[status]["amount"] += total
+        
+        # 逾期统计
+        if invoice.due_date and invoice.due_date < today and invoice.payment_status in ["PENDING", "PARTIAL"]:
+            total_overdue += unpaid
+    
+    # 转换月度统计为列表
+    monthly_list = [
+        {
+            "month": month,
+            "invoiced": float(stats["invoiced"]),
+            "paid": float(stats["paid"]),
+            "unpaid": float(stats["invoiced"] - stats["paid"]),
+            "collection_rate": float((stats["paid"] / stats["invoiced"] * 100) if stats["invoiced"] > 0 else 0),
+            "count": stats["count"]
+        }
+        for month, stats in sorted(monthly_stats.items())
+    ]
+    
+    # 转换客户统计为列表
+    customer_list = [
+        {
+            "customer_id": stats["customer_id"],
+            "customer_name": stats["customer_name"],
+            "invoiced": float(stats["invoiced"]),
+            "paid": float(stats["paid"]),
+            "unpaid": float(stats["unpaid"]),
+            "collection_rate": float((stats["paid"] / stats["invoiced"] * 100) if stats["invoiced"] > 0 else 0),
+            "count": stats["count"]
+        }
+        for stats in sorted(customer_stats.values(), key=lambda x: x["unpaid"], reverse=True)
+    ]
+    
+    collection_rate = (total_paid / total_invoiced * 100) if total_invoiced > 0 else Decimal("0")
+    
+    return ResponseModel(
+        code=200,
+        message="success",
+        data={
+            "summary": {
+                "total_invoiced": float(total_invoiced),
+                "total_paid": float(total_paid),
+                "total_unpaid": float(total_unpaid),
+                "total_overdue": float(total_overdue),
+                "collection_rate": float(collection_rate),
+                "invoice_count": len(invoices),
+            },
+            "monthly_statistics": monthly_list,
+            "customer_statistics": customer_list[:10],  # 只返回前10个客户
+            "status_statistics": {
+                "PAID": {
+                    "count": status_stats["PAID"]["count"],
+                    "amount": float(status_stats["PAID"]["amount"])
+                },
+                "PARTIAL": {
+                    "count": status_stats["PARTIAL"]["count"],
+                    "amount": float(status_stats["PARTIAL"]["amount"])
+                },
+                "PENDING": {
+                    "count": status_stats["PENDING"]["count"],
+                    "amount": float(status_stats["PENDING"]["amount"])
+                },
+            }
+        }
+    )
+
+
+@router.get("/payments/invoices/export")
+def export_payment_invoices(
+    *,
+    db: Session = Depends(deps.get_db),
+    contract_id: Optional[int] = Query(None, description="合同ID筛选"),
+    project_id: Optional[int] = Query(None, description="项目ID筛选"),
+    customer_id: Optional[int] = Query(None, description="客户ID筛选"),
+    payment_status: Optional[str] = Query(None, description="收款状态筛选"),
+    start_date: Optional[date] = Query(None, description="开始日期"),
+    end_date: Optional[date] = Query(None, description="结束日期"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    导出回款记录（基于发票，Excel格式）
+    """
+    from io import BytesIO
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, PatternFill
+    from fastapi.responses import StreamingResponse
+    
+    query = db.query(Invoice).filter(Invoice.status == "ISSUED")
+    
+    if contract_id:
+        query = query.filter(Invoice.contract_id == contract_id)
+    
+    if project_id:
+        query = query.filter(Invoice.project_id == project_id)
+    
+    if customer_id:
+        query = query.join(Contract).filter(Contract.customer_id == customer_id)
+    
+    if payment_status:
+        query = query.filter(Invoice.payment_status == payment_status)
+    
+    if start_date:
+        query = query.filter(Invoice.paid_date >= start_date)
+    
+    if end_date:
+        query = query.filter(Invoice.paid_date <= end_date)
+    
+    invoices = query.order_by(desc(Invoice.paid_date)).all()
+    
+    # 创建Excel工作簿
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "回款记录"
+    
+    # 设置表头
+    headers = [
+        "发票号", "合同编号", "项目编号", "客户名称", "发票金额", 
+        "已收金额", "未收金额", "收款状态", "开票日期", "到期日期", 
+        "实际收款日期", "逾期天数", "备注"
+    ]
+    
+    # 设置表头样式
+    header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF")
+    
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+    
+    # 填充数据
+    today = date.today()
+    for row, invoice in enumerate(invoices, 2):
+        contract = invoice.contract
+        total = invoice.total_amount or invoice.amount or Decimal("0")
+        paid = invoice.paid_amount or Decimal("0")
+        unpaid = total - paid
+        
+        overdue_days = None
+        if invoice.due_date and invoice.due_date < today and invoice.payment_status in ["PENDING", "PARTIAL"]:
+            overdue_days = (today - invoice.due_date).days
+        
+        ws.cell(row=row, column=1, value=invoice.invoice_code or "")
+        ws.cell(row=row, column=2, value=contract.contract_code if contract else "")
+        ws.cell(row=row, column=3, value=invoice.project.project_code if invoice.project else "")
+        ws.cell(row=row, column=4, value=contract.customer.customer_name if contract and contract.customer else "")
+        ws.cell(row=row, column=5, value=float(total))
+        ws.cell(row=row, column=6, value=float(paid))
+        ws.cell(row=row, column=7, value=float(unpaid))
+        ws.cell(row=row, column=8, value=invoice.payment_status or "")
+        ws.cell(row=row, column=9, value=invoice.issue_date.strftime("%Y-%m-%d") if invoice.issue_date else "")
+        ws.cell(row=row, column=10, value=invoice.due_date.strftime("%Y-%m-%d") if invoice.due_date else "")
+        ws.cell(row=row, column=11, value=invoice.paid_date.strftime("%Y-%m-%d") if invoice.paid_date else "")
+        ws.cell(row=row, column=12, value=overdue_days if overdue_days else "")
+        ws.cell(row=row, column=13, value=invoice.remark or "")
+    
+    # 调整列宽
+    column_widths = [15, 15, 15, 20, 12, 12, 12, 12, 12, 12, 12, 10, 30]
+    for col, width in enumerate(column_widths, 1):
+        ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = width
+    
+    # 保存到内存
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    # 生成文件名
+    filename = f"回款记录_{date.today().strftime('%Y%m%d')}.xlsx"
+    
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
+@router.get("/payment-plans", response_model=PaginatedResponse)
+def get_payment_plans(
+    *,
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    project_id: Optional[int] = Query(None, description="项目ID筛选"),
+    contract_id: Optional[int] = Query(None, description="合同ID筛选"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取收款计划列表
+    """
+    query = db.query(ProjectPaymentPlan)
+    
+    if project_id:
+        query = query.filter(ProjectPaymentPlan.project_id == project_id)
+    
+    if contract_id:
+        query = query.filter(ProjectPaymentPlan.contract_id == contract_id)
+    
+    if status:
+        query = query.filter(ProjectPaymentPlan.status == status)
+    
+    total = query.count()
+    offset = (page - 1) * page_size
+    plans = query.order_by(ProjectPaymentPlan.planned_date).offset(offset).limit(page_size).all()
+    
+    items = []
+    for plan in plans:
+        items.append({
+            "id": plan.id,
+            "payment_no": plan.payment_no,
+            "project_id": plan.project_id,
+            "project_code": plan.project.project_code if plan.project else None,
+            "contract_id": plan.contract_id,
+            "contract_code": plan.contract.contract_code if plan.contract else None,
+            "payment_stage": plan.payment_stage,
+            "payment_ratio": float(plan.payment_ratio or 0),
+            "planned_amount": float(plan.planned_amount or 0),
+            "actual_amount": float(plan.actual_amount or 0),
+            "planned_date": plan.planned_date,
+            "actual_date": plan.actual_date,
+            "milestone_id": plan.milestone_id,
+            "milestone_name": plan.milestone.milestone_name if plan.milestone else None,
+            "trigger_milestone": plan.trigger_milestone,
+            "status": plan.status,
+            "invoice_id": plan.invoice_id,
+            "invoice_no": plan.invoice_no,
+        })
+    
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
     )
 
 

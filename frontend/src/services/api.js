@@ -5,7 +5,7 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
-    timeout: 10000, // 10秒超时
+    timeout: 5000, // 5秒超时，更快响应
 });
 
 // Request interceptor for adding auth token
@@ -210,7 +210,7 @@ export const roleApi = {
     create: (data) => api.post('/roles/', data),
     update: (id, data) => api.put(`/roles/${id}`, data),
     assignPermissions: (id, permissionIds) => api.put(`/roles/${id}/permissions`, permissionIds),
-    permissions: () => api.get('/roles/permissions'),
+    permissions: (params) => api.get('/roles/permissions', { params }),
     // 菜单配置相关
     getNavGroups: (id) => api.get(`/roles/${id}/nav-groups`),
     updateNavGroups: (id, navGroups) => api.put(`/roles/${id}/nav-groups`, navGroups),
@@ -378,12 +378,21 @@ export const paymentApi = {
     get: (id) => api.get(`/sales/payments/${id}`),
     create: (params) => api.post('/sales/payments', null, { params }),
     matchInvoice: (id, params) => api.put(`/sales/payments/${id}/match-invoice`, null, { params }),
+    // 新增API端点
+    getReminders: (params) => api.get('/sales/payments/reminders', { params }),
+    getStatistics: (params) => api.get('/sales/payments/statistics', { params }),
+    exportInvoices: (params) => api.get('/sales/payments/invoices/export', { params, responseType: 'blob' }),
 };
 
 export const receivableApi = {
     list: (params) => api.get('/sales/receivables/overdue', { params }),
     getAging: (params) => api.get('/sales/receivables/aging', { params }),
     getSummary: (params) => api.get('/sales/receivables/summary', { params }),
+};
+
+// 收款计划API
+export const paymentPlanApi = {
+    list: (params) => api.get('/sales/payment-plans', { params }),
 };
 
 export const disputeApi = {

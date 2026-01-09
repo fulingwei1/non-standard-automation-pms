@@ -52,6 +52,7 @@ import {
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { projectApi, salesStatisticsApi, productionApi, contractApi, invoiceApi, pmoApi, ecnApi, purchaseApi, departmentApi } from '../services/api'
+import CultureWallCarousel from '../components/culture/CultureWallCarousel'
 
 // Mock data for general manager dashboard
 const mockBusinessStats = {
@@ -644,6 +645,24 @@ export default function GeneralManagerWorkstation() {
           </motion.div>
         }
       />
+
+      {/* 文化墙滚动播放 */}
+      <motion.div variants={fadeIn}>
+        <CultureWallCarousel
+          autoPlay={true}
+          interval={5000}
+          showControls={true}
+          showIndicators={true}
+          height="400px"
+          onItemClick={(item) => {
+            if (item.category === 'GOAL') {
+              window.location.href = '/personal-goals'
+            } else {
+              window.location.href = `/culture-wall?item=${item.id}`
+            }
+          }}
+        />
+      </motion.div>
 
       {/* Key Statistics - 6 column grid */}
       <motion.div

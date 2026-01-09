@@ -63,6 +63,8 @@ export function ProtectedRoute({
 
   const hasPermission = checkPermission ? checkPermission(role) : true
   console.log('ProtectedRoute: checkPermission result =', hasPermission)
+  console.log('ProtectedRoute: role =', role, ', role type =', typeof role)
+  console.log('ProtectedRoute: permissionName =', permissionName)
 
   if (!role || !hasPermission) {
     return (

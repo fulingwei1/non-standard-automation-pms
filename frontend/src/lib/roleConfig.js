@@ -437,23 +437,47 @@ export function getNavForRole(role) {
     ],
     sales_director: [
       {
-        label: '销售管理',
+        label: '销售工作',
         items: [
           { name: '销售总监工作台', path: '/sales-director-dashboard', icon: 'LayoutDashboard' },
-          { name: '销售业绩', path: '/sales/performance', icon: 'TrendingUp' },
+          { name: '客户管理', path: '/customers', icon: 'Building2' },
+          { name: '商机看板', path: '/opportunities', icon: 'Target' },
         ],
       },
       {
-        label: '项目概览',
+        label: '销售管理',
         items: [
+          { name: '线索评估', path: '/lead-assessment', icon: 'Target' },
+          { name: '报价管理', path: '/sales/quotes', icon: 'Calculator' },
+          { name: '合同管理', path: '/sales/contracts', icon: 'FileCheck' },
+          { name: '模板与CPQ', path: '/sales/templates', icon: 'Layers' },
+          { name: '技术评审', path: '/technical-reviews', icon: 'FileCheck' },
+          { name: '应收账款', path: '/sales/receivables', icon: 'CreditCard' },
+          { name: '回款跟踪', path: '/payments', icon: 'CreditCard' },
+          { name: '销售统计', path: '/sales/statistics', icon: 'BarChart3' },
+        ],
+      },
+      {
+        label: '项目跟踪',
+        items: [
+          { name: '项目进度', path: '/sales-projects', icon: 'Briefcase' },
           { name: '项目看板', path: '/board', icon: 'Kanban' },
-          { name: '项目列表', path: '/projects', icon: 'Briefcase' },
+          { name: '项目列表', path: '/projects', icon: 'List' },
+        ],
+      },
+      {
+        label: '审批与监控',
+        items: [
+          { name: '审批中心', path: '/approvals', icon: 'ClipboardCheck' },
+          { name: '预警中心', path: '/alerts', icon: 'AlertTriangle' },
+          { name: '问题管理', path: '/issues', icon: 'AlertCircle' },
         ],
       },
       {
         label: '个人中心',
         items: [
           { name: '通知中心', path: '/notifications', icon: 'Bell' },
+          { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
           { name: '个人设置', path: '/settings', icon: 'Settings' },
         ],
       },
@@ -559,15 +583,27 @@ export function hasProcurementAccess(role, isSuperuser = false) {
 export function hasFinanceAccess(role, isSuperuser = false) {
   if (isSuperuser) return true;
 
+  // 统一转换为字符串并转为小写进行比较（英文角色）
+  const roleStr = String(role || '').trim();
+  const roleLower = roleStr.toLowerCase();
+
   const allowedRoles = [
     'admin', 'super_admin', 'chairman', 'gm',
     'finance_manager', 'finance', 'accountant',
-    'sales_director', 'sales_manager',
+    'sales_director', 'sales_manager', 'sales',
+    'business_support', 'presales_manager', 'presales',
     'project_dept_manager', 'pmc', 'pm',
-    '财务经理', '会计', '销售总监', '销售经理', '项目经理',
+    '财务经理', '会计', '销售总监', '销售经理', '销售工程师',
+    '商务支持', '商务支持专员', '售前经理', '售前技术工程师',
+    '项目经理', '项目部经理',
+    // 中文角色名（完整匹配）
+    '总经理', '管理员', '系统管理员', '董事长', '财务人员',
   ];
 
-  return allowedRoles.includes(role);
+  // 同时检查原始值、小写值和中文值
+  return allowedRoles.includes(roleStr) || 
+         allowedRoles.includes(roleLower) ||
+         allowedRoles.some(r => r === roleStr);
 }
 
 /**

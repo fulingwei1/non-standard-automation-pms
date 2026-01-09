@@ -114,7 +114,7 @@ class RoleResponse(TimestampSchema):
     ui_config: Optional[Dict[str, Any]] = Field(default=None, description="UI配置")
 
 
-class PermissionResponse(BaseSchema):
+class PermissionResponse(TimestampSchema):
     """权限响应"""
     id: int
     permission_code: str
@@ -122,6 +122,8 @@ class PermissionResponse(BaseSchema):
     module: Optional[str] = None
     resource: Optional[str] = None
     action: Optional[str] = None
+    description: Optional[str] = None
+    is_active: bool = True
 
 
 class UserRoleAssign(BaseModel):
