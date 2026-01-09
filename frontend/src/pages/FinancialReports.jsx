@@ -3,7 +3,7 @@
  * Features: Financial statements, Profit & loss, Cash flow, Budget analysis, Export reports
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   BarChart3,
@@ -41,6 +41,14 @@ import {
 } from '../components/ui'
 import { cn, formatCurrency } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
+import { financialReportApi, reportCenterApi } from '../services/api'
+import {
+  LineChart as LineChartComponent,
+  BarChart as BarChartComponent,
+  PieChart as PieChartComponent,
+  AreaChart as AreaChartComponent,
+  DualAxesChart,
+} from '../components/charts'
 
 // Mock financial data
 const mockMonthlyFinancials = [
@@ -89,11 +97,50 @@ export default function FinancialReports() {
   const [selectedPeriod, setSelectedPeriod] = useState('month') // month, quarter, year
   const [selectedReport, setSelectedReport] = useState('profit-loss')
   const [dateRange, setDateRange] = useState('2024-07')
+  const [loading, setLoading] = useState(false)
 
-  const currentData = mockMonthlyFinancials[mockMonthlyFinancials.length - 1]
-  const totalRevenue = mockMonthlyFinancials.reduce((sum, m) => sum + m.revenue, 0)
-  const totalCost = mockMonthlyFinancials.reduce((sum, m) => sum + m.cost, 0)
-  const totalProfit = mockMonthlyFinancials.reduce((sum, m) => sum + m.profit, 0)
+  // State with mock data as default
+  const [monthlyFinancials, setMonthlyFinancials] = useState(mockMonthlyFinancials)
+  const [costBreakdown, setCostBreakdown] = useState(mockCostBreakdown)
+  const [projectProfitability, setProjectProfitability] = useState(mockProjectProfitability)
+  const [cashFlowData, setCashFlowData] = useState(mockCashFlow)
+
+  // Fetch data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const [summaryRes, costRes, projectRes, cashFlowRes] = await Promise.allSettled([
+          financialReportApi.getMonthlyTrend({ period: selectedPeriod, year: dateRange.split('-')[0] }),
+          financialReportApi.getCostAnalysis({ period: selectedPeriod }),
+          financialReportApi.getProjectProfitability({ limit: 10 }),
+          financialReportApi.getCashFlow({ period: selectedPeriod }),
+        ])
+
+        if (summaryRes.status === 'fulfilled' && summaryRes.value.data) {
+          setMonthlyFinancials(summaryRes.value.data)
+        }
+        if (costRes.status === 'fulfilled' && costRes.value.data) {
+          setCostBreakdown(costRes.value.data)
+        }
+        if (projectRes.status === 'fulfilled' && projectRes.value.data) {
+          setProjectProfitability(projectRes.value.data)
+        }
+        if (cashFlowRes.status === 'fulfilled' && cashFlowRes.value.data) {
+          setCashFlowData(cashFlowRes.value.data)
+        }
+      } catch (err) {
+        console.log('Financial reports API unavailable, using mock data')
+      }
+      setLoading(false)
+    }
+    fetchData()
+  }, [selectedPeriod, dateRange])
+
+  const currentData = monthlyFinancials[monthlyFinancials.length - 1]
+  const totalRevenue = monthlyFinancials.reduce((sum, m) => sum + m.revenue, 0)
+  const totalCost = monthlyFinancials.reduce((sum, m) => sum + m.cost, 0)
+  const totalProfit = monthlyFinancials.reduce((sum, m) => sum + m.profit, 0)
   const avgMargin = (totalProfit / totalRevenue) * 100
 
   return (
@@ -274,45 +321,87 @@ export default function FinancialReports() {
 
               {/* Profit & Loss Statement */}
               <TabsContent value="profit-loss" className="space-y-6 mt-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-4">损益表</h3>
-                  <div className="space-y-4">
-                    <div className="p-4 bg-slate-800/40 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-slate-400">营业收入</span>
-                        <span className="text-2xl font-bold text-amber-400">
-                          {formatCurrency(currentData.revenue)}
-                        </span>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* 损益汇总 */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-4">损益表</h3>
+                    <div className="space-y-4">
+                      <div className="p-4 bg-slate-800/40 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-slate-400">营业收入</span>
+                          <span className="text-2xl font-bold text-amber-400">
+                            {formatCurrency(currentData.revenue)}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="p-4 bg-slate-800/40 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-slate-400">营业成本</span>
-                        <span className="text-xl font-bold text-red-400">
-                          {formatCurrency(currentData.cost)}
-                        </span>
+                      <div className="p-4 bg-slate-800/40 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-slate-400">营业成本</span>
+                          <span className="text-xl font-bold text-red-400">
+                            {formatCurrency(currentData.cost)}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-slate-400">净利润</span>
-                        <span className="text-2xl font-bold text-emerald-400">
-                          {formatCurrency(currentData.profit)}
-                        </span>
-                      </div>
-                      <div className="text-sm text-slate-400 mt-2">
-                        利润率: {((currentData.profit / currentData.revenue) * 100).toFixed(1)}%
+                      <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-slate-400">净利润</span>
+                          <span className="text-2xl font-bold text-emerald-400">
+                            {formatCurrency(currentData.profit)}
+                          </span>
+                        </div>
+                        <div className="text-sm text-slate-400 mt-2">
+                          利润率: {((currentData.profit / currentData.revenue) * 100).toFixed(1)}%
+                        </div>
                       </div>
                     </div>
                   </div>
+
+                  {/* 营收利润趋势图 */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-4">营收与利润趋势</h3>
+                    <DualAxesChart
+                      data={monthlyFinancials.map(item => ({
+                        month: item.month,
+                        revenue: item.revenue,
+                        profit: item.profit,
+                        margin: ((item.profit / item.revenue) * 100).toFixed(1)
+                      }))}
+                      xField="month"
+                      yField={['revenue', 'margin']}
+                      leftYAxisTitle="营收 (元)"
+                      rightYAxisTitle="利润率 (%)"
+                      height={280}
+                      leftFormatter={(v) => `¥${(v / 10000).toFixed(0)}万`}
+                      rightFormatter={(v) => `${v}%`}
+                    />
+                  </div>
                 </div>
 
-                {/* Revenue Trend */}
+                {/* 收入成本对比柱状图 */}
                 <div>
-                  <h4 className="text-sm font-medium text-slate-400 mb-3">营收趋势</h4>
+                  <h4 className="text-sm font-medium text-slate-400 mb-3">收入成本对比</h4>
+                  <BarChartComponent
+                    data={monthlyFinancials.flatMap(item => [
+                      { month: item.month, type: '营业收入', value: item.revenue },
+                      { month: item.month, type: '营业成本', value: item.cost },
+                      { month: item.month, type: '净利润', value: item.profit },
+                    ])}
+                    xField="month"
+                    yField="value"
+                    seriesField="type"
+                    isGroup={true}
+                    height={300}
+                    colors={['#f59e0b', '#ef4444', '#10b981']}
+                    formatter={(v) => `¥${(v / 10000).toFixed(0)}万`}
+                  />
+                </div>
+
+                {/* Revenue Trend List */}
+                <div>
+                  <h4 className="text-sm font-medium text-slate-400 mb-3">月度营收明细</h4>
                   <div className="space-y-3">
-                    {mockMonthlyFinancials.map((item, index) => {
-                      const maxRevenue = Math.max(...mockMonthlyFinancials.map(m => m.revenue))
+                    {monthlyFinancials.map((item, index) => {
+                      const maxRevenue = Math.max(...monthlyFinancials.map(m => m.revenue))
                       const percentage = (item.revenue / maxRevenue) * 100
                       return (
                         <div key={index} className="space-y-2">
@@ -325,13 +414,13 @@ export default function FinancialReports() {
                               {index > 0 && (
                                 <span className={cn(
                                   'text-xs',
-                                  item.revenue > mockMonthlyFinancials[index - 1].revenue
+                                  item.revenue > monthlyFinancials[index - 1].revenue
                                     ? 'text-emerald-400'
                                     : 'text-red-400'
                                 )}>
-                                  {item.revenue > mockMonthlyFinancials[index - 1].revenue ? '↑' : '↓'}
+                                  {item.revenue > monthlyFinancials[index - 1].revenue ? '↑' : '↓'}
                                   {Math.abs(
-                                    ((item.revenue - mockMonthlyFinancials[index - 1].revenue) / mockMonthlyFinancials[index - 1].revenue) * 100
+                                    ((item.revenue - monthlyFinancials[index - 1].revenue) / monthlyFinancials[index - 1].revenue) * 100
                                   ).toFixed(1)}%
                                 </span>
                               )}
@@ -347,11 +436,30 @@ export default function FinancialReports() {
 
               {/* Cash Flow Statement */}
               <TabsContent value="cash-flow" className="space-y-6 mt-6">
+                {/* 现金流趋势图 */}
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-4">现金流量表</h3>
+                  <h3 className="text-lg font-semibold text-white mb-4">现金流量趋势</h3>
+                  <AreaChartComponent
+                    data={cashFlowData.flatMap(item => [
+                      { month: item.month, type: '现金流入', value: item.inflow },
+                      { month: item.month, type: '现金流出', value: -item.outflow },
+                      { month: item.month, type: '净现金流', value: item.net },
+                    ])}
+                    xField="month"
+                    yField="value"
+                    seriesField="type"
+                    height={300}
+                    colors={['#10b981', '#ef4444', '#3b82f6']}
+                    formatter={(v) => `¥${(Math.abs(v) / 10000).toFixed(0)}万`}
+                  />
+                </div>
+
+                {/* 现金流明细 */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-4">现金流量明细</h3>
                   <div className="space-y-4">
-                    {mockCashFlow.map((item, index) => {
-                      const maxFlow = Math.max(...mockCashFlow.map(c => Math.abs(c.net)))
+                    {cashFlowData.map((item, index) => {
+                      const maxFlow = Math.max(...cashFlowData.map(c => Math.abs(c.net)))
                       const percentage = (Math.abs(item.net) / maxFlow) * 100
                       return (
                         <div key={index} className="p-4 bg-slate-800/40 rounded-lg">
@@ -400,7 +508,7 @@ export default function FinancialReports() {
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-4">预算执行分析</h3>
                   <div className="space-y-3">
-                    {mockCostBreakdown.map((item, index) => {
+                    {costBreakdown.map((item, index) => {
                       const used = (item.amount / item.budget) * 100
                       return (
                         <div key={index} className="space-y-2">
@@ -444,50 +552,133 @@ export default function FinancialReports() {
 
               {/* Cost Analysis */}
               <TabsContent value="cost" className="space-y-6 mt-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-4">成本构成分析</h3>
-                  <div className="space-y-3">
-                    {mockCostBreakdown.map((item, index) => {
-                      const total = mockCostBreakdown.reduce((sum, c) => sum + c.amount, 0)
-                      const percentage = (item.amount / total) * 100
-                      const colors = [
-                        'bg-blue-500',
-                        'bg-purple-500',
-                        'bg-amber-500',
-                        'bg-cyan-500',
-                        'bg-emerald-500',
-                        'bg-pink-500',
-                      ]
-                      return (
-                        <div key={index} className="space-y-2">
-                          <div className="flex items-center justify-between text-sm">
-                            <div className="flex items-center gap-2">
-                              <div className={cn('w-3 h-3 rounded-full', colors[index % colors.length])} />
-                              <span className="text-slate-400">{item.category}</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <span className="text-white font-medium">
-                                {formatCurrency(item.amount)}
-                              </span>
-                              <span className="text-slate-500 text-xs w-12 text-right">
-                                {percentage.toFixed(1)}%
-                              </span>
-                            </div>
-                          </div>
-                          <Progress value={percentage} className="h-2 bg-slate-700/50" />
-                        </div>
-                      )
-                    })}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* 成本构成饼图 */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-4">成本构成占比</h3>
+                    <PieChartComponent
+                      data={costBreakdown.map(item => ({
+                        category: item.category,
+                        value: item.amount,
+                      }))}
+                      angleField="value"
+                      colorField="category"
+                      height={300}
+                      innerRadius={0.6}
+                      label={{
+                        type: 'spider',
+                        content: '{name}: {percentage}',
+                      }}
+                      formatter={(v) => `¥${(v / 10000).toFixed(0)}万`}
+                    />
                   </div>
+
+                  {/* 成本明细列表 */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-4">成本构成明细</h3>
+                    <div className="space-y-3">
+                      {costBreakdown.map((item, index) => {
+                        const total = costBreakdown.reduce((sum, c) => sum + c.amount, 0)
+                        const percentage = (item.amount / total) * 100
+                        const colors = [
+                          'bg-blue-500',
+                          'bg-purple-500',
+                          'bg-amber-500',
+                          'bg-cyan-500',
+                          'bg-emerald-500',
+                          'bg-pink-500',
+                        ]
+                        return (
+                          <div key={index} className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-2">
+                                <div className={cn('w-3 h-3 rounded-full', colors[index % colors.length])} />
+                                <span className="text-slate-400">{item.category}</span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="text-white font-medium">
+                                  {formatCurrency(item.amount)}
+                                </span>
+                                <span className="text-slate-500 text-xs w-12 text-right">
+                                  {percentage.toFixed(1)}%
+                                </span>
+                              </div>
+                            </div>
+                            <Progress value={percentage} className="h-2 bg-slate-700/50" />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 成本趋势对比 */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-4">预算与实际对比</h3>
+                  <BarChartComponent
+                    data={costBreakdown.flatMap(item => [
+                      { category: item.category, type: '预算', value: item.budget },
+                      { category: item.category, type: '实际', value: item.amount },
+                    ])}
+                    xField="category"
+                    yField="value"
+                    seriesField="type"
+                    isGroup={true}
+                    height={280}
+                    colors={['#64748b', '#3b82f6']}
+                    formatter={(v) => `¥${(v / 10000).toFixed(0)}万`}
+                  />
                 </div>
               </TabsContent>
 
               {/* Project Profitability */}
               <TabsContent value="project" className="space-y-6 mt-6">
+                {/* 项目利润率对比图 */}
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-4">项目盈利能力分析</h3>
+                  <h3 className="text-lg font-semibold text-white mb-4">项目利润率对比</h3>
+                  <BarChartComponent
+                    data={projectProfitability.map(p => ({
+                      project: p.project.length > 8 ? p.project.slice(0, 8) + '...' : p.project,
+                      margin: p.margin,
+                    }))}
+                    xField="project"
+                    yField="margin"
+                    height={250}
+                    colors={projectProfitability.map(p =>
+                      p.margin >= 30 ? '#10b981' : p.margin >= 20 ? '#f59e0b' : '#ef4444'
+                    )}
+                    formatter={(v) => `${v}%`}
+                    label={{
+                      position: 'top',
+                      style: { fill: '#94a3b8' },
+                      formatter: (datum) => `${datum.margin}%`,
+                    }}
+                  />
+                </div>
+
+                {/* 项目收入成本对比 */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-4">项目收入与成本</h3>
+                  <BarChartComponent
+                    data={projectProfitability.flatMap(p => [
+                      { project: p.project.length > 8 ? p.project.slice(0, 8) + '...' : p.project, type: '收入', value: p.revenue },
+                      { project: p.project.length > 8 ? p.project.slice(0, 8) + '...' : p.project, type: '成本', value: p.cost },
+                    ])}
+                    xField="project"
+                    yField="value"
+                    seriesField="type"
+                    isGroup={true}
+                    height={280}
+                    colors={['#f59e0b', '#ef4444']}
+                    formatter={(v) => `¥${(v / 10000).toFixed(0)}万`}
+                  />
+                </div>
+
+                {/* 项目盈利明细列表 */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-4">项目盈利明细</h3>
                   <div className="space-y-3">
-                    {mockProjectProfitability.map((project, index) => {
+                    {projectProfitability.map((project, index) => {
                       const statusColors = {
                         good: 'bg-emerald-500',
                         warning: 'bg-amber-500',

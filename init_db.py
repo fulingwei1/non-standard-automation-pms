@@ -62,6 +62,9 @@ for f in files:
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
+# Disable foreign key checks during migration
+cursor.execute("PRAGMA foreign_keys = OFF")
+
 # Debug: check payments table
 cursor.execute("PRAGMA table_info(payments)")
 columns = cursor.fetchall()
@@ -79,6 +82,8 @@ for f in files:
         conn.close()
         raise e
 
+# Re-enable foreign key checks
+cursor.execute("PRAGMA foreign_keys = ON")
 conn.close()
 print("Database migration execution completed.")
 

@@ -825,7 +825,7 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
                   <SelectValue placeholder="请选择物料分类" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">无分类</SelectItem>
+                  <SelectItem value="__none__">无分类</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id.toString()}>
                       {cat.category_name}

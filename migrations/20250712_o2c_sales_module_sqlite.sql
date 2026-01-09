@@ -2,7 +2,7 @@
 -- Targets: leads/opportunities/quotes/contracts/invoices/disputes
 -- Aligns with existing projects/payments tables.
 
-PRAGMA foreign_keys = ON;
+-- PRAGMA foreign_keys = ON;  -- Disabled for migration
 BEGIN;
 
 -- 1) Leads

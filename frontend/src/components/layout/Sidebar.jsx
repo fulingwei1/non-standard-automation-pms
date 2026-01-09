@@ -1,5 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { roleApi } from '../../services/api'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '../../lib/utils'
 import { getRoleInfo, getNavForRole, hasProcurementAccess } from '../../lib/roleConfig'
@@ -170,9 +171,11 @@ const defaultNavGroups = [
   {
     label: '个人中心',
     items: [
+      { name: '工作中心', path: '/work-center', icon: 'LayoutDashboard', badge: null },
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '5' },
       { name: '岗位打卡', path: '/punch-in', icon: 'Clock' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '工作日志', path: '/work-log', icon: 'ClipboardList' },
       { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
@@ -227,10 +230,12 @@ const engineerNavGroups = [
   {
     label: '个人中心',
     items: [
+      { name: '工作中心', path: '/work-center', icon: 'LayoutDashboard', badge: null },
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '5' },
       { name: '我的绩效', path: '/personal/my-performance', icon: 'Award' },
       { name: '我的奖金', path: '/personal/my-bonus', icon: 'DollarSign' },
       { name: '月度总结', path: '/personal/monthly-summary', icon: 'FileText' },
+      { name: '工作日志', path: '/work-log', icon: 'ClipboardList' },
       { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
@@ -275,8 +280,10 @@ const pmcNavGroups = [
   {
     label: '个人中心',
     items: [
+      { name: '工作中心', path: '/work-center', icon: 'LayoutDashboard', badge: null },
       { name: '通知中心', path: '/notifications', icon: 'Bell' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { name: '工作日志', path: '/work-log', icon: 'ClipboardList' },
       { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
     ],
@@ -310,6 +317,7 @@ const buyerNavGroups = [
   {
     label: '个人中心',
     items: [
+      { name: '工作中心', path: '/work-center', icon: 'LayoutDashboard', badge: null },
       { name: '通知中心', path: '/notifications', icon: 'Bell' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
       { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
@@ -360,6 +368,7 @@ const generalManagerNavGroups = [
   {
     label: '个人中心',
     items: [
+      { name: '工作中心', path: '/work-center', icon: 'LayoutDashboard', badge: null },
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '5' },
       { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
@@ -475,6 +484,7 @@ const productionManagerNavGroups = [
   {
     label: '个人中心',
     items: [
+      { name: '工作中心', path: '/work-center', icon: 'LayoutDashboard', badge: null },
       { name: '通知中心', path: '/notifications', icon: 'Bell' },
       { name: '工时填报', path: '/timesheet', icon: 'Clock' },
       { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
@@ -503,6 +513,7 @@ const assemblerNavGroups = [
   {
     label: '个人中心',
     items: [
+      { name: '工作中心', path: '/work-center', icon: 'LayoutDashboard', badge: null },
       { name: '通知中心', path: '/notifications', icon: 'Bell', badge: '5' },
       { name: '知识管理', path: '/settings?section=knowledge', icon: 'BookOpen' },
       { name: '个人设置', path: '/settings', icon: 'Settings' },
@@ -890,6 +901,7 @@ function getNavGroupsForRole(role, isSuperuser = false) {
             { name: '付款审批', path: '/payment-approval', icon: 'ClipboardCheck' },
             { name: '项目结算', path: '/settlement', icon: 'FileText' },
             { name: '财务报表', path: '/financial-reports', icon: 'BarChart3' },
+            { name: '决策驾驶舱', path: '/executive-dashboard', icon: 'Gauge' },
           ],
         },
         {
@@ -1079,6 +1091,10 @@ function getNavGroupsForRole(role, isSuperuser = false) {
 export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
   const location = useLocation()
 
+  // State for dynamic menu from backend
+  const [dynamicNavGroups, setDynamicNavGroups] = useState(null)
+  const [menuLoading, setMenuLoading] = useState(false)
+
   // Get user role from localStorage if not provided - memoized
   const currentUser = useMemo(() => {
     try {
@@ -1093,11 +1109,43 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
   const isSuperuser = useMemo(() => currentUser?.is_superuser === true || currentUser?.isSuperuser === true, [currentUser])
   const roleInfo = useMemo(() => getRoleInfo(role), [role])
 
+  // Fetch dynamic menu from backend
+  useEffect(() => {
+    const fetchDynamicMenu = async () => {
+      // Skip if no token (not logged in)
+      const token = localStorage.getItem('token')
+      if (!token) return
+
+      setMenuLoading(true)
+      try {
+        const response = await roleApi.getMyNavGroups()
+        const data = response.data
+        // Only use dynamic menu if it has content
+        if (data.nav_groups && data.nav_groups.length > 0) {
+          setDynamicNavGroups(data.nav_groups)
+        }
+      } catch (error) {
+        // Silently fail and use default menu
+        console.warn('Failed to fetch dynamic menu, using default:', error)
+      } finally {
+        setMenuLoading(false)
+      }
+    }
+
+    fetchDynamicMenu()
+  }, [currentUser])
+
   // Get navigation groups based on role - memoized
+  // Priority: dynamic menu from backend > hardcoded menu based on role
   const navGroups = useMemo(() => {
+    // If we have dynamic menu from backend, use it
+    if (dynamicNavGroups && dynamicNavGroups.length > 0) {
+      return dynamicNavGroups
+    }
+    // Otherwise, fall back to hardcoded menu
     const groups = getNavGroupsForRole(role, isSuperuser)
     return filterNavItemsByRole(groups, role, isSuperuser)
-  }, [role, isSuperuser])
+  }, [role, isSuperuser, dynamicNavGroups])
 
   return (
     <aside

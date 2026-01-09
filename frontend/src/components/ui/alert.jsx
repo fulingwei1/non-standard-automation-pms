@@ -6,6 +6,10 @@
 import * as React from 'react'
 import { cva } from 'class-variance-authority'
 import { cn } from '../../lib/utils'
+import * as React from 'react'
+import { cva } from 'class-variance-authority'
+import { cn } from '../../lib/utils'
+import { AlertCircle, CheckCircle2, Info, AlertTriangle, XCircle } from 'lucide-react'
 
 const alertVariants = cva(
   'relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground',
@@ -21,6 +25,11 @@ const alertVariants = cva(
           'border-green-500/50 text-green-600 dark:border-green-500 [&>svg]:text-green-600 bg-green-50 dark:bg-green-950/50',
         info:
           'border-blue-500/50 text-blue-600 dark:border-blue-500 [&>svg]:text-blue-600 bg-blue-50 dark:bg-blue-950/50',
+        default: 'bg-slate-800/50 border-slate-700 text-slate-300',
+        destructive: 'border-red-500/50 bg-red-500/10 text-red-400 [&>svg]:text-red-400',
+        warning: 'border-amber-500/50 bg-amber-500/10 text-amber-400 [&>svg]:text-amber-400',
+        success: 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400 [&>svg]:text-emerald-400',
+        info: 'border-blue-500/50 bg-blue-500/10 text-blue-400 [&>svg]:text-blue-400',
       },
     },
     defaultVariants: {
@@ -37,6 +46,28 @@ const Alert = React.forwardRef(({ className, variant, ...props }, ref) => (
     {...props}
   />
 ))
+const iconMap = {
+  default: Info,
+  destructive: XCircle,
+  warning: AlertTriangle,
+  success: CheckCircle2,
+  info: Info,
+}
+
+const Alert = React.forwardRef(({ className, variant = 'default', children, ...props }, ref) => {
+  const Icon = iconMap[variant]
+  return (
+    <div
+      ref={ref}
+      role="alert"
+      className={cn(alertVariants({ variant }), className)}
+      {...props}
+    >
+      <Icon className="h-4 w-4" />
+      {children}
+    </div>
+  )
+})
 Alert.displayName = 'Alert'
 
 const AlertTitle = React.forwardRef(({ className, ...props }, ref) => (
@@ -58,3 +89,4 @@ const AlertDescription = React.forwardRef(({ className, ...props }, ref) => (
 AlertDescription.displayName = 'AlertDescription'
 
 export { Alert, AlertTitle, AlertDescription, alertVariants }
+export { Alert, AlertTitle, AlertDescription }

@@ -1,7 +1,7 @@
 -- Permission management module migration (SQLite)
 -- Targets: users/roles/permissions/user_roles/role_permissions/project_members/permission_audits
 
-PRAGMA foreign_keys = ON;
+-- PRAGMA foreign_keys = ON;  -- Disabled for migration
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS users (

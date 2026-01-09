@@ -4,7 +4,7 @@
  * Core Functions: Sales strategy, Team management, Performance monitoring, Contract approval
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
   TrendingUp,
@@ -29,6 +29,7 @@ import {
   Activity,
   Zap,
   ChevronRight,
+  Loader2,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -42,6 +43,7 @@ import {
 } from '../components/ui'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
+import { salesStatisticsApi, opportunityApi, contractApi } from '../services/api'
 
 // Mock data for sales director dashboard
 const mockOverallStats = {
@@ -244,7 +246,48 @@ const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg }) => {
 }
 
 export default function SalesDirectorWorkstation() {
+  const [loading, setLoading] = useState(true)
+  const [overallStats, setOverallStats] = useState(mockOverallStats)
+  const [teamPerformance, setTeamPerformance] = useState(mockTeamPerformance)
+  const [pendingApprovals, setPendingApprovals] = useState(mockPendingApprovals)
+  const [recentActivities, setRecentActivities] = useState(mockRecentActivities)
   const [selectedPeriod, setSelectedPeriod] = useState('month')
+
+  // Load data from API with fallback to mock data
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const statsRes = await salesStatisticsApi.getSummary({ period: selectedPeriod })
+        if (statsRes.data) {
+          setOverallStats(prev => ({ ...prev, ...statsRes.data }))
+        }
+      } catch (err) {
+        console.log('Sales statistics API unavailable, using mock data')
+      }
+
+      try {
+        const teamRes = await salesStatisticsApi.getSalesPerformance({ period: selectedPeriod })
+        if (teamRes.data?.items) {
+          setTeamPerformance(teamRes.data.items)
+        }
+      } catch (err) {
+        console.log('Team performance API unavailable')
+      }
+
+      try {
+        const approvalsRes = await contractApi.list({ status: 'pending_approval' })
+        if (approvalsRes.data?.items) {
+          setPendingApprovals(approvalsRes.data.items)
+        }
+      } catch (err) {
+        console.log('Pending approvals API unavailable')
+      }
+
+      setLoading(false)
+    }
+    fetchData()
+  }, [selectedPeriod])
 
   return (
     <motion.div
@@ -256,7 +299,7 @@ export default function SalesDirectorWorkstation() {
       {/* Page Header */}
       <PageHeader
         title="销售总监工作台"
-        description={`年度目标: ${formatCurrency(mockOverallStats.yearTarget)} | 已完成: ${formatCurrency(mockOverallStats.yearAchieved)} (${mockOverallStats.yearProgress.toFixed(1)}%)`}
+        description={`年度目标: ${formatCurrency(overallStats.yearTarget)} | 已完成: ${formatCurrency(overallStats.yearAchieved)} (${overallStats.yearProgress.toFixed(1)}%)`}
         actions={
           <motion.div variants={fadeIn} className="flex gap-2">
             <Button variant="outline" className="flex items-center gap-2">
@@ -280,8 +323,8 @@ export default function SalesDirectorWorkstation() {
       >
         <StatCard
           title="本月签约"
-          value={formatCurrency(mockOverallStats.monthlyAchieved)}
-          subtitle={`目标: ${formatCurrency(mockOverallStats.monthlyTarget)}`}
+          value={formatCurrency(overallStats.monthlyAchieved)}
+          subtitle={`目标: ${formatCurrency(overallStats.monthlyTarget)}`}
           trend={15.2}
           icon={DollarSign}
           color="text-amber-400"
@@ -289,7 +332,7 @@ export default function SalesDirectorWorkstation() {
         />
         <StatCard
           title="完成率"
-          value={`${mockOverallStats.achievementRate}%`}
+          value={`${overallStats.achievementRate}%`}
           subtitle="本月目标达成"
           icon={Target}
           color="text-emerald-400"
@@ -297,8 +340,8 @@ export default function SalesDirectorWorkstation() {
         />
         <StatCard
           title="活跃客户"
-          value={mockOverallStats.totalCustomers}
-          subtitle={`本月新增 ${mockOverallStats.newCustomersThisMonth}`}
+          value={overallStats.totalCustomers}
+          subtitle={`本月新增 ${overallStats.newCustomersThisMonth}`}
           trend={8.5}
           icon={Building2}
           color="text-blue-400"
@@ -306,23 +349,23 @@ export default function SalesDirectorWorkstation() {
         />
         <StatCard
           title="进行中合同"
-          value={mockOverallStats.activeContracts}
-          subtitle={`待审批 ${mockOverallStats.pendingContracts}`}
+          value={overallStats.activeContracts}
+          subtitle={`待审批 ${overallStats.pendingContracts}`}
           icon={Briefcase}
           color="text-purple-400"
           bg="bg-purple-500/10"
         />
         <StatCard
           title="待回款"
-          value={formatCurrency(mockOverallStats.pendingPayment)}
-          subtitle={`逾期 ${formatCurrency(mockOverallStats.overduePayment)}`}
+          value={formatCurrency(overallStats.pendingPayment)}
+          subtitle={`逾期 ${formatCurrency(overallStats.overduePayment)}`}
           icon={CreditCard}
           color="text-red-400"
           bg="bg-red-500/10"
         />
         <StatCard
           title="回款率"
-          value={`${mockOverallStats.collectionRate}%`}
+          value={`${overallStats.collectionRate}%`}
           subtitle="回款完成率"
           icon={Receipt}
           color="text-cyan-400"
@@ -344,7 +387,7 @@ export default function SalesDirectorWorkstation() {
                     销售漏斗分析
                   </CardTitle>
                   <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-                    {mockOverallStats.activeOpportunities} 个商机
+                    {overallStats.activeOpportunities} 个商机
                   </Badge>
                 </div>
               </CardHeader>
@@ -412,7 +455,7 @@ export default function SalesDirectorWorkstation() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockTeamPerformance.map((member, index) => (
+                  {teamPerformance.map((member, index) => (
                     <div
                       key={member.id}
                       className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors"
@@ -486,12 +529,12 @@ export default function SalesDirectorWorkstation() {
                     待审批事项
                   </CardTitle>
                   <Badge variant="outline" className="bg-amber-500/20 text-amber-400 border-amber-500/30">
-                    {mockPendingApprovals.length}
+                    {pendingApprovals.length}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {mockPendingApprovals.map((item) => (
+                {pendingApprovals.map((item) => (
                   <div
                     key={item.id}
                     className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"
@@ -607,26 +650,26 @@ export default function SalesDirectorWorkstation() {
                 <div>
                   <p className="text-sm text-slate-400">年度目标</p>
                   <p className="text-2xl font-bold text-white mt-1">
-                    {formatCurrency(mockOverallStats.yearTarget)}
+                    {formatCurrency(overallStats.yearTarget)}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-slate-400">已完成</p>
                   <p className="text-2xl font-bold text-emerald-400 mt-1">
-                    {formatCurrency(mockOverallStats.yearAchieved)}
+                    {formatCurrency(overallStats.yearAchieved)}
                   </p>
                 </div>
               </div>
               <Progress
-                value={mockOverallStats.yearProgress}
+                value={overallStats.yearProgress}
                 className="h-3 bg-slate-700/50"
               />
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-400">
-                  完成率: {mockOverallStats.yearProgress.toFixed(1)}%
+                  完成率: {overallStats.yearProgress.toFixed(1)}%
                 </span>
                 <span className="text-slate-400">
-                  剩余: {formatCurrency(mockOverallStats.yearTarget - mockOverallStats.yearAchieved)}
+                  剩余: {formatCurrency(overallStats.yearTarget - overallStats.yearAchieved)}
                 </span>
               </div>
             </div>

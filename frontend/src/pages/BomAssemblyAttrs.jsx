@@ -234,6 +234,44 @@ export default function BomAssemblyAttrs() {
     }
   }
 
+  const handleSmartRecommend = async () => {
+    try {
+      setLoading(true)
+      // 先获取推荐结果预览
+      const previewRes = await assemblyKitApi.getRecommendations(selectedBom)
+      console.log('推荐结果预览:', previewRes.data)
+      
+      // 询问用户是否应用推荐
+      if (window.confirm(`智能推荐完成，共推荐 ${previewRes.data?.total || 0} 项。是否应用推荐结果？`)) {
+        const res = await assemblyKitApi.smartRecommend(selectedBom, { bom_id: parseInt(selectedBom), overwrite })
+        console.log(res.message || '智能推荐完成')
+        if (res.data?.recommendation_stats) {
+          const stats = res.data.recommendation_stats
+          const statsText = Object.entries(stats)
+            .filter(([_, count]) => count > 0)
+            .map(([source, count]) => {
+              const sourceNames = {
+                'HISTORY': '历史数据',
+                'CATEGORY': '分类匹配',
+                'KEYWORD': '关键词',
+                'SUPPLIER': '供应商类型',
+                'DEFAULT': '默认'
+              }
+              return `${sourceNames[source] || source}: ${count}项`
+            })
+            .join(', ')
+          alert(`推荐完成！\n${statsText}`)
+        }
+        setAutoAssignDialogOpen(false)
+        fetchBomAssemblyAttrs()
+      }
+    } catch (error) {
+      console.error('智能推荐失败:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleApplyTemplate = async () => {
     if (!selectedTemplate) {
       console.error('请选择模板')
@@ -304,6 +342,15 @@ export default function BomAssemblyAttrs() {
           >
             <Wand2 className="w-4 h-4 mr-2" />
             自动分配
+          </Button>
+          <Button
+            variant="outline"
+            disabled={!selectedBom || loading}
+            onClick={handleSmartRecommend}
+            className="bg-blue-50 hover:bg-blue-100 border-blue-300"
+          >
+            <Wand2 className="w-4 h-4 mr-2" />
+            智能推荐
           </Button>
           <Button
             variant="outline"
@@ -537,8 +584,8 @@ export default function BomAssemblyAttrs() {
                           <Input
                             type="number"
                             className="h-8 w-16"
-                            value={edited.install_sequence || 0}
-                            onChange={(e) => handleAttrChange(attr.bom_item_id, 'install_sequence', parseInt(e.target.value) || 0)}
+                            value={edited.stage_order || 0}
+                            onChange={(e) => handleAttrChange(attr.bom_item_id, 'stage_order', parseInt(e.target.value) || 0)}
                             min={0}
                           />
                         </TableCell>

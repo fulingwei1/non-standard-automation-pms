@@ -3,7 +3,7 @@
  * Features: Leave application, approval workflow, leave balance, leave statistics
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Search,
@@ -35,6 +35,7 @@ import {
 import { cn, formatDate } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { SimpleBarChart, MonthlyTrendChart, SimplePieChart, TrendComparisonCard } from '../components/administrative/StatisticsCharts'
+import { adminApi } from '../services/api'
 
 // Mock data
 const mockLeaveApplications = [
@@ -98,26 +99,47 @@ export default function LeaveManagement() {
   const [searchText, setSearchText] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
+  const [loading, setLoading] = useState(false)
+  const [leaveApplications, setLeaveApplications] = useState(mockLeaveApplications)
+
+  // Fetch data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const res = await adminApi.leave.list()
+        if (res.data?.items) {
+          setLeaveApplications(res.data.items)
+        } else if (Array.isArray(res.data)) {
+          setLeaveApplications(res.data)
+        }
+      } catch (err) {
+        console.log('Leave API unavailable, using mock data')
+      }
+      setLoading(false)
+    }
+    fetchData()
+  }, [])
 
   const filteredApplications = useMemo(() => {
-    return mockLeaveApplications.filter(app => {
+    return leaveApplications.filter(app => {
       const matchSearch = app.employee.toLowerCase().includes(searchText.toLowerCase()) ||
         app.department.toLowerCase().includes(searchText.toLowerCase())
       const matchStatus = statusFilter === 'all' || app.status === statusFilter
       const matchType = typeFilter === 'all' || app.type === typeFilter
       return matchSearch && matchStatus && matchType
     })
-  }, [searchText, statusFilter, typeFilter])
+  }, [leaveApplications, searchText, statusFilter, typeFilter])
 
   const stats = useMemo(() => {
-    const pending = mockLeaveApplications.filter(a => a.status === 'pending').length
-    const approved = mockLeaveApplications.filter(a => a.status === 'approved').length
-    const rejected = mockLeaveApplications.filter(a => a.status === 'rejected').length
-    const totalDays = mockLeaveApplications
+    const pending = leaveApplications.filter(a => a.status === 'pending').length
+    const approved = leaveApplications.filter(a => a.status === 'approved').length
+    const rejected = leaveApplications.filter(a => a.status === 'rejected').length
+    const totalDays = leaveApplications
       .filter(a => a.status === 'approved')
       .reduce((sum, a) => sum + a.days, 0)
     return { pending, approved, rejected, totalDays }
-  }, [])
+  }, [leaveApplications])
 
   return (
     <motion.div
@@ -209,9 +231,9 @@ export default function LeaveManagement() {
               <CardContent>
                 <SimplePieChart
                   data={[
-                    { label: '年假', value: mockLeaveApplications.filter(a => a.type === '年假').length, color: '#3b82f6' },
-                    { label: '病假', value: mockLeaveApplications.filter(a => a.type === '病假').length, color: '#10b981' },
-                    { label: '事假', value: mockLeaveApplications.filter(a => a.type === '事假').length, color: '#f59e0b' },
+                    { label: '年假', value: leaveApplications.filter(a => a.type === '年假').length, color: '#3b82f6' },
+                    { label: '病假', value: leaveApplications.filter(a => a.type === '病假').length, color: '#10b981' },
+                    { label: '事假', value: leaveApplications.filter(a => a.type === '事假').length, color: '#f59e0b' },
                   ]}
                   size={180}
                 />
@@ -227,7 +249,7 @@ export default function LeaveManagement() {
                     { month: '2024-10', amount: 12 },
                     { month: '2024-11', amount: 15 },
                     { month: '2024-12', amount: 18 },
-                    { month: '2025-01', amount: mockLeaveApplications.length },
+                    { month: '2025-01', amount: leaveApplications.length },
                   ]}
                   valueKey="amount"
                   labelKey="month"

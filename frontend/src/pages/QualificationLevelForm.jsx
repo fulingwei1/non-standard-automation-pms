@@ -211,7 +211,7 @@ export default function QualificationLevelForm() {
                     <SelectValue placeholder="选择适用角色（留空表示通用）" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">通用（所有角色）</SelectItem>
+                    <SelectItem value="__empty__">通用（所有角色）</SelectItem>
                     <SelectItem value="ENGINEER">工程师</SelectItem>
                     <SelectItem value="SALES">销售</SelectItem>
                     <SelectItem value="CUSTOMER_SERVICE">客服</SelectItem>

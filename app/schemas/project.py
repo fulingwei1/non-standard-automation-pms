@@ -435,6 +435,8 @@ class ProjectMemberUpdate(BaseModel):
     allocation_pct: Optional[Decimal] = Field(None, ge=0, le=100)
     start_date: Optional[date] = None
     end_date: Optional[date] = None
+    commitment_level: Optional[str] = None
+    reporting_to_pm: Optional[bool] = None
     is_active: Optional[bool] = None
     remark: Optional[str] = None
 

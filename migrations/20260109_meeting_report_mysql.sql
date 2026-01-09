@@ -1,0 +1,27 @@
+-- 会议报告表
+CREATE TABLE IF NOT EXISTS meeting_report (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    report_no VARCHAR(50) NOT NULL UNIQUE COMMENT '报告编号',
+    report_type VARCHAR(20) NOT NULL COMMENT '报告类型:ANNUAL/MONTHLY',
+    report_title VARCHAR(200) NOT NULL COMMENT '报告标题',
+    period_year INT NOT NULL COMMENT '报告年份',
+    period_month INT COMMENT '报告月份（月度报告）',
+    period_start DATE NOT NULL COMMENT '周期开始日期',
+    period_end DATE NOT NULL COMMENT '周期结束日期',
+    rhythm_level VARCHAR(20) NOT NULL COMMENT '节律层级:STRATEGIC/OPERATIONAL/OPERATION/TASK',
+    report_data JSON COMMENT '报告数据(JSON)',
+    comparison_data JSON COMMENT '对比数据(JSON)，与上月对比',
+    file_path VARCHAR(500) COMMENT '报告文件路径（PDF/Excel）',
+    file_size INT COMMENT '文件大小（字节）',
+    status VARCHAR(20) DEFAULT 'GENERATED' COMMENT '状态:GENERATED/PUBLISHED/ARCHIVED',
+    generated_by INT COMMENT '生成人ID',
+    generated_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '生成时间',
+    published_at DATETIME COMMENT '发布时间',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    FOREIGN KEY (generated_by) REFERENCES user(id),
+    INDEX idx_meeting_report_type (report_type),
+    INDEX idx_meeting_report_period (period_year, period_month),
+    INDEX idx_meeting_report_level (rhythm_level),
+    INDEX idx_meeting_report_date (period_start, period_end)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='会议报告表';

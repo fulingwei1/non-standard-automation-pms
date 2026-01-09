@@ -270,14 +270,14 @@ function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories = [] }) 
                   项目分类
                 </label>
                 <Select
-                  value={formData.category_id?.toString() || ''}
-                  onValueChange={(value) => setFormData({ ...formData, category_id: value ? parseInt(value) : '' })}
+                  value={formData.category_id?.toString() || '__none__'}
+                  onValueChange={(value) => setFormData({ ...formData, category_id: value && value !== '__none__' ? parseInt(value) : '' })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="请选择分类" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">请选择分类</SelectItem>
+                    <SelectItem value="__none__">请选择分类</SelectItem>
                     {categories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id.toString()}>
                         {cat.category_name}
@@ -432,8 +432,8 @@ export default function RdProjectList() {
   const [projects, setProjects] = useState([])
   const [categories, setCategories] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
-  const [filterStatus, setFilterStatus] = useState('')
-  const [filterCategoryType, setFilterCategoryType] = useState('')
+  const [filterStatus, setFilterStatus] = useState('all')
+  const [filterCategoryType, setFilterCategoryType] = useState('all')
   const [viewMode, setViewMode] = useState('grid')
   const [formOpen, setFormOpen] = useState(false)
   const [pagination, setPagination] = useState({
@@ -461,8 +461,8 @@ export default function RdProjectList() {
         page_size: pagination.page_size,
       }
       if (searchQuery) params.keyword = searchQuery
-      if (filterStatus) params.status = filterStatus
-      if (filterCategoryType) params.category_type = filterCategoryType
+      if (filterStatus && filterStatus !== 'all') params.status = filterStatus
+      if (filterCategoryType && filterCategoryType !== 'all') params.category_type = filterCategoryType
 
       const response = await rdProjectApi.list(params)
       const data = response.data || response
@@ -548,7 +548,7 @@ export default function RdProjectList() {
                 <SelectValue placeholder="项目状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部状态</SelectItem>
+                <SelectItem value="all">全部状态</SelectItem>
                 <SelectItem value="DRAFT">草稿</SelectItem>
                 <SelectItem value="APPROVED">已审批</SelectItem>
                 <SelectItem value="IN_PROGRESS">进行中</SelectItem>
@@ -561,7 +561,7 @@ export default function RdProjectList() {
                 <SelectValue placeholder="项目类型" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部类型</SelectItem>
+                <SelectItem value="all">全部类型</SelectItem>
                 <SelectItem value="SELF">自主研发</SelectItem>
                 <SelectItem value="ENTRUST">委托研发</SelectItem>
                 <SelectItem value="COOPERATION">合作研发</SelectItem>

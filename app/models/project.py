@@ -401,6 +401,11 @@ class ProjectMember(Base, TimestampMixin):
     allocation_pct = Column(Numeric(5, 2), default=100, comment="分配比例")
     start_date = Column(Date, comment="开始日期")
     end_date = Column(Date, comment="结束日期")
+    
+    # 矩阵式管理字段
+    commitment_level = Column(String(20), comment="投入级别：FULL/PARTIAL/ADVISORY")
+    reporting_to_pm = Column(Boolean, default=True, comment="是否向项目经理汇报")
+    dept_manager_notified = Column(Boolean, default=False, comment="部门经理是否已通知")
 
     # 状态
     is_active = Column(Boolean, default=True)
@@ -768,3 +773,44 @@ class ProjectTemplateVersion(Base, TimestampMixin):
     
     def __repr__(self):
         return f"<ProjectTemplateVersion {self.template_id}-{self.version_no}>"
+
+
+class ProjectMemberContribution(Base, TimestampMixin):
+    """项目成员贡献度表"""
+    __tablename__ = "project_member_contributions"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
+    period = Column(String(7), nullable=False, comment="统计周期 YYYY-MM")
+    
+    # 工作量指标
+    task_count = Column(Integer, default=0, comment="完成任务数")
+    task_hours = Column(Numeric(10, 2), default=0, comment="任务工时")
+    actual_hours = Column(Numeric(10, 2), default=0, comment="实际投入工时")
+    
+    # 质量指标
+    deliverable_count = Column(Integer, default=0, comment="交付物数量")
+    issue_count = Column(Integer, default=0, comment="问题数")
+    issue_resolved = Column(Integer, default=0, comment="解决问题数")
+    
+    # 贡献度评分
+    contribution_score = Column(Numeric(5, 2), comment="贡献度评分")
+    pm_rating = Column(Integer, comment="项目经理评分 1-5")
+    
+    # 奖金关联
+    bonus_amount = Column(Numeric(14, 2), default=0, comment="项目奖金金额")
+    
+    # 关系
+    project = relationship("Project")
+    user = relationship("User", foreign_keys=[user_id])
+    
+    __table_args__ = (
+        Index("idx_project_member_contrib_project", "project_id"),
+        Index("idx_project_member_contrib_user", "user_id"),
+        Index("idx_project_member_contrib_period", "period"),
+        UniqueConstraint("project_id", "user_id", "period"),
+    )
+    
+    def __repr__(self):
+        return f"<ProjectMemberContribution {self.project_id}-{self.user_id}-{self.period}>"

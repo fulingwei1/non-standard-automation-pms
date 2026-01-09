@@ -275,7 +275,7 @@ export default function CompetencyModelForm() {
                       <SelectValue placeholder="选择子类型（可选）" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">通用</SelectItem>
+                      <SelectItem value="__empty__">通用</SelectItem>
                       <SelectItem value="ME">机械工程师</SelectItem>
                       <SelectItem value="EE">电气工程师</SelectItem>
                       <SelectItem value="SW">软件工程师</SelectItem>

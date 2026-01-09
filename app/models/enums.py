@@ -846,3 +846,36 @@ class EquipmentTypeEnum(str, Enum):
     BURN_IN = 'BURN_IN'      # 烧录设备
     TEST = 'TEST'            # 通用测试设备
     OTHER = 'OTHER'          # 其他
+
+
+# ==================== 管理节律相关 ====================
+
+class MeetingRhythmLevel(str, Enum):
+    """会议节律层级"""
+    STRATEGIC = 'STRATEGIC'      # 战略层
+    OPERATIONAL = 'OPERATIONAL'  # 经营层
+    OPERATION = 'OPERATION'      # 运营层
+    TASK = 'TASK'                # 任务层
+
+
+class MeetingCycleType(str, Enum):
+    """会议周期类型"""
+    QUARTERLY = 'QUARTERLY'  # 季度
+    MONTHLY = 'MONTHLY'      # 月度
+    WEEKLY = 'WEEKLY'        # 周度
+    DAILY = 'DAILY'          # 每日
+
+
+class ActionItemStatus(str, Enum):
+    """行动项状态"""
+    PENDING = 'PENDING'          # 待处理
+    IN_PROGRESS = 'IN_PROGRESS'  # 进行中
+    COMPLETED = 'COMPLETED'      # 已完成
+    OVERDUE = 'OVERDUE'          # 已逾期
+
+
+class RhythmHealthStatus(str, Enum):
+    """节律健康状态"""
+    GREEN = 'GREEN'    # 正常(绿色)
+    YELLOW = 'YELLOW'  # 有风险(黄色)
+    RED = 'RED'        # 阻塞(红色)

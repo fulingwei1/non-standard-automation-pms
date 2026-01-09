@@ -8,6 +8,7 @@
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import List, Optional
+import json
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, or_
@@ -215,7 +216,7 @@ async def get_bom_assembly_attrs(
     if is_blocking is not None:
         query = query.filter(BomItemAssemblyAttrs.is_blocking == is_blocking)
 
-    attrs = query.order_by(BomItemAssemblyAttrs.assembly_stage, BomItemAssemblyAttrs.install_sequence).all()
+    attrs = query.order_by(BomItemAssemblyAttrs.assembly_stage, BomItemAssemblyAttrs.stage_order).all()
 
     # 关联物料信息
     result = []
@@ -381,6 +382,139 @@ async def auto_assign_assembly_attrs(
     )
 
 
+@router.get("/bom/{bom_id}/assembly-attrs/recommendations", response_model=ResponseModel)
+async def get_assembly_attr_recommendations(
+    bom_id: int,
+    db: Session = Depends(deps.get_db)
+):
+    """获取装配属性推荐结果（不应用，仅返回推荐）"""
+    from app.services.assembly_attr_recommender import AssemblyAttrRecommender
+    
+    # 验证BOM存在
+    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
+    if not bom:
+        raise HTTPException(status_code=404, detail="BOM不存在")
+
+    # 获取BOM明细
+    bom_items = db.query(BomItem).filter(BomItem.bom_header_id == bom_id).all()
+
+    # 批量推荐
+    recommendations = AssemblyAttrRecommender.batch_recommend(db, bom_id, bom_items)
+
+    # 构建响应
+    result = []
+    for bom_item in bom_items:
+        material = db.query(Material).filter(Material.id == bom_item.material_id).first()
+        if not material:
+            continue
+        
+        rec = recommendations.get(bom_item.id)
+        if rec:
+            result.append({
+                "bom_item_id": bom_item.id,
+                "material_code": material.code,
+                "material_name": material.name,
+                "recommended_stage": rec.stage_code,
+                "recommended_blocking": rec.is_blocking,
+                "recommended_postpone": rec.can_postpone,
+                "recommended_importance": rec.importance_level,
+                "confidence": rec.confidence,
+                "source": rec.source,
+                "reason": rec.reason
+            })
+
+    return ResponseModel(
+        code=200,
+        message="推荐结果获取成功",
+        data={"recommendations": result, "total": len(result)}
+    )
+
+
+@router.post("/bom/{bom_id}/assembly-attrs/smart-recommend", response_model=ResponseModel)
+async def smart_recommend_assembly_attrs(
+    bom_id: int,
+    request: BomAssemblyAttrsAutoRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """智能推荐装配属性（多级推荐规则）"""
+    from app.services.assembly_attr_recommender import AssemblyAttrRecommender
+    
+    # 验证BOM存在
+    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
+    if not bom:
+        raise HTTPException(status_code=404, detail="BOM不存在")
+
+    # 获取BOM明细
+    bom_items = db.query(BomItem).filter(BomItem.bom_header_id == bom_id).all()
+
+    # 批量推荐
+    recommendations = AssemblyAttrRecommender.batch_recommend(db, bom_id, bom_items)
+
+    assigned_count = 0
+    skipped_count = 0
+    recommendation_stats = {
+        "HISTORY": 0,
+        "CATEGORY": 0,
+        "KEYWORD": 0,
+        "SUPPLIER": 0,
+        "DEFAULT": 0
+    }
+
+    for bom_item in bom_items:
+        # 检查是否已有配置
+        existing = db.query(BomItemAssemblyAttrs).filter(
+            BomItemAssemblyAttrs.bom_item_id == bom_item.id
+        ).first()
+
+        if existing and not request.overwrite:
+            skipped_count += 1
+            continue
+
+        # 获取推荐结果
+        rec = recommendations.get(bom_item.id)
+        if not rec:
+            skipped_count += 1
+            continue
+
+        # 统计推荐来源
+        recommendation_stats[rec.source] = recommendation_stats.get(rec.source, 0) + 1
+
+        if existing:
+            existing.assembly_stage = rec.stage_code
+            existing.is_blocking = rec.is_blocking
+            existing.can_postpone = rec.can_postpone
+            existing.importance_level = rec.importance_level
+            existing.setting_source = rec.source
+            existing.updated_at = datetime.now()
+        else:
+            attr = BomItemAssemblyAttrs(
+                bom_item_id=bom_item.id,
+                bom_id=bom_id,
+                assembly_stage=rec.stage_code,
+                importance_level=rec.importance_level,
+                is_blocking=rec.is_blocking,
+                can_postpone=rec.can_postpone,
+                setting_source=rec.source,
+                created_by=current_user.id
+            )
+            db.add(attr)
+
+        assigned_count += 1
+
+    db.commit()
+
+    return ResponseModel(
+        code=200,
+        message=f"智能推荐完成，处理 {assigned_count} 条，跳过 {skipped_count} 条",
+        data={
+            "assigned": assigned_count,
+            "skipped": skipped_count,
+            "recommendation_stats": recommendation_stats
+        }
+    )
+
+
 @router.post("/bom/{bom_id}/assembly-attrs/template", response_model=ResponseModel)
 async def apply_assembly_template(
     bom_id: int,
@@ -504,6 +638,67 @@ def calculate_available_qty(
     return (stock_qty, allocated_qty, in_transit_qty, available)
 
 
+def calculate_estimated_ready_date(
+    db: Session,
+    blocking_items: List[Dict],
+    check_date: date
+) -> Optional[date]:
+    """
+    计算预计完全齐套日期
+    
+    基于阻塞物料的预计到货日期，取最晚的日期
+    """
+    from app.models import PurchaseOrderItem, PurchaseOrder
+    
+    if not blocking_items:
+        return None
+    
+    latest_date = None
+    
+    for item in blocking_items:
+        material_id = item.get("material_id")
+        shortage_qty = item.get("shortage_qty", Decimal(0))
+        expected_arrival = item.get("expected_arrival")
+        
+        # 如果缺料明细中已有预计到货日期，直接使用
+        if expected_arrival:
+            if latest_date is None or expected_arrival > latest_date:
+                latest_date = expected_arrival
+            continue
+        
+        # 否则从采购订单查找
+        if not material_id or shortage_qty <= 0:
+            continue
+        
+        try:
+            po_items = db.query(PurchaseOrderItem).join(
+                PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id
+            ).filter(
+                PurchaseOrderItem.material_id == material_id,
+                PurchaseOrder.status.in_(['approved', 'partial_received']),
+                or_(
+                    PurchaseOrder.promised_date.isnot(None),
+                    PurchaseOrder.required_date.isnot(None)
+                )
+            ).order_by(
+                PurchaseOrder.promised_date.desc(),
+                PurchaseOrder.required_date.desc()
+            ).all()
+            
+            for po_item in po_items:
+                if po_item.order:
+                    # 优先使用承诺交期，其次使用要求交期
+                    expected_date = po_item.order.promised_date or po_item.order.required_date
+                    if expected_date:
+                        if latest_date is None or expected_date > latest_date:
+                            latest_date = expected_date
+                        break
+        except Exception:
+            continue
+    
+    return latest_date
+
+
 def determine_alert_level(
     db: Session,
     is_blocking: bool,
@@ -623,7 +818,29 @@ async def execute_kit_analysis(
 
         # 记录缺料明细
         if shortage_qty > 0:
-            alert_level = determine_alert_level(db, is_blocking, shortage_rate, 7)  # 假设7天后需要
+            # 计算距需求日期的天数
+            days_to_required = 7  # 默认7天
+            if bom_item.required_date:
+                days_to_required = (bom_item.required_date - check_date).days
+            
+            alert_level = determine_alert_level(db, is_blocking, shortage_rate, days_to_required)
+            
+            # 获取预计到货日期（从采购订单）
+            expected_arrival = None
+            try:
+                from app.models import PurchaseOrderItem, PurchaseOrder
+                po_item = db.query(PurchaseOrderItem).join(
+                    PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id
+                ).filter(
+                    PurchaseOrderItem.material_id == material.id,
+                    PurchaseOrder.status.in_(['approved', 'partial_received']),
+                    PurchaseOrder.promised_date.isnot(None)
+                ).order_by(PurchaseOrder.promised_date.asc()).first()
+                
+                if po_item and po_item.order and po_item.order.promised_date:
+                    expected_arrival = po_item.order.promised_date
+            except Exception:
+                pass
 
             shortage_details.append({
                 "bom_item_id": bom_item.id,
@@ -639,17 +856,21 @@ async def execute_kit_analysis(
                 "available_qty": available_qty,
                 "shortage_qty": shortage_qty,
                 "shortage_rate": shortage_rate,
-                "alert_level": alert_level
+                "alert_level": alert_level,
+                "expected_arrival": expected_arrival,
+                "required_date": bom_item.required_date
             })
 
     # 计算各阶段齐套率和是否可开始
     stage_kit_rates = []
     can_proceed = True
     first_blocked_stage = None
+    current_workable_stage = None
     overall_total = 0
     overall_fulfilled = 0
     blocking_total = 0
     blocking_fulfilled = 0
+    all_blocking_items = []  # 收集所有阻塞物料
 
     for stage in stages:
         stats = stage_results.get(stage.stage_code, {"total": 0, "fulfilled": 0, "blocking_total": 0, "blocking_fulfilled": 0})
@@ -670,9 +891,16 @@ async def execute_kit_analysis(
         # 判断是否可开始: 前序阶段都可开始 && 当前阶段阻塞齐套率100%
         stage_can_start = can_proceed and (blocking_rate == 100)
 
+        if stage_can_start:
+            current_workable_stage = stage.stage_code
+
         if not stage_can_start and can_proceed:
             first_blocked_stage = stage.stage_code
             can_proceed = False
+            # 收集该阶段的阻塞物料
+            for detail in shortage_details:
+                if detail.get("assembly_stage") == stage.stage_code and detail.get("is_blocking"):
+                    all_blocking_items.append(detail)
 
         stage_kit_rates.append(StageKitRate(
             stage_code=stage.stage_code,
@@ -691,6 +919,9 @@ async def execute_kit_analysis(
     # 计算整体齐套率
     overall_kit_rate = Decimal(overall_fulfilled / overall_total * 100) if overall_total > 0 else Decimal(100)
     blocking_kit_rate = Decimal(blocking_fulfilled / blocking_total * 100) if blocking_total > 0 else Decimal(100)
+    
+    # 计算预计完全齐套日期（基于阻塞物料的预计到货日期）
+    estimated_ready_date = calculate_estimated_ready_date(db, all_blocking_items, check_date)
 
     # 创建齐套分析记录
     readiness = MaterialReadiness(
@@ -698,12 +929,19 @@ async def execute_kit_analysis(
         project_id=request.project_id,
         machine_id=request.machine_id,
         bom_id=request.bom_id,
-        check_date=check_date,
+        planned_start_date=request.planned_start_date or project.planned_start_date,
         overall_kit_rate=round(overall_kit_rate, 2),
         blocking_kit_rate=round(blocking_kit_rate, 2),
-        stage_kit_rates={s.stage_code: {"kit_rate": float(s.kit_rate), "blocking_rate": float(s.blocking_rate), "can_start": s.can_start} for s in stage_kit_rates},
+        stage_kit_rates=json.dumps({s.stage_code: {"kit_rate": float(s.kit_rate), "blocking_rate": float(s.blocking_rate), "can_start": s.can_start} for s in stage_kit_rates}),
+        total_items=overall_total,
+        fulfilled_items=overall_fulfilled,
+        shortage_items=len(shortage_details),
+        blocking_total=blocking_total,
+        blocking_fulfilled=blocking_fulfilled,
         can_start=first_blocked_stage is None,
+        current_workable_stage=current_workable_stage,
         first_blocked_stage=first_blocked_stage,
+        estimated_ready_date=estimated_ready_date,
         analysis_time=datetime.now(),
         analyzed_by=current_user.id
     )
@@ -714,9 +952,34 @@ async def execute_kit_analysis(
     for detail in shortage_details:
         shortage = ShortageDetail(
             readiness_id=readiness.id,
-            **detail
+            bom_item_id=detail["bom_item_id"],
+            material_id=detail["material_id"],
+            material_code=detail["material_code"],
+            material_name=detail["material_name"],
+            assembly_stage=detail["assembly_stage"],
+            is_blocking=detail["is_blocking"],
+            required_qty=detail["required_qty"],
+            stock_qty=detail["stock_qty"],
+            allocated_qty=detail["allocated_qty"],
+            in_transit_qty=detail["in_transit_qty"],
+            available_qty=detail["available_qty"],
+            shortage_qty=detail["shortage_qty"],
+            alert_level=detail["alert_level"],
+            expected_arrival=detail.get("expected_arrival"),
+            required_date=detail.get("required_date")
         )
         db.add(shortage)
+        
+        # 如果是L1或L2级别，发送企业微信预警
+        if detail["alert_level"] in ["L1", "L2"]:
+            try:
+                from app.services.wechat_alert_service import WeChatAlertService
+                WeChatAlertService.send_shortage_alert(
+                    db, shortage, detail["alert_level"]
+                )
+            except Exception as e:
+                # 预警发送失败不影响分析结果
+                print(f"发送企业微信预警失败: {e}")
 
     db.commit()
     db.refresh(readiness)
@@ -728,16 +991,16 @@ async def execute_kit_analysis(
         project_id=readiness.project_id,
         machine_id=readiness.machine_id,
         bom_id=readiness.bom_id,
-        check_date=readiness.check_date,
+        check_date=check_date,
         overall_kit_rate=readiness.overall_kit_rate,
         blocking_kit_rate=readiness.blocking_kit_rate,
         can_start=readiness.can_start,
         first_blocked_stage=readiness.first_blocked_stage,
         estimated_ready_date=readiness.estimated_ready_date,
         stage_kit_rates=stage_kit_rates,
-        project_no=project.project_no,
-        project_name=project.name,
-        machine_no=machine.machine_no if machine else None,
+        project_no=project.project_code if project else None,
+        project_name=project.project_name if project else None,
+        machine_no=machine.machine_code if machine else None,
         bom_no=bom.bom_no,
         analysis_time=readiness.analysis_time,
         analyzed_by=readiness.analyzed_by,
@@ -748,6 +1011,32 @@ async def execute_kit_analysis(
         code=200,
         message="齐套分析完成",
         data=response_data
+    )
+
+
+@router.get("/analysis/{readiness_id}/optimize", response_model=ResponseModel)
+async def get_optimization_suggestions(
+    readiness_id: int,
+    db: Session = Depends(deps.get_db)
+):
+    """获取齐套分析优化建议"""
+    from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
+    
+    readiness = db.query(MaterialReadiness).filter(MaterialReadiness.id == readiness_id).first()
+    if not readiness:
+        raise HTTPException(status_code=404, detail="齐套分析记录不存在")
+    
+    suggestions = AssemblyKitOptimizer.generate_optimization_suggestions(db, readiness)
+    optimized_date = AssemblyKitOptimizer.optimize_estimated_ready_date(db, readiness)
+    
+    return ResponseModel(
+        code=200,
+        message="优化建议获取成功",
+        data={
+            "suggestions": suggestions,
+            "optimized_ready_date": optimized_date.isoformat() if optimized_date else None,
+            "current_ready_date": readiness.estimated_ready_date.isoformat() if readiness.estimated_ready_date else None
+        }
     )
 
 
@@ -794,28 +1083,48 @@ async def get_analysis_detail(
 
     shortage_responses = [ShortageDetailResponse.model_validate(s) for s in shortage_details]
 
+    # 获取优化建议（可选）
+    optimization_suggestions = None
+    try:
+        from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
+        optimization_suggestions = AssemblyKitOptimizer.generate_optimization_suggestions(db, readiness)
+    except Exception:
+        pass
+    
     response_data = MaterialReadinessDetailResponse(
         id=readiness.id,
         readiness_no=readiness.readiness_no,
         project_id=readiness.project_id,
         machine_id=readiness.machine_id,
         bom_id=readiness.bom_id,
-        check_date=readiness.check_date,
+        check_date=readiness.planned_start_date or date.today(),
         overall_kit_rate=readiness.overall_kit_rate,
         blocking_kit_rate=readiness.blocking_kit_rate,
         can_start=readiness.can_start,
         first_blocked_stage=readiness.first_blocked_stage,
         estimated_ready_date=readiness.estimated_ready_date,
         stage_kit_rates=stage_kit_rates,
-        project_no=project.project_no if project else None,
-        project_name=project.name if project else None,
-        machine_no=machine.machine_no if machine else None,
+        project_no=project.project_code if project else None,
+        project_name=project.project_name if project else None,
+        machine_no=machine.machine_code if machine else None,
         bom_no=bom.bom_no if bom else None,
         analysis_time=readiness.analysis_time,
         analyzed_by=readiness.analyzed_by,
         created_at=readiness.created_at,
         shortage_details=shortage_responses
     )
+    
+    # 将优化建议添加到响应数据中
+    if optimization_suggestions:
+        # 使用dict方式返回，包含优化建议
+        return ResponseModel(
+            code=200,
+            message="success",
+            data={
+                **response_data.model_dump(),
+                'optimization_suggestions': optimization_suggestions
+            }
+        )
 
     return ResponseModel(code=200, message="success", data=response_data)
 
@@ -850,16 +1159,16 @@ async def get_project_readiness_list(
             project_id=r.project_id,
             machine_id=r.machine_id,
             bom_id=r.bom_id,
-            check_date=r.check_date,
+            check_date=r.planned_start_date or date.today(),
             overall_kit_rate=r.overall_kit_rate,
             blocking_kit_rate=r.blocking_kit_rate,
             can_start=r.can_start,
             first_blocked_stage=r.first_blocked_stage,
             estimated_ready_date=r.estimated_ready_date,
             stage_kit_rates=[],
-            project_no=project.project_no,
-            project_name=project.name,
-            machine_no=machine.machine_no if machine else None,
+            project_no=project.project_code if project else None,
+            project_name=project.project_name if project else None,
+            machine_no=machine.machine_code if machine else None,
             bom_no=bom.bom_no if bom else None,
             analysis_time=r.analysis_time,
             analyzed_by=r.analyzed_by,
@@ -1033,7 +1342,87 @@ async def update_alert_rule(
     return ResponseModel(code=200, message="更新成功", data=ShortageAlertRuleResponse.model_validate(rule))
 
 
+# ==================== 企业微信配置 ====================
+
+@router.get("/wechat/config", response_model=ResponseModel)
+async def get_wechat_config(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """获取企业微信配置（仅显示是否已配置，不返回敏感信息）"""
+    from app.core.config import settings
+    
+    config = {
+        "enabled": settings.WECHAT_ENABLED,
+        "corp_id_configured": bool(settings.WECHAT_CORP_ID),
+        "agent_id_configured": bool(settings.WECHAT_AGENT_ID),
+        "secret_configured": bool(settings.WECHAT_SECRET),
+        "fully_configured": all([
+            settings.WECHAT_CORP_ID,
+            settings.WECHAT_AGENT_ID,
+            settings.WECHAT_SECRET
+        ])
+    }
+    
+    return ResponseModel(
+        code=200,
+        message="success",
+        data=config
+    )
+
+
+@router.post("/wechat/test", response_model=ResponseModel)
+async def test_wechat_connection(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """测试企业微信连接"""
+    from app.utils.wechat_client import WeChatClient
+    from app.core.config import settings
+    
+    if not settings.WECHAT_ENABLED:
+        raise HTTPException(status_code=400, detail="企业微信功能未启用")
+    
+    try:
+        client = WeChatClient()
+        token = client.get_access_token()
+        
+        return ResponseModel(
+            code=200,
+            message="企业微信连接成功",
+            data={"access_token_obtained": bool(token)}
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"配置不完整: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"连接失败: {str(e)}")
+
+
 # ==================== 排产建议 ====================
+
+@router.post("/suggestions/generate", response_model=ResponseModel)
+async def generate_scheduling_suggestions(
+    db: Session = Depends(deps.get_db),
+    scope: str = Query("WEEKLY", description="排产范围：WEEKLY/MONTHLY"),
+    project_ids: Optional[str] = Query(None, description="项目ID列表，逗号分隔")
+):
+    """生成智能排产建议"""
+    from app.services.scheduling_suggestion_service import SchedulingSuggestionService
+    
+    project_id_list = None
+    if project_ids:
+        project_id_list = [int(x.strip()) for x in project_ids.split(",") if x.strip().isdigit()]
+    
+    suggestions = SchedulingSuggestionService.generate_scheduling_suggestions(
+        db, scope=scope, project_ids=project_id_list
+    )
+    
+    return ResponseModel(
+        code=200,
+        message="排产建议生成成功",
+        data={"suggestions": suggestions, "total": len(suggestions)}
+    )
+
 
 @router.get("/suggestions", response_model=ResponseModel)
 async def get_scheduling_suggestions(
@@ -1232,16 +1621,16 @@ async def get_assembly_dashboard(
             project_id=r.project_id,
             machine_id=r.machine_id,
             bom_id=r.bom_id,
-            check_date=r.check_date,
+            check_date=r.planned_start_date or date.today(),
             overall_kit_rate=r.overall_kit_rate,
             blocking_kit_rate=r.blocking_kit_rate,
             can_start=r.can_start,
             first_blocked_stage=r.first_blocked_stage,
             estimated_ready_date=r.estimated_ready_date,
             stage_kit_rates=[],
-            project_no=project.project_no if project else None,
-            project_name=project.name if project else None,
-            machine_no=machine.machine_no if machine else None,
+            project_no=project.project_code if project else None,
+            project_name=project.project_name if project else None,
+            machine_no=machine.machine_code if machine else None,
             bom_no=bom.bom_no if bom else None,
             analysis_time=r.analysis_time,
             analyzed_by=r.analyzed_by,

@@ -3,7 +3,7 @@
  * Features: Sales trends, Performance analysis, Customer analysis, Revenue forecasting
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   BarChart3,
@@ -37,6 +37,7 @@ import {
 } from '../components/ui'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
+import { salesStatisticsApi } from '../services/api'
 
 // Mock data
 const mockMonthlySales = [
@@ -86,9 +87,46 @@ const formatCurrency = (value) => {
 export default function SalesReports() {
   const [selectedPeriod, setSelectedPeriod] = useState('month')
   const [selectedReport, setSelectedReport] = useState('overview')
+  const [loading, setLoading] = useState(false)
+  const [monthlySales, setMonthlySales] = useState(mockMonthlySales)
+  const [customerAnalysis, setCustomerAnalysis] = useState(mockCustomerAnalysis)
+  const [productAnalysis, setProductAnalysis] = useState(mockProductAnalysis)
+  const [regionalAnalysis, setRegionalAnalysis] = useState(mockRegionalAnalysis)
 
-  const currentMonth = mockMonthlySales[mockMonthlySales.length - 1]
-  const avgAchievement = mockMonthlySales.reduce((sum, m) => sum + (m.achieved / m.target * 100), 0) / mockMonthlySales.length
+  // Fetch data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const [monthlyRes, customerRes, productRes, regionalRes] = await Promise.allSettled([
+          salesStatisticsApi.getMonthlyTrend({ period: selectedPeriod }),
+          salesStatisticsApi.getByCustomer({ limit: 10 }),
+          salesStatisticsApi.getByProduct({ limit: 10 }),
+          salesStatisticsApi.getByRegion(),
+        ])
+
+        if (monthlyRes.status === 'fulfilled' && monthlyRes.value.data) {
+          setMonthlySales(monthlyRes.value.data)
+        }
+        if (customerRes.status === 'fulfilled' && customerRes.value.data) {
+          setCustomerAnalysis(customerRes.value.data)
+        }
+        if (productRes.status === 'fulfilled' && productRes.value.data) {
+          setProductAnalysis(productRes.value.data)
+        }
+        if (regionalRes.status === 'fulfilled' && regionalRes.value.data) {
+          setRegionalAnalysis(regionalRes.value.data)
+        }
+      } catch (err) {
+        console.log('Sales reports API unavailable, using mock data')
+      }
+      setLoading(false)
+    }
+    fetchData()
+  }, [selectedPeriod])
+
+  const currentMonth = monthlySales[monthlySales.length - 1]
+  const avgAchievement = monthlySales.reduce((sum, m) => sum + (m.achieved / m.target * 100), 0) / monthlySales.length
 
   return (
     <motion.div
@@ -179,7 +217,7 @@ export default function SalesReports() {
               <div>
                 <p className="text-sm text-slate-400">累计销售额</p>
                 <p className="text-2xl font-bold text-white mt-1">
-                  {formatCurrency(mockMonthlySales.reduce((sum, m) => sum + m.achieved, 0))}
+                  {formatCurrency(monthlySales.reduce((sum, m) => sum + m.achieved, 0))}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">近7个月累计</p>
               </div>
@@ -196,7 +234,7 @@ export default function SalesReports() {
               <div>
                 <p className="text-sm text-slate-400">活跃客户</p>
                 <p className="text-2xl font-bold text-white mt-1">
-                  {mockCustomerAnalysis.length}
+                  {customerAnalysis.length}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">TOP客户数</p>
               </div>
@@ -221,7 +259,7 @@ export default function SalesReports() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockMonthlySales.map((item, index) => {
+                {monthlySales.map((item, index) => {
                   const achievementRate = (item.achieved / item.target * 100)
                   return (
                     <div key={item.month} className="space-y-2">
@@ -257,7 +295,7 @@ export default function SalesReports() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockCustomerAnalysis.map((customer, index) => (
+                {customerAnalysis.map((customer, index) => (
                   <div
                     key={customer.name}
                     className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
@@ -309,7 +347,7 @@ export default function SalesReports() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockProductAnalysis.map((product, index) => (
+                {productAnalysis.map((product, index) => (
                   <div
                     key={product.name}
                     className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
@@ -343,7 +381,7 @@ export default function SalesReports() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockRegionalAnalysis.map((region, index) => (
+                {regionalAnalysis.map((region, index) => (
                   <div
                     key={region.region}
                     className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
@@ -363,7 +401,7 @@ export default function SalesReports() {
                       </div>
                     </div>
                     <Progress
-                      value={(region.amount / mockRegionalAnalysis.reduce((sum, r) => sum + r.amount, 0)) * 100}
+                      value={(region.amount / regionalAnalysis.reduce((sum, r) => sum + r.amount, 0)) * 100}
                       className="h-1.5 mt-2"
                     />
                   </div>

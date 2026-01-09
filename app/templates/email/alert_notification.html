@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>预警通知</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            border-bottom: 3px solid {{ level_color }};
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .alert-level {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: {{ level_color }};
+            margin-bottom: 10px;
+        }
+        .alert-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a1a1a;
+            margin: 10px 0;
+        }
+        .alert-info {
+            background-color: #f8f9fa;
+            border-left: 4px solid {{ level_color }};
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info-row {
+            display: flex;
+            margin: 8px 0;
+        }
+        .info-label {
+            font-weight: bold;
+            min-width: 100px;
+            color: #666;
+        }
+        .info-value {
+            color: #333;
+        }
+        .alert-content {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #555;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: {{ level_color }};
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .button:hover {
+            opacity: 0.9;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+        }
+        @media only screen and (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .email-container {
+                padding: 20px;
+            }
+            .info-row {
+                flex-direction: column;
+            }
+            .info-label {
+                min-width: auto;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <span class="alert-level">{{ alert_level }}</span>
+            <div class="alert-title">{{ alert_title }}</div>
+        </div>
+        
+        <div class="alert-info">
+            <div class="info-row">
+                <span class="info-label">预警编号：</span>
+                <span class="info-value">{{ alert_no }}</span>
+            </div>
+            {% if project_name %}
+            <div class="info-row">
+                <span class="info-label">项目名称：</span>
+                <span class="info-value">{{ project_name }}</span>
+            </div>
+            {% endif %}
+            {% if project_code %}
+            <div class="info-row">
+                <span class="info-label">项目编码：</span>
+                <span class="info-value">{{ project_code }}</span>
+            </div>
+            {% endif %}
+            <div class="info-row">
+                <span class="info-label">触发时间：</span>
+                <span class="info-value">{{ triggered_at }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">当前状态：</span>
+                <span class="info-value">{{ status }}</span>
+            </div>
+        </div>
+        
+        <div class="alert-content">
+            {{ alert_content }}
+        </div>
+        
+        {% if alert_url %}
+        <div style="text-align: center;">
+            <a href="{{ alert_url }}" class="button">查看预警详情</a>
+        </div>
+        {% endif %}
+        
+        <div class="footer">
+            <p>此邮件由系统自动发送，请勿回复。</p>
+            <p>如有疑问，请联系系统管理员。</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -2,7 +2,7 @@
 -- Targets: technical_assessments/scoring_rules/failure_cases/lead_requirement_details/requirement_freezes/open_items/ai_clarifications
 -- Extends: leads/opportunities tables
 
-PRAGMA foreign_keys = ON;
+-- PRAGMA foreign_keys = ON;  -- Disabled for migration
 BEGIN;
 
 -- 1) Technical Assessments

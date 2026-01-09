@@ -61,9 +61,27 @@ class Settings(BaseSettings):
     EMAIL_SMTP_PORT: int = 587
     EMAIL_USERNAME: Optional[str] = None
     EMAIL_PASSWORD: Optional[str] = None
+    
+    # 短信通知配置（阿里云）
+    SMS_ENABLED: bool = False
+    SMS_PROVIDER: str = "aliyun"  # aliyun/tencent
+    SMS_ALIYUN_ACCESS_KEY_ID: Optional[str] = None
+    SMS_ALIYUN_ACCESS_KEY_SECRET: Optional[str] = None
+    SMS_ALIYUN_SIGN_NAME: Optional[str] = None
+    SMS_ALIYUN_TEMPLATE_CODE: Optional[str] = None
+    SMS_ALIYUN_REGION: str = "cn-hangzhou"
+    # 短信成本控制
+    SMS_MAX_PER_DAY: int = 100  # 每天最多发送短信数
+    SMS_MAX_PER_HOUR: int = 20  # 每小时最多发送短信数
 
     WECHAT_WEBHOOK_URL: Optional[str] = None
     WECHAT_ENABLED: bool = False
+    
+    # 企业微信API配置
+    WECHAT_CORP_ID: Optional[str] = None  # 企业ID
+    WECHAT_AGENT_ID: Optional[str] = None  # 应用ID
+    WECHAT_SECRET: Optional[str] = None  # 应用Secret
+    WECHAT_TOKEN_CACHE_TTL: int = 7000  # Token缓存时间（秒），默认7000秒（约2小时）
 
     # 销售模块配置
     SALES_GROSS_MARGIN_THRESHOLD: float = 15.0  # 毛利率阈值（%），低于此值需要审批

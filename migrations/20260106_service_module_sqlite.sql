@@ -2,7 +2,7 @@
 -- Targets: customer_communications, customer_satisfactions, knowledge_base
 -- Note: service_tickets and service_records tables already exist
 
-PRAGMA foreign_keys = ON;
+-- PRAGMA foreign_keys = ON;  -- Disabled for migration
 BEGIN;
 
 -- Customer Communications Table

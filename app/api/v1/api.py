@@ -56,6 +56,11 @@ from app.api.v1.endpoints import (
     assembly_kit,
     staff_matching,
     project_roles,
+    management_rhythm,
+    culture_wall,
+    work_log,
+    project_workspace,
+    project_contributions,
 )
 
 api_router = APIRouter()
@@ -116,3 +121,8 @@ api_router.include_router(scheduler.router, prefix="/scheduler", tags=["schedule
 api_router.include_router(assembly_kit.router, prefix="/assembly", tags=["assembly-kit"])
 api_router.include_router(staff_matching.router, prefix="/staff-matching", tags=["staff-matching"])
 api_router.include_router(project_roles.router, prefix="/project-roles", tags=["project-roles"])
+api_router.include_router(management_rhythm.router, prefix="", tags=["management-rhythm"])
+api_router.include_router(culture_wall.router, prefix="", tags=["culture-wall"])
+api_router.include_router(work_log.router, prefix="", tags=["work-log"])
+api_router.include_router(project_workspace.router, prefix="", tags=["project-workspace"])
+api_router.include_router(project_contributions.router, prefix="", tags=["project-contributions"])

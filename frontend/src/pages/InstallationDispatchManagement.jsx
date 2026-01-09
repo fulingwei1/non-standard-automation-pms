@@ -466,7 +466,7 @@ export default function InstallationDispatchManagement() {
                 <SelectValue placeholder="状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部状态</SelectItem>
+                <SelectItem value="all">全部状态</SelectItem>
                 <SelectItem value="PENDING">待派工</SelectItem>
                 <SelectItem value="ASSIGNED">已派工</SelectItem>
                 <SelectItem value="IN_PROGRESS">进行中</SelectItem>
@@ -479,7 +479,7 @@ export default function InstallationDispatchManagement() {
                 <SelectValue placeholder="优先级" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部优先级</SelectItem>
+                <SelectItem value="all">全部优先级</SelectItem>
                 <SelectItem value="LOW">低</SelectItem>
                 <SelectItem value="NORMAL">普通</SelectItem>
                 <SelectItem value="HIGH">高</SelectItem>
@@ -491,7 +491,7 @@ export default function InstallationDispatchManagement() {
                 <SelectValue placeholder="任务类型" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部类型</SelectItem>
+                <SelectItem value="all">全部类型</SelectItem>
                 <SelectItem value="INSTALLATION">安装</SelectItem>
                 <SelectItem value="DEBUGGING">调试</SelectItem>
                 <SelectItem value="TRAINING">培训</SelectItem>
@@ -505,7 +505,7 @@ export default function InstallationDispatchManagement() {
                 <SelectValue placeholder="项目" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部项目</SelectItem>
+                <SelectItem value="all">全部项目</SelectItem>
                 {projects.map((p) => (
                   <SelectItem key={p.id} value={p.id.toString()}>
                     {p.project_name}
@@ -775,7 +775,7 @@ export default function InstallationDispatchManagement() {
                       <SelectValue placeholder={createData.project_id ? "选择机台" : "请先选择项目"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">不选择机台</SelectItem>
+                      <SelectItem value="__none__">不选择机台</SelectItem>
                       {machines.map((m) => (
                         <SelectItem key={m.id} value={m.id.toString()}>
                           {m.machine_no} - {m.machine_name || ''}

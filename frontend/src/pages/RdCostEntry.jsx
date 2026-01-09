@@ -331,7 +331,7 @@ export default function RdCostEntry() {
                       <SelectValue placeholder="请选择费用类型" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">请选择费用类型</SelectItem>
+                      <SelectItem value="__empty__">请选择费用类型</SelectItem>
                       {costTypes.map((type) => (
                         <SelectItem key={type.id} value={type.id.toString()}>
                           {type.cost_type_name}

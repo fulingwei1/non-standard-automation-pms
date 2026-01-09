@@ -2416,3 +2416,423 @@ def toggle_alert_subscription(
         "updated_at": subscription.updated_at.isoformat() if subscription.updated_at else None,
     }
 
+
+
+# ==================== 预警报表导出 ====================
+
+@router.get("/alerts/export/excel", response_class=StreamingResponse, status_code=status.HTTP_200_OK)
+def export_alerts_excel(
+    db: Session = Depends(deps.get_db),
+    project_id: Optional[int] = Query(None, description="项目ID筛选"),
+    alert_level: Optional[str] = Query(None, description="预警级别筛选"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    rule_type: Optional[str] = Query(None, description="预警类型筛选"),
+    start_date: Optional[date] = Query(None, description="开始日期"),
+    end_date: Optional[date] = Query(None, description="结束日期"),
+    group_by: Optional[str] = Query("none", description="分组方式: none/level/type"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    导出预警数据到 Excel
+    
+    支持筛选参数（与列表接口一致）
+    支持多 Sheet（按级别或类型分组）
+    """
+    try:
+        import pandas as pd
+        import openpyxl
+        import io
+        from openpyxl.styles import Font, PatternFill, Alignment
+    except ImportError:
+        raise HTTPException(
+            status_code=500,
+            detail="Excel处理库未安装，请安装pandas和openpyxl: pip install pandas openpyxl"
+        )
+    
+    # 构建查询（与列表接口一致）
+    query = db.query(AlertRecord).filter(AlertRecord.triggered_at.isnot(None))
+    
+    if project_id:
+        query = query.filter(AlertRecord.project_id == project_id)
+    if alert_level:
+        query = query.filter(AlertRecord.alert_level == alert_level)
+    if status:
+        query = query.filter(AlertRecord.status == status)
+    if rule_type:
+        query = query.join(AlertRule).filter(AlertRule.rule_type == rule_type)
+    if start_date:
+        query = query.filter(AlertRecord.triggered_at >= datetime.combine(start_date, datetime.min.time()))
+    if end_date:
+        query = query.filter(AlertRecord.triggered_at <= datetime.combine(end_date, datetime.max.time()))
+    
+    alerts = query.order_by(AlertRecord.triggered_at.desc()).all()
+    
+    if not alerts:
+        raise HTTPException(status_code=404, detail="没有符合条件的数据")
+    
+    # 准备数据
+    data = []
+    for alert in alerts:
+        rule = alert.rule
+        project = alert.project
+        handler = None
+        if alert.handler_id:
+            handler = db.query(User).filter(User.id == alert.handler_id).first()
+        elif alert.acknowledged_by:
+            handler = db.query(User).filter(User.id == alert.acknowledged_by).first()
+        
+        data.append({
+            '预警编号': alert.alert_no,
+            '预警级别': alert.alert_level,
+            '预警标题': alert.alert_title,
+            '预警类型': rule.rule_type if rule else 'UNKNOWN',
+            '项目名称': project.project_name if project else '',
+            '项目编码': project.project_code if project else '',
+            '触发时间': alert.triggered_at.strftime('%Y-%m-%d %H:%M:%S') if alert.triggered_at else '',
+            '状态': alert.status,
+            '处理人': handler.username if handler else '',
+            '确认时间': alert.acknowledged_at.strftime('%Y-%m-%d %H:%M:%S') if alert.acknowledged_at else '',
+            '处理完成时间': alert.handle_end_at.strftime('%Y-%m-%d %H:%M:%S') if alert.handle_end_at else '',
+            '是否升级': '是' if alert.is_escalated else '否',
+            '处理结果': alert.handle_result or '',
+        })
+    
+    # 创建 Excel 文件
+    output = io.BytesIO()
+    
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        if group_by == 'level':
+            # 按级别分组
+            level_groups = {}
+            for item in data:
+                level = item['预警级别']
+                if level not in level_groups:
+                    level_groups[level] = []
+                level_groups[level].append(item)
+            
+            for level, items in level_groups.items():
+                df = pd.DataFrame(items)
+                sheet_name = f"{level}级预警"[:31]  # Excel sheet名称限制31字符
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
+                
+                # 设置样式
+                worksheet = writer.sheets[sheet_name]
+                _format_alert_excel_sheet(worksheet, level)
+        
+        elif group_by == 'type':
+            # 按类型分组
+            type_groups = {}
+            for item in data:
+                rule_type = item['预警类型']
+                if rule_type not in type_groups:
+                    type_groups[rule_type] = []
+                type_groups[rule_type].append(item)
+            
+            for rule_type, items in type_groups.items():
+                df = pd.DataFrame(items)
+                sheet_name = rule_type[:31]  # Excel sheet名称限制31字符
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
+                
+                # 设置样式
+                worksheet = writer.sheets[sheet_name]
+                _format_alert_excel_sheet(worksheet, None)
+        
+        else:
+            # 不分组，单个Sheet
+            df = pd.DataFrame(data)
+            df.to_excel(writer, sheet_name='预警列表', index=False)
+            
+            # 设置样式
+            worksheet = writer.sheets['预警列表']
+            _format_alert_excel_sheet(worksheet, None)
+    
+    output.seek(0)
+    
+    # 生成文件名
+    filename = f"预警报表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    
+    return StreamingResponse(
+        io.BytesIO(output.read()),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{filename}"
+        }
+    )
+
+
+def _format_alert_excel_sheet(worksheet, level: Optional[str] = None):
+    """格式化 Excel Sheet"""
+    from openpyxl.styles import Font, PatternFill, Alignment
+    
+    # 级别颜色映射
+    level_colors = {
+        'URGENT': 'FF0000',      # 红色
+        'CRITICAL': 'FF8C00',    # 橙色
+        'WARNING': 'FFD700',     # 黄色
+        'INFO': '4169E1',        # 蓝色
+    }
+    
+    # 设置表头样式
+    header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    
+    for cell in worksheet[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = header_alignment
+    
+    # 设置列宽
+    column_widths = {
+        'A': 20,  # 预警编号
+        'B': 12,  # 预警级别
+        'C': 40,  # 预警标题
+        'D': 20,  # 预警类型
+        'E': 25,  # 项目名称
+        'F': 15,  # 项目编码
+        'G': 18,  # 触发时间
+        'H': 12,  # 状态
+        'I': 12,  # 处理人
+        'J': 18,  # 确认时间
+        'K': 18,  # 处理完成时间
+        'L': 10,  # 是否升级
+        'M': 40,  # 处理结果
+    }
+    for col, width in column_widths.items():
+        worksheet.column_dimensions[col].width = width
+    
+    # 根据级别设置行颜色
+    if level and level in level_colors:
+        fill_color = level_colors[level]
+        for row in worksheet.iter_rows(min_row=2, max_row=worksheet.max_row):
+            # 只对级别列（B列）设置颜色
+            if row[1].value == level:
+                row[1].fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
+                row[1].font = Font(color="FFFFFF", bold=True)
+    
+    # 设置数据行对齐
+    for row in worksheet.iter_rows(min_row=2, max_row=worksheet.max_row):
+        for cell in row:
+            if cell.column_letter in ['G', 'J', 'K']:  # 时间列
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+            else:
+                cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+
+
+@router.get("/alerts/export/pdf", response_class=StreamingResponse, status_code=status.HTTP_200_OK)
+def export_alerts_pdf(
+    db: Session = Depends(deps.get_db),
+    project_id: Optional[int] = Query(None, description="项目ID筛选"),
+    alert_level: Optional[str] = Query(None, description="预警级别筛选"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    rule_type: Optional[str] = Query(None, description="预警类型筛选"),
+    start_date: Optional[date] = Query(None, description="开始日期"),
+    end_date: Optional[date] = Query(None, description="结束日期"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    导出预警数据到 PDF
+    
+    包含统计摘要和预警列表
+    支持分页
+    """
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.units import cm
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.enums import TA_CENTER, TA_LEFT
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+        from reportlab.lib import colors
+        import io
+    except ImportError:
+        raise HTTPException(
+            status_code=500,
+            detail="PDF处理库未安装，请安装reportlab: pip install reportlab"
+        )
+    
+    # 构建查询（与列表接口一致）
+    query = db.query(AlertRecord).filter(AlertRecord.triggered_at.isnot(None))
+    
+    if project_id:
+        query = query.filter(AlertRecord.project_id == project_id)
+    if alert_level:
+        query = query.filter(AlertRecord.alert_level == alert_level)
+    if status:
+        query = query.filter(AlertRecord.status == status)
+    if rule_type:
+        query = query.join(AlertRule).filter(AlertRule.rule_type == rule_type)
+    if start_date:
+        query = query.filter(AlertRecord.triggered_at >= datetime.combine(start_date, datetime.min.time()))
+    if end_date:
+        query = query.filter(AlertRecord.triggered_at <= datetime.combine(end_date, datetime.max.time()))
+    
+    alerts = query.order_by(AlertRecord.triggered_at.desc()).all()
+    
+    if not alerts:
+        raise HTTPException(status_code=404, detail="没有符合条件的数据")
+    
+    # 创建PDF缓冲区
+    buffer = io.BytesIO()
+    
+    # 创建PDF文档
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=2*cm,
+        leftMargin=2*cm,
+        topMargin=2*cm,
+        bottomMargin=2*cm
+    )
+    
+    # 获取样式
+    styles = getSampleStyleSheet()
+    
+    # 创建自定义样式
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        textColor=colors.HexColor('#1e40af'),
+        spaceAfter=30,
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=14,
+        textColor=colors.HexColor('#1e40af'),
+        spaceAfter=12,
+        spaceBefore=12,
+        fontName='Helvetica-Bold'
+    )
+    
+    normal_style = styles['Normal']
+    normal_style.fontSize = 10
+    normal_style.leading = 14
+    
+    # 构建PDF内容
+    story = []
+    
+    # 标题
+    story.append(Paragraph("预警报表", title_style))
+    story.append(Spacer(1, 0.5*cm))
+    
+    # 统计摘要
+    story.append(Paragraph("统计摘要", heading_style))
+    
+    # 计算统计
+    total_count = len(alerts)
+    by_level = {}
+    by_status = {}
+    by_type = {}
+    
+    for alert in alerts:
+        level = alert.alert_level
+        by_level[level] = by_level.get(level, 0) + 1
+        
+        status_val = alert.status
+        by_status[status_val] = by_status.get(status_val, 0) + 1
+        
+        rule = alert.rule
+        rule_type = rule.rule_type if rule else 'UNKNOWN'
+        by_type[rule_type] = by_type.get(rule_type, 0) + 1
+    
+    # 统计摘要表格
+    summary_data = [
+        ['统计项', '数量'],
+        ['总预警数', str(total_count)],
+        ['', ''],
+    ]
+    
+    summary_data.append(['按级别统计', ''])
+    for level, count in sorted(by_level.items()):
+        summary_data.append([level, str(count)])
+    
+    summary_data.append(['', ''])
+    summary_data.append(['按状态统计', ''])
+    for status_val, count in sorted(by_status.items()):
+        summary_data.append([status_val, str(count)])
+    
+    summary_table = Table(summary_data, colWidths=[6*cm, 4*cm])
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#366092')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    story.append(summary_table)
+    story.append(Spacer(1, 1*cm))
+    
+    # 预警列表
+    story.append(Paragraph("预警列表", heading_style))
+    
+    # 预警列表表格（分页显示，每页最多20条）
+    page_size = 20
+    for page_idx in range(0, len(alerts), page_size):
+        if page_idx > 0:
+            story.append(PageBreak())
+        
+        page_alerts = alerts[page_idx:page_idx + page_size]
+        
+        # 表头
+        table_data = [[
+            '预警编号', '级别', '标题', '项目', '触发时间', '状态', '处理人'
+        ]]
+        
+        # 数据行
+        for alert in page_alerts:
+            rule = alert.rule
+            project = alert.project
+            handler = None
+            if alert.handler_id:
+                handler = db.query(User).filter(User.id == alert.handler_id).first()
+            elif alert.acknowledged_by:
+                handler = db.query(User).filter(User.id == alert.acknowledged_by).first()
+            
+            table_data.append([
+                alert.alert_no,
+                alert.alert_level,
+                alert.alert_title[:30] + '...' if len(alert.alert_title) > 30 else alert.alert_title,
+                project.project_name if project else '',
+                alert.triggered_at.strftime('%Y-%m-%d %H:%M') if alert.triggered_at else '',
+                alert.status,
+                handler.username if handler else '',
+            ])
+        
+        # 创建表格
+        alert_table = Table(table_data, colWidths=[3*cm, 2*cm, 5*cm, 3*cm, 3*cm, 2*cm, 2*cm])
+        alert_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#366092')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ]))
+        story.append(alert_table)
+    
+    # 生成PDF
+    doc.build(story)
+    buffer.seek(0)
+    
+    # 生成文件名
+    filename = f"预警报表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    
+    return StreamingResponse(
+        io.BytesIO(buffer.read()),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{filename}"
+        }
+    )

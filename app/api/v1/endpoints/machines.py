@@ -501,6 +501,9 @@ def get_machine_documents(
 ) -> Any:
     """
     获取设备的所有文档（按类型分类）
+    
+    注意：只返回用户有权限访问的文档。如果用户没有权限访问某类文档，
+    该类文档将不会出现在列表中。
     """
     machine = db.query(Machine).filter(Machine.id == machine_id).first()
     if not machine:
@@ -511,12 +514,18 @@ def get_machine_documents(
     if doc_type:
         query = query.filter(ProjectDocument.doc_type == doc_type)
     
-    documents = query.order_by(desc(ProjectDocument.created_at)).all()
+    all_documents = query.order_by(desc(ProjectDocument.created_at)).all()
+    
+    # 权限过滤：只返回用户有权限访问的文档
+    accessible_documents = []
+    for doc in all_documents:
+        if security.has_machine_document_permission(current_user, doc.doc_type):
+            accessible_documents.append(doc)
     
     if group_by_type:
         # 按类型分组
         grouped = {}
-        for doc in documents:
+        for doc in accessible_documents:
             doc_type = doc.doc_type
             if doc_type not in grouped:
                 grouped[doc_type] = []
@@ -531,7 +540,8 @@ def get_machine_documents(
                 "machine_name": machine.machine_name,
                 "machine_stage": machine.stage,
                 "documents_by_type": grouped,
-                "total_count": len(documents)
+                "total_count": len(accessible_documents),
+                "filtered_count": len(all_documents) - len(accessible_documents)  # 被过滤掉的文档数量
             }
         )
     else:
@@ -543,8 +553,9 @@ def get_machine_documents(
                 "machine_code": machine.machine_code,
                 "machine_name": machine.machine_name,
                 "machine_stage": machine.stage,
-                "documents": [ProjectDocumentResponse.model_validate(doc) for doc in documents],
-                "total_count": len(documents)
+                "documents": [ProjectDocumentResponse.model_validate(doc) for doc in accessible_documents],
+                "total_count": len(accessible_documents),
+                "filtered_count": len(all_documents) - len(accessible_documents)  # 被过滤掉的文档数量
             }
         )
 
@@ -618,6 +629,9 @@ def get_machine_document_versions(
 ) -> Any:
     """
     获取设备文档的所有版本
+    
+    注意：只返回用户有权限访问的版本。如果用户没有权限访问该文档类型，
+    将返回空列表。
     """
     machine = db.query(Machine).filter(Machine.id == machine_id).first()
     if not machine:
@@ -631,6 +645,23 @@ def get_machine_document_versions(
     if not document:
         raise HTTPException(status_code=404, detail="文档不存在")
     
+    # 检查用户是否有权限访问该类型的文档
+    if not security.has_machine_document_permission(current_user, document.doc_type):
+        doc_type_names = {
+            "CIRCUIT_DIAGRAM": "电路图",
+            "PLC_PROGRAM": "PLC程序",
+            "LABELWORK_PROGRAM": "Labelwork程序",
+            "BOM_DOCUMENT": "BOM文档",
+            "FAT_DOCUMENT": "FAT文档",
+            "SAT_DOCUMENT": "SAT文档",
+            "OTHER": "其他文档",
+        }
+        doc_name = doc_type_names.get(document.doc_type.upper(), document.doc_type)
+        raise HTTPException(
+            status_code=403,
+            detail=f"您没有权限查看{doc_name}类型的文档版本。请联系管理员分配相应角色权限。"
+        )
+    
     # 根据文档编号或名称查找所有版本
     query = db.query(ProjectDocument).filter(
         ProjectDocument.machine_id == machine_id
@@ -642,5 +673,12 @@ def get_machine_document_versions(
         # 如果没有文档编号，使用文档名称匹配
         query = query.filter(ProjectDocument.doc_name == document.doc_name)
     
-    versions = query.order_by(desc(ProjectDocument.created_at)).all()
-    return versions
+    all_versions = query.order_by(desc(ProjectDocument.created_at)).all()
+    
+    # 权限过滤：只返回用户有权限访问的版本
+    accessible_versions = [
+        doc for doc in all_versions
+        if security.has_machine_document_permission(current_user, doc.doc_type)
+    ]
+    
+    return accessible_versions

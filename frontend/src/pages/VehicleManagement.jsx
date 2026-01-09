@@ -3,7 +3,7 @@
  * Features: Vehicle list, usage tracking, maintenance records, fuel management
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Search,
@@ -39,6 +39,7 @@ import {
 import { cn, formatCurrency, formatDate } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { SimpleBarChart, MonthlyTrendChart, SimplePieChart, TrendComparisonCard } from '../components/administrative/StatisticsCharts'
+import { adminApi } from '../services/api'
 
 // Mock data
 const mockVehicles = [
@@ -97,24 +98,45 @@ const mockVehicles = [
 export default function VehicleManagement() {
   const [searchText, setSearchText] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [loading, setLoading] = useState(false)
+  const [vehicles, setVehicles] = useState(mockVehicles)
+
+  // Fetch data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const res = await adminApi.vehicles.list()
+        if (res.data?.items) {
+          setVehicles(res.data.items)
+        } else if (Array.isArray(res.data)) {
+          setVehicles(res.data)
+        }
+      } catch (err) {
+        console.log('Vehicle API unavailable, using mock data')
+      }
+      setLoading(false)
+    }
+    fetchData()
+  }, [])
 
   const filteredVehicles = useMemo(() => {
-    return mockVehicles.filter(vehicle => {
+    return vehicles.filter(vehicle => {
       const matchSearch = vehicle.plateNumber.includes(searchText) ||
         vehicle.brand.includes(searchText) ||
         (vehicle.driver && vehicle.driver.includes(searchText))
       const matchStatus = statusFilter === 'all' || vehicle.status === statusFilter
       return matchSearch && matchStatus
     })
-  }, [searchText, statusFilter])
+  }, [vehicles, searchText, statusFilter])
 
   const stats = useMemo(() => {
-    const total = mockVehicles.length
-    const inUse = mockVehicles.filter(v => v.status === 'in_use').length
-    const available = mockVehicles.filter(v => v.status === 'available').length
-    const maintenance = mockVehicles.filter(v => v.status === 'maintenance').length
+    const total = vehicles.length
+    const inUse = vehicles.filter(v => v.status === 'in_use').length
+    const available = vehicles.filter(v => v.status === 'available').length
+    const maintenance = vehicles.filter(v => v.status === 'maintenance').length
     return { total, inUse, available, maintenance }
-  }, [])
+  }, [vehicles])
 
   return (
     <motion.div
@@ -357,7 +379,7 @@ export default function VehicleManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockVehicles
+                {vehicles
                   .filter(v => v.status === 'in_use')
                   .map((vehicle) => (
                     <div
@@ -406,7 +428,7 @@ export default function VehicleManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockVehicles
+                {vehicles
                   .filter(v => v.status === 'maintenance')
                   .map((vehicle) => (
                     <div
@@ -439,7 +461,7 @@ export default function VehicleManagement() {
                       </div>
                     </div>
                   ))}
-                {mockVehicles
+                {vehicles
                   .filter(v => v.nextMaintenance)
                   .map((vehicle) => (
                     <div

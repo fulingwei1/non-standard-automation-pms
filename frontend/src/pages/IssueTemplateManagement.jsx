@@ -849,7 +849,7 @@ export default function IssueTemplateManagement() {
                       <SelectValue placeholder="选择项目" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">不关联</SelectItem>
+                      <SelectItem value="__none__">不关联</SelectItem>
                       {projects.map((project) => (
                         <SelectItem key={project.id} value={project.id.toString()}>
                           {project.project_name} ({project.project_code})
@@ -869,7 +869,7 @@ export default function IssueTemplateManagement() {
                       <SelectValue placeholder={createIssueForm.project_id ? "选择机台" : "请先选择项目"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">不关联</SelectItem>
+                      <SelectItem value="__none__">不关联</SelectItem>
                       {machines.map((machine) => (
                         <SelectItem key={machine.id} value={machine.id.toString()}>
                           {machine.machine_name} ({machine.machine_code})

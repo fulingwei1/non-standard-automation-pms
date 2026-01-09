@@ -276,6 +276,20 @@ class CustomerSatisfactionResponse(BaseModel):
         from_attributes = True
 
 
+# ==================== 仪表板统计 ====================
+
+class ServiceDashboardStatistics(BaseModel):
+    """客服部门仪表板统计"""
+    active_cases: int = Field(0, description="活跃案例数")
+    resolved_today: int = Field(0, description="今日解决案例数")
+    pending_cases: int = Field(0, description="待处理案例数")
+    avg_response_time: float = Field(0.0, description="平均响应时间（小时）")
+    customer_satisfaction: float = Field(0.0, description="客户满意度")
+    on_site_services: int = Field(0, description="现场服务次数")
+    total_engineers: int = Field(0, description="服务工程师总数")
+    active_engineers: int = Field(0, description="在岗工程师数")
+
+
 # ==================== 知识库 ====================
 
 class KnowledgeBaseCreate(BaseModel):

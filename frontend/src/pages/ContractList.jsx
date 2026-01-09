@@ -3,7 +3,7 @@
  * Features: Contract list, status tracking, payment milestones
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FileSignature,
@@ -29,6 +29,7 @@ import {
   Milestone,
   Paperclip,
   Shield,
+  Loader2,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -49,6 +50,7 @@ import {
 } from '../components/ui'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
+import { contractApi } from '../services/api'
 
 // Status configuration
 const statusConfig = {
@@ -199,38 +201,57 @@ const paymentTypeLabels = {
 }
 
 export default function ContractList() {
+  const [loading, setLoading] = useState(true)
+  const [contracts, setContracts] = useState(mockContracts)
   const [viewMode, setViewMode] = useState('list')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [selectedContract, setSelectedContract] = useState(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
 
+  // Load data from API with fallback to mock data
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const res = await contractApi.list()
+        if (res.data?.items || res.data) {
+          setContracts(res.data?.items || res.data)
+        }
+      } catch (err) {
+        console.log('Contract API unavailable, using mock data')
+      }
+      setLoading(false)
+    }
+    fetchData()
+  }, [])
+
   // Filter contracts
   const filteredContracts = useMemo(() => {
-    return mockContracts.filter(contract => {
-      const matchesSearch = !searchTerm || 
+    return contracts.filter(contract => {
+      const matchesSearch = !searchTerm ||
         contract.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         contract.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contract.customerShort.toLowerCase().includes(searchTerm.toLowerCase())
-      
+        (contract.customerShort || '').toLowerCase().includes(searchTerm.toLowerCase())
+
       const matchesStatus = selectedStatus === 'all' || contract.status === selectedStatus
 
       return matchesSearch && matchesStatus
     })
-  }, [searchTerm, selectedStatus])
+  }, [contracts, searchTerm, selectedStatus])
 
   // Stats
   const stats = useMemo(() => {
-    const active = mockContracts.filter(c => c.status === 'active')
+    const active = contracts.filter(c => c.status === 'active')
     return {
-      total: mockContracts.length,
+      total: contracts.length,
       active: active.length,
-      completed: mockContracts.filter(c => c.status === 'completed').length,
-      totalValue: active.reduce((sum, c) => sum + c.totalAmount, 0),
-      paidValue: active.reduce((sum, c) => sum + c.paidAmount, 0),
-      pendingValue: active.reduce((sum, c) => sum + (c.totalAmount - c.paidAmount), 0),
+      completed: contracts.filter(c => c.status === 'completed').length,
+      totalValue: active.reduce((sum, c) => sum + (c.totalAmount || 0), 0),
+      paidValue: active.reduce((sum, c) => sum + (c.paidAmount || 0), 0),
+      pendingValue: active.reduce((sum, c) => sum + ((c.totalAmount || 0) - (c.paidAmount || 0)), 0),
     }
-  }, [])
+  }, [contracts])
 
   const handleContractClick = (contract) => {
     setSelectedContract(contract)

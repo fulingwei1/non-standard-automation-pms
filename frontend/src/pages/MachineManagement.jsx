@@ -610,8 +610,16 @@ export default function MachineManagement() {
 
                   {loadingDocuments ? (
                     <div className="text-center py-8 text-slate-400">加载中...</div>
-                  ) : machineDocuments?.documents_by_type ? (
+                  ) : machineDocuments?.documents_by_type && Object.keys(machineDocuments.documents_by_type).length > 0 ? (
                     <div className="space-y-6">
+                      {machineDocuments.filtered_count > 0 && (
+                        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-200">
+                          <p className="flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4" />
+                            提示：有 {machineDocuments.filtered_count} 个文档因权限限制未显示。如需查看，请联系管理员分配相应角色权限。
+                          </p>
+                        </div>
+                      )}
                       {Object.entries(machineDocuments.documents_by_type).map(([docType, docs]) => {
                         const config = docTypeConfigs[docType] || docTypeConfigs.OTHER
                         const Icon = config.icon
@@ -674,9 +682,23 @@ export default function MachineManagement() {
                                               selectedMachine.id,
                                               doc.id
                                             )
-                                            alert(`该文档共有 ${versions.data?.length || versions.length} 个版本`)
+                                            const versionList = versions.data || versions
+                                            if (versionList.length === 0) {
+                                              alert('该文档暂无版本记录')
+                                            } else {
+                                              const versionInfo = versionList.map(v => 
+                                                `v${v.version} - ${formatDate(v.created_at)}`
+                                              ).join('\n')
+                                              alert(`该文档共有 ${versionList.length} 个版本：\n\n${versionInfo}`)
+                                            }
                                           } catch (error) {
                                             console.error('Failed to fetch versions:', error)
+                                            const errorMessage = error.response?.data?.detail || error.message || '获取版本失败'
+                                            if (error.response?.status === 403) {
+                                              alert(`获取版本失败：${errorMessage}\n\n如需查看此文档版本，请联系管理员分配相应角色权限。`)
+                                            } else {
+                                              alert(`获取版本失败：${errorMessage}`)
+                                            }
                                           }
                                         }}
                                       >
@@ -692,8 +714,23 @@ export default function MachineManagement() {
                       })}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-slate-400">
-                      暂无文档，点击"上传文档"按钮添加文档
+                    <div className="text-center py-8 text-slate-400 space-y-2">
+                      <p>暂无可见文档</p>
+                      {machineDocuments?.filtered_count > 0 && (
+                        <p className="text-sm text-amber-600 mt-2">
+                          提示：有 {machineDocuments.filtered_count} 个文档因权限限制未显示。
+                          <br />
+                          如需查看，请联系管理员分配相应角色权限。
+                        </p>
+                      )}
+                      <Button 
+                        onClick={() => setShowUploadDialog(true)} 
+                        size="sm" 
+                        className="mt-4"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        上传文档
+                      </Button>
                     </div>
                   )}
                 </TabsContent>
@@ -792,7 +829,7 @@ export default function MachineManagement() {
                     <SelectValue placeholder="选择阶段（可选）" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">不关联</SelectItem>
+                    <SelectItem value="__none__">不关联</SelectItem>
                     <SelectItem value="S1">S1 - 需求进入</SelectItem>
                     <SelectItem value="S2">S2 - 方案设计</SelectItem>
                     <SelectItem value="S3">S3 - 采购备料</SelectItem>

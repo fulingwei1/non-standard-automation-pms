@@ -544,28 +544,95 @@ export default function ProjectDetail() {
 
           {/* Team Tab */}
           {activeTab === 'team' && (
-            <Card>
-              <CardContent>
-                {members.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {members.map((member) => (
-                      <div
-                        key={member.id}
-                        className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
-                      >
-                        <UserAvatar user={{ name: member.name || member.member_name }} size="lg" />
-                        <div>
-                          <p className="font-medium text-white">{member.name || member.member_name}</p>
-                          <p className="text-sm text-slate-500">{member.role || '团队成员'}</p>
-                        </div>
-                      </div>
-                    ))}
+            <div className="space-y-6">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">项目团队</h3>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        // TODO: 打开添加成员对话框
+                        console.log('Add member')
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      添加成员
+                    </Button>
                   </div>
-                ) : (
-                  <div className="text-center py-12 text-slate-500">暂无团队成员</div>
-                )}
-              </CardContent>
-            </Card>
+                  {members.length > 0 ? (
+                    <div className="space-y-4">
+                      {members.map((member) => (
+                        <div
+                          key={member.id}
+                          className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors border border-white/5"
+                        >
+                          <div className="flex items-center gap-4 flex-1">
+                            <UserAvatar user={{ name: member.real_name || member.name || member.member_name }} size="lg" />
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="font-medium text-white">
+                                  {member.real_name || member.name || member.member_name}
+                                </p>
+                                <Badge variant="outline">{member.role_code || member.role || '团队成员'}</Badge>
+                                {member.commitment_level && (
+                                  <Badge variant="secondary">{member.commitment_level}</Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-4 text-sm text-slate-400">
+                                <span>投入: {member.allocation_pct || 100}%</span>
+                                {member.start_date && member.end_date && (
+                                  <span>
+                                    {formatDate(member.start_date)} ~ {formatDate(member.end_date)}
+                                  </span>
+                                )}
+                                {member.reporting_to_pm !== false && (
+                                  <Badge variant="outline" className="text-xs">向PM汇报</Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={async () => {
+                                // 检查冲突
+                                try {
+                                  const response = await memberApi.checkConflicts(id, member.user_id, {
+                                    start_date: member.start_date,
+                                    end_date: member.end_date,
+                                  })
+                                  if (response.data.has_conflict) {
+                                    alert(`发现时间冲突：${response.data.conflict_count} 个冲突项目`)
+                                  } else {
+                                    alert('未发现时间冲突')
+                                  }
+                                } catch (err) {
+                                  console.error('Failed to check conflicts:', err)
+                                }
+                              }}
+                            >
+                              <AlertTriangle className="h-4 w-4" />
+                              检查冲突
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => navigate(`/projects/${id}/workspace`)}
+                            >
+                              查看详情
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-slate-500">暂无团队成员</div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           )}
 
           {/* Leads Tab - 项目负责人配置 */}
