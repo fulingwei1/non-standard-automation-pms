@@ -280,6 +280,7 @@ export default function ECNManagement() {
       const res = await projectApi.list({ page_size: 1000 })
       setProjects(res.data?.items || res.data || [])
     } catch (error) {
+      console.error('获取项目列表失败:', error)
     }
   }
 
@@ -296,6 +297,7 @@ export default function ECNManagement() {
       const ecnList = res.data?.items || res.data || []
       setEcns(ecnList)
     } catch (error) {
+      console.error('获取ECN列表失败:', error)
     } finally {
       setLoading(false)
     }
@@ -325,6 +327,7 @@ export default function ECNManagement() {
       setLogs(logsRes.data || [])
       setEvaluationSummary(summaryRes.data)
     } catch (error) {
+      console.error('获取ECN详情失败:', error)
     }
   }
 
