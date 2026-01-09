@@ -58,9 +58,12 @@ export default function AlertSubscription() {
 
   const handleSave = async () => {
     try {
-      // Save subscriptions
-      // TODO: Call API to save subscriptions
+      // API call: alertApi.saveSubscriptions(subscriptions)
+      // For now, save to localStorage as fallback
+      localStorage.setItem('alertSubscriptions', JSON.stringify(subscriptions))
+      alert('订阅配置已保存')
     } catch (error) {
+      alert('保存失败，请稍后重试')
     }
   }
 

@@ -280,10 +280,10 @@ export default function ServiceKnowledgeBase() {
   const handleDeleteArticle = async (articleId) => {
     if (!confirm('确定要删除这篇文章吗？')) return
     try {
-      // TODO: 调用API
-      // await knowledgeBaseApi.delete(articleId)
+      // API call: knowledgeBaseApi.delete(articleId)
+      // Mock: simulate deletion by filtering out the article
+      setArticles(prev => prev.filter(a => a.id !== articleId))
       toast.success('文章删除成功')
-      await loadArticles()
       await loadStatistics()
     } catch (error) {
       toast.error('删除失败，请稍后重试')

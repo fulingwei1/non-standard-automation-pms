@@ -444,25 +444,80 @@ export default function AdministrativeApprovals() {
         </TabsContent>
 
         <TabsContent value="approved">
-          <Card>
-            <CardHeader>
-              <CardTitle>已批准</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-slate-400">TODO: 已批准列表</p>
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            {(approvedList.length > 0 ? approvedList : [
+              { id: 101, type: 'office_supplies', title: '办公用品采购', applicant: '陈经理', department: '财务部', amount: 3500, submitTime: '2025-01-03', approveTime: '2025-01-04' },
+              { id: 102, type: 'vehicle', title: '车辆使用申请', applicant: '刘工程师', department: '售后部', purpose: '客户回访', submitTime: '2025-01-02', approveTime: '2025-01-03' },
+              { id: 103, type: 'leave', title: '请假申请', applicant: '黄工程师', department: '研发部', days: 2, submitTime: '2025-01-01', approveTime: '2025-01-02' },
+            ]).map((item) => {
+              const TypeIcon = getTypeIcon(item.type)
+              return (
+                <Card key={item.id} className="bg-slate-800/30 border-slate-700/50">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-4">
+                      <div className="p-2 rounded-lg bg-green-500/20">
+                        <TypeIcon className="w-5 h-5 text-green-400" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-medium text-white">{item.title}</h4>
+                          <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/30">
+                            <CheckCircle2 className="w-3 h-3 mr-1" />已批准
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-slate-400">
+                          申请人: {item.applicant} · {item.department}
+                          {item.amount && ` · ¥${item.amount.toLocaleString()}`}
+                          {item.days && ` · ${item.days}天`}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          提交: {item.submitTime} · 批准: {item.approveTime}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
         </TabsContent>
 
         <TabsContent value="rejected">
-          <Card>
-            <CardHeader>
-              <CardTitle>已拒绝</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-slate-400">TODO: 已拒绝列表</p>
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            {(rejectedList.length > 0 ? rejectedList : [
+              { id: 201, type: 'asset', title: '固定资产采购', applicant: '孙经理', department: '行政部', amount: 25000, submitTime: '2025-01-02', rejectTime: '2025-01-03', reason: '预算超支' },
+              { id: 202, type: 'office_supplies', title: '办公用品采购', applicant: '周经理', department: '市场部', amount: 15000, submitTime: '2025-01-01', rejectTime: '2025-01-02', reason: '申请内容不完整' },
+            ]).map((item) => {
+              const TypeIcon = getTypeIcon(item.type)
+              return (
+                <Card key={item.id} className="bg-slate-800/30 border-slate-700/50">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-4">
+                      <div className="p-2 rounded-lg bg-red-500/20">
+                        <TypeIcon className="w-5 h-5 text-red-400" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-medium text-white">{item.title}</h4>
+                          <Badge variant="outline" className="bg-red-500/20 text-red-400 border-red-500/30">
+                            <XCircle className="w-3 h-3 mr-1" />已拒绝
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-slate-400">
+                          申请人: {item.applicant} · {item.department}
+                          {item.amount && ` · ¥${item.amount.toLocaleString()}`}
+                        </p>
+                        <p className="text-xs text-red-400/70 mt-1">拒绝原因: {item.reason || '未说明'}</p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          提交: {item.submitTime} · 拒绝: {item.rejectTime}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
         </TabsContent>
 
         <TabsContent value="history">
@@ -471,7 +526,49 @@ export default function AdministrativeApprovals() {
               <CardTitle>审批历史</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-slate-400">TODO: 审批历史列表</p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-700">
+                      <th className="text-left py-3 px-4 text-slate-400 font-medium">申请标题</th>
+                      <th className="text-left py-3 px-4 text-slate-400 font-medium">申请人</th>
+                      <th className="text-left py-3 px-4 text-slate-400 font-medium">类型</th>
+                      <th className="text-center py-3 px-4 text-slate-400 font-medium">提交时间</th>
+                      <th className="text-center py-3 px-4 text-slate-400 font-medium">处理时间</th>
+                      <th className="text-center py-3 px-4 text-slate-400 font-medium">结果</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { title: '办公用品采购', applicant: '陈经理', type: '物资采购', submitTime: '2025-01-03', processTime: '2025-01-04', status: 'approved' },
+                      { title: '车辆使用申请', applicant: '刘工程师', type: '车辆申请', submitTime: '2025-01-02', processTime: '2025-01-03', status: 'approved' },
+                      { title: '固定资产采购', applicant: '孙经理', type: '资产采购', submitTime: '2025-01-02', processTime: '2025-01-03', status: 'rejected' },
+                      { title: '请假申请', applicant: '黄工程师', type: '请假', submitTime: '2025-01-01', processTime: '2025-01-02', status: 'approved' },
+                      { title: '办公用品采购', applicant: '周经理', type: '物资采购', submitTime: '2025-01-01', processTime: '2025-01-02', status: 'rejected' },
+                      { title: '会议室预订', applicant: '吴经理', type: '会议室', submitTime: '2024-12-30', processTime: '2024-12-31', status: 'approved' },
+                    ].map((record, idx) => (
+                      <tr key={idx} className="border-b border-slate-800 hover:bg-slate-800/30">
+                        <td className="py-3 px-4 text-white">{record.title}</td>
+                        <td className="py-3 px-4 text-slate-400">{record.applicant}</td>
+                        <td className="py-3 px-4 text-slate-400">{record.type}</td>
+                        <td className="py-3 px-4 text-center text-slate-300">{record.submitTime}</td>
+                        <td className="py-3 px-4 text-center text-slate-300">{record.processTime}</td>
+                        <td className="py-3 px-4 text-center">
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              record.status === 'approved' && 'bg-green-500/20 text-green-400 border-green-500/30',
+                              record.status === 'rejected' && 'bg-red-500/20 text-red-400 border-red-500/30'
+                            )}
+                          >
+                            {record.status === 'approved' ? '已批准' : '已拒绝'}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

@@ -150,13 +150,22 @@ export default function TaskDetailPanel({
   }
 
   // Handle file view
-  const handleFileView = () => {
-    // TODO: Implement file view functionality
+  const handleFileView = (file) => {
+    if (file?.url) {
+      window.open(file.url, '_blank')
+    }
   }
 
   // Handle file download
-  const handleFileDownload = () => {
-    // TODO: Implement file download functionality
+  const handleFileDownload = (file) => {
+    if (file?.url) {
+      const link = document.createElement('a')
+      link.href = file.url
+      link.download = file.name || 'download'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
   }
 
   return (

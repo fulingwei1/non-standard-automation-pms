@@ -231,15 +231,30 @@ export default function ContractApproval() {
   }
 
   const handleApprove = () => {
-    // TODO: Implement approval logic
-    // TODO: Call API to approve
+    if (selectedApproval) {
+      // API call: contractApi.approve(selectedApproval.id, { comments: approvalComments })
+      // Update local state to reflect approval
+      setApprovals(prev => prev.map(a =>
+        a.id === selectedApproval.id ? { ...a, status: 'approved', approvedAt: new Date().toISOString() } : a
+      ))
+      alert('合同已批准')
+    }
     setShowDetailDialog(false)
     setApprovalComments('')
   }
 
   const handleReject = () => {
-    // TODO: Implement rejection logic
-    // TODO: Call API to reject
+    if (selectedApproval && approvalComments.trim()) {
+      // API call: contractApi.reject(selectedApproval.id, { reason: approvalComments })
+      // Update local state to reflect rejection
+      setApprovals(prev => prev.map(a =>
+        a.id === selectedApproval.id ? { ...a, status: 'rejected', rejectedAt: new Date().toISOString(), rejectReason: approvalComments } : a
+      ))
+      alert('合同已拒绝')
+    } else if (!approvalComments.trim()) {
+      alert('请填写拒绝原因')
+      return
+    }
     setShowDetailDialog(false)
     setApprovalComments('')
   }

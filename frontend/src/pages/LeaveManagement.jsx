@@ -384,20 +384,125 @@ export default function LeaveManagement() {
               <CardTitle>假期余额</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-slate-400">TODO: 员工假期余额列表</p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-700">
+                      <th className="text-left py-3 px-4 text-slate-400 font-medium">员工</th>
+                      <th className="text-left py-3 px-4 text-slate-400 font-medium">部门</th>
+                      <th className="text-center py-3 px-4 text-slate-400 font-medium">年假(天)</th>
+                      <th className="text-center py-3 px-4 text-slate-400 font-medium">病假(天)</th>
+                      <th className="text-center py-3 px-4 text-slate-400 font-medium">事假(天)</th>
+                      <th className="text-center py-3 px-4 text-slate-400 font-medium">调休(天)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { name: '赵工程师', dept: '机械部', annual: 8, sick: 5, personal: 3, comp: 2 },
+                      { name: '钱工程师', dept: '电气部', annual: 10, sick: 5, personal: 3, comp: 1.5 },
+                      { name: '孙工程师', dept: '软件部', annual: 5, sick: 5, personal: 3, comp: 0 },
+                      { name: '李工程师', dept: '项目部', annual: 12, sick: 5, personal: 3, comp: 3 },
+                      { name: '周工程师', dept: '测试部', annual: 7, sick: 5, personal: 2, comp: 0.5 },
+                    ].map((emp, idx) => (
+                      <tr key={idx} className="border-b border-slate-800 hover:bg-slate-800/30">
+                        <td className="py-3 px-4 text-white">{emp.name}</td>
+                        <td className="py-3 px-4 text-slate-400">{emp.dept}</td>
+                        <td className="py-3 px-4 text-center">
+                          <span className={cn('font-medium', emp.annual > 5 ? 'text-green-400' : 'text-amber-400')}>
+                            {emp.annual}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-center text-slate-300">{emp.sick}</td>
+                        <td className="py-3 px-4 text-center text-slate-300">{emp.personal}</td>
+                        <td className="py-3 px-4 text-center text-blue-400">{emp.comp}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="statistics">
-          <Card>
-            <CardHeader>
-              <CardTitle>统计分析</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-slate-400">TODO: 请假统计分析图表</p>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>请假类型分布</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SimplePieChart
+                  data={[
+                    { name: '年假', value: 45, color: '#22c55e' },
+                    { name: '病假', value: 20, color: '#f59e0b' },
+                    { name: '事假', value: 25, color: '#3b82f6' },
+                    { name: '调休', value: 10, color: '#8b5cf6' },
+                  ]}
+                  height={250}
+                />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>月度请假趋势</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <MonthlyTrendChart
+                  data={[
+                    { month: '7月', value: 28 },
+                    { month: '8月', value: 35 },
+                    { month: '9月', value: 22 },
+                    { month: '10月', value: 30 },
+                    { month: '11月', value: 25 },
+                    { month: '12月', value: 32 },
+                  ]}
+                  height={250}
+                />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>部门请假统计</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SimpleBarChart
+                  data={[
+                    { name: '销售部', value: 15 },
+                    { name: '项目部', value: 12 },
+                    { name: '技术部', value: 18 },
+                    { name: '生产部', value: 8 },
+                    { name: '行政部', value: 5 },
+                  ]}
+                  height={250}
+                />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>关键指标</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <TrendComparisonCard
+                  title="本月请假天数"
+                  current={32}
+                  previous={25}
+                  unit="天"
+                />
+                <TrendComparisonCard
+                  title="平均请假时长"
+                  current={2.5}
+                  previous={2.8}
+                  unit="天/次"
+                />
+                <TrendComparisonCard
+                  title="待审批申请"
+                  current={5}
+                  previous={8}
+                  unit="件"
+                />
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </motion.div>
