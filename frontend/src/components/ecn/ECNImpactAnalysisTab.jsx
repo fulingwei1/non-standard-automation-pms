@@ -7,11 +7,10 @@ import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { Plus, Edit2, XCircle, GitBranch, AlertTriangle, Users, FileText } from 'lucide-react'
 import { useECNImpact } from './hooks/useECNImpact'
-// TODO: 后续添加对话框组件
-// import MaterialDialog from './dialogs/MaterialDialog'
-// import OrderDialog from './dialogs/OrderDialog'
-// import ResponsibilityDialog from './dialogs/ResponsibilityDialog'
-// import RcaDialog from './dialogs/RcaDialog'
+import MaterialDialog from './dialogs/MaterialDialog'
+import OrderDialog from './dialogs/OrderDialog'
+import ResponsibilityDialog from './dialogs/ResponsibilityDialog'
+import RcaDialog from './dialogs/RcaDialog'
 
 export default function ECNImpactAnalysisTab({
   ecnId,
@@ -44,6 +43,8 @@ export default function ECNImpactAnalysisTab({
     setMaterialForm,
     orderForm,
     setOrderForm,
+    editingMaterial,
+    editingOrder,
     handleAnalyzeBomImpact,
     handleCheckObsoleteRisk,
     handleAddMaterial,
@@ -601,11 +602,68 @@ export default function ECNImpactAnalysisTab({
         </Card>
       </div>
 
-      {/* TODO: 对话框组件 - 后续添加 */}
-      {/* <MaterialDialog ... /> */}
-      {/* <OrderDialog ... /> */}
-      {/* <ResponsibilityDialog ... /> */}
-      {/* <RcaDialog ... /> */}
+      {/* 对话框组件 */}
+      <MaterialDialog
+        open={showMaterialDialog}
+        onOpenChange={setShowMaterialDialog}
+        form={materialForm}
+        setForm={setMaterialForm}
+        onSubmit={async () => {
+          const result = await handleSaveMaterial()
+          if (result.success) {
+            alert(result.message)
+          } else {
+            alert(result.message)
+          }
+        }}
+        editingMaterial={editingMaterial}
+      />
+
+      <OrderDialog
+        open={showOrderDialog}
+        onOpenChange={setShowOrderDialog}
+        form={orderForm}
+        setForm={setOrderForm}
+        onSubmit={async () => {
+          const result = await handleSaveOrder()
+          if (result.success) {
+            alert(result.message)
+          } else {
+            alert(result.message)
+          }
+        }}
+        editingOrder={editingOrder}
+      />
+
+      <ResponsibilityDialog
+        open={showResponsibilityDialog}
+        onOpenChange={setShowResponsibilityDialog}
+        form={responsibilityForm}
+        setForm={setResponsibilityForm}
+        onSubmit={async () => {
+          const result = await handleCreateResponsibility()
+          if (result.success) {
+            alert(result.message)
+          } else {
+            alert(result.message)
+          }
+        }}
+      />
+
+      <RcaDialog
+        open={showRcaDialog}
+        onOpenChange={setShowRcaDialog}
+        form={rcaForm}
+        setForm={setRcaForm}
+        onSubmit={async () => {
+          const result = await handleSaveRcaAnalysis()
+          if (result.success) {
+            alert(result.message)
+          } else {
+            alert(result.message)
+          }
+        }}
+      />
     </div>
   )
 }

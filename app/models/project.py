@@ -20,6 +20,7 @@ from sqlalchemy.orm import relationship
 
 from .base import Base, TimestampMixin
 from .organization import Department
+from .rd_project import RdProject
 
 
 class Customer(Base, TimestampMixin):
@@ -723,9 +724,9 @@ class ProjectDocument(Base, TimestampMixin):
     # 关系
     project = relationship("Project", back_populates="documents")
     rd_project = relationship(
-        "RdProject",
+        RdProject,
         foreign_keys=[rd_project_id],
-        primaryjoin="ProjectDocument.rd_project_id == RdProject.id"
+        back_populates="documents",
     )
     machine = relationship("Machine")
 

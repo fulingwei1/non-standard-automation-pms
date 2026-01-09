@@ -27,6 +27,14 @@ frontend/src/components/ecn/
 ├── ECNIntegrationTab.jsx       ✅ 模块集成 Tab (250行)
 ├── ECNLogsTab.jsx              ✅ 变更日志 Tab (150行)
 ├── ECNDetailHeader.jsx          ✅ 页面头部组件 (150行)
+├── dialogs/
+│   ├── EvaluationDialog.jsx    ✅ 评估对话框 (150行)
+│   ├── TaskDialog.jsx          ✅ 任务对话框 (100行)
+│   ├── SolutionTemplateDialog.jsx ✅ 解决方案模板对话框 (80行)
+│   ├── MaterialDialog.jsx      ✅ 物料对话框 (120行)
+│   ├── OrderDialog.jsx         ✅ 订单对话框 (90行)
+│   ├── ResponsibilityDialog.jsx ✅ 责任分摊对话框 (150行)
+│   └── RcaDialog.jsx           ✅ RCA分析对话框 (80行)
 └── ECNDetail.refactored.example.jsx  ✅ 重构示例 (150行)
 ```
 
@@ -153,6 +161,43 @@ frontend/src/components/ecn/
 - 模板分类输入
 - 关键词输入（逗号分隔）
 - 显示当前ECN的解决方案内容
+
+**代码行数**: ~80 行（符合规范）
+
+#### MaterialDialog.jsx ✅
+**功能**:
+- 物料编码和名称输入
+- 变更类型选择（新增/删除/修改/替换）
+- 原数量/新数量、原规格/新规格
+- 成本影响和备注
+
+**代码行数**: ~120 行（符合规范）
+
+#### OrderDialog.jsx ✅
+**功能**:
+- 订单类型选择（采购/外协）
+- 订单号输入
+- 影响描述
+- 处理方式选择（取消/修改/新增/延期）
+- 处理说明
+
+**代码行数**: ~90 行（符合规范）
+
+#### ResponsibilityDialog.jsx ✅
+**功能**:
+- 多部门责任分摊配置
+- 责任比例输入（总和必须100%）
+- 责任类型选择（主要/次要/支持）
+- 影响描述和责任范围
+- 动态添加/删除责任部门
+
+**代码行数**: ~150 行（符合规范）
+
+#### RcaDialog.jsx ✅
+**功能**:
+- 根本原因类型选择（设计问题/物料缺陷/工艺问题等）
+- 原因分类输入
+- RCA分析内容（详细分析文本）
 
 **代码行数**: ~80 行（符合规范）
 
@@ -295,8 +340,18 @@ npm run dev
 - ✅ 完成了知识库 Tab 的重构（包括 Hook 和对话框，相似ECN、解决方案推荐、提取解决方案）
 - ✅ 完成了模块集成 Tab 的重构（BOM、项目、采购同步，批量同步）
 - ✅ 完成了变更日志 Tab 的重构（日志筛选、时间线视图）
+- ✅ 完成了所有对话框组件的创建（7个对话框组件）
 
 **当前进度**: 100% ✅
+
+### 对话框组件 ✅
+- ✅ `EvaluationDialog.jsx` - 创建部门评估对话框
+- ✅ `TaskDialog.jsx` - 创建执行任务对话框
+- ✅ `SolutionTemplateDialog.jsx` - 创建解决方案模板对话框
+- ✅ `MaterialDialog.jsx` - 添加/编辑受影响物料对话框
+- ✅ `OrderDialog.jsx` - 添加/编辑受影响订单对话框
+- ✅ `ResponsibilityDialog.jsx` - 责任分摊配置对话框
+- ✅ `RcaDialog.jsx` - RCA分析对话框
 
 **注意**: 影响分析 Tab 组件较大（~600行），后续可以考虑进一步拆分为子组件。
 

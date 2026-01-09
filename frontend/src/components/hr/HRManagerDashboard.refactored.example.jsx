@@ -32,6 +32,7 @@ import {
   ArrowDownRight,
 } from 'lucide-react'
 import { staggerContainer, fadeIn } from '../../lib/animations'
+import { cn } from '../../lib/utils'
 import { useHRDashboard } from './hooks/useHRDashboard'
 import HRDashboardHeader from './HRDashboardHeader'
 import HROverviewTab from './tabs/HROverviewTab'

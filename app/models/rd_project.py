@@ -93,6 +93,11 @@ class RdProject(Base, TimestampMixin):
     category = relationship('RdProjectCategory')
     project_manager = relationship('User', foreign_keys=[project_manager_id])
     linked_project = relationship('Project')
+    documents = relationship(
+        'ProjectDocument',
+        back_populates='rd_project',
+        lazy='dynamic'
+    )
     
     __table_args__ = (
         Index('idx_rd_project_no', 'project_no'),
@@ -262,4 +267,3 @@ class RdReportRecord(Base, TimestampMixin):
         Index('idx_rd_report_date', 'generated_at'),
         {'comment': '研发报表记录表'}
     )
-
