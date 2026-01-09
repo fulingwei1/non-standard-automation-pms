@@ -111,6 +111,17 @@ def get_session() -> Session:
     return SessionLocal()
 
 
+def get_db():
+    """
+    FastAPI 依赖使用的数据库会话生成器
+    """
+    db = get_session()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
 @contextmanager
 def get_db_session():
     """
