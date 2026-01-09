@@ -287,8 +287,12 @@ export default function ECNDetail() {
         ecnApi.getAffectedOrders(id).catch(() => ({ data: [] })),
         ecnApi.getLogs(id).catch(() => ({ data: [] })),
         ecnApi.getEvaluationSummary(id).catch(() => ({ data: null })),
+        ecnApi.getBomImpactSummary(id).catch(() => ({ data: null })),
+        ecnApi.getObsoleteAlerts(id).catch(() => ({ data: { obsolete_risks: [] } })),
+        ecnApi.getResponsibilitySummary(id).catch(() => ({ data: null })),
+        ecnApi.getRcaAnalysis(id).catch(() => ({ data: null })),
       ])
-      
+
       setEcn(ecnRes.data || ecnRes)
       setEvaluations(evalsRes.data || [])
       setApprovals(approvalsRes.data || [])
@@ -297,7 +301,12 @@ export default function ECNDetail() {
       setAffectedOrders(ordersRes.data || [])
       setLogs(logsRes.data || [])
       setEvaluationSummary(summaryRes.data)
+      setBomImpactSummary(bomImpactRes.data)
+      setObsoleteAlerts(obsoleteRes.data?.obsolete_risks || [])
+      setResponsibilitySummary(responsibilityRes.data)
+      setRcaAnalysis(rcaRes.data)
     } catch (error) {
+      console.error('获取ECN详情失败:', error)
     } finally {
       setLoading(false)
     }
