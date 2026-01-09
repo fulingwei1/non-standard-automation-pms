@@ -361,3 +361,134 @@ def get_all_roles_config(
         roles_config[role.role_code] = role_config
     
     return {"roles": roles_config}
+
+
+@router.put("/{role_id}/nav-groups", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def update_role_nav_groups(
+    *,
+    db: Session = Depends(deps.get_db),
+    role_id: int,
+    nav_groups: List[Dict[str, Any]],
+    request: Request,
+    current_user: User = Depends(security.require_permission("ROLE_UPDATE")),
+) -> Any:
+    """
+    更新角色的导航菜单配置
+
+    - **role_id**: 角色ID
+    - **nav_groups**: 导航组配置（JSON数组）
+
+    nav_groups 格式示例：
+    [
+        {
+            "label": "概览",
+            "items": [
+                {"name": "工作台", "path": "/workstation", "icon": "LayoutDashboard"}
+            ]
+        }
+    ]
+    """
+    role = db.query(Role).filter(Role.id == role_id).first()
+    if not role:
+        raise HTTPException(status_code=404, detail="角色不存在")
+
+    # 更新导航组配置
+    role.nav_groups = nav_groups
+    db.add(role)
+    db.commit()
+
+    # 记录审计日志
+    try:
+        PermissionAuditService.log_role_operation(
+            db=db,
+            operator_id=current_user.id,
+            role_id=role.id,
+            action="NAV_GROUPS_UPDATED",
+            changes={"nav_groups": nav_groups},
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent")
+        )
+    except Exception:
+        pass  # 审计日志记录失败不影响主流程
+
+    return ResponseModel(
+        code=200,
+        message="角色菜单配置更新成功"
+    )
+
+
+@router.get("/{role_id}/nav-groups", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
+def get_role_nav_groups(
+    role_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取角色的导航菜单配置
+
+    - **role_id**: 角色ID
+    """
+    role = db.query(Role).filter(Role.id == role_id).first()
+    if not role:
+        raise HTTPException(status_code=404, detail="角色不存在")
+
+    return {
+        "role_id": role.id,
+        "role_code": role.role_code,
+        "role_name": role.role_name,
+        "nav_groups": role.nav_groups or []
+    }
+
+
+@router.get("/my/nav-groups", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
+def get_my_nav_groups(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取当前用户的导航菜单配置
+
+    根据用户的角色返回合并后的导航菜单
+    """
+    # 获取用户的所有角色
+    user_roles = current_user.roles.all() if hasattr(current_user.roles, 'all') else list(current_user.roles)
+
+    if not user_roles:
+        return {
+            "user_id": current_user.id,
+            "username": current_user.username,
+            "nav_groups": [],
+            "is_superuser": current_user.is_superuser
+        }
+
+    # 合并所有角色的导航菜单
+    merged_nav_groups = []
+    seen_labels = {}
+
+    for user_role in user_roles:
+        role = user_role.role
+        if role and role.nav_groups:
+            for nav_group in role.nav_groups:
+                label = nav_group.get("label")
+                if label not in seen_labels:
+                    seen_labels[label] = len(merged_nav_groups)
+                    merged_nav_groups.append({
+                        "label": label,
+                        "items": list(nav_group.get("items", []))
+                    })
+                else:
+                    # 合并同名分组的菜单项
+                    existing_group = merged_nav_groups[seen_labels[label]]
+                    existing_paths = {item.get("path") for item in existing_group["items"]}
+                    for item in nav_group.get("items", []):
+                        if item.get("path") not in existing_paths:
+                            existing_group["items"].append(item)
+                            existing_paths.add(item.get("path"))
+
+    return {
+        "user_id": current_user.id,
+        "username": current_user.username,
+        "nav_groups": merged_nav_groups,
+        "is_superuser": current_user.is_superuser,
+        "role_codes": [ur.role.role_code for ur in user_roles if ur.role]
+    }

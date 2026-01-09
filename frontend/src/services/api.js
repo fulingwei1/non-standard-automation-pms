@@ -186,6 +186,11 @@ export const roleApi = {
     update: (id, data) => api.put(`/roles/${id}`, data),
     assignPermissions: (id, permissionIds) => api.put(`/roles/${id}/permissions`, permissionIds),
     permissions: () => api.get('/roles/permissions'),
+    // 菜单配置相关
+    getNavGroups: (id) => api.get(`/roles/${id}/nav-groups`),
+    updateNavGroups: (id, navGroups) => api.put(`/roles/${id}/nav-groups`, navGroups),
+    getMyNavGroups: () => api.get('/roles/my/nav-groups'),
+    getAllConfig: () => api.get('/roles/config/all'),
 };
 
 export const customerApi = {
