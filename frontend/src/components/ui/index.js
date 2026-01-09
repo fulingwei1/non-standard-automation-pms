@@ -82,4 +82,5 @@ export {
   TableCell,
   TableCaption,
 } from './table'
+export { Alert, AlertTitle, AlertDescription, alertVariants } from './alert'
 
