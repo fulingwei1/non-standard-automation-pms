@@ -603,39 +603,58 @@ def apply_report_template(
     """
     应用报表模板（套用模板）
     """
+    from app.services.template_report_service import template_report_service
+
     template = db.query(ReportTemplate).filter(ReportTemplate.id == apply_in.template_id).first()
     if not template:
         raise HTTPException(status_code=404, detail="模板不存在")
-    
+
+    if not template.is_active:
+        raise HTTPException(status_code=400, detail="模板已停用")
+
     # 更新使用次数
     template.use_count = (template.use_count or 0) + 1
     db.add(template)
-    
-    # 生成报表
+
+    # 生成报表编码
     report_code = f"RPT-{datetime.now().strftime('%y%m%d%H%M%S')}"
-    
-    # TODO: 根据模板配置生成报表数据
-    report_data = template.sections or {}
-    
+
+    # 根据模板配置生成报表数据
+    report_data = template_report_service.generate_from_template(
+        db,
+        template,
+        apply_in.project_id,
+        apply_in.department_id,
+        apply_in.start_date,
+        apply_in.end_date,
+        apply_in.filters
+    )
+
+    # 如果有错误，返回错误信息
+    if "error" in report_data:
+        raise HTTPException(status_code=400, detail=report_data["error"])
+
     generation = ReportGeneration(
         template_id=template.id,
         report_type=template.report_type,
         report_title=apply_in.report_name,
         scope_type="PROJECT" if apply_in.project_id else ("DEPARTMENT" if apply_in.department_id else None),
         scope_id=apply_in.project_id or apply_in.department_id,
+        period_start=apply_in.start_date,
+        period_end=apply_in.end_date,
         report_data=report_data,
         status="GENERATED",
         generated_by=current_user.id
     )
-    
+
     db.add(generation)
     db.commit()
     db.refresh(generation)
-    
+
     return ReportGenerateResponse(
         report_id=generation.id,
         report_code=report_code,
-        report_name=generation.report_title or f"{template.report_type}报表",
+        report_name=generation.report_title or f"{template.template_name}报表",
         report_type=generation.report_type,
         generated_at=generation.generated_at or datetime.now(),
         data=generation.report_data or {}
