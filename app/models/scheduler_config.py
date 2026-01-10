@@ -34,9 +34,14 @@ class JSONType(TypeDecorator):
     def process_result_value(self, value, dialect):
         if value is not None:
             if isinstance(value, str):
-                return json.loads(value)
+                try:
+                    return json.loads(value)
+                except (json.JSONDecodeError, TypeError):
+                    # 如果 JSON 解析失败，返回空字典或空列表
+                    return {} if self.impl == Text else []
             return value
-        return value
+        # 返回 None 或默认值
+        return None
 
 
 class SchedulerTaskConfig(Base, TimestampMixin):

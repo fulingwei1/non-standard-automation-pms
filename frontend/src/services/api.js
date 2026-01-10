@@ -102,7 +102,7 @@ export const projectContributionApi = {
 };
 
 export const projectApi = {
-    list: (params) => api.get('/projects/', { params }),
+    list: (params = {}) => api.get('/projects/', { params: { page: 1, ...params } }),
     get: (id) => api.get(`/projects/${id}`),
     create: (data) => api.post('/projects/', data),
     update: (id, data) => api.put(`/projects/${id}`, data),
@@ -249,7 +249,7 @@ export const customerApi = {
 };
 
 export const supplierApi = {
-    list: (params) => api.get('/suppliers/', { params }),
+    list: (params = {}) => api.get('/suppliers/', { params: { page: 1, ...params } }),
     get: (id) => api.get(`/suppliers/${id}`),
     create: (data) => api.post('/suppliers/', data),
     update: (id, data) => api.put(`/suppliers/${id}`, data),
@@ -736,7 +736,7 @@ export const acceptanceApi = {
 // Purchase Management APIs
 export const purchaseApi = {
     orders: {
-        list: (params) => api.get('/purchase-orders', { params }),
+        list: (params) => api.get('/purchase-orders/', { params }),
         get: (id) => api.get(`/purchase-orders/${id}`),
         create: (data) => api.post('/purchase-orders', data),
         update: (id, data) => api.put(`/purchase-orders/${id}`, data),

@@ -4,6 +4,7 @@
 """
 import logging
 from typing import Any, List, Optional, Dict
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
@@ -57,11 +58,11 @@ def read_roles(
             where_clauses.append("(role_code LIKE :keyword OR role_name LIKE :keyword)")
             params['keyword'] = f"%{keyword}%"
         
-        # 启用状态筛选（兼容status字段）
+        # 启用状态筛选（使用 is_active 字段）
         if is_active is not None:
-            # 尝试使用status字段，如果没有则不过滤
-            where_clauses.append("(status = :status OR status IS NULL)")
-            params['status'] = 'ACTIVE' if is_active else 'INACTIVE'
+            # 使用 is_active 字段进行筛选
+            where_clauses.append("(is_active = :is_active OR is_active IS NULL)")
+            params['is_active'] = 1 if is_active else 0
         
         where_sql = " AND ".join(where_clauses) if where_clauses else "1=1"
         
@@ -72,6 +73,7 @@ def read_roles(
         
         # 分页查询
         offset = (page - 1) * page_size
+        # 使用 COALESCE 处理可能不存在的 status 字段，使用 is_active 替代
         sql = f"""
             SELECT 
                 id,
@@ -80,7 +82,7 @@ def read_roles(
                 description,
                 data_scope,
                 is_system,
-                status,
+                COALESCE(is_active, 1) as is_active,
                 created_at,
                 updated_at
             FROM roles
@@ -97,33 +99,48 @@ def read_roles(
         # 转换为RoleResponse对象（避免创建Role对象触发ORM关系检查）
         roles = []
         for row in rows:
-            role_id = row[0]
-            
-            # 查询角色的权限（使用SQL避免ORM关系错误）
-            perm_sql = """
-                SELECT p.perm_name
-                FROM role_permissions rp
-                JOIN permissions p ON rp.permission_id = p.id
-                WHERE rp.role_id = :role_id
-            """
-            perm_result = db.execute(text(perm_sql), {"role_id": role_id})
-            perm_rows = perm_result.fetchall()
-            permissions = [row[0] for row in perm_rows if row[0] and row[0].strip()]
-            
-            # 直接构建RoleResponse（避免ORM关系错误）
-            role_response = RoleResponse(
-                id=row[0],
-                role_code=row[1],
-                role_name=row[2],
-                description=row[3],
-                data_scope=row[4] if row[4] else "OWN",
-                is_system=bool(row[5]) if row[5] is not None else False,
-                is_active=True,  # 默认启用
-                permissions=permissions,
-                created_at=row[7],
-                updated_at=row[8],
-            )
-            roles.append(role_response)
+            try:
+                # 安全地访问行数据，检查索引范围
+                if len(row) < 9:
+                    logger.warning(f"角色数据列数不足: {len(row)}, 跳过该行")
+                    continue
+                
+                role_id = row[0]
+                
+                # 查询角色的权限（使用SQL避免ORM关系错误）
+                perm_sql = """
+                    SELECT p.perm_name
+                    FROM role_permissions rp
+                    JOIN permissions p ON rp.permission_id = p.id
+                    WHERE rp.role_id = :role_id
+                """
+                perm_result = db.execute(text(perm_sql), {"role_id": role_id})
+                perm_rows = perm_result.fetchall()
+                # 安全地处理权限数据
+                permissions = []
+                for perm_row in perm_rows:
+                    if perm_row and len(perm_row) > 0 and perm_row[0]:
+                        perm_name = perm_row[0].strip() if isinstance(perm_row[0], str) else str(perm_row[0]).strip()
+                        if perm_name:
+                            permissions.append(perm_name)
+                
+                # 直接构建RoleResponse（避免ORM关系错误）
+                role_response = RoleResponse(
+                    id=row[0],
+                    role_code=row[1] if row[1] else "",
+                    role_name=row[2] if row[2] else "",
+                    description=row[3] if len(row) > 3 and row[3] else None,
+                    data_scope=row[4] if len(row) > 4 and row[4] else "OWN",
+                    is_system=bool(row[5]) if len(row) > 5 and row[5] is not None else False,
+                    is_active=bool(row[6]) if len(row) > 6 and row[6] is not None else True,
+                    permissions=permissions,
+                    created_at=row[7] if len(row) > 7 else None,
+                    updated_at=row[8] if len(row) > 8 else None,
+                )
+                roles.append(role_response)
+            except Exception as row_error:
+                logger.error(f"处理角色数据行失败: {row_error}, row={row}", exc_info=True)
+                continue
         
         return RoleListResponse(
             items=roles,
@@ -275,7 +292,7 @@ def read_role(
                 description,
                 data_scope,
                 is_system,
-                status,
+                COALESCE(is_active, 1) as is_active,
                 created_at,
                 updated_at
             FROM roles
@@ -287,6 +304,13 @@ def read_role(
         if not row:
             raise HTTPException(status_code=404, detail="角色不存在")
         
+        # 检查行数据完整性
+        if len(row) < 9:
+            raise HTTPException(
+                status_code=500,
+                detail=f"角色数据不完整: 期望9列，实际{len(row)}列"
+            )
+        
         # 查询角色的权限（使用SQL避免ORM关系错误）
         perm_sql = """
             SELECT p.perm_name
@@ -296,20 +320,26 @@ def read_role(
         """
         perm_result = db.execute(text(perm_sql), {"role_id": role_id})
         perm_rows = perm_result.fetchall()
-        permissions = [row[0] for row in perm_rows if row[0] and row[0].strip()]
+        # 安全地处理权限数据
+        permissions = []
+        for perm_row in perm_rows:
+            if perm_row and len(perm_row) > 0 and perm_row[0]:
+                perm_name = perm_row[0].strip() if isinstance(perm_row[0], str) else str(perm_row[0]).strip()
+                if perm_name:
+                    permissions.append(perm_name)
         
         # 直接构建RoleResponse（避免ORM关系错误）
         role_response = RoleResponse(
             id=row[0],
-            role_code=row[1],
-            role_name=row[2],
-            description=row[3],
-            data_scope=row[4] if row[4] else "OWN",
-            is_system=bool(row[5]) if row[5] is not None else False,
-            is_active=True,  # 默认启用
+            role_code=row[1] if row[1] else "",
+            role_name=row[2] if row[2] else "",
+            description=row[3] if len(row) > 3 and row[3] else None,
+            data_scope=row[4] if len(row) > 4 and row[4] else "OWN",
+            is_system=bool(row[5]) if len(row) > 5 and row[5] is not None else False,
+            is_active=bool(row[6]) if len(row) > 6 and row[6] is not None else True,
             permissions=permissions,
-            created_at=row[7],
-            updated_at=row[8],
+            created_at=row[7] if len(row) > 7 else None,
+            updated_at=row[8] if len(row) > 8 else None,
         )
         
         return role_response

@@ -172,11 +172,16 @@ class SupplierResponse(TimestampSchema):
     supplier_type: Optional[str] = None
     contact_person: Optional[str] = None
     contact_phone: Optional[str] = None
-    quality_rating: Decimal = 0
-    delivery_rating: Decimal = 0
-    overall_rating: Decimal = 0
-    supplier_level: str = "B"
-    status: str = "ACTIVE"
+    contact_email: Optional[str] = None
+    address: Optional[str] = None
+    quality_rating: Optional[Decimal] = Decimal("0")
+    delivery_rating: Optional[Decimal] = Decimal("0")
+    service_rating: Optional[Decimal] = Decimal("0")
+    overall_rating: Optional[Decimal] = Decimal("0")
+    supplier_level: Optional[str] = "B"
+    status: Optional[str] = "ACTIVE"
+    cooperation_start: Optional[date] = None
+    last_order_date: Optional[date] = None
 
 
 # ==================== BOM ====================

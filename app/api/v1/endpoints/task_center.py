@@ -104,11 +104,12 @@ def get_task_overview(
     ).count()
     
     # 逾期任务
+    today_str = today.strftime("%Y-%m-%d")
     overdue_tasks = db.query(TaskUnified).filter(
         TaskUnified.assignee_id == user_id,
         TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"]),
         TaskUnified.deadline.isnot(None),
-        func.date(TaskUnified.deadline) < today
+        func.date(TaskUnified.deadline) < today_str
     ).count()
     
     # 本周任务
@@ -215,17 +216,18 @@ def get_my_tasks(
     # 逾期任务筛选
     if is_overdue is not None:
         today = datetime.now().date()
+        today_str = today.strftime("%Y-%m-%d")
         if is_overdue:
             query = query.filter(
                 TaskUnified.deadline.isnot(None),
-                func.date(TaskUnified.deadline) < today,
+                func.date(TaskUnified.deadline) < today_str,
                 TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"])
             )
         else:
             query = query.filter(
                 or_(
                     TaskUnified.deadline.is_(None),
-                    func.date(TaskUnified.deadline) >= today,
+                    func.date(TaskUnified.deadline) >= today_str,
                     ~TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"])
                 )
             )
@@ -1351,9 +1353,11 @@ def get_batch_operation_statistics(
     )
     
     if start_date:
-        query = query.filter(func.date(TaskOperationLog.operation_time) >= start_date)
+        start_date_str = start_date.strftime("%Y-%m-%d")
+        query = query.filter(func.date(TaskOperationLog.operation_time) >= start_date_str)
     if end_date:
-        query = query.filter(func.date(TaskOperationLog.operation_time) <= end_date)
+        end_date_str = end_date.strftime("%Y-%m-%d")
+        query = query.filter(func.date(TaskOperationLog.operation_time) <= end_date_str)
     
     logs = query.order_by(desc(TaskOperationLog.operation_time)).all()
     

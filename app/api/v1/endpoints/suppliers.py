@@ -65,8 +65,33 @@ def read_suppliers(
     offset = (page - 1) * page_size
     suppliers = query.order_by(desc(Supplier.created_at)).offset(offset).limit(page_size).all()
     
+    # 手动构建响应对象，确保 Decimal 类型正确处理
+    items = []
+    for supplier in suppliers:
+        items.append(SupplierResponse(
+            id=supplier.id,
+            supplier_code=supplier.supplier_code,
+            supplier_name=supplier.supplier_name,
+            supplier_short_name=supplier.supplier_short_name,
+            supplier_type=supplier.supplier_type,
+            contact_person=supplier.contact_person,
+            contact_phone=supplier.contact_phone,
+            contact_email=supplier.contact_email,
+            address=supplier.address,
+            quality_rating=supplier.quality_rating or Decimal("0"),
+            delivery_rating=supplier.delivery_rating or Decimal("0"),
+            service_rating=supplier.service_rating or Decimal("0"),
+            overall_rating=supplier.overall_rating or Decimal("0"),
+            supplier_level=supplier.supplier_level or "B",
+            status=supplier.status or "ACTIVE",
+            cooperation_start=supplier.cooperation_start,
+            last_order_date=supplier.last_order_date,
+            created_at=supplier.created_at,
+            updated_at=supplier.updated_at
+        ))
+    
     return PaginatedResponse(
-        items=suppliers,
+        items=items,
         total=total,
         page=page,
         page_size=page_size,

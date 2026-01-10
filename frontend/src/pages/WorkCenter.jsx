@@ -22,6 +22,7 @@ import {
   Award,
   BookOpen,
   BarChart3,
+  Zap,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {

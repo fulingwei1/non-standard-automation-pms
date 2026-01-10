@@ -1171,6 +1171,27 @@ def init_project_stages(
     )
 
 
+def _serialize_project_status_log(log: ProjectStatusLog) -> Dict[str, Any]:
+    """构造状态变更日志响应数据"""
+    return {
+        "id": log.id,
+        "project_id": log.project_id,
+        "machine_id": log.machine_id,
+        "old_stage": log.old_stage,
+        "old_status": log.old_status,
+        "old_health": log.old_health,
+        "new_stage": log.new_stage,
+        "new_status": log.new_status,
+        "new_health": log.new_health,
+        "change_type": log.change_type,
+        "change_reason": log.change_reason,
+        "change_note": log.change_note,
+        "changed_by": log.changed_by,
+        "changed_by_name": log.changer.username if log.changer else None,
+        "changed_at": log.changed_at,
+    }
+
+
 @router.get("/{project_id}/status-history", response_model=List[ProjectStatusLogResponse])
 def get_project_status_history(
     *,
@@ -1187,9 +1208,8 @@ def get_project_status_history(
     - **change_type**: 变更类型筛选（可选）
     - **limit**: 返回记录数（默认50，最大200）
     """
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    from app.utils.permission_helpers import check_project_access_or_raise
+    check_project_access_or_raise(db, current_user, project_id)
     
     query = db.query(ProjectStatusLog).filter(ProjectStatusLog.project_id == project_id)
     
@@ -1204,29 +1224,58 @@ def get_project_status_history(
     
     logs = query.order_by(desc(ProjectStatusLog.changed_at)).limit(limit).all()
     
-    # 补充变更人姓名
-    result = []
-    for log in logs:
-        log_dict = {
-            "id": log.id,
-            "project_id": log.project_id,
-            "machine_id": log.machine_id,
-            "old_stage": log.old_stage,
-            "old_status": log.old_status,
-            "old_health": log.old_health,
-            "new_stage": log.new_stage,
-            "new_status": log.new_status,
-            "new_health": log.new_health,
-            "change_type": log.change_type,
-            "change_reason": log.change_reason,
-            "change_note": log.change_note,
-            "changed_by": log.changed_by,
-            "changed_by_name": log.changer.username if log.changer else None,
-            "changed_at": log.changed_at,
-        }
-        result.append(log_dict)
-    
-    return result
+    return [_serialize_project_status_log(log) for log in logs]
+
+
+@router.get(
+    "/{project_id}/status-logs",
+    response_model=PaginatedResponse[ProjectStatusLogResponse]
+)
+def get_project_status_logs(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    page: int = Query(1, ge=1, description="页码"),
+    limit: int = Query(
+        20,
+        ge=1,
+        le=settings.MAX_PAGE_SIZE,
+        description="每页数量（支持limit参数）",
+    ),
+    change_type: Optional[str] = Query(None, description="变更类型筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取项目状态变更日志（分页）
+    """
+    from app.utils.permission_helpers import check_project_access_or_raise
+
+    check_project_access_or_raise(db, current_user, project_id)
+
+    query = db.query(ProjectStatusLog).filter(ProjectStatusLog.project_id == project_id)
+
+    if change_type:
+        valid_types = ['STAGE_CHANGE', 'STATUS_CHANGE', 'HEALTH_CHANGE']
+        if change_type not in valid_types:
+            raise HTTPException(
+                status_code=400,
+                detail=f"无效的变更类型。有效值：{', '.join(valid_types)}"
+            )
+        query = query.filter(ProjectStatusLog.change_type == change_type)
+
+    total = query.count()
+    offset = (page - 1) * limit
+    logs = query.order_by(desc(ProjectStatusLog.changed_at)).offset(offset).limit(limit).all()
+    items = [_serialize_project_status_log(log) for log in logs]
+    pages = (total + limit - 1) // limit if limit else 0
+
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=limit,
+        pages=pages,
+    )
 
 
 # ==================== 项目收款计划 ====================

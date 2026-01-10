@@ -5,6 +5,8 @@
 """
 
 from typing import Any, List, Optional
+import json
+import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
 
@@ -386,6 +388,10 @@ def get_task_configs(
     获取所有定时任务配置列表
     """
     try:
+        # 确保数据库会话有效
+        if not db:
+            raise HTTPException(status_code=500, detail="数据库连接失败")
+        
         query = db.query(SchedulerTaskConfig)
         
         if category:
@@ -395,35 +401,77 @@ def get_task_configs(
         
         configs = query.order_by(SchedulerTaskConfig.category, SchedulerTaskConfig.task_name).all()
         
+        # 安全地处理 JSON 字段
+        items = []
+        for config in configs:
+            try:
+                # 处理 cron_config（JSONType 应该已经处理，但为了安全起见再次检查）
+                cron_config = config.cron_config
+                if cron_config is None:
+                    cron_config = {}
+                elif isinstance(cron_config, str):
+                    try:
+                        cron_config = json.loads(cron_config)
+                    except (json.JSONDecodeError, TypeError):
+                        cron_config = {}
+                
+                # 处理 dependencies_tables
+                dependencies_tables = config.dependencies_tables
+                if dependencies_tables is None:
+                    dependencies_tables = []
+                elif isinstance(dependencies_tables, str):
+                    try:
+                        dependencies_tables = json.loads(dependencies_tables)
+                    except (json.JSONDecodeError, TypeError):
+                        dependencies_tables = []
+                
+                # 处理 sla_config
+                sla_config = config.sla_config
+                if sla_config is None:
+                    sla_config = {}
+                elif isinstance(sla_config, str):
+                    try:
+                        sla_config = json.loads(sla_config)
+                    except (json.JSONDecodeError, TypeError):
+                        sla_config = {}
+                
+                items.append({
+                    "id": config.id,
+                    "task_id": config.task_id,
+                    "task_name": config.task_name,
+                    "module": config.module,
+                    "callable_name": config.callable_name,
+                    "owner": config.owner,
+                    "category": config.category,
+                    "description": config.description,
+                    "is_enabled": config.is_enabled,
+                    "cron_config": cron_config,
+                    "dependencies_tables": dependencies_tables,
+                    "risk_level": config.risk_level,
+                    "sla_config": sla_config,
+                    "updated_by": config.updated_by,
+                    "created_at": config.created_at.isoformat() if config.created_at else None,
+                    "updated_at": config.updated_at.isoformat() if config.updated_at else None,
+                })
+            except Exception as config_error:
+                # 如果某个配置项处理失败，记录错误但继续处理其他项
+                logger = logging.getLogger(__name__)
+                logger.error(f"处理配置项 {config.task_id} 失败: {config_error}", exc_info=True)
+                continue
+        
         return ResponseModel(
             code=200,
             message="success",
             data={
-                "total": len(configs),
-                "items": [
-                    {
-                        "id": config.id,
-                        "task_id": config.task_id,
-                        "task_name": config.task_name,
-                        "module": config.module,
-                        "callable_name": config.callable_name,
-                        "owner": config.owner,
-                        "category": config.category,
-                        "description": config.description,
-                        "is_enabled": config.is_enabled,
-                        "cron_config": config.cron_config if config.cron_config else {},
-                        "dependencies_tables": config.dependencies_tables if config.dependencies_tables else [],
-                        "risk_level": config.risk_level,
-                        "sla_config": config.sla_config if config.sla_config else {},
-                        "updated_by": config.updated_by,
-                        "created_at": config.created_at.isoformat() if config.created_at else None,
-                        "updated_at": config.updated_at.isoformat() if config.updated_at else None,
-                    }
-                    for config in configs
-                ]
+                "total": len(items),
+                "items": items
             }
         )
+    except HTTPException:
+        raise
     except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"获取任务配置列表失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"获取任务配置列表失败: {str(e)}")
 
 

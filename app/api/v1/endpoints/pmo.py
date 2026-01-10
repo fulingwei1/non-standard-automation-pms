@@ -1343,33 +1343,34 @@ def get_pmo_dashboard(
     PMO 驾驶舱数据
     """
     # 统计项目
-    total_projects = db.query(Project).count()
-    active_projects = db.query(Project).filter(Project.is_active == True).count()
-    completed_projects = db.query(Project).filter(Project.stage == 'S9').count()
+    total_projects = db.query(func.count(Project.id)).scalar() or 0
+    active_projects = db.query(func.count(Project.id)).filter(Project.is_active == True).scalar() or 0
+    completed_projects = db.query(func.count(Project.id)).filter(Project.stage == 'S9').scalar() or 0
     
     # 统计延期项目（简化：计划结束日期已过但未完成）
     from datetime import date
     today = date.today()
-    delayed_projects = db.query(Project).filter(
+    delayed_projects = db.query(func.count(Project.id)).filter(
+        Project.planned_end_date != None,
         Project.planned_end_date < today,
         Project.stage != 'S9',
         Project.is_active == True
-    ).count()
+    ).scalar() or 0
     
     # 统计预算和成本
     budget_result = db.query(func.sum(Project.budget_amount)).scalar() or 0
     cost_result = db.query(func.sum(Project.actual_cost)).scalar() or 0
     
     # 统计风险
-    total_risks = db.query(PmoProjectRisk).filter(PmoProjectRisk.status != 'CLOSED').count()
-    high_risks = db.query(PmoProjectRisk).filter(
+    total_risks = db.query(func.count(PmoProjectRisk.id)).filter(PmoProjectRisk.status != 'CLOSED').scalar() or 0
+    high_risks = db.query(func.count(PmoProjectRisk.id)).filter(
         PmoProjectRisk.risk_level == 'HIGH',
         PmoProjectRisk.status != 'CLOSED'
-    ).count()
-    critical_risks = db.query(PmoProjectRisk).filter(
+    ).scalar() or 0
+    critical_risks = db.query(func.count(PmoProjectRisk.id)).filter(
         PmoProjectRisk.risk_level == 'CRITICAL',
         PmoProjectRisk.status != 'CLOSED'
-    ).count()
+    ).scalar() or 0
     
     # 按状态统计项目
     projects_by_status = {}
@@ -1937,4 +1938,3 @@ def get_meeting_actions(
         raise HTTPException(status_code=404, detail="会议不存在")
     
     return meeting.action_items if meeting.action_items else []
-

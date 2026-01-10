@@ -12,20 +12,19 @@
  */
 
 import { useParams, useNavigate } from 'react-router-dom'
-import { useECNDetail } from './hooks/useECNDetail'
-import ECNDetailHeader from './ECNDetailHeader'
-import ECNInfoTab from './ECNInfoTab'
-import ECNEvaluationsTab from './ECNEvaluationsTab'
-import ECNTasksTab from './ECNTasksTab'
-import ECNApprovalsTab from './ECNApprovalsTab'
-import ECNImpactAnalysisTab from './ECNImpactAnalysisTab'
-import ECNKnowledgeTab from './ECNKnowledgeTab'
-import ECNIntegrationTab from './ECNIntegrationTab'
-import ECNLogsTab from './ECNLogsTab'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
-import { Skeleton } from '../ui/skeleton'
-import { Button } from '../ui/button'
-import { useState } from 'react'
+import { useECNDetail } from '../components/ecn/hooks/useECNDetail'
+import ECNDetailHeader from '../components/ecn/ECNDetailHeader'
+import ECNInfoTab from '../components/ecn/ECNInfoTab'
+import ECNEvaluationsTab from '../components/ecn/ECNEvaluationsTab'
+import ECNTasksTab from '../components/ecn/ECNTasksTab'
+import ECNApprovalsTab from '../components/ecn/ECNApprovalsTab'
+import ECNImpactAnalysisTab from '../components/ecn/ECNImpactAnalysisTab'
+import ECNKnowledgeTab from '../components/ecn/ECNKnowledgeTab'
+import ECNIntegrationTab from '../components/ecn/ECNIntegrationTab'
+import ECNLogsTab from '../components/ecn/ECNLogsTab'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
+import { Skeleton } from '../components/ui/skeleton'
+import { Button } from '../components/ui/button'
 
 export default function ECNDetail() {
   const { id } = useParams()
@@ -69,6 +68,24 @@ export default function ECNDetail() {
     }
   }
 
+  const handleVerifyClick = async (verifyForm) => {
+    const result = await handleVerify(verifyForm)
+    if (result.success) {
+      alert(result.message)
+    } else {
+      alert(result.message)
+    }
+  }
+
+  const handleCloseClick = async (closeForm) => {
+    const result = await handleClose(closeForm)
+    if (result.success) {
+      alert(result.message)
+    } else {
+      alert(result.message)
+    }
+  }
+
   // 加载状态
   if (loading) {
     return (
@@ -100,8 +117,8 @@ export default function ECNDetail() {
         onRefresh={refetch}
         onSubmit={handleSubmitClick}
         onStartExecution={handleStartExecutionClick}
-        onVerify={handleVerifyClick}
-        onClose={handleCloseClick}
+        onVerify={handleVerify}
+        onClose={handleClose}
       />
 
       {/* Tab 内容 */}
