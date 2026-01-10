@@ -4,8 +4,10 @@
 """
 
 import os
+import secrets
+import warnings
 from typing import List, Optional
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings
 
 
@@ -23,7 +25,7 @@ class Settings(BaseSettings):
     # 数据库配置
     DATABASE_URL: Optional[str] = None
     SQLITE_DB_PATH: str = "data/app.db"
-    
+
     # Redis配置
     REDIS_URL: Optional[str] = None  # Redis连接URL，格式: redis://localhost:6379/0
     REDIS_CACHE_ENABLED: bool = True  # 是否启用Redis缓存
@@ -32,9 +34,30 @@ class Settings(BaseSettings):
     REDIS_CACHE_PROJECT_LIST_TTL: int = 300  # 项目列表缓存过期时间（秒），5分钟
 
     # JWT配置
-    SECRET_KEY: str = "dev-temp-secret-key-for-testing-only-change-in-production"  # TODO: 生产环境必须从环境变量读取
+    # 生产环境必须从环境变量设置 SECRET_KEY
+    # 开发环境如未设置将自动生成一个临时密钥
+    SECRET_KEY: Optional[str] = None
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24小时
+
+    @model_validator(mode="after")
+    def validate_secret_key(self) -> "Settings":
+        """验证并设置 SECRET_KEY"""
+        if self.SECRET_KEY is None:
+            if self.DEBUG:
+                # 开发环境生成临时密钥
+                self.SECRET_KEY = secrets.token_urlsafe(32)
+                warnings.warn(
+                    "使用开发环境临时生成的 SECRET_KEY。"
+                    "生产环境请务必通过环境变量 SECRET_KEY 设置安全的密钥。"
+                )
+            else:
+                # 生产环境必须有密钥
+                raise ValueError(
+                    "生产环境必须设置 SECRET_KEY 环境变量。"
+                    "请使用: python -c 'import secrets; print(secrets.token_urlsafe(32))' 生成安全密钥。"
+                )
+        return self
 
     # CORS配置
     CORS_ORIGINS: List[str] = [

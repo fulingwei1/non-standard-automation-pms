@@ -4,6 +4,7 @@ import { cn } from '../lib/utils'
 import { authApi } from '../services/api'
 import { DEMO_USERS, getRoleInfo } from '../lib/roleConfig'
 import { diagnoseLogin } from '../utils/diagnose'
+import { logger } from '../utils/logger'
 import {
   User,
   Lock,
@@ -168,13 +169,13 @@ export default function Login({ onLoginSuccess }) {
       } catch (loginErr) {
         // 如果是真实数据库账号，不使用fallback，直接抛出错误
         if (isRealAccount) {
-          console.error('真实账号登录失败:', loginErr)
+          logger.error('真实账号登录失败:', loginErr)
           throw loginErr
         }
 
         // 如果是演示账号且登录失败（超时、网络错误等），使用fallback
         if (isDemoAccount && demoUser) {
-          console.warn('演示账号登录API失败，使用fallback:', loginErr)
+          logger.warn('演示账号登录API失败，使用fallback:', loginErr)
           // 清理之前的用户信息
           localStorage.removeItem('user')
 
@@ -197,7 +198,7 @@ export default function Login({ onLoginSuccess }) {
       // 处理响应数据
       const token = response.data?.access_token || response.data?.data?.access_token || response.access_token
       if (!token) {
-        console.error('登录响应格式错误:', response)
+        logger.error('登录响应格式错误:', response)
         throw new Error('服务器返回格式错误，请检查后端服务')
       }
       
@@ -216,11 +217,10 @@ export default function Login({ onLoginSuccess }) {
           // 确保权限列表被保存到localStorage
           if (userData.permissions && Array.isArray(userData.permissions)) {
             // 权限列表已从后端获取，直接使用
-            console.log('[Login] 用户权限列表:', userData.permissions.length, '个权限')
+            logger.debug('[Login] 用户权限列表:', userData.permissions.length, '个权限')
           } else {
             // 如果没有权限列表，初始化为空数组
             userData.permissions = []
-            console.warn('[Login] 后端未返回权限列表，初始化为空数组')
           }
           
           // 确定用户角色
@@ -306,10 +306,10 @@ export default function Login({ onLoginSuccess }) {
             permissions: userData.permissions || [], // 保存权限列表
           }
           localStorage.setItem('user', JSON.stringify(frontendUser))
-          console.log('[Login] 用户权限已保存:', frontendUser.permissions.length, '个权限')
+          logger.debug('[Login] 用户权限已保存:', frontendUser.permissions.length, '个权限')
         }
       } catch (userErr) {
-        console.warn('获取用户信息失败，使用备用信息:', userErr)
+        logger.warn('获取用户信息失败，使用备用信息:', userErr)
         // 如果获取用户信息失败，创建基本用户信息
         // 优先使用演示账号信息，否则创建默认管理员信息
         if (isDemoAccount && demoUser) {
@@ -334,13 +334,13 @@ export default function Login({ onLoginSuccess }) {
             roles: ['系统管理员'],
           }
           localStorage.setItem('user', JSON.stringify(fallbackUser))
-          console.log('使用备用用户信息:', fallbackUser)
+          logger.warn('使用备用用户信息:', fallbackUser)
         }
       }
       
       onLoginSuccess()
     } catch (err) {
-      console.error('登录错误:', err)
+      logger.error('登录错误:', err)
       
       // Fallback: allow demo login in development mode
       if (isDemoAccount && demoUser) {
@@ -423,7 +423,7 @@ export default function Login({ onLoginSuccess }) {
       setPassword('admin123')
       setError('') // 清除之前的错误信息
     } else {
-      console.warn(`未找到角色 ${roleCode} 的演示用户`)
+      logger.warn(`未找到角色 ${roleCode} 的演示用户`)
     }
   }
 

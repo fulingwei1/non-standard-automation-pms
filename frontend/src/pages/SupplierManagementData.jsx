@@ -217,26 +217,7 @@ export default function SupplierManagementData() {
       case 'D': return 'bg-red-500';
       default: return 'bg-gray-500';
     }
-  };    useEffect(() => {
-    ,
-        {
-          id: 2,
-          supplier_code: 'V00023',
-          supplier_name: 'THK(深圳)销售',
-          supplier_short_name: 'THK',
-          supplier_type: 'MATERIAL',
-          contact_person: '李经理',
-          contact_phone: '0755-87654321',
-          contact_email: 'li@thk.com',
-          address: '深圳市南山区',
-          overall_rating: 4.6,
-          supplier_level: 'A',
-          status: 'ACTIVE',
-        },
-      ])
-      setTotal(2)
-    }
-  }, [])
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">

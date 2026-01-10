@@ -58,18 +58,6 @@ import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { serviceApi, issueApi, projectApi, acceptanceApi } from '../services/api'
 
-// Mock data - 统计数据
-// Mock data - 已移除，使用真实API
-// Mock data - 今日待办
-// Mock data - 已移除，使用真实API
-// Mock data - 进行中的项目（S8/S9阶段）
-// Mock data - 已移除，使用真实API
-// Mock data - 客户问题列表
-// Mock data - 已移除，使用真实API
-// Mock data - 现场服务任务
-// Mock data - 已移除，使用真实API
-// Mock data - 质保期项目
-// Mock data - 已移除，使用真实API
 // 配置
 const todoTypeConfig = {
   issue: { icon: AlertCircle, color: 'text-red-400', bg: 'bg-red-500/20' },
@@ -117,7 +105,7 @@ const healthColors = {
 export default function CustomerServiceDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [stats, setStats] = useState(mockStats)
+  const [stats, setStats] = useState({})
   const [todos, setTodos] = useState([])
   const [activeProjects, setActiveProjects] = useState([])
   const [issues, setIssues] = useState([])
@@ -845,8 +833,7 @@ function CreateIssueDialog({ onClose, onSubmit }) {
     tags: [],
   })
 
-  // Mock data - 实际应从API获取
-  const mockProjects = [
+    const mockProjects = [
     { id: 1, code: 'PJ250106002', name: 'EOL功能测试设备', customer: '东莞XX电子' },
     { id: 2, code: 'PJ250103003', name: 'ICT在线测试设备', customer: '惠州XX电池' },
     { id: 3, code: 'PJ250101001', name: 'BMS老化测试设备', customer: '深圳XX科技' },
@@ -1074,8 +1061,7 @@ function AssignIssueDialog({ issue, onClose, onSubmit }) {
     comment: '',
   })
 
-  // Mock data - 实际应从API获取
-  const mockUsers = [
+    const mockUsers = [
     { id: 1, name: '李工程师', role: '机械工程师' },
     { id: 2, name: '王工程师', role: '电气工程师' },
     { id: 3, name: '张工程师', role: '测试工程师' },

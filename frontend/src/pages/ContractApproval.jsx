@@ -51,8 +51,6 @@ import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 
 // Mock approval data
-// Mock data - 已移除，使用真实API
-// Mock data - 已移除，使用真实API
 const formatCurrency = (value) => {
   if (value >= 10000) {
     return `¥${(value / 10000).toFixed(1)}万`

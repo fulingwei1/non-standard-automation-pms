@@ -18,12 +18,6 @@ import { Progress } from '../components/ui/progress';
 import { cn } from '../lib/utils';
 import { staffMatchingApi } from '../services/api';
 
-// 模拟员工详情数据
-// Mock data - 已移除，使用真实API
-};
-
-// Mock data - 已移除，使用真实API
-// Mock data - 已移除，使用真实API
 // 标签类型配置
 const TAG_TYPE_CONFIG = {
   SKILL: { label: '技能', color: 'blue', icon: Target },
@@ -37,9 +31,9 @@ export default function EmployeeProfileDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [profile, setProfile] = useState(mockProfile);
-  const [evaluations, setEvaluations] = useState(mockEvaluations);
-  const [performance, setPerformance] = useState(mockPerformance);
+  const [profile, setProfile] = useState(null);
+  const [evaluations, setEvaluations] = useState([]);
+  const [performance, setPerformance] = useState([]);
 
   useEffect(() => {
     const loadData = async () => {

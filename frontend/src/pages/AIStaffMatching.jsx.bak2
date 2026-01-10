@@ -38,6 +38,64 @@ const PRIORITY_CONFIG = {
   P5: { color: 'slate', text: 'P5-最低', threshold: 50 },
 };
 
+// 模拟人员需求数据
+// Mock data - 已移除，使用真实API
+  },
+  {
+    id: 2, project_id: 2, project_name: '3C电子装配线',
+    role_code: 'ELEC_ENG', role_name: '电气工程师', headcount: 1,
+    priority: 'P2', status: 'MATCHING', start_date: '2026-02-01', end_date: '2026-08-31',
+    allocation_pct: 80, filled_count: 0,
+    required_skills: [
+      { tag_id: 6, tag_name: 'PLC编程', min_score: 4 },
+      { tag_id: 7, tag_name: '电气设计', min_score: 3 }
+    ]
+  },
+  {
+    id: 3, project_id: 3, project_name: '医疗器械检测设备',
+    role_code: 'SW_ENG', role_name: '软件工程师', headcount: 1,
+    priority: 'P3', status: 'OPEN', start_date: '2026-01-20', end_date: '2026-05-31',
+    allocation_pct: 100, filled_count: 0,
+    required_skills: [
+      { tag_id: 10, tag_name: 'C#开发', min_score: 4 },
+      { tag_id: 11, tag_name: '视觉算法', min_score: 3 }
+    ]
+  }
+];
+
+// 模拟匹配结果
+// Mock data - 已移除，使用真实API
+    },
+    {
+      employee_id: 2, employee_name: '李工', employee_code: 'EMP002',
+      department: '机械设计部', total_score: 86.8, rank: 2,
+      recommendation_type: 'STRONG', current_workload_pct: 75, available_hours: 40,
+      matched_skills: ['机械设计', 'SolidWorks'], missing_skills: ['AutoCAD'],
+      dimension_scores: { skill: 88, domain: 85, attitude: 90, quality: 82, workload: 85, special: 80 }
+    },
+    {
+      employee_id: 3, employee_name: '王工', employee_code: 'EMP003',
+      department: '研发部', total_score: 78.2, rank: 3,
+      recommendation_type: 'RECOMMENDED', current_workload_pct: 50, available_hours: 80,
+      matched_skills: ['机械设计'], missing_skills: ['SolidWorks'],
+      dimension_scores: { skill: 75, domain: 80, attitude: 85, quality: 78, workload: 100, special: 70 }
+    },
+    {
+      employee_id: 4, employee_name: '赵工', employee_code: 'EMP004',
+      department: '工艺部', total_score: 68.5, rank: 4,
+      recommendation_type: 'ACCEPTABLE', current_workload_pct: 90, available_hours: 16,
+      matched_skills: ['SolidWorks'], missing_skills: ['机械设计'],
+      dimension_scores: { skill: 70, domain: 65, attitude: 75, quality: 70, workload: 50, special: 65 }
+    },
+    {
+      employee_id: 5, employee_name: '孙工', employee_code: 'EMP005',
+      department: '技术支持部', total_score: 55.0, rank: 5,
+      recommendation_type: 'WEAK', current_workload_pct: 100, available_hours: 0,
+      matched_skills: [], missing_skills: ['机械设计', 'SolidWorks'],
+      dimension_scores: { skill: 50, domain: 55, attitude: 70, quality: 60, workload: 0, special: 50 }
+    }
+  ]
+};
 
 // 模拟匹配历史
 // Mock data - 已移除，使用真实API

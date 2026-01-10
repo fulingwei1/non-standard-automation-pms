@@ -440,165 +440,33 @@ async def import_employees_from_excel(
     - 为新员工生成工号
     - 创建员工档案
     """
+    from app.services.employee_import_service import (
+        validate_excel_file,
+        import_employees_from_dataframe
+    )
+    
     # 验证文件类型
-    if not file.filename.endswith(('.xlsx', '.xls')):
-        raise HTTPException(status_code=400, detail="请上传Excel文件（.xlsx或.xls格式）")
-
+    validate_excel_file(file.filename)
+    
+    # 读取Excel文件
     try:
-        # 读取Excel文件
         contents = await file.read()
         df = pd.read_excel(io.BytesIO(contents))
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"读取Excel文件失败: {str(e)}")
-
-    # 检查必需列
-    columns = df.columns.tolist()
-    name_col = None
-    for col in ['姓名', '名字', 'name', 'Name', '员工姓名']:
-        if col in columns:
-            name_col = col
-            break
-
-    if not name_col:
-        raise HTTPException(status_code=400, detail="Excel中必须包含'姓名'列")
-
-    # 识别部门列
-    dept_cols = []
-    for col in ['一级部门', '二级部门', '三级部门']:
-        if col in columns:
-            dept_cols.append(col)
-    if not dept_cols and '部门' in columns:
-        dept_cols = ['部门']
-
-    # 识别其他列
-    position_col = next((c for c in ['职务', '岗位', '职位', 'position'] if c in columns), None)
-    phone_col = next((c for c in ['联系方式', '手机', '电话', 'phone', '手机号'] if c in columns), None)
-    status_col = next((c for c in ['在职离职状态', '状态', '在职状态'] if c in columns), None)
-
-    # 获取现有员工
-    existing_employees = db.query(Employee).all()
-    existing_map = {(e.name, e.department): e for e in existing_employees}
-    existing_codes = {e.employee_code for e in existing_employees}
-
-    # 获取管理员用户ID用于评估
-    evaluator_id = current_user.id
-
-    # 获取标签字典
-    tags = db.query(HrTagDict).filter(HrTagDict.is_active == True).all()
-    tag_dict = {tag.tag_name: tag for tag in tags}
-
-    now = datetime.now()
-    today = now.date()
-
-    imported_count = 0
-    updated_count = 0
-    skipped_count = 0
-    errors = []
-
-    for idx, row in df.iterrows():
-        try:
-            name = _clean_name(row.get(name_col))
-            if not name:
-                skipped_count += 1
-                continue
-
-            department = _get_department_name(row, dept_cols) if dept_cols else None
-            position = str(row.get(position_col, '')).strip() if position_col and pd.notna(row.get(position_col)) else None
-            phone = _clean_phone(row.get(phone_col)) if phone_col else None
-            is_active = _is_active_employee(row.get(status_col)) if status_col else True
-
-            key = (name, department)
-
-            if key in existing_map:
-                # 更新现有员工
-                employee = existing_map[key]
-                if phone:
-                    employee.phone = phone
-                if position:
-                    employee.role = position
-                employee.is_active = is_active
-                updated_count += 1
-            else:
-                # 创建新员工
-                employee_code = _generate_employee_code(len(existing_codes) + 1, existing_codes)
-                existing_codes.add(employee_code)
-
-                employee = Employee(
-                    employee_code=employee_code,
-                    name=name,
-                    department=department,
-                    role=position,
-                    phone=phone,
-                    is_active=is_active
-                )
-                db.add(employee)
-                db.flush()
-                existing_map[key] = employee
-                imported_count += 1
-
-                # 创建员工档案
-                profile = HrEmployeeProfile(
-                    employee_id=employee.id,
-                    skill_tags=[],
-                    domain_tags=[],
-                    attitude_tags=[],
-                    character_tags=[],
-                    special_tags=[],
-                    current_workload_pct=Decimal('0'),
-                    total_projects=0,
-                    profile_updated_at=now
-                )
-                db.add(profile)
-
-                # 根据职位自动添加技能标签
-                if position and is_active:
-                    skill_mappings = {
-                        'PLC': ['PLC编程'],
-                        '测试': ['ICT测试', 'FCT测试'],
-                        '机械': ['机械设计', '3D建模'],
-                        '电气': ['电气原理图'],
-                        '视觉': ['视觉系统'],
-                        '客服': ['故障排除', '现场经验'],
-                        '装配': ['装配调试'],
-                        'HMI': ['HMI开发'],
-                        '硬件': ['电气原理图'],
-                        '软件': ['PLC编程', 'HMI开发'],
-                    }
-
-                    matched_tags = set()
-                    for keyword, tag_names in skill_mappings.items():
-                        if keyword in position:
-                            for tag_name in tag_names:
-                                if tag_name in tag_dict:
-                                    matched_tags.add(tag_name)
-
-                    for tag_name in matched_tags:
-                        tag = tag_dict.get(tag_name)
-                        if tag:
-                            eval_record = HrEmployeeTagEvaluation(
-                                employee_id=employee.id,
-                                tag_id=tag.id,
-                                score=3,
-                                evidence=f'根据职位 "{position}" 自动匹配',
-                                evaluator_id=evaluator_id,
-                                evaluate_date=today,
-                                is_valid=True
-                            )
-                            db.add(eval_record)
-
-        except Exception as e:
-            errors.append(f"第{idx + 2}行处理失败: {str(e)}")
-            continue
-
+    
+    # 导入数据
+    result = import_employees_from_dataframe(db, df, current_user.id)
+    
     db.commit()
-
+    
     return {
         "success": True,
-        "message": f"导入完成：新增 {imported_count} 人，更新 {updated_count} 人，跳过 {skipped_count} 条",
-        "imported": imported_count,
-        "updated": updated_count,
-        "skipped": skipped_count,
-        "errors": errors[:10] if errors else []  # 只返回前10条错误
+        "message": f"导入完成：新增 {result['imported']} 人，更新 {result['updated']} 人，跳过 {result['skipped']} 条",
+        "imported": result['imported'],
+        "updated": result['updated'],
+        "skipped": result['skipped'],
+        "errors": result['errors']
     }
 
 
@@ -819,169 +687,37 @@ async def import_hr_profiles(
 
     系统会根据姓名匹配员工，已存在的员工会更新档案，不存在的会新建员工和档案。
     """
-    if not file.filename.endswith(('.xlsx', '.xls')):
-        raise HTTPException(status_code=400, detail="请上传Excel文件（.xlsx或.xls格式）")
-
+    from app.services.hr_profile_import_service import (
+        validate_excel_file,
+        validate_required_columns,
+        import_hr_profiles_from_dataframe
+    )
+    
+    # 验证文件类型
+    validate_excel_file(file.filename)
+    
+    # 读取Excel文件
     try:
         contents = await file.read()
         df = pd.read_excel(io.BytesIO(contents))
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"读取Excel文件失败: {str(e)}")
-
+    
     # 检查必需列
-    if '姓名' not in df.columns:
-        raise HTTPException(status_code=400, detail="Excel中必须包含'姓名'列")
-
-    # 获取现有员工
-    existing_employees = db.query(Employee).all()
-    name_to_employee = {_clean_str(e.name): e for e in existing_employees}
-    existing_codes = {e.employee_code for e in existing_employees}
-
-    imported_count = 0
-    updated_count = 0
-    skipped_count = 0
-    errors = []
-
-    for idx, row in df.iterrows():
-        try:
-            name = _clean_str(row.get('姓名'))
-            if not name:
-                skipped_count += 1
-                continue
-
-            # 查找或创建员工
-            employee = name_to_employee.get(name)
-            if not employee:
-                # 创建新员工
-                code_idx = len(existing_codes) + 1
-                employee_code = f"EMP{code_idx:04d}"
-                while employee_code in existing_codes:
-                    code_idx += 1
-                    employee_code = f"EMP{code_idx:04d}"
-                existing_codes.add(employee_code)
-
-                # 组合部门名称
-                dept_parts = []
-                for col in ['一级部门', '二级部门', '三级部门']:
-                    val = _clean_str(row.get(col))
-                    if val:
-                        dept_parts.append(val)
-                department = '-'.join(dept_parts) if dept_parts else None
-
-                # 确定在职状态
-                status_val = _clean_str(row.get('在职离职状态'))
-                if status_val in ['离职', '已离职']:
-                    employment_status = 'resigned'
-                    is_active = False
-                elif status_val == '试用期':
-                    employment_status = 'active'
-                    is_active = True
-                else:
-                    employment_status = 'active'
-                    is_active = True
-
-                # 确定员工类型
-                is_confirmed = _clean_str(row.get('是否转正'))
-                if is_confirmed == '否' or status_val == '试用期':
-                    employment_type = 'probation'
-                else:
-                    employment_type = 'regular'
-
-                employee = Employee(
-                    employee_code=employee_code,
-                    name=name,
-                    department=department,
-                    role=_clean_str(row.get('职务')),
-                    phone=_clean_phone(row.get('联系方式')),
-                    is_active=is_active,
-                    employment_status=employment_status,
-                    employment_type=employment_type,
-                    id_card=_clean_str(row.get('身份证号')),
-                )
-                db.add(employee)
-                db.flush()
-                name_to_employee[name] = employee
-                imported_count += 1
-            else:
-                # 更新员工基本信息
-                if row.get('联系方式'):
-                    employee.phone = _clean_phone(row.get('联系方式'))
-                if row.get('身份证号'):
-                    employee.id_card = _clean_str(row.get('身份证号'))
-                updated_count += 1
-
-            # 创建或更新人事档案
-            profile = db.query(EmployeeHrProfile).filter(
-                EmployeeHrProfile.employee_id == employee.id
-            ).first()
-            if not profile:
-                profile = EmployeeHrProfile(employee_id=employee.id)
-                db.add(profile)
-
-            # 组织信息
-            profile.dept_level1 = _clean_str(row.get('一级部门'))
-            profile.dept_level2 = _clean_str(row.get('二级部门'))
-            profile.dept_level3 = _clean_str(row.get('三级部门'))
-            profile.direct_supervisor = _clean_str(row.get('直接上级'))
-            profile.position = _clean_str(row.get('职务'))
-            profile.job_level = _clean_str(row.get('级别'))
-
-            # 入职相关
-            profile.hire_date = _parse_date(row.get('入职时间'))
-            profile.probation_end_date = _parse_date(row.get('转正日期'))
-            profile.is_confirmed = _clean_str(row.get('是否转正')) == '是'
-            profile.contract_sign_date = _parse_date(row.get('签订日期'))
-            profile.contract_end_date = _parse_date(row.get('合同到期日'))
-
-            # 个人基本信息
-            profile.gender = _clean_str(row.get('性别'))
-            profile.birth_date = _parse_date(row.get('出生年月'))
-            age_val = row.get('年龄')
-            profile.age = int(age_val) if pd.notna(age_val) else None
-            profile.ethnicity = _clean_str(row.get('民族'))
-            profile.political_status = _clean_str(row.get('政治面貌'))
-            profile.marital_status = _clean_str(row.get('婚姻状况'))
-            profile.height_cm = _clean_decimal(row.get('身高cm'))
-            profile.weight_kg = _clean_decimal(row.get('体重kg'))
-            profile.native_place = _clean_str(row.get('籍贯'))
-
-            # 联系地址
-            profile.home_address = _clean_str(row.get('家庭住址'))
-            profile.current_address = _clean_str(row.get('目前住址'))
-            profile.emergency_contact = _clean_str(row.get('紧急\n联系人'))
-            profile.emergency_phone = _clean_str(row.get('紧急联系\n电话'))
-
-            # 教育背景
-            profile.graduate_school = _clean_str(row.get('毕业院校'))
-            profile.graduate_date = _clean_str(row.get('毕业时间'))
-            profile.major = _clean_str(row.get('所学专业'))
-            profile.education_level = _clean_str(row.get('文化\n程度'))
-            profile.foreign_language = _clean_str(row.get('外语\n程度'))
-            profile.hobbies = _clean_str(row.get('特长爱好'))
-
-            # 财务与社保
-            profile.bank_account = _clean_str(row.get('招商银行卡号/中国工商银行卡'))
-            profile.insurance_base = _clean_decimal(row.get('保险\n基数'))
-            profile.social_security_no = _clean_str(row.get('社保号'))
-            profile.housing_fund_no = _clean_str(row.get('公积金号'))
-
-            # 离职信息
-            profile.resignation_date = _parse_date(row.get('离职日期'))
-            profile.old_department = _clean_str(row.get('部门（旧）'))
-
-        except Exception as e:
-            errors.append(f"第{idx + 2}行处理失败: {str(e)}")
-            continue
-
+    validate_required_columns(df)
+    
+    # 导入数据
+    result = import_hr_profiles_from_dataframe(db, df)
+    
     db.commit()
-
+    
     return {
         "success": True,
-        "message": f"导入完成：新增 {imported_count} 人，更新 {updated_count} 人，跳过 {skipped_count} 条",
-        "imported": imported_count,
-        "updated": updated_count,
-        "skipped": skipped_count,
-        "errors": errors[:10] if errors else []
+        "message": f"导入完成：新增 {result['imported']} 人，更新 {result['updated']} 人，跳过 {result['skipped']} 条",
+        "imported": result['imported'],
+        "updated": result['updated'],
+        "skipped": result['skipped'],
+        "errors": result['errors']
     }
 
 

@@ -66,8 +66,10 @@ export default function GoodsReceiptNew() {
     tracking_no: '',
     remark: '',
   })
-  
-  const [selectedItems, setSelectedItems] = useState([])  useEffect(() => {
+
+  const [selectedItems, setSelectedItems] = useState([])
+
+  useEffect(() => {
     const targetOrderId = orderId || formData.order_id
     if (targetOrderId) {
       loadOrder(targetOrderId)
@@ -82,42 +84,13 @@ export default function GoodsReceiptNew() {
       if (!orderIdToLoad) {
         return
       }
-      
-      )
-        setOrderItems([
-          {
-            id: 1,
-            material_code: 'EL-02-03-0015',
-            material_name: '光电传感器 E3Z-D82',
-            specification: '',
-            unit: '个',
-            quantity: 12,
-            received_qty: 0,
-            unit_price: 450,
-            amount: 5400,
-            status: 'PENDING',
-          },
-          {
-            id: 2,
-            material_code: 'EL-02-03-0016',
-            material_name: '接近开关 E2E-X10D1-N',
-            specification: '',
-            unit: '个',
-            quantity: 8,
-            received_qty: 0,
-            unit_price: 120,
-            amount: 960,
-            status: 'PENDING',
-          },
-        ])
-      } else {
-        const [orderRes, itemsRes] = await Promise.all([
-          purchaseApi.orders.get(orderIdToLoad),
-          purchaseApi.orders.getItems(orderIdToLoad),
-        ])
-        setOrder(orderRes.data || orderRes)
-        setOrderItems(itemsRes.data || itemsRes || [])
-      }
+
+      const [orderRes, itemsRes] = await Promise.all([
+        purchaseApi.orders.get(orderIdToLoad),
+        purchaseApi.orders.getItems(orderIdToLoad),
+      ])
+      setOrder(orderRes.data || orderRes)
+      setOrderItems(itemsRes.data || itemsRes || [])
     } catch (err) {
       console.error('Failed to load order:', err)
       setError(err.response?.data?.detail || '加载采购订单失败')
@@ -215,12 +188,10 @@ export default function GoodsReceiptNew() {
           remark: item.remark || null,
         })),
       }
-      
-       else {
-        const res = await purchaseApi.receipts.create(receiptData)
-        toast.success('收货单创建成功')
-        navigate(`/purchases/receipts/${res.data?.id || res.id}`)
-      }
+
+      const res = await purchaseApi.receipts.create(receiptData)
+      toast.success('收货单创建成功')
+      navigate(`/purchases/receipts/${res.data?.id || res.id}`)
     } catch (err) {
       console.error('Failed to create receipt:', err)
       setError(err.response?.data?.detail || '创建收货单失败')
@@ -508,29 +479,19 @@ export default function GoodsReceiptNew() {
 function OrderSelectionForm({ onSelect }) {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')  useEffect(() => {
+  const [searchQuery, setSearchQuery] = useState('')
+
+  useEffect(() => {
     const loadOrders = async () => {
       try {
         setLoading(true)
-        ,
-            {
-              id: 2,
-              order_no: 'PO-250115-002',
-              supplier_name: 'THK(深圳)销售',
-              project_name: 'BMS老化测试设备',
-              status: 'APPROVED',
-              total_amount: 18984,
-            },
-          ])
-        } else {
-          const res = await purchaseApi.orders.list({ 
-            page: 1, 
-            page_size: 100,
-            status: 'APPROVED' // Only show approved orders
-          })
-          const data = res.data?.items || res.data || []
-          setOrders(data)
-        }
+        const res = await purchaseApi.orders.list({
+          page: 1,
+          page_size: 100,
+          status: 'APPROVED' // Only show approved orders
+        })
+        const data = res.data?.items || res.data || []
+        setOrders(data)
       } catch (err) {
         console.error('Failed to load orders:', err)
       } finally {

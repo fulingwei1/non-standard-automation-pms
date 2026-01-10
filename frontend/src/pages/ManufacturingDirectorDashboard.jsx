@@ -61,7 +61,6 @@ import { productionApi, shortageApi, serviceApi, materialApi, businessSupportApi
 import CultureWallCarousel from '../components/culture/CultureWallCarousel'
 import { ApiIntegrationError } from '../components/ui'
 
-// Mock data - Overall manufacturing center stats - 已移除，使用真实API
 
 
 // Mock workshops data - 已移除，使用真实API

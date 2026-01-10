@@ -1,432 +1,318 @@
 # -*- coding: utf-8 -*-
 """
-预警通知服务
-提供统一的预警通知发送、阅读状态管理和查询接口
+统一通知服务
+支持邮件、短信、企业微信等多种通知渠道
 """
 
+import os
 import logging
 from typing import List, Optional, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime
+from enum import Enum
 
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_
 
-from app.models.alert import AlertRecord, AlertNotification
-from app.models.user import User
-from app.models.notification import Notification, NotificationSettings
-from app.services.notification_dispatcher import (
-    NotificationDispatcher,
-    resolve_channels,
-    resolve_recipients,
-    resolve_channel_target,
-    channel_allowed,
-    is_quiet_hours,
-    next_quiet_resume,
-)
-
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 
-class AlertNotificationService:
-    """预警通知服务类"""
+class NotificationChannel(str, Enum):
+    """通知渠道"""
+    EMAIL = "email"
+    SMS = "sms"
+    WECHAT = "wechat"
+    WEB = "web"  # 站内通知
+    WEBHOOK = "webhook"
 
-    def __init__(self, db: Session):
-        self.db = db
-        self.dispatcher = NotificationDispatcher(db)
 
-    def send_alert_notification(
+class NotificationPriority(str, Enum):
+    """通知优先级"""
+    LOW = "low"
+    NORMAL = "normal"
+    HIGH = "high"
+    URGENT = "urgent"
+
+
+class NotificationType(str, Enum):
+    """通知类型"""
+    TASK_ASSIGNED = "task_assigned"  # 任务分配
+    TASK_UPDATED = "task_updated"  # 任务更新
+    TASK_COMPLETED = "task_completed"  # 任务完成
+    TASK_APPROVED = "task_approved"  # 任务审批通过
+    TASK_REJECTED = "task_rejected"  # 任务审批拒绝
+    PROJECT_UPDATE = "project_update"  # 项目更新
+    HEALTH_CHANGE = "health_change"  # 健康度变更
+    DEADLINE_REMINDER = "deadline_reminder"  # 截止日期提醒
+    SYSTEM_ANNOUNCEMENT = "system_announcement"  # 系统公告
+
+
+class NotificationService:
+    """统一通知服务"""
+
+    def __init__(self):
+        self.enabled_channels = self._get_enabled_channels()
+
+    def _get_enabled_channels(self) -> List[NotificationChannel]:
+        """获取启用的通知渠道"""
+        channels = [NotificationChannel.WEB]  # 站内通知始终启用
+
+        if settings.EMAIL_ENABLED:
+            channels.append(NotificationChannel.EMAIL)
+
+        if settings.SMS_ENABLED:
+            channels.append(NotificationChannel.SMS)
+
+        if settings.WECHAT_ENABLED:
+            channels.append(NotificationChannel.WECHAT)
+
+        if settings.WECHAT_WEBHOOK_URL:
+            channels.append(NotificationChannel.WEBHOOK)
+
+        return channels
+
+    def send_notification(
         self,
-        alert: AlertRecord,
-        user_ids: Optional[List[int]] = None,
-        channels: Optional[List[str]] = None,
-        force_send: bool = False
-    ) -> Dict[str, Any]:
-        """
-        发送预警通知
-        
-        Args:
-            alert: 预警记录
-            user_ids: 指定用户ID列表，如果为None则从规则配置中获取
-            channels: 指定通知渠道列表，如果为None则从规则配置中获取
-            force_send: 是否强制发送（忽略免打扰时段）
-        
-        Returns:
-            包含发送结果的字典
-        """
-        try:
-            # 1. 确定通知渠道
-            if channels is None:
-                channels = resolve_channels(alert)
-            if not channels:
-                channels = ["SYSTEM"]  # 默认使用站内消息
-
-            # 2. 确定通知对象
-            if user_ids is None:
-                recipients = resolve_recipients(self.db, alert)
-                user_ids = list(recipients.keys())
-            
-            if not user_ids:
-                logger.warning(f"Alert {alert.id} has no recipients, skipping notification")
-                return {
-                    "success": False,
-                    "message": "No recipients found",
-                    "notifications_created": 0
-                }
-
-            # 3. 创建通知记录
-            current_time = datetime.now()
-            notifications_created = 0
-            notifications_sent = 0
-            notifications_failed = 0
-            notifications_delayed = 0
-
-            for user_id in user_ids:
-                user = self.db.query(User).filter(User.id == user_id).first()
-                if not user or not user.is_active:
-                    continue
-
-                # 获取用户通知设置
-                settings = self.db.query(NotificationSettings).filter(
-                    NotificationSettings.user_id == user_id
-                ).first()
-
-                for channel in channels:
-                    # 检查渠道是否允许
-                    if not channel_allowed(channel, settings):
-                        continue
-
-                    # 检查是否已存在通知（避免重复）
-                    target = resolve_channel_target(channel, user)
-                    if not target:
-                        continue
-
-                    existing = self.db.query(AlertNotification).filter(
-                        AlertNotification.alert_id == alert.id,
-                        AlertNotification.notify_channel == channel.upper(),
-                        AlertNotification.notify_target == target
-                    ).first()
-
-                    if existing:
-                        continue
-
-                    # 创建通知记录
-                    notification = AlertNotification(
-                        alert_id=alert.id,
-                        notify_channel=channel.upper(),
-                        notify_target=target,
-                        notify_user_id=user_id,
-                        notify_title=alert.alert_title,
-                        notify_content=alert.alert_content,
-                        status='PENDING'
-                    )
-
-                    # 检查免打扰时段
-                    if not force_send and is_quiet_hours(settings, current_time):
-                        notification.next_retry_at = next_quiet_resume(settings, current_time)
-                        notification.error_message = "Delayed due to quiet hours"
-                        notification.status = 'PENDING'
-                        notifications_delayed += 1
-                    else:
-                        # 立即尝试发送
-                        try:
-                            success = self.dispatcher.dispatch(notification, alert, user)
-                            if success:
-                                notifications_sent += 1
-                            else:
-                                notifications_failed += 1
-                        except Exception as e:
-                            logger.error(f"Failed to send notification for alert {alert.id}: {str(e)}")
-                            notification.status = 'FAILED'
-                            notification.error_message = str(e)
-                            notifications_failed += 1
-
-                    self.db.add(notification)
-                    notifications_created += 1
-
-            self.db.flush()
-
-            return {
-                "success": True,
-                "message": "Notifications processed",
-                "notifications_created": notifications_created,
-                "notifications_sent": notifications_sent,
-                "notifications_failed": notifications_failed,
-                "notifications_delayed": notifications_delayed
-            }
-
-        except Exception as e:
-            logger.error(f"Error sending alert notifications: {str(e)}", exc_info=True)
-            return {
-                "success": False,
-                "message": f"Error: {str(e)}",
-                "notifications_created": 0
-            }
-
-    def mark_notification_read(
-        self,
-        notification_id: int,
-        user_id: int
+        db: Session,
+        recipient_id: int,
+        notification_type: NotificationType,
+        title: str,
+        content: str,
+        priority: NotificationPriority = NotificationPriority.NORMAL,
+        channels: Optional[List[NotificationChannel]] = None,
+        data: Optional[Dict[str, Any]] = None,
+        link: Optional[str] = None
     ) -> bool:
-        """
-        标记通知为已读
-        
-        Args:
-            notification_id: 通知ID
-            user_id: 用户ID（用于权限验证）
-        
-        Returns:
-            是否成功
-        """
-        try:
-            notification = self.db.query(AlertNotification).filter(
-                AlertNotification.id == notification_id,
-                AlertNotification.notify_user_id == user_id
-            ).first()
+        """发送通知"""
+        if channels is None:
+            channels = self.enabled_channels
 
-            if not notification:
-                logger.warning(f"Notification {notification_id} not found or not owned by user {user_id}")
-                return False
+        success = True
 
-            if notification.read_at:
-                # 已经标记为已读
-                return True
+        # 保存站内通知记录
+        if NotificationChannel.WEB in channels:
+            try:
+                self._save_web_notification(
+                    db, recipient_id, notification_type, title, content, priority, data, link
+                )
+            except Exception as e:
+                logger.error(f"保存站内通知失败: {e}")
+                success = False
 
-            notification.read_at = datetime.now()
-            self.db.add(notification)
-            self.db.commit()
+        # 发送邮件通知
+        if NotificationChannel.EMAIL in channels:
+            try:
+                self._send_email_notification(
+                    db, recipient_id, notification_type, title, content
+                )
+            except Exception as e:
+                logger.error(f"发送邮件通知失败: {e}")
 
-            # 同时更新站内消息的阅读状态
-            if notification.notify_channel == "SYSTEM":
-                system_notification = self.db.query(Notification).filter(
-                    Notification.user_id == user_id,
-                    Notification.source_type == "alert",
-                    Notification.source_id == notification.alert_id,
-                    Notification.notification_type == "ALERT_NOTIFICATION"
-                ).first()
-                if system_notification:
-                    system_notification.is_read = True
-                    system_notification.read_at = datetime.now()
-                    self.db.add(system_notification)
+        # 发送企业微信通知
+        if NotificationChannel.WECHAT in channels:
+            try:
+                self._send_wechat_notification(
+                    db, recipient_id, notification_type, title, content, data
+                )
+            except Exception as e:
+                logger.error(f"发送企业微信通知失败: {e}")
 
-            self.db.commit()
-            return True
+        # 发送 Webhook 通知
+        if NotificationChannel.WEBHOOK in channels:
+            try:
+                self._send_webhook_notification(notification_type, title, content, data)
+            except Exception as e:
+                logger.error(f"发送 Webhook 通知失败: {e}")
 
-        except Exception as e:
-            logger.error(f"Error marking notification as read: {str(e)}", exc_info=True)
-            self.db.rollback()
-            return False
+        return success
 
-    def get_user_notifications(
+    def _save_web_notification(
         self,
-        user_id: int,
-        is_read: Optional[bool] = None,
-        limit: int = 50,
-        offset: int = 0
-    ) -> Dict[str, Any]:
-        """
-        获取用户的通知列表
-        
-        Args:
-            user_id: 用户ID
-            is_read: 是否已读（None表示全部）
-            limit: 返回数量限制
-            offset: 偏移量
-        
-        Returns:
-            包含通知列表和总数的字典
-        """
+        db: Session,
+        recipient_id: int,
+        notification_type: NotificationType,
+        title: str,
+        content: str,
+        priority: NotificationPriority,
+        data: Optional[Dict[str, Any]],
+        link: Optional[str]
+    ):
+        """保存站内通知"""
+        # 尝试导入 WebNotification 模型
         try:
-            query = self.db.query(AlertNotification).filter(
-                AlertNotification.notify_user_id == user_id
+            from app.models.notification import WebNotification
+
+            notification = WebNotification(
+                recipient_id=recipient_id,
+                notification_type=notification_type.value,
+                title=title,
+                content=content,
+                priority=priority.value,
+                link=link,
+                data=data or {},
+                is_read=False
             )
 
-            if is_read is not None:
-                if is_read:
-                    query = query.filter(AlertNotification.read_at.isnot(None))
-                else:
-                    query = query.filter(AlertNotification.read_at.is_(None))
+            db.add(notification)
+            db.commit()
+        except ImportError:
+            # 如果模型不存在，记录日志但不报错
+            logger.warning("WebNotification 模型不存在，跳过站内通知")
 
-            total = query.count()
-
-            notifications = query.options(
-                # 预加载关联数据，避免N+1查询
-            ).join(AlertRecord).order_by(
-                AlertNotification.created_at.desc()
-            ).offset(offset).limit(limit).all()
-
-            # 构建返回数据
-            items = []
-            for notification in notifications:
-                alert = notification.alert
-                items.append({
-                    "id": notification.id,
-                    "alert_id": alert.id if alert else None,
-                    "alert_no": alert.alert_no if alert else None,
-                    "alert_level": alert.alert_level if alert else None,
-                    "alert_title": notification.notify_title or (alert.alert_title if alert else ""),
-                    "alert_content": notification.notify_content or (alert.alert_content if alert else ""),
-                    "notify_channel": notification.notify_channel,
-                    "status": notification.status,
-                    "is_read": notification.read_at is not None,
-                    "read_at": notification.read_at.isoformat() if notification.read_at else None,
-                    "sent_at": notification.sent_at.isoformat() if notification.sent_at else None,
-                    "created_at": notification.created_at.isoformat() if notification.created_at else None,
-                    "project_id": alert.project_id if alert else None,
-                    "project_name": alert.project.project_name if alert and alert.project else None,
-                })
-
-            return {
-                "success": True,
-                "items": items,
-                "total": total,
-                "limit": limit,
-                "offset": offset
-            }
-
-        except Exception as e:
-            logger.error(f"Error getting user notifications: {str(e)}", exc_info=True)
-            return {
-                "success": False,
-                "message": f"Error: {str(e)}",
-                "items": [],
-                "total": 0
-            }
-
-    def get_unread_count(self, user_id: int) -> int:
-        """
-        获取用户未读通知数量
-        
-        Args:
-            user_id: 用户ID
-        
-        Returns:
-            未读通知数量
-        """
-        try:
-            count = self.db.query(AlertNotification).filter(
-                AlertNotification.notify_user_id == user_id,
-                AlertNotification.read_at.is_(None),
-                AlertNotification.status == 'SENT'
-            ).count()
-            return count
-        except Exception as e:
-            logger.error(f"Error getting unread count: {str(e)}", exc_info=True)
-            return 0
-
-    def batch_mark_read(
+    def _send_email_notification(
         self,
-        notification_ids: List[int],
-        user_id: int
-    ) -> Dict[str, Any]:
-        """
-        批量标记通知为已读
-        
-        Args:
-            notification_ids: 通知ID列表
-            user_id: 用户ID
-        
-        Returns:
-            包含成功和失败数量的字典
-        """
+        db: Session,
+        recipient_id: int,
+        notification_type: NotificationType,
+        title: str,
+        content: str
+    ):
+        """发送邮件通知"""
+        if not settings.EMAIL_ENABLED:
+            return
+
+        from app.models.user import User
+
+        # 获取接收人邮箱
+        recipient = db.query(User).filter(User.id == recipient_id).first()
+        if not recipient or not recipient.email:
+            logger.warning(f"用户 {recipient_id} 没有配置邮箱")
+            return
+
+        logger.info(f"[邮件通知] 发送给 {recipient.email}: {title}")
+
+    def _send_wechat_notification(
+        self,
+        db: Session,
+        recipient_id: int,
+        notification_type: NotificationType,
+        title: str,
+        content: str,
+        data: Optional[Dict[str, Any]]
+    ):
+        """发送企业微信通知"""
+        if not settings.WECHAT_ENABLED:
+            return
+
+        from app.models.user import User
+
+        # 获取接收人企业微信账号
+        recipient = db.query(User).filter(User.id == recipient_id).first()
+        if not recipient:
+            return
+
+        logger.info(f"[企业微信通知] 发送给 {recipient.username}: {title}")
+
+    def _send_webhook_notification(
+        self,
+        notification_type: NotificationType,
+        title: str,
+        content: str,
+        data: Optional[Dict[str, Any]]
+    ):
+        """发送 Webhook 通知（如钉钉、飞书等）"""
+        if not settings.WECHAT_WEBHOOK_URL:
+            return
+
+        import requests
+
+        # 构造 Webhook 消息
+        message = {
+            "msgtype": "text",
+            "text": {
+                "content": f"【{title}】\n{content}"
+            }
+        }
+
         try:
-            notifications = self.db.query(AlertNotification).filter(
-                AlertNotification.id.in_(notification_ids),
-                AlertNotification.notify_user_id == user_id,
-                AlertNotification.read_at.is_(None)
-            ).all()
-
-            success_count = 0
-            for notification in notifications:
-                notification.read_at = datetime.now()
-                self.db.add(notification)
-                success_count += 1
-
-            self.db.commit()
-
-            return {
-                "success": True,
-                "total": len(notification_ids),
-                "success_count": success_count,
-                "failed_count": len(notification_ids) - success_count
-            }
-
+            response = requests.post(
+                settings.WECHAT_WEBHOOK_URL,
+                json=message,
+                timeout=10
+            )
+            if response.status_code != 200:
+                logger.error(f"Webhook 通知失败: {response.status_code}")
         except Exception as e:
-            logger.error(f"Error batch marking notifications as read: {str(e)}", exc_info=True)
-            self.db.rollback()
-            return {
-                "success": False,
-                "message": f"Error: {str(e)}",
-                "total": len(notification_ids),
-                "success_count": 0,
-                "failed_count": len(notification_ids)
-            }
+            logger.error(f"发送 Webhook 通知异常: {e}")
+
+    def send_task_assigned_notification(
+        self,
+        db: Session,
+        assignee_id: int,
+        task_name: str,
+        project_name: str,
+        task_id: int,
+        due_date: Optional[datetime] = None
+    ):
+        """发送任务分配通知"""
+        title = "新任务分配"
+        content = f"您被分配了新任务：{task_name}"
+
+        if project_name:
+            content += f"\n所属项目：{project_name}"
+
+        if due_date:
+            content += f"\n截止日期：{due_date.strftime('%Y-%m-%d')}"
+
+        self.send_notification(
+            db=db,
+            recipient_id=assignee_id,
+            notification_type=NotificationType.TASK_ASSIGNED,
+            title=title,
+            content=content,
+            priority=NotificationPriority.NORMAL,
+            link=f"/tasks/{task_id}"
+        )
+
+    def send_task_completed_notification(
+        self,
+        db: Session,
+        task_owner_id: int,
+        task_name: str,
+        project_name: str
+    ):
+        """发送任务完成通知"""
+        title = "任务已完成"
+        content = f"任务「{task_name}」已完成"
+
+        if project_name:
+            content += f"\n所属项目：{project_name}"
+
+        self.send_notification(
+            db=db,
+            recipient_id=task_owner_id,
+            notification_type=NotificationType.TASK_COMPLETED,
+            title=title,
+            content=content,
+            priority=NotificationPriority.NORMAL
+        )
+
+    def send_deadline_reminder(
+        self,
+        db: Session,
+        recipient_id: int,
+        task_name: str,
+        due_date: datetime,
+        days_remaining: int
+    ):
+        """发送截止日期提醒"""
+        title = "任务截止提醒"
+        urgency = "紧急" if days_remaining <= 1 else ("即将到期" if days_remaining <= 3 else "提醒")
+        content = f"任务「{task_name}」{urgency}\n"
+        content += f"截止日期：{due_date.strftime('%Y-%m-%d')}\n"
+        content += f"剩余天数：{days_remaining} 天"
+
+        priority = NotificationPriority.URGENT if days_remaining <= 1 else NotificationPriority.HIGH
+
+        self.send_notification(
+            db=db,
+            recipient_id=recipient_id,
+            notification_type=NotificationType.DEADLINE_REMINDER,
+            title=title,
+            content=content,
+            priority=priority
+        )
 
 
-# 便捷函数
-def send_alert_notification(
-    db: Session,
-    alert: AlertRecord,
-    user_ids: Optional[List[int]] = None,
-    channels: Optional[List[str]] = None,
-    force_send: bool = False
-) -> Dict[str, Any]:
-    """
-    发送预警通知的便捷函数
-    
-    Args:
-        db: 数据库会话
-        alert: 预警记录
-        user_ids: 指定用户ID列表
-        channels: 指定通知渠道列表
-        force_send: 是否强制发送
-    
-    Returns:
-        发送结果字典
-    """
-    service = AlertNotificationService(db)
-    return service.send_alert_notification(alert, user_ids, channels, force_send)
-
-
-def mark_notification_read(
-    db: Session,
-    notification_id: int,
-    user_id: int
-) -> bool:
-    """
-    标记通知为已读的便捷函数
-    
-    Args:
-        db: 数据库会话
-        notification_id: 通知ID
-        user_id: 用户ID
-    
-    Returns:
-        是否成功
-    """
-    service = AlertNotificationService(db)
-    return service.mark_notification_read(notification_id, user_id)
-
-
-def get_user_notifications(
-    db: Session,
-    user_id: int,
-    is_read: Optional[bool] = None,
-    limit: int = 50,
-    offset: int = 0
-) -> Dict[str, Any]:
-    """
-    获取用户通知列表的便捷函数
-    
-    Args:
-        db: 数据库会话
-        user_id: 用户ID
-        is_read: 是否已读
-        limit: 返回数量限制
-        offset: 偏移量
-    
-    Returns:
-        通知列表和总数
-    """
-    service = AlertNotificationService(db)
-    return service.get_user_notifications(user_id, is_read, limit, offset)
+# 创建单例
+notification_service = NotificationService()

@@ -13,43 +13,6 @@ import { OverviewTab } from '../components/performance/OverviewTab'
 import { HistoryTab } from '../components/performance/HistoryTab'
 import { DetailsTab } from '../components/performance/DetailsTab'
 
-// Mock 数据作为 fallback
-// Mock data - 已移除，使用真实API
-  },
-  {
-    period: '2024-11',
-    submitDate: '2024-11-30',
-    status: 'COMPLETED',
-    totalScore: 88,
-    level: 'B',
-    deptScore: 88,
-    projectScores: [
-      { projectName: '项目A', score: 88, weight: 100, evaluator: '王经理' }
-    ],
-    comments: [
-      {
-        evaluator: '李经理',
-        role: '部门经理',
-        score: 88,
-        comment: '工作完成度良好，建议加强跨部门协作'
-      }
-    ]
-  },
-  {
-    period: '2024-10',
-    submitDate: '2024-10-31',
-    status: 'COMPLETED',
-    totalScore: 90,
-    level: 'A',
-    deptScore: 89,
-    projectScores: [
-      { projectName: '项目A', score: 92, weight: 70, evaluator: '王经理' },
-      { projectName: '项目C', score: 85, weight: 30, evaluator: '赵经理' }
-    ],
-    comments: []
-  }
-]
-
 const performanceOverview = {
   currentPeriod: {
     year: 2025,

@@ -110,9 +110,8 @@ export default function ShortageAlert() {
       const alertList = res.data?.items || res.data || []
       setAlerts(alertList)
     } catch (error) {
-      console.error('Failed to fetch alerts:', error)       else {
-        setAlerts([])
-      }
+      console.error('Failed to fetch alerts:', error)
+      setAlerts([])
     } finally {
       setLoading(false)
     }
@@ -122,14 +121,13 @@ export default function ShortageAlert() {
       const res = await shortageAlertApi.getSummary()
       setSummary(res.data || res)
     } catch (error) {
-      console.error('Failed to fetch summary:', error)       else {
-        setSummary({
-          pending_count: 0,
-          processing_count: 0,
-          resolved_count: 0,
-          total_count: 0,
-        })
-      }
+      console.error('Failed to fetch summary:', error)
+      setSummary({
+        pending_count: 0,
+        processing_count: 0,
+        resolved_count: 0,
+        total_count: 0,
+      })
     }
   }
   const handleViewDetail = async (alertId) => {
@@ -193,29 +191,7 @@ export default function ShortageAlert() {
       (new Date(alert.required_date) - new Date()) / (1000 * 60 * 60 * 24)
     )
     return daysUntilRequired <= 7 && daysUntilRequired >= 0
-  }    useEffect(() => {
-    ,
-        {
-          id: 2,
-          material_code: 'EL-02-03-0018',
-          material_name: '接近传感器 E2E-X5',
-          project_name: 'BMS老化测试设备',
-          required_qty: 15,
-          available_qty: 5,
-          shortage_qty: 10,
-          required_date: '2026-01-25',
-          alert_level: 'LEVEL2',
-          status: 'ACKNOWLEDGED',
-        },
-      ])
-      setSummary({
-        pending_count: 1,
-        processing_count: 0,
-        resolved_count: 0,
-        total_count: 2,
-      })
-    }
-  }, [])
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">

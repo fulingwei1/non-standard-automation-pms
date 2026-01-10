@@ -47,11 +47,6 @@ import { fadeIn, staggerContainer } from '../lib/animations'
 import { performanceApi, pmoApi } from '../services/api'
 
 // Fallback mock data (used when API fails)
-// Mock data - 已移除，使用真实API
-// Mock data - 已移除，使用真实API
-// Mock data - 已移除，使用真实API
-// Mock data - 已移除，使用真实API
-// Mock data - 已移除，使用真实API
 const getLevelColor = (level) => {
   const colors = {
     EXCELLENT: 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30',
@@ -78,11 +73,11 @@ export default function PerformanceManagement() {
   const [selectedPeriod, setSelectedPeriod] = useState('current')
 
   // API data states with fallback to mock data
-  const [currentPeriod, setCurrentPeriod] = useState(mockCurrentPeriod)
-  const [stats, setStats] = useState(mockStats)
-  const [pendingTasks, setPendingTasks] = useState(mockPendingTasks)
-  const [recentResults, setRecentResults] = useState(mockRecentResults)
-  const [departmentPerformance, setDepartmentPerformance] = useState(mockDepartmentPerformance)
+  const [currentPeriod, setCurrentPeriod] = useState({})
+  const [stats, setStats] = useState({})
+  const [pendingTasks, setPendingTasks] = useState([])
+  const [recentResults, setRecentResults] = useState([])
+  const [departmentPerformance, setDepartmentPerformance] = useState([])
 
   // Fetch data from API
   useEffect(() => {

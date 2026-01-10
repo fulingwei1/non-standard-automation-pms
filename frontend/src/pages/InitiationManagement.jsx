@@ -5,6 +5,7 @@ import { cn } from '../lib/utils'
 import { pmoApi } from '../services/api'
 import { formatDate, formatCurrency } from '../lib/utils'
 import { PageHeader } from '../components/layout/PageHeader'
+import { logger } from '../utils/logger'
 import {
   Card,
   CardContent,
@@ -84,40 +85,23 @@ export default function InitiationManagement() {
         status: statusFilter || undefined,
       }
       const res = await pmoApi.initiations.list(params)
-      console.log('[立项管理] API响应完整对象:', res)
-      console.log('[立项管理] res.data类型:', typeof res.data)
-      console.log('[立项管理] res.data:', res.data)
-      console.log('[立项管理] res.data是否为对象:', res.data && typeof res.data === 'object')
-      console.log('[立项管理] res.data是否有items:', res.data && 'items' in res.data)
-      
-      // axios 返回的响应结构: { data: {...}, status: 200, ... }
-      // FastAPI 直接返回 PaginatedResponse，所以 res.data 就是 PaginatedResponse
       const data = res.data
-      console.log('[立项管理] 处理后的data:', data)
-      console.log('[立项管理] data.items类型:', Array.isArray(data?.items) ? '数组' : typeof data?.items)
+
       // Handle PaginatedResponse format
       if (data && typeof data === 'object' && 'items' in data) {
-        console.log('[立项管理] 找到items字段，数量:', data.items?.length || 0)
-        console.log('[立项管理] items内容:', data.items)
-        console.log('[立项管理] total:', data.total)
         const itemsArray = Array.isArray(data.items) ? data.items : []
-        console.log('[立项管理] 准备设置的数据，数量:', itemsArray.length)
         setInitiations(itemsArray)
         setTotal(data.total || 0)
-        console.log('[立项管理] 状态已更新，initiations数量:', itemsArray.length)
       } else if (Array.isArray(data)) {
-        console.log('[立项管理] data是数组，数量:', data.length)
         setInitiations(data)
         setTotal(data.length)
       } else {
-        console.warn('[立项管理] 无法识别数据格式:', data)
+        logger.warn('无法识别数据格式:', data)
         setInitiations([])
         setTotal(0)
       }
     } catch (err) {
-      console.error('[立项管理] 获取数据失败:', err)
-      console.error('[立项管理] 错误详情:', err.response?.data)
-      console.error('[立项管理] 错误状态码:', err.response?.status)
+      logger.error('获取数据失败:', err)
       setError(err.response?.data?.detail || err.message || '加载数据失败')
       setInitiations([])
       setTotal(0)
@@ -225,15 +209,10 @@ export default function InitiationManagement() {
         </div>
       ) : error ? null : (
         <>
-          {console.log('[立项管理] 渲染时 - loading:', loading, 'error:', error, 'initiations.length:', initiations.length)}
-          {console.log('[立项管理] initiations内容:', initiations)}
           {initiations.length > 0 ? (
         <div className="grid grid-cols-1 gap-4">
-          {initiations.map((initiation, index) => {
-            console.log(`[立项管理] 渲染第${index}项:`, initiation)
-            console.log(`[立项管理] 第${index}项 - id:`, initiation?.id, 'project_name:', initiation?.project_name)
+          {initiations.map((initiation) => {
             if (!initiation || !initiation.id) {
-              console.warn(`[立项管理] 第${index}项数据无效:`, initiation)
               return null
             }
             const statusBadge = getStatusBadge(initiation.status)
@@ -328,7 +307,6 @@ export default function InitiationManagement() {
       ) : (
         <Card>
           <CardContent className="p-12 text-center text-slate-500">
-            {console.log('[立项管理] 显示空状态')}
             暂无立项申请
           </CardContent>
         </Card>

@@ -81,14 +81,13 @@ export default function PurchaseRequestNew() {
   const [showMaterialDialog, setShowMaterialDialog] = useState(false)
   const [selectedItemIndex, setSelectedItemIndex] = useState(null)
 
-  // Check if demo account  // Load projects
+  // Check if demo account
+  // Load projects
   useEffect(() => {
     const loadProjects = async () => {
       try {
-         else {
-          const res = await projectApi.list({ page_size: 1000 })
-          setProjects(res.data?.items || res.data || [])
-        }
+        const res = await projectApi.list({ page_size: 1000 })
+        setProjects(res.data?.items || res.data || [])
       } catch (err) {
         console.error('Failed to load projects:', err)
       }
@@ -105,30 +104,20 @@ export default function PurchaseRequestNew() {
       }
 
       try {
-        ,
-            { id: 2, machine_code: 'PN002', machine_name: '机台2' },
-          ])
-        } else {
-          // Load machines for project from API
-          try {
-            const response = await machineApi.list({
-              project_id: formData.project_id,
-              page: 1,
-              page_size: 100,
-            })
-            const machineList = response.data?.items || response.data || []
-            setMachines(machineList.map(m => ({
-              id: m.id,
-              machine_code: m.machine_code || m.machine_no,
-              machine_name: m.machine_name || m.machine_code || `机台${m.id}`,
-            })))
-          } catch (err) {
-            console.error('Failed to load machines:', err)
-            setMachines([])
-          }
-        }
+        const response = await machineApi.list({
+          project_id: formData.project_id,
+          page: 1,
+          page_size: 100,
+        })
+        const machineList = response.data?.items || response.data || []
+        setMachines(machineList.map(m => ({
+          id: m.id,
+          machine_code: m.machine_code || m.machine_no,
+          machine_name: m.machine_name || m.machine_code || `机台${m.id}`,
+        })))
       } catch (err) {
         console.error('Failed to load machines:', err)
+        setMachines([])
       }
     }
     loadMachines()
@@ -138,10 +127,8 @@ export default function PurchaseRequestNew() {
   useEffect(() => {
     const loadMaterials = async () => {
       try {
-         else {
-          const res = await materialApi.list({ page_size: 1000 })
-          setMaterials(res.data?.items || res.data || [])
-        }
+        const res = await materialApi.list({ page_size: 1000 })
+        setMaterials(res.data?.items || res.data || [])
       } catch (err) {
         console.error('Failed to load materials:', err)
       }
@@ -153,10 +140,8 @@ export default function PurchaseRequestNew() {
   useEffect(() => {
     const loadSuppliers = async () => {
       try {
-         else {
-          const res = await supplierApi.list({ page: 1, page_size: 1000 })
-          setSuppliers(res.data?.items || res.data || [])
-        }
+        const res = await supplierApi.list({ page: 1, page_size: 1000 })
+        setSuppliers(res.data?.items || res.data || [])
       } catch (err) {
         console.error('Failed to load suppliers:', err)
       }
@@ -170,23 +155,18 @@ export default function PurchaseRequestNew() {
       const loadRequest = async () => {
         try {
           setLoading(true)
-          ,
-              ],
-            })
-          } else {
-            const res = await purchaseApi.requests.get(id)
-            const data = res.data?.data || res.data
-            setFormData({
-              project_id: data.project_id,
-              machine_id: data.machine_id,
-              supplier_id: data.supplier_id || null,
-              request_type: data.request_type || 'NORMAL',
-              request_reason: data.request_reason || '',
-              required_date: data.required_date || '',
-              remark: data.remark || '',
-              items: data.items || [],
-            })
-          }
+          const res = await purchaseApi.requests.get(id)
+          const data = res.data?.data || res.data
+          setFormData({
+            project_id: data.project_id,
+            machine_id: data.machine_id,
+            supplier_id: data.supplier_id || null,
+            request_type: data.request_type || 'NORMAL',
+            request_reason: data.request_reason || '',
+            required_date: data.required_date || '',
+            remark: data.remark || '',
+            items: data.items || [],
+          })
         } catch (err) {
           console.error('Failed to load request:', err)
           setError(err.response?.data?.detail || '加载失败')
@@ -318,17 +298,13 @@ export default function PurchaseRequestNew() {
       }
 
       if (isEdit) {
-         else {
-          await purchaseApi.requests.update(id, requestData)
-          toast.success('采购申请已更新')
-          navigate('/purchase-requests')
-        }
+        await purchaseApi.requests.update(id, requestData)
+        toast.success('采购申请已更新')
+        navigate('/purchase-requests')
       } else {
-         else {
-          await purchaseApi.requests.create(requestData)
-          toast.success('采购申请已创建')
-          navigate('/purchase-requests')
-        }
+        await purchaseApi.requests.create(requestData)
+        toast.success('采购申请已创建')
+        navigate('/purchase-requests')
       }
     } catch (err) {
       console.error('Failed to save request:', err)
@@ -347,15 +323,13 @@ export default function PurchaseRequestNew() {
 
     // Save first, then submit
     await handleSave()
-    
+
     if (!error) {
       try {
-         else {
-          // Get the created request ID from the response
-          // For now, just show success message
-          toast.success('采购申请已提交')
-          navigate('/purchase-requests')
-        }
+        // Get the created request ID from the response
+        // For now, just show success message
+        toast.success('采购申请已提交')
+        navigate('/purchase-requests')
       } catch (err) {
         console.error('Failed to submit request:', err)
         toast.error(err.response?.data?.detail || '提交失败')

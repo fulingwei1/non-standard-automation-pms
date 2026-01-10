@@ -165,9 +165,132 @@ const formatTimelineLabel = (value) => {
   proposal: { count: 20, amount: 3200000, conversion: 62.5 },
   negotiation: { count: 12, amount: 2100000, conversion: 60 },
   closed: { count: 7, amount: 1680000, conversion: 58.3 },
+} */
+
+// Type config for approvals
+const typeConfig = {
+  contract: { label: '合同审批', textColor: 'text-blue-400', bgColor: 'bg-blue-500/20' },
+  opportunity: { label: '商机审批', textColor: 'text-emerald-400', bgColor: 'bg-emerald-500/20' },
+  payment: { label: '回款审批', textColor: 'text-amber-400', bgColor: 'bg-amber-500/20' },
 }
 
-// Mock data - 已移除，使用真实API
+const priorityConfig = {
+  high: { label: '紧急', color: 'text-red-400' },
+  medium: { label: '普通', color: 'text-amber-400' },
+  low: { label: '低', color: 'text-slate-400' },
+}
+
+const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg }) => {
+  const [isHovered, setIsHovered] = useState(false)
+  return (
+    <motion.div
+      variants={fadeIn}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+    >
+      <Card className={cn('transition-all duration-300', isHovered && 'scale-105', bg, 'border-slate-700/50')}>
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <p className="text-xs text-slate-400 mb-1">{title}</p>
+              <p className={cn('text-xl font-bold text-white', color)}>{value}</p>
+              <p className="text-xs text-slate-400 mt-1">{subtitle}</p>
+              {trend !== undefined && (
+                <div className={cn('flex items-center text-xs mt-1', trend > 0 ? 'text-emerald-400' : 'text-red-400')}>
+                  {trend > 0 ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
+                  {Math.abs(trend)}%
+                </div>
+              )}
+            </div>
+            <div className={cn('p-2 rounded-lg', bg)}>
+              <Icon className={cn('w-5 h-5', color)} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  )
+}
+
+export default function SalesManagerWorkstation() {
+  const [selectedPeriod, setSelectedPeriod] = useState('month')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [deptStats, setDeptStats] = useState(null)
+  const [teamMembers, setTeamMembers] = useState([])
+  const [salesFunnel, setSalesFunnel] = useState({})
+  const [pendingApprovals, setPendingApprovals] = useState([])
+  const [topCustomers, setTopCustomers] = useState([])
+  const [payments, setPayments] = useState([])
+
+  const extractData = (res) => res?.data || {}
+
+  const loadDashboard = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const { start, end } = getRangeForPeriod(selectedPeriod)
+
+      // Parallel API calls for better performance
+      const [
+        summaryRes,
+        yearSummaryRes,
+        targetRes,
+        yearTargetRes,
+        teamRes,
+        funnelRes,
+        approvalsRes,
+        customersRes,
+        plansRes,
+        paymentStatsRes,
+      ] = await Promise.all([
+        salesStatisticsApi.getDepartmentStatistics({
+          start_date: toISODate(start),
+          end_date: toISODate(end),
+        }).catch(() => ({ data: {} })),
+        salesStatisticsApi.getDepartmentStatistics({
+          start_date: toISODate(new Date(start.getFullYear(), 0, 1)),
+          end_date: toISODate(end),
+        }).catch(() => ({ data: {} })),
+        salesTargetApi.list({
+          target_scope: 'DEPARTMENT',
+          target_period: 'MONTHLY',
+          period_value: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`,
+        }).catch(() => ({ data: { items: [] } })),
+        salesTargetApi.list({
+          target_scope: 'DEPARTMENT',
+          target_period: 'YEARLY',
+          period_value: String(start.getFullYear()),
+        }).catch(() => ({ data: { items: [] } })),
+        salesTeamApi.listDepartmentMembers().catch(() => ({ data: { items: [] } })),
+        salesStatisticsApi.getFunnelStatistics({
+          start_date: toISODate(start),
+          end_date: toISODate(end),
+        }).catch(() => ({ data: {} })),
+        contractApi.list({
+          page: 1,
+          page_size: 100,
+          approval_status: 'PENDING',
+        }).catch(() => ({ data: { items: [] } })),
+        salesReportApi.getCustomerContribution({
+          start_date: toISODate(start),
+          end_date: toISODate(end),
+        }).catch(() => ({ data: {} })),
+        paymentPlanApi.list({
+          page: 1,
+          page_size: 100,
+          planned_date_start: toISODate(start),
+          planned_date_end: toISODate(end),
+        }).catch(() => ({ data: { items: [] } })),
+        paymentApi.getStatistics({
+          start_date: toISODate(start),
+          end_date: toISODate(end),
+        }).catch(() => ({ data: {} })),
+      ])
+
+      const funnelPayload = extractData(funnelRes)
+      const teamData = extractData(teamRes)?.items || extractData(teamRes) || []
       const approvals = approvalsRes?.data?.items || approvalsRes?.data || []
       const customerContribution = extractData(customersRes)?.customers || []
       const planItems = plansRes?.data?.items || plansRes?.data || []

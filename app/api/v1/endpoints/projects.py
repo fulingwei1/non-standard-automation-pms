@@ -662,152 +662,15 @@ def get_project_stats(
     - by_customer: 按客户统计（如果group_by=customer）
     - by_month: 按月份统计（如果group_by=month）
     """
-    # 应用数据权限过滤
     from app.services.data_scope_service import DataScopeService
+    from app.services.project_statistics_service import build_project_statistics
+    
+    # 应用数据权限过滤
     query = db.query(Project).filter(Project.is_active == True)
     query = DataScopeService.filter_projects_by_scope(db, query, current_user)
     
-    # 按状态统计
-    status_query = query
-    status_stats = (
-        status_query.with_entities(Project.status, func.count(Project.id).label('count'))
-        .group_by(Project.status)
-        .all()
-    )
-    
-    # 按阶段统计
-    stage_query = query
-    stage_stats = (
-        stage_query.with_entities(Project.stage, func.count(Project.id).label('count'))
-        .group_by(Project.stage)
-        .all()
-    )
-    
-    # 按健康度统计
-    health_query = query
-    health_stats = (
-        health_query.with_entities(Project.health, func.count(Project.id).label('count'))
-        .group_by(Project.health)
-        .all()
-    )
-    
-    # 总体统计
-    total_projects = query.count()
-    avg_progress = query.with_entities(func.avg(Project.progress_pct)).scalar() or 0
-    
-    # 按项目经理统计
-    pm_query = query.filter(Project.pm_id.isnot(None))
-    pm_stats = (
-        pm_query.with_entities(Project.pm_id, Project.pm_name, func.count(Project.id).label('count'))
-        .group_by(Project.pm_id, Project.pm_name)
-        .all()
-    )
-    
-    stats_data = {
-        "total": total_projects,
-        "average_progress": float(avg_progress),
-        "by_status": {status: count for status, count in status_stats if status},
-        "by_stage": {stage: count for stage, count in stage_stats if stage},
-        "by_health": {health: count for health, count in health_stats if health},
-        "by_pm": [
-            {
-                "pm_id": pm_id,
-                "pm_name": pm_name or "未分配",
-                "count": count
-            }
-            for pm_id, pm_name, count in pm_stats
-        ],
-    }
-    
-    # 按客户统计
-    if group_by == "customer":
-        customer_query = query.filter(Project.customer_id.isnot(None))
-        customer_stats = (
-            customer_query.with_entities(
-                Project.customer_id,
-                Project.customer_name,
-                func.count(Project.id).label('count'),
-                func.sum(Project.contract_amount).label('total_amount')
-            )
-            .group_by(Project.customer_id, Project.customer_name)
-            .all()
-        )
-        
-        stats_data["by_customer"] = [
-            {
-                "customer_id": customer_id,
-                "customer_name": customer_name or "未知客户",
-                "count": count,
-                "total_amount": float(total_amount or 0),
-            }
-            for customer_id, customer_name, count, total_amount in customer_stats
-        ]
-    
-    # 按月份统计
-    if group_by == "month":
-        # 如果没有指定日期范围，默认统计最近12个月
-        if not start_date or not end_date:
-            today = date.today()
-            end_date = today
-            start_date = date(today.year - 1, today.month, 1)
-        
-        # 按项目创建月份统计
-        month_query = query.filter(
-            Project.created_at >= datetime.combine(start_date, datetime.min.time()),
-            Project.created_at <= datetime.combine(end_date, datetime.max.time())
-        )
-        
-        # 使用SQLite的strftime或MySQL的DATE_FORMAT
-        from sqlalchemy import case, extract
-        try:
-            # 尝试使用extract（适用于大多数数据库）
-            month_stats = (
-                month_query.with_entities(
-                    extract('year', Project.created_at).label('year'),
-                    extract('month', Project.created_at).label('month'),
-                    func.count(Project.id).label('count'),
-                    func.sum(Project.contract_amount).label('total_amount')
-                )
-                .group_by(
-                    extract('year', Project.created_at),
-                    extract('month', Project.created_at)
-                )
-                .order_by(
-                    extract('year', Project.created_at),
-                    extract('month', Project.created_at)
-                )
-                .all()
-            )
-        except:
-            # 如果extract不支持，使用字符串格式化（SQLite）
-            month_stats = (
-                month_query.with_entities(
-                    func.strftime('%Y', Project.created_at).label('year'),
-                    func.strftime('%m', Project.created_at).label('month'),
-                    func.count(Project.id).label('count'),
-                    func.sum(Project.contract_amount).label('total_amount')
-                )
-                .group_by(
-                    func.strftime('%Y', Project.created_at),
-                    func.strftime('%m', Project.created_at)
-                )
-                .order_by(
-                    func.strftime('%Y', Project.created_at),
-                    func.strftime('%m', Project.created_at)
-                )
-                .all()
-            )
-        
-        stats_data["by_month"] = [
-            {
-                "year": int(year),
-                "month": int(month),
-                "month_label": f"{int(year)}-{int(month):02d}",
-                "count": count,
-                "total_amount": float(total_amount or 0),
-            }
-            for year, month, count, total_amount in month_stats
-        ]
+    # 构建统计数据
+    stats_data = build_project_statistics(db, query, group_by, start_date, end_date)
     
     return ResponseModel(
         code=200,
@@ -2884,6 +2747,13 @@ def get_project_relations(
     项目关联分析
     分析项目之间的关联关系（物料转移、共享资源、共享客户等）
     """
+    from app.services.project_relations_service import (
+        get_material_transfer_relations,
+        get_shared_resource_relations,
+        get_shared_customer_relations,
+        calculate_relation_statistics
+    )
+    
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
@@ -2891,144 +2761,16 @@ def get_project_relations(
     relations = []
     
     # 1. 物料转移关联
-    if not relation_type or relation_type == 'MATERIAL_TRANSFER':
-        outbound_transfers = db.query(MaterialTransfer).filter(
-            MaterialTransfer.from_project_id == project_id,
-            MaterialTransfer.status.in_(['APPROVED', 'EXECUTED'])
-        ).all()
-        
-        for transfer in outbound_transfers:
-            if transfer.to_project_id:
-                to_project = db.query(Project).filter(Project.id == transfer.to_project_id).first()
-                if to_project:
-                    relations.append({
-                        'type': 'MATERIAL_TRANSFER_OUT',
-                        'related_project_id': transfer.to_project_id,
-                        'related_project_code': to_project.project_code,
-                        'related_project_name': to_project.project_name,
-                        'relation_detail': {
-                            'transfer_no': transfer.transfer_no,
-                            'material_code': transfer.material_code,
-                            'material_name': transfer.material_name,
-                            'transfer_qty': float(transfer.transfer_qty),
-                        },
-                        'strength': 'MEDIUM',
-                    })
-        
-        inbound_transfers = db.query(MaterialTransfer).filter(
-            MaterialTransfer.to_project_id == project_id,
-            MaterialTransfer.status.in_(['APPROVED', 'EXECUTED'])
-        ).all()
-        
-        for transfer in inbound_transfers:
-            if transfer.from_project_id:
-                from_project = db.query(Project).filter(Project.id == transfer.from_project_id).first()
-                if from_project:
-                    relations.append({
-                        'type': 'MATERIAL_TRANSFER_IN',
-                        'related_project_id': transfer.from_project_id,
-                        'related_project_code': from_project.project_code,
-                        'related_project_name': from_project.project_name,
-                        'relation_detail': {
-                            'transfer_no': transfer.transfer_no,
-                            'material_code': transfer.material_code,
-                            'material_name': transfer.material_name,
-                            'transfer_qty': float(transfer.transfer_qty),
-                        },
-                        'strength': 'MEDIUM',
-                    })
+    relations.extend(get_material_transfer_relations(db, project_id, relation_type))
     
     # 2. 共享资源关联
-    if not relation_type or relation_type == 'SHARED_RESOURCE':
-        project_resources = db.query(PmoResourceAllocation).filter(
-            PmoResourceAllocation.project_id == project_id,
-            PmoResourceAllocation.status != 'CANCELLED'
-        ).all()
-        
-        resource_ids = [alloc.resource_id for alloc in project_resources]
-        
-        if resource_ids:
-            shared_resource_projects = (
-                db.query(PmoResourceAllocation.project_id, func.count(PmoResourceAllocation.id).label('shared_count'))
-                .filter(
-                    PmoResourceAllocation.resource_id.in_(resource_ids),
-                    PmoResourceAllocation.project_id != project_id,
-                    PmoResourceAllocation.status != 'CANCELLED'
-                )
-                .group_by(PmoResourceAllocation.project_id)
-                .all()
-            )
-            
-            for shared_project_id, shared_count in shared_resource_projects:
-                shared_project = db.query(Project).filter(Project.id == shared_project_id).first()
-                if shared_project:
-                    shared_resources = (
-                        db.query(PmoResourceAllocation)
-                        .filter(
-                            PmoResourceAllocation.project_id == shared_project_id,
-                            PmoResourceAllocation.resource_id.in_(resource_ids),
-                            PmoResourceAllocation.status != 'CANCELLED'
-                        )
-                        .all()
-                    )
-                    
-                    relations.append({
-                        'type': 'SHARED_RESOURCE',
-                        'related_project_id': shared_project_id,
-                        'related_project_code': shared_project.project_code,
-                        'related_project_name': shared_project.project_name,
-                        'relation_detail': {
-                            'shared_resource_count': shared_count,
-                            'shared_resources': [
-                                {
-                                    'resource_id': r.resource_id,
-                                    'resource_name': r.resource_name,
-                                    'allocation_percent': r.allocation_percent,
-                                }
-                                for r in shared_resources
-                            ],
-                        },
-                        'strength': 'HIGH' if shared_count >= 3 else 'MEDIUM',
-                    })
+    relations.extend(get_shared_resource_relations(db, project_id, relation_type))
     
     # 3. 共享客户关联
-    if not relation_type or relation_type == 'SHARED_CUSTOMER':
-        if project.customer_id:
-            customer_projects = db.query(Project).filter(
-                Project.customer_id == project.customer_id,
-                Project.id != project_id,
-                Project.is_active == True
-            ).all()
-            
-            for customer_project in customer_projects:
-                relations.append({
-                    'type': 'SHARED_CUSTOMER',
-                    'related_project_id': customer_project.id,
-                    'related_project_code': customer_project.project_code,
-                    'related_project_name': customer_project.project_name,
-                    'relation_detail': {
-                        'customer_id': project.customer_id,
-                        'customer_name': project.customer_name,
-                    },
-                    'strength': 'LOW',
-                })
+    relations.extend(get_shared_customer_relations(db, project, project_id, relation_type))
     
     # 统计
-    relation_stats = {
-        'total_relations': len(relations),
-        'by_type': {},
-        'by_strength': {'HIGH': 0, 'MEDIUM': 0, 'LOW': 0}
-    }
-    
-    for relation in relations:
-        rel_type = relation['type']
-        strength = relation['strength']
-        
-        if rel_type not in relation_stats['by_type']:
-            relation_stats['by_type'][rel_type] = 0
-        relation_stats['by_type'][rel_type] += 1
-        
-        relation_stats['by_strength'][strength] += 1
+    relation_stats = calculate_relation_statistics(relations)
     
     return {
         'project_id': project_id,
@@ -3059,6 +2801,17 @@ def auto_discover_project_relations(
     6. 共享资源
     7. 关联的研发项目
     """
+    from app.services.project_relation_discovery_service import (
+        discover_same_customer_relations,
+        discover_same_pm_relations,
+        discover_time_overlap_relations,
+        discover_material_transfer_relations,
+        discover_shared_resource_relations,
+        discover_shared_rd_project_relations,
+        deduplicate_and_filter_relations,
+        calculate_relation_statistics
+    )
+    
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
@@ -3066,143 +2819,28 @@ def auto_discover_project_relations(
     discovered_relations = []
     
     # 1. 相同客户的项目（置信度：0.8）
-    if project.customer_id:
-        customer_projects = db.query(Project).filter(
-            Project.customer_id == project.customer_id,
-            Project.id != project_id,
-            Project.is_active == True
-        ).all()
-        for related_project in customer_projects:
-            discovered_relations.append({
-                'related_project_id': related_project.id,
-                'related_project_code': related_project.project_code,
-                'related_project_name': related_project.project_name,
-                'relation_type': 'SAME_CUSTOMER',
-                'confidence': 0.8,
-                'reason': f'相同客户：{project.customer_name}',
-            })
+    discovered_relations.extend(discover_same_customer_relations(db, project, project_id))
     
     # 2. 相同项目经理的项目（置信度：0.7）
-    if project.pm_id:
-        pm_projects = db.query(Project).filter(
-            Project.pm_id == project.pm_id,
-            Project.id != project_id,
-            Project.is_active == True
-        ).all()
-        for related_project in pm_projects:
-            discovered_relations.append({
-                'related_project_id': related_project.id,
-                'related_project_code': related_project.project_code,
-                'related_project_name': related_project.project_name,
-                'relation_type': 'SAME_PM',
-                'confidence': 0.7,
-                'reason': f'相同项目经理：{project.pm_name}',
-            })
+    discovered_relations.extend(discover_same_pm_relations(db, project, project_id))
     
     # 3. 时间重叠的项目（置信度：0.6）
-    if project.planned_start_date and project.planned_end_date:
-        overlapping_projects = db.query(Project).filter(
-            Project.id != project_id,
-            Project.is_active == True,
-            Project.planned_start_date <= project.planned_end_date,
-            Project.planned_end_date >= project.planned_start_date
-        ).all()
-        for related_project in overlapping_projects:
-            discovered_relations.append({
-                'related_project_id': related_project.id,
-                'related_project_code': related_project.project_code,
-                'related_project_name': related_project.project_name,
-                'relation_type': 'TIME_OVERLAP',
-                'confidence': 0.6,
-                'reason': '项目时间重叠',
-            })
+    discovered_relations.extend(discover_time_overlap_relations(db, project, project_id))
     
     # 4. 物料转移记录（置信度：0.9）
-    material_transfers = db.query(MaterialTransfer).filter(
-        or_(
-            MaterialTransfer.from_project_id == project_id,
-            MaterialTransfer.to_project_id == project_id
-        ),
-        MaterialTransfer.status.in_(['APPROVED', 'EXECUTED'])
-    ).all()
-    for transfer in material_transfers:
-        related_project_id = transfer.to_project_id if transfer.from_project_id == project_id else transfer.from_project_id
-        if related_project_id:
-            related_project = db.query(Project).filter(Project.id == related_project_id).first()
-            if related_project:
-                discovered_relations.append({
-                    'related_project_id': related_project.id,
-                    'related_project_code': related_project.project_code,
-                    'related_project_name': related_project.project_name,
-                    'relation_type': 'MATERIAL_TRANSFER',
-                    'confidence': 0.9,
-                    'reason': f'物料转移：{transfer.material_name}',
-                })
+    discovered_relations.extend(discover_material_transfer_relations(db, project_id))
     
     # 5. 共享资源（置信度：0.75）
-    project_resources = db.query(PmoResourceAllocation).filter(
-        PmoResourceAllocation.project_id == project_id,
-        PmoResourceAllocation.status != 'CANCELLED'
-    ).all()
-    resource_ids = [alloc.resource_id for alloc in project_resources]
-    if resource_ids:
-        shared_projects = (
-            db.query(PmoResourceAllocation.project_id)
-            .filter(
-                PmoResourceAllocation.resource_id.in_(resource_ids),
-                PmoResourceAllocation.project_id != project_id,
-                PmoResourceAllocation.status != 'CANCELLED'
-            )
-            .distinct()
-            .all()
-        )
-        for (related_project_id,) in shared_projects:
-            related_project = db.query(Project).filter(Project.id == related_project_id).first()
-            if related_project:
-                discovered_relations.append({
-                    'related_project_id': related_project.id,
-                    'related_project_code': related_project.project_code,
-                    'related_project_name': related_project.project_name,
-                    'relation_type': 'SHARED_RESOURCE',
-                    'confidence': 0.75,
-                    'reason': '共享资源',
-                })
+    discovered_relations.extend(discover_shared_resource_relations(db, project_id))
     
     # 6. 关联的研发项目（置信度：0.85）
-    from app.models.rd_project import RdProject
-    linked_rd_projects = db.query(RdProject).filter(
-        RdProject.linked_project_id == project_id
-    ).all()
-    for rd_project in linked_rd_projects:
-        # 查找其他关联到相同研发项目的非标项目
-        other_linked_projects = db.query(RdProject).filter(
-            RdProject.id == rd_project.id,
-            RdProject.linked_project_id != project_id,
-            RdProject.linked_project_id.isnot(None)
-        ).all()
-        for other_rd in other_linked_projects:
-            if other_rd.linked_project_id:
-                related_project = db.query(Project).filter(Project.id == other_rd.linked_project_id).first()
-                if related_project:
-                    discovered_relations.append({
-                        'related_project_id': related_project.id,
-                        'related_project_code': related_project.project_code,
-                        'related_project_name': related_project.project_name,
-                        'relation_type': 'SHARED_RD_PROJECT',
-                        'confidence': 0.85,
-                        'reason': f'关联相同研发项目：{rd_project.project_name}',
-                    })
+    discovered_relations.extend(discover_shared_rd_project_relations(db, project_id))
     
     # 去重并过滤置信度
-    unique_relations = {}
-    for relation in discovered_relations:
-        if relation['confidence'] >= min_confidence:
-            key = relation['related_project_id']
-            if key not in unique_relations or relation['confidence'] > unique_relations[key]['confidence']:
-                unique_relations[key] = relation
+    final_relations = deduplicate_and_filter_relations(discovered_relations, min_confidence)
     
-    # 按置信度排序
-    final_relations = sorted(unique_relations.values(), key=lambda x: x['confidence'], reverse=True)
+    # 计算统计信息
+    statistics = calculate_relation_statistics(final_relations)
     
     return {
         'project_id': project_id,
@@ -3211,14 +2849,7 @@ def auto_discover_project_relations(
         'min_confidence': min_confidence,
         'total_discovered': len(final_relations),
         'relations': final_relations,
-        'statistics': {
-            'by_type': {},
-            'by_confidence_range': {
-                'high': len([r for r in final_relations if r['confidence'] >= 0.8]),
-                'medium': len([r for r in final_relations if 0.5 <= r['confidence'] < 0.8]),
-                'low': len([r for r in final_relations if r['confidence'] < 0.5]),
-            }
-        }
+        'statistics': statistics
     }
 
 
@@ -4619,162 +4250,72 @@ def advance_project_stage(
     
     根据目标阶段进行阶段门校验，通过后更新项目阶段和状态
     """
-    # 检查项目访问权限
     from app.utils.permission_helpers import check_project_access_or_raise
+    from app.services.stage_advance_service import (
+        validate_target_stage,
+        validate_stage_advancement,
+        perform_gate_check,
+        update_project_stage_and_status,
+        create_status_log,
+        create_installation_dispatch_orders,
+        generate_cost_review_report
+    )
+    from app.api.v1.endpoints.projects import check_gate_detailed
+    
+    # 检查项目访问权限
     project = check_project_access_or_raise(db, current_user, project_id)
     
     # 验证目标阶段
-    valid_stages = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9']
-    if advance_request.target_stage not in valid_stages:
-        raise HTTPException(
-            status_code=400,
-            detail=f"无效的目标阶段。有效值：{', '.join(valid_stages)}"
-        )
+    validate_target_stage(advance_request.target_stage)
     
     # 检查阶段是否向前推进
     current_stage = project.stage or "S1"
-    current_stage_num = int(current_stage[1]) if len(current_stage) > 1 else 1
-    target_stage_num = int(advance_request.target_stage[1]) if len(advance_request.target_stage) > 1 else 1
-    
-    if target_stage_num <= current_stage_num:
-        raise HTTPException(
-            status_code=400,
-            detail=f"目标阶段 {advance_request.target_stage} 不能早于或等于当前阶段 {current_stage}"
-        )
+    validate_stage_advancement(current_stage, advance_request.target_stage)
     
     # 阶段门校验（除非跳过）
-    gate_passed = True
-    missing_items = []
+    gate_passed, missing_items, gate_check_result = perform_gate_check(
+        db, project, advance_request.target_stage,
+        advance_request.skip_gate_check, current_user.is_superuser
+    )
     
-    if not advance_request.skip_gate_check:
-        # 只有管理员可以跳过阶段门校验
-        if not current_user.is_superuser:
-            gate_passed, missing_items = check_gate(db, project, advance_request.target_stage)
-            
-            if not gate_passed:
-                # Issue 1.4: 返回详细的校验结果
-                from app.api.v1.endpoints.projects import check_gate_detailed
-                gate_check_result = check_gate_detailed(db, project, advance_request.target_stage)
-                
-                return ResponseModel(
-                    code=400,
-                    message="阶段门校验未通过",
-                    data={
-                        "project_id": project_id,
-                        "target_stage": advance_request.target_stage,
-                        "gate_passed": False,
-                        "missing_items": missing_items,
-                        "gate_check_result": gate_check_result,
-                    }
-                )
-    else:
-        if not current_user.is_superuser:
-            raise HTTPException(
-                status_code=403,
-                detail="只有管理员可以跳过阶段门校验"
-            )
+    if not gate_passed:
+        return ResponseModel(
+            code=400,
+            message="阶段门校验未通过",
+            data={
+                "project_id": project_id,
+                "target_stage": advance_request.target_stage,
+                "gate_passed": False,
+                "missing_items": missing_items,
+                "gate_check_result": gate_check_result,
+            }
+        )
     
     # 记录旧阶段
     old_stage = current_stage
     old_status = project.status
     
-    # 更新项目阶段
-    project.stage = advance_request.target_stage
-    
-    # 根据阶段自动更新状态（可选）
-    stage_status_map = {
-        'S1': 'ST01',
-        'S2': 'ST03',
-        'S3': 'ST05',
-        'S4': 'ST07',
-        'S5': 'ST10',
-        'S6': 'ST15',
-        'S7': 'ST20',
-        'S8': 'ST25',
-        'S9': 'ST30',
-    }
-    
-    new_status = stage_status_map.get(advance_request.target_stage, old_status)
-    if new_status != old_status:
-        project.status = new_status
-    
-    db.add(project)
+    # 更新项目阶段和状态
+    new_status = update_project_stage_and_status(
+        db, project, advance_request.target_stage, old_stage, old_status
+    )
     
     # 记录状态变更历史
-    status_log = ProjectStatusLog(
-        project_id=project_id,
-        old_stage=old_stage,
-        new_stage=advance_request.target_stage,
-        old_status=old_status,
-        new_status=new_status,
-        old_health=project.health,
-        new_health=project.health,
-        change_type="STAGE_ADVANCE",
-        change_reason=advance_request.reason,
-        changed_by=current_user.id,
-        changed_at=datetime.now()
+    create_status_log(
+        db, project_id, old_stage, advance_request.target_stage,
+        old_status, new_status, project.health,
+        advance_request.reason, current_user.id
     )
-    db.add(status_log)
     
     # 如果项目进入S8阶段，自动创建安装调试派工单
-    if advance_request.target_stage == "S8" and old_stage != "S8":
-        try:
-            from app.models.installation_dispatch import InstallationDispatchOrder
-            from app.api.v1.endpoints.installation_dispatch import generate_order_no
-            from app.models.project import Machine
-            
-            # 获取项目的所有机台
-            machines = db.query(Machine).filter(Machine.project_id == project_id).all()
-            
-            # 为每个机台创建安装调试派工单
-            for machine in machines:
-                # 检查是否已存在该机台的安装调试派工单
-                existing_order = db.query(InstallationDispatchOrder).filter(
-                    InstallationDispatchOrder.project_id == project_id,
-                    InstallationDispatchOrder.machine_id == machine.id,
-                    InstallationDispatchOrder.status != "CANCELLED"
-                ).first()
-                
-                if not existing_order:
-                    dispatch_order = InstallationDispatchOrder(
-                        order_no=generate_order_no(db),
-                        project_id=project_id,
-                        machine_id=machine.id,
-                        customer_id=project.customer_id,
-                        task_type="INSTALLATION",
-                        task_title=f"{machine.machine_no} 现场安装调试",
-                        task_description=f"项目 {project.project_name} 的 {machine.machine_no} 设备现场安装调试",
-                        location=getattr(project, 'customer_address', None),
-                        scheduled_date=date.today() + timedelta(days=7),  # 默认7天后
-                        estimated_hours=Decimal("8.0"),
-                        priority="HIGH",
-                        status="PENDING",
-                        progress=0,
-                    )
-                    db.add(dispatch_order)
-        except Exception as e:
-            # 如果创建派工单失败，记录日志但不影响阶段更新
-            import logging
-            logging.warning(f"自动创建安装调试派工单失败：{str(e)}")
+    create_installation_dispatch_orders(
+        db, project, advance_request.target_stage, old_stage
+    )
     
     # 如果项目进入S9阶段或状态变为ST30，自动生成成本复盘报告
-    if advance_request.target_stage == "S9" or new_status == "ST30":
-        try:
-            from app.services.cost_review_service import CostReviewService
-            # 自动生成成本复盘报告（如果不存在）
-            existing_review = db.query(ProjectReview).filter(
-                ProjectReview.project_id == project_id,
-                ProjectReview.review_type == "POST_MORTEM"
-            ).first()
-            
-            if not existing_review:
-                CostReviewService.generate_cost_review_report(
-                    db, project_id, current_user.id
-                )
-        except Exception as e:
-            # 如果生成复盘报告失败，记录日志但不影响阶段更新
-            import logging
-            logging.warning(f"自动生成成本复盘报告失败：{str(e)}")
+    generate_cost_review_report(
+        db, project_id, advance_request.target_stage, new_status, current_user.id
+    )
     
     db.commit()
     db.refresh(project)

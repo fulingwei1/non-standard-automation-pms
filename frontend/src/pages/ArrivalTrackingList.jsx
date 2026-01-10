@@ -86,42 +86,23 @@ export default function ArrivalTrackingList() {
       console.error('Failed to fetch suppliers:', error)
       setSuppliers([])
     }
-  }  const fetchArrivals = async () => {
+  }
+  const fetchArrivals = async () => {
     try {
       setLoading(true)
-      
-      ,
-          {
-            id: 2,
-            arrival_no: 'AT-250115-002',
-            material_code: 'ME-03-02-0008',
-            material_name: '精密导轨 HSR25',
-            supplier_name: 'THK(深圳)销售',
-            expected_qty: 4,
-            expected_date: '2026-01-10',
-            actual_date: '2026-01-12',
-            status: 'ARRIVED',
-            is_delayed: true,
-            delay_days: 2,
-          },
-        ])
-      } else {
-        const params = {}
-        if (filterSupplier && filterSupplier !== 'all') params.supplier_id = filterSupplier
-        if (filterStatus && filterStatus !== 'all') params.status = filterStatus
-        if (filterDelayed && filterDelayed !== 'all') params.is_delayed = filterDelayed === 'true'
-        if (searchKeyword) params.keyword = searchKeyword
-        const res = await shortageApi.arrivals.list(params)
-        // Handle different response formats
-        const data = res.data?.data || res.data || res
-        const arrivalList = data?.items || (Array.isArray(data) ? data : [])
-        setArrivals(arrivalList)
-      }
+      const params = {}
+      if (filterSupplier && filterSupplier !== 'all') params.supplier_id = filterSupplier
+      if (filterStatus && filterStatus !== 'all') params.status = filterStatus
+      if (filterDelayed && filterDelayed !== 'all') params.is_delayed = filterDelayed === 'true'
+      if (searchKeyword) params.keyword = searchKeyword
+      const res = await shortageApi.arrivals.list(params)
+      // Handle different response formats
+      const data = res.data?.data || res.data || res
+      const arrivalList = data?.items || (Array.isArray(data) ? data : [])
+      setArrivals(arrivalList)
     } catch (error) {
       console.error('Failed to fetch arrivals:', error)
-      ,
-        ])
-      }
+      setArrivals([])
     } finally {
       setLoading(false)
     }

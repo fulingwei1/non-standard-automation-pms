@@ -298,10 +298,8 @@ export default function PurchaseOrderDetail() {
       setPo(transformedPO)
     } catch (err) {
       console.error('Failed to load purchase order:', err)
-       else {
-        setError(err.response?.data?.detail || err.message || '加载采购订单失败')
-        setPo(null)
-      }
+      setError(err.response?.data?.detail || err.message || '加载采购订单失败')
+      setPo(null)
     } finally {
       setLoading(false)
     }
@@ -335,7 +333,7 @@ export default function PurchaseOrderDetail() {
     )
   }
 
-  if (error && !po && !isDemoAccount) {
+  if (error && !po) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         <div className="container mx-auto px-4 py-6">

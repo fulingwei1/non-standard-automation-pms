@@ -1049,12 +1049,22 @@ def get_dashboard(
             'employee_name': log.candidate.name if log.candidate else None
         })
 
+    # 统计总人数需求
+    total_headcount_needed = db.query(func.sum(MesProjectStaffingNeed.headcount)).filter(
+        MesProjectStaffingNeed.status.in_(['OPEN', 'MATCHING', 'FILLED'])
+    ).scalar() or 0
+
+    # 统计已填充人数
+    total_headcount_filled = db.query(func.sum(MesProjectStaffingNeed.filled_headcount)).filter(
+        MesProjectStaffingNeed.status.in_(['OPEN', 'MATCHING', 'FILLED'])
+    ).scalar() or 0
+
     return {
         'open_needs': open_needs,
         'matching_needs': matching_needs,
         'filled_needs': filled_needs,
-        'total_headcount_needed': 0,  # TODO: 统计
-        'total_headcount_filled': 0,  # TODO: 统计
+        'total_headcount_needed': int(total_headcount_needed),
+        'total_headcount_filled': int(total_headcount_filled),
         'needs_by_priority': needs_by_priority,
         'matching_stats': {
             'total_requests': total_requests,

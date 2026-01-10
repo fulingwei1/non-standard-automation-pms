@@ -41,13 +41,11 @@ import { fadeIn, staggerContainer } from '../lib/animations'
 import { SimpleBarChart, MonthlyTrendChart, SimplePieChart, TrendComparisonCard } from '../components/administrative/StatisticsCharts'
 import { adminApi } from '../services/api'
 
-// Mock data
-// Mock data - 已移除，使用真实API
 export default function VehicleManagement() {
   const [searchText, setSearchText] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [loading, setLoading] = useState(false)
-  const [vehicles, setVehicles] = useState(mockVehicles)
+  const [vehicles, setVehicles] = useState([])
 
   // Fetch data from API
   useEffect(() => {

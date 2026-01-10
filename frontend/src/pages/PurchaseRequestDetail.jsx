@@ -80,29 +80,9 @@ export default function PurchaseRequestDetail() {
         setLoading(true)
         setError(null)
 
-        ,
-              {
-                id: 2,
-                material_code: 'ME-03-02-0008',
-                material_name: '精密导轨 HSR25',
-                specification: '',
-                unit: '根',
-                quantity: 4,
-                unit_price: 4200,
-                amount: 16800,
-                required_date: '2026-01-15',
-                ordered_qty: 0,
-                remark: '',
-              },
-            ],
-            created_at: '2026-01-04T10:00:00',
-            updated_at: '2026-01-04T10:00:00',
-          })
-        } else {
-          const res = await purchaseApi.requests.get(id)
-          const data = res.data?.data || res.data
-          setRequest(data)
-        }
+        const res = await purchaseApi.requests.get(id)
+        const data = res.data?.data || res.data
+        setRequest(data)
       } catch (err) {
         console.error('Failed to load request:', err)
         setError(err.response?.data?.detail || '加载失败')
@@ -126,11 +106,9 @@ export default function PurchaseRequestDetail() {
     }
 
     try {
-       else {
-        await purchaseApi.requests.delete(id)
-        toast.success('采购申请已删除')
-        navigate('/purchase-requests')
-      }
+      await purchaseApi.requests.delete(id)
+      toast.success('采购申请已删除')
+      navigate('/purchase-requests')
     } catch (err) {
       console.error('Failed to delete request:', err)
       toast.error(err.response?.data?.detail || '删除失败')
@@ -144,15 +122,11 @@ export default function PurchaseRequestDetail() {
     }
 
     try {
-      )
-        toast.success('采购申请已提交，等待审批')
-      } else {
-        await purchaseApi.requests.submit(id)
-        toast.success('采购申请已提交，等待审批')
-        // Reload request
-        const res = await purchaseApi.requests.get(id)
-        setRequest(res.data?.data || res.data)
-      }
+      await purchaseApi.requests.submit(id)
+      toast.success('采购申请已提交，等待审批')
+      // Reload request
+      const res = await purchaseApi.requests.get(id)
+      setRequest(res.data?.data || res.data)
     } catch (err) {
       console.error('Failed to submit request:', err)
       toast.error(err.response?.data?.detail || '提交失败')
@@ -163,12 +137,10 @@ export default function PurchaseRequestDetail() {
     if (!id) return
     try {
       setGenerating(true)
-       else {
-        await purchaseApi.requests.generateOrders(id)
-        toast.success('已生成采购订单')
-        const res = await purchaseApi.requests.get(id)
-        setRequest(res.data?.data || res.data)
-      }
+      await purchaseApi.requests.generateOrders(id)
+      toast.success('已生成采购订单')
+      const res = await purchaseApi.requests.get(id)
+      setRequest(res.data?.data || res.data)
     } catch (err) {
       console.error('Failed to generate orders:', err)
       toast.error(err.response?.data?.detail || '生成采购订单失败')
@@ -184,20 +156,15 @@ export default function PurchaseRequestDetail() {
     }
 
     try {
-      )
-        toast.success(approved ? '采购申请已审批通过' : '采购申请已驳回')
-        setShowApproveDialog(false)
-      } else {
-        await purchaseApi.requests.approve(id, {
-          approved,
-          approval_note: note,
-        })
-        toast.success(approved ? '采购申请已审批通过' : '采购申请已驳回')
-        setShowApproveDialog(false)
-        // Reload request
-        const res = await purchaseApi.requests.get(id)
-        setRequest(res.data?.data || res.data)
-      }
+      await purchaseApi.requests.approve(id, {
+        approved,
+        approval_note: note,
+      })
+      toast.success(approved ? '采购申请已审批通过' : '采购申请已驳回')
+      setShowApproveDialog(false)
+      // Reload request
+      const res = await purchaseApi.requests.get(id)
+      setRequest(res.data?.data || res.data)
     } catch (err) {
       console.error('Failed to approve request:', err)
       toast.error(err.response?.data?.detail || '审批失败')

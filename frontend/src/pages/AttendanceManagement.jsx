@@ -38,14 +38,11 @@ import { staggerContainer } from '../lib/animations'
 import { SimpleBarChart, MonthlyTrendChart, TrendComparisonCard } from '../components/administrative/StatisticsCharts'
 import { adminApi } from '../services/api'
 
-// Mock data
-// Mock data - 已移除，使用真实API
-// Mock data - 已移除，使用真实API
 export default function AttendanceManagement() {
   const [searchText, setSearchText] = useState('')
   const [dateFilter, setDateFilter] = useState('today')
   const [loading, setLoading] = useState(false)
-  const [attendanceStats, setAttendanceStats] = useState(mockAttendanceStats)
+  const [attendanceStats, setAttendanceStats] = useState([])
 
   // Fetch data from API
   useEffect(() => {

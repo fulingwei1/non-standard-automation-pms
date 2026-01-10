@@ -49,6 +49,119 @@ import { formatCurrency } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { presaleApi } from '../services/api'
 
+// Mock data - 已移除，使用真实API
+  ],
+
+  // 文件
+  documents: [
+    {
+      id: 1,
+      name: '技术方案书v1.pdf',
+      type: 'proposal',
+      status: 'submitted',
+      size: '8.5 MB',
+      uploadDate: '2025-12-15',
+      uploadedBy: '王工程师'
+    },
+    {
+      id: 2,
+      name: '商务报价v1.xlsx',
+      type: 'pricing',
+      status: 'submitted',
+      size: '450 KB',
+      uploadDate: '2025-12-16',
+      uploadedBy: '张工程师'
+    },
+    {
+      id: 3,
+      name: '实施计划.pptx',
+      type: 'plan',
+      status: 'submitted',
+      size: '3.2 MB',
+      uploadDate: '2025-12-17',
+      uploadedBy: '李经理'
+    },
+    {
+      id: 4,
+      name: 'FAQ回复.docx',
+      type: 'faq',
+      status: 'draft',
+      size: '220 KB',
+      uploadDate: '2025-12-18',
+      uploadedBy: '王工程师'
+    }
+  ],
+
+  // 评标信息
+  evaluation: [
+    {
+      id: 1,
+      stage: '资格审查',
+      status: 'completed',
+      completedDate: '2025-12-20',
+      notes: '资格审查通过'
+    },
+    {
+      id: 2,
+      stage: '技术评标',
+      status: 'in_progress',
+      dueDate: '2026-01-05',
+      notes: '技术评标进行中'
+    },
+    {
+      id: 3,
+      stage: '商务评标',
+      status: 'pending',
+      dueDate: '2026-01-08',
+      notes: '待技术评标完成'
+    },
+    {
+      id: 4,
+      stage: '综合评定',
+      status: 'pending',
+      dueDate: '2026-01-10',
+      notes: '待商务评标完成'
+    }
+  ],
+
+  // 竞争对手
+  competitors: [
+    { id: 1, name: '竞争对手A', estimatedPrice: '2800000', status: '已提交' },
+    { id: 2, name: '竞争对手B', estimatedPrice: '2450000', status: '已提交' },
+    { id: 3, name: '竞争对手C', estimatedPrice: '2650000', status: '已提交' }
+  ],
+
+  // 风险和机会
+  risks: [
+    { id: 1, description: '客户可能延长评标时间', probability: '中', impact: '中', mitigation: '提前沟通评标进度' },
+    { id: 2, description: '竞争对手可能大幅降价', probability: '高', impact: '高', mitigation: '强化技术优势宣传' }
+  ],
+
+  opportunities: [
+    { id: 1, description: '可争取后续维保服务合同', value: '高' },
+    { id: 2, description: '可引入配套软件和咨询服务', value: '中' }
+  ],
+
+  // 沟通记录
+  communications: [
+    {
+      id: 1,
+      date: '2025-12-20',
+      type: '邮件',
+      content: '提交技术方案书初稿',
+      contact: '采购经理',
+      status: '已发送'
+    },
+    {
+      id: 2,
+      date: '2025-12-22',
+      type: '电话',
+      content: '技术方案讨论，客户建议增加模块化功能',
+      contact: '采购经理',
+      status: '已完成'
+    }
+  ]
+}
 
 export default function BiddingDetail() {
   const { id } = useParams()

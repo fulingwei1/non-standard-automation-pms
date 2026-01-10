@@ -41,11 +41,9 @@ import { staggerContainer } from '../lib/animations'
 import { SimpleBarChart, MonthlyTrendChart, SimplePieChart, TrendComparisonCard } from '../components/administrative/StatisticsCharts'
 import { adminApi } from '../services/api'
 
-// Mock data - same as in AdministrativeManagerWorkstation
-// Mock data - 已移除，使用真实API
 export default function AdministrativeApprovals() {
   const [loading, setLoading] = useState(true)
-  const [approvals, setApprovals] = useState(mockPendingApprovals)
+  const [approvals, setApprovals] = useState([])
   const [approvedList, setApprovedList] = useState([])
   const [rejectedList, setRejectedList] = useState([])
   const [searchText, setSearchText] = useState('')

@@ -142,16 +142,246 @@ def download_import_template(
         )
     
     # 其他模板类型
-    template = db.query(ImportTemplate).filter(
-        ImportTemplate.template_type == template_type,
-        ImportTemplate.is_active == True
-    ).first()
-    
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在或未实现")
-    
-    # TODO: 返回其他类型的模板
-    raise HTTPException(status_code=501, detail="该模板类型暂未实现")
+    elif template_type.upper() == "TASK":
+        template_data = {
+            '任务名称*': ['示例：机械设计'],
+            '项目编码*': ['示例：PRJ-2025-001'],
+            '阶段': ['S1/S2/S3/S4/S5/S6/S7/S8/S9'],
+            '负责人*': ['示例：张三'],
+            '计划开始日期': ['2025-02-01'],
+            '计划结束日期': ['2025-02-15'],
+            '权重(%)': [10],
+            '任务描述': ['任务详细描述'],
+        }
+
+        df = pd.DataFrame(template_data)
+
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='任务导入模板', index=False)
+
+            worksheet = writer.sheets['任务导入模板']
+            from openpyxl.styles import Font, PatternFill, Alignment
+
+            header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            header_font = Font(bold=True, color="FFFFFF")
+
+            for cell in worksheet[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+
+            column_widths = {'A': 30, 'B': 18, 'C': 12, 'D': 12, 'E': 15, 'F': 15, 'G': 10, 'H': 40}
+            for col, width in column_widths.items():
+                worksheet.column_dimensions[col].width = width
+
+            worksheet.insert_rows(1)
+            worksheet.merge_cells('A1:H1')
+            worksheet['A1'] = '说明：1. 带*的列为必填项；2. 日期格式：YYYY-MM-DD；3. 阶段：S1-需求进入到S9-质保结项'
+            worksheet['A1'].font = Font(size=10, italic=True)
+            worksheet['A1'].alignment = Alignment(horizontal="left")
+
+        output.seek(0)
+        filename = f"任务导入模板_{datetime.now().strftime('%Y%m%d')}.xlsx"
+
+        return StreamingResponse(
+            io.BytesIO(output.read()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"}
+        )
+
+    elif template_type.upper() == "USER":
+        template_data = {
+            '用户名*': ['示例：zhangsan'],
+            '真实姓名*': ['示例：张三'],
+            '邮箱': ['zhangsan@example.com'],
+            '手机号': ['13800138000'],
+            '部门': ['技术部'],
+            '岗位': ['机械工程师'],
+            '工号': ['EMP001'],
+        }
+
+        df = pd.DataFrame(template_data)
+
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='人员导入模板', index=False)
+
+            worksheet = writer.sheets['人员导入模板']
+            from openpyxl.styles import Font, PatternFill, Alignment
+
+            header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            header_font = Font(bold=True, color="FFFFFF")
+
+            for cell in worksheet[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+
+            column_widths = {'A': 15, 'B': 15, 'C': 25, 'D': 15, 'E': 15, 'F': 15, 'G': 12}
+            for col, width in column_widths.items():
+                worksheet.column_dimensions[col].width = width
+
+            worksheet.insert_rows(1)
+            worksheet.merge_cells('A1:G1')
+            worksheet['A1'] = '说明：1. 带*的列为必填项；2. 用户名必须唯一；3. 初始密码默认为123456'
+            worksheet['A1'].font = Font(size=10, italic=True)
+            worksheet['A1'].alignment = Alignment(horizontal="left")
+
+        output.seek(0)
+        filename = f"人员导入模板_{datetime.now().strftime('%Y%m%d')}.xlsx"
+
+        return StreamingResponse(
+            io.BytesIO(output.read()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"}
+        )
+
+    elif template_type.upper() == "TIMESHEET":
+        template_data = {
+            '工作日期*': ['2025-01-15'],
+            '人员姓名*': ['张三'],
+            '项目编码*': ['PRJ-2025-001'],
+            '任务名称': ['机械设计'],
+            '工时(小时)*': [8],
+            '工作内容': ['完成设备结构设计'],
+            '工作成果': ['产出图纸10张'],
+            '加班类型': ['NORMAL/OVERTIME/WEEKEND/HOLIDAY'],
+        }
+
+        df = pd.DataFrame(template_data)
+
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='工时导入模板', index=False)
+
+            worksheet = writer.sheets['工时导入模板']
+            from openpyxl.styles import Font, PatternFill, Alignment
+
+            header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            header_font = Font(bold=True, color="FFFFFF")
+
+            for cell in worksheet[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+
+            column_widths = {'A': 12, 'B': 12, 'C': 18, 'D': 30, 'E': 12, 'F': 40, 'G': 40, 'H': 25}
+            for col, width in column_widths.items():
+                worksheet.column_dimensions[col].width = width
+
+            worksheet.insert_rows(1)
+            worksheet.merge_cells('A1:H1')
+            worksheet['A1'] = '说明：1. 带*的列为必填项；2. 日期格式：YYYY-MM-DD；3. 加班类型：NORMAL-正常/OVERTIME-平时加班/WEEKEND-周末/HOLIDAY-节假日'
+            worksheet['A1'].font = Font(size=10, italic=True)
+            worksheet['A1'].alignment = Alignment(horizontal="left")
+
+        output.seek(0)
+        filename = f"工时导入模板_{datetime.now().strftime('%Y%m%d')}.xlsx"
+
+        return StreamingResponse(
+            io.BytesIO(output.read()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"}
+        )
+
+    elif template_type.upper() == "MATERIAL":
+        template_data = {
+            '物料编码*': ['示例：MAT-001'],
+            '物料名称*': ['示例：气缸'],
+            '规格型号': ['例：CDJ2B10-45'],
+            '单位': ['个'],
+            '物料类型': ['标准件/机械件/电气件'],
+            '默认供应商': ['某某公司'],
+            '参考价格': [100.00],
+            '安全库存': [10],
+        }
+
+        df = pd.DataFrame(template_data)
+
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='物料导入模板', index=False)
+
+            worksheet = writer.sheets['物料导入模板']
+            from openpyxl.styles import Font, PatternFill, Alignment
+
+            header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            header_font = Font(bold=True, color="FFFFFF")
+
+            for cell in worksheet[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+
+            column_widths = {'A': 15, 'B': 25, 'C': 20, 'D': 8, 'E': 15, 'F': 15, 'G': 10, 'H': 10}
+            for col, width in column_widths.items():
+                worksheet.column_dimensions[col].width = width
+
+            worksheet.insert_rows(1)
+            worksheet.merge_cells('A1:H1')
+            worksheet['A1'] = '说明：1. 带*的列为必填项；2. 物料编码必须唯一；3. 价格单位：元'
+            worksheet['A1'].font = Font(size=10, italic=True)
+            worksheet['A1'].alignment = Alignment(horizontal="left")
+
+        output.seek(0)
+        filename = f"物料导入模板_{datetime.now().strftime('%Y%m%d')}.xlsx"
+
+        return StreamingResponse(
+            io.BytesIO(output.read()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"}
+        )
+
+    elif template_type.upper() == "BOM":
+        template_data = {
+            'BOM编码*': ['示例：BOM-PRJ-001'],
+            '项目编码*': ['PRJ-2025-001'],
+            '机台编号': ['PN001'],
+            '物料编码*': ['MAT-001'],
+            '用量*': [2],
+            '单位': ['个'],
+            '备注': ['说明'],
+        }
+
+        df = pd.DataFrame(template_data)
+
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='BOM导入模板', index=False)
+
+            worksheet = writer.sheets['BOM导入模板']
+            from openpyxl.styles import Font, PatternFill, Alignment
+
+            header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            header_font = Font(bold=True, color="FFFFFF")
+
+            for cell in worksheet[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+
+            column_widths = {'A': 18, 'B': 18, 'C': 10, 'D': 12, 'E': 8, 'F': 8, 'G': 30}
+            for col, width in column_widths.items():
+                worksheet.column_dimensions[col].width = width
+
+            worksheet.insert_rows(1)
+            worksheet.merge_cells('A1:G1')
+            worksheet['A1'] = '说明：1. 带*的列为必填项；2. BOM编码格式：BOM-{项目编码}；3. 物料编码必须已存在'
+            worksheet['A1'].font = Font(size=10, italic=True)
+            worksheet['A1'].alignment = Alignment(horizontal="left")
+
+        output.seek(0)
+        filename = f"BOM导入模板_{datetime.now().strftime('%Y%m%d')}.xlsx"
+
+        return StreamingResponse(
+            io.BytesIO(output.read()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"}
+        )
+
+    else:
+        raise HTTPException(status_code=400, detail=f"不支持的模板类型: {template_type}")
 
 
 @router.post("/preview", response_model=ImportPreviewResponse, status_code=status.HTTP_200_OK)
@@ -585,177 +815,28 @@ def export_project_detail(
     """
     导出项目详情（含任务/成本）
     """
-    # 检查Excel库是否可用
+    from app.utils.permission_helpers import check_project_access_or_raise
+    from app.services.project_export_service import create_project_detail_excel
+    
+    # 检查项目访问权限
+    project = check_project_access_or_raise(db, current_user, export_in.project_id)
+    
+    # 创建Excel文件
     try:
-        import openpyxl
-        import io
+        output = create_project_detail_excel(
+            db, project, export_in.include_tasks, export_in.include_costs
+        )
     except ImportError:
         raise HTTPException(
             status_code=500,
             detail="Excel处理库未安装，请安装openpyxl"
         )
     
-    # 检查项目访问权限
-    from app.utils.permission_helpers import check_project_access_or_raise
-    project = check_project_access_or_raise(db, current_user, export_in.project_id)
-    
-    # 创建Excel工作簿
-    output = io.BytesIO()
-    from openpyxl import Workbook
-    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-    
-    wb = Workbook()
-    
-    # 设置样式
-    header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
-    header_font = Font(bold=True, color="FFFFFF", size=12)
-    title_font = Font(bold=True, size=14)
-    border = Border(
-        left=Side(style='thin'),
-        right=Side(style='thin'),
-        top=Side(style='thin'),
-        bottom=Side(style='thin')
-    )
-    
-    # ========== 项目基本信息 ==========
-    ws1 = wb.active
-    ws1.title = "项目基本信息"
-    
-    # 标题
-    ws1.merge_cells('A1:B1')
-    ws1['A1'] = '项目基本信息'
-    ws1['A1'].font = title_font
-    ws1['A1'].alignment = Alignment(horizontal="center")
-    
-    # 项目信息
-    row = 3
-    project_info = [
-        ('项目编码', project.project_code or ''),
-        ('项目名称', project.project_name or ''),
-        ('客户名称', project.customer_name or ''),
-        ('合同编号', project.contract_no or ''),
-        ('合同金额', f"{float(project.contract_amount or 0):,.2f}"),
-        ('项目经理', project.pm_name or ''),
-        ('项目类型', project.project_type or ''),
-        ('阶段', project.stage or ''),
-        ('状态', project.status or ''),
-        ('健康度', project.health or ''),
-        ('进度(%)', f"{float(project.progress_pct or 0):.2f}"),
-        ('计划开始日期', project.planned_start_date.strftime('%Y-%m-%d') if project.planned_start_date else ''),
-        ('计划结束日期', project.planned_end_date.strftime('%Y-%m-%d') if project.planned_end_date else ''),
-        ('实际开始日期', project.actual_start_date.strftime('%Y-%m-%d') if project.actual_start_date else ''),
-        ('实际结束日期', project.actual_end_date.strftime('%Y-%m-%d') if project.actual_end_date else ''),
-    ]
-    
-    for label, value in project_info:
-        ws1[f'A{row}'] = label
-        ws1[f'B{row}'] = value
-        ws1[f'A{row}'].font = Font(bold=True)
-        ws1[f'A{row}'].border = border
-        ws1[f'B{row}'].border = border
-        row += 1
-    
-    # 设置列宽
-    ws1.column_dimensions['A'].width = 15
-    ws1.column_dimensions['B'].width = 30
-    
-    # ========== 任务列表 ==========
-    if export_in.include_tasks:
-        from app.models.progress import Task
-        tasks = db.query(Task).filter(Task.project_id == export_in.project_id).order_by(desc(Task.created_at)).all()
-        
-        ws2 = wb.create_sheet("任务列表")
-        
-        # 表头
-        headers = ['任务编号', '任务名称', '任务类型', '优先级', '状态', '进度(%)', 
-                   '计划开始日期', '计划结束日期', '实际开始日期', '实际结束日期', 
-                   '负责人', '创建时间']
-        for col, header in enumerate(headers, 1):
-            cell = ws2.cell(row=1, column=col, value=header)
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = Alignment(horizontal="center", vertical="center")
-            cell.border = border
-        
-        # 数据
-        for row_idx, task in enumerate(tasks, 2):
-            ws2.cell(row=row_idx, column=1, value=task.task_code or '')
-            ws2.cell(row=row_idx, column=2, value=task.task_name or '')
-            ws2.cell(row=row_idx, column=3, value=task.task_type or '')
-            ws2.cell(row=row_idx, column=4, value=task.priority or '')
-            ws2.cell(row=row_idx, column=5, value=task.status or '')
-            ws2.cell(row=row_idx, column=6, value=f"{float(task.progress_pct or 0):.2f}")
-            ws2.cell(row=row_idx, column=7, value=task.planned_start_date.strftime('%Y-%m-%d') if task.planned_start_date else '')
-            ws2.cell(row=row_idx, column=8, value=task.planned_end_date.strftime('%Y-%m-%d') if task.planned_end_date else '')
-            ws2.cell(row=row_idx, column=9, value=task.actual_start_date.strftime('%Y-%m-%d') if task.actual_start_date else '')
-            ws2.cell(row=row_idx, column=10, value=task.actual_end_date.strftime('%Y-%m-%d') if task.actual_end_date else '')
-            ws2.cell(row=row_idx, column=11, value=task.assignee_name or '')
-            ws2.cell(row=row_idx, column=12, value=task.created_at.strftime('%Y-%m-%d %H:%M:%S') if task.created_at else '')
-            
-            # 设置边框
-            for col in range(1, 13):
-                ws2.cell(row=row_idx, column=col).border = border
-        
-        # 设置列宽
-        column_widths = [15, 30, 12, 10, 10, 10, 12, 12, 12, 12, 12, 18]
-        for col, width in enumerate(column_widths, 1):
-            ws2.column_dimensions[chr(64 + col)].width = width
-    
-    # ========== 成本列表 ==========
-    if export_in.include_costs:
-        from app.models.project import ProjectCost
-        costs = db.query(ProjectCost).filter(ProjectCost.project_id == export_in.project_id).order_by(desc(ProjectCost.cost_date)).all()
-        
-        ws3 = wb.create_sheet("成本列表")
-        
-        # 表头
-        headers = ['成本日期', '成本类型', '成本分类', '金额', '币种', '说明', '创建时间']
-        for col, header in enumerate(headers, 1):
-            cell = ws3.cell(row=1, column=col, value=header)
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = Alignment(horizontal="center", vertical="center")
-            cell.border = border
-        
-        # 数据
-        total_amount = 0
-        for row_idx, cost in enumerate(costs, 2):
-            amount = float(cost.amount or 0)
-            total_amount += amount
-            
-            ws3.cell(row=row_idx, column=1, value=cost.cost_date.strftime('%Y-%m-%d') if cost.cost_date else '')
-            ws3.cell(row=row_idx, column=2, value=cost.cost_type or '')
-            ws3.cell(row=row_idx, column=3, value=cost.cost_category or '')
-            ws3.cell(row=row_idx, column=4, value=amount)
-            ws3.cell(row=row_idx, column=5, value=cost.currency or 'CNY')
-            ws3.cell(row=row_idx, column=6, value=cost.description or '')
-            ws3.cell(row=row_idx, column=7, value=cost.created_at.strftime('%Y-%m-%d %H:%M:%S') if cost.created_at else '')
-            
-            # 设置边框
-            for col in range(1, 8):
-                ws3.cell(row=row_idx, column=col).border = border
-        
-        # 添加合计行
-        if costs:
-            total_row = len(costs) + 2
-            ws3.cell(row=total_row, column=3, value='合计').font = Font(bold=True)
-            ws3.cell(row=total_row, column=4, value=total_amount).font = Font(bold=True)
-            for col in range(1, 8):
-                ws3.cell(row=total_row, column=col).border = border
-        
-        # 设置列宽
-        column_widths = [12, 12, 15, 15, 8, 40, 18]
-        for col, width in enumerate(column_widths, 1):
-            ws3.column_dimensions[chr(64 + col)].width = width
-    
-    wb.save(output)
-    output.seek(0)
-    
     # 生成文件名
     filename = f"项目详情_{project.project_code}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     
     return StreamingResponse(
-        io.BytesIO(output.read()),
+        output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={
             "Content-Disposition": f"attachment; filename*=UTF-8''{filename}"

@@ -60,45 +60,6 @@ import { toast } from '../components/ui/toast'
 import { LoadingCard } from '../components/common'
 import { ErrorMessage } from '../components/common'
 import { EmptyState } from '../components/common'
-,
-      ],
-    },
-    {
-      supplier_id: 2,
-      supplier_name: 'THK(深圳)销售',
-      project_id: 1,
-      project_name: 'BMS老化测试设备',
-      order_type: 'NORMAL',
-      order_title: 'BOM-PJ250108-001 - THK(深圳)销售',
-      total_amount: 16800,
-      tax_amount: 2184,
-      amount_with_tax: 18984,
-      item_count: 1,
-      items: [
-        {
-          item_no: 1,
-          material_code: 'ME-03-02-0008',
-          material_name: '精密导轨 HSR25',
-          specification: '',
-          unit: '根',
-          quantity: 4,
-          unit_price: 4200,
-          tax_rate: 13,
-          amount: 16800,
-          tax_amount: 2184,
-          amount_with_tax: 18984,
-          required_date: '2026-01-15',
-        },
-      ],
-    },
-  ],
-  summary: {
-    total_orders: 2,
-    total_items: 2,
-    total_amount: 22200,
-    total_amount_with_tax: 25086,
-  },
-}
 
 export default function PurchaseOrderFromBOM() {
   const navigate = useNavigate()
@@ -125,12 +86,10 @@ export default function PurchaseOrderFromBOM() {
   useEffect(() => {
     const loadBOMs = async () => {
       try {
-         else {
-          // Load released BOMs
-          const res = await bomApi.list({ status: 'RELEASED', page_size: 1000 })
-          const data = res.data?.data || res.data
-          setBoms(data?.items || data || [])
-        }
+        // Load released BOMs
+        const res = await bomApi.list({ status: 'RELEASED', page_size: 1000 })
+        const data = res.data?.data || res.data
+        setBoms(data?.items || data || [])
       } catch (err) {
         console.error('Failed to load BOMs:', err)
       }
@@ -142,13 +101,8 @@ export default function PurchaseOrderFromBOM() {
   useEffect(() => {
     const loadSuppliers = async () => {
       try {
-        ,
-            { id: 2, supplier_name: 'THK(深圳)销售' },
-          ])
-        } else {
-          const res = await supplierApi.list({ page_size: 1000 })
-          setSuppliers(res.data?.items || res.data || [])
-        }
+        const res = await supplierApi.list({ page_size: 1000 })
+        setSuppliers(res.data?.items || res.data || [])
       } catch (err) {
         console.error('Failed to load suppliers:', err)
       }
@@ -167,20 +121,18 @@ export default function PurchaseOrderFromBOM() {
       setLoading(true)
       setError(null)
 
-       else {
-        const params = {
-          bom_id: parseInt(selectedBomId),
-          create_orders: false, // Preview only
-        }
-        if (defaultSupplierId) {
-          params.supplier_id = defaultSupplierId
-        }
-        const res = await purchaseApi.orders.createFromBOM(params)
-        const data = res.data?.data || res.data
-        setPreview(data)
-        setSelectedBom(boms.find(b => b.id === parseInt(selectedBomId)))
-        setStep(2)
+      const params = {
+        bom_id: parseInt(selectedBomId),
+        create_orders: false, // Preview only
       }
+      if (defaultSupplierId) {
+        params.supplier_id = defaultSupplierId
+      }
+      const res = await purchaseApi.orders.createFromBOM(params)
+      const data = res.data?.data || res.data
+      setPreview(data)
+      setSelectedBom(boms.find(b => b.id === parseInt(selectedBomId)))
+      setStep(2)
     } catch (err) {
       console.error('Failed to generate preview:', err)
       setError(err.response?.data?.detail || '生成预览失败')
@@ -217,27 +169,18 @@ export default function PurchaseOrderFromBOM() {
       setLoading(true)
       setError(null)
 
-      -${String(index + 1).padStart(3, '0')}`,
-          supplier_name: order.supplier_name,
-          total_amount: order.amount_with_tax,
-        }))
-        setCreatedOrders(mockCreated)
-        setStep(3)
-        toast.success(`已创建${mockCreated.length}个采购订单`)
-      } else {
-        const params = {
-          bom_id: preview.bom_id,
-          create_orders: true,
-        }
-        if (defaultSupplierId) {
-          params.supplier_id = defaultSupplierId
-        }
-        const res = await purchaseApi.orders.createFromBOM(params)
-        const data = res.data?.data || res.data
-        setCreatedOrders(data.created_orders || [])
-        setStep(3)
-        toast.success(`已创建${data.created_orders?.length || 0}个采购订单`)
+      const params = {
+        bom_id: preview.bom_id,
+        create_orders: true,
       }
+      if (defaultSupplierId) {
+        params.supplier_id = defaultSupplierId
+      }
+      const res = await purchaseApi.orders.createFromBOM(params)
+      const data = res.data?.data || res.data
+      setCreatedOrders(data.created_orders || [])
+      setStep(3)
+      toast.success(`已创建${data.created_orders?.length || 0}个采购订单`)
     } catch (err) {
       console.error('Failed to create orders:', err)
       setError(err.response?.data?.detail || '创建订单失败')

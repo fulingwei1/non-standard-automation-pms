@@ -83,7 +83,9 @@ export default function GoodsReceiptDetail() {
     qualified_qty: 0,
     rejected_qty: 0,
     inspect_result: 'QUALIFIED',
-  })  useEffect(() => {
+  })
+
+  useEffect(() => {
     loadReceipt()
   }, [id])
 
@@ -91,40 +93,13 @@ export default function GoodsReceiptDetail() {
     try {
       setLoading(true)
       setError(null)
-      
-      )
-        setItems([
-          {
-            id: 1,
-            material_code: 'EL-02-03-0015',
-            material_name: '光电传感器 E3Z-D82',
-            delivery_qty: 12,
-            received_qty: 12,
-            inspect_qty: 0,
-            qualified_qty: 0,
-            rejected_qty: 0,
-            inspect_result: null,
-          },
-          {
-            id: 2,
-            material_code: 'EL-02-03-0016',
-            material_name: '接近开关 E2E-X10D1-N',
-            delivery_qty: 8,
-            received_qty: 8,
-            inspect_qty: 8,
-            qualified_qty: 7,
-            rejected_qty: 1,
-            inspect_result: 'PARTIAL',
-          },
-        ])
-      } else {
-        const [receiptRes, itemsRes] = await Promise.all([
-          purchaseApi.receipts.get(id),
-          purchaseApi.receipts.getItems(id),
-        ])
-        setReceipt(receiptRes.data || receiptRes)
-        setItems(itemsRes.data || itemsRes || [])
-      }
+
+      const [receiptRes, itemsRes] = await Promise.all([
+        purchaseApi.receipts.get(id),
+        purchaseApi.receipts.getItems(id),
+      ])
+      setReceipt(receiptRes.data || receiptRes)
+      setItems(itemsRes.data || itemsRes || [])
     } catch (err) {
       console.error('Failed to load receipt:', err)
       setError(err.response?.data?.detail || '加载收货单失败')
@@ -159,23 +134,16 @@ export default function GoodsReceiptDetail() {
     
     try {
       setLoading(true)
-      
-      
-            : item
-        )
-        setItems(updatedItems)
-        toast.success('质检结果已更新（演示模式）')
-      } else {
-        await purchaseApi.receipts.inspectItem(id, inspectingItem.id, {
-          inspect_qty: inspectData.inspect_qty,
-          qualified_qty: inspectData.qualified_qty,
-          rejected_qty: inspectData.rejected_qty,
-          inspect_result: inspectData.inspect_result,
-        })
-        toast.success('质检结果已更新')
-        loadReceipt()
-      }
-      
+
+      await purchaseApi.receipts.inspectItem(id, inspectingItem.id, {
+        inspect_qty: inspectData.inspect_qty,
+        qualified_qty: inspectData.qualified_qty,
+        rejected_qty: inspectData.rejected_qty,
+        inspect_result: inspectData.inspect_result,
+      })
+      toast.success('质检结果已更新')
+      loadReceipt()
+
       setShowInspectDialog(false)
       setInspectingItem(null)
     } catch (err) {
@@ -189,14 +157,10 @@ export default function GoodsReceiptDetail() {
   const handleUpdateStatus = async (status) => {
     try {
       setLoading(true)
-      
-      )
-        toast.success('状态已更新（演示模式）')
-      } else {
-        await purchaseApi.receipts.updateStatus(id, status)
-        toast.success('状态已更新')
-        loadReceipt()
-      }
+
+      await purchaseApi.receipts.updateStatus(id, status)
+      toast.success('状态已更新')
+      loadReceipt()
     } catch (err) {
       console.error('Failed to update status:', err)
       toast.error(err.response?.data?.detail || '更新状态失败')

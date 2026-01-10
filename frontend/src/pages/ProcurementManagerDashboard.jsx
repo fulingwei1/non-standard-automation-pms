@@ -233,7 +233,6 @@ import { ApiIntegrationError } from '../components/ui'
 } */
 
 // Mock alerts
-// Mock data - 已移除，使用真实API
 const getStatusColor = (status) => {
   const colors = {
     active: 'bg-emerald-500',

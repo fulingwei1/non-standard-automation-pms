@@ -223,7 +223,21 @@ def create_task(
         )
         db.add(approval_workflow)
 
-        # TODO: 发送通知给PM
+        # 发送通知给PM
+        from app.services.notification_service import notification_service, NotificationType
+        try:
+            notification_service.send_notification(
+                db=db,
+                recipient_id=project.pm_id,
+                notification_type=NotificationType.TASK_ASSIGNED,
+                title=f"待审批：{task_data.title}",
+                content=f"提交人：{current_user.real_name or current_user.username}\n说明：{task_data.justification or '无'}",
+                priority=notification_service.NotificationPriority.NORMAL,
+                link=f"/engineers/tasks/{new_task.id}"
+            )
+        except Exception as e:
+            # 通知失败不影响主流程
+            pass
 
     db.commit()
     db.refresh(new_task)
@@ -355,7 +369,21 @@ def complete_task(
     # 触发进度聚合
     aggregation_result = aggregate_task_progress(db, task.id)
 
-    # TODO: 发送通知
+    # 发送通知
+    from app.services.notification_service import notification_service, NotificationType
+    try:
+        # 通知项目经理任务已完成
+        project = db.query(Project).filter(Project.id == task.project_id).first()
+        if project and project.pm_id:
+            notification_service.send_task_completed_notification(
+                db=db,
+                task_owner_id=project.pm_id,
+                task_name=task.title or f"任务#{task.id}",
+                project_name=project.project_name or ""
+            )
+    except Exception as e:
+        # 通知失败不影响主流程
+        pass
 
     return schemas.TaskCompleteResponse(
         task_id=task.id,
@@ -505,7 +533,24 @@ def report_task_delay(
         visible_roles = ['PROJECT_TEAM', 'DEPT_HEAD', 'PM', 'PMO', 'MANAGEMENT']
         notifications_count = 5
 
-    # TODO: 实际发送通知
+    # 发送异常通知
+    from app.services.notification_service import notification_service, NotificationType, NotificationPriority
+    try:
+        # 通知项目经理
+        project = db.query(Project).filter(Project.id == task.project_id).first()
+        if project and project.pm_id:
+            notification_service.send_notification(
+                db=db,
+                recipient_id=project.pm_id,
+                notification_type=NotificationType.PROJECT_UPDATE,
+                title=f"任务延期报告：{task.title or f'任务#{task.id}'}",
+                content=f"延期天数：{delay_data.schedule_impact_days}天\n原因分析：{delay_data.root_cause_analysis or '无'}",
+                priority=NotificationPriority.HIGH,
+                link=f"/engineers/tasks/{task.id}"
+            )
+    except Exception as e:
+        # 通知失败不影响主流程
+        pass
 
     # 检查是否需要更新项目健康度
     aggregate_task_progress(db, task.id)
@@ -622,7 +667,21 @@ def approve_task(
 
     db.commit()
 
-    # TODO: 发送通知给任务执行人
+    # 发送通知给任务执行人
+    from app.services.notification_service import notification_service, NotificationType
+    try:
+        notification_service.send_notification(
+            db=db,
+            recipient_id=task.assignee_id,
+            notification_type=NotificationType.TASK_APPROVED,
+            title=f"任务已审批通过：{task.title or f'任务#{task.id}'}",
+            content=f"审批人：{current_user.real_name or current_user.username}\n备注：{approval_data.comment or '无'}",
+            priority=notification_service.NotificationPriority.NORMAL,
+            link=f"/engineers/tasks/{task.id}"
+        )
+    except Exception as e:
+        # 通知失败不影响主流程
+        pass
 
     return schemas.TaskApprovalResponse(
         task_id=task.id,
@@ -682,7 +741,21 @@ def reject_task(
 
     db.commit()
 
-    # TODO: 发送通知给任务创建人
+    # 发送通知给任务创建人
+    from app.services.notification_service import notification_service, NotificationType
+    try:
+        notification_service.send_notification(
+            db=db,
+            recipient_id=task.created_by,
+            notification_type=NotificationType.TASK_REJECTED,
+            title=f"任务已被拒绝：{task.title or f'任务#{task.id}'}",
+            content=f"审批人：{current_user.real_name or current_user.username}\n拒绝原因：{rejection_data.reason}",
+            priority=notification_service.NotificationPriority.HIGH,
+            link=f"/engineers/tasks/{task.id}"
+        )
+    except Exception as e:
+        # 通知失败不影响主流程
+        pass
 
     return schemas.TaskApprovalResponse(
         task_id=task.id,

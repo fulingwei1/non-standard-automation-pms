@@ -795,9 +795,8 @@ export default function ScheduleBoard() {
         
         setProjects(transformedProjects)
       } catch (err) {
-        console.error('Failed to fetch projects:', err)         else {
-          setProjects([])
-        }
+        console.error('Failed to fetch projects:', err)
+        setProjects([])
       } finally {
         setLoading(false)
       }

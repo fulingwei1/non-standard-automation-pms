@@ -312,6 +312,39 @@ def download_report(
     )
 
 
+@router.get("/download-file")
+def download_file(
+    *,
+    path: str = Query(..., description="文件路径"),
+    current_user: User = Depends(security.require_permission("report:read")),
+):
+    """
+    直接下载文件（通过路径）
+    """
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="文件不存在")
+
+    # 获取文件扩展名
+    _, ext = os.path.splitext(path)
+
+    # 设置 MIME 类型
+    media_type_map = {
+        '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        '.pdf': 'application/pdf',
+        '.csv': 'text/csv',
+    }
+    media_type = media_type_map.get(ext, 'application/octet-stream')
+
+    # 生成下载文件名
+    filename = os.path.basename(path)
+
+    return FileResponse(
+        path=path,
+        media_type=media_type,
+        filename=filename
+    )
+
+
 @router.post("/export-direct", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def export_direct(
     *,
@@ -850,24 +883,186 @@ def export_rd_report(
     year: int = Query(..., description="年度"),
     format: str = Query("xlsx", description="导出格式：xlsx/pdf"),
     project_id: Optional[int] = Query(None, description="研发项目ID"),
-    current_user: User = Depends(security.require_permission("report:read")),
+    current_user: User = Depends(security.require_permission("report:export")),
 ) -> Any:
     """
     导出研发费用报表
     """
-    # TODO: 根据报表类型生成Excel/PDF文件
-    # 这里返回文件路径或下载链接
-    
-    return ResponseModel(
-        code=200,
-        message="导出功能开发中",
-        data={
-            "report_type": report_type,
-            "year": year,
-            "format": format,
-            "file_url": f"/exports/rd-{report_type}-{year}.{format}"
+    from app.services.report_export_service import report_export_service, ReportGenerator
+
+    # 根据报表类型获取数据
+    report_data = {}
+    report_title = ""
+
+    if report_type == 'auxiliary-ledger':
+        # 研发费用辅助账
+        query = db.query(RdCost).join(RdProject).filter(
+            func.extract('year', RdCost.cost_date) == year
+        )
+        if project_id:
+            query = query.filter(RdCost.rd_project_id == project_id)
+
+        costs = query.order_by(RdCost.rd_project_id, RdCost.cost_date, RdCost.cost_type_id).all()
+
+        details = []
+        for cost in costs:
+            project = db.query(RdProject).filter(RdProject.id == cost.rd_project_id).first()
+            cost_type = db.query(RdCostType).filter(RdCostType.id == cost.cost_type_id).first()
+            details.append({
+                "项目名称": project.project_name if project else "",
+                "费用类型": cost_type.type_name if cost_type else "",
+                "费用日期": str(cost.cost_date) if cost.cost_date else "",
+                "费用单号": cost.cost_no or "",
+                "费用说明": cost.cost_description or "",
+                "费用金额": float(cost.cost_amount or 0),
+                "可加计扣除": float(cost.deductible_amount or 0),
+            })
+
+        report_data = {"details": details}
+        report_title = f"{year}年研发费用辅助账"
+
+    elif report_type == 'deduction-detail':
+        # 研发费用加计扣除明细
+        query = db.query(RdCost).join(RdProject).filter(
+            func.extract('year', RdCost.cost_date) == year,
+            RdCost.deductible_amount > 0
+        )
+        if project_id:
+            query = query.filter(RdCost.rd_project_id == project_id)
+
+        costs = query.order_by(RdCost.rd_project_id, RdCost.cost_type_id).all()
+
+        details = []
+        for cost in costs:
+            project = db.query(RdProject).filter(RdProject.id == cost.rd_project_id).first()
+            cost_type = db.query(RdCostType).filter(RdCostType.id == cost.cost_type_id).first()
+            details.append({
+                "项目名称": project.project_name if project else "",
+                "费用类型": cost_type.type_name if cost_type else "",
+                "费用说明": cost.cost_description or "",
+                "费用金额": float(cost.cost_amount or 0),
+                "可加计扣除": float(cost.deductible_amount or 0),
+            })
+
+        total_deductible = sum(float(c.deductible_amount or 0) for c in costs)
+
+        report_data = {
+            "summary": {"年度": year, "总可加计扣除": f"¥{total_deductible:,.2f}"},
+            "details": details
         }
-    )
+        report_title = f"{year}年研发费用加计扣除明细"
+
+    elif report_type == 'high-tech':
+        # 高新企业研发费用表
+        costs = db.query(RdCost).join(RdProject).filter(
+            func.extract('year', RdCost.cost_date) == year
+        ).all()
+
+        by_type = {}
+        total_cost = 0
+
+        for cost in costs:
+            cost_type = db.query(RdCostType).filter(RdCostType.id == cost.cost_type_id).first()
+            type_name = cost_type.type_name if cost_type else "其他"
+            if type_name not in by_type:
+                by_type[type_name] = 0
+            by_type[type_name] += float(cost.cost_amount or 0)
+            total_cost += float(cost.cost_amount or 0)
+
+        details = [{"费用类型": k, "金额": f"¥{v:,.2f}"} for k, v in by_type.items()]
+
+        report_data = {
+            "summary": {"年度": year, "研发费用总计": f"¥{total_cost:,.2f}"},
+            "details": details
+        }
+        report_title = f"{year}年高新企业研发费用表"
+
+    elif report_type == 'intensity':
+        # 研发投入强度报表（简化版，需要营业收入数据）
+        rd_costs = db.query(func.sum(RdCost.cost_amount)).filter(
+            func.extract('year', RdCost.cost_date) == year
+        ).scalar() or 0
+
+        details = [{
+            "年度": year,
+            "研发费用": f"¥{float(rd_costs):,.2f}",
+            "营业收入": "待从销售模块获取",
+            "研发投入强度": "待计算",
+        }]
+
+        report_data = {"details": details}
+        report_title = f"{year}年研发投入强度报表"
+
+    elif report_type == 'personnel':
+        # 研发人员统计
+        rd_projects = db.query(RdProject).filter(
+            func.extract('year', RdProject.start_date) <= year,
+            func.extract('year', RdProject.end_date) >= year
+        ).all()
+
+        rd_user_ids = set()
+        for project in rd_projects:
+            if project.linked_project_id:
+                timesheets = db.query(Timesheet).filter(
+                    Timesheet.project_id == project.linked_project_id,
+                    func.extract('year', Timesheet.work_date) == year,
+                    Timesheet.status == 'APPROVED'
+                ).all()
+                rd_user_ids.update([ts.user_id for ts in timesheets])
+
+        details = []
+        for user_id in rd_user_ids:
+            user = db.query(User).filter(User.id == user_id).first()
+            if user:
+                details.append({
+                    "姓名": user.real_name or user.username,
+                    "部门": user.department or "",
+                    "岗位": user.position or "",
+                })
+
+        all_users = db.query(User).filter(User.is_active == True).count()
+
+        report_data = {
+            "summary": {
+                "年度": year,
+                "总人数": all_users,
+                "研发人员数": len(rd_user_ids),
+                "研发人员占比": f"{len(rd_user_ids) / all_users * 100:.1f}%" if all_users > 0 else "0%"
+            },
+            "details": details
+        }
+        report_title = f"{year}年研发人员统计"
+
+    else:
+        raise HTTPException(status_code=400, detail=f"不支持的报表类型: {report_type}")
+
+    # 导出文件
+    try:
+        filename = f"rd-{report_type}-{year}"
+        export_fmt = format.upper()
+
+        if export_fmt == 'XLSX':
+            filepath = report_export_service.export_to_excel(report_data, filename, report_title)
+        elif export_fmt == 'PDF':
+            filepath = report_export_service.export_to_pdf(report_data, filename, report_title)
+        elif export_fmt == 'CSV':
+            filepath = report_export_service.export_to_csv(report_data, filename)
+        else:
+            raise HTTPException(status_code=400, detail=f"不支持的导出格式: {format}")
+
+        return ResponseModel(
+            code=200,
+            message="导出成功",
+            data={
+                "report_type": report_type,
+                "year": year,
+                "format": export_fmt,
+                "file_path": filepath,
+                "download_url": f"/api/v1/reports/download-file?path={filepath}"
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"导出失败: {str(e)}")
 
 
 # ==================== BI 报表 ====================

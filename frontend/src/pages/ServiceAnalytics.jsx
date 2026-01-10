@@ -30,7 +30,9 @@ import { toast } from '../components/ui/toast'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { serviceApi } from '../services/api'
-,
+
+// Mock data for fallback
+const mockData = {
   ticketTrends: [
     { month: '2025-10', count: 12, resolved: 10 },
     { month: '2025-11', count: 15, resolved: 13 },

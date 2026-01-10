@@ -141,10 +141,7 @@ export default function Documents() {
       console.error('Failed to load documents:', err)
       const errorMessage = err.response?.data?.detail || err.message || '加载文档失败'
       setError(errorMessage)
-      
-      // 如果是演示账号，使用空数组       else {
-        setDocuments([])
-      }
+      setDocuments([])
     } finally {
       setLoading(false)
     }

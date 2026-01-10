@@ -76,67 +76,6 @@ import {
 } from '../services/api'
 import { toast } from '../components/ui/toast'
 
-,
-    submitTime: '2025-01-06 10:30',
-    priority: 'high',
-    status: 'pending',
-  },
-  {
-    id: 2,
-    type: 'vehicle',
-    title: '车辆使用申请',
-    applicant: '李工程师',
-    department: '项目部',
-    purpose: '客户现场服务',
-    date: '2025-01-08',
-    submitTime: '2025-01-06 14:20',
-    priority: 'medium',
-    status: 'pending',
-  },
-  {
-    id: 3,
-    type: 'asset',
-    title: '固定资产采购',
-    applicant: '王经理',
-    department: '生产部',
-    item: '办公桌椅套装',
-    amount: 12000,
-    submitTime: '2025-01-05 16:45',
-    priority: 'medium',
-    status: 'pending',
-  },
-  {
-    id: 4,
-    type: 'meeting',
-    title: '会议室预订申请',
-    applicant: '周经理',
-    department: '技术开发部',
-    room: '大会议室',
-    date: '2025-01-07',
-    time: '14:00-16:00',
-    submitTime: '2025-01-06 09:15',
-    priority: 'low',
-    status: 'pending',
-  },
-  {
-    id: 5,
-    type: 'leave',
-    title: '请假申请',
-    applicant: '赵工程师',
-    department: '机械部',
-    leaveType: '年假',
-    days: 3,
-    date: '2025-01-10',
-    submitTime: '2025-01-06 11:30',
-    priority: 'medium',
-    status: 'pending',
-  },
-]
-
-// Mock data - 已移除，使用真实API
-// Mock data - 已移除，使用真实API
-// Mock data - 已移除，使用真实API
-// Mock data - 已移除，使用真实API
 const formatCurrency = (value) => {
   if (value >= 100000000) {
     return `¥${(value / 100000000).toFixed(2)}亿`
@@ -198,12 +137,26 @@ const StatCard = ({ title, value, subtitle, trend, icon: IconComponent, color, b
 
 export default function AdministrativeManagerWorkstation() {
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState(mockStats)
-  const [pendingApprovals, setPendingApprovals] = useState(mockPendingApprovals)
-  const [meetings, setMeetings] = useState(mockMeetings)
-  const [officeSupplies, setOfficeSupplies] = useState(mockOfficeSupplies)
-  const [vehicles, setVehicles] = useState(mockVehicles)
-  const [attendanceStats, setAttendanceStats] = useState(mockAttendanceStats)
+  const [stats, setStats] = useState({
+    totalEmployees: 0,
+    attendanceRate: 0,
+    pendingApprovals: 0,
+    urgentApprovals: 0,
+    monthlyAdminBudget: 0,
+    monthlyAdminSpent: 0,
+    budgetUtilization: 0,
+    officeSuppliesTotal: 0,
+    officeSuppliesLowStock: 0,
+    meetingsThisWeek: 0,
+    meetingsToday: 0,
+    totalVehicles: 0,
+    vehiclesInUse: 0,
+  })
+  const [pendingApprovals, setPendingApprovals] = useState([])
+  const [meetings, setMeetings] = useState([])
+  const [officeSupplies, setOfficeSupplies] = useState([])
+  const [vehicles, setVehicles] = useState([])
+  const [attendanceStats, setAttendanceStats] = useState([])
   const [selectedMeeting, setSelectedMeeting] = useState(null)
   const [showMeetingDetail, setShowMeetingDetail] = useState(false)
   const [selectedApproval, setSelectedApproval] = useState(null)
@@ -479,18 +432,18 @@ export default function AdministrativeManagerWorkstation() {
                       使用率: {stats.budgetUtilization}%
                     </span>
                     <span className="text-slate-400">
-                      剩余: {formatCurrency(mockStats.monthlyAdminBudget - mockStats.monthlyAdminSpent)}
+                      剩余: {formatCurrency(stats.monthlyAdminBudget - stats.monthlyAdminSpent)}
                     </span>
                   </div>
                   <div className="pt-4 border-t border-slate-700/50">
                     <CategoryBreakdownCard
                       title="费用分类"
                       data={[
-                        { label: '办公用品', value: mockStats.officeSuppliesMonthlyCost, color: '#3b82f6' },
-                        { label: '车辆费用', value: mockStats.monthlyFuelCost, color: '#06b6d4' },
-                        { label: '其他费用', value: mockStats.monthlyAdminSpent - mockStats.officeSuppliesMonthlyCost - mockStats.monthlyFuelCost, color: '#64748b' },
+                        { label: '办公用品', value: stats.officeSuppliesMonthlyCost, color: '#3b82f6' },
+                        { label: '车辆费用', value: stats.monthlyFuelCost, color: '#06b6d4' },
+                        { label: '其他费用', value: stats.monthlyAdminSpent - stats.officeSuppliesMonthlyCost - stats.monthlyFuelCost, color: '#64748b' },
                       ]}
-                      total={mockStats.monthlyAdminSpent}
+                      total={stats.monthlyAdminSpent}
                       formatValue={formatCurrency}
                     />
                   </div>
@@ -502,7 +455,7 @@ export default function AdministrativeManagerWorkstation() {
                         { month: '2024-10', amount: 420000 },
                         { month: '2024-11', amount: 395000 },
                         { month: '2024-12', amount: 410000 },
-                        { month: '2025-01', amount: mockStats.monthlyAdminSpent },
+                        { month: '2025-01', amount: stats.monthlyAdminSpent },
                       ]}
                       valueKey="amount"
                       labelKey="month"
@@ -530,7 +483,7 @@ export default function AdministrativeManagerWorkstation() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {mockOfficeSupplies.map((item) => (
+                  {officeSupplies.map((item) => (
                     <div
                       key={item.id}
                       className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors"
@@ -601,7 +554,7 @@ export default function AdministrativeManagerWorkstation() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {mockMeetings.map((meeting) => (
+                  {meetings.map((meeting) => (
                     <div
                       key={meeting.id}
                       className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"
@@ -750,7 +703,7 @@ export default function AdministrativeManagerWorkstation() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {mockVehicles.map((vehicle) => (
+                {vehicles.map((vehicle) => (
                   <div
                     key={vehicle.id}
                     className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors"
@@ -818,7 +771,7 @@ export default function AdministrativeManagerWorkstation() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {mockAttendanceStats.map((stat, index) => (
+                {attendanceStats.map((stat, index) => (
                   <div
                     key={index}
                     className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"

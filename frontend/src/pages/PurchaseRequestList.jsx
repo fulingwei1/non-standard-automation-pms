@@ -278,11 +278,9 @@ export default function PurchaseRequestList() {
     }
 
     try {
-       else {
-        await purchaseApi.requests.delete(request.id)
-        toast.success('采购申请已删除')
-        loadRequests()
-      }
+      await purchaseApi.requests.delete(request.id)
+      toast.success('采购申请已删除')
+      loadRequests()
     } catch (err) {
       console.error('Failed to delete request:', err)
       toast.error(err.response?.data?.detail || '删除失败')
@@ -296,14 +294,9 @@ export default function PurchaseRequestList() {
     }
 
     try {
-       : r
-        ))
-        toast.success('采购申请已提交，等待审批')
-      } else {
-        await purchaseApi.requests.submit(request.id)
-        toast.success('采购申请已提交，等待审批')
-        loadRequests()
-      }
+      await purchaseApi.requests.submit(request.id)
+      toast.success('采购申请已提交，等待审批')
+      loadRequests()
     } catch (err) {
       console.error('Failed to submit request:', err)
       toast.error(err.response?.data?.detail || '提交失败')
@@ -317,19 +310,13 @@ export default function PurchaseRequestList() {
     }
 
     try {
-       : r
-        ))
-        toast.success(approved ? '采购申请已审批通过' : '采购申请已驳回')
-        setShowApproveDialog(false)
-      } else {
-        await purchaseApi.requests.approve(request.id, {
-          approved,
-          approval_note: note,
-        })
-        toast.success(approved ? '采购申请已审批通过' : '采购申请已驳回')
-        loadRequests()
-        setShowApproveDialog(false)
-      }
+      await purchaseApi.requests.approve(request.id, {
+        approved,
+        approval_note: note,
+      })
+      toast.success(approved ? '采购申请已审批通过' : '采购申请已驳回')
+      loadRequests()
+      setShowApproveDialog(false)
     } catch (err) {
       console.error('Failed to approve request:', err)
       toast.error(err.response?.data?.detail || '审批失败')

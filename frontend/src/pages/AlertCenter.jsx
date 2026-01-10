@@ -159,14 +159,13 @@ export default function AlertCenter() {
       
       setProjects(transformedProjects)
     } catch (error) {
-      console.error('Failed to load projects:', error)      ,
-          { id: 2, name: 'YY检测设备项目' },
-          { id: 3, name: 'ZZ包装线项目' },
-        ]
-        setProjects(mockProjects)
-      } else {
-        setProjects([])
-      }
+      console.error('Failed to load projects:', error)
+      const mockProjects = [
+        { id: 1, name: 'XX测试设备项目' },
+        { id: 2, name: 'YY检测设备项目' },
+        { id: 3, name: 'ZZ包装线项目' },
+      ]
+      setProjects(mockProjects)
     }
   }
 
@@ -219,10 +218,9 @@ export default function AlertCenter() {
       } else {
         errorMessage = err.message || errorMessage
       }
-      setError(errorMessage)       else {
-        setAlerts([])
-        setTotal(0)
-      }
+      setError(errorMessage)
+      setAlerts([])
+      setTotal(0)
     } finally {
       setLoading(false)
     }
@@ -246,20 +244,19 @@ export default function AlertCenter() {
         })
       }
     } catch (error) {
-      console.error('Failed to load statistics:', error)       else {
-        // Calculate from loaded alerts as fallback
-        setStats({
-          total: alerts.length,
-          urgent: alerts.filter(a => a.alert_level === 'URGENT').length,
-          critical: alerts.filter(a => a.alert_level === 'CRITICAL').length,
-          warning: alerts.filter(a => a.alert_level === 'WARNING').length,
-          today_new: 0,
-          today_closed: 0,
-          urgent_change: 0,
-          critical_change: 0,
-          warning_change: 0,
-        })
-      }
+      console.error('Failed to load statistics:', error)
+      // Calculate from loaded alerts as fallback
+      setStats({
+        total: alerts.length,
+        urgent: alerts.filter(a => a.alert_level === 'URGENT').length,
+        critical: alerts.filter(a => a.alert_level === 'CRITICAL').length,
+        warning: alerts.filter(a => a.alert_level === 'WARNING').length,
+        today_new: 0,
+        today_closed: 0,
+        urgent_change: 0,
+        critical_change: 0,
+        warning_change: 0,
+      })
     }
   }, [])
 
