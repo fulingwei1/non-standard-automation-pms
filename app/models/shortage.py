@@ -543,8 +543,8 @@ class ShortageAlert(Base, TimestampMixin):
         Index('idx_alert_no', 'alert_no'),
         Index('idx_alert_work_order', 'work_order_id'),
         Index('idx_alert_material', 'material_code'),
-        Index('idx_alert_level', 'alert_level'),
-        Index('idx_alert_status', 'status'),
+        Index('idx_shortage_alert_level', 'alert_level'),
+        Index('idx_shortage_alert_status', 'status'),
         Index('idx_alert_handler', 'handler_id'),
         Index('idx_alert_required_date', 'required_date'),
         {'comment': '缺料预警表'}

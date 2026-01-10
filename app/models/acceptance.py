@@ -31,8 +31,8 @@ class AcceptanceTemplate(Base, TimestampMixin):
     categories = relationship('TemplateCategory', back_populates='template', lazy='dynamic')
 
     __table_args__ = (
-        Index('idx_template_type', 'acceptance_type'),
-        Index('idx_template_equip', 'equipment_type'),
+        Index('idx_acceptance_template_type', 'acceptance_type'),
+        Index('idx_acceptance_template_equip', 'equipment_type'),
     )
 
     def __repr__(self):
@@ -247,7 +247,7 @@ class AcceptanceIssue(Base, TimestampMixin):
 
     __table_args__ = (
         Index('idx_issue_order', 'order_id'),
-        Index('idx_issue_status', 'status'),
+        Index('idx_acceptance_issue_status', 'status'),
         Index('idx_issue_severity', 'severity'),
         Index('idx_issue_assigned', 'assigned_to'),
     )

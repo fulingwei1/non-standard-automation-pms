@@ -216,7 +216,7 @@ class EcnApproval(Base, TimestampMixin):
 
     __table_args__ = (
         Index('idx_approval_ecn', 'ecn_id'),
-        Index('idx_approval_approver', 'approver_id'),
+        Index('idx_ecn_approval_approver', 'approver_id'),
         Index('idx_approval_status', 'status'),
     )
 
@@ -262,8 +262,8 @@ class EcnTask(Base, TimestampMixin):
 
     __table_args__ = (
         Index('idx_task_ecn', 'ecn_id'),
-        Index('idx_task_assignee', 'assignee_id'),
-        Index('idx_task_status', 'status'),
+        Index('idx_ecn_task_assignee', 'assignee_id'),
+        Index('idx_ecn_task_status', 'status'),
     )
 
 
@@ -484,8 +484,8 @@ class EcnSolutionTemplate(Base, TimestampMixin):
     creator = relationship('User', foreign_keys=[created_by])
     
     __table_args__ = (
-        Index('idx_solution_template_type', 'ecn_type'),
-        Index('idx_solution_template_category', 'template_category'),
+        Index('idx_ecn_solution_template_type', 'ecn_type'),
+        Index('idx_ecn_solution_template_category', 'template_category'),
         Index('idx_solution_template_active', 'is_active'),
     )
 

@@ -78,7 +78,7 @@ class BiddingProject(Base, TimestampMixin):
 
     __table_args__ = (
         Index("idx_bidding_no", "bidding_no"),
-        Index("idx_customer", "customer_id"),
+        Index("idx_bidding_customer", "customer_id"),
         Index("idx_deadline", "deadline_date"),
         Index("idx_result", "bid_result"),
     )
@@ -110,7 +110,7 @@ class BiddingDocument(Base, TimestampMixin):
 
     __table_args__ = (
         Index("idx_bidding_project", "bidding_project_id"),
-        Index("idx_document_type", "document_type"),
+        Index("idx_bidding_document_type", "document_type"),
     )
 
     def __repr__(self):
@@ -136,8 +136,8 @@ class ContractReview(Base, TimestampMixin):
     reviewer = relationship("User", foreign_keys=[reviewer_id])
 
     __table_args__ = (
-        Index("idx_contract", "contract_id"),
-        Index("idx_review_status", "review_status"),
+        Index("idx_contract_review_contract", "contract_id"),
+        Index("idx_contract_review_status", "review_status"),
     )
 
     def __repr__(self):
@@ -167,7 +167,7 @@ class ContractSealRecord(Base, TimestampMixin):
     seal_operator = relationship("User", foreign_keys=[seal_operator_id])
 
     __table_args__ = (
-        Index("idx_contract", "contract_id"),
+        Index("idx_seal_record_contract", "contract_id"),
         Index("idx_seal_status", "seal_status"),
     )
 
@@ -201,8 +201,8 @@ class PaymentReminder(Base, TimestampMixin):
     reminder_person = relationship("User", foreign_keys=[reminder_person_id])
 
     __table_args__ = (
-        Index("idx_contract", "contract_id"),
-        Index("idx_project", "project_id"),
+        Index("idx_payment_reminder_contract", "contract_id"),
+        Index("idx_payment_reminder_project", "project_id"),
         Index("idx_reminder_date", "reminder_date"),
     )
 
@@ -234,7 +234,7 @@ class DocumentArchive(Base, TimestampMixin):
 
     __table_args__ = (
         Index("idx_archive_no", "archive_no"),
-        Index("idx_document_type", "document_type"),
+        Index("idx_archive_document_type", "document_type"),
         Index("idx_related", "related_type", "related_id"),
     )
 
@@ -299,10 +299,10 @@ class SalesOrder(Base, TimestampMixin):
 
     __table_args__ = (
         Index("idx_order_no", "order_no"),
-        Index("idx_contract", "contract_id"),
-        Index("idx_customer", "customer_id"),
-        Index("idx_project", "project_id"),
-        Index("idx_status", "order_status"),
+        Index("idx_sales_order_contract", "contract_id"),
+        Index("idx_sales_order_customer", "customer_id"),
+        Index("idx_sales_order_project", "project_id"),
+        Index("idx_sales_order_status", "order_status"),
     )
 
     def __repr__(self):
@@ -400,8 +400,8 @@ class DeliveryOrder(Base, TimestampMixin):
     __table_args__ = (
         Index("idx_delivery_no", "delivery_no"),
         Index("idx_order", "order_id"),
-        Index("idx_customer", "customer_id"),
-        Index("idx_status", "delivery_status"),
+        Index("idx_delivery_customer", "customer_id"),
+        Index("idx_delivery_order_status", "delivery_status"),
         Index("idx_return_status", "return_status"),
     )
 
@@ -557,7 +557,7 @@ class Reconciliation(Base, TimestampMixin):
         Index("idx_reconciliation_no", "reconciliation_no"),
         Index("idx_customer_reconciliation", "customer_id"),
         Index("idx_period", "period_start", "period_end"),
-        Index("idx_status", "status"),
+        Index("idx_reconciliation_status", "status"),
     )
 
     def __repr__(self):

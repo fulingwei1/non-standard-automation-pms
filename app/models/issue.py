@@ -168,8 +168,8 @@ class SolutionTemplate(Base, TimestampMixin):
     creator = relationship('User', foreign_keys=[created_by])
     
     __table_args__ = (
-        Index('idx_solution_template_type', 'issue_type'),
-        Index('idx_solution_template_category', 'category'),
+        Index('idx_issue_solution_template_type', 'issue_type'),
+        Index('idx_issue_solution_template_category', 'category'),
         Index('idx_solution_template_code', 'template_code'),
         {'comment': '解决方案模板表'}
     )

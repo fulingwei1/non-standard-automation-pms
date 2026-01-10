@@ -71,7 +71,7 @@ class TechnicalReview(Base, TimestampMixin):
         Index('idx_review_no', 'review_no'),
         Index('idx_review_project', 'project_id'),
         Index('idx_review_type', 'review_type'),
-        Index('idx_review_status', 'status'),
+        Index('idx_tech_review_status', 'status'),
         Index('idx_review_scheduled_date', 'scheduled_date'),
     )
 
@@ -124,7 +124,7 @@ class ReviewMaterial(Base, TimestampMixin):
     
     __table_args__ = (
         Index('idx_material_review', 'review_id'),
-        Index('idx_material_type', 'material_type'),
+        Index('idx_review_material_type', 'material_type'),
     )
 
 
@@ -193,7 +193,7 @@ class ReviewIssue(Base, TimestampMixin):
         Index('idx_issue_no', 'issue_no'),
         Index('idx_issue_review', 'review_id'),
         Index('idx_issue_level', 'issue_level'),
-        Index('idx_issue_status', 'status'),
+        Index('idx_review_issue_status', 'status'),
         Index('idx_issue_assignee', 'assignee_id'),
         Index('idx_issue_deadline', 'deadline'),
     )
