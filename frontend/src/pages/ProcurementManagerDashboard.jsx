@@ -233,39 +233,7 @@ import { ApiIntegrationError } from '../components/ui'
 } */
 
 // Mock alerts
-const mockAlerts = [
-  {
-    id: 1,
-    type: 'shortage',
-    level: 'critical',
-    title: '缺料预警',
-    content: 'BMS老化测试设备 - 电控柜缺料17套，需求日期2026-01-20',
-    projectCode: 'PJ250708001',
-    createdAt: '2025-01-06 10:30',
-    status: 'pending',
-  },
-  {
-    id: 2,
-    type: 'delay',
-    level: 'warning',
-    title: '到货延期',
-    content: 'PO-2025-0016 - 苏州电器供应，预计延期3天',
-    projectCode: 'PJ250708002',
-    createdAt: '2025-01-06 09:15',
-    status: 'pending',
-  },
-  {
-    id: 3,
-    type: 'quality',
-    level: 'warning',
-    title: '质量问题',
-    content: '东莞精密工厂 - 钣金件批次20250104质量异常',
-    projectCode: 'PJ250708001',
-    createdAt: '2025-01-05 16:45',
-    status: 'processing',
-  },
-]
-
+// Mock data - 已移除，使用真实API
 const getStatusColor = (status) => {
   const colors = {
     active: 'bg-emerald-500',

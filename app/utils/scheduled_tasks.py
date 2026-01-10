@@ -543,216 +543,74 @@ def daily_issue_statistics_snapshot():
     每天凌晨3点执行，生成问题统计快照并保存到数据库
     """
     import logging
-    import json
-    from sqlalchemy import func, case
     logger = logging.getLogger(__name__)
+    
+    from app.services.issue_statistics_service import (
+        check_existing_snapshot,
+        count_issues_by_status,
+        count_issues_by_severity,
+        count_issues_by_priority,
+        count_issues_by_type,
+        count_blocking_and_overdue_issues,
+        count_issues_by_category,
+        count_today_issues,
+        calculate_avg_resolve_time,
+        build_distribution_data,
+        create_snapshot_record
+    )
     
     try:
         with get_db_session() as db:
             today = date.today()
             
             # 检查今天是否已生成快照
-            existing = db.query(IssueStatisticsSnapshot).filter(
-                IssueStatisticsSnapshot.snapshot_date == today
-            ).first()
-            if existing:
+            if check_existing_snapshot(db, today):
                 logger.info(f"[{datetime.now()}] 今日快照已存在，跳过生成")
                 return {'message': 'Snapshot already exists for today'}
             
-            # 统计各状态问题数量
-            total = db.query(Issue).filter(Issue.status != 'DELETED').count()
-            open_count = db.query(Issue).filter(Issue.status == 'OPEN').count()
-            processing_count = db.query(Issue).filter(Issue.status == 'PROCESSING').count()
-            resolved_count = db.query(Issue).filter(Issue.status == 'RESOLVED').count()
-            closed_count = db.query(Issue).filter(Issue.status == 'CLOSED').count()
-            cancelled_count = db.query(Issue).filter(Issue.status == 'CANCELLED').count()
-            deferred_count = db.query(Issue).filter(Issue.status == 'DEFERRED').count()
+            # 统计各类问题数量
+            status_counts = count_issues_by_status(db)
+            severity_counts = count_issues_by_severity(db)
+            priority_counts = count_issues_by_priority(db)
+            type_counts = count_issues_by_type(db)
+            blocking_overdue = count_blocking_and_overdue_issues(db, today)
+            category_counts = count_issues_by_category(db)
+            today_counts = count_today_issues(db, today)
+            avg_resolve_time = calculate_avg_resolve_time(db)
             
-            # 统计严重程度
-            critical_count = db.query(Issue).filter(
-                Issue.severity == 'CRITICAL',
-                Issue.status != 'DELETED'
-            ).count()
-            major_count = db.query(Issue).filter(
-                Issue.severity == 'MAJOR',
-                Issue.status != 'DELETED'
-            ).count()
-            minor_count = db.query(Issue).filter(
-                Issue.severity == 'MINOR',
-                Issue.status != 'DELETED'
-            ).count()
-            
-            # 统计优先级
-            urgent_count = db.query(Issue).filter(
-                Issue.priority == 'URGENT',
-                Issue.status != 'DELETED'
-            ).count()
-            high_priority_count = db.query(Issue).filter(
-                Issue.priority == 'HIGH',
-                Issue.status != 'DELETED'
-            ).count()
-            medium_priority_count = db.query(Issue).filter(
-                Issue.priority == 'MEDIUM',
-                Issue.status != 'DELETED'
-            ).count()
-            low_priority_count = db.query(Issue).filter(
-                Issue.priority == 'LOW',
-                Issue.status != 'DELETED'
-            ).count()
-            
-            # 统计类型
-            defect_count = db.query(Issue).filter(
-                Issue.issue_type == 'DEFECT',
-                Issue.status != 'DELETED'
-            ).count()
-            risk_count = db.query(Issue).filter(
-                Issue.issue_type == 'RISK',
-                Issue.status != 'DELETED'
-            ).count()
-            blocker_count = db.query(Issue).filter(
-                Issue.issue_type == 'BLOCKER',
-                Issue.status != 'DELETED'
-            ).count()
-            
-            # 统计阻塞和逾期问题
-            blocking_count = db.query(Issue).filter(
-                Issue.is_blocking == True,
-                Issue.status.in_(['OPEN', 'PROCESSING'])
-            ).count()
-            overdue_count = db.query(Issue).filter(
-                Issue.status.in_(['OPEN', 'PROCESSING']),
-                Issue.due_date.isnot(None),
-                Issue.due_date < today
-            ).count()
-            
-            # 统计分类
-            project_issues_count = db.query(Issue).filter(
-                Issue.category == 'PROJECT',
-                Issue.status != 'DELETED'
-            ).count()
-            task_issues_count = db.query(Issue).filter(
-                Issue.category == 'TASK',
-                Issue.status != 'DELETED'
-            ).count()
-            acceptance_issues_count = db.query(Issue).filter(
-                Issue.category == 'ACCEPTANCE',
-                Issue.status != 'DELETED'
-            ).count()
-            
-            # 统计今日新增/解决/关闭
-            today_start = datetime.combine(today, datetime.min.time())
-            new_today = db.query(Issue).filter(
-                Issue.created_at >= today_start,
-                Issue.status != 'DELETED'
-            ).count()
-            resolved_today = db.query(Issue).filter(
-                Issue.resolved_at >= today_start,
-                Issue.status.in_(['RESOLVED', 'CLOSED'])
-            ).count()
-            closed_today = db.query(Issue).filter(
-                Issue.status == 'CLOSED',
-                Issue.updated_at >= today_start
-            ).count()
-            
-            # 计算平均处理时间（简化版，实际可以更复杂）
-            resolved_issues = db.query(Issue).filter(
-                Issue.status.in_(['RESOLVED', 'CLOSED']),
-                Issue.resolved_at.isnot(None),
-                Issue.report_date.isnot(None)
-            ).all()
-            
-            if resolved_issues:
-                resolve_times = []
-                for issue in resolved_issues:
-                    if issue.resolved_at and issue.report_date:
-                        delta = issue.resolved_at - issue.report_date
-                        resolve_times.append(delta.total_seconds() / 3600)  # 转换为小时
-                avg_resolve_time = sum(resolve_times) / len(resolve_times) if resolve_times else 0
-            else:
-                avg_resolve_time = 0
-            
-            # 生成分布数据（JSON格式）
-            status_distribution = {
-                'OPEN': open_count,
-                'PROCESSING': processing_count,
-                'RESOLVED': resolved_count,
-                'CLOSED': closed_count,
-                'CANCELLED': cancelled_count,
-                'DEFERRED': deferred_count,
-            }
-            severity_distribution = {
-                'CRITICAL': critical_count,
-                'MAJOR': major_count,
-                'MINOR': minor_count,
-            }
-            priority_distribution = {
-                'URGENT': urgent_count,
-                'HIGH': high_priority_count,
-                'MEDIUM': medium_priority_count,
-                'LOW': low_priority_count,
-            }
-            category_distribution = {
-                'PROJECT': project_issues_count,
-                'TASK': task_issues_count,
-                'ACCEPTANCE': acceptance_issues_count,
-            }
-            
-            # 创建快照记录
-            snapshot = IssueStatisticsSnapshot(
-                snapshot_date=today,
-                total_issues=total,
-                open_issues=open_count,
-                processing_issues=processing_count,
-                resolved_issues=resolved_count,
-                closed_issues=closed_count,
-                cancelled_issues=cancelled_count,
-                deferred_issues=deferred_count,
-                critical_issues=critical_count,
-                major_issues=major_count,
-                minor_issues=minor_count,
-                urgent_issues=urgent_count,
-                high_priority_issues=high_priority_count,
-                medium_priority_issues=medium_priority_count,
-                low_priority_issues=low_priority_count,
-                defect_issues=defect_count,
-                risk_issues=risk_count,
-                blocker_issues=blocker_count,
-                blocking_issues=blocking_count,
-                overdue_issues=overdue_count,
-                project_issues=project_issues_count,
-                task_issues=task_issues_count,
-                acceptance_issues=acceptance_issues_count,
-                avg_resolve_time=avg_resolve_time,
-                status_distribution=json.dumps(status_distribution),
-                severity_distribution=json.dumps(severity_distribution),
-                priority_distribution=json.dumps(priority_distribution),
-                category_distribution=json.dumps(category_distribution),
-                new_issues_today=new_today,
-                resolved_today=resolved_today,
-                closed_today=closed_today,
+            # 生成分布数据
+            distributions = build_distribution_data(
+                status_counts, severity_counts, priority_counts, category_counts
             )
             
-            db.add(snapshot)
+            # 创建快照记录
+            snapshot = create_snapshot_record(
+                db, today, status_counts, severity_counts, priority_counts,
+                type_counts, blocking_overdue, category_counts, today_counts,
+                avg_resolve_time, distributions
+            )
+            
             db.commit()
             
             logger.info(
                 f"问题统计快照 [{today.isoformat()}]: "
-                f"总计={total}, 待处理={open_count}, 处理中={processing_count}, "
-                f"已解决={resolved_count}, 已关闭={closed_count}, "
-                f"阻塞={blocking_count}, 逾期={overdue_count}"
+                f"总计={status_counts['total']}, 待处理={status_counts['open']}, "
+                f"处理中={status_counts['processing']}, 已解决={status_counts['resolved']}, "
+                f"已关闭={status_counts['closed']}, 阻塞={blocking_overdue['blocking']}, "
+                f"逾期={blocking_overdue['overdue']}"
             )
             
-            logger.info(f"[{datetime.now()}] 问题统计快照生成完成并保存到数据库: 总计 {total} 个问题")
+            logger.info(f"[{datetime.now()}] 问题统计快照生成完成并保存到数据库: 总计 {status_counts['total']} 个问题")
             
             return {
                 'snapshot_date': today.isoformat(),
-                'total_issues': total,
-                'open_issues': open_count,
-                'processing_issues': processing_count,
-                'resolved_issues': resolved_count,
-                'closed_issues': closed_count,
-                'blocking_issues': blocking_count,
-                'overdue_issues': overdue_count,
+                'total_issues': status_counts['total'],
+                'open_issues': status_counts['open'],
+                'processing_issues': status_counts['processing'],
+                'resolved_issues': status_counts['resolved'],
+                'closed_issues': status_counts['closed'],
+                'blocking_issues': blocking_overdue['blocking'],
+                'overdue_issues': blocking_overdue['overdue'],
                 'timestamp': datetime.now().isoformat()
             }
     except Exception as e:
@@ -2749,6 +2607,143 @@ def calculate_monthly_labor_cost_task():
             import traceback
             traceback.print_exc()
             return {'error': str(e)}
+
+
+# ==================== 工时提醒定时任务 ====================
+
+def daily_timesheet_reminder_task():
+    """
+    每日工时填报提醒任务
+    每天上午9:00执行，提醒未填报昨天工时的用户
+    """
+    from app.services.timesheet_reminder_service import notify_timesheet_missing
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        with get_db_session() as db:
+            count = notify_timesheet_missing(db)
+            logger.info(f"[{datetime.now()}] 每日工时填报提醒完成: 发送 {count} 条提醒")
+            print(f"[{datetime.now()}] 每日工时填报提醒完成: 发送 {count} 条提醒")
+            
+            return {
+                'reminder_count': count,
+                'timestamp': datetime.now().isoformat()
+            }
+    except Exception as e:
+        logger.error(f"[{datetime.now()}] 每日工时填报提醒失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {'error': str(e)}
+
+
+def weekly_timesheet_reminder_task():
+    """
+    每周工时填报提醒任务
+    每周一上午10:00执行，提醒未完成上周工时填报的用户
+    """
+    from app.services.timesheet_reminder_service import notify_weekly_timesheet_missing
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        with get_db_session() as db:
+            count = notify_weekly_timesheet_missing(db)
+            logger.info(f"[{datetime.now()}] 每周工时填报提醒完成: 发送 {count} 条提醒")
+            print(f"[{datetime.now()}] 每周工时填报提醒完成: 发送 {count} 条提醒")
+            
+            return {
+                'reminder_count': count,
+                'timestamp': datetime.now().isoformat()
+            }
+    except Exception as e:
+        logger.error(f"[{datetime.now()}] 每周工时填报提醒失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {'error': str(e)}
+
+
+def timesheet_anomaly_alert_task():
+    """
+    异常工时预警任务
+    每天下午14:00执行，检测并提醒异常工时记录
+    """
+    from app.services.timesheet_reminder_service import notify_timesheet_anomaly
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        with get_db_session() as db:
+            count = notify_timesheet_anomaly(db, days=1)
+            logger.info(f"[{datetime.now()}] 异常工时预警完成: 发送 {count} 条提醒")
+            print(f"[{datetime.now()}] 异常工时预警完成: 发送 {count} 条提醒")
+            
+            return {
+                'alert_count': count,
+                'timestamp': datetime.now().isoformat()
+            }
+    except Exception as e:
+        logger.error(f"[{datetime.now()}] 异常工时预警失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {'error': str(e)}
+
+
+def timesheet_approval_timeout_reminder_task():
+    """
+    工时审批超时提醒任务
+    每天上午11:00和下午15:00执行，提醒审批超时的记录
+    """
+    from app.services.timesheet_reminder_service import notify_approval_timeout
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        with get_db_session() as db:
+            count = notify_approval_timeout(db, timeout_hours=24)
+            logger.info(f"[{datetime.now()}] 工时审批超时提醒完成: 发送 {count} 条提醒")
+            print(f"[{datetime.now()}] 工时审批超时提醒完成: 发送 {count} 条提醒")
+            
+            return {
+                'reminder_count': count,
+                'timestamp': datetime.now().isoformat()
+            }
+    except Exception as e:
+        logger.error(f"[{datetime.now()}] 工时审批超时提醒失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {'error': str(e)}
+
+
+def timesheet_sync_failure_alert_task():
+    """
+    工时数据同步失败提醒任务
+    每天下午16:00执行，检查并提醒同步失败的记录
+    """
+    from app.services.timesheet_reminder_service import notify_sync_failure
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        with get_db_session() as db:
+            count = notify_sync_failure(db)
+            logger.info(f"[{datetime.now()}] 工时数据同步失败提醒完成: 发送 {count} 条提醒")
+            print(f"[{datetime.now()}] 工时数据同步失败提醒完成: 发送 {count} 条提醒")
+            
+            return {
+                'alert_count': count,
+                'timestamp': datetime.now().isoformat()
+            }
+    except Exception as e:
+        logger.error(f"[{datetime.now()}] 工时数据同步失败提醒失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {'error': str(e)}
 
 
 # ==================== 工时汇总定时任务 ====================

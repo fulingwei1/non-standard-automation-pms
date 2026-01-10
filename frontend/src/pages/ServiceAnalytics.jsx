@@ -30,19 +30,7 @@ import { toast } from '../components/ui/toast'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { serviceApi } from '../services/api'
-
-// Mock data
-const mockAnalytics = {
-  overview: {
-    totalTickets: 156,
-    totalRecords: 89,
-    totalCommunications: 234,
-    totalSurveys: 45,
-    averageResponseTime: 2.5, // hours
-    averageResolutionTime: 8.5, // hours
-    averageSatisfaction: 4.3,
-    completionRate: 87.5,
-  },
+,
   ticketTrends: [
     { month: '2025-10', count: 12, resolved: 10 },
     { month: '2025-11', count: 15, resolved: 13 },
@@ -336,13 +324,7 @@ export default function ServiceAnalytics() {
       setAnalytics(analyticsData)
     } catch (err) {
       console.error('Failed to load analytics:', err)
-      setError(err.response?.data?.detail || err.message || '加载分析数据失败')
-      // 如果是演示账号，使用 mock 数据
-      const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-      if (isDemoAccount) {
-        setAnalytics(mockAnalytics)
-      }
-    } finally {
+      setError(err.response?.data?.detail || err.message || '加载分析数据失败')    } finally {
       setLoading(false)
     }
   }, [period])

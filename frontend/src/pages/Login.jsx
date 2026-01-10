@@ -213,6 +213,16 @@ export default function Login({ onLoginSuccess }) {
         const userData = userResponse.data
         if (userData) {
           // 将后端返回的用户数据转换为前端需要的格式
+          // 确保权限列表被保存到localStorage
+          if (userData.permissions && Array.isArray(userData.permissions)) {
+            // 权限列表已从后端获取，直接使用
+            console.log('[Login] 用户权限列表:', userData.permissions.length, '个权限')
+          } else {
+            // 如果没有权限列表，初始化为空数组
+            userData.permissions = []
+            console.warn('[Login] 后端未返回权限列表，初始化为空数组')
+          }
+          
           // 确定用户角色
           let userRole = 'user'
           
@@ -293,8 +303,10 @@ export default function Login({ onLoginSuccess }) {
             is_active: userData.is_active,
             roles: userData.roles || [],
             role: userRole,
+            permissions: userData.permissions || [], // 保存权限列表
           }
           localStorage.setItem('user', JSON.stringify(frontendUser))
+          console.log('[Login] 用户权限已保存:', frontendUser.permissions.length, '个权限')
         }
       } catch (userErr) {
         console.warn('获取用户信息失败，使用备用信息:', userErr)

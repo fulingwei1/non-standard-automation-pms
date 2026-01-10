@@ -38,35 +38,7 @@ import { toast } from '../components/ui/toast'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { serviceApi } from '../services/api'
-
-// Mock data
-const mockServiceRecords = [
-  {
-    id: 1,
-    record_no: 'SRV-20260106-001',
-    service_type: '安装调试',
-    project_code: 'PJ250106002',
-    project_name: 'EOL功能测试设备',
-    machine_no: 'PN001',
-    customer_name: '东莞XX电子',
-    service_location: '广东省东莞市XX工业区',
-    service_date: '2026-01-06',
-    service_start_time: '09:00',
-    service_end_time: '17:00',
-    service_duration: 8,
-    service_engineer: '张工程师',
-    service_engineer_phone: '138****5678',
-    customer_contact: '李工',
-    customer_phone: '139****9012',
-    service_content: '完成设备安装、电气接线、程序调试，设备运行正常',
-    service_result: '完成',
-    issues_found: '无',
-    solutions: '设备已正常运行，客户已掌握基本操作',
-    customer_satisfaction: 5,
-    customer_feedback: '服务专业，安装调试顺利',
-    customer_signature: true,
-    signature_time: '2026-01-06 17:00:00',
-    photos: ['photo1.jpg', 'photo2.jpg'],
+,
     status: '已完成',
     created_at: '2026-01-06 08:00:00',
   },
@@ -218,12 +190,7 @@ export default function ServiceRecord() {
       setRecords(transformedRecords)
     } catch (err) {
       console.error('Failed to load records:', err)
-      setError(err.response?.data?.detail || err.message || '加载服务记录失败')
-      // 如果是演示账号，使用 mock 数据
-      const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-      if (isDemoAccount) {
-        setRecords(mockServiceRecords)
-      } else {
+      setError(err.response?.data?.detail || err.message || '加载服务记录失败')       else {
         setRecords([])
       }
     } finally {

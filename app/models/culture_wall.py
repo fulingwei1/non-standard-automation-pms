@@ -46,14 +46,14 @@ class CultureWallContent(Base, TimestampMixin):
     view_count = Column(Integer, default=0, comment='浏览次数')
     
     # 关联信息
-    related_project_id = Column(Integer, ForeignKey('project.id'), comment='关联项目ID')
-    related_department_id = Column(Integer, ForeignKey('organization.id'), comment='关联部门ID')
+    related_project_id = Column(Integer, ForeignKey('projects.id'), comment='关联项目ID')
+    related_department_id = Column(Integer, ForeignKey('departments.id'), comment='关联部门ID')
     
     # 发布人
-    published_by = Column(Integer, ForeignKey('user.id'), comment='发布人ID')
+    published_by = Column(Integer, ForeignKey('users.id'), comment='发布人ID')
     published_by_name = Column(String(50), comment='发布人姓名')
     
-    created_by = Column(Integer, ForeignKey('user.id'), comment='创建人ID')
+    created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
     
     __table_args__ = (
         Index('idx_culture_wall_type', 'content_type'),
@@ -70,7 +70,7 @@ class PersonalGoal(Base, TimestampMixin):
     __tablename__ = 'personal_goal'
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
-    user_id = Column(Integer, ForeignKey('user.id'), nullable=False, comment='用户ID')
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, comment='用户ID')
     
     # 目标信息
     goal_type = Column(String(20), nullable=False, comment='目标类型:MONTHLY/QUARTERLY/YEARLY')
@@ -97,7 +97,7 @@ class PersonalGoal(Base, TimestampMixin):
     # 备注
     notes = Column(Text, comment='备注')
     
-    created_by = Column(Integer, ForeignKey('user.id'), comment='创建人ID')
+    created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
     
     __table_args__ = (
         Index('idx_personal_goal_user', 'user_id'),
@@ -115,7 +115,7 @@ class CultureWallReadRecord(Base, TimestampMixin):
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
     content_id = Column(Integer, ForeignKey('culture_wall_content.id', ondelete='CASCADE'), nullable=False, comment='内容ID')
-    user_id = Column(Integer, ForeignKey('user.id'), nullable=False, comment='用户ID')
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, comment='用户ID')
     
     # 阅读时间
     read_at = Column(DateTime, nullable=False, comment='阅读时间')

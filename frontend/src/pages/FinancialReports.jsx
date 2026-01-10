@@ -51,40 +51,10 @@ import {
 } from '../components/charts'
 
 // Mock financial data
-const mockMonthlyFinancials = [
-  { month: '2024-07', revenue: 9800000, cost: 7500000, profit: 2300000, cashFlow: 12000000 },
-  { month: '2024-08', revenue: 10500000, cost: 8000000, profit: 2500000, cashFlow: 13500000 },
-  { month: '2024-09', revenue: 11200000, cost: 8500000, profit: 2700000, cashFlow: 15000000 },
-  { month: '2024-10', revenue: 11800000, cost: 9000000, profit: 2800000, cashFlow: 16500000 },
-  { month: '2024-11', revenue: 12200000, cost: 9200000, profit: 3000000, cashFlow: 17500000 },
-  { month: '2024-12', revenue: 12500000, cost: 9500000, profit: 3000000, cashFlow: 18500000 },
-]
-
-const mockCostBreakdown = [
-  { category: '材料成本', amount: 47500000, percentage: 47.5, budget: 50000000, variance: -2500000 },
-  { category: '人工成本', amount: 28500000, percentage: 28.5, budget: 30000000, variance: -1500000 },
-  { category: '外协费用', amount: 14500000, percentage: 14.5, budget: 15000000, variance: -500000 },
-  { category: '管理费用', amount: 10500000, percentage: 10.5, budget: 10000000, variance: 500000 },
-  { category: '销售费用', amount: 8500000, percentage: 8.5, budget: 8000000, variance: 500000 },
-  { category: '研发费用', amount: 6800000, percentage: 6.8, budget: 7000000, variance: -200000 },
-]
-
-const mockProjectProfitability = [
-  { project: 'BMS老化测试设备', revenue: 850000, cost: 420000, profit: 430000, margin: 50.6, status: 'good' },
-  { project: 'EOL功能测试设备', revenue: 620000, cost: 498000, profit: 122000, margin: 19.7, status: 'warning' },
-  { project: 'ICT在线测试设备', revenue: 450000, cost: 234500, profit: 215500, margin: 47.9, status: 'good' },
-  { project: 'AOI视觉检测系统', revenue: 380000, cost: 320000, profit: 60000, margin: 15.8, status: 'warning' },
-]
-
-const mockCashFlow = [
-  { month: '2024-07', inflow: 9800000, outflow: 7500000, net: 2300000 },
-  { month: '2024-08', inflow: 10500000, outflow: 8000000, net: 2500000 },
-  { month: '2024-09', inflow: 11200000, outflow: 8500000, net: 2700000 },
-  { month: '2024-10', inflow: 11800000, outflow: 9000000, net: 2800000 },
-  { month: '2024-11', inflow: 12200000, outflow: 9200000, net: 3000000 },
-  { month: '2024-12', inflow: 12500000, outflow: 9500000, net: 3000000 },
-]
-
+// Mock data - 已移除，使用真实API
+// Mock data - 已移除，使用真实API
+// Mock data - 已移除，使用真实API
+// Mock data - 已移除，使用真实API
 const reportTypes = [
   { id: 'profit-loss', label: '损益表', icon: BarChart3 },
   { id: 'cash-flow', label: '现金流量表', icon: Wallet },

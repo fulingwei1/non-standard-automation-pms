@@ -3899,246 +3899,44 @@ def get_project_dashboard(
     
     聚合项目的各种数据，包括进度、成本、任务、里程碑、风险、问题等
     """
-    # 检查项目访问权限
+    from datetime import date
     from app.utils.permission_helpers import check_project_access_or_raise
+    from app.services.project_dashboard_service import (
+        build_basic_info,
+        calculate_progress_stats,
+        calculate_cost_stats,
+        calculate_task_stats,
+        calculate_milestone_stats,
+        calculate_risk_stats,
+        calculate_issue_stats,
+        calculate_resource_usage,
+        get_recent_activities,
+        calculate_key_metrics
+    )
+    
+    # 检查项目访问权限
     project = check_project_access_or_raise(db, current_user, project_id)
     
-    # ========== 基本信息 ==========
-    basic_info = {
-        "project_code": project.project_code,
-        "project_name": project.project_name,
-        "customer_name": project.customer_name,
-        "pm_name": project.pm_name,
-        "stage": project.stage or "S1",
-        "status": project.status or "ST01",
-        "health": project.health or "H1",
-        "progress_pct": float(project.progress_pct or 0),
-        "planned_start_date": project.planned_start_date.isoformat() if project.planned_start_date else None,
-        "planned_end_date": project.planned_end_date.isoformat() if project.planned_end_date else None,
-        "actual_start_date": project.actual_start_date.isoformat() if project.actual_start_date else None,
-        "actual_end_date": project.actual_end_date.isoformat() if project.actual_end_date else None,
-        "contract_amount": float(project.contract_amount or 0),
-        "budget_amount": float(project.budget_amount or 0),
-    }
-    
-    # ========== 进度统计 ==========
-    from datetime import date
     today = date.today()
     
-    # 计算计划进度
-    plan_progress = 0
-    if project.planned_start_date and project.planned_end_date:
-        total_days = (project.planned_end_date - project.planned_start_date).days
-        if total_days > 0:
-            elapsed_days = (today - project.planned_start_date).days
-            plan_progress = min(100, max(0, (elapsed_days / total_days) * 100))
+    # 获取各项统计数据
+    basic_info = build_basic_info(project)
+    progress_stats = calculate_progress_stats(project, today)
+    cost_stats = calculate_cost_stats(db, project_id, float(project.budget_amount or 0))
+    task_stats = calculate_task_stats(db, project_id)
+    milestone_stats = calculate_milestone_stats(db, project_id, today)
+    risk_stats = calculate_risk_stats(db, project_id)
+    issue_stats = calculate_issue_stats(db, project_id)
+    resource_usage = calculate_resource_usage(db, project_id)
+    recent_activities = get_recent_activities(db, project_id)
     
-    # 计算进度偏差
-    progress_deviation = float(project.progress_pct or 0) - plan_progress
-    
-    # 计算时间偏差
-    time_deviation_days = 0
-    if project.planned_end_date:
-        time_deviation_days = (today - project.planned_end_date).days
-    
-    progress_stats = {
-        "actual_progress": float(project.progress_pct or 0),
-        "plan_progress": plan_progress,
-        "progress_deviation": progress_deviation,
-        "time_deviation_days": time_deviation_days,
-        "is_delayed": time_deviation_days > 0 and project.stage != "S9",
-    }
-    
-    # ========== 成本统计 ==========
-    from app.models.project import ProjectCost
-    costs = db.query(ProjectCost).filter(ProjectCost.project_id == project_id).all()
-    
-    total_cost = sum(float(cost.amount or 0) for cost in costs)
-    cost_by_type = {}
-    cost_by_category = {}
-    
-    for cost in costs:
-        cost_type = cost.cost_type or "其他"
-        cost_category = cost.cost_category or "其他"
-        amount = float(cost.amount or 0)
-        
-        cost_by_type[cost_type] = cost_by_type.get(cost_type, 0) + amount
-        cost_by_category[cost_category] = cost_by_category.get(cost_category, 0) + amount
-    
-    budget_amount = float(project.budget_amount or 0)
-    cost_variance = budget_amount - total_cost if budget_amount > 0 else 0
-    cost_variance_rate = (cost_variance / budget_amount * 100) if budget_amount > 0 else 0
-    
-    cost_stats = {
-        "total_cost": total_cost,
-        "budget_amount": budget_amount,
-        "cost_variance": cost_variance,
-        "cost_variance_rate": cost_variance_rate,
-        "cost_by_type": cost_by_type,
-        "cost_by_category": cost_by_category,
-        "is_over_budget": total_cost > budget_amount if budget_amount > 0 else False,
-    }
-    
-    # ========== 任务统计 ==========
-    from app.models.progress import Task
-    tasks = db.query(Task).filter(Task.project_id == project_id).all()
-    
-    task_total = len(tasks)
-    task_completed = len([t for t in tasks if t.status == "COMPLETED"])
-    task_in_progress = len([t for t in tasks if t.status == "IN_PROGRESS"])
-    task_pending = len([t for t in tasks if t.status in ["PENDING", "ACCEPTED"]])
-    task_blocked = len([t for t in tasks if t.status == "BLOCKED"])
-    
-    task_avg_progress = sum(float(t.progress_pct or 0) for t in tasks) / task_total if task_total > 0 else 0
-    
-    task_stats = {
-        "total": task_total,
-        "completed": task_completed,
-        "in_progress": task_in_progress,
-        "pending": task_pending,
-        "blocked": task_blocked,
-        "completion_rate": (task_completed / task_total * 100) if task_total > 0 else 0,
-        "avg_progress": task_avg_progress,
-    }
-    
-    # ========== 里程碑统计 ==========
-    milestones = db.query(ProjectMilestone).filter(ProjectMilestone.project_id == project_id).all()
-    
-    milestone_total = len(milestones)
-    milestone_completed = len([m for m in milestones if m.status == "COMPLETED"])
-    milestone_overdue = len([
-        m for m in milestones 
-        if m.status != "COMPLETED" and m.planned_date and m.planned_date < today
-    ])
-    milestone_upcoming = len([
-        m for m in milestones 
-        if m.status != "COMPLETED" and m.planned_date and m.planned_date >= today
-    ])
-    
-    milestone_stats = {
-        "total": milestone_total,
-        "completed": milestone_completed,
-        "overdue": milestone_overdue,
-        "upcoming": milestone_upcoming,
-        "completion_rate": (milestone_completed / milestone_total * 100) if milestone_total > 0 else 0,
-    }
-    
-    # ========== 风险统计 ==========
-    risk_stats = None
-    try:
-        from app.models.pmo import PmoProjectRisk
-        risks = db.query(PmoProjectRisk).filter(PmoProjectRisk.project_id == project_id).all()
-        
-        risk_total = len(risks)
-        risk_high = len([r for r in risks if r.risk_level == "HIGH" and r.status != "CLOSED"])
-        risk_critical = len([r for r in risks if r.risk_level == "CRITICAL" and r.status != "CLOSED"])
-        risk_open = len([r for r in risks if r.status != "CLOSED"])
-        
-        risk_stats = {
-            "total": risk_total,
-            "open": risk_open,
-            "high": risk_high,
-            "critical": risk_critical,
-        }
-    except:
-        pass
-    
-    # ========== 问题统计 ==========
-    issue_stats = None
-    try:
-        from app.models.issue import Issue
-        issues = db.query(Issue).filter(Issue.project_id == project_id).all()
-        
-        issue_total = len(issues)
-        issue_open = len([i for i in issues if i.status == "OPEN"])
-        issue_processing = len([i for i in issues if i.status == "PROCESSING"])
-        issue_blocking = len([i for i in issues if i.is_blocking])
-        
-        issue_stats = {
-            "total": issue_total,
-            "open": issue_open,
-            "processing": issue_processing,
-            "blocking": issue_blocking,
-        }
-    except:
-        pass
-    
-    # ========== 资源使用 ==========
-    resource_usage = None
-    try:
-        from app.models.pmo import PmoResourceAllocation
-        allocations = db.query(PmoResourceAllocation).filter(
-            PmoResourceAllocation.project_id == project_id
-        ).all()
-        
-        if allocations:
-            resource_usage = {
-                "total_allocations": len(allocations),
-                "by_department": {},
-                "by_role": {},
-            }
-            
-            for alloc in allocations:
-                dept = alloc.department_name or "未分配"
-                role = alloc.role or "未分配"
-                
-                resource_usage["by_department"][dept] = resource_usage["by_department"].get(dept, 0) + 1
-                resource_usage["by_role"][role] = resource_usage["by_role"].get(role, 0) + 1
-    except:
-        pass
-    
-    # ========== 最近活动 ==========
-    recent_activities = []
-    
-    # 最近的状态变更
-    recent_status_logs = db.query(ProjectStatusLog).filter(
-        ProjectStatusLog.project_id == project_id
-    ).order_by(desc(ProjectStatusLog.changed_at)).limit(5).all()
-    
-    for log in recent_status_logs:
-        activity = {
-            "type": "STATUS_CHANGE",
-            "time": log.changed_at.isoformat() if log.changed_at else None,
-            "title": f"状态变更：{log.old_status} → {log.new_status}",
-            "description": log.change_reason,
-        }
-        recent_activities.append(activity)
-    
-    # 最近的里程碑完成
-    recent_milestones = db.query(ProjectMilestone).filter(
-        ProjectMilestone.project_id == project_id,
-        ProjectMilestone.status == "COMPLETED"
-    ).order_by(desc(ProjectMilestone.actual_date)).limit(3).all()
-    
-    for milestone in recent_milestones:
-        activity = {
-            "type": "MILESTONE",
-            "time": milestone.actual_date.isoformat() if milestone.actual_date else None,
-            "title": f"里程碑完成：{milestone.milestone_name}",
-            "description": None,
-        }
-        recent_activities.append(activity)
-    
-    # 按时间排序
-    recent_activities.sort(key=lambda x: x.get("time") or "", reverse=True)
-    recent_activities = recent_activities[:10]
-    
-    # ========== 关键指标 ==========
-    key_metrics = {
-        "health_score": 100 if project.health == "H1" else (75 if project.health == "H2" else (50 if project.health == "H3" else 25)),
-        "progress_score": float(project.progress_pct or 0),
-        "schedule_score": 100 - abs(progress_deviation) if abs(progress_deviation) <= 20 else max(0, 100 - abs(progress_deviation) * 2),
-        "cost_score": 100 - abs(cost_variance_rate) if abs(cost_variance_rate) <= 10 else max(0, 100 - abs(cost_variance_rate) * 2),
-        "quality_score": (task_completed / task_total * 100) if task_total > 0 else 100,
-    }
-    
-    # 计算综合得分
-    key_metrics["overall_score"] = (
-        key_metrics["health_score"] * 0.3 +
-        key_metrics["progress_score"] * 0.25 +
-        key_metrics["schedule_score"] * 0.2 +
-        key_metrics["cost_score"] * 0.15 +
-        key_metrics["quality_score"] * 0.1
+    # 计算关键指标
+    key_metrics = calculate_key_metrics(
+        project,
+        progress_stats["progress_deviation"],
+        cost_stats["cost_variance_rate"],
+        task_stats["completed"],
+        task_stats["total"]
     )
     
     return ProjectDashboardResponse(

@@ -64,54 +64,7 @@ const STATUS_CONFIG = {
   CLOSED: { label: '已关闭', color: 'bg-slate-500', icon: Package },
 }
 
-// Mock data for demo accounts
-const mockPurchaseRequests = [
-  {
-    id: 1,
-    request_no: 'PR-250104-001',
-    project_id: 1,
-    project_name: 'BMS老化测试设备',
-    machine_id: 1,
-    machine_name: 'PN001',
-    request_type: 'NORMAL',
-    request_reason: '项目启动，需要采购关键物料',
-    required_date: '2026-01-15',
-    total_amount: 125680.00,
-    status: 'SUBMITTED',
-    requester_name: '张工程师',
-    created_at: '2026-01-04T10:00:00',
-  },
-  {
-    id: 2,
-    request_no: 'PR-250104-002',
-    project_id: 1,
-    project_name: 'BMS老化测试设备',
-    machine_id: 2,
-    machine_name: 'PN002',
-    request_type: 'URGENT',
-    request_reason: '紧急缺料，影响装配进度',
-    required_date: '2026-01-10',
-    total_amount: 45680.00,
-    status: 'APPROVED',
-    requester_name: '李工程师',
-    created_at: '2026-01-03T14:30:00',
-  },
-  {
-    id: 3,
-    request_no: 'PR-250103-003',
-    project_id: 2,
-    project_name: 'ICT测试设备',
-    machine_id: null,
-    machine_name: null,
-    request_type: 'NORMAL',
-    request_reason: '标准物料采购',
-    required_date: '2026-01-20',
-    total_amount: 28900.00,
-    status: 'DRAFT',
-    requester_name: '王工程师',
-    created_at: '2026-01-02T09:15:00',
-  },
-]
+// Mock data - 已移除，使用真实API
 
 function RequestCard({ request, onView, onEdit, onDelete, onSubmit, onApprove }) {
   const statusConfig = STATUS_CONFIG[request.status] || STATUS_CONFIG.DRAFT
@@ -223,44 +176,24 @@ export default function PurchaseRequestList() {
   // Projects for filter
   const [projects, setProjects] = useState([])
 
-  // Check if demo account
-  const isDemoAccount = useMemo(() => {
-    const token = localStorage.getItem('token')
-    return token && token.startsWith('demo_token_')
-  }, [])
-
   // Load projects
   useEffect(() => {
     const loadProjects = async () => {
       try {
-        if (isDemoAccount) {
-          setProjects([
-            { id: 1, project_name: 'BMS老化测试设备' },
-            { id: 2, project_name: 'ICT测试设备' },
-          ])
-        } else {
-          const res = await projectApi.list({ page_size: 1000 })
-          setProjects(res.data?.items || res.data || [])
-        }
+        const res = await projectApi.list({ page_size: 1000 })
+        setProjects(res.data?.items || res.data || [])
       } catch (err) {
         console.error('Failed to load projects:', err)
       }
     }
     loadProjects()
-  }, [isDemoAccount])
+  }, [])
 
   // Load requests
   const loadRequests = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
-
-      if (isDemoAccount) {
-        // Use mock data for demo accounts
-        setRequests(mockPurchaseRequests)
-        setLoading(false)
-        return
-      }
 
       const params = {
         page: 1,
@@ -292,14 +225,11 @@ export default function PurchaseRequestList() {
     } catch (err) {
       console.error('Failed to load purchase requests:', err)
       setError(err.response?.data?.detail || err.message || '加载采购申请失败')
-      if (isDemoAccount) {
-        setRequests(mockPurchaseRequests)
-        setError(null)
-      }
+      
     } finally {
       setLoading(false)
     }
-  }, [searchQuery, statusFilter, projectFilter, isDemoAccount])
+  }, [searchQuery, statusFilter, projectFilter])
 
   useEffect(() => {
     loadRequests()
@@ -348,10 +278,7 @@ export default function PurchaseRequestList() {
     }
 
     try {
-      if (isDemoAccount) {
-        setRequests(requests.filter(r => r.id !== request.id))
-        toast.success('采购申请已删除')
-      } else {
+       else {
         await purchaseApi.requests.delete(request.id)
         toast.success('采购申请已删除')
         loadRequests()
@@ -369,9 +296,7 @@ export default function PurchaseRequestList() {
     }
 
     try {
-      if (isDemoAccount) {
-        setRequests(requests.map(r => 
-          r.id === request.id ? { ...r, status: 'SUBMITTED' } : r
+       : r
         ))
         toast.success('采购申请已提交，等待审批')
       } else {
@@ -392,9 +317,7 @@ export default function PurchaseRequestList() {
     }
 
     try {
-      if (isDemoAccount) {
-        setRequests(requests.map(r => 
-          r.id === request.id ? { ...r, status: approved ? 'APPROVED' : 'REJECTED' } : r
+       : r
         ))
         toast.success(approved ? '采购申请已审批通过' : '采购申请已驳回')
         setShowApproveDialog(false)

@@ -46,7 +46,7 @@ def list_timesheets(
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
     status: Optional[str] = Query(None, description="状态筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:read")),
 ) -> Any:
     """
     工时记录列表（分页+筛选）
@@ -119,7 +119,7 @@ def create_timesheet(
     *,
     db: Session = Depends(deps.get_db),
     timesheet_in: TimesheetCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:create")),
 ) -> Any:
     """
     创建单条工时
@@ -204,7 +204,7 @@ def batch_create_timesheets(
     *,
     db: Session = Depends(deps.get_db),
     batch_in: TimesheetBatchCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:create")),
 ) -> Any:
     """
     批量创建工时
@@ -280,7 +280,7 @@ def batch_create_timesheets(
 def get_timesheet_detail(
     timesheet_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:read")),
 ) -> Any:
     """
     获取工时记录详情
@@ -332,7 +332,7 @@ def update_timesheet(
     db: Session = Depends(deps.get_db),
     timesheet_id: int,
     timesheet_in: TimesheetUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:update")),
 ) -> Any:
     """
     更新工时记录
@@ -369,7 +369,7 @@ def delete_timesheet(
     *,
     db: Session = Depends(deps.get_db),
     timesheet_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:delete")),
 ) -> Any:
     """
     删除工时记录（仅草稿）
@@ -397,7 +397,7 @@ def submit_timesheets(
     *,
     db: Session = Depends(deps.get_db),
     timesheet_ids: List[int] = Body(..., description="工时记录ID列表"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:update")),
 ) -> Any:
     """
     提交工时（草稿→待审核）
@@ -425,7 +425,7 @@ def approve_timesheet(
     db: Session = Depends(deps.get_db),
     timesheet_id: int,
     comment: Optional[str] = Body(None, description="审批意见"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:approve")),
 ) -> Any:
     """
     审批单条工时记录
@@ -476,7 +476,7 @@ def approve_timesheets(
     db: Session = Depends(deps.get_db),
     timesheet_ids: List[int] = Body(..., description="工时记录ID列表"),
     comment: Optional[str] = Body(None, description="审批意见"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:approve")),
 ) -> Any:
     """
     批量审批工时（PM/部门审批）
@@ -535,7 +535,7 @@ def batch_approve_timesheets(
     db: Session = Depends(deps.get_db),
     timesheet_ids: List[int] = Body(..., description="工时记录ID列表"),
     comment: Optional[str] = Body(None, description="审批意见"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:approve")),
 ) -> Any:
     """
     批量审批工时（PUT方式，与POST /approve功能相同）
@@ -549,7 +549,7 @@ def reject_timesheets(
     db: Session = Depends(deps.get_db),
     timesheet_ids: List[int] = Body(..., description="工时记录ID列表"),
     comment: str = Body(..., description="拒绝原因"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:approve")),
 ) -> Any:
     """
     拒绝工时
@@ -589,7 +589,7 @@ def get_week_timesheet(
     db: Session = Depends(deps.get_db),
     week_start: Optional[date] = Query(None, description="周开始日期（默认本周一）"),
     user_id: Optional[int] = Query(None, description="用户ID（默认当前用户）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:read")),
 ) -> Any:
     """
     获取周工时表（按周展示）
@@ -684,7 +684,7 @@ def get_month_summary(
     year: int = Query(..., description="年份"),
     month: int = Query(..., ge=1, le=12, description="月份"),
     user_id: Optional[int] = Query(None, description="用户ID（默认当前用户）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:read")),
 ) -> Any:
     """
     获取月度汇总
@@ -767,7 +767,7 @@ def get_pending_approval_timesheets(
     page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
     user_id: Optional[int] = Query(None, description="用户ID筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:read")),
 ) -> Any:
     """
     待审核列表（审核人视角）
@@ -831,7 +831,7 @@ def get_timesheet_statistics(
     end_date: Optional[date] = Query(None, description="结束日期"),
     user_id: Optional[int] = Query(None, description="用户ID筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:read")),
 ) -> Any:
     """
     工时统计分析（多维统计）
@@ -914,7 +914,7 @@ def get_my_timesheet_summary(
     db: Session = Depends(deps.get_db),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:read")),
 ) -> Any:
     """
     我的工时汇总（个人统计）
@@ -998,7 +998,7 @@ def get_department_timesheet_summary(
     dept_id: int,
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:read")),
 ) -> Any:
     """
     部门工时汇总
@@ -1120,7 +1120,7 @@ def aggregate_timesheet(
     user_id: Optional[int] = Query(None, description="用户ID（可选）"),
     department_id: Optional[int] = Query(None, description="部门ID（可选）"),
     project_id: Optional[int] = Query(None, description="项目ID（可选）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:manage")),
 ) -> Any:
     """
     手动触发工时汇总
@@ -1148,7 +1148,7 @@ def get_hr_report(
     month: int = Query(..., ge=1, le=12, description="月份"),
     department_id: Optional[int] = Query(None, description="部门ID（可选）"),
     format: str = Query("json", description="格式：json/excel"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:read")),
 ) -> Any:
     """
     获取HR加班工资报表
@@ -1191,7 +1191,7 @@ def get_finance_report(
     month: int = Query(..., ge=1, le=12, description="月份"),
     project_id: Optional[int] = Query(None, description="项目ID（可选）"),
     format: str = Query("json", description="格式：json/excel"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:read")),
 ) -> Any:
     """
     获取财务报表（项目成本核算表）
@@ -1234,7 +1234,7 @@ def get_rd_report(
     month: int = Query(..., ge=1, le=12, description="月份"),
     rd_project_id: Optional[int] = Query(None, description="研发项目ID（可选）"),
     format: str = Query("json", description="格式：json/excel"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:read")),
 ) -> Any:
     """
     获取研发报表（研发费用核算表）
@@ -1277,7 +1277,7 @@ def get_project_report(
     start_date: Optional[date] = Query(None, description="开始日期（可选）"),
     end_date: Optional[date] = Query(None, description="结束日期（可选）"),
     format: str = Query("json", description="格式：json/excel"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:read")),
 ) -> Any:
     """
     获取项目报表（项目工时统计）
@@ -1325,7 +1325,7 @@ def sync_timesheet(
     year: Optional[int] = Query(None, description="年份（用于批量同步）"),
     month: Optional[int] = Query(None, ge=1, le=12, description="月份（用于批量同步）"),
     sync_target: str = Query("all", description="同步目标：all/finance/rd/project/hr"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:read")),
 ) -> Any:
     """
     手动触发数据同步
@@ -1375,7 +1375,7 @@ def get_sync_status(
     *,
     db: Session = Depends(deps.get_db),
     timesheet_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("timesheet:read")),
 ) -> Any:
     """
     获取工时记录的同步状态

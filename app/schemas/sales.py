@@ -4,7 +4,7 @@
 """
 
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict, AliasChoices
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -17,7 +17,9 @@ from .common import BaseSchema, TimestampSchema
 class LeadCreate(BaseModel):
     """创建线索"""
 
-    lead_code: str = Field(max_length=20, description="线索编码")
+    model_config = ConfigDict(populate_by_name=True)
+
+    lead_code: Optional[str] = Field(default=None, max_length=20, description="线索编码")
     source: Optional[str] = Field(default=None, max_length=50, description="来源")
     customer_name: Optional[str] = Field(default=None, max_length=100, description="客户名称")
     industry: Optional[str] = Field(default=None, max_length=50, description="行业")
@@ -118,20 +120,43 @@ class OpportunityRequirementResponse(TimestampSchema):
 class OpportunityCreate(BaseModel):
     """创建商机"""
 
-    opp_code: str = Field(max_length=20, description="商机编码")
+    model_config = ConfigDict(populate_by_name=True)
+
+    opp_code: Optional[str] = Field(
+        default=None,
+        max_length=20,
+        description="商机编码",
+        validation_alias=AliasChoices("opp_code", "opportunity_code"),
+        serialization_alias="opportunity_code",
+    )
     lead_id: Optional[int] = Field(default=None, description="线索ID")
     customer_id: int = Field(description="客户ID")
-    opp_name: str = Field(max_length=200, description="商机名称")
+    opp_name: str = Field(
+        max_length=200,
+        description="商机名称",
+        validation_alias=AliasChoices("opp_name", "opportunity_name"),
+        serialization_alias="opportunity_name",
+    )
     project_type: Optional[str] = Field(default=None, max_length=20, description="项目类型")
     equipment_type: Optional[str] = Field(default=None, max_length=20, description="设备类型")
     stage: Optional[str] = Field(default="DISCOVERY", description="阶段")
-    est_amount: Optional[Decimal] = Field(default=None, description="预估金额")
+    est_amount: Optional[Decimal] = Field(
+        default=None,
+        description="预估金额",
+        validation_alias=AliasChoices("est_amount", "expected_amount"),
+        serialization_alias="expected_amount",
+    )
     est_margin: Optional[Decimal] = Field(default=None, description="预估毛利率")
     budget_range: Optional[str] = Field(default=None, max_length=50, description="预算范围")
     decision_chain: Optional[str] = Field(default=None, description="决策链")
     delivery_window: Optional[str] = Field(default=None, max_length=50, description="交付窗口")
     acceptance_basis: Optional[str] = Field(default=None, description="验收依据")
-    score: Optional[int] = Field(default=0, description="评分")
+    score: Optional[int] = Field(
+        default=0,
+        description="评分",
+        validation_alias=AliasChoices("score", "probability"),
+        serialization_alias="probability",
+    )
     risk_level: Optional[str] = Field(default=None, max_length=10, description="风险等级")
     owner_id: Optional[int] = Field(default=None, description="负责人ID")
     gate_status: Optional[str] = Field(default="PENDING", description="阶段门状态")
@@ -140,6 +165,8 @@ class OpportunityCreate(BaseModel):
 
 class OpportunityUpdate(BaseModel):
     """更新商机"""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     opp_name: Optional[str] = None
     project_type: Optional[str] = None
@@ -151,7 +178,10 @@ class OpportunityUpdate(BaseModel):
     decision_chain: Optional[str] = None
     delivery_window: Optional[str] = None
     acceptance_basis: Optional[str] = None
-    score: Optional[int] = None
+    score: Optional[int] = Field(
+        default=None,
+        validation_alias=AliasChoices("score", "probability"),
+    )
     risk_level: Optional[str] = None
     owner_id: Optional[int] = None
     gate_status: Optional[str] = None
@@ -160,22 +190,24 @@ class OpportunityUpdate(BaseModel):
 class OpportunityResponse(TimestampSchema):
     """商机响应"""
 
+    model_config = ConfigDict(populate_by_name=True)
+
     id: int
-    opp_code: str
+    opp_code: str = Field(serialization_alias="opportunity_code")
     lead_id: Optional[int] = None
     customer_id: int
     customer_name: Optional[str] = None
-    opp_name: str
+    opp_name: str = Field(serialization_alias="opportunity_name")
     project_type: Optional[str] = None
     equipment_type: Optional[str] = None
     stage: str = "DISCOVERY"
-    est_amount: Optional[Decimal] = None
+    est_amount: Optional[Decimal] = Field(default=None, serialization_alias="expected_amount")
     est_margin: Optional[Decimal] = None
     budget_range: Optional[str] = None
     decision_chain: Optional[str] = None
     delivery_window: Optional[str] = None
     acceptance_basis: Optional[str] = None
-    score: int = 0
+    score: int = Field(default=0, serialization_alias="probability")
     risk_level: Optional[str] = None
     owner_id: Optional[int] = None
     owner_name: Optional[str] = None

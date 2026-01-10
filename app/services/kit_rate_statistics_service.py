@@ -1,0 +1,233 @@
+# -*- coding: utf-8 -*-
+"""
+齐套率统计服务
+"""
+
+from typing import Dict, Any, List, Optional, Tuple
+from datetime import date, timedelta
+from sqlalchemy.orm import Session
+
+from app.models.project import Project
+from app.models.machine import Machine
+from app.models.material import BomHeader, BomItem
+
+
+def calculate_date_range(today: date) -> Tuple[date, date]:
+    """
+    计算默认日期范围（当前月）
+    
+    Returns:
+        Tuple[date, date]: (开始日期, 结束日期)
+    """
+    start_date = date(today.year, today.month, 1)
+    
+    if today.month == 12:
+        end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
+    else:
+        end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
+    
+    return start_date, end_date
+
+
+def get_project_bom_items(
+    db: Session,
+    project_id: int
+) -> List[BomItem]:
+    """
+    获取项目的所有BOM物料项
+    
+    Returns:
+        List[BomItem]: BOM物料项列表
+    """
+    machines = db.query(Machine).filter(Machine.project_id == project_id).all()
+    all_bom_items = []
+    
+    for machine in machines:
+        bom = (
+            db.query(BomHeader)
+            .filter(BomHeader.machine_id == machine.id)
+            .filter(BomHeader.is_latest == True)
+            .first()
+        )
+        if bom:
+            bom_items = db.query(BomItem).filter(BomItem.bom_id == bom.id).all()
+            all_bom_items.extend(bom_items)
+    
+    return all_bom_items
+
+
+def calculate_project_kit_statistics(
+    db: Session,
+    project: Project
+) -> Optional[Dict[str, Any]]:
+    """
+    计算单个项目的齐套率统计
+    
+    Returns:
+        Optional[Dict[str, Any]]: 统计结果字典，如果计算失败返回None
+    """
+    try:
+        from app.api.v1.endpoints.kit_rate import calculate_kit_rate
+        
+        all_bom_items = get_project_bom_items(db, project.id)
+        
+        # 计算齐套率
+        kit_data = calculate_kit_rate(db, all_bom_items, "quantity")
+        
+        return {
+            "project_id": project.id,
+            "project_name": project.project_name,
+            "project_code": project.project_code,
+            "kit_rate": kit_data.get("kit_rate", 0.0),
+            "total_items": kit_data.get("total_items", 0),
+            "fulfilled_items": kit_data.get("fulfilled_items", 0),
+            "shortage_items": kit_data.get("shortage_items", 0),
+            "in_transit_items": kit_data.get("in_transit_items", 0),
+            "kit_status": kit_data.get("kit_status", "shortage"),
+        }
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"计算项目 {project.id} 齐套率失败: {str(e)}")
+        return None
+
+
+def calculate_workshop_kit_statistics(
+    db: Session,
+    workshop_id: Optional[int],
+    projects: List[Project]
+) -> List[Dict[str, Any]]:
+    """
+    按车间统计齐套率
+    
+    Returns:
+        List[Dict[str, Any]]: 车间统计列表
+    """
+    from app.models.production import Workshop
+    from app.api.v1.endpoints.kit_rate import calculate_kit_rate
+    
+    workshops = db.query(Workshop).all()
+    if workshop_id:
+        workshops = [w for w in workshops if w.id == workshop_id]
+    
+    statistics = []
+    
+    for workshop in workshops:
+        # 获取该车间的所有项目（简化处理，实际应该关联车间）
+        workshop_projects = [p for p in projects if p.id]
+        
+        total_kit_rate = 0.0
+        project_count = 0
+        total_items = 0
+        fulfilled_items = 0
+        shortage_items = 0
+        in_transit_items = 0
+        
+        for project in workshop_projects:
+            try:
+                all_bom_items = get_project_bom_items(db, project.id)
+                kit_data = calculate_kit_rate(db, all_bom_items, "quantity")
+                
+                total_kit_rate += kit_data.get("kit_rate", 0.0)
+                project_count += 1
+                total_items += kit_data.get("total_items", 0)
+                fulfilled_items += kit_data.get("fulfilled_items", 0)
+                shortage_items += kit_data.get("shortage_items", 0)
+                in_transit_items += kit_data.get("in_transit_items", 0)
+            except:
+                continue
+        
+        avg_kit_rate = total_kit_rate / project_count if project_count > 0 else 0.0
+        
+        statistics.append({
+            "workshop_id": workshop.id,
+            "workshop_name": workshop.workshop_name,
+            "kit_rate": round(avg_kit_rate, 2),
+            "project_count": project_count,
+            "total_items": total_items,
+            "fulfilled_items": fulfilled_items,
+            "shortage_items": shortage_items,
+            "in_transit_items": in_transit_items,
+        })
+    
+    return statistics
+
+
+def calculate_daily_kit_statistics(
+    db: Session,
+    start_date: date,
+    end_date: date,
+    projects: List[Project]
+) -> List[Dict[str, Any]]:
+    """
+    按日期统计齐套率
+    
+    Returns:
+        List[Dict[str, Any]]: 日期统计列表
+    """
+    from app.api.v1.endpoints.kit_rate import calculate_kit_rate
+    
+    statistics = []
+    current = start_date
+    
+    while current <= end_date:
+        # 简化处理：使用当前数据，实际应该从历史记录表查询
+        total_kit_rate = 0.0
+        project_count = 0
+        
+        for project in projects:
+            try:
+                all_bom_items = get_project_bom_items(db, project.id)
+                kit_data = calculate_kit_rate(db, all_bom_items, "quantity")
+                
+                total_kit_rate += kit_data.get("kit_rate", 0.0)
+                project_count += 1
+            except:
+                continue
+        
+        avg_kit_rate = total_kit_rate / project_count if project_count > 0 else 0.0
+        
+        statistics.append({
+            "date": current.isoformat(),
+            "kit_rate": round(avg_kit_rate, 2),
+            "project_count": project_count,
+        })
+        
+        current += timedelta(days=1)
+    
+    return statistics
+
+
+def calculate_summary_statistics(
+    statistics: List[Dict[str, Any]],
+    group_by: str
+) -> Dict[str, Any]:
+    """
+    计算汇总统计
+    
+    Returns:
+        Dict[str, Any]: 汇总统计字典
+    """
+    if not statistics:
+        return {
+            "avg_kit_rate": 0.0,
+            "max_kit_rate": 0.0,
+            "min_kit_rate": 0.0,
+            "total_count": 0,
+        }
+    
+    if group_by in ["project", "workshop"]:
+        avg_kit_rate = sum(s["kit_rate"] for s in statistics) / len(statistics)
+        max_kit_rate = max(s["kit_rate"] for s in statistics)
+        min_kit_rate = min(s["kit_rate"] for s in statistics)
+    else:  # day
+        avg_kit_rate = sum(s["kit_rate"] for s in statistics) / len(statistics)
+        max_kit_rate = max(s["kit_rate"] for s in statistics)
+        min_kit_rate = min(s["kit_rate"] for s in statistics)
+    
+    return {
+        "avg_kit_rate": round(avg_kit_rate, 2),
+        "max_kit_rate": round(max_kit_rate, 2),
+        "min_kit_rate": round(min_kit_rate, 2),
+        "total_count": len(statistics),
+    }

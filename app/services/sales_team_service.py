@@ -196,7 +196,7 @@ class SalesTeamService:
 
         query = self.db.query(
             Lead.owner_id,
-            Lead.lead_name,
+            Lead.customer_name,
             Lead.lead_code,
             LeadFollowUp.follow_up_type,
             LeadFollowUp.content,
@@ -219,7 +219,7 @@ class SalesTeamService:
         result: Dict[int, dict] = {}
         for row in rows:
             result[row.owner_id] = {
-                "lead_name": row.lead_name,
+                "lead_name": row.customer_name,  # 使用customer_name作为lead_name
                 "lead_code": row.lead_code,
                 "follow_up_type": row.follow_up_type,
                 "content": row.content,
@@ -234,7 +234,7 @@ class SalesTeamService:
         start_date: Optional[date_type],
         end_date: Optional[date_type],
     ) -> Dict[int, dict]:
-        """统计客户行业分布及指定区间新增客户数"""
+        """统计客户分布及指定区间新增客户数"""
         if not user_ids:
             return {}
 
@@ -245,10 +245,11 @@ class SalesTeamService:
             datetime.combine(end_date, datetime.max.time()) if end_date else None
         )
 
+        # 使用project_type作为分类依据（因为industry字段不存在）
         distributions_query = (
             self.db.query(
                 Opportunity.owner_id,
-                Opportunity.industry,
+                Opportunity.project_type,
                 func.count(Opportunity.id).label("count"),
             )
             .filter(Opportunity.owner_id.in_(user_ids))
@@ -262,7 +263,7 @@ class SalesTeamService:
                 Opportunity.created_at <= end_datetime
             )
         distributions = distributions_query.group_by(
-            Opportunity.owner_id, Opportunity.industry
+            Opportunity.owner_id, Opportunity.project_type
         ).all()
 
         new_customers_query = (
@@ -285,7 +286,7 @@ class SalesTeamService:
         result: Dict[int, dict] = {}
 
         for row in distributions:
-            label = row.industry or "未分类"
+            label = row.project_type or "未分类"
             entry = result.setdefault(
                 row.owner_id, {"total": 0, "categories": [], "new_customers": 0}
             )

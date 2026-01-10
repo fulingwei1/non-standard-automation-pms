@@ -48,25 +48,9 @@ import { toast } from '../components/ui/toast'
 import { LoadingCard } from '../components/common'
 import { ErrorMessage } from '../components/common'
 
-// Mock data for demo accounts
-const mockProjects = [
-  { id: 1, project_name: 'BMS老化测试设备' },
-  { id: 2, project_name: 'ICT测试设备' },
-]
 
-const mockMaterials = [
-  { id: 1, material_code: 'EL-02-03-0015', material_name: '光电传感器 E3Z-D82', unit: '个', standard_price: 450 },
-  { id: 2, material_code: 'EL-02-03-0018', material_name: '接近传感器 E2E-X5', unit: '个', standard_price: 280 },
-  { id: 3, material_code: 'ME-03-02-0008', material_name: '精密导轨 HSR25', unit: '根', standard_price: 4200 },
-  { id: 4, material_code: 'ME-03-02-0012', material_name: '滑块 HSR25R', unit: '个', standard_price: 850 },
-]
-
-const mockSuppliers = [
-  { id: 1, supplier_name: '欧姆龙(上海)代理' },
-  { id: 2, supplier_name: 'THK(深圳)销售' },
-  { id: 3, supplier_name: '西门子官方授权' },
-]
-
+// Mock data - 已移除，使用真实API
+// Mock data - 已移除，使用真实API
 export default function PurchaseRequestNew() {
   const navigate = useNavigate()
   const { id } = useParams()
@@ -97,16 +81,11 @@ export default function PurchaseRequestNew() {
   const [showMaterialDialog, setShowMaterialDialog] = useState(false)
   const [selectedItemIndex, setSelectedItemIndex] = useState(null)
 
-  // Check if demo account
-  const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-
-  // Load projects
+  // Check if demo account  // Load projects
   useEffect(() => {
     const loadProjects = async () => {
       try {
-        if (isDemoAccount) {
-          setProjects(mockProjects)
-        } else {
+         else {
           const res = await projectApi.list({ page_size: 1000 })
           setProjects(res.data?.items || res.data || [])
         }
@@ -115,7 +94,7 @@ export default function PurchaseRequestNew() {
       }
     }
     loadProjects()
-  }, [isDemoAccount])
+  }, [])
 
   // Load machines when project changes
   useEffect(() => {
@@ -126,9 +105,7 @@ export default function PurchaseRequestNew() {
       }
 
       try {
-        if (isDemoAccount) {
-          setMachines([
-            { id: 1, machine_code: 'PN001', machine_name: '机台1' },
+        ,
             { id: 2, machine_code: 'PN002', machine_name: '机台2' },
           ])
         } else {
@@ -155,15 +132,13 @@ export default function PurchaseRequestNew() {
       }
     }
     loadMachines()
-  }, [formData.project_id, isDemoAccount])
+  }, [formData.project_id])
 
   // Load materials
   useEffect(() => {
     const loadMaterials = async () => {
       try {
-        if (isDemoAccount) {
-          setMaterials(mockMaterials)
-        } else {
+         else {
           const res = await materialApi.list({ page_size: 1000 })
           setMaterials(res.data?.items || res.data || [])
         }
@@ -172,15 +147,13 @@ export default function PurchaseRequestNew() {
       }
     }
     loadMaterials()
-  }, [isDemoAccount])
+  }, [])
 
   // Load suppliers
   useEffect(() => {
     const loadSuppliers = async () => {
       try {
-        if (isDemoAccount) {
-          setSuppliers(mockSuppliers)
-        } else {
+         else {
           const res = await supplierApi.list({ page: 1, page_size: 1000 })
           setSuppliers(res.data?.items || res.data || [])
         }
@@ -189,7 +162,7 @@ export default function PurchaseRequestNew() {
       }
     }
     loadSuppliers()
-  }, [isDemoAccount])
+  }, [])
 
   // Load request data if editing
   useEffect(() => {
@@ -197,27 +170,7 @@ export default function PurchaseRequestNew() {
       const loadRequest = async () => {
         try {
           setLoading(true)
-          if (isDemoAccount) {
-            // Mock data
-            setFormData({
-              project_id: 1,
-              machine_id: 1,
-              request_type: 'NORMAL',
-              request_reason: '项目启动，需要采购关键物料',
-              required_date: '2026-01-15',
-              remark: '',
-              items: [
-                {
-                  material_id: 1,
-                  material_code: 'EL-02-03-0015',
-                  material_name: '光电传感器 E3Z-D82',
-                  specification: '',
-                  unit: '个',
-                  quantity: 12,
-                  unit_price: 450,
-                  required_date: '2026-01-15',
-                  remark: '',
-                },
+          ,
               ],
             })
           } else {
@@ -243,7 +196,7 @@ export default function PurchaseRequestNew() {
       }
       loadRequest()
     }
-  }, [isEdit, id, isDemoAccount])
+  }, [isEdit, id])
 
   // Calculate total amount
   const totalAmount = formData.items.reduce((sum, item) => {
@@ -365,19 +318,13 @@ export default function PurchaseRequestNew() {
       }
 
       if (isEdit) {
-        if (isDemoAccount) {
-          toast.success('采购申请已更新')
-          navigate('/purchase-requests')
-        } else {
+         else {
           await purchaseApi.requests.update(id, requestData)
           toast.success('采购申请已更新')
           navigate('/purchase-requests')
         }
       } else {
-        if (isDemoAccount) {
-          toast.success('采购申请已创建')
-          navigate('/purchase-requests')
-        } else {
+         else {
           await purchaseApi.requests.create(requestData)
           toast.success('采购申请已创建')
           navigate('/purchase-requests')
@@ -403,10 +350,7 @@ export default function PurchaseRequestNew() {
     
     if (!error) {
       try {
-        if (isDemoAccount) {
-          toast.success('采购申请已提交')
-          navigate('/purchase-requests')
-        } else {
+         else {
           // Get the created request ID from the response
           // For now, just show success message
           toast.success('采购申请已提交')

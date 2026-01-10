@@ -89,33 +89,7 @@ const defaultStats = {
   auditLogsThisWeek: 0,
 }
 
-// 演示账号的演示数据
-const demoStats = {
-  totalUsers: 183,
-  activeUsers: 174,
-  inactiveUsers: 9,
-  newUsersThisMonth: 5,
-  usersWithRoles: 8,
-  usersWithoutRoles: 175,
-  totalRoles: 34,
-  systemRoles: 5,
-  customRoles: 29,
-  activeRoles: 34,
-  inactiveRoles: 0,
-  totalPermissions: 67,
-  assignedPermissions: 249,
-  unassignedPermissions: 0,
-  systemUptime: 99.9,
-  databaseSize: 2.5,
-  storageUsed: 45,
-  apiResponseTime: 120,
-  errorRate: 0.1,
-  loginCountToday: 42,
-  loginCountThisWeek: 287,
-  lastBackup: '2025-01-09 02:00:00',
-  auditLogsToday: 156,
-  auditLogsThisWeek: 1024,
-}
+// Mock data - 已移除，使用真实API
 
 // Mock data - 已移除，使用真实API
 
@@ -194,19 +168,6 @@ export default function AdminDashboard() {
   useEffect(() => {
     // 从后端获取真实统计数据
     const fetchStats = async () => {
-      // 检查是否是演示账号
-      const token = localStorage.getItem('token')
-      const isDemoAccount = token && token.startsWith('demo_token_')
-      
-      if (isDemoAccount) {
-        // 演示账号不调用真实API，使用演示数据
-        console.log('[管理员工作台] 演示账号，使用演示数据')
-        setStats(demoStats)
-        setError(null)
-        setLoading(false)
-        return
-      }
-      
       try {
         setLoading(true)
         setError(null) // 清除之前的错误

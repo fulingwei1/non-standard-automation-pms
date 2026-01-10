@@ -187,7 +187,7 @@ def read_purchase_orders(
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     status: Optional[str] = Query(None, description="订单状态筛选"),
     payment_status: Optional[str] = Query(None, description="付款状态筛选"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:order:read")),
 ) -> Any:
     """
     获取采购订单列表（支持分页、搜索、筛选）
@@ -258,7 +258,7 @@ def read_purchase_order(
     *,
     db: Session = Depends(deps.get_db),
     order_id: int,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:order:read")),
 ) -> Any:
     """
     获取采购订单详情
@@ -319,7 +319,7 @@ def create_purchase_order(
     *,
     db: Session = Depends(deps.get_db),
     order_in: PurchaseOrderCreate,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:order:create")),
 ) -> Any:
     """
     创建采购订单
@@ -418,7 +418,7 @@ def update_purchase_order(
     db: Session = Depends(deps.get_db),
     order_id: int,
     order_in: PurchaseOrderUpdate,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:order:update")),
 ) -> Any:
     """
     更新采购订单（仅草稿状态可更新）
@@ -447,7 +447,7 @@ def submit_purchase_order(
     *,
     db: Session = Depends(deps.get_db),
     order_id: int,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:order:submit")),
 ) -> Any:
     """
     提交采购订单（提交审批）
@@ -485,7 +485,7 @@ def approve_purchase_order(
     order_id: int,
     approved: bool = Query(True, description="是否审批通过"),
     approval_note: Optional[str] = Query(None, description="审批意见"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:order:approve")),
 ) -> Any:
     """
     审批采购订单
@@ -533,7 +533,7 @@ def get_purchase_order_items(
     *,
     db: Session = Depends(deps.get_db),
     order_id: int,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:order:read")),
 ) -> Any:
     """
     获取采购订单明细列表
@@ -596,7 +596,7 @@ def read_goods_receipts(
     supplier_id: Optional[int] = Query(None, description="供应商ID筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
     inspect_status: Optional[str] = Query(None, description="质检状态筛选"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:receipt:read")),
 ) -> Any:
     """
     获取收货记录列表（支持分页、搜索、筛选）
@@ -665,7 +665,7 @@ def create_goods_receipt(
     *,
     db: Session = Depends(deps.get_db),
     receipt_in: GoodsReceiptCreate,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:receipt:create")),
 ) -> Any:
     """
     创建收货单
@@ -754,7 +754,7 @@ def get_goods_receipt_detail(
     *,
     db: Session = Depends(deps.get_db),
     receipt_id: int,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:receipt:read")),
 ) -> Any:
     """
     获取收货单详情
@@ -799,7 +799,7 @@ def get_goods_receipt_items(
     *,
     db: Session = Depends(deps.get_db),
     receipt_id: int,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:receipt:read")),
 ) -> Any:
     """
     获取收货单明细列表
@@ -831,7 +831,7 @@ def update_receipt_status(
     db: Session = Depends(deps.get_db),
     receipt_id: int,
     status: str = Query(..., description="状态：PENDING/RECEIVED/REJECTED"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:receipt:update")),
 ) -> Any:
     """
     更新收货单状态
@@ -860,7 +860,7 @@ def update_order_item_receive_status(
     item_id: int,
     received_qty: Decimal = Query(..., description="已收货数量"),
     qualified_qty: Optional[Decimal] = Query(None, description="合格数量"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:order:receive")),
 ) -> Any:
     """
     更新采购订单明细的到货状态
@@ -916,7 +916,7 @@ def update_receipt_item_inspect(
     qualified_qty: Decimal = Query(..., description="合格数量"),
     rejected_qty: Optional[Decimal] = Query(None, description="不合格数量（自动计算）"),
     inspect_result: Optional[str] = Query(None, description="质检结果：QUALIFIED/UNQUALIFIED/PARTIAL"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:receipt:inspect")),
 ) -> Any:
     """
     更新收货单明细的质检结果
@@ -1034,7 +1034,7 @@ def read_purchase_requests(
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     machine_id: Optional[int] = Query(None, description="设备ID筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:request:read")),
 ) -> Any:
     """
     获取采购申请列表（支持分页、搜索、筛选）
@@ -1096,7 +1096,7 @@ def read_purchase_request(
     *,
     db: Session = Depends(deps.get_db),
     request_id: int,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:request:read")),
 ) -> Any:
     """
     获取采购申请详情
@@ -1172,7 +1172,7 @@ def create_purchase_request(
     *,
     db: Session = Depends(deps.get_db),
     request_in: PurchaseRequestCreate,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:request:create")),
 ) -> Any:
     """
     创建采购申请
@@ -1261,7 +1261,7 @@ def update_purchase_request(
     db: Session = Depends(deps.get_db),
     request_id: int,
     request_in: PurchaseRequestUpdate,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:request:update")),
 ) -> Any:
     """
     更新采购申请（仅草稿状态可更新）
@@ -1301,7 +1301,7 @@ def submit_purchase_request(
     *,
     db: Session = Depends(deps.get_db),
     request_id: int,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:request:submit")),
 ) -> Any:
     """
     提交采购申请
@@ -1340,7 +1340,7 @@ def approve_purchase_request(
     request_id: int,
     approved: bool = Query(..., description="是否审批通过"),
     approval_note: Optional[str] = Query(None, description="审批意见"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:request:approve")),
 ) -> Any:
     """
     审批采购申请
@@ -1384,7 +1384,7 @@ def generate_purchase_orders_from_request(
     db: Session = Depends(deps.get_db),
     request_id: int,
     force: bool = Query(False, description="是否强制重新生成（忽略已生成标记）"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:request:generate")),
 ) -> Any:
     """
     手动从采购申请生成采购订单
@@ -1411,7 +1411,7 @@ def delete_purchase_request(
     *,
     db: Session = Depends(deps.get_db),
     request_id: int,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:request:delete")),
 ) -> Any:
     """
     删除采购申请（仅草稿状态可删除）
@@ -1443,14 +1443,21 @@ def create_purchase_orders_from_bom(
     supplier_id: Optional[int] = Query(None, description="默认供应商ID（可选）"),
     project_id: Optional[int] = Query(None, description="项目ID（可选，从BOM获取）"),
     create_orders: bool = Query(True, description="是否直接创建采购订单（False则只返回预览）"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("purchase:bom:generate")),
 ) -> Any:
     """
     从BOM批量创建采购订单
     根据BOM明细中需要采购的物料，按供应商分组，批量创建采购订单
     """
-    from app.models.material import BomHeader, BomItem, Material
-    from collections import defaultdict
+    from app.models.material import BomHeader
+    from app.services.purchase_order_from_bom_service import (
+        get_purchase_items_from_bom,
+        group_items_by_supplier,
+        build_order_items,
+        create_order_preview,
+        create_purchase_order_from_preview,
+        calculate_summary
+    )
     
     # 获取BOM
     bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
@@ -1461,32 +1468,13 @@ def create_purchase_orders_from_bom(
     target_project_id = project_id or bom.project_id
     
     # 获取BOM明细中需要采购的物料
-    bom_items = bom.items.filter(
-        BomItem.source_type == "PURCHASE"
-    ).all()
+    bom_items = get_purchase_items_from_bom(db, bom)
     
     if not bom_items:
         raise HTTPException(status_code=400, detail="BOM中没有需要采购的物料")
     
     # 按供应商分组物料
-    supplier_items = defaultdict(list)
-    
-    for item in bom_items:
-        # 确定供应商
-        target_supplier_id = supplier_id
-        if not target_supplier_id and item.supplier_id:
-            target_supplier_id = item.supplier_id
-        elif not target_supplier_id and item.material_id:
-            # 尝试从物料获取默认供应商
-            material = db.query(Material).filter(Material.id == item.material_id).first()
-            if material and material.default_supplier_id:
-                target_supplier_id = material.default_supplier_id
-        
-        if not target_supplier_id:
-            # 如果没有供应商，使用默认供应商ID 0（表示未指定）
-            target_supplier_id = 0
-        
-        supplier_items[target_supplier_id].append(item)
+    supplier_items = group_items_by_supplier(db, bom_items, supplier_id)
     
     # 生成采购订单预览
     purchase_orders_preview = []
@@ -1502,116 +1490,35 @@ def create_purchase_orders_from_bom(
             continue
         
         # 构建订单明细
-        order_items = []
-        total_amount = Decimal(0)
-        total_tax_amount = Decimal(0)
-        total_amount_with_tax = Decimal(0)
-        
-        for idx, item in enumerate(items, start=1):
-            # 计算未采购数量
-            remaining_qty = item.quantity - (item.purchased_qty or 0)
-            if remaining_qty <= 0:
-                continue  # 跳过已完全采购的物料
-            
-            unit_price = item.unit_price or 0
-            tax_rate = Decimal(13)  # 默认税率13%
-            amount = remaining_qty * unit_price
-            tax_amount = amount * tax_rate / 100
-            amount_with_tax = amount + tax_amount
-            
-            total_amount += amount
-            total_tax_amount += tax_amount
-            total_amount_with_tax += amount_with_tax
-            
-            order_items.append({
-                "item_no": idx,
-                "material_id": item.material_id,
-                "bom_item_id": item.id,
-                "material_code": item.material_code,
-                "material_name": item.material_name,
-                "specification": item.specification,
-                "unit": item.unit or "件",
-                "quantity": remaining_qty,
-                "unit_price": unit_price,
-                "tax_rate": tax_rate,
-                "amount": amount,
-                "tax_amount": tax_amount,
-                "amount_with_tax": amount_with_tax,
-                "required_date": item.required_date,
-            })
+        order_items, total_amount, total_tax_amount, total_amount_with_tax = build_order_items(items)
         
         if not order_items:
             continue
         
         # 生成订单预览
-        order_preview = {
-            "supplier_id": supplier_id_key,
-            "supplier_name": supplier.supplier_name,
-            "project_id": target_project_id,
-            "project_name": bom.project.project_name if bom.project else None,
-            "order_type": "NORMAL",
-            "order_title": f"{bom.bom_no} - {supplier.supplier_name}",
-            "total_amount": float(total_amount),
-            "tax_amount": float(total_tax_amount),
-            "amount_with_tax": float(total_amount_with_tax),
-            "item_count": len(order_items),
-            "items": order_items,
-        }
+        order_preview = create_order_preview(
+            supplier, supplier_id_key, bom, target_project_id,
+            order_items, total_amount, total_tax_amount, total_amount_with_tax
+        )
         purchase_orders_preview.append(order_preview)
         
         # 如果create_orders为True，创建采购订单
         if create_orders:
-            # 生成订单编号
-            order_no = generate_order_no(db)
-            
-            # 创建订单
-            order = PurchaseOrder(
-                order_no=order_no,
-                supplier_id=supplier_id_key,
-                project_id=target_project_id,
-                order_type="NORMAL",
-                order_title=order_preview["order_title"],
-                required_date=bom.required_date if hasattr(bom, 'required_date') else None,
-                order_date=date.today(),
-                status="DRAFT",
-                total_amount=total_amount,
-                tax_amount=total_tax_amount,
-                amount_with_tax=total_amount_with_tax,
-                created_by=current_user.id,
+            order, _ = create_purchase_order_from_preview(
+                db, order_preview, bom, current_user.id, generate_order_no
             )
-            db.add(order)
-            db.flush()
-            
-            # 创建订单明细
-            for item_data in order_items:
-                order_item = PurchaseOrderItem(
-                    order_id=order.id,
-                    item_no=item_data["item_no"],
-                    material_id=item_data["material_id"],
-                    bom_item_id=item_data["bom_item_id"],
-                    material_code=item_data["material_code"],
-                    material_name=item_data["material_name"],
-                    specification=item_data["specification"],
-                    unit=item_data["unit"],
-                    quantity=item_data["quantity"],
-                    unit_price=item_data["unit_price"],
-                    amount=item_data["amount"],
-                    tax_rate=item_data["tax_rate"],
-                    tax_amount=item_data["tax_amount"],
-                    amount_with_tax=item_data["amount_with_tax"],
-                    required_date=item_data["required_date"],
-                    status="PENDING",
-                )
-                db.add(order_item)
             
             created_orders.append({
                 "order_id": order.id,
-                "order_no": order_no,
+                "order_no": order.order_no,
                 "supplier_name": supplier.supplier_name,
                 "total_amount": float(total_amount_with_tax),
             })
     
     db.commit()
+    
+    # 计算汇总
+    summary = calculate_summary(purchase_orders_preview)
     
     return ResponseModel(
         code=200,
@@ -1622,11 +1529,6 @@ def create_purchase_orders_from_bom(
             "project_id": target_project_id,
             "preview": purchase_orders_preview,
             "created_orders": created_orders if create_orders else None,
-            "summary": {
-                "total_orders": len(purchase_orders_preview),
-                "total_items": sum(len(order["items"]) for order in purchase_orders_preview),
-                "total_amount": sum(order["total_amount"] for order in purchase_orders_preview),
-                "total_amount_with_tax": sum(order["amount_with_tax"] for order in purchase_orders_preview),
-            }
+            "summary": summary
         }
     )

@@ -45,8 +45,7 @@ export default function PermissionManagement() {
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [permissionRoles, setPermissionRoles] = useState([]);
   
-  // 检查是否是演示账号
-  const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token');
   const isDemoAccount = token && token.startsWith('demo_token_');
 
   // 加载权限列表
@@ -125,8 +124,7 @@ export default function PermissionManagement() {
   };
 
   useEffect(() => {
-    // 演示账号不加载数据
-    const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token');
     if (token && token.startsWith('demo_token_')) {
       console.log('[权限管理] 演示账号，跳过数据加载');
       return;

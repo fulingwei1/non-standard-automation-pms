@@ -34,7 +34,7 @@ def get_my_projects(
     page: int = 1,
     page_size: int = 20,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user)
+    current_user: User = Depends(security.require_permission("engineer:read"))
 ):
     """
     获取工程师参与的所有项目（含任务统计）
@@ -122,7 +122,7 @@ def get_my_projects(
 def create_task(
     task_data: schemas.TaskCreateRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user)
+    current_user: User = Depends(security.require_permission("engineer:create"))
 ):
     """
     创建任务（支持智能审批路由）
@@ -242,7 +242,7 @@ def update_task_progress(
     task_id: int,
     progress_data: schemas.ProgressUpdateRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user)
+    current_user: User = Depends(security.require_permission("engineer:read"))
 ):
     """
     更新任务进度（自动触发项目/阶段进度聚合）
@@ -317,7 +317,7 @@ def complete_task(
     task_id: int,
     complete_data: schemas.TaskCompleteRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user)
+    current_user: User = Depends(security.require_permission("engineer:read"))
 ):
     """
     完成任务（含证明材料验证）
@@ -379,7 +379,7 @@ async def upload_completion_proof(
     file_category: Optional[str] = Form(None),
     description: Optional[str] = Form(None),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user)
+    current_user: User = Depends(security.require_permission("engineer:read"))
 ):
     """
     上传任务完成证明材料
@@ -440,7 +440,7 @@ def report_task_delay(
     task_id: int,
     delay_data: schemas.DelayReportRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user)
+    current_user: User = Depends(security.require_permission("engineer:read"))
 ):
     """
     报告任务延期（创建异常事件，自动通知相关方）
@@ -526,7 +526,7 @@ def get_pending_approval_tasks(
     page: int = 1,
     page_size: int = 20,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user)
+    current_user: User = Depends(security.require_permission("engineer:read"))
 ):
     """
     获取待我审批的任务列表（PM视图）
@@ -579,7 +579,7 @@ def approve_task(
     task_id: int,
     approval_data: schemas.TaskApprovalRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user)
+    current_user: User = Depends(security.require_permission("engineer:read"))
 ):
     """
     批准任务（PM操作）
@@ -639,7 +639,7 @@ def reject_task(
     task_id: int,
     rejection_data: schemas.TaskRejectionRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user)
+    current_user: User = Depends(security.require_permission("engineer:read"))
 ):
     """
     拒绝任务（PM操作）
@@ -698,7 +698,7 @@ def reject_task(
 def get_task_approval_history(
     task_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user)
+    current_user: User = Depends(security.require_permission("engineer:read"))
 ):
     """
     获取任务审批历史
@@ -746,7 +746,7 @@ def get_task_approval_history(
 def get_task_completion_proofs(
     task_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user)
+    current_user: User = Depends(security.require_permission("engineer:read"))
 ):
     """
     获取任务的所有完成证明材料
@@ -782,7 +782,7 @@ def delete_completion_proof(
     task_id: int,
     proof_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user)
+    current_user: User = Depends(security.require_permission("engineer:read"))
 ):
     """
     删除任务完成证明材料
@@ -833,7 +833,7 @@ def get_my_tasks(
     is_delayed: Optional[bool] = None,
     is_overdue: Optional[bool] = None,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user)
+    current_user: User = Depends(security.require_permission("engineer:read"))
 ):
     """
     获取我的任务列表（支持多种筛选条件）
@@ -915,7 +915,7 @@ def get_my_tasks(
 def get_task_detail(
     task_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user)
+    current_user: User = Depends(security.require_permission("engineer:read"))
 ):
     """
     获取任务详情
@@ -947,7 +947,7 @@ def get_task_detail(
 def get_project_progress_visibility(
     project_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user)
+    current_user: User = Depends(security.require_permission("engineer:read"))
 ):
     """
     获取项目的跨部门进度视图

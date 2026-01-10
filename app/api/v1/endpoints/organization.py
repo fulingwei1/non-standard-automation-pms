@@ -110,13 +110,36 @@ def create_department(
             detail="该部门编码已存在",
         )
     
-    # 如果有父部门，计算层级
-    level = 1
+    # 检查同一父部门下部门名称是否重复
+    query = db.query(Department).filter(Department.dept_name == dept_in.dept_name)
+    if dept_in.parent_id:
+        query = query.filter(Department.parent_id == dept_in.parent_id)
+    else:
+        query = query.filter(Department.parent_id.is_(None))
+    
+    existing_dept = query.first()
+    if existing_dept:
+        raise HTTPException(
+            status_code=400,
+            detail=f"该部门名称已存在（{existing_dept.dept_code}）",
+        )
+    
+    # 检查部门名称是否包含父部门名称（避免创建"父部门-子部门"这种冗余命名）
     if dept_in.parent_id:
         parent = db.query(Department).filter(Department.id == dept_in.parent_id).first()
         if not parent:
             raise HTTPException(status_code=404, detail="父部门不存在")
+        
+        # 如果部门名称包含父部门名称，提示用户
+        if parent.dept_name in dept_in.dept_name and dept_in.dept_name != parent.dept_name:
+            raise HTTPException(
+                status_code=400,
+                detail=f"部门名称不应包含父部门名称。建议使用：{dept_in.dept_name.replace(parent.dept_name + '-', '').replace(parent.dept_name, '')}",
+            )
+        
         level = parent.level + 1
+    else:
+        level = 1
     
     department = Department(**dept_in.model_dump())
     department.level = level
@@ -157,6 +180,36 @@ def update_department(
         raise HTTPException(status_code=404, detail="部门不存在")
 
     update_data = dept_in.model_dump(exclude_unset=True)
+    
+    # 如果更新了部门名称，检查是否与同级部门重复
+    if 'dept_name' in update_data:
+        new_name = update_data['dept_name']
+        parent_id = update_data.get('parent_id', department.parent_id)
+        
+        query = db.query(Department).filter(
+            Department.dept_name == new_name,
+            Department.id != dept_id
+        )
+        if parent_id:
+            query = query.filter(Department.parent_id == parent_id)
+        else:
+            query = query.filter(Department.parent_id.is_(None))
+        
+        existing_dept = query.first()
+        if existing_dept:
+            raise HTTPException(
+                status_code=400,
+                detail=f"该部门名称已存在（{existing_dept.dept_code}）",
+            )
+        
+        # 检查部门名称是否包含父部门名称
+        if parent_id:
+            parent = db.query(Department).filter(Department.id == parent_id).first()
+            if parent and parent.dept_name in new_name and new_name != parent.dept_name:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"部门名称不应包含父部门名称。建议使用：{new_name.replace(parent.dept_name + '-', '').replace(parent.dept_name, '')}",
+                )
     
     # 如果更新了父部门，需要重新计算层级
     if 'parent_id' in update_data and update_data['parent_id'] != department.parent_id:

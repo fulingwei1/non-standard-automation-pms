@@ -44,7 +44,7 @@ router = APIRouter()
 def get_report_roles(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
     获取支持角色列表（角色配置）
@@ -67,7 +67,7 @@ def get_report_roles(
 def get_report_types(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
     获取报表类型列表（周报/月报/成本等）
@@ -91,7 +91,7 @@ def get_report_types(
 def get_role_report_matrix(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
     角色-报表权限矩阵（权限配置）
@@ -117,7 +117,7 @@ def generate_report(
     *,
     db: Session = Depends(deps.get_db),
     generate_in: ReportGenerateRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:create")),
 ) -> Any:
     """
     生成报表（按角色/类型）
@@ -168,7 +168,7 @@ def preview_report(
     db: Session = Depends(deps.get_db),
     report_type: str,
     project_id: Optional[int] = Query(None, description="项目ID"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
     预览报表（简化版预览）
@@ -190,7 +190,7 @@ def compare_role_perspectives(
     *,
     db: Session = Depends(deps.get_db),
     compare_in: ReportCompareRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
     比较角色视角（多角色对比）
@@ -213,7 +213,7 @@ def export_report(
     *,
     db: Session = Depends(deps.get_db),
     export_in: ReportExportRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:export")),
 ) -> Any:
     """
     导出报表（xlsx/pdf/csv）
@@ -279,7 +279,7 @@ def download_report(
     *,
     db: Session = Depends(deps.get_db),
     report_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ):
     """
     下载已导出的报表文件
@@ -322,7 +322,7 @@ def export_direct(
     end_date: Optional[date] = Query(None, description="结束日期"),
     project_id: Optional[int] = Query(None, description="项目ID"),
     department_id: Optional[int] = Query(None, description="部门ID"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
     直接导出报表（不需要先生成报表记录）
@@ -451,7 +451,7 @@ def get_report_templates(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
     report_type: Optional[str] = Query(None, description="报表类型筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
     获取报表模板列表
@@ -494,7 +494,7 @@ def apply_report_template(
     *,
     db: Session = Depends(deps.get_db),
     apply_in: ApplyTemplateRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:create")),
 ) -> Any:
     """
     应用报表模板（套用模板）
@@ -546,7 +546,7 @@ def get_rd_auxiliary_ledger(
     db: Session = Depends(deps.get_db),
     year: int = Query(..., description="年度"),
     project_id: Optional[int] = Query(None, description="研发项目ID（不提供则查询所有项目）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
     研发费用辅助账
@@ -627,7 +627,7 @@ def get_rd_deduction_detail(
     db: Session = Depends(deps.get_db),
     year: int = Query(..., description="年度"),
     project_id: Optional[int] = Query(None, description="研发项目ID"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
     研发费用加计扣除明细
@@ -696,7 +696,7 @@ def get_rd_high_tech_report(
     *,
     db: Session = Depends(deps.get_db),
     year: int = Query(..., description="年度"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
     高新企业研发费用表
@@ -749,7 +749,7 @@ def get_rd_intensity_report(
     db: Session = Depends(deps.get_db),
     start_year: int = Query(..., description="开始年度"),
     end_year: int = Query(..., description="结束年度"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
     研发投入强度报表
@@ -791,7 +791,7 @@ def get_rd_personnel_report(
     *,
     db: Session = Depends(deps.get_db),
     year: int = Query(..., description="年度"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
     研发人员统计
@@ -850,7 +850,7 @@ def export_rd_report(
     year: int = Query(..., description="年度"),
     format: str = Query("xlsx", description="导出格式：xlsx/pdf"),
     project_id: Optional[int] = Query(None, description="研发项目ID"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
     导出研发费用报表
@@ -878,7 +878,7 @@ def get_delivery_rate(
     db: Session = Depends(deps.get_db),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
     交付准时率
@@ -926,7 +926,7 @@ def get_delivery_rate(
 def get_health_distribution(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
     项目健康度分布
@@ -970,7 +970,7 @@ def get_utilization(
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
     department_id: Optional[int] = Query(None, description="部门ID筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
     人员利用率
@@ -1049,7 +1049,7 @@ def get_supplier_performance(
     db: Session = Depends(deps.get_db),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
     供应商绩效
@@ -1145,7 +1145,7 @@ def get_supplier_performance(
 def get_executive_dashboard(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
     决策驾驶舱数据

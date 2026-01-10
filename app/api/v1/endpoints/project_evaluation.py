@@ -39,7 +39,7 @@ def create_project_evaluation(
     *,
     db: Session = Depends(deps.get_db),
     eval_in: ProjectEvaluationCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:create")),
 ) -> Any:
     """
     创建项目评价
@@ -79,7 +79,7 @@ def auto_create_project_evaluation(
     *,
     db: Session = Depends(deps.get_db),
     request: AutoEvaluationRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:read")),
 ) -> Any:
     """
     自动创建项目评价（部分维度自动计算）
@@ -154,7 +154,7 @@ def get_project_evaluations(
     *,
     db: Session = Depends(deps.get_db),
     query_params: ProjectEvaluationQuery = Depends(),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:read")),
 ) -> Any:
     """
     获取项目评价列表
@@ -193,7 +193,7 @@ def get_project_evaluation(
     *,
     db: Session = Depends(deps.get_db),
     eval_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:read")),
 ) -> Any:
     """
     获取项目评价详情
@@ -210,7 +210,7 @@ def get_project_latest_evaluation(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:read")),
 ) -> Any:
     """
     获取项目最新评价
@@ -234,7 +234,7 @@ def update_project_evaluation(
     db: Session = Depends(deps.get_db),
     eval_id: int,
     eval_in: ProjectEvaluationUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:update")),
 ) -> Any:
     """
     更新项目评价
@@ -281,7 +281,7 @@ def confirm_project_evaluation(
     *,
     db: Session = Depends(deps.get_db),
     eval_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:read")),
 ) -> Any:
     """
     确认项目评价（将状态改为CONFIRMED）
@@ -306,7 +306,7 @@ def get_evaluation_dimensions(
     page: int = Query(1, ge=1),
     page_size: int = Query(100, ge=1, le=100),
     is_active: Optional[bool] = Query(None, description="是否启用"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:read")),
 ) -> Any:
     """
     获取评价维度配置列表
@@ -335,7 +335,7 @@ def get_evaluation_dimension(
     *,
     db: Session = Depends(deps.get_db),
     dim_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:read")),
 ) -> Any:
     """
     获取评价维度配置详情
@@ -352,7 +352,7 @@ def create_evaluation_dimension(
     *,
     db: Session = Depends(deps.get_db),
     dim_in: ProjectEvaluationDimensionCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:read")),
 ) -> Any:
     """
     创建评价维度配置（管理员功能）
@@ -378,7 +378,7 @@ def update_evaluation_dimension(
     db: Session = Depends(deps.get_db),
     dim_id: int,
     dim_in: ProjectEvaluationDimensionUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:read")),
 ) -> Any:
     """
     更新评价维度配置（管理员功能）
@@ -411,7 +411,7 @@ def delete_evaluation_dimension(
     *,
     db: Session = Depends(deps.get_db),
     dim_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:read")),
 ) -> Any:
     """
     删除评价维度配置（管理员功能）
@@ -431,7 +431,7 @@ def toggle_dimension_status(
     *,
     db: Session = Depends(deps.get_db),
     dim_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:read")),
 ) -> Any:
     """
     启用/停用评价维度配置（管理员功能）
@@ -455,7 +455,7 @@ def toggle_dimension_status(
 def get_dimension_weights_summary(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:read")),
 ) -> Any:
     """
     获取维度权重配置摘要（用于前端显示和验证）
@@ -504,7 +504,7 @@ def get_evaluation_statistics(
     db: Session = Depends(deps.get_db),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:read")),
 ) -> Any:
     """
     获取项目评价统计

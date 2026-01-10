@@ -38,7 +38,7 @@ import {
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { timesheetApi, projectApi } from '../services/api'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, Copy, FileText, Zap } from 'lucide-react'
 
 // Current week dates helper
 const getWeekDates = (offset = 0) => {
@@ -531,6 +531,86 @@ export default function Timesheet() {
     alert('工时记录已自动保存为草稿')
   }
 
+  // 复制上周的工时记录
+  const handleCopyLastWeek = async () => {
+    if (weekOffset === 0) {
+      alert('当前是本周，无法复制上周数据')
+      return
+    }
+
+    if (!confirm('确定要复制上周的工时记录到本周吗？')) {
+      return
+    }
+
+    setSaving(true)
+    try {
+      // 获取上周的周开始日期
+      const lastWeekStart = getWeekDates(weekOffset - 1)[0]
+      const lastWeekStartStr = formatFullDate(lastWeekStart)
+
+      // 获取上周的工时数据
+      const lastWeekResponse = await timesheetApi.getWeek({
+        week_start: lastWeekStartStr,
+      })
+      const lastWeekData = lastWeekResponse.data?.data || lastWeekResponse.data
+      const lastWeekTimesheets = lastWeekData.timesheets || []
+
+      if (lastWeekTimesheets.length === 0) {
+        alert('上周没有工时记录可复制')
+        return
+      }
+
+      // 为本周创建对应的工时记录
+      const timesheetsToCreate = []
+      const currentWeekStart = weekDates[0]
+
+      lastWeekTimesheets.forEach((ts) => {
+        // 计算对应的本周日期（保持星期几不变）
+        const lastWeekDate = new Date(ts.work_date)
+        const dayOfWeek = lastWeekDate.getDay() === 0 ? 7 : lastWeekDate.getDay() // 转换为1-7（周一到周日）
+        const currentWeekDate = new Date(currentWeekStart)
+        currentWeekDate.setDate(currentWeekStart.getDate() + dayOfWeek - 1)
+
+        // 检查本周该日期是否已有记录
+        const dateStr = formatFullDate(currentWeekDate)
+        const existing = entries.find(
+          (e) =>
+            e.project_id === ts.project_id &&
+            e.task_id === ts.task_id &&
+            e.hours?.[dateStr]
+        )
+
+        if (!existing && parseFloat(ts.work_hours || 0) > 0) {
+          timesheetsToCreate.push({
+            project_id: ts.project_id,
+            rd_project_id: ts.rd_project_id,
+            task_id: ts.task_id,
+            work_date: dateStr,
+            work_hours: parseFloat(ts.work_hours || 0),
+            work_type: ts.work_type || 'NORMAL',
+            description: ts.description || '',
+          })
+        }
+      })
+
+      if (timesheetsToCreate.length > 0) {
+        await timesheetApi.batchCreate({
+          timesheets: timesheetsToCreate,
+        })
+        alert(`成功复制 ${timesheetsToCreate.length} 条工时记录`)
+        // 重新加载数据
+        await loadWeekTimesheet()
+      } else {
+        alert('本周已有对应日期的工时记录，无需复制')
+      }
+    } catch (error) {
+      console.error('复制上周工时记录失败:', error)
+      alert('复制上周工时记录失败，请稍后重试')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <div className="container mx-auto px-4 py-6">
@@ -571,7 +651,7 @@ export default function Timesheet() {
           },
           {
             label: '参与项目',
-            value: new Set(entries.map((e) => e.projectId)).size,
+            value: new Set(entries.map((e) => e.project_id).filter(Boolean)).size,
             icon: Briefcase,
             color: 'text-emerald-400',
             desc: '个项目',
@@ -640,6 +720,15 @@ export default function Timesheet() {
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   添加记录
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleCopyLastWeek}
+                  disabled={loading || weekOffset === 0}
+                  title="复制上周的工时记录"
+                >
+                  <Copy className="w-4 h-4 mr-1" />
+                  复制上周
                 </Button>
                 <Button
                   variant="outline"

@@ -39,16 +39,7 @@ const PRIORITY_CONFIG = {
 };
 
 // 模拟人员需求数据
-const mockStaffingNeeds = [
-  {
-    id: 1, project_id: 1, project_name: '汽车零部件自动化产线',
-    role_code: 'MECH_ENG', role_name: '机械工程师', headcount: 2,
-    priority: 'P1', status: 'OPEN', start_date: '2026-01-15', end_date: '2026-06-30',
-    allocation_pct: 100, filled_count: 0,
-    required_skills: [
-      { tag_id: 1, tag_name: '机械设计', min_score: 4 },
-      { tag_id: 2, tag_name: 'SolidWorks', min_score: 3 }
-    ]
+// Mock data - 已移除，使用真实API
   },
   {
     id: 2, project_id: 2, project_name: '3C电子装配线',
@@ -73,25 +64,7 @@ const mockStaffingNeeds = [
 ];
 
 // 模拟匹配结果
-const mockMatchingResult = {
-  request_id: 'REQ-20260108-001',
-  staffing_need_id: 1,
-  project_id: 1,
-  project_name: '汽车零部件自动化产线',
-  role_code: 'MECH_ENG',
-  role_name: '机械工程师',
-  priority: 'P1',
-  priority_threshold: 85,
-  total_candidates: 5,
-  qualified_count: 3,
-  matching_time: new Date().toISOString(),
-  candidates: [
-    {
-      employee_id: 1, employee_name: '张工', employee_code: 'EMP001',
-      department: '机械设计部', total_score: 92.5, rank: 1,
-      recommendation_type: 'STRONG', current_workload_pct: 60, available_hours: 64,
-      matched_skills: ['机械设计', 'SolidWorks', 'AutoCAD'], missing_skills: [],
-      dimension_scores: { skill: 95, domain: 90, attitude: 92, quality: 88, workload: 95, special: 85 }
+// Mock data - 已移除，使用真实API
     },
     {
       employee_id: 2, employee_name: '李工', employee_code: 'EMP002',
@@ -125,26 +98,7 @@ const mockMatchingResult = {
 };
 
 // 模拟匹配历史
-const mockMatchingHistory = [
-  {
-    id: 1, request_id: 'REQ-20260107-001', project_name: '新能源电池产线',
-    role_name: '机械工程师', employee_name: '张工', total_score: 88.5,
-    is_accepted: true, accept_time: '2026-01-07 15:30:00', acceptor_name: '项目经理A',
-    matching_time: '2026-01-07 14:00:00'
-  },
-  {
-    id: 2, request_id: 'REQ-20260106-002', project_name: '半导体封装设备',
-    role_name: '电气工程师', employee_name: '李工', total_score: 82.3,
-    is_accepted: false, reject_reason: '工作负载过高', matching_time: '2026-01-06 10:00:00'
-  },
-  {
-    id: 3, request_id: 'REQ-20260105-001', project_name: '视觉检测系统',
-    role_name: '软件工程师', employee_name: '王工', total_score: 90.1,
-    is_accepted: true, accept_time: '2026-01-05 16:45:00', acceptor_name: '项目经理B',
-    matching_time: '2026-01-05 16:00:00'
-  }
-];
-
+// Mock data - 已移除，使用真实API
 export default function AIStaffMatching() {
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('matching');

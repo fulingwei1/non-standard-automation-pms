@@ -20,7 +20,7 @@ from app.models.project import Project
 from app.models.user import User
 from app.schemas import staff_matching as schemas
 from app.services.staff_matching_service import StaffMatchingService
-from app.core.security import get_current_user
+from app.core import security
 
 router = APIRouter()
 
@@ -35,7 +35,7 @@ def list_tags(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """获取标签列表"""
     query = db.query(HrTagDict)
@@ -60,7 +60,7 @@ def list_tags(
 def get_tag_tree(
     tag_type: Optional[str] = Query(None, description="标签类型筛选"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """获取标签层级树"""
     query = db.query(HrTagDict).filter(HrTagDict.is_active == True)
@@ -96,7 +96,7 @@ def get_tag_tree(
 def create_tag(
     tag_data: schemas.TagDictCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:create"))
 ):
     """创建标签"""
     # 检查编码唯一性
@@ -116,7 +116,7 @@ def update_tag(
     tag_id: int,
     tag_data: schemas.TagDictUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:update"))
 ):
     """更新标签"""
     tag = db.query(HrTagDict).filter(HrTagDict.id == tag_id).first()
@@ -135,7 +135,7 @@ def update_tag(
 def delete_tag(
     tag_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """删除标签（软删除）"""
     tag = db.query(HrTagDict).filter(HrTagDict.id == tag_id).first()
@@ -158,7 +158,7 @@ def list_evaluations(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """获取员工标签评估列表"""
     query = db.query(HrEmployeeTagEvaluation).join(HrTagDict)
@@ -200,7 +200,7 @@ def list_evaluations(
 def create_evaluation(
     eval_data: schemas.EmployeeTagEvaluationCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:create"))
 ):
     """创建员工标签评估"""
     # 验证员工和标签存在
@@ -240,7 +240,7 @@ def create_evaluation(
 def batch_create_evaluations(
     batch_data: schemas.EmployeeTagEvaluationBatch,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:create"))
 ):
     """批量创建员工标签评估"""
     # 验证员工存在
@@ -286,7 +286,7 @@ def update_evaluation(
     eval_id: int,
     eval_data: schemas.EmployeeTagEvaluationUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:update"))
 ):
     """更新员工标签评估"""
     evaluation = db.query(HrEmployeeTagEvaluation).filter(HrEmployeeTagEvaluation.id == eval_id).first()
@@ -319,7 +319,7 @@ def update_evaluation(
 def delete_evaluation(
     eval_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """删除评估记录（软删除）"""
     evaluation = db.query(HrEmployeeTagEvaluation).filter(HrEmployeeTagEvaluation.id == eval_id).first()
@@ -344,7 +344,7 @@ def list_profiles(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """获取员工档案列表"""
     query = db.query(Employee, HrEmployeeProfile).outerjoin(
@@ -415,7 +415,7 @@ def list_profiles(
 def get_profile(
     employee_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """获取员工档案详情"""
     profile = db.query(HrEmployeeProfile).filter(
@@ -437,7 +437,7 @@ def get_profile(
 def refresh_profile(
     employee_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """刷新员工档案聚合数据"""
     employee = db.query(Employee).filter(Employee.id == employee_id).first()
@@ -463,7 +463,7 @@ def list_performance(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """获取项目绩效列表"""
     query = db.query(HrProjectPerformance)
@@ -506,7 +506,7 @@ def list_performance(
 def create_performance(
     perf_data: schemas.ProjectPerformanceCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:create"))
 ):
     """创建项目绩效记录"""
     # 验证员工和项目存在
@@ -563,7 +563,7 @@ def create_performance(
 def get_employee_performance_history(
     employee_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """获取员工项目绩效历史"""
     performances = db.query(HrProjectPerformance).filter(
@@ -605,7 +605,7 @@ def list_staffing_needs(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """获取人员需求列表"""
     query = db.query(MesProjectStaffingNeed)
@@ -655,7 +655,7 @@ def list_staffing_needs(
 def get_staffing_need(
     need_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """获取人员需求详情"""
     need = db.query(MesProjectStaffingNeed).filter(MesProjectStaffingNeed.id == need_id).first()
@@ -691,7 +691,7 @@ def get_staffing_need(
 def create_staffing_need(
     need_data: schemas.StaffingNeedCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:create"))
 ):
     """创建人员需求"""
     # 验证项目存在
@@ -756,7 +756,7 @@ def update_staffing_need(
     need_id: int,
     need_data: schemas.StaffingNeedUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:update"))
 ):
     """更新人员需求"""
     need = db.query(MesProjectStaffingNeed).filter(MesProjectStaffingNeed.id == need_id).first()
@@ -810,7 +810,7 @@ def update_staffing_need(
 def cancel_staffing_need(
     need_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """取消人员需求"""
     need = db.query(MesProjectStaffingNeed).filter(MesProjectStaffingNeed.id == need_id).first()
@@ -830,7 +830,7 @@ def execute_matching(
     top_n: int = Query(10, ge=1, le=50, description="返回候选人数量"),
     include_overloaded: bool = Query(False, description="是否包含超负荷员工"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """执行AI匹配"""
     try:
@@ -852,7 +852,7 @@ def get_matching_results(
     staffing_need_id: int,
     request_id: Optional[str] = Query(None, description="匹配请求ID"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """获取匹配结果"""
     query = db.query(HrAIMatchingLog).filter(
@@ -901,7 +901,7 @@ def get_matching_results(
 def accept_candidate(
     accept_data: schemas.MatchingAcceptRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """采纳候选人"""
     success = StaffMatchingService.accept_candidate(
@@ -920,7 +920,7 @@ def accept_candidate(
 def reject_candidate(
     reject_data: schemas.MatchingRejectRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """拒绝候选人"""
     success = StaffMatchingService.reject_candidate(
@@ -942,7 +942,7 @@ def get_matching_history(
     employee_id: Optional[int] = Query(None, description="员工ID"),
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """获取匹配历史"""
     logs = StaffMatchingService.get_matching_history(
@@ -983,7 +983,7 @@ def get_matching_history(
 @router.get("/dashboard")
 def get_dashboard(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """获取人员匹配仪表板"""
     # 需求统计

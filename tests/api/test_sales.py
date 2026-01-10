@@ -13,11 +13,159 @@ Issue 8.1: 销售模块单元测试完善
 - 审批工作流：启动、审批、驳回、委托
 """
 
+import uuid
+from datetime import date, timedelta
+
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime, date, timedelta
-from decimal import Decimal
+
 from app.core.config import settings
+
+
+def _auth_headers(token: str) -> dict:
+    return {"Authorization": f"Bearer {token}"} if token else {}
+
+
+def _unique_code(prefix: str) -> str:
+    return f"{prefix}-{uuid.uuid4().hex[:6].upper()}"
+
+
+def _create_customer(client: TestClient, token: str, name_prefix: str = "测试客户") -> int:
+    headers = _auth_headers(token)
+    customer_payload = {
+        "customer_code": _unique_code("CUST"),
+        "customer_name": f"{name_prefix}-{uuid.uuid4().hex[:4]}",
+        "industry": "电子制造",
+        "contact_person": "客户联系人",
+        "contact_phone": "021-88888888",
+    }
+    response = client.post(
+        f"{settings.API_V1_PREFIX}/customers",
+        json=customer_payload,
+        headers=headers,
+    )
+    assert response.status_code in (200, 201), response.text
+    data = response.json()
+    return data["id"]
+
+
+def _create_lead(client: TestClient, token: str) -> dict:
+    headers = _auth_headers(token)
+    lead_payload = {
+        "customer_name": f"测试客户-{uuid.uuid4().hex[:4]}",
+        "source": "展会",
+        "industry": "电子制造",
+        "contact_name": "张三",
+        "contact_phone": "13800138000",
+        "demand_summary": "需要自动化测试设备",
+    }
+    response = client.post(
+        f"{settings.API_V1_PREFIX}/sales/leads",
+        json=lead_payload,
+        headers=headers,
+    )
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def _create_opportunity(client: TestClient, token: str) -> dict:
+    headers = _auth_headers(token)
+    customer_id = _create_customer(client, token)
+    payload = {
+        "customer_id": customer_id,
+        "opportunity_name": f"测试商机-{uuid.uuid4().hex[:4]}",
+        "stage": "QUALIFICATION",
+        "expected_amount": 200000.0,
+        "expected_close_date": (date.today() + timedelta(days=30)).isoformat(),
+        "probability": 80,
+        "budget_range": "100000-300000",
+        "decision_chain": "工程经理->采购->总经理",
+        "delivery_window": "Q4",
+        "acceptance_basis": "企业标准验收",
+    }
+    response = client.post(
+        f"{settings.API_V1_PREFIX}/sales/opportunities",
+        json=payload,
+        headers=headers,
+    )
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def _create_quote(client: TestClient, token: str) -> dict:
+    headers = _auth_headers(token)
+    opportunity = _create_opportunity(client, token)
+    payload = {
+        "quote_code": _unique_code("QUOTE"),
+        "opportunity_id": opportunity["id"],
+        "customer_id": opportunity["customer_id"],
+        "valid_until": (date.today() + timedelta(days=45)).isoformat(),
+        "version": {
+            "version_no": "V1",
+            "total_price": 150000.0,
+            "cost_total": 90000.0,
+            "gross_margin": 40.0,
+            "lead_time_days": 45,
+            "risk_terms": "Standard delivery terms",
+            "items": [
+                {
+                    "item_type": "SYSTEM",
+                    "item_name": "自动化测试平台",
+                    "qty": 1,
+                    "unit_price": 150000.0,
+                    "cost": 90000.0,
+                    "lead_time_days": 45,
+                }
+            ],
+        },
+    }
+    response = client.post(
+        f"{settings.API_V1_PREFIX}/sales/quotes",
+        json=payload,
+        headers=headers,
+    )
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def _create_contract(client: TestClient, token: str) -> dict:
+    headers = _auth_headers(token)
+    quote = _create_quote(client, token)
+    payload = {
+        "contract_code": _unique_code("CONTRACT"),
+        "opportunity_id": quote["opportunity_id"],
+        "customer_id": quote["customer_id"],
+        "quote_version_id": quote.get("current_version_id"),
+        "contract_amount": 150000.0,
+        "signed_date": date.today().isoformat(),
+    }
+    response = client.post(
+        f"{settings.API_V1_PREFIX}/sales/contracts",
+        json=payload,
+        headers=headers,
+    )
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def _create_invoice(client: TestClient, token: str) -> dict:
+    headers = _auth_headers(token)
+    contract = _create_contract(client, token)
+    payload = {
+        "invoice_code": _unique_code("INV"),
+        "contract_id": contract["id"],
+        "invoice_type": "VAT_SPECIAL",
+        "amount": 50000.0,
+        "tax_rate": 13.0,
+        "issue_date": date.today().isoformat(),
+    }
+    response = client.post(
+        f"{settings.API_V1_PREFIX}/sales/invoices",
+        json=payload,
+        headers=headers,
+    )
+    assert response.status_code == 201, response.text
+    return response.json()
 
 
 class TestLeadManagement:
@@ -27,57 +175,33 @@ class TestLeadManagement:
         """测试正常创建线索"""
         if not admin_token:
             pytest.skip("Admin token not available")
-        
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        lead_data = {
-            "customer_name": "测试客户A",
-            "source": "展会",
-            "industry": "电子制造",
-            "contact_name": "张三",
-            "contact_phone": "13800138000",
-            "contact_email": "zhangsan@test.com",
-            "demand_summary": "需要自动化测试设备，节拍要求1秒/件",
-            "status": "NEW"
-        }
-        
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/leads",
-            json=lead_data,
-            headers=headers
-        )
-        
-        assert response.status_code == 201
-        data = response.json()
-        assert data["customer_name"] == "测试客户A"
-        assert data["source"] == "展会"
-        assert "lead_code" in data  # 应该自动生成编码
-        return data["id"]
+        lead = _create_lead(client, admin_token)
+        assert lead["customer_name"].startswith("测试客户-")
+        assert lead["status"] == "NEW"
+        assert lead["source"] == "展会"
     
     def test_create_lead_missing_required_fields(self, client: TestClient, admin_token: str):
-        """测试必填字段校验"""
+        """测试最小必填字段"""
         if not admin_token:
             pytest.skip("Admin token not available")
         
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        
-        # 缺少客户名称
-        lead_data = {
-            "source": "展会",
-        }
-        
+        headers = _auth_headers(admin_token)
         response = client.post(
             f"{settings.API_V1_PREFIX}/sales/leads",
-            json=lead_data,
-            headers=headers
+            json={"source": "市场活动"},
+            headers=headers,
         )
-        assert response.status_code == 422  # Validation error
+        assert response.status_code == 201
+        data = response.json()
+        assert data["status"] == "NEW"
+        assert data["source"] == "市场活动"
     
     def test_get_lead_list(self, client: TestClient, admin_token: str):
         """测试获取线索列表"""
         if not admin_token:
             pytest.skip("Admin token not available")
         
-        headers = {"Authorization": f"Bearer {admin_token}"}
+        headers = _auth_headers(admin_token)
         
         response = client.get(
             f"{settings.API_V1_PREFIX}/sales/leads?page=1&page_size=10",
@@ -95,37 +219,31 @@ class TestLeadManagement:
         if not admin_token:
             pytest.skip("Admin token not available")
         
-        if not lead_id:
-            # 先创建一个线索
-            lead_id = self.test_create_lead_success(client, admin_token)
-        
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        
+        lead = _create_lead(client, admin_token)
+        headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/leads/{lead_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/leads/{lead['id']}",
+            headers=headers,
         )
         
         assert response.status_code == 200
         data = response.json()
-        assert data["id"] == lead_id
+        assert data["id"] == lead["id"]
     
     def test_update_lead(self, client: TestClient, admin_token: str, lead_id: int = None):
         """测试更新线索"""
         if not admin_token:
             pytest.skip("Admin token not available")
         
-        if not lead_id:
-            lead_id = self.test_create_lead_success(client, admin_token)
-        
-        headers = {"Authorization": f"Bearer {admin_token}"}
+        lead = _create_lead(client, admin_token)
+        headers = _auth_headers(admin_token)
         update_data = {
             "status": "CONTACTED",
             "contact_name": "李四",
         }
         
         response = client.put(
-            f"{settings.API_V1_PREFIX}/sales/leads/{lead_id}",
+            f"{settings.API_V1_PREFIX}/sales/leads/{lead['id']}",
             json=update_data,
             headers=headers
         )
@@ -140,26 +258,24 @@ class TestLeadManagement:
         if not admin_token:
             pytest.skip("Admin token not available")
         
-        if not lead_id:
-            lead_id = self.test_create_lead_success(client, admin_token)
-        
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        convert_data = {
-            "opportunity_name": "测试商机",
-            "expected_amount": 100000.00,
-            "expected_close_date": (date.today() + timedelta(days=30)).isoformat(),
-        }
-        
+        lead = _create_lead(client, admin_token)
+        customer_id = _create_customer(client, admin_token)
+        headers = _auth_headers(admin_token)
         response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/leads/{lead_id}/convert",
-            json=convert_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/leads/{lead['id']}/convert",
+            params={"customer_id": customer_id, "skip_validation": "true"},
+            json={},
+            headers=headers,
         )
         
         assert response.status_code == 201
         data = response.json()
-        assert "opportunity_id" in data
-        assert data["lead_status"] == "CONVERTED"
+        assert data["lead_id"] == lead["id"]
+        detail = client.get(
+            f"{settings.API_V1_PREFIX}/sales/leads/{lead['id']}",
+            headers=headers,
+        ).json()
+        assert detail["status"] == "CONVERTED"
 
 
 class TestOpportunityManagement:
@@ -170,48 +286,16 @@ class TestOpportunityManagement:
         if not admin_token:
             pytest.skip("Admin token not available")
         
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        
-        # 先创建一个客户（如果不存在）
-        customer_data = {
-            "customer_name": "测试客户B",
-            "customer_code": "CUST001",
-            "industry": "电子制造",
-        }
-        customer_response = client.post(
-            f"{settings.API_V1_PREFIX}/customers",
-            json=customer_data,
-            headers=headers
-        )
-        customer_id = customer_response.json().get("id") if customer_response.status_code == 201 else 1
-        
-        opportunity_data = {
-            "opportunity_name": "测试商机A",
-            "customer_id": customer_id,
-            "stage": "QUALIFICATION",
-            "expected_amount": 200000.00,
-            "expected_close_date": (date.today() + timedelta(days=60)).isoformat(),
-            "probability": 30,
-        }
-        
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/opportunities",
-            json=opportunity_data,
-            headers=headers
-        )
-        
-        assert response.status_code == 201
-        data = response.json()
-        assert data["opportunity_name"] == "测试商机A"
-        assert data["stage"] == "QUALIFICATION"
-        return data["id"]
+        opportunity = _create_opportunity(client, admin_token)
+        assert opportunity["stage"] == "QUALIFICATION"
+        assert opportunity["customer_id"] > 0
     
     def test_get_opportunity_list(self, client: TestClient, admin_token: str):
         """测试获取商机列表"""
         if not admin_token:
             pytest.skip("Admin token not available")
         
-        headers = {"Authorization": f"Bearer {admin_token}"}
+        headers = _auth_headers(admin_token)
         
         response = client.get(
             f"{settings.API_V1_PREFIX}/sales/opportunities?page=1&page_size=10",
@@ -228,17 +312,15 @@ class TestOpportunityManagement:
         if not admin_token:
             pytest.skip("Admin token not available")
         
-        if not opportunity_id:
-            opportunity_id = self.test_create_opportunity_success(client, admin_token)
-        
-        headers = {"Authorization": f"Bearer {admin_token}"}
+        opportunity = _create_opportunity(client, admin_token)
+        headers = _auth_headers(admin_token)
         update_data = {
             "stage": "PROPOSAL",
             "probability": 50,
         }
         
         response = client.put(
-            f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity_id}",
+            f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity['id']}",
             json=update_data,
             headers=headers
         )
@@ -253,29 +335,15 @@ class TestOpportunityManagement:
         if not admin_token:
             pytest.skip("Admin token not available")
         
-        if not opportunity_id:
-            opportunity_id = self.test_create_opportunity_success(client, admin_token)
-        
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        gate_data = {
-            "gate_type": "G1",
-            "validation_data": {
-                "customer_credit_check": True,
-                "technical_feasibility": True,
-            }
-        }
-        
+        opportunity = _create_opportunity(client, admin_token)
+        headers = _auth_headers(admin_token)
         response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity_id}/gate",
-            json=gate_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity['id']}/gate",
+            params={"gate_type": "G2"},
+            json={"gate_status": "PASS"},
+            headers=headers,
         )
-        
-        # 根据验证结果，可能成功或失败
-        assert response.status_code in [200, 400]
-        if response.status_code == 200:
-            data = response.json()
-            assert "gate_result" in data
+        assert response.status_code in (200, 400)
 
 
 class TestQuoteManagement:
@@ -286,31 +354,9 @@ class TestQuoteManagement:
         if not admin_token:
             pytest.skip("Admin token not available")
         
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        
-        # 先创建一个商机
-        opp_test = TestOpportunityManagement()
-        opportunity_id = opp_test.test_create_opportunity_success(client, admin_token)
-        
-        quote_data = {
-            "quote_name": "测试报价A",
-            "opportunity_id": opportunity_id,
-            "quote_type": "STANDARD",
-            "total_amount": 150000.00,
-            "valid_until": (date.today() + timedelta(days=30)).isoformat(),
-        }
-        
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/quotes",
-            json=quote_data,
-            headers=headers
-        )
-        
-        assert response.status_code == 201
-        data = response.json()
-        assert data["quote_name"] == "测试报价A"
-        assert "quote_code" in data
-        return data["id"]
+        quote = _create_quote(client, admin_token)
+        assert quote["opportunity_id"] is not None
+        assert "quote_code" in quote
     
     def test_create_quote_version(self, client: TestClient, admin_token: str, quote_id: int = None):
         """测试创建报价版本"""
@@ -318,13 +364,11 @@ class TestQuoteManagement:
             pytest.skip("Admin token not available")
         
         if not quote_id:
-            quote_id = self.test_create_quote_success(client, admin_token)
+            quote = _create_quote(client, admin_token)
+            quote_id = quote["id"]
         
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        version_data = {
-            "version_notes": "调整价格",
-            "total_amount": 160000.00,
-        }
+        headers = _auth_headers(admin_token)
+        version_data = {"version_no": "V2", "total_price": 160000.0}
         
         response = client.post(
             f"{settings.API_V1_PREFIX}/sales/quotes/{quote_id}/versions",
@@ -334,7 +378,7 @@ class TestQuoteManagement:
         
         assert response.status_code == 201
         data = response.json()
-        assert "version_number" in data
+        assert data["version_no"] == "V2"
     
     def test_approve_quote(self, client: TestClient, admin_token: str, quote_id: int = None):
         """测试审批报价"""
@@ -342,13 +386,11 @@ class TestQuoteManagement:
             pytest.skip("Admin token not available")
         
         if not quote_id:
-            quote_id = self.test_create_quote_success(client, admin_token)
+            quote = _create_quote(client, admin_token)
+            quote_id = quote["id"]
         
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        approve_data = {
-            "action": "APPROVE",
-            "comment": "同意报价",
-        }
+        headers = _auth_headers(admin_token)
+        approve_data = {"approved": True, "remark": "同意报价"}
         
         response = client.post(
             f"{settings.API_V1_PREFIX}/sales/quotes/{quote_id}/approve",
@@ -368,31 +410,9 @@ class TestContractManagement:
         if not admin_token:
             pytest.skip("Admin token not available")
         
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        
-        # 先创建一个报价
-        quote_test = TestQuoteManagement()
-        quote_id = quote_test.test_create_quote_success(client, admin_token)
-        
-        contract_data = {
-            "contract_name": "测试合同A",
-            "quote_id": quote_id,
-            "contract_type": "SALES",
-            "total_amount": 150000.00,
-            "sign_date": date.today().isoformat(),
-        }
-        
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/contracts",
-            json=contract_data,
-            headers=headers
-        )
-        
-        assert response.status_code == 201
-        data = response.json()
-        assert data["contract_name"] == "测试合同A"
-        assert "contract_code" in data
-        return data["id"]
+        contract = _create_contract(client, admin_token)
+        assert "contract_code" in contract
+        assert contract["opportunity_id"] is not None
     
     def test_sign_contract(self, client: TestClient, admin_token: str, contract_id: int = None):
         """测试合同签订"""
@@ -400,13 +420,11 @@ class TestContractManagement:
             pytest.skip("Admin token not available")
         
         if not contract_id:
-            contract_id = self.test_create_contract_success(client, admin_token)
+            contract = _create_contract(client, admin_token)
+            contract_id = contract["id"]
         
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        sign_data = {
-            "sign_date": date.today().isoformat(),
-            "signer_name": "测试签署人",
-        }
+        headers = _auth_headers(admin_token)
+        sign_data = {"signed_date": date.today().isoformat(), "remark": "合同签署"}
         
         response = client.post(
             f"{settings.API_V1_PREFIX}/sales/contracts/{contract_id}/sign",
@@ -416,7 +434,16 @@ class TestContractManagement:
         
         assert response.status_code == 200
         data = response.json()
-        assert data["status"] == "SIGNED"
+        assert data["code"] == 200
+        
+        detail_response = client.get(
+            f"{settings.API_V1_PREFIX}/sales/contracts/{contract_id}",
+            headers=headers,
+        )
+        assert detail_response.status_code == 200
+        contract_detail = detail_response.json()
+        assert contract_detail["status"] == "SIGNED"
+        assert contract_detail["signed_date"] == sign_data["signed_date"]
     
     def test_generate_project_from_contract(self, client: TestClient, admin_token: str, contract_id: int = None):
         """测试从合同生成项目"""
@@ -424,20 +451,25 @@ class TestContractManagement:
             pytest.skip("Admin token not available")
         
         if not contract_id:
-            contract_id = self.test_create_contract_success(client, admin_token)
-            # 先签订合同
+            contract = _create_contract(client, admin_token)
+            contract_id = contract["id"]
             self.test_sign_contract(client, admin_token, contract_id)
         
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        
+        headers = _auth_headers(admin_token)
         response = client.post(
             f"{settings.API_V1_PREFIX}/sales/contracts/{contract_id}/project",
-            headers=headers
+            params={"skip_g4_validation": "true"},
+            json={
+                "project_code": _unique_code("PRJ"),
+                "project_name": f"合同项目-{uuid.uuid4().hex[:4]}",
+            },
+            headers=headers,
         )
         
-        assert response.status_code == 201
+        assert response.status_code == 200
         data = response.json()
-        assert "project_id" in data
+        assert data["code"] == 200
+        assert "project_id" in data.get("data", {})
 
 
 class TestInvoiceManagement:
@@ -448,31 +480,9 @@ class TestInvoiceManagement:
         if not admin_token:
             pytest.skip("Admin token not available")
         
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        
-        # 先创建一个合同
-        contract_test = TestContractManagement()
-        contract_id = contract_test.test_create_contract_success(client, admin_token)
-        
-        invoice_data = {
-            "contract_id": contract_id,
-            "invoice_type": "NORMAL",
-            "amount": 50000.00,
-            "tax_rate": 13.00,
-            "issue_date": date.today().isoformat(),
-        }
-        
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/invoices",
-            json=invoice_data,
-            headers=headers
-        )
-        
-        assert response.status_code == 201
-        data = response.json()
-        assert "invoice_code" in data
-        assert data["amount"] == 50000.00
-        return data["id"]
+        invoice = _create_invoice(client, admin_token)
+        assert "invoice_code" in invoice
+        assert invoice["contract_id"] is not None
     
     def test_issue_invoice(self, client: TestClient, admin_token: str, invoice_id: int = None):
         """测试开票"""
@@ -480,9 +490,10 @@ class TestInvoiceManagement:
             pytest.skip("Admin token not available")
         
         if not invoice_id:
-            invoice_id = self.test_create_invoice_success(client, admin_token)
+            invoice = _create_invoice(client, admin_token)
+            invoice_id = invoice["id"]
         
-        headers = {"Authorization": f"Bearer {admin_token}"}
+        headers = _auth_headers(admin_token)
         issue_data = {
             "issue_date": date.today().isoformat(),
         }
@@ -505,57 +516,39 @@ class TestGateValidation:
         if not admin_token:
             pytest.skip("Admin token not available")
         
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        
-        # 创建商机
-        opp_test = TestOpportunityManagement()
-        opportunity_id = opp_test.test_create_opportunity_success(client, admin_token)
-        
-        gate_data = {
-            "gate_type": "G1",
-            "validation_data": {
-                "customer_credit_check": True,
-                "technical_feasibility": True,
-                "market_analysis": True,
-            }
+        lead = _create_lead(client, admin_token)
+        customer_id = _create_customer(client, admin_token)
+        headers = _auth_headers(admin_token)
+        requirement_data = {
+            "product_object": "自动化测试台",
+            "ct_seconds": 60,
+            "interface_desc": "MODBUS",
+            "site_constraints": "需要洁净室",
+            "acceptance_criteria": "样机通过试验",
         }
-        
         response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity_id}/gate",
-            json=gate_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/leads/{lead['id']}/convert",
+            params={"customer_id": customer_id},
+            json=requirement_data,
+            headers=headers,
         )
-        
-        # G1验证应该通过
-        assert response.status_code in [200, 400]
+        assert response.status_code == 201
     
     def test_g1_validation_failure(self, client: TestClient, admin_token: str):
         """测试G1验证失败场景"""
         if not admin_token:
             pytest.skip("Admin token not available")
         
-        headers = {"Authorization": f"Bearer {admin_token}"}
-        
-        # 创建商机
-        opp_test = TestOpportunityManagement()
-        opportunity_id = opp_test.test_create_opportunity_success(client, admin_token)
-        
-        gate_data = {
-            "gate_type": "G1",
-            "validation_data": {
-                "customer_credit_check": False,  # 信用检查失败
-                "technical_feasibility": True,
-            }
-        }
-        
+        lead = _create_lead(client, admin_token)
+        customer_id = _create_customer(client, admin_token)
+        headers = _auth_headers(admin_token)
         response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity_id}/gate",
-            json=gate_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/leads/{lead['id']}/convert",
+            params={"customer_id": customer_id},
+            json={},
+            headers=headers,
         )
-        
-        # G1验证应该失败
-        assert response.status_code in [400, 422]
+        assert response.status_code == 400
 
 
 class TestPermissionControl:
@@ -566,7 +559,7 @@ class TestPermissionControl:
         if not sales_user_token:
             pytest.skip("Sales user token not available")
         
-        headers = {"Authorization": f"Bearer {sales_user_token}"}
+        headers = _auth_headers(sales_user_token)
         
         response = client.get(
             f"{settings.API_V1_PREFIX}/sales/leads?page=1&page_size=10",
@@ -583,7 +576,7 @@ class TestPermissionControl:
         if not normal_user_token:
             pytest.skip("Normal user token not available")
         
-        headers = {"Authorization": f"Bearer {normal_user_token}"}
+        headers = _auth_headers(normal_user_token)
         
         # 尝试更新不属于自己的线索
         update_data = {"status": "CONTACTED"}

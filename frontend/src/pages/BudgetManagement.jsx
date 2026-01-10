@@ -48,45 +48,7 @@ import { cn, formatCurrency, formatDate } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { projectApi, costApi } from '../services/api'
 
-// Mock budget data for demo accounts
-const mockBudgets = [
-  {
-    id: 1,
-    project_code: 'PJ250108001',
-    project_name: 'BMS老化测试设备',
-    budget_amount: 1500000,
-    used_amount: 1250000,
-    remaining_amount: 250000,
-    usage_rate: 83.3,
-    status: 'WARNING',
-    start_date: '2025-01-01',
-    end_date: '2025-06-30',
-  },
-  {
-    id: 2,
-    project_code: 'PJ250106002',
-    project_name: 'EOL功能测试设备',
-    budget_amount: 2000000,
-    used_amount: 1200000,
-    remaining_amount: 800000,
-    usage_rate: 60.0,
-    status: 'NORMAL',
-    start_date: '2025-01-15',
-    end_date: '2025-08-31',
-  },
-  {
-    id: 3,
-    project_code: 'PJ250103003',
-    project_name: 'ICT在线测试设备',
-    budget_amount: 1800000,
-    used_amount: 1700000,
-    remaining_amount: 100000,
-    usage_rate: 94.4,
-    status: 'CRITICAL',
-    start_date: '2024-12-01',
-    end_date: '2025-05-31',
-  },
-]
+// Mock data - 已移除，使用真实API
 
 export default function BudgetManagement() {
   const navigate = useNavigate()
@@ -96,64 +58,54 @@ export default function BudgetManagement() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterUsageRate, setFilterUsageRate] = useState('all')
 
-  const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-
   const loadBudgets = useCallback(async () => {
     try {
       setLoading(true)
-      
-      if (isDemoAccount) {
-        // Use mock data for demo accounts
-        setBudgets(mockBudgets)
-      } else {
-        // Load projects with budget information
-        const res = await projectApi.list({ page: 1, page_size: 100 })
-        const projects = res.data?.items || res.data || []
-        
-        // Transform projects to budget format
-        const budgetsData = await Promise.all(
-          projects.map(async (project) => {
-            try {
-              const costSummary = await costApi.getProjectSummary(project.id)
-              const summary = costSummary.data || {}
-              const usedAmount = summary.total_cost || 0
-              const budgetAmount = project.budget_amount || 0
-              const usageRate = budgetAmount > 0 ? (usedAmount / budgetAmount) * 100 : 0
-              
-              let status = 'NORMAL'
-              if (usageRate >= 90) status = 'CRITICAL'
-              else if (usageRate >= 80) status = 'WARNING'
-              
-              return {
-                id: project.id,
-                project_code: project.project_code,
-                project_name: project.project_name,
-                budget_amount: budgetAmount,
-                used_amount: usedAmount,
-                remaining_amount: budgetAmount - usedAmount,
-                usage_rate: usageRate,
-                status,
-                start_date: project.planned_start_date,
-                end_date: project.planned_end_date,
-              }
-            } catch (err) {
-              console.error(`Failed to load budget for project ${project.id}:`, err)
-              return null
+      // Load projects with budget information
+      const res = await projectApi.list({ page: 1, page_size: 100 })
+      const projects = res.data?.items || res.data || []
+
+      // Transform projects to budget format
+      const budgetsData = await Promise.all(
+        projects.map(async (project) => {
+          try {
+            const costSummary = await costApi.getProjectSummary(project.id)
+            const summary = costSummary.data || {}
+            const usedAmount = summary.total_cost || 0
+            const budgetAmount = project.budget_amount || 0
+            const usageRate = budgetAmount > 0 ? (usedAmount / budgetAmount) * 100 : 0
+
+            let status = 'NORMAL'
+            if (usageRate >= 90) status = 'CRITICAL'
+            else if (usageRate >= 80) status = 'WARNING'
+
+            return {
+              id: project.id,
+              project_code: project.project_code,
+              project_name: project.project_name,
+              budget_amount: budgetAmount,
+              used_amount: usedAmount,
+              remaining_amount: budgetAmount - usedAmount,
+              usage_rate: usageRate,
+              status,
+              start_date: project.planned_start_date,
+              end_date: project.planned_end_date,
             }
-          })
-        )
-        
-        setBudgets(budgetsData.filter(Boolean))
-      }
+          } catch (err) {
+            console.error(`Failed to load budget for project ${project.id}:`, err)
+            return null
+          }
+        })
+      )
+
+      setBudgets(budgetsData.filter(Boolean))
     } catch (error) {
       console.error('Failed to load budgets:', error)
-      if (isDemoAccount) {
-        setBudgets(mockBudgets)
-      }
+      setBudgets([])
     } finally {
       setLoading(false)
     }
-  }, [isDemoAccount])
+  }, [])
 
   useEffect(() => {
     loadBudgets()

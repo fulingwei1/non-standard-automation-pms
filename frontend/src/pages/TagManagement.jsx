@@ -30,35 +30,7 @@ const TAG_TYPES = [
 ];
 
 // 模拟数据
-const mockTags = {
-  SKILL: [
-    { id: 1, tag_code: 'SKILL_001', tag_name: '机械设计', description: '机械结构设计能力', weight: 1.0, is_active: true },
-    { id: 2, tag_code: 'SKILL_002', tag_name: 'SolidWorks', description: '3D建模软件', weight: 1.0, is_active: true },
-    { id: 3, tag_code: 'SKILL_003', tag_name: 'AutoCAD', description: '2D制图软件', weight: 0.8, is_active: true },
-    { id: 4, tag_code: 'SKILL_004', tag_name: 'PLC编程', description: '可编程逻辑控制器编程', weight: 1.0, is_active: true },
-    { id: 5, tag_code: 'SKILL_005', tag_name: '电气设计', description: '电气原理图设计', weight: 1.0, is_active: true },
-    { id: 6, tag_code: 'SKILL_006', tag_name: 'C#开发', description: '上位机软件开发', weight: 1.0, is_active: true },
-  ],
-  DOMAIN: [
-    { id: 7, tag_code: 'DOMAIN_001', tag_name: '汽车行业', description: '汽车零部件制造经验', weight: 1.0, is_active: true },
-    { id: 8, tag_code: 'DOMAIN_002', tag_name: '3C电子', description: '消费电子制造经验', weight: 1.0, is_active: true },
-    { id: 9, tag_code: 'DOMAIN_003', tag_name: '医疗器械', description: '医疗设备制造经验', weight: 1.2, is_active: true },
-  ],
-  ATTITUDE: [
-    { id: 10, tag_code: 'ATT_001', tag_name: '责任心强', description: '对工作认真负责', weight: 1.0, is_active: true },
-    { id: 11, tag_code: 'ATT_002', tag_name: '团队协作', description: '善于团队合作', weight: 1.0, is_active: true },
-    { id: 12, tag_code: 'ATT_003', tag_name: '主动性高', description: '工作主动积极', weight: 1.0, is_active: true },
-  ],
-  CHARACTER: [
-    { id: 13, tag_code: 'CHAR_001', tag_name: '沟通能力强', description: '善于沟通表达', weight: 1.0, is_active: true },
-    { id: 14, tag_code: 'CHAR_002', tag_name: '抗压能力强', description: '能承受工作压力', weight: 1.0, is_active: true },
-  ],
-  SPECIAL: [
-    { id: 15, tag_code: 'SPEC_001', tag_name: '项目管理', description: '具备项目管理能力', weight: 1.2, is_active: true },
-    { id: 16, tag_code: 'SPEC_002', tag_name: '客户沟通', description: '善于与客户沟通', weight: 1.0, is_active: true },
-  ],
-};
-
+// Mock data - 已移除，使用真实API
 export default function TagManagement() {
   const [activeType, setActiveType] = useState('SKILL');
   const [tags, setTags] = useState(mockTags);

@@ -12,6 +12,7 @@ import pandas as pd
 import json
 
 from app.api import deps
+from app.core import security
 from app.models.issue import Issue, IssueFollowUpRecord, IssueTemplate, IssueStatisticsSnapshot
 from app.models.user import User
 from app.models.project import Project, Machine
@@ -189,7 +190,7 @@ def generate_issue_no(db: Session) -> str:
 @router.get("/", response_model=IssueListResponse)
 def list_issues(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
     category: Optional[str] = Query(None, description="问题分类"),
     project_id: Optional[int] = Query(None, description="项目ID"),
     machine_id: Optional[int] = Query(None, description="机台ID"),
@@ -330,7 +331,7 @@ def list_issues(
 def get_issue(
     issue_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """获取问题详情"""
     from sqlalchemy.orm import joinedload
@@ -396,7 +397,7 @@ def get_issue(
 def create_issue(
     issue_in: IssueCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:create")),
 ) -> Any:
     """创建问题"""
     # 生成问题编号
@@ -447,7 +448,7 @@ def update_issue(
     issue_id: int,
     issue_in: IssueUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:update")),
 ) -> Any:
     """更新问题"""
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
@@ -509,7 +510,7 @@ def assign_issue(
     issue_id: int,
     assign_req: IssueAssignRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:assign")),
 ) -> Any:
     """分配问题"""
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
@@ -591,7 +592,7 @@ def resolve_issue(
     issue_id: int,
     resolve_req: IssueResolveRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:resolve")),
 ) -> Any:
     """解决问题"""
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
@@ -670,7 +671,7 @@ def verify_issue(
     issue_id: int,
     verify_req: IssueVerifyRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """验证问题"""
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
@@ -730,7 +731,7 @@ def change_issue_status(
     issue_id: int,
     status_req: IssueStatusChangeRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """变更问题状态"""
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
@@ -763,7 +764,7 @@ def change_issue_status(
 def get_issue_follow_ups(
     issue_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """获取问题跟进记录"""
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
@@ -796,7 +797,7 @@ def create_issue_follow_up(
     issue_id: int,
     follow_up_in: IssueFollowUpCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """创建问题跟进记录"""
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
@@ -840,7 +841,7 @@ def create_issue_follow_up(
 @router.get("/statistics/overview", response_model=IssueStatistics)
 def get_issue_statistics(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
     project_id: Optional[int] = Query(None, description="项目ID"),
 ) -> Any:
     """获取问题统计"""
@@ -896,7 +897,7 @@ def get_issue_statistics(
 @router.get("/statistics/engineer-design-issues", response_model=List[EngineerIssueStatistics])
 def get_engineer_design_issues_statistics(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
     engineer_id: Optional[int] = Query(None, description="工程师ID（可选，不提供则统计所有工程师）"),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
@@ -1030,7 +1031,7 @@ def get_engineer_design_issues_statistics(
 def close_issue(
     issue_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """关闭问题（直接关闭，无需验证）"""
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
@@ -1066,7 +1067,7 @@ def cancel_issue(
     issue_id: int,
     cancel_reason: Optional[str] = Query(None, description="取消原因"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """取消/撤销问题"""
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
@@ -1102,7 +1103,7 @@ def cancel_issue(
 def get_related_issues(
     issue_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """获取关联的父子问题"""
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
@@ -1130,7 +1131,7 @@ def create_related_issue(
     issue_id: int,
     issue_in: IssueCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """创建关联问题（子问题或关联问题）"""
     parent_issue = db.query(Issue).filter(Issue.id == issue_id).first()
@@ -1179,7 +1180,7 @@ def create_related_issue(
 def get_project_issues(
     project_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
     status: Optional[str] = Query(None, description="状态筛选"),
@@ -1199,7 +1200,7 @@ def get_project_issues(
 def get_machine_issues(
     machine_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
     status: Optional[str] = Query(None, description="状态筛选"),
@@ -1224,7 +1225,7 @@ def batch_assign_issues(
     issue_ids: List[int] = Body(..., description="问题ID列表"),
     assignee_id: int = Body(..., description="处理人ID"),
     due_date: Optional[date] = Body(None, description="要求完成日期"),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """批量分配问题"""
     assignee = db.query(User).filter(User.id == assignee_id).first()
@@ -1278,7 +1279,7 @@ def batch_change_issue_status(
     issue_ids: List[int] = Body(..., description="问题ID列表"),
     new_status: str = Body(..., description="新状态"),
     comment: Optional[str] = Body(None, description="备注"),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """批量更新问题状态"""
     success_count = 0
@@ -1325,7 +1326,7 @@ def batch_close_issues(
     db: Session = Depends(deps.get_db),
     issue_ids: List[int] = Body(..., description="问题ID列表"),
     comment: Optional[str] = Body(None, description="关闭原因"),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """批量关闭问题"""
     success_count = 0
@@ -1384,7 +1385,7 @@ except ImportError:
 @router.get("/export", response_class=StreamingResponse)
 def export_issues(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
     category: Optional[str] = Query(None, description="问题分类"),
     project_id: Optional[int] = Query(None, description="项目ID"),
     status: Optional[str] = Query(None, description="状态筛选"),
@@ -1483,7 +1484,7 @@ async def import_issues(
     *,
     db: Session = Depends(deps.get_db),
     file: UploadFile = File(...),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """从Excel导入问题"""
     if not EXCEL_AVAILABLE:
@@ -1564,7 +1565,7 @@ async def import_issues(
 def get_issue_board(
     db: Session = Depends(deps.get_db),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """获取问题看板数据（按状态分组）"""
     query = db.query(Issue)
@@ -1623,7 +1624,7 @@ def get_issue_trend(
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
     group_by: str = Query("day", description="分组方式：day/week/month"),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """获取问题趋势分析数据"""
     if not start_date:
@@ -1756,7 +1757,7 @@ def get_issue_trend(
 def delete_issue(
     issue_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:delete")),
 ) -> Any:
     """删除问题（软删除，仅管理员）"""
     # 检查是否为管理员
@@ -1802,7 +1803,7 @@ def delete_issue(
 def get_task_issues(
     task_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
     status: Optional[str] = Query(None, description="状态筛选"),
@@ -1829,7 +1830,7 @@ def get_task_issues(
 def get_acceptance_order_issues(
     order_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
     status: Optional[str] = Query(None, description="状态筛选"),
@@ -1915,7 +1916,7 @@ def get_issue_cause_analysis(
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
     top_n: int = Query(10, ge=1, le=50, description="返回Top N原因"),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """获取问题原因分析（Top N原因统计）"""
     query = db.query(Issue).filter(Issue.status != 'DELETED')
@@ -2010,7 +2011,7 @@ def get_issue_cause_analysis(
 @template_router.get("/", response_model=IssueTemplateListResponse)
 def list_issue_templates(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
     keyword: Optional[str] = Query(None, description="关键词搜索（模板编码/名称）"),
@@ -2083,7 +2084,7 @@ def list_issue_templates(
 def get_issue_template(
     template_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """获取问题模板详情"""
     template = db.query(IssueTemplate).filter(IssueTemplate.id == template_id).first()
@@ -2118,7 +2119,7 @@ def get_issue_template(
 def create_issue_template(
     template_in: IssueTemplateCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """创建问题模板"""
     # 验证模板编码唯一性
@@ -2157,7 +2158,7 @@ def update_issue_template(
     template_id: int,
     template_in: IssueTemplateUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """更新问题模板"""
     template = db.query(IssueTemplate).filter(IssueTemplate.id == template_id).first()
@@ -2192,7 +2193,7 @@ def update_issue_template(
 def delete_issue_template(
     template_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """删除问题模板（软删除）"""
     template = db.query(IssueTemplate).filter(IssueTemplate.id == template_id).first()
@@ -2215,7 +2216,7 @@ def create_issue_from_template(
     template_id: int,
     issue_in: IssueFromTemplateRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """从模板创建问题"""
     # 获取模板

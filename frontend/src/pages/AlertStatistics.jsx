@@ -374,13 +374,7 @@ export default function AlertStatistics() {
       console.error('Failed to load trends:', err)
       const errorMessage = err.response?.data?.detail || err.message || '加载趋势数据失败'
       setError(errorMessage)
-      // 如果是演示账号，设置空数据而不是显示错误
-      const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-      if (isDemoAccount) {
-        setTrends(null)
-        setError(null) // Clear error for demo accounts
-      }
-    } finally {
+      // 如果是演示账号，设置空数据而不是显示错误    } finally {
       setLoading(false)
     }
   }

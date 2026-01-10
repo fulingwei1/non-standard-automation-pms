@@ -67,11 +67,7 @@ export default function GoodsReceiptNew() {
     remark: '',
   })
   
-  const [selectedItems, setSelectedItems] = useState([])
-  
-  const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-
-  useEffect(() => {
+  const [selectedItems, setSelectedItems] = useState([])  useEffect(() => {
     const targetOrderId = orderId || formData.order_id
     if (targetOrderId) {
       loadOrder(targetOrderId)
@@ -87,15 +83,7 @@ export default function GoodsReceiptNew() {
         return
       }
       
-      if (isDemoAccount) {
-        // Mock data
-        setOrder({
-          id: 1,
-          order_no: 'PO-250115-001',
-          supplier_name: '欧姆龙(上海)代理',
-          project_name: 'BMS老化测试设备',
-          status: 'APPROVED',
-        })
+      )
         setOrderItems([
           {
             id: 1,
@@ -228,11 +216,7 @@ export default function GoodsReceiptNew() {
         })),
       }
       
-      if (isDemoAccount) {
-        // Mock creation
-        toast.success('收货单创建成功（演示模式）')
-        navigate('/purchases/receipts')
-      } else {
+       else {
         const res = await purchaseApi.receipts.create(receiptData)
         toast.success('收货单创建成功')
         navigate(`/purchases/receipts/${res.data?.id || res.id}`)
@@ -524,23 +508,11 @@ export default function GoodsReceiptNew() {
 function OrderSelectionForm({ onSelect }) {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
-  const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-
-  useEffect(() => {
+  const [searchQuery, setSearchQuery] = useState('')  useEffect(() => {
     const loadOrders = async () => {
       try {
         setLoading(true)
-        if (isDemoAccount) {
-          setOrders([
-            {
-              id: 1,
-              order_no: 'PO-250115-001',
-              supplier_name: '欧姆龙(上海)代理',
-              project_name: 'BMS老化测试设备',
-              status: 'APPROVED',
-              total_amount: 6102,
-            },
+        ,
             {
               id: 2,
               order_no: 'PO-250115-002',
@@ -566,7 +538,7 @@ function OrderSelectionForm({ onSelect }) {
       }
     }
     loadOrders()
-  }, [isDemoAccount])
+  }, [])
 
   const filteredOrders = orders.filter(order => {
     if (searchQuery) {

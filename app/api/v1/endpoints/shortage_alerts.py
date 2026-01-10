@@ -43,7 +43,7 @@ def read_shortage_alerts(
     status: Optional[str] = Query(None, description="状态筛选"),
     alert_level: Optional[str] = Query(None, description="预警级别筛选"),
     handler_id: Optional[int] = Query(None, description="处理人ID筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:read")),
 ) -> Any:
     """
     获取缺料预警列表（支持分页、筛选）
@@ -113,7 +113,7 @@ def get_shortage_alert_detail(
     *,
     db: Session = Depends(deps.get_db),
     alert_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:read")),
 ) -> Any:
     """
     获取缺料预警详情
@@ -150,7 +150,7 @@ def acknowledge_shortage_alert(
     *,
     db: Session = Depends(deps.get_db),
     alert_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:update")),
 ) -> Any:
     """
     确认缺料预警（PMC确认）
@@ -184,7 +184,7 @@ def update_shortage_alert(
     handler_id: Optional[int] = Body(None, description="处理人ID"),
     alert_level: Optional[str] = Body(None, description="预警级别"),
     remark: Optional[str] = Body(None, description="备注"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:update")),
 ) -> Any:
     """
     更新缺料预警（处理预警）
@@ -263,7 +263,7 @@ def add_shortage_alert_follow_up(
     follow_up_note: str = Body(..., description="跟进内容"),
     follow_up_type: Optional[str] = Body("COMMENT", description="跟进类型：COMMENT/CALL/EMAIL/VISIT"),
     next_follow_up_date: Optional[date] = Body(None, description="下次跟进日期"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:update")),
 ) -> Any:
     """
     添加缺料预警跟进记录
@@ -326,7 +326,7 @@ def get_shortage_alert_follow_ups(
     *,
     db: Session = Depends(deps.get_db),
     alert_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:read")),
 ) -> Any:
     """
     获取缺料预警的跟进记录列表
@@ -371,7 +371,7 @@ def resolve_shortage_alert(
     db: Session = Depends(deps.get_db),
     alert_id: int,
     solution: Optional[str] = Body(None, description="解决方案"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:resolve")),
 ) -> Any:
     """
     解决缺料预警（结案）
@@ -432,7 +432,7 @@ def get_shortage_alerts_statistics(
     *,
     db: Session = Depends(deps.get_db),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:read")),
 ) -> Any:
     """
     获取缺料预警统计（按级别/类型）
@@ -484,7 +484,7 @@ def get_shortage_dashboard(
     *,
     db: Session = Depends(deps.get_db),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:read")),
 ) -> Any:
     """
     缺料看板
@@ -569,7 +569,7 @@ def get_supplier_delivery_analysis(
     supplier_id: Optional[int] = Query(None, description="供应商ID筛选"),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:read")),
 ) -> Any:
     """
     供应商交期分析
@@ -650,7 +650,7 @@ def get_shortage_daily_report(
     *,
     db: Session = Depends(deps.get_db),
     report_date: Optional[date] = Query(None, description="报告日期（默认今天）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:read")),
 ) -> Any:
     """
     缺料日报
@@ -714,7 +714,7 @@ def get_shortage_cause_analysis(
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:read")),
 ) -> Any:
     """
     缺料原因分析
@@ -797,7 +797,7 @@ def read_shortage_reports(
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
     urgent_level: Optional[str] = Query(None, description="紧急程度筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:read")),
 ) -> Any:
     """
     缺料上报列表
@@ -866,7 +866,7 @@ def create_shortage_report(
     *,
     db: Session = Depends(deps.get_db),
     report_in: ShortageReportCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:create")),
 ) -> Any:
     """
     创建缺料上报（车间扫码上报）
@@ -914,7 +914,7 @@ def create_shortage_report(
 def read_shortage_report(
     report_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:read")),
 ) -> Any:
     """
     上报详情
@@ -964,7 +964,7 @@ def confirm_shortage_report(
     *,
     db: Session = Depends(deps.get_db),
     report_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:update")),
 ) -> Any:
     """
     确认上报（仓管确认）
@@ -995,7 +995,7 @@ def handle_shortage_report(
     solution_type: str = Query(..., description="解决方案类型：PURCHASE/SUBSTITUTE/TRANSFER/OTHER"),
     solution_note: Optional[str] = Query(None, description="解决方案说明"),
     handler_id: Optional[int] = Query(None, description="处理人ID"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:update")),
 ) -> Any:
     """
     处理上报
@@ -1024,7 +1024,7 @@ def resolve_shortage_report(
     *,
     db: Session = Depends(deps.get_db),
     report_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:resolve")),
 ) -> Any:
     """
     解决上报
@@ -1075,7 +1075,7 @@ def read_material_arrivals(
     purchase_order_id: Optional[int] = Query(None, description="采购订单ID筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
     is_delayed: Optional[bool] = Query(None, description="是否延迟筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:read")),
 ) -> Any:
     """
     到货跟踪列表
@@ -1146,7 +1146,7 @@ def create_material_arrival(
     expected_qty: Decimal = Query(..., gt=0, description="预期到货数量"),
     expected_date: date = Query(..., description="预期到货日期"),
     supplier_id: Optional[int] = Query(None, description="供应商ID"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:create")),
 ) -> Any:
     """
     创建交付记录（从采购订单或缺料上报创建）
@@ -1201,7 +1201,7 @@ def create_material_arrival(
 def read_material_arrival(
     arrival_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:read")),
 ) -> Any:
     """
     到货跟踪详情
@@ -1247,7 +1247,7 @@ def update_arrival_status(
     db: Session = Depends(deps.get_db),
     arrival_id: int,
     status: str = Query(..., description="状态：PENDING/IN_TRANSIT/DELAYED/RECEIVED/CANCELLED"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:update")),
 ) -> Any:
     """
     更新到货状态
@@ -1278,7 +1278,7 @@ def create_arrival_follow_up(
     db: Session = Depends(deps.get_db),
     arrival_id: int,
     follow_up_in: ArrivalFollowUpCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:update")),
 ) -> Any:
     """
     创建跟催记录
@@ -1312,7 +1312,7 @@ def receive_material_arrival(
     db: Session = Depends(deps.get_db),
     arrival_id: int,
     received_qty: Decimal = Query(..., gt=0, description="实收数量"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:update")),
 ) -> Any:
     """
     确认收货
@@ -1367,7 +1367,7 @@ def read_material_substitutions(
     page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:read")),
 ) -> Any:
     """
     替代申请列表
@@ -1438,7 +1438,7 @@ def create_material_substitution(
     *,
     db: Session = Depends(deps.get_db),
     sub_in: MaterialSubstitutionCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:create")),
 ) -> Any:
     """
     创建替代申请
@@ -1492,7 +1492,7 @@ def create_material_substitution(
 def read_material_substitution(
     sub_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:read")),
 ) -> Any:
     """
     物料替代详情
@@ -1547,7 +1547,7 @@ def tech_approve_substitution(
     db: Session = Depends(deps.get_db),
     sub_id: int,
     approval_note: Optional[str] = Query(None, description="审批意见"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:update")),
 ) -> Any:
     """
     技术审批
@@ -1577,7 +1577,7 @@ def prod_approve_substitution(
     db: Session = Depends(deps.get_db),
     sub_id: int,
     approval_note: Optional[str] = Query(None, description="审批意见"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:update")),
 ) -> Any:
     """
     生产审批
@@ -1611,7 +1611,7 @@ def execute_substitution(
     db: Session = Depends(deps.get_db),
     sub_id: int,
     execution_note: Optional[str] = Query(None, description="执行说明"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:update")),
 ) -> Any:
     """
     执行替代
@@ -1663,7 +1663,7 @@ def read_material_transfers(
     from_project_id: Optional[int] = Query(None, description="调出项目ID筛选"),
     to_project_id: Optional[int] = Query(None, description="调入项目ID筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:read")),
 ) -> Any:
     """
     调拨申请列表
@@ -1733,7 +1733,7 @@ def create_material_transfer(
     *,
     db: Session = Depends(deps.get_db),
     transfer_in: MaterialTransferCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:create")),
 ) -> Any:
     """
     创建调拨申请
@@ -1792,7 +1792,7 @@ def create_material_transfer(
 def read_material_transfer(
     transfer_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:read")),
 ) -> Any:
     """
     物料调拨详情
@@ -1844,7 +1844,7 @@ def approve_material_transfer(
     db: Session = Depends(deps.get_db),
     transfer_id: int,
     approval_note: Optional[str] = Query(None, description="审批意见"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:update")),
 ) -> Any:
     """
     调拨审批
@@ -1875,7 +1875,7 @@ def execute_material_transfer(
     transfer_id: int,
     actual_qty: Optional[Decimal] = Query(None, description="实际调拨数量"),
     execution_note: Optional[str] = Query(None, description="执行说明"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage_alert:update")),
 ) -> Any:
     """
     执行调拨

@@ -94,16 +94,16 @@ class PresaleSupportTicket(Base, TimestampMixin):
     customer_id = Column(Integer, comment='客户ID')
     customer_name = Column(String(100), comment='客户名称')
     opportunity_id = Column(Integer, comment='关联商机ID')
-    project_id = Column(Integer, ForeignKey('project.id'), comment='关联项目ID')
+    project_id = Column(Integer, ForeignKey('projects.id'), comment='关联项目ID')
     
     # 申请人信息
-    applicant_id = Column(Integer, ForeignKey('user.id'), nullable=False, comment='申请人ID(销售)')
+    applicant_id = Column(Integer, ForeignKey('users.id'), nullable=False, comment='申请人ID(销售)')
     applicant_name = Column(String(50), comment='申请人姓名')
     applicant_dept = Column(String(100), comment='申请人部门')
     apply_time = Column(DateTime, default=datetime.now, comment='申请时间')
     
     # 处理人信息
-    assignee_id = Column(Integer, ForeignKey('user.id'), comment='指派处理人ID')
+    assignee_id = Column(Integer, ForeignKey('users.id'), comment='指派处理人ID')
     assignee_name = Column(String(50), comment='处理人姓名')
     accept_time = Column(DateTime, comment='接单时间')
     
@@ -122,7 +122,7 @@ class PresaleSupportTicket(Base, TimestampMixin):
     satisfaction_score = Column(Integer, comment='满意度评分(1-5)')
     feedback = Column(Text, comment='反馈意见')
     
-    created_by = Column(Integer, ForeignKey('user.id'), comment='创建人ID')
+    created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
     
     # 关系
     deliverables = relationship('PresaleTicketDeliverable', back_populates='ticket')
@@ -158,11 +158,11 @@ class PresaleTicketDeliverable(Base, TimestampMixin):
     status = Column(String(20), default='DRAFT', comment='状态')
     
     # 审核信息
-    reviewer_id = Column(Integer, ForeignKey('user.id'), comment='审核人ID')
+    reviewer_id = Column(Integer, ForeignKey('users.id'), comment='审核人ID')
     review_time = Column(DateTime, comment='审核时间')
     review_comment = Column(Text, comment='审核意见')
     
-    created_by = Column(Integer, ForeignKey('user.id'), comment='创建人ID')
+    created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
     
     # 关系
     ticket = relationship('PresaleSupportTicket', back_populates='deliverables')
@@ -188,7 +188,7 @@ class PresaleTicketProgress(Base):
     progress_percent = Column(Integer, comment='进度百分比')
     
     # 操作人
-    operator_id = Column(Integer, ForeignKey('user.id'), nullable=False, comment='操作人ID')
+    operator_id = Column(Integer, ForeignKey('users.id'), nullable=False, comment='操作人ID')
     operator_name = Column(String(50), comment='操作人')
     
     created_at = Column(DateTime, default=datetime.now, comment='创建时间')
@@ -244,13 +244,13 @@ class PresaleSolution(Base, TimestampMixin):
     parent_id = Column(Integer, ForeignKey('presale_solution.id'), comment='父版本ID')
     
     # 审核
-    reviewer_id = Column(Integer, ForeignKey('user.id'), comment='审核人')
+    reviewer_id = Column(Integer, ForeignKey('users.id'), comment='审核人')
     review_time = Column(DateTime, comment='审核时间')
     review_status = Column(String(20), comment='审核状态:PENDING/APPROVED/REJECTED')
     review_comment = Column(Text, comment='审核意见')
     
     # 编制人
-    author_id = Column(Integer, ForeignKey('user.id'), nullable=False, comment='编制人ID')
+    author_id = Column(Integer, ForeignKey('users.id'), nullable=False, comment='编制人ID')
     author_name = Column(String(50), comment='编制人姓名')
     
     # 关系
@@ -327,7 +327,7 @@ class PresaleSolutionTemplate(Base, TimestampMixin):
     # 状态
     is_active = Column(Boolean, default=True, comment='是否启用')
     
-    created_by = Column(Integer, ForeignKey('user.id'), comment='创建人ID')
+    created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
     
     __table_args__ = (
         Index('idx_template_no', 'template_no'),
@@ -343,7 +343,7 @@ class PresaleWorkload(Base, TimestampMixin):
     __tablename__ = 'presale_workload'
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
-    user_id = Column(Integer, ForeignKey('user.id'), nullable=False, comment='人员ID')
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, comment='人员ID')
     stat_date = Column(Date, nullable=False, comment='统计日期')
     
     # 工单统计
@@ -442,7 +442,7 @@ class PresaleTenderRecord(Base, TimestampMixin):
     result_reason = Column(Text, comment='中标/落标原因分析')
     
     # 负责人
-    leader_id = Column(Integer, ForeignKey('user.id'), comment='投标负责人')
+    leader_id = Column(Integer, ForeignKey('users.id'), comment='投标负责人')
     team_members = Column(JSON, comment='投标团队')
     
     __table_args__ = (
@@ -450,4 +450,3 @@ class PresaleTenderRecord(Base, TimestampMixin):
         Index('idx_tender_result', 'result'),
         {'comment': '投标记录表'}
     )
-

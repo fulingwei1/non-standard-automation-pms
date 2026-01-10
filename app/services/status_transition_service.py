@@ -84,14 +84,23 @@ class StatusTransitionService:
         customer = self.db.query(Customer).filter(Customer.id == contract.customer_id).first()
         
         # 创建项目
+        fallback_name = getattr(contract, "contract_name", None)
+        if not fallback_name:
+            if customer and getattr(customer, "customer_name", None):
+                fallback_name = f"{customer.customer_name}项目"
+            else:
+                fallback_name = f"项目-{contract.contract_code}"
+
+        planned_end_date = getattr(contract, "delivery_deadline", None)
+
         project = Project(
             project_code=project_code,
-            project_name=contract.contract_name or f"项目-{contract.contract_code}",
+            project_name=fallback_name,
             customer_id=contract.customer_id,
             contract_no=contract.contract_code,
             contract_amount=contract.contract_amount or 0,
             contract_date=contract.signed_date,
-            planned_end_date=contract.delivery_deadline,
+            planned_end_date=planned_end_date,
             stage="S3",
             status="ST08",
             health="H1",
@@ -534,6 +543,15 @@ class StatusTransitionService:
         Returns:
             dict: 检查结果，包含是否可推进、目标阶段、缺失项等
         """
+        from app.services.stage_transition_checks import (
+            check_s3_to_s4_transition,
+            check_s4_to_s5_transition,
+            check_s5_to_s6_transition,
+            check_s7_to_s8_transition,
+            check_s8_to_s9_transition,
+            execute_stage_transition
+        )
+        
         project = self.db.query(Project).filter(Project.id == project_id).first()
         if not project:
             return {
@@ -550,171 +568,51 @@ class StatusTransitionService:
         missing_items = []
         transition_reason = ""
         
-        # S3→S4: 合同签订后自动推进
+        # 根据当前阶段检查流转条件
         if current_stage == "S3":
-            if project.contract_no and project.contract_date and project.contract_amount:
-                # 检查合同状态
-                from app.models.sales import Contract
-                contract = self.db.query(Contract).filter(Contract.contract_code == project.contract_no).first()
-                if contract and contract.status == "SIGNED":
-                    can_advance = True
-                    target_stage = "S4"
-                    transition_reason = "合同已签订，自动推进至方案设计阶段"
-                else:
-                    missing_items.append("合同未签订（请完成合同签订流程）")
-            else:
-                missing_items.append("合同信息不完整（请填写合同编号、签订日期和金额）")
+            can_advance, target_stage, missing_items = check_s3_to_s4_transition(self.db, project)
+            if can_advance:
+                transition_reason = "合同已签订，自动推进至方案设计阶段"
         
-        # S4→S5: BOM发布后自动推进
         elif current_stage == "S4":
-            from app.models.material import BomHeader
-            released_boms = self.db.query(BomHeader).filter(
-                BomHeader.project_id == project_id,
-                BomHeader.status == "RELEASED"
-            ).count()
-            
-            if released_boms > 0:
-                can_advance = True
-                target_stage = "S5"
+            can_advance, target_stage, missing_items = check_s4_to_s5_transition(self.db, project_id)
+            if can_advance:
                 transition_reason = "BOM已发布，自动推进至采购制造阶段"
-            else:
-                missing_items.append("BOM未发布（请发布至少一个BOM）")
         
-        # S5→S6: 物料齐套率≥80%时提示可推进
         elif current_stage == "S5":
-            from app.api.v1.endpoints.projects import check_gate_s5_to_s6
-            gate_passed, gate_missing = check_gate_s5_to_s6(self.db, project)
-            
-            if gate_passed:
-                can_advance = True
-                target_stage = "S6"
+            can_advance, target_stage, missing_items = check_s5_to_s6_transition(self.db, project)
+            if can_advance:
                 transition_reason = "物料齐套率≥80%，可推进至装配联调阶段"
-            else:
-                missing_items = gate_missing
         
-        # S7→S8: FAT验收通过后自动推进
         elif current_stage == "S7":
-            from app.models.acceptance import AcceptanceOrder
-            fat_orders = self.db.query(AcceptanceOrder).filter(
-                AcceptanceOrder.project_id == project_id,
-                AcceptanceOrder.acceptance_type == "FAT",
-                AcceptanceOrder.status == "COMPLETED",
-                AcceptanceOrder.overall_result == "PASSED"
-            ).count()
-            
-            if fat_orders > 0:
-                can_advance = True
-                target_stage = "S8"
+            can_advance, target_stage, missing_items = check_s7_to_s8_transition(self.db, project_id)
+            if can_advance:
                 transition_reason = "FAT验收已通过，自动推进至现场交付阶段"
-            else:
-                missing_items.append("FAT验收未通过（请完成FAT验收流程）")
         
-        # S8→S9: 终验收通过且回款达标后提示可推进
         elif current_stage == "S8":
-            from app.models.acceptance import AcceptanceOrder
-            from app.models.project import ProjectPaymentPlan
-            
-            # 检查终验收
-            final_orders = self.db.query(AcceptanceOrder).filter(
-                AcceptanceOrder.project_id == project_id,
-                AcceptanceOrder.acceptance_type.in_(["FINAL", "SAT"]),
-                AcceptanceOrder.status == "COMPLETED",
-                AcceptanceOrder.overall_result == "PASSED"
-            ).count()
-            
-            if final_orders > 0:
-                # 检查回款达标
-                payment_plans = self.db.query(ProjectPaymentPlan).filter(
-                    ProjectPaymentPlan.project_id == project_id
-                ).all()
-                
-                if payment_plans:
-                    total_paid = sum(float(plan.actual_amount or 0) for plan in payment_plans if plan.status == "PAID")
-                    total_planned = sum(float(plan.planned_amount or 0) for plan in payment_plans)
-                    contract_amount = float(project.contract_amount or 0)
-                    base_amount = max(contract_amount, total_planned) if total_planned > 0 else contract_amount
-                    
-                    if base_amount > 0:
-                        payment_rate = (total_paid / base_amount) * 100
-                        if payment_rate >= 80:
-                            can_advance = True
-                            target_stage = "S9"
-                            transition_reason = "终验收已通过且回款达标，可推进至质保结项阶段"
-                        else:
-                            missing_items.append(f"回款率 {payment_rate:.1f}%，需≥80%")
-                    else:
-                        missing_items.append("合同金额未设置")
-                else:
-                    missing_items.append("收款计划未设置")
-            else:
-                missing_items.append("终验收未通过（请完成终验收流程）")
+            can_advance, target_stage, missing_items = check_s8_to_s9_transition(self.db, project)
+            if can_advance:
+                transition_reason = "终验收已通过且回款达标，可推进至质保结项阶段"
         
         # 如果满足自动推进条件且auto_advance=True，执行自动推进
         if can_advance and auto_advance and target_stage:
-            try:
-                from app.api.v1.endpoints.projects import check_gate
-                gate_passed, gate_missing = check_gate(self.db, project, target_stage)
+            success, result = execute_stage_transition(self.db, project, target_stage, transition_reason)
+            
+            if success:
+                # 记录状态变更
+                self._log_status_change(
+                    project_id,
+                    old_stage=result["current_stage"],
+                    new_stage=target_stage,
+                    old_status=project.status,
+                    new_status=project.status,
+                    change_type="AUTO_STAGE_TRANSITION",
+                    change_reason=transition_reason
+                )
                 
-                if gate_passed:
-                    old_stage = project.stage
-                    project.stage = target_stage
-                    
-                    # 更新状态
-                    stage_status_map = {
-                        'S4': 'ST09',
-                        'S5': 'ST12',
-                        'S6': 'ST16',
-                        'S8': 'ST23',
-                        'S9': 'ST30',
-                    }
-                    if target_stage in stage_status_map:
-                        project.status = stage_status_map[target_stage]
-                    
-                    # 记录状态变更
-                    self._log_status_change(
-                        project_id,
-                        old_stage=old_stage,
-                        new_stage=target_stage,
-                        old_status=project.status,
-                        new_status=project.status,
-                        change_type="AUTO_STAGE_TRANSITION",
-                        change_reason=transition_reason
-                    )
-                    
-                    self.db.commit()
-                    
-                    return {
-                        "can_advance": True,
-                        "auto_advanced": True,
-                        "message": f"已自动推进至 {target_stage} 阶段",
-                        "current_stage": old_stage,
-                        "target_stage": target_stage,
-                        "missing_items": [],
-                        "transition_reason": transition_reason
-                    }
-                else:
-                    # 门校验未通过，返回缺失项
-                    return {
-                        "can_advance": False,
-                        "auto_advanced": False,
-                        "message": "阶段门校验未通过",
-                        "current_stage": current_stage,
-                        "target_stage": target_stage,
-                        "missing_items": gate_missing,
-                        "transition_reason": transition_reason
-                    }
-            except Exception as e:
-                import logging
-                logger = logging.getLogger(__name__)
-                logger.error(f"自动推进阶段失败：{str(e)}", exc_info=True)
-                return {
-                    "can_advance": can_advance,
-                    "auto_advanced": False,
-                    "message": f"自动推进失败：{str(e)}",
-                    "current_stage": current_stage,
-                    "target_stage": target_stage,
-                    "missing_items": missing_items
-                }
+                self.db.commit()
+            
+            return result
         
         return {
             "can_advance": can_advance,

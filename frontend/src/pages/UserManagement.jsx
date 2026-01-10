@@ -352,13 +352,40 @@ export default function UserManagement() {
   };
 
   // 重置密码
-  const handleResetPassword = async (userId, username) => {
-    if (!window.confirm(`确定要重置用户 ${username} 的密码吗？密码将重置为初始密码。`)) {
+  const handleResetPassword = async (userId, username, isSuperuser = false) => {
+    let confirmMessage = `确定要重置用户 ${username} 的密码吗？密码将重置为初始密码。`;
+    
+    if (isSuperuser) {
+      confirmMessage = `⚠️ 警告：您正在重置超级管理员 ${username} 的密码！\n\n` +
+        `此操作将重置超级管理员的密码为初始密码。\n` +
+        `请确保您有权限执行此操作，并妥善保管新密码。\n\n` +
+        `确定要继续吗？`;
+    }
+    
+    if (!window.confirm(confirmMessage)) {
       return;
     }
+    
+    // 超级管理员需要二次确认
+    if (isSuperuser) {
+      const secondConfirm = window.confirm(
+        `最后确认：您确定要重置超级管理员 ${username} 的密码吗？\n\n` +
+        `此操作不可撤销，请确保您有权限执行此操作。`
+      );
+      if (!secondConfirm) {
+        return;
+      }
+    }
+    
     try {
       const response = await userApi.resetPassword(userId);
-      alert(`密码已重置为: ${response.data.data.new_password}`);
+      const newPassword = response.data.data.new_password;
+      alert(
+        `密码重置成功！\n\n` +
+        `用户名: ${username}\n` +
+        `新密码: ${newPassword}\n\n` +
+        `请妥善保管新密码，并通知用户及时修改。`
+      );
     } catch (error) {
       alert('重置密码失败: ' + (error.response?.data?.detail || error.message));
     }
@@ -610,9 +637,9 @@ export default function UserManagement() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleResetPassword(user.id, user.username)}
-                                title="重置密码"
-                                disabled={user.is_superuser}
+                                onClick={() => handleResetPassword(user.id, user.username, user.is_superuser)}
+                                title={user.is_superuser ? "重置密码（超级管理员）" : "重置密码"}
+                                className={user.is_superuser ? "text-yellow-500 hover:text-yellow-400" : ""}
                               >
                                 <Key className="h-4 w-4" />
                               </Button>

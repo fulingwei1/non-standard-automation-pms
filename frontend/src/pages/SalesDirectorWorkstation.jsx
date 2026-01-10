@@ -236,19 +236,8 @@ export default function SalesDirectorWorkstation() {
       }
       const monthLabel = `${range.start.getFullYear()}-${String(range.start.getMonth() + 1).padStart(2, '0')}`
 
-      const [
-        monthlySummaryRes,
-        yearlySummaryRes,
-        funnelRes,
-        teamRes,
-        approvalsRes,
-        customersRes,
-        paymentStatsRes,
-        opportunitiesRes,
-        invoicesRes,
-        monthTargetsRes,
-        yearTargetsRes,
-      ] = await Promise.all([
+      // 使用 Promise.allSettled 来捕获所有API调用的结果，包括失败的
+      const results = await Promise.allSettled([
         salesStatisticsApi.summary(rangeParams),
         salesStatisticsApi.summary(yearParams),
         salesStatisticsApi.funnel(rangeParams),
@@ -271,6 +260,55 @@ export default function SalesDirectorWorkstation() {
           page_size: 1,
         }),
       ])
+
+      // 检查是否有失败的请求
+      const failedRequests = results
+        .map((result, index) => ({ result, index }))
+        .filter(({ result }) => result.status === 'rejected')
+      
+      if (failedRequests.length > 0) {
+        // 记录所有失败的请求
+        console.error('Failed API requests:', failedRequests.map(f => ({
+          index: f.index,
+          error: f.result.reason?.response?.data || f.result.reason?.message || f.result.reason
+        })))
+        
+        // 找到第一个失败的请求并抛出错误
+        const firstFailed = failedRequests[0]
+        const apiNames = [
+          'salesStatisticsApi.summary (monthly)',
+          'salesStatisticsApi.summary (yearly)',
+          'salesStatisticsApi.funnel',
+          'salesTeamApi.getTeam',
+          'contractApi.list',
+          'salesReportApi.customerContribution',
+          'paymentApi.getStatistics',
+          'opportunityApi.list',
+          'invoiceApi.list',
+          'salesTargetApi.list (monthly)',
+          'salesTargetApi.list (yearly)',
+        ]
+        const error = firstFailed.result.reason
+        error.apiName = apiNames[firstFailed.index]
+        error.apiIndex = firstFailed.index
+        console.error(`First failed API: ${error.apiName} (index: ${firstFailed.index})`, error)
+        throw error
+      }
+
+      // 提取成功的结果
+      const [
+        monthlySummaryRes,
+        yearlySummaryRes,
+        funnelRes,
+        teamRes,
+        approvalsRes,
+        customersRes,
+        paymentStatsRes,
+        opportunitiesRes,
+        invoicesRes,
+        monthTargetsRes,
+        yearTargetsRes,
+      ] = results.map(r => r.value)
 
       const extractData = (res) => res?.data?.data || res?.data || res || {}
       const summaryMonth = extractData(monthlySummaryRes)
@@ -357,6 +395,15 @@ export default function SalesDirectorWorkstation() {
       })
     } catch (err) {
       console.error('Failed to load sales director data:', err)
+      console.error('Error details:', {
+        message: err?.message,
+        response: err?.response?.data,
+        status: err?.response?.status,
+        apiName: err?.apiName,
+        apiIndex: err?.apiIndex,
+        url: err?.config?.url,
+      })
+      
       // 提取错误信息字符串，避免直接传递对象给 React 渲染
       const errorMsg = err?.response?.data?.detail
       let errorStr = '加载数据失败'
@@ -367,7 +414,16 @@ export default function SalesDirectorWorkstation() {
       } else if (err?.message) {
         errorStr = err.message
       }
-      setError({ message: errorStr, originalError: err })
+      // 添加API名称信息
+      if (err?.apiName) {
+        errorStr = `[${err.apiName}] ${errorStr}`
+      }
+      setError({ 
+        message: errorStr, 
+        originalError: err, 
+        apiName: err?.apiName || err?.config?.url,
+        apiIndex: err?.apiIndex 
+      })
       setOverallStats(null)
       setTeamPerformance([])
       setPendingApprovals([])
@@ -399,7 +455,15 @@ export default function SalesDirectorWorkstation() {
         <PageHeader title="销售总监工作台" description="销售战略总览、团队绩效监控" />
         <ApiIntegrationError
           error={error}
-          apiEndpoint="/api/v1/sales/statistics/summary"
+          apiEndpoint={error?.apiName ? 
+            (error.apiName.includes('summary') ? '/api/v1/sales/statistics/summary' :
+             error.apiName.includes('funnel') ? '/api/v1/sales/statistics/funnel' :
+             error.apiName.includes('getTeam') ? '/api/v1/sales/team' :
+             error.apiName.includes('customerContribution') ? '/api/v1/sales/reports/customer-contribution' :
+             error.apiName.includes('getStatistics') ? '/api/v1/sales/payments/statistics' :
+             error.apiName.includes('list') && error.apiName.includes('Target') ? '/api/v1/sales/targets' :
+             error?.originalError?.config?.url || "/api/v1/sales/statistics/summary") :
+            (error?.originalError?.config?.url || "/api/v1/sales/statistics/summary")}
           onRetry={loadDashboard}
         />
       </div>

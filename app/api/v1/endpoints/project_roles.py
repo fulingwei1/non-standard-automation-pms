@@ -15,10 +15,12 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, and_, or_
 
 from app.api import deps
+from app.core import security
 from app.models import (
     ProjectRoleType, ProjectRoleConfig, ProjectMember,
-    Project, User
+    Project
 )
+from app.models.user import User
 from app.schemas.project_role import (
     ProjectRoleTypeCreate, ProjectRoleTypeUpdate, ProjectRoleTypeResponse, ProjectRoleTypeListResponse,
     ProjectRoleConfigCreate, ProjectRoleConfigUpdate, ProjectRoleConfigBatchUpdate,
@@ -41,7 +43,8 @@ router = APIRouter()
 async def get_role_types(
     category: Optional[str] = Query(None, description="角色分类筛选"),
     active_only: bool = Query(True, description="仅显示启用的角色"),
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("project_role:read"))
 ):
     """获取所有项目角色类型"""
     query = db.query(ProjectRoleType)
@@ -63,7 +66,7 @@ async def get_role_types(
 async def create_role_type(
     data: ProjectRoleTypeCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("project_role:create"))
 ):
     """创建新的项目角色类型（需要管理员权限）"""
     # 检查编码是否重复
@@ -84,7 +87,8 @@ async def create_role_type(
 @router.get("/types/{role_type_id}", response_model=ProjectRoleTypeResponse, summary="获取角色类型详情")
 async def get_role_type(
     role_type_id: int,
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("project_role:read"))
 ):
     """获取单个角色类型详情"""
     role_type = db.query(ProjectRoleType).filter(ProjectRoleType.id == role_type_id).first()
@@ -98,7 +102,7 @@ async def update_role_type(
     role_type_id: int,
     data: ProjectRoleTypeUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("project_role:update"))
 ):
     """更新项目角色类型"""
     role_type = db.query(ProjectRoleType).filter(ProjectRoleType.id == role_type_id).first()
@@ -119,7 +123,7 @@ async def update_role_type(
 async def delete_role_type(
     role_type_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("project_role:delete"))
 ):
     """删除项目角色类型（软删除，设置 is_active=False）"""
     role_type = db.query(ProjectRoleType).filter(ProjectRoleType.id == role_type_id).first()
@@ -151,7 +155,8 @@ async def delete_role_type(
 @router.get("/projects/{project_id}/role-configs", response_model=ProjectRoleConfigListResponse, summary="获取项目角色配置")
 async def get_project_role_configs(
     project_id: int,
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("project_role:read"))
 ):
     """获取项目的角色配置列表"""
     # 检查项目是否存在
@@ -176,7 +181,7 @@ async def get_project_role_configs(
 async def init_project_role_configs(
     project_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("project_role:create"))
 ):
     """从系统默认配置初始化项目角色配置"""
     # 检查项目是否存在
@@ -226,7 +231,7 @@ async def update_project_role_configs(
     project_id: int,
     data: ProjectRoleConfigBatchUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("project_role:update"))
 ):
     """批量更新项目角色配置"""
     # 检查项目是否存在
@@ -281,7 +286,8 @@ async def update_project_role_configs(
 async def get_project_leads(
     project_id: int,
     include_team: bool = Query(False, description="是否包含团队成员"),
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("project_role:read"))
 ):
     """获取项目所有负责人"""
     # 检查项目是否存在
@@ -338,7 +344,7 @@ async def create_project_lead(
     project_id: int,
     data: ProjectLeadCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("project_role:assign"))
 ):
     """为项目指定负责人"""
     # 检查项目是否存在
@@ -418,7 +424,7 @@ async def update_project_lead(
     member_id: int,
     data: ProjectLeadUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("project_role:update"))
 ):
     """更新项目负责人信息"""
     lead = db.query(ProjectMember).filter(
@@ -468,7 +474,7 @@ async def remove_project_lead(
     project_id: int,
     member_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("project_role:update"))
 ):
     """移除项目负责人"""
     lead = db.query(ProjectMember).filter(
@@ -507,7 +513,8 @@ async def remove_project_lead(
 async def get_team_members(
     project_id: int,
     member_id: int,
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("project_role:read"))
 ):
     """获取负责人的团队成员列表"""
     # 检查负责人是否存在
@@ -558,7 +565,7 @@ async def add_team_member(
     member_id: int,
     data: TeamMemberCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("project_role:assign"))
 ):
     """为负责人添加团队成员"""
     # 检查负责人是否存在
@@ -634,7 +641,7 @@ async def remove_team_member(
     lead_id: int,
     member_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("project_role:update"))
 ):
     """从团队中移除成员"""
     member = db.query(ProjectMember).filter(
@@ -661,7 +668,8 @@ async def remove_team_member(
 @router.get("/projects/{project_id}/role-overview", response_model=List[ProjectRoleOverviewResponse], summary="获取项目角色概览")
 async def get_project_role_overview(
     project_id: int,
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("project_role:read"))
 ):
     """获取项目角色概览（包含角色类型、配置、负责人信息）"""
     # 检查项目是否存在

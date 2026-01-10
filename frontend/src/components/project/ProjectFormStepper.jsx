@@ -8,8 +8,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Card,
-  CardContent,
   Button,
   Input,
   FormField,
@@ -29,8 +27,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Check,
-  Info,
-  Sparkles,
   Building2,
   DollarSign,
   Calendar,
@@ -42,6 +38,10 @@ import {
 import { cn } from '../../lib/utils'
 import { projectApi, customerApi, orgApi } from '../../services/api'
 import { toast } from '../ui/toast'
+import { BasicInfoStep } from './steps/BasicInfoStep'
+import { CustomerInfoStep } from './steps/CustomerInfoStep'
+import { FinanceInfoStep } from './steps/FinanceInfoStep'
+import { ScheduleInfoStep } from './steps/ScheduleInfoStep'
 
 // 步骤配置
 const STEPS = [
@@ -71,12 +71,7 @@ const STEPS = [
   },
 ]
 
-// 项目类型选项
-const PROJECT_TYPES = [
-  { value: 'FIXED_PRICE', label: '固定价格' },
-  { value: 'TIME_MATERIAL', label: '工时材料' },
-  { value: 'COST_PLUS', label: '成本加成' },
-]
+// 项目类型选项已移至 BasicInfoStep 组件
 
 export default function ProjectFormStepper({
   open,
@@ -344,424 +339,49 @@ export default function ProjectFormStepper({
     switch (step.id) {
       case 'basic':
         return (
-          <div className="space-y-4">
-            {/* 模板推荐 */}
-            {recommendedTemplates.length > 0 && currentStep === 0 && (
-              <Card className="bg-gradient-to-r from-violet-500/10 to-indigo-500/10 border-violet-500/20">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className="h-4 w-4 text-violet-400" />
-                    <span className="text-sm font-medium text-violet-300">推荐模板</span>
-                  </div>
-                  <div className="space-y-2">
-                    {recommendedTemplates.slice(0, 3).map((template) => (
-                      <div
-                        key={template.template_id}
-                        className="flex items-center justify-between p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
-                        onClick={() => handleApplyTemplate(template)}
-                      >
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-white">
-                            {template.template_name}
-                          </div>
-                          <div className="text-xs text-slate-400 mt-1">
-                            {template.reasons.join('、')}
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleApplyTemplate(template)
-                          }}
-                        >
-                          应用
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">
-                项目编码 <span className="text-red-400">*</span>
-              </label>
-              <div className="relative">
-                <Input
-                  value={formData.project_code}
-                  onChange={(e) => {
-                    setFormData({ ...formData, project_code: e.target.value })
-                    setCodeError('')
-                  }}
-                  onBlur={handleCodeBlur}
-                  placeholder="例如: PJ260104001"
-                  disabled={!!initialData.id}
-                  error={codeError}
-                />
-                {validatingCode && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-slate-400" />
-                )}
-              </div>
-              {codeError && (
-                <p className="text-xs text-red-400">{codeError}</p>
-              )}
-              {!initialData.id && !codeError && (
-                <p className="text-xs text-slate-500">
-                  格式：PJ + 年月日(YYMMDD) + 序号(3位)
-                </p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">
-                项目名称 <span className="text-red-400">*</span>
-              </label>
-              <Input
-                value={formData.project_name}
-                onChange={(e) =>
-                  setFormData({ ...formData, project_name: e.target.value })
-                }
-                placeholder="请输入项目全称"
-                required
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">项目简称</label>
-                <Input
-                  value={formData.short_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, short_name: e.target.value })
-                  }
-                  placeholder="项目简称（可选）"
-                />
-              </div>
-              
-              <FormSelect
-                label="项目类型"
-                name="project_type"
-                value={formData.project_type}
-                onChange={(e) =>
-                  setFormData({ ...formData, project_type: e.target.value })
-                }
-                required
-              >
-                <option value="">选择项目类型</option>
-                {PROJECT_TYPES.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </FormSelect>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">产品类别</label>
-                <Input
-                  value={formData.product_category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, product_category: e.target.value })
-                  }
-                  placeholder="例如: ICT测试设备"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">行业</label>
-                <Input
-                  value={formData.industry}
-                  onChange={(e) =>
-                    setFormData({ ...formData, industry: e.target.value })
-                  }
-                  placeholder="例如: 消费电子"
-                />
-              </div>
-            </div>
-            
-            <FormTextarea
-              label="项目描述"
-              name="description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="请输入项目描述（可选）"
-              rows={3}
-            />
-          </div>
+          <BasicInfoStep
+            formData={formData}
+            setFormData={setFormData}
+            recommendedTemplates={recommendedTemplates}
+            currentStep={currentStep}
+            initialData={initialData}
+            validatingCode={validatingCode}
+            codeError={codeError}
+            onCodeBlur={handleCodeBlur}
+            onApplyTemplate={handleApplyTemplate}
+          />
         )
         
       case 'customer':
         return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">
-                客户 <span className="text-red-400">*</span>
-              </label>
-              <div className="space-y-2">
-                <Input
-                  value={customerSearch}
-                  onChange={(e) => setCustomerSearch(e.target.value)}
-                  placeholder="搜索客户名称或编码"
-                  icon={Building2}
-                />
-                {customerSearch && (
-                  <div className="max-h-48 overflow-y-auto border border-white/10 rounded-lg bg-slate-900/50">
-                    {filteredCustomers.length > 0 ? (
-                      filteredCustomers.map((customer) => (
-                        <div
-                          key={customer.id}
-                          className="p-3 hover:bg-white/5 cursor-pointer border-b border-white/5 last:border-0"
-                          onClick={() => handleCustomerSelect(customer.id)}
-                        >
-                          <div className="font-medium text-white">
-                            {customer.customer_name}
-                          </div>
-                          <div className="text-xs text-slate-400 mt-1">
-                            {customer.customer_code}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-3 text-sm text-slate-400 text-center">
-                        未找到匹配的客户
-                      </div>
-                    )}
-                  </div>
-                )}
-                {selectedCustomer && (
-                  <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium text-white">
-                          {selectedCustomer.customer_name}
-                        </div>
-                        <div className="text-xs text-slate-400 mt-1">
-                          {selectedCustomer.customer_code}
-                        </div>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setSelectedCustomer(null)
-                          setFormData((prev) => ({
-                            ...prev,
-                            customer_id: '',
-                            customer_name: '',
-                            customer_contact: '',
-                            customer_phone: '',
-                          }))
-                        }}
-                      >
-                        清除
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">联系人</label>
-                <Input
-                  value={formData.customer_contact}
-                  onChange={(e) =>
-                    setFormData({ ...formData, customer_contact: e.target.value })
-                  }
-                  placeholder="客户联系人"
-                  disabled={!selectedCustomer}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">联系电话</label>
-                <Input
-                  value={formData.customer_phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, customer_phone: e.target.value })
-                  }
-                  placeholder="客户联系电话"
-                  disabled={!selectedCustomer}
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">合同编号</label>
-              <Input
-                value={formData.contract_no}
-                onChange={(e) =>
-                  setFormData({ ...formData, contract_no: e.target.value })
-                }
-                placeholder="合同编号（可选）"
-              />
-            </div>
-          </div>
+          <CustomerInfoStep
+            formData={formData}
+            setFormData={setFormData}
+            customerSearch={customerSearch}
+            setCustomerSearch={setCustomerSearch}
+            filteredCustomers={filteredCustomers}
+            selectedCustomer={selectedCustomer}
+            setSelectedCustomer={setSelectedCustomer}
+            onCustomerSelect={handleCustomerSelect}
+          />
         )
         
       case 'finance':
         return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">合同金额 (CNY)</label>
-                <Input
-                  type="number"
-                  value={formData.contract_amount}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      contract_amount: parseFloat(e.target.value) || 0,
-                    })
-                  }
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">预算金额 (CNY)</label>
-                <Input
-                  type="number"
-                  value={formData.budget_amount}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      budget_amount: parseFloat(e.target.value) || 0,
-                    })
-                  }
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">合同日期</label>
-              <Input
-                type="date"
-                value={formData.contract_date}
-                onChange={(e) =>
-                  setFormData({ ...formData, contract_date: e.target.value })
-                }
-              />
-            </div>
-            
-            <FormSelect
-              label="项目经理 (PM)"
-              name="pm_id"
-              value={formData.pm_id}
-              onChange={(e) => {
-                const pmId = e.target.value
-                const pm = employees.find((e) => e.id === parseInt(pmId))
-                setFormData({
-                  ...formData,
-                  pm_id: pmId,
-                  pm_name: pm ? pm.name || pm.real_name : '',
-                })
-              }}
-            >
-              <option value="">选择项目经理（可选）</option>
-              {employees.map((emp) => {
-                const projectCount = pmStats[emp.id] || 0
-                return (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name || emp.real_name} ({emp.employee_code})
-                    {projectCount > 0 && ` - ${projectCount}个项目`}
-                  </option>
-                )
-              })}
-            </FormSelect>
-            
-            {formData.pm_id && (
-              <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-sm text-blue-300">
-                    <Info className="h-4 w-4" />
-                    <span>项目经理信息将自动填充</span>
-                  </div>
-                  {pmStats[formData.pm_id] !== undefined && (
-                    <div className="text-xs text-blue-200/80 ml-6">
-                      当前负责项目数: {pmStats[formData.pm_id]} 个
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          <FinanceInfoStep
+            formData={formData}
+            setFormData={setFormData}
+            employees={employees}
+            pmStats={pmStats}
+          />
         )
         
       case 'schedule':
         return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">计划开始日期</label>
-                <Input
-                  type="date"
-                  value={formData.planned_start_date}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      planned_start_date: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">计划结束日期</label>
-                <Input
-                  type="date"
-                  value={formData.planned_end_date}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      planned_end_date: e.target.value,
-                    })
-                  }
-                  min={formData.planned_start_date}
-                />
-              </div>
-            </div>
-            
-            {formData.planned_start_date && formData.planned_end_date && (
-              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                <div className="flex items-center gap-2 text-sm text-amber-300">
-                  <Calendar className="h-4 w-4" />
-                  <span>
-                    项目周期：
-                    {Math.ceil(
-                      (new Date(formData.planned_end_date) -
-                        new Date(formData.planned_start_date)) /
-                        (1000 * 60 * 60 * 24)
-                    )}{' '}
-                    天
-                  </span>
-                </div>
-              </div>
-            )}
-            
-            <FormTextarea
-              label="项目需求摘要"
-              name="requirements"
-              value={formData.requirements}
-              onChange={(e) =>
-                setFormData({ ...formData, requirements: e.target.value })
-              }
-              placeholder="请输入项目需求摘要（可选）"
-              rows={4}
-            />
-          </div>
+          <ScheduleInfoStep
+            formData={formData}
+            setFormData={setFormData}
+          />
         )
         
       default:

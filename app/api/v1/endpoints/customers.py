@@ -39,7 +39,7 @@ def read_customers(
     keyword: Optional[str] = Query(None, description="关键词搜索（客户名称/编码）"),
     industry: Optional[str] = Query(None, description="行业筛选"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("customer:read")),
 ) -> Any:
     """
     获取客户列表（支持分页、搜索、筛选）
@@ -84,7 +84,7 @@ def create_customer(
     *,
     db: Session = Depends(deps.get_db),
     customer_in: CustomerCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("customer:create")),
 ) -> Any:
     """
     创建新客户
@@ -113,6 +113,7 @@ def read_customer(
     *,
     db: Session = Depends(deps.get_db),
     customer_id: int,
+    current_user: User = Depends(security.require_permission("customer:read")),
 ) -> Any:
     """
     Get customer by ID.
@@ -129,7 +130,7 @@ def update_customer(
     db: Session = Depends(deps.get_db),
     customer_id: int,
     customer_in: CustomerUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("customer:update")),
 ) -> Any:
     """
     更新客户信息
@@ -153,7 +154,7 @@ def delete_customer(
     *,
     db: Session = Depends(deps.get_db),
     customer_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("customer:delete")),
 ) -> Any:
     """
     删除客户（软删除）
@@ -185,7 +186,7 @@ def get_customer_projects(
     customer_id: int,
     page: int = Query(1, ge=1),
     page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("customer:read")),
 ) -> Any:
     """
     获取客户的项目列表
@@ -213,7 +214,7 @@ def get_customer_360_overview(
     *,
     db: Session = Depends(deps.get_db),
     customer_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("customer:read")),
 ) -> Any:
     """
     获取客户360视图信息

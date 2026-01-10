@@ -100,7 +100,7 @@ def generate_archive_no(db: Session) -> str:
 @router.get("/dashboard", response_model=ResponseModel[BusinessSupportDashboardResponse], summary="获取商务支持工作台统计")
 async def get_business_support_dashboard(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("business_support:read"))
 ):
     """
     获取商务支持工作台统计数据
@@ -276,7 +276,7 @@ async def get_bidding_projects(
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     search: Optional[str] = Query(None, description="搜索关键词"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("business_support:read"))
 ):
     """获取投标项目列表"""
     try:
@@ -369,7 +369,7 @@ async def get_bidding_projects(
 async def create_bidding_project(
     bidding_data: BiddingProjectCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("business_support:create"))
 ):
     """创建投标项目"""
     try:
@@ -455,7 +455,7 @@ async def create_bidding_project(
 async def get_bidding_project(
     bidding_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("business_support:read"))
 ):
     """获取投标项目详情"""
     try:
@@ -514,7 +514,7 @@ async def update_bidding_project(
     bidding_id: int,
     bidding_data: BiddingProjectUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("business_support:update"))
 ):
     """更新投标项目"""
     try:
@@ -585,7 +585,7 @@ async def create_contract_review(
     contract_id: int,
     review_data: ContractReviewCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("business_support:create"))
 ):
     """创建合同审核记录"""
     try:
@@ -637,7 +637,7 @@ async def update_contract_review(
     review_id: int,
     review_data: ContractReviewUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("business_support:approve"))
 ):
     """更新合同审核记录（审批）"""
     try:
@@ -695,7 +695,7 @@ async def create_contract_seal_record(
     contract_id: int,
     seal_data: ContractSealRecordCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("business_support:create"))
 ):
     """创建合同盖章记录"""
     try:
@@ -753,7 +753,7 @@ async def update_contract_seal_record(
     seal_id: int,
     seal_data: ContractSealRecordUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("business_support:update"))
 ):
     """更新合同盖章记录"""
     try:
@@ -810,7 +810,7 @@ async def update_contract_seal_record(
 async def create_payment_reminder(
     reminder_data: PaymentReminderCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("business_support:create"))
 ):
     """创建回款催收记录"""
     try:
@@ -878,7 +878,7 @@ async def get_payment_reminders(
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("business_support:read"))
 ):
     """获取回款催收记录列表"""
     try:
@@ -948,7 +948,7 @@ async def get_payment_reminders(
 async def create_document_archive(
     archive_data: DocumentArchiveCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("business_support:create"))
 ):
     """创建文件归档"""
     try:
@@ -1010,7 +1010,7 @@ async def get_document_archives(
     related_id: Optional[int] = Query(None, description="关联ID筛选"),
     search: Optional[str] = Query(None, description="搜索关键词"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("business_support:read"))
 ):
     """获取文件归档列表"""
     try:
@@ -1086,7 +1086,7 @@ async def get_document_archives(
 async def get_active_contracts(
     limit: int = Query(10, ge=1, le=50, description="返回数量限制"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("business_support:read"))
 ):
     """获取进行中的合同列表（用于工作台展示）"""
     try:
@@ -1148,7 +1148,7 @@ async def get_active_contracts(
 async def get_active_bidding(
     limit: int = Query(10, ge=1, le=50, description="返回数量限制"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("business_support:read"))
 ):
     """获取进行中的投标列表（用于工作台展示）"""
     try:
@@ -1214,7 +1214,7 @@ async def get_active_bidding(
 async def get_performance_metrics(
     month: Optional[str] = Query(None, description="统计月份（YYYY-MM格式），不提供则使用当前月份"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("business_support:read"))
 ):
     """获取本月绩效指标（用于工作台右侧展示）"""
     try:

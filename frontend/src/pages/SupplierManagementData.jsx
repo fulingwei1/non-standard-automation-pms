@@ -217,28 +217,8 @@ export default function SupplierManagementData() {
       case 'D': return 'bg-red-500';
       default: return 'bg-gray-500';
     }
-  };
-
-  const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-
-  // Mock data for demo accounts
-  useEffect(() => {
-    if (isDemoAccount && suppliers.length === 0 && !loading) {
-      setSuppliers([
-        {
-          id: 1,
-          supplier_code: 'V00015',
-          supplier_name: '欧姆龙(上海)代理',
-          supplier_short_name: '欧姆龙',
-          supplier_type: 'MATERIAL',
-          contact_person: '张经理',
-          contact_phone: '021-12345678',
-          contact_email: 'zhang@omron.com',
-          address: '上海市浦东新区',
-          overall_rating: 4.8,
-          supplier_level: 'A',
-          status: 'ACTIVE',
-        },
+  };    useEffect(() => {
+    ,
         {
           id: 2,
           supplier_code: 'V00023',
@@ -256,7 +236,7 @@ export default function SupplierManagementData() {
       ])
       setTotal(2)
     }
-  }, [isDemoAccount])
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">

@@ -55,6 +55,30 @@ export default function RoleManagement() {
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
 
+  // 角色编码选项（带说明）
+  const roleCodeOptions = [
+    { code: 'ADMIN', name: '系统管理员', description: '系统管理权限，可管理所有功能和数据' },
+    { code: 'SUPER_ADMIN', name: '超级管理员', description: '系统最高权限，拥有所有权限' },
+    { code: 'PROJECT_MANAGER', name: '项目经理', description: '项目管理权限，可管理项目全流程' },
+    { code: 'PM', name: '项目经理', description: '项目全权管理，进度/变更/验收/成本' },
+    { code: 'GM', name: '总经理', description: '全局数据只读，关键审批权限' },
+    { code: 'CFO', name: '财务总监', description: '财务相关全局权限，成本与回款管理' },
+    { code: 'CTO', name: '技术总监', description: '技术相关全局权限，研发管理' },
+    { code: 'SALES_DIR', name: '销售总监', description: '销售部门全局权限，商机与合同管理' },
+    { code: 'PMC', name: '计划管理', description: '生产计划、物料齐套、进度协调' },
+    { code: 'QA_MGR', name: '质量主管', description: '质量管理、验收审批、问题闭环' },
+    { code: 'PU_MGR', name: '采购主管', description: '采购管理、供应商管理、成本控制' },
+    { code: 'ENGINEER', name: '工程师', description: '工程执行权限，执行设计任务' },
+    { code: 'ME', name: '机械工程师', description: '机械设计任务执行、交付物提交' },
+    { code: 'EE', name: '电气工程师', description: '电气设计任务执行、交付物提交' },
+    { code: 'PURCHASER', name: '采购员', description: '采购相关权限，执行采购任务' },
+    { code: 'QA', name: '质量工程师', description: '质量管理权限，质量检查与验收' },
+    { code: 'FINANCE', name: '财务人员', description: '财务相关权限，财务数据处理' },
+    { code: 'WAREHOUSE', name: '仓库管理员', description: '仓库管理权限，库存管理' },
+    { code: 'VIEWER', name: '查看者', description: '只读权限，仅可查看数据' },
+    { code: 'CUSTOMER', name: '客户', description: '客户门户权限，查看项目进度' },
+  ];
+
   const [newRole, setNewRole] = useState({
     role_code: '',
     role_name: '',
@@ -458,22 +482,70 @@ export default function RoleManagement() {
       </motion.div>
 
       {/* Create Dialog */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+      <Dialog 
+        open={showCreateDialog} 
+        onOpenChange={(open) => {
+          setShowCreateDialog(open);
+          if (!open) {
+            // 关闭对话框时重置表单
+            setNewRole({
+              role_code: '',
+              role_name: '',
+              description: '',
+              data_scope: 'OWN',
+              permission_ids: [],
+            });
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>新增角色</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="create-role-code" className="text-right">角色编码 *</Label>
-              <Input
-                id="create-role-code"
-                name="role_code"
-                value={newRole.role_code}
-                onChange={handleCreateChange}
-                className="col-span-3"
-                required
-              />
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label htmlFor="create-role-code" className="text-right pt-2">角色编码 *</Label>
+              <div className="col-span-3 space-y-2">
+                <Select
+                  value={newRole.role_code}
+                  onValueChange={(value) => {
+                    const selected = roleCodeOptions.find(opt => opt.code === value);
+                    setNewRole((prev) => ({
+                      ...prev,
+                      role_code: value,
+                      // 如果角色名称为空，则自动填充；否则保持用户输入的值
+                      role_name: prev.role_name || (selected ? selected.name : ''),
+                    }));
+                  }}
+                >
+                  <SelectTrigger id="create-role-code" className="w-full">
+                    <SelectValue placeholder="请选择角色编码" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {roleCodeOptions.map((option) => (
+                      <SelectItem 
+                        key={option.code} 
+                        value={option.code}
+                        title={option.description}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-medium">{option.code}</span>
+                          <span className="text-muted-foreground">-</span>
+                          <span>{option.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {newRole.role_code && (
+                  <div className="rounded-md bg-muted/50 p-2">
+                    <p className="text-xs text-muted-foreground">
+                      <span className="font-medium">说明：</span>
+                      {roleCodeOptions.find(opt => opt.code === newRole.role_code)?.description}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="create-role-name" className="text-right">角色名称 *</Label>

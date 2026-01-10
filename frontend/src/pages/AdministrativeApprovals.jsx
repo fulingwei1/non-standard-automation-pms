@@ -42,71 +42,7 @@ import { SimpleBarChart, MonthlyTrendChart, SimplePieChart, TrendComparisonCard 
 import { adminApi } from '../services/api'
 
 // Mock data - same as in AdministrativeManagerWorkstation
-const mockPendingApprovals = [
-  {
-    id: 1,
-    type: 'office_supplies',
-    title: '办公用品采购申请',
-    applicant: '张经理',
-    department: '销售部',
-    amount: 8500,
-    items: ['打印机耗材', '办公文具', '清洁用品'],
-    submitTime: '2025-01-06 10:30',
-    priority: 'high',
-    status: 'pending',
-  },
-  {
-    id: 2,
-    type: 'vehicle',
-    title: '车辆使用申请',
-    applicant: '李工程师',
-    department: '项目部',
-    purpose: '客户现场服务',
-    date: '2025-01-08',
-    submitTime: '2025-01-06 14:20',
-    priority: 'medium',
-    status: 'pending',
-  },
-  {
-    id: 3,
-    type: 'asset',
-    title: '固定资产采购',
-    applicant: '王经理',
-    department: '生产部',
-    item: '办公桌椅套装',
-    amount: 12000,
-    submitTime: '2025-01-05 16:45',
-    priority: 'medium',
-    status: 'pending',
-  },
-  {
-    id: 4,
-    type: 'meeting',
-    title: '会议室预订申请',
-    applicant: '周经理',
-    department: '技术开发部',
-    room: '大会议室',
-    date: '2025-01-07',
-    time: '14:00-16:00',
-    submitTime: '2025-01-06 09:15',
-    priority: 'low',
-    status: 'pending',
-  },
-  {
-    id: 5,
-    type: 'leave',
-    title: '请假申请',
-    applicant: '赵工程师',
-    department: '机械部',
-    leaveType: '年假',
-    days: 3,
-    date: '2025-01-10',
-    submitTime: '2025-01-06 11:30',
-    priority: 'medium',
-    status: 'pending',
-  },
-]
-
+// Mock data - 已移除，使用真实API
 export default function AdministrativeApprovals() {
   const [loading, setLoading] = useState(true)
   const [approvals, setApprovals] = useState(mockPendingApprovals)

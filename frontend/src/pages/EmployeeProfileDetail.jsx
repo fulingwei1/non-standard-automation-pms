@@ -19,47 +19,11 @@ import { cn } from '../lib/utils';
 import { staffMatchingApi } from '../services/api';
 
 // 模拟员工详情数据
-const mockProfile = {
-  id: 1,
-  employee_id: 1,
-  employee_name: '张工',
-  employee_code: 'EMP001',
-  department: '机械设计部',
-  position: '高级机械工程师',
-  skill_score_avg: 88,
-  domain_score_avg: 85,
-  attitude_score_avg: 90,
-  quality_score_avg: 92,
-  special_score_avg: 80,
-  current_workload_pct: 60,
-  project_count: 5,
-  total_contribution_score: 450,
-  avg_contribution_level: '核心',
-  dimension_scores: {
-    skill: 88,
-    domain: 85,
-    attitude: 90,
-    quality: 92,
-    workload: 40, // 100 - 60
-    special: 80
-  }
+// Mock data - 已移除，使用真实API
 };
 
-const mockEvaluations = [
-  { id: 1, tag_name: '机械设计', tag_type: 'SKILL', score: 5, evaluator_name: '李经理', evaluated_at: '2026-01-05' },
-  { id: 2, tag_name: 'SolidWorks', tag_type: 'SKILL', score: 4, evaluator_name: '李经理', evaluated_at: '2026-01-05' },
-  { id: 3, tag_name: 'AutoCAD', tag_type: 'SKILL', score: 4, evaluator_name: '李经理', evaluated_at: '2026-01-05' },
-  { id: 4, tag_name: '汽车行业', tag_type: 'DOMAIN', score: 5, evaluator_name: '王总', evaluated_at: '2026-01-03' },
-  { id: 5, tag_name: '责任心强', tag_type: 'ATTITUDE', score: 5, evaluator_name: '李经理', evaluated_at: '2026-01-05' },
-  { id: 6, tag_name: '团队协作', tag_type: 'ATTITUDE', score: 4, evaluator_name: '李经理', evaluated_at: '2026-01-05' },
-];
-
-const mockPerformance = [
-  { id: 1, project_name: '汽车零部件自动化产线', contribution_level: '核心', quality_score: 95, end_date: '2025-12-30' },
-  { id: 2, project_name: '3C电子装配线', contribution_level: '骨干', quality_score: 88, end_date: '2025-11-15' },
-  { id: 3, project_name: '医疗器械检测设备', contribution_level: '核心', quality_score: 92, end_date: '2025-10-20' },
-];
-
+// Mock data - 已移除，使用真实API
+// Mock data - 已移除，使用真实API
 // 标签类型配置
 const TAG_TYPE_CONFIG = {
   SKILL: { label: '技能', color: 'blue', icon: Target },

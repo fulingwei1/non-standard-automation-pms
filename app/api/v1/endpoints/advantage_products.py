@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
 
 from app.api import deps
+from app.core import security
+from app.models.user import User
 from app.models.advantage_product import AdvantageProduct, AdvantageProductCategory, DEFAULT_CATEGORIES
 from app.schemas.advantage_product import (
     AdvantageProductCategoryCreate,
@@ -33,7 +35,8 @@ router = APIRouter()
 @router.get("/categories", response_model=List[AdvantageProductCategoryResponse])
 def get_categories(
     include_inactive: bool = Query(False, description="是否包含已禁用的类别"),
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("advantage_product:read"))
 ):
     """获取所有产品类别"""
     query = db.query(AdvantageProductCategory)
@@ -69,7 +72,8 @@ def get_categories(
 @router.post("/categories", response_model=AdvantageProductCategoryResponse, status_code=status.HTTP_201_CREATED)
 def create_category(
     category_in: AdvantageProductCategoryCreate,
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("advantage_product:create"))
 ):
     """创建产品类别"""
     # 检查编码是否已存在
@@ -96,7 +100,8 @@ def create_category(
 def update_category(
     category_id: int,
     category_in: AdvantageProductCategoryUpdate,
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("advantage_product:update"))
 ):
     """更新产品类别"""
     category = db.query(AdvantageProductCategory).filter(
@@ -132,7 +137,8 @@ def get_products(
     category_id: Optional[int] = Query(None, description="按类别筛选"),
     search: Optional[str] = Query(None, description="搜索产品名称或编码"),
     include_inactive: bool = Query(False, description="是否包含已禁用的产品"),
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("advantage_product:read"))
 ):
     """获取优势产品列表"""
     query = db.query(AdvantageProduct)
@@ -178,7 +184,8 @@ def get_products(
 @router.get("/grouped", response_model=List[AdvantageProductGrouped])
 def get_products_grouped(
     include_inactive: bool = Query(False, description="是否包含已禁用的"),
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("advantage_product:read"))
 ):
     """获取按类别分组的产品列表"""
     # 获取所有类别
@@ -238,7 +245,8 @@ def get_products_grouped(
 @router.get("/simple", response_model=List[AdvantageProductSimple])
 def get_products_simple(
     category_id: Optional[int] = Query(None, description="按类别筛选"),
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("advantage_product:read"))
 ):
     """获取产品简略列表（用于下拉选择）"""
     query = db.query(AdvantageProduct).filter(AdvantageProduct.is_active == True)
@@ -266,7 +274,8 @@ def get_products_simple(
 @router.post("", response_model=AdvantageProductResponse, status_code=status.HTTP_201_CREATED)
 def create_product(
     product_in: AdvantageProductCreate,
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("advantage_product:create"))
 ):
     """创建优势产品"""
     # 检查产品编码是否已存在
@@ -320,7 +329,8 @@ def create_product(
 def update_product(
     product_id: int,
     product_in: AdvantageProductUpdate,
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("advantage_product:update"))
 ):
     """更新优势产品"""
     product = db.query(AdvantageProduct).filter(
@@ -375,7 +385,8 @@ def update_product(
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_product(
     product_id: int,
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("advantage_product:delete"))
 ):
     """删除优势产品（软删除）"""
     product = db.query(AdvantageProduct).filter(
@@ -397,7 +408,8 @@ def delete_product(
 async def import_from_excel(
     file: UploadFile = File(..., description="Excel 文件"),
     clear_existing: bool = Query(True, description="是否先清空现有数据"),
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("advantage_product:create"))
 ):
     """从 Excel 文件导入优势产品"""
     try:
@@ -564,7 +576,8 @@ async def import_from_excel(
 @router.post("/check-match", response_model=ProductMatchCheckResponse)
 def check_product_match(
     request: ProductMatchCheckRequest,
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("advantage_product:read"))
 ):
     """检查产品名称是否匹配优势产品"""
     product_name = request.product_name.strip()

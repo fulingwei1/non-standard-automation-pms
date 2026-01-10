@@ -76,58 +76,7 @@ import {
 } from '../services/api'
 import { toast } from '../components/ui/toast'
 
-// Mock data for administrative manager dashboard
-const mockStats = {
-  // Office supplies
-  officeSuppliesTotal: 1250,
-  officeSuppliesLowStock: 18,
-  officeSuppliesPendingOrders: 5,
-  officeSuppliesMonthlyCost: 45000,
-  
-  // Meeting management
-  meetingsThisWeek: 12,
-  meetingsToday: 3,
-  meetingRooms: 8,
-  meetingRoomsOccupied: 5,
-  
-  // Vehicle management
-  totalVehicles: 12,
-  vehiclesInUse: 8,
-  vehiclesAvailable: 4,
-  vehiclesMaintenance: 2,
-  monthlyFuelCost: 28000,
-  
-  // Fixed assets
-  fixedAssetsTotal: 856,
-  fixedAssetsValue: 12500000,
-  fixedAssetsMaintenance: 15,
-  fixedAssetsDepreciation: 1250000,
-  
-  // Employee services
-  totalEmployees: 186,
-  attendanceRate: 96.5,
-  leaveApplications: 8,
-  overtimeApplications: 12,
-  
-  // Approvals
-  pendingApprovals: 15,
-  urgentApprovals: 3,
-  
-  // Financial
-  monthlyAdminBudget: 500000,
-  monthlyAdminSpent: 385000,
-  budgetUtilization: 77,
-}
-
-const mockPendingApprovals = [
-  {
-    id: 1,
-    type: 'office_supplies',
-    title: '办公用品采购申请',
-    applicant: '张经理',
-    department: '销售部',
-    amount: 8500,
-    items: ['打印机耗材', '办公文具', '清洁用品'],
+,
     submitTime: '2025-01-06 10:30',
     priority: 'high',
     status: 'pending',
@@ -184,166 +133,10 @@ const mockPendingApprovals = [
   },
 ]
 
-const mockOfficeSupplies = [
-  {
-    id: 1,
-    name: 'A4打印纸',
-    category: '办公耗材',
-    currentStock: 45,
-    minStock: 50,
-    unit: '包',
-    status: 'low',
-    lastPurchase: '2024-12-20',
-    supplier: 'XX办公用品公司',
-  },
-  {
-    id: 2,
-    name: '黑色签字笔',
-    category: '办公文具',
-    currentStock: 120,
-    minStock: 100,
-    unit: '支',
-    status: 'normal',
-    lastPurchase: '2024-12-28',
-    supplier: 'XX办公用品公司',
-  },
-  {
-    id: 3,
-    name: '打印机墨盒',
-    category: '办公耗材',
-    currentStock: 8,
-    minStock: 15,
-    unit: '个',
-    status: 'low',
-    lastPurchase: '2024-12-25',
-    supplier: 'XX办公用品公司',
-  },
-  {
-    id: 4,
-    name: '文件夹',
-    category: '办公文具',
-    currentStock: 35,
-    minStock: 30,
-    unit: '个',
-    status: 'normal',
-    lastPurchase: '2024-12-30',
-    supplier: 'XX办公用品公司',
-  },
-]
-
-const mockMeetings = [
-  {
-    id: 1,
-    title: '项目进度评审会',
-    organizer: '孙经理',
-    department: '项目部',
-    room: '大会议室',
-    date: '2025-01-07',
-    time: '14:00-16:00',
-    attendees: 12,
-    status: 'scheduled',
-  },
-  {
-    id: 2,
-    title: '技术方案讨论',
-    organizer: '周经理',
-    department: '技术开发部',
-    room: '小会议室A',
-    date: '2025-01-07',
-    time: '10:00-11:30',
-    attendees: 8,
-    status: 'scheduled',
-  },
-  {
-    id: 3,
-    title: '销售周会',
-    organizer: '刘总监',
-    department: '销售部',
-    room: '中会议室',
-    date: '2025-01-07',
-    time: '09:00-10:00',
-    attendees: 15,
-    status: 'ongoing',
-  },
-]
-
-const mockVehicles = [
-  {
-    id: 1,
-    plateNumber: '粤B12345',
-    brand: '丰田凯美瑞',
-    driver: '张师傅',
-    purpose: '客户现场服务',
-    destination: '深圳XX科技',
-    startTime: '2025-01-07 08:00',
-    endTime: '2025-01-07 18:00',
-    status: 'in_use',
-  },
-  {
-    id: 2,
-    plateNumber: '粤B67890',
-    brand: '大众帕萨特',
-    driver: '李师傅',
-    purpose: '供应商拜访',
-    destination: '东莞XX电子',
-    startTime: '2025-01-07 09:00',
-    endTime: '2025-01-07 17:00',
-    status: 'in_use',
-  },
-  {
-    id: 3,
-    plateNumber: '粤B11111',
-    brand: '本田雅阁',
-    driver: null,
-    status: 'available',
-    nextMaintenance: '2025-01-20',
-  },
-  {
-    id: 4,
-    plateNumber: '粤B22222',
-    brand: '别克GL8',
-    driver: null,
-    status: 'maintenance',
-    maintenanceReason: '定期保养',
-    returnDate: '2025-01-08',
-  },
-]
-
-const mockAttendanceStats = [
-  {
-    department: '销售部',
-    total: 45,
-    present: 43,
-    leave: 2,
-    late: 1,
-    attendanceRate: 95.6,
-  },
-  {
-    department: '项目部',
-    total: 38,
-    present: 37,
-    leave: 1,
-    late: 0,
-    attendanceRate: 97.4,
-  },
-  {
-    department: '技术开发部',
-    total: 52,
-    present: 51,
-    leave: 1,
-    late: 0,
-    attendanceRate: 98.1,
-  },
-  {
-    department: '生产部',
-    total: 28,
-    present: 28,
-    leave: 0,
-    late: 0,
-    attendanceRate: 100,
-  },
-]
-
+// Mock data - 已移除，使用真实API
+// Mock data - 已移除，使用真实API
+// Mock data - 已移除，使用真实API
+// Mock data - 已移除，使用真实API
 const formatCurrency = (value) => {
   if (value >= 100000000) {
     return `¥${(value / 100000000).toFixed(2)}亿`
@@ -551,17 +344,8 @@ export default function AdministrativeManagerWorkstation() {
       }
 
     } catch (err) {
-      console.error('Failed to load dashboard data:', err)
-      // 如果是演示账号，使用 mock 数据
-      const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-      if (isDemoAccount) {
-        setStats(mockStats)
-        setPendingApprovals(mockPendingApprovals)
-        setMeetings(mockMeetings)
-        setOfficeSupplies(mockOfficeSupplies)
-        setVehicles(mockVehicles)
-        setAttendanceStats(mockAttendanceStats)
-      }
+        console.error('Failed to load dashboard data:', err)
+        setError(err)
     } finally {
       setLoading(false)
     }

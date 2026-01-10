@@ -110,12 +110,7 @@ export default function ShortageAlert() {
       const alertList = res.data?.items || res.data || []
       setAlerts(alertList)
     } catch (error) {
-      console.error('Failed to fetch alerts:', error)
-      // 如果是演示账号，使用 mock 数据
-      const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-      if (isDemoAccount) {
-        setAlerts([]) // Will be populated by useEffect with mock data
-      } else {
+      console.error('Failed to fetch alerts:', error)       else {
         setAlerts([])
       }
     } finally {
@@ -127,12 +122,7 @@ export default function ShortageAlert() {
       const res = await shortageAlertApi.getSummary()
       setSummary(res.data || res)
     } catch (error) {
-      console.error('Failed to fetch summary:', error)
-      // 如果是演示账号，使用 mock 数据
-      const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-      if (isDemoAccount) {
-        // Summary will be set by useEffect with mock data
-      } else {
+      console.error('Failed to fetch summary:', error)       else {
         setSummary({
           pending_count: 0,
           processing_count: 0,
@@ -203,25 +193,8 @@ export default function ShortageAlert() {
       (new Date(alert.required_date) - new Date()) / (1000 * 60 * 60 * 24)
     )
     return daysUntilRequired <= 7 && daysUntilRequired >= 0
-  }
-  const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-
-  // Mock data for demo accounts
-  useEffect(() => {
-    if (isDemoAccount && alerts.length === 0 && !loading) {
-      setAlerts([
-        {
-          id: 1,
-          material_code: 'EL-02-03-0015',
-          material_name: '光电传感器 E3Z-D82',
-          project_name: 'BMS老化测试设备',
-          required_qty: 20,
-          available_qty: 8,
-          shortage_qty: 12,
-          required_date: '2026-01-20',
-          alert_level: 'LEVEL1',
-          status: 'PENDING',
-        },
+  }    useEffect(() => {
+    ,
         {
           id: 2,
           material_code: 'EL-02-03-0018',
@@ -242,7 +215,7 @@ export default function ShortageAlert() {
         total_count: 2,
       })
     }
-  }, [isDemoAccount])
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">

@@ -31,76 +31,7 @@ import { fadeIn, staggerContainer } from '../lib/animations'
 import { projectApi, milestoneApi, progressApi, productionApi, workloadApi } from '../services/api'
 
 // Mock schedule data
-const mockProjects = [
-  {
-    id: 'PJ250108001',
-    name: 'BMS老化测试设备',
-    customer: '宁德时代',
-    stage: 'S5',
-    stageName: '装配调试',
-    progress: 65,
-    health: 'H2',
-    planStart: '2026-01-02',
-    planEnd: '2026-01-20',
-    daysRemaining: 16,
-    milestones: [
-      { name: '物料齐套', date: '2026-01-08', status: 'completed' },
-      { name: '机械装配', date: '2026-01-12', status: 'in_progress' },
-      { name: '电气调试', date: '2026-01-16', status: 'pending' },
-      { name: '整机联调', date: '2026-01-20', status: 'pending' },
-    ],
-    resources: [
-      { name: '张工', role: 'ME', load: 100 },
-      { name: '李工', role: 'EE', load: 80 },
-    ],
-  },
-  {
-    id: 'PJ250105002',
-    name: 'EOL功能测试设备',
-    customer: '比亚迪',
-    stage: 'S4',
-    stageName: '加工制造',
-    progress: 45,
-    health: 'H1',
-    planStart: '2025-12-20',
-    planEnd: '2026-01-25',
-    daysRemaining: 21,
-    milestones: [
-      { name: '设计评审', date: '2025-12-25', status: 'completed' },
-      { name: '采购下单', date: '2026-01-02', status: 'completed' },
-      { name: '物料到货', date: '2026-01-15', status: 'in_progress' },
-      { name: '开始装配', date: '2026-01-18', status: 'pending' },
-    ],
-    resources: [
-      { name: '王工', role: 'ME', load: 60 },
-      { name: '赵工', role: 'SW', load: 40 },
-    ],
-  },
-  {
-    id: 'PJ250106003',
-    name: 'ICT测试设备',
-    customer: '华为',
-    stage: 'S3',
-    stageName: '采购备料',
-    progress: 30,
-    health: 'H3',
-    planStart: '2025-12-28',
-    planEnd: '2026-01-30',
-    daysRemaining: 26,
-    milestones: [
-      { name: 'BOM发布', date: '2025-12-28', status: 'completed' },
-      { name: '长周期物料下单', date: '2026-01-02', status: 'delayed' },
-      { name: '物料齐套', date: '2026-01-20', status: 'at_risk' },
-      { name: '开始装配', date: '2026-01-25', status: 'pending' },
-    ],
-    resources: [
-      { name: '陈工', role: 'ME', load: 80 },
-      { name: '刘工', role: 'EE', load: 100 },
-    ],
-    alerts: ['3件关键物料延期', '需要紧急协调'],
-  },
-]
-
+// Mock data - 已移除，使用真实API
 const stageColors = {
   S1: 'bg-slate-500',
   S2: 'bg-blue-500',
@@ -864,12 +795,7 @@ export default function ScheduleBoard() {
         
         setProjects(transformedProjects)
       } catch (err) {
-        console.error('Failed to fetch projects:', err)
-        // 如果是演示账号，使用 mock 数据
-        const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-        if (isDemoAccount) {
-          setProjects(mockProjects)
-        } else {
+        console.error('Failed to fetch projects:', err)         else {
           setProjects([])
         }
       } finally {

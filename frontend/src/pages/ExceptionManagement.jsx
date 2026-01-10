@@ -137,11 +137,7 @@ export default function ExceptionManagement() {
       setExceptions(exceptionList)
     } catch (error) {
       console.error('Failed to fetch exceptions:', error)
-      // 如果是演示账号，使用空数组
-      const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-      if (isDemoAccount) {
-        setExceptions([])
-      } else {
+      // 如果是演示账号，使用空数组       else {
         setExceptions([])
       }
     } finally {

@@ -42,202 +42,68 @@ def get_culture_wall_summary(
     获取文化墙汇总数据（用于滚动播放）
     根据配置过滤内容和角色
     """
+    from app.services.culture_wall_service import (
+        get_culture_wall_config,
+        check_user_role_permission,
+        get_content_types_config,
+        build_content_query,
+        query_content_by_type,
+        get_read_records,
+        format_content,
+        get_personal_goals,
+        format_goal,
+        get_notifications
+    )
+    
     today = date.today()
     
     # 获取配置
-    config = db.query(CultureWallConfig).filter(
-        CultureWallConfig.is_default == True,
-        CultureWallConfig.is_enabled == True
-    ).first()
-    
-    if not config:
-        config = db.query(CultureWallConfig).filter(
-            CultureWallConfig.is_enabled == True
-        ).order_by(desc(CultureWallConfig.created_at)).first()
+    config = get_culture_wall_config(db)
     
     # 检查角色权限
-    if config and config.visible_roles and len(config.visible_roles) > 0:
-        user_role = current_user.role or ''
-        if user_role not in config.visible_roles:
-            # 如果用户角色不在可见列表中，返回空数据
-            return CultureWallSummary(
-                strategies=[],
-                cultures=[],
-                important_items=[],
-                notices=[],
-                rewards=[],
-                personal_goals=[],
-                notifications=[],
-            )
+    user_role = current_user.role or ''
+    if not check_user_role_permission(config, user_role):
+        # 如果用户角色不在可见列表中，返回空数据
+        return CultureWallSummary(
+            strategies=[],
+            cultures=[],
+            important_items=[],
+            notices=[],
+            rewards=[],
+            personal_goals=[],
+            notifications=[],
+        )
     
     # 获取内容类型配置
-    content_types_config = {}
-    if config and config.content_types:
-        content_types_config = config.content_types
+    content_types_config = get_content_types_config(config)
     
-    # 查询已发布且未过期的内容
-    content_query = db.query(CultureWallContent).filter(
-        and_(
-            CultureWallContent.is_published == True,
-            or_(
-                CultureWallContent.expire_date.is_(None),
-                CultureWallContent.expire_date >= today
-            )
-        )
-    )
+    # 构建内容查询
+    content_query = build_content_query(db, today)
     
-    # 按类型分组查询，根据配置过滤
-    strategies = []
-    if not content_types_config.get('STRATEGY') or content_types_config['STRATEGY'].get('enabled', True):
-        max_count = content_types_config.get('STRATEGY', {}).get('max_count', 10) if content_types_config.get('STRATEGY') else 10
-        strategies = content_query.filter(
-            CultureWallContent.content_type == 'STRATEGY'
-        ).order_by(desc(CultureWallContent.priority), desc(CultureWallContent.publish_date)).limit(max_count).all()
-    
-    cultures = []
-    if not content_types_config.get('CULTURE') or content_types_config['CULTURE'].get('enabled', True):
-        max_count = content_types_config.get('CULTURE', {}).get('max_count', 10) if content_types_config.get('CULTURE') else 10
-        cultures = content_query.filter(
-            CultureWallContent.content_type == 'CULTURE'
-        ).order_by(desc(CultureWallContent.priority), desc(CultureWallContent.publish_date)).limit(max_count).all()
-    
-    important_items = []
-    if not content_types_config.get('IMPORTANT') or content_types_config['IMPORTANT'].get('enabled', True):
-        max_count = content_types_config.get('IMPORTANT', {}).get('max_count', 10) if content_types_config.get('IMPORTANT') else 10
-        important_items = content_query.filter(
-            CultureWallContent.content_type == 'IMPORTANT'
-        ).order_by(desc(CultureWallContent.priority), desc(CultureWallContent.publish_date)).limit(max_count).all()
-    
-    notices = []
-    if not content_types_config.get('NOTICE') or content_types_config['NOTICE'].get('enabled', True):
-        max_count = content_types_config.get('NOTICE', {}).get('max_count', 10) if content_types_config.get('NOTICE') else 10
-        notices = content_query.filter(
-            CultureWallContent.content_type == 'NOTICE'
-        ).order_by(desc(CultureWallContent.priority), desc(CultureWallContent.publish_date)).limit(max_count).all()
-    
-    rewards = []
-    if not content_types_config.get('REWARD') or content_types_config['REWARD'].get('enabled', True):
-        max_count = content_types_config.get('REWARD', {}).get('max_count', 10) if content_types_config.get('REWARD') else 10
-        rewards = content_query.filter(
-            CultureWallContent.content_type == 'REWARD'
-        ).order_by(desc(CultureWallContent.priority), desc(CultureWallContent.publish_date)).limit(max_count).all()
+    # 按类型查询内容
+    strategies = query_content_by_type(content_query, 'STRATEGY', content_types_config)
+    cultures = query_content_by_type(content_query, 'CULTURE', content_types_config)
+    important_items = query_content_by_type(content_query, 'IMPORTANT', content_types_config)
+    notices = query_content_by_type(content_query, 'NOTICE', content_types_config)
+    rewards = query_content_by_type(content_query, 'REWARD', content_types_config)
     
     # 检查阅读状态
-    content_ids = [c.id for c in strategies + cultures + important_items + notices + rewards]
-    read_records = {}
-    if content_ids:
-        records = db.query(CultureWallReadRecord).filter(
-            and_(
-                CultureWallReadRecord.content_id.in_(content_ids),
-                CultureWallReadRecord.user_id == current_user.id
-            )
-        ).all()
-        read_records = {r.content_id: True for r in records}
+    all_contents = strategies + cultures + important_items + notices + rewards
+    content_ids = [c.id for c in all_contents]
+    read_records = get_read_records(db, content_ids, current_user.id)
     
-    def format_content(content):
-        return CultureWallContentResponse(
-            id=content.id,
-            content_type=content.content_type,
-            title=content.title,
-            content=content.content,
-            summary=content.summary,
-            images=content.images if content.images else [],
-            videos=content.videos if content.videos else [],
-            attachments=content.attachments if content.attachments else [],
-            is_published=content.is_published,
-            publish_date=content.publish_date,
-            expire_date=content.expire_date,
-            priority=content.priority,
-            display_order=content.display_order,
-            view_count=content.view_count,
-            related_project_id=content.related_project_id,
-            related_department_id=content.related_department_id,
-            published_by=content.published_by,
-            published_by_name=content.published_by_name,
-            created_by=content.created_by,
-            created_at=content.created_at,
-            updated_at=content.updated_at,
-            is_read=read_records.get(content.id, False),
-        )
+    # 获取个人目标
+    personal_goals = get_personal_goals(db, current_user.id, today, content_types_config)
     
-    # 获取个人目标（根据配置决定是否显示）
-    personal_goals = []
-    if not content_types_config.get('PERSONAL_GOAL') or content_types_config['PERSONAL_GOAL'].get('enabled', True):
-        current_month = today.strftime('%Y-%m')
-        quarter = (today.month - 1) // 3 + 1
-        current_quarter = f"{today.year}-Q{quarter}"
-        
-        monthly_goals = db.query(PersonalGoal).filter(
-            and_(
-                PersonalGoal.user_id == current_user.id,
-                PersonalGoal.goal_type == 'MONTHLY',
-                PersonalGoal.period == current_month,
-                PersonalGoal.status != 'CANCELLED'
-            )
-        ).order_by(desc(PersonalGoal.created_at)).all()
-        
-        quarterly_goals = db.query(PersonalGoal).filter(
-            and_(
-                PersonalGoal.user_id == current_user.id,
-                PersonalGoal.goal_type == 'QUARTERLY',
-                PersonalGoal.period == current_quarter,
-                PersonalGoal.status != 'CANCELLED'
-            )
-        ).order_by(desc(PersonalGoal.created_at)).all()
-        
-        max_count = content_types_config.get('PERSONAL_GOAL', {}).get('max_count', 5) if content_types_config.get('PERSONAL_GOAL') else 5
-        all_goals = (monthly_goals + quarterly_goals)[:max_count]
-        personal_goals = all_goals
-    
-    def format_goal(goal):
-        return PersonalGoalResponse(
-            id=goal.id,
-            user_id=goal.user_id,
-            goal_type=goal.goal_type,
-            period=goal.period,
-            title=goal.title,
-            description=goal.description,
-            target_value=goal.target_value,
-            current_value=goal.current_value,
-            unit=goal.unit,
-            progress=goal.progress,
-            status=goal.status,
-            start_date=goal.start_date,
-            end_date=goal.end_date,
-            completed_date=goal.completed_date,
-            notes=goal.notes,
-            created_by=goal.created_by,
-            created_at=goal.created_at,
-            updated_at=goal.updated_at,
-        )
-    
-    # 获取系统通知（根据配置决定是否显示）
-    notification_list = []
-    if not content_types_config.get('NOTIFICATION') or content_types_config['NOTIFICATION'].get('enabled', True):
-        max_count = content_types_config.get('NOTIFICATION', {}).get('max_count', 10) if content_types_config.get('NOTIFICATION') else 10
-        notifications = db.query(Notification).filter(
-            and_(
-                Notification.user_id == current_user.id,
-                Notification.is_read == False
-            )
-        ).order_by(desc(Notification.created_at)).limit(max_count).all()
-        
-        for notif in notifications:
-            notification_list.append({
-                'id': notif.id,
-                'title': notif.title,
-                'content': notif.content,
-                'type': notif.notification_type,
-                'priority': notif.priority,
-                'created_at': notif.created_at.isoformat() if notif.created_at else None,
-            })
+    # 获取系统通知
+    notification_list = get_notifications(db, current_user.id, content_types_config)
     
     return CultureWallSummary(
-        strategies=[format_content(c) for c in strategies],
-        cultures=[format_content(c) for c in cultures],
-        important_items=[format_content(c) for c in important_items],
-        notices=[format_content(c) for c in notices],
-        rewards=[format_content(c) for c in rewards],
+        strategies=[format_content(c, read_records) for c in strategies],
+        cultures=[format_content(c, read_records) for c in cultures],
+        important_items=[format_content(c, read_records) for c in important_items],
+        notices=[format_content(c, read_records) for c in notices],
+        rewards=[format_content(c, read_records) for c in rewards],
         personal_goals=[format_goal(g) for g in personal_goals],
         notifications=notification_list,
     )

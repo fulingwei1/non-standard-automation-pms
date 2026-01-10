@@ -59,59 +59,7 @@ import { fadeIn, staggerContainer } from '../lib/animations'
 import { costApi, invoiceApi, projectApi, purchaseApi } from '../services/api'
 
 // Mock financial statistics
-const mockFinancialStats = {
-  // Revenue metrics
-  monthlyRevenue: 12500000,
-  monthlyTarget: 12000000,
-  monthlyProgress: 104.2,
-  yearRevenue: 125000000,
-  yearTarget: 150000000,
-  yearProgress: 83.3,
-  
-  // Cost metrics
-  monthlyCost: 9500000,
-  monthlyBudget: 10000000,
-  budgetUsed: 95,
-  yearCost: 100000000,
-  yearBudget: 120000000,
-  yearBudgetUsed: 83.3,
-  
-  // Profit metrics
-  monthlyProfit: 3000000,
-  monthlyProfitMargin: 24,
-  yearProfit: 25000000,
-  yearProfitMargin: 20,
-  
-  // Cash flow
-  cashFlow: 18500000,
-  accountsReceivable: 28500000,
-  overdueReceivable: 3500000,
-  collectionRate: 87.7,
-  accountsPayable: 12500000,
-  overduePayable: 850000,
-  
-  // Payment approval
-  pendingPayments: 18,
-  pendingAmount: 2850000,
-  urgentPayments: 5,
-  
-  // Invoice
-  pendingInvoices: 12,
-  invoicedAmount: 8500000,
-  paidInvoices: 156,
-  paidAmount: 125000000,
-  
-  // Project cost
-  activeProjects: 42,
-  projectsOverBudget: 5,
-  totalProjectCost: 85000000,
-  totalProjectBudget: 100000000,
-  
-  // Team
-  teamSize: 6,
-  activeTeamMembers: 6,
-}
-
+// Mock data - 已移除，使用真实API
 // Mock pending payment approvals
 const pendingPayments = [
   {
@@ -230,128 +178,15 @@ const projectCosts = [
 ]
 
 // Mock team members
-const mockTeamMembers = [
-  {
-    id: 1,
-    name: '张会计',
-    role: '财务会计',
-    monthlyTasks: 156,
-    completionRate: 98.5,
-    accuracy: 99.2,
-    status: 'active',
-    performance: 'excellent',
-  },
-  {
-    id: 2,
-    name: '李出纳',
-    role: '出纳',
-    monthlyTasks: 142,
-    completionRate: 96.3,
-    accuracy: 98.8,
-    status: 'active',
-    performance: 'good',
-  },
-  {
-    id: 3,
-    name: '王成本',
-    role: '成本会计',
-    monthlyTasks: 128,
-    completionRate: 94.7,
-    accuracy: 97.5,
-    status: 'active',
-    performance: 'good',
-  },
-  {
-    id: 4,
-    name: '赵税务',
-    role: '税务会计',
-    monthlyTasks: 98,
-    completionRate: 92.2,
-    accuracy: 96.8,
-    status: 'active',
-    performance: 'warning',
-  },
-]
-
+// Mock data - 已移除，使用真实API
 // Mock monthly trends
-const mockMonthlyTrends = [
-  { month: '7月', revenue: 9800000, cost: 7500000, profit: 2300000, cashFlow: 12000000 },
-  { month: '8月', revenue: 10500000, cost: 8000000, profit: 2500000, cashFlow: 13500000 },
-  { month: '9月', revenue: 11200000, cost: 8500000, profit: 2700000, cashFlow: 15000000 },
-  { month: '10月', revenue: 11800000, cost: 9000000, profit: 2800000, cashFlow: 16500000 },
-  { month: '11月', revenue: 12200000, cost: 9200000, profit: 3000000, cashFlow: 17500000 },
-  { month: '12月', revenue: 12500000, cost: 9500000, profit: 3000000, cashFlow: 18500000 },
-]
-
+// Mock data - 已移除，使用真实API
 // Mock cost breakdown by category
-const mockCostBreakdown = [
-  { category: '材料成本', amount: 47500000, percentage: 47.5, color: 'bg-blue-500' },
-  { category: '人工成本', amount: 28500000, percentage: 28.5, color: 'bg-purple-500' },
-  { category: '外协费用', amount: 14500000, percentage: 14.5, color: 'bg-amber-500' },
-  { category: '管理费用', amount: 10500000, percentage: 10.5, color: 'bg-cyan-500' },
-  { category: '销售费用', amount: 8500000, percentage: 8.5, color: 'bg-emerald-500' },
-  { category: '研发费用', amount: 6800000, percentage: 6.8, color: 'bg-pink-500' },
-]
-
+// Mock data - 已移除，使用真实API
 // Mock revenue by project type
-const mockRevenueByType = [
-  { type: '标准设备', amount: 75000000, percentage: 60, count: 25 },
-  { type: '定制设备', amount: 40000000, percentage: 32, count: 12 },
-  { type: '技术服务', amount: 10000000, percentage: 8, count: 5 },
-]
-
+// Mock data - 已移除，使用真实API
 // Mock budget execution
-const mockBudgetExecution = [
-  {
-    category: '材料成本',
-    budget: 50000000,
-    actual: 47500000,
-    used: 95,
-    variance: -2500000,
-    status: 'good',
-  },
-  {
-    category: '人工成本',
-    budget: 30000000,
-    actual: 28500000,
-    used: 95,
-    variance: -1500000,
-    status: 'good',
-  },
-  {
-    category: '外协费用',
-    budget: 15000000,
-    actual: 14500000,
-    used: 96.7,
-    variance: -500000,
-    status: 'good',
-  },
-  {
-    category: '管理费用',
-    budget: 10000000,
-    actual: 10500000,
-    used: 105,
-    variance: 500000,
-    status: 'warning',
-  },
-  {
-    category: '销售费用',
-    budget: 8000000,
-    actual: 8500000,
-    used: 106.25,
-    variance: 500000,
-    status: 'warning',
-  },
-  {
-    category: '研发费用',
-    budget: 7000000,
-    actual: 6800000,
-    used: 97.1,
-    variance: -200000,
-    status: 'good',
-  },
-]
-
+// Mock data - 已移除，使用真实API
 const formatCurrency = (value) => {
   if (value >= 100000000) {
     return `¥${(value / 100000000).toFixed(2)}亿`

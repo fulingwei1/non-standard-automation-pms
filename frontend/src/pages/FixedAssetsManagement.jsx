@@ -39,54 +39,7 @@ import { staggerContainer } from '../lib/animations'
 import { SimpleBarChart, MonthlyTrendChart, SimplePieChart, CategoryBreakdownCard, TrendComparisonCard } from '../components/administrative/StatisticsCharts'
 
 // Mock data
-const mockAssets = [
-  {
-    id: 1,
-    name: '办公桌椅套装',
-    category: '办公家具',
-    assetNo: 'FA-2023-001',
-    location: '3楼办公区',
-    purchaseDate: '2023-06-15',
-    purchasePrice: 12000,
-    currentValue: 9600,
-    depreciation: 2400,
-    depreciationRate: 20,
-    status: 'in_use',
-    responsible: '张经理',
-    department: '销售部',
-  },
-  {
-    id: 2,
-    name: '投影仪',
-    category: '办公设备',
-    assetNo: 'FA-2023-002',
-    location: '大会议室',
-    purchaseDate: '2023-08-20',
-    purchasePrice: 8500,
-    currentValue: 6800,
-    depreciation: 1700,
-    depreciationRate: 20,
-    status: 'in_use',
-    responsible: '行政部',
-    department: '行政部',
-  },
-  {
-    id: 3,
-    name: '打印机',
-    category: '办公设备',
-    assetNo: 'FA-2022-015',
-    location: '2楼打印室',
-    purchaseDate: '2022-12-10',
-    purchasePrice: 15000,
-    currentValue: 10500,
-    depreciation: 4500,
-    depreciationRate: 30,
-    status: 'maintenance',
-    responsible: '行政部',
-    department: '行政部',
-  },
-]
-
+// Mock data - 已移除，使用真实API
 export default function FixedAssetsManagement() {
   const [searchText, setSearchText] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')

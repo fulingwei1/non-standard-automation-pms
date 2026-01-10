@@ -39,76 +39,8 @@ import { SimpleBarChart, MonthlyTrendChart, TrendComparisonCard } from '../compo
 import { adminApi } from '../services/api'
 
 // Mock data
-const mockAttendanceStats = [
-  {
-    department: '销售部',
-    total: 45,
-    present: 43,
-    leave: 2,
-    late: 1,
-    earlyLeave: 0,
-    absence: 0,
-    attendanceRate: 95.6,
-  },
-  {
-    department: '项目部',
-    total: 38,
-    present: 37,
-    leave: 1,
-    late: 0,
-    earlyLeave: 0,
-    absence: 0,
-    attendanceRate: 97.4,
-  },
-  {
-    department: '技术开发部',
-    total: 52,
-    present: 51,
-    leave: 1,
-    late: 0,
-    earlyLeave: 0,
-    absence: 0,
-    attendanceRate: 98.1,
-  },
-  {
-    department: '生产部',
-    total: 28,
-    present: 28,
-    leave: 0,
-    late: 0,
-    earlyLeave: 0,
-    absence: 0,
-    attendanceRate: 100,
-  },
-]
-
-const mockLeaveApplications = [
-  {
-    id: 1,
-    employee: '赵工程师',
-    department: '机械部',
-    type: '年假',
-    days: 3,
-    startDate: '2025-01-10',
-    endDate: '2025-01-12',
-    reason: '个人事务',
-    status: 'pending',
-    submitTime: '2025-01-06 11:30',
-  },
-  {
-    id: 2,
-    employee: '钱工程师',
-    department: '电气部',
-    type: '病假',
-    days: 1,
-    startDate: '2025-01-08',
-    endDate: '2025-01-08',
-    reason: '身体不适',
-    status: 'approved',
-    submitTime: '2025-01-07 09:00',
-  },
-]
-
+// Mock data - 已移除，使用真实API
+// Mock data - 已移除，使用真实API
 export default function AttendanceManagement() {
   const [searchText, setSearchText] = useState('')
   const [dateFilter, setDateFilter] = useState('today')

@@ -49,50 +49,9 @@ const ROLE_OPTIONS = [
 ];
 
 // 模拟数据
-const mockNeeds = [
-  {
-    id: 1, project_id: 1, project_name: 'ICT测试设备-A客户',
-    role_code: 'ME', role_name: '机械工程师', headcount: 2,
-    required_skills: [{ tag_id: 1, tag_name: '机械设计', min_score: 4 }],
-    priority: 'P1', status: 'OPEN', filled_count: 0,
-    start_date: '2026-01-15', end_date: '2026-03-15',
-    allocation_pct: 100, requester_name: '张经理',
-    created_at: '2026-01-05T10:00:00'
-  },
-  {
-    id: 2, project_id: 2, project_name: 'FCT测试设备-B客户',
-    role_code: 'EE', role_name: '电气工程师', headcount: 1,
-    required_skills: [{ tag_id: 2, tag_name: 'PLC编程', min_score: 3 }],
-    priority: 'P2', status: 'MATCHING', filled_count: 0,
-    start_date: '2026-01-20', end_date: '2026-04-20',
-    allocation_pct: 80, requester_name: '李经理',
-    created_at: '2026-01-04T14:00:00'
-  },
-  {
-    id: 3, project_id: 1, project_name: 'ICT测试设备-A客户',
-    role_code: 'SW', role_name: '软件工程师', headcount: 1,
-    required_skills: [{ tag_id: 3, tag_name: '视觉系统', min_score: 4 }],
-    priority: 'P3', status: 'FILLED', filled_count: 1,
-    start_date: '2026-01-10', end_date: '2026-02-28',
-    allocation_pct: 100, requester_name: '张经理',
-    created_at: '2026-01-03T09:00:00'
-  },
-];
-
-const mockProjects = [
-  { id: 1, name: 'ICT测试设备-A客户', project_code: 'PJ260101001' },
-  { id: 2, name: 'FCT测试设备-B客户', project_code: 'PJ260101002' },
-  { id: 3, name: '老化设备-C客户', project_code: 'PJ260101003' },
-];
-
-const mockTags = [
-  { id: 1, tag_code: 'SKILL_ME_DESIGN', tag_name: '机械设计' },
-  { id: 2, tag_code: 'SKILL_EE_PLC', tag_name: 'PLC编程' },
-  { id: 3, tag_code: 'SKILL_SW_VISION', tag_name: '视觉系统' },
-  { id: 4, tag_code: 'SKILL_SW_CSHARP', tag_name: 'C#开发' },
-  { id: 5, tag_code: 'SKILL_ME_CAD', tag_name: 'AutoCAD' },
-];
-
+// Mock data - 已移除，使用真实API
+// Mock data - 已移除，使用真实API
+// Mock data - 已移除，使用真实API
 export default function ProjectStaffingNeed() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);

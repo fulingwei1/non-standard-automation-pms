@@ -31,7 +31,7 @@ def read_stages(
     limit: int = 100,
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("stage:read")),
 ) -> Any:
     """
     获取项目阶段列表
@@ -53,7 +53,7 @@ def get_project_stages(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("stage:read")),
 ) -> Any:
     """
     获取项目的阶段列表
@@ -76,7 +76,7 @@ def create_stage(
     *,
     db: Session = Depends(deps.get_db),
     stage_in: ProjectStageCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("stage:create")),
 ) -> Any:
     """
     Create new project stage.
@@ -123,7 +123,7 @@ def update_stage(
     db: Session = Depends(deps.get_db),
     stage_id: int,
     stage_in: ProjectStageCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("stage:update")),
 ) -> Any:
     """
     更新项目阶段
@@ -152,7 +152,7 @@ def update_project_stage_progress(
     status: Optional[str] = Query(None, description="阶段状态"),
     actual_start_date: Optional[str] = Query(None, description="实际开始日期（YYYY-MM-DD）"),
     actual_end_date: Optional[str] = Query(None, description="实际结束日期（YYYY-MM-DD）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("stage:read")),
 ) -> Any:
     """
     更新项目阶段进度
@@ -191,7 +191,7 @@ def update_project_stage_progress(
 def read_statuses(
     db: Session = Depends(deps.get_db),
     stage_id: Optional[int] = Query(None, description="阶段ID筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("stage:read")),
 ) -> Any:
     """
     获取项目状态列表
@@ -209,7 +209,7 @@ def get_stage_statuses(
     *,
     db: Session = Depends(deps.get_db),
     stage_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("stage:read")),
 ) -> Any:
     """
     获取阶段的状态列表
@@ -232,7 +232,7 @@ def complete_project_status(
     *,
     db: Session = Depends(deps.get_db),
     status_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("stage:read")),
 ) -> Any:
     """
     完成项目状态（标记状态为已完成）
@@ -257,7 +257,7 @@ def create_status(
     *,
     db: Session = Depends(deps.get_db),
     status_in: ProjectStatusCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("stage:read")),
 ) -> Any:
     """
     Create new project status.

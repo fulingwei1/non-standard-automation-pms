@@ -139,26 +139,8 @@ export default function ArrivalManagement() {
       }
       return true
     })
-  }, [receipts, searchKeyword])
-  const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-
-  // Mock data for demo accounts
-  useEffect(() => {
-    if (isDemoAccount && receipts.length === 0) {
-      setReceipts([
-        {
-          id: 1,
-          receipt_no: 'GR-250115-001',
-          order_no: 'PO-250115-001',
-          purchase_order_no: 'PO-250115-001',
-          supplier_name: '欧姆龙(上海)代理',
-          project_name: 'BMS老化测试设备',
-          item_count: 2,
-          total_amount: 6102,
-          receipt_date: '2025-01-15',
-          status: 'PENDING',
-          inspect_status: 'PENDING',
-        },
+  }, [receipts, searchKeyword])    useEffect(() => {
+    ,
         {
           id: 2,
           receipt_no: 'GR-250115-002',
@@ -175,7 +157,7 @@ export default function ArrivalManagement() {
       ])
       setLoading(false)
     }
-  }, [isDemoAccount])
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">

@@ -58,7 +58,7 @@ def generate_order_no(db: Session) -> str:
 @router.get("/statistics", response_model=InstallationDispatchStatistics, status_code=status.HTTP_200_OK)
 def get_installation_dispatch_statistics(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("installation_dispatch:read")),
 ) -> Any:
     """
     获取安装调试派工统计
@@ -97,7 +97,7 @@ def read_installation_dispatch_orders(
     assigned_to_id: Optional[int] = Query(None, description="派工人员ID筛选"),
     task_type: Optional[str] = Query(None, description="任务类型筛选"),
     keyword: Optional[str] = Query(None, description="关键词搜索（派工单号/任务标题）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("installation_dispatch:read")),
 ) -> Any:
     """
     获取安装调试派工单列表
@@ -159,7 +159,7 @@ def create_installation_dispatch_order(
     *,
     db: Session = Depends(deps.get_db),
     order_in: InstallationDispatchOrderCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("installation_dispatch:create")),
 ) -> Any:
     """
     创建安装调试派工单
@@ -213,7 +213,7 @@ def create_installation_dispatch_order(
 def read_installation_dispatch_order(
     order_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("installation_dispatch:read")),
 ) -> Any:
     """
     获取安装调试派工单详情
@@ -246,7 +246,7 @@ def update_installation_dispatch_order(
     db: Session = Depends(deps.get_db),
     order_id: int,
     order_in: InstallationDispatchOrderUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("installation_dispatch:update")),
 ) -> Any:
     """
     更新安装调试派工单
@@ -276,7 +276,7 @@ def assign_installation_dispatch_order(
     db: Session = Depends(deps.get_db),
     order_id: int,
     assign_in: InstallationDispatchOrderAssign,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("installation_dispatch:read")),
 ) -> Any:
     """
     派工安装调试派工单
@@ -314,7 +314,7 @@ def batch_assign_installation_dispatch_orders(
     *,
     db: Session = Depends(deps.get_db),
     batch_assign_in: InstallationDispatchOrderBatchAssign,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("installation_dispatch:read")),
 ) -> Any:
     """
     批量派工安装调试派工单
@@ -367,7 +367,7 @@ def start_installation_dispatch_order(
     db: Session = Depends(deps.get_db),
     order_id: int,
     start_in: InstallationDispatchOrderStart,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("installation_dispatch:read")),
 ) -> Any:
     """
     开始安装调试任务
@@ -399,7 +399,7 @@ def update_installation_dispatch_order_progress(
     db: Session = Depends(deps.get_db),
     order_id: int,
     progress_in: InstallationDispatchOrderProgress,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("installation_dispatch:read")),
 ) -> Any:
     """
     更新安装调试任务进度
@@ -428,7 +428,7 @@ def complete_installation_dispatch_order(
     db: Session = Depends(deps.get_db),
     order_id: int,
     complete_in: InstallationDispatchOrderComplete,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("installation_dispatch:read")),
 ) -> Any:
     """
     完成安装调试任务
@@ -507,7 +507,7 @@ def cancel_installation_dispatch_order(
     *,
     db: Session = Depends(deps.get_db),
     order_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("installation_dispatch:read")),
 ) -> Any:
     """
     取消安装调试派工单

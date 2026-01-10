@@ -1,192 +1,246 @@
-# 权限功能实现总结
+# 权限检查批量添加实施总结
 
-> 更新日期：2026-01-06
+> 执行日期：2026-01-20  
+> 执行内容：为29个缺失权限的功能模块添加权限检查和权限定义
 
-## 一、已完成功能
+## ✅ 已完成工作
 
-### 1.1 数据权限控制
+### 1. 权限定义迁移脚本
 
-✅ **数据权限服务** (`app/services/data_scope_service.py`)
-- 支持5种数据权限范围：ALL、DEPT、PROJECT、OWN、CUSTOMER
-- 项目查询自动过滤
-- 项目访问权限检查
-- 客户访问权限检查
+已创建完整的权限定义SQL迁移脚本：
 
-✅ **权限检查辅助函数** (`app/utils/permission_helpers.py`)
-- `check_project_access_or_raise()` - 检查项目权限并抛出异常
-- `filter_projects_by_scope()` - 过滤项目查询
+- ✅ `migrations/20260120_comprehensive_permissions_sqlite.sql` - SQLite版本
+- ✅ `migrations/20260120_comprehensive_permissions_mysql.sql` - MySQL版本
 
-✅ **已应用权限检查的API端点**：
-- `GET /projects` - 项目列表（自动过滤）
-- `GET /projects/{project_id}` - 项目详情（权限检查）
-- `PUT /projects/{project_id}` - 更新项目（权限检查）
-- `GET /projects/{project_id}/milestones` - 项目里程碑列表（权限检查）
-- `POST /milestones` - 创建里程碑（权限检查）
-- `GET /milestones` - 里程碑列表（数据权限过滤）
-- `GET /projects/{project_id}/members` - 项目成员列表（权限检查）
-- `POST /projects/{project_id}/members` - 添加项目成员（权限检查）
-- `GET /members` - 成员列表（数据权限过滤）
+**包含内容**：
+- 29个模块的完整权限定义
+- 每个模块的read、create、update、delete等基础权限
+- 特殊操作权限（approve、assign、resolve、manage等）
+- 权限描述和说明
 
-### 1.2 权限审计
+**权限总数**：约120+个权限定义
 
-✅ **权限审计服务** (`app/services/permission_audit_service.py`)
-- 记录用户操作审计日志
-- 记录角色操作审计日志
-- 记录权限分配审计日志
+### 2. API端点权限检查
 
-✅ **权限审计模型** (`app/models/user.py`)
-- `PermissionAudit` 模型，包含操作人、操作类型、目标、详细信息等
+已为以下模块添加权限检查：
 
-✅ **已集成审计日志的API**：
-- `POST /users` - 创建用户
-- `PUT /users/{id}` - 更新用户
-- `PUT /users/{id}/roles` - 用户角色分配
-- `POST /roles` - 创建角色
-- `PUT /roles/{id}` - 更新角色
-- `PUT /roles/{id}/permissions` - 角色权限分配
+- ✅ **customers模块** (7个端点)
+  - `GET /customers` → `customer:read`
+  - `POST /customers` → `customer:create`
+  - `GET /customers/{id}` → `customer:read`
+  - `PUT /customers/{id}` → `customer:update`
+  - `DELETE /customers/{id}` → `customer:delete`
+  - `GET /customers/{id}/projects` → `customer:read`
+  - `GET /customers/{id}/360` → `customer:read`
 
-✅ **权限审计查询API** (`app/api/v1/endpoints/audits.py`)
-- `GET /audits` - 查询审计日志（支持分页和筛选）
-- `GET /audits/{audit_id}` - 查询审计日志详情
+### 3. 文档和指南
 
-## 二、数据权限范围说明
+已创建以下文档：
 
-| 范围 | 说明 | 优先级 |
-|------|------|:------:|
-| ALL | 全部可见 | 最高 |
-| DEPT | 同部门可见 | 中 |
-| PROJECT | 参与项目可见 | 中 |
-| OWN | 自己创建/负责的对象可见 | 低 |
-| CUSTOMER | 客户门户仅看自身项目 | 特殊 |
+- ✅ `docs/PERMISSION_IMPLEMENTATION_GUIDE.md` - 权限检查添加指南
+  - 权限检查添加模式
+  - 模块权限映射表
+  - 批量添加步骤
+  - 快速替换脚本示例
 
-**权限优先级**：用户有多个角色时，取最宽松的权限范围。
+- ✅ `docs/PERMISSION_ALLOCATION_PLAN.md` - 权限分配方案
+  - 29个模块的角色权限分配表
+  - 权限分配原则
+  - 执行步骤和SQL脚本模板
 
-## 三、使用指南
+## 📊 进度统计
 
-### 3.1 在API中检查项目权限
+| 项目 | 总数 | 已完成 | 待完成 | 完成率 |
+|------|------|--------|--------|--------|
+| 权限定义 | 120+ | 120+ | 0 | 100% |
+| API端点权限检查 | 29个模块 | 1个模块 | 28个模块 | 3.4% |
+| 权限分配方案 | 29个模块 | 29个模块 | 0 | 100% |
 
-```python
-from app.utils.permission_helpers import check_project_access_or_raise
+## ⏳ 待完成工作
 
-@router.get("/projects/{project_id}/something")
-def get_something(
-    project_id: int,
-    current_user: User = Depends(security.get_current_active_user),
-    db: Session = Depends(deps.get_db),
-):
-    # 检查项目访问权限（如果无权限会自动抛出403异常）
-    check_project_access_or_raise(db, current_user, project_id)
-    
-    # 继续业务逻辑...
+### 高优先级（API端点数量多）
+
+1. **shortage-alerts** (35个端点)
+   - 文件：`app/api/v1/endpoints/shortage_alerts.py`
+   - 权限前缀：`shortage_alert:`
+
+2. **assembly-kit** (32个端点)
+   - 文件：`app/api/v1/endpoints/assembly_kit.py`
+   - 权限前缀：`assembly_kit:`
+
+3. **issues** (29个端点)
+   - 文件：`app/api/v1/endpoints/issues.py`
+   - 权限前缀：`issue:`
+
+4. **staff-matching** (27个端点)
+   - 文件：`app/api/v1/endpoints/staff_matching.py`
+   - 权限前缀：`staff_matching:`
+
+5. **business-support** (16个端点)
+   - 文件：`app/api/v1/endpoints/business_support.py`
+   - 权限前缀：`business_support:`
+
+### 中优先级
+
+6. **timesheets** (22个端点)
+7. **reports** (22个端点)
+8. **costs** (21个端点)
+9. **task-center** (21个端点)
+10. **budgets** (17个端点)
+11. **project-roles** (16个端点)
+12. **qualifications** (16个端点)
+13. **project-evaluation** (15个端点)
+14. **engineers** (15个端点)
+15. **hr-management** (14个端点)
+16. **machines** (14个端点)
+17. **advantage-products** (11个端点)
+18. **installation-dispatch** (11个端点)
+19. **materials** (10个端点)
+20. **stages** (10个端点)
+21. **data-import-export** (10个端点)
+22. **documents** (9个端点)
+23. **technical-spec** (8个端点)
+24. **notifications** (8个端点)
+25. **hourly-rates** (8个端点)
+26. **milestones** (7个端点)
+27. **presales-integration** (7个端点)
+28. **suppliers** (6个端点)
+
+## 🚀 后续执行步骤
+
+### 步骤1：执行权限迁移脚本
+
+```bash
+# SQLite环境
+sqlite3 data/app.db < migrations/20260120_comprehensive_permissions_sqlite.sql
+
+# MySQL环境
+mysql -u user -p database < migrations/20260120_comprehensive_permissions_mysql.sql
 ```
 
-### 3.2 在查询中应用数据权限过滤
+### 步骤2：批量添加权限检查
+
+参考 `docs/PERMISSION_IMPLEMENTATION_GUIDE.md` 中的指南，为剩余28个模块添加权限检查。
+
+**推荐顺序**：
+1. 先处理高优先级模块（端点数量多）
+2. 再处理中优先级模块
+3. 最后处理低优先级模块
+
+**每个模块的处理步骤**：
+1. 打开对应的API端点文件
+2. 查找所有使用 `get_current_active_user` 的端点
+3. 根据HTTP方法替换为对应的权限检查：
+   - GET → `module:read`
+   - POST → `module:create`
+   - PUT/PATCH → `module:update`
+   - DELETE → `module:delete`
+4. 对于特殊操作，使用对应的action权限（如 `approve`、`assign`、`resolve`）
+5. 测试验证
+
+### 步骤3：为角色分配权限
+
+参考 `docs/PERMISSION_ALLOCATION_PLAN.md` 中的权限分配表，为各个角色分配权限。
+
+**分配方式**：
+1. 通过角色管理API
+2. 通过SQL脚本
+3. 通过管理界面
+
+### 步骤4：测试验证
+
+1. **权限验证**：使用不同角色的用户测试API访问
+2. **功能验证**：确保权限检查不影响正常业务流程
+3. **性能验证**：确保权限检查不会显著影响API响应时间
+
+## 📝 注意事项
+
+### 1. 权限编码一致性
+
+确保API端点中使用的权限编码与迁移脚本中定义的完全一致：
+- ✅ `customer:read`
+- ❌ `customers:read` (错误：复数形式)
+- ❌ `customer:view` (错误：action不一致)
+
+### 2. 个人数据API
+
+对于用户查看自己数据的API（如 `/my/timesheets`），可以保持使用 `get_current_active_user`，因为已经在函数内部做了数据范围限制。
+
+### 3. 公开API
+
+以下API不需要权限检查：
+- `/auth/login` - 登录接口
+- `/auth/logout` - 登出接口
+- `/health` - 健康检查
+
+### 4. 权限检查顺序
+
+在函数参数中，权限检查依赖应该放在其他依赖之后：
 
 ```python
-from app.utils.permission_helpers import filter_projects_by_scope
-
-@router.get("/projects")
-def list_projects(
-    current_user: User = Depends(security.get_current_active_user),
+# ✅ 正确
+def my_function(
     db: Session = Depends(deps.get_db),
+    item_id: int,
+    current_user: User = Depends(security.require_permission("module:read")),
 ):
-    query = db.query(Project)
-    
-    # 应用数据权限过滤
-    query = filter_projects_by_scope(db, query, current_user)
-    
-    return query.all()
+    ...
+
+# ❌ 错误（权限检查应该在最后）
+def my_function(
+    current_user: User = Depends(security.require_permission("module:read")),
+    db: Session = Depends(deps.get_db),
+    item_id: int,
+):
+    ...
 ```
 
-### 3.3 记录审计日志
+## 🔗 相关文件
 
-```python
-from app.services.permission_audit_service import PermissionAuditService
-from fastapi import Request
+### 迁移脚本
+- `migrations/20260120_comprehensive_permissions_sqlite.sql`
+- `migrations/20260120_comprehensive_permissions_mysql.sql`
 
-@router.put("/users/{user_id}/roles")
-def assign_roles(
-    user_id: int,
-    role_data: UserRoleAssign,
-    request: Request,
-    current_user: User = Depends(security.get_current_active_user),
-    db: Session = Depends(deps.get_db),
-):
-    # 执行角色分配...
-    
-    # 记录审计日志
-    PermissionAuditService.log_user_role_assignment(
-        db=db,
-        operator_id=current_user.id,
-        user_id=user_id,
-        role_ids=role_data.role_ids,
-        ip_address=request.client.host if request.client else None,
-        user_agent=request.headers.get("user-agent")
-    )
-```
+### 文档
+- `docs/PERMISSION_IMPLEMENTATION_GUIDE.md` - 权限检查添加指南
+- `docs/PERMISSION_ALLOCATION_PLAN.md` - 权限分配方案
+- `docs/SYSTEM_FEATURES_REPORT.md` - 系统功能状态报告
 
-## 四、待完善功能
+### 参考实现
+- `app/api/v1/endpoints/customers.py` - customers模块（已完成）
 
-### 4.1 需要添加权限检查的API端点
+## 📈 预期效果
 
-以下API端点建议添加项目权限检查：
+完成所有权限检查添加后：
 
-1. **项目相关操作**：
-   - `PUT /projects/{project_id}/stage` - 更新项目阶段
-   - `PUT /projects/{project_id}/status` - 更新项目状态
-   - `DELETE /projects/{project_id}` - 删除项目
-   - `POST /projects/{project_id}/payment-plans` - 创建收款计划
+1. **安全性提升**：所有业务API都有权限控制
+2. **权限覆盖率**：从32.6%提升到100%
+3. **系统完整性**：功能、权限、前端三者完整对应
+4. **可维护性**：权限管理更加规范和系统化
 
-2. **里程碑相关**：
-   - `PUT /milestones/{milestone_id}` - 更新里程碑
-   - `DELETE /milestones/{milestone_id}` - 删除里程碑
+## ⏱️ 预计工作量
 
-3. **成员相关**：
-   - `PUT /project-members/{member_id}` - 更新项目成员
-   - `DELETE /members/{member_id}` - 移除项目成员
+- **高优先级模块**（5个）：约2-3小时
+- **中优先级模块**（10个）：约3-4小时
+- **低优先级模块**（13个）：约2-3小时
+- **测试验证**：约1-2小时
 
-4. **其他项目相关资源**：
-   - 文档管理（`/documents`）
-   - 成本管理（`/costs`）
-   - 进度跟踪（`/progress`）
-   - 任务管理（`/tasks`）
+**总计**：约8-12小时
 
-### 4.2 需要应用数据权限过滤的查询API
+## ✅ 检查清单
 
-以下查询API建议应用数据权限过滤（当project_id为查询参数时）：
+完成权限检查添加后，请确认：
 
-1. `GET /documents?project_id=xxx`
-2. `GET /costs?project_id=xxx`
-3. `GET /tasks?project_id=xxx`
-4. `GET /issues?project_id=xxx`
-5. `GET /ecn?project_id=xxx`
-6. `GET /acceptance?project_id=xxx`
-7. `GET /outsourcing?project_id=xxx`
-8. `GET /production?project_id=xxx`
+- [ ] 所有29个模块的权限定义已创建
+- [ ] 所有29个模块的API端点已添加权限检查
+- [ ] 权限编码与迁移脚本中的定义一致
+- [ ] 所有角色的权限已分配
+- [ ] 使用不同角色测试API访问正常
+- [ ] 权限检查不影响正常业务流程
+- [ ] 系统功能报告显示权限覆盖率达到100%
 
-## 五、最佳实践
+---
 
-1. **权限检查位置**：
-   - 对于路径参数中的`project_id`，使用`check_project_access_or_raise()`
-   - 对于查询参数中的`project_id`，先检查权限，再过滤数据
-
-2. **查询过滤**：
-   - 对于列表查询，使用`filter_projects_by_scope()`自动过滤
-   - 对于没有指定project_id的查询，根据用户权限范围过滤
-
-3. **审计日志**：
-   - 所有权限相关操作都应记录审计日志
-   - 审计日志记录失败不应影响主业务流程
-
-4. **性能优化**：
-   - 权限检查在数据库层面进行，避免应用层过滤
-   - 对于频繁查询，考虑使用缓存
-
-## 六、相关文档
-
-- [数据权限与审计功能实现文档](./DATA_SCOPE_AND_AUDIT_IMPLEMENTATION.md)
-- [权限管理模块详细设计文档](../claude%20设计方案/权限管理模块_详细设计文档.md)
-- [权限控制系统总结文档](./PERMISSION_SYSTEM_SUMMARY.md)
-
-
-
+**最后更新**：2026-01-20  
+**执行人**：AI Assistant  
+**状态**：进行中（1/29模块已完成）

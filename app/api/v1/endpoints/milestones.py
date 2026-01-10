@@ -22,7 +22,7 @@ def read_milestones(
     limit: int = 100,
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     status: Optional[str] = Query(None, description="里程碑状态筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("milestone:read")),
 ) -> Any:
     """
     Retrieve milestones.
@@ -81,7 +81,7 @@ def get_project_milestones(
     db: Session = Depends(deps.get_db),
     project_id: int,
     status: Optional[str] = Query(None, description="里程碑状态筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("milestone:read")),
 ) -> Any:
     """
     获取项目的里程碑列表
@@ -103,7 +103,7 @@ def create_milestone(
     *,
     db: Session = Depends(deps.get_db),
     milestone_in: MilestoneCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("milestone:create")),
 ) -> Any:
     """
     Create new milestone.
@@ -124,7 +124,7 @@ def read_milestone(
     *,
     db: Session = Depends(deps.get_db),
     milestone_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("milestone:read")),
 ) -> Any:
     """
     Get milestone by ID.
@@ -143,7 +143,7 @@ def update_milestone(
     db: Session = Depends(deps.get_db),
     milestone_id: int,
     milestone_in: MilestoneUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("milestone:read")),
 ) -> Any:
     """
     Update a milestone.
@@ -171,7 +171,7 @@ def complete_milestone(
     milestone_id: int,
     actual_date: Optional[str] = Query(None, description="实际完成日期（YYYY-MM-DD）"),
     auto_trigger_invoice: bool = Query(True, description="自动触发开票"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("milestone:read")),
 ) -> Any:
     """
     完成里程碑（自动触发收款计划开票）
@@ -299,7 +299,7 @@ def delete_milestone(
     *,
     db: Session = Depends(deps.get_db),
     milestone_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("milestone:read")),
 ) -> Any:
     """
     删除里程碑

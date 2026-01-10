@@ -54,7 +54,7 @@ def convert_lead_code_to_project_code(lead_id: str) -> str:
 async def create_project_from_lead(
     lead_data: LeadConversionRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user)
+    current_user: User = Depends(security.require_permission("presales_integration:create"))
 ) -> Any:
     """从评估通过的销售线索创建项目
 
@@ -274,7 +274,7 @@ def get_win_rate_recommendations(
 async def predict_win_rate(
     request: WinRatePredictionRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user)
+    current_user: User = Depends(security.require_permission("presales_integration:create"))
 ) -> Any:
     """预测线索中标概率"""
 
@@ -351,7 +351,7 @@ async def predict_win_rate(
 async def get_lead_resource_investment(
     lead_id: str,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user)
+    current_user: User = Depends(security.require_permission("presales_integration:create"))
 ) -> Any:
     """获取某线索/项目投入的资源工时"""
 
@@ -427,7 +427,7 @@ async def get_lead_resource_investment(
 async def get_resource_waste_analysis(
     period: str = Query(..., description="分析周期，格式 YYYY-MM 或 YYYY"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user)
+    current_user: User = Depends(security.require_permission("presales_integration:create"))
 ) -> Any:
     """获取资源浪费分析报告"""
 
@@ -510,7 +510,7 @@ async def get_salesperson_performance(
     salesperson_id: int,
     period: Optional[str] = Query(None, description="统计周期，格式 YYYY 或 YYYY-MM，默认全部"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user)
+    current_user: User = Depends(security.require_permission("presales_integration:create"))
 ) -> Any:
     """获取销售人员绩效分析"""
 
@@ -616,7 +616,7 @@ async def get_salesperson_ranking(
     period: str = Query(..., description="统计周期，格式 YYYY 或 YYYY-MM"),
     limit: int = Query(10, ge=1, le=50, description="返回数量"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user)
+    current_user: User = Depends(security.require_permission("presales_integration:create"))
 ) -> Any:
     """获取销售人员排行榜"""
 
@@ -687,7 +687,7 @@ async def get_salesperson_ranking(
 @router.get("/dashboard", response_model=ResponseModel[PresalesDashboardData])
 async def get_presales_dashboard(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user)
+    current_user: User = Depends(security.require_permission("presales_integration:create"))
 ) -> Any:
     """获取售前分析仪表板数据"""
 

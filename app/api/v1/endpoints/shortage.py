@@ -2051,19 +2051,20 @@ def get_kit_rate_statistics(
     齐套率统计
     按项目/车间/时间维度统计齐套率
     """
-    from datetime import timedelta
-    from app.api.v1.endpoints.kit_rate import calculate_kit_rate
-    from app.models.material import BomHeader, BomItem
+    from app.services.kit_rate_statistics_service import (
+        calculate_date_range,
+        calculate_project_kit_statistics,
+        calculate_workshop_kit_statistics,
+        calculate_daily_kit_statistics,
+        calculate_summary_statistics
+    )
     
     # 默认使用当前月
     today = date.today()
-    if not start_date:
-        start_date = date(today.year, today.month, 1)
-    if not end_date:
-        if today.month == 12:
-            end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
+    if not start_date or not end_date:
+        default_start, default_end = calculate_date_range(today)
+        start_date = start_date or default_start
+        end_date = end_date or default_end
     
     # 获取项目列表
     query = db.query(Project).filter(Project.is_active == True)
@@ -2076,155 +2077,20 @@ def get_kit_rate_statistics(
     if group_by == "project":
         # 按项目统计
         for project in projects:
-            try:
-                # 获取项目下所有机台的BOM
-                machines = db.query(Machine).filter(Machine.project_id == project.id).all()
-                all_bom_items = []
-                
-                for machine in machines:
-                    bom = (
-                        db.query(BomHeader)
-                        .filter(BomHeader.machine_id == machine.id)
-                        .filter(BomHeader.is_latest == True)
-                        .first()
-                    )
-                    if bom:
-                        bom_items = db.query(BomItem).filter(BomItem.bom_id == bom.id).all()
-                        all_bom_items.extend(bom_items)
-                
-                # 计算齐套率
-                kit_data = calculate_kit_rate(db, all_bom_items, "quantity")
-                
-                statistics.append({
-                    "project_id": project.id,
-                    "project_name": project.project_name,
-                    "project_code": project.project_code,
-                    "kit_rate": kit_data.get("kit_rate", 0.0),
-                    "total_items": kit_data.get("total_items", 0),
-                    "fulfilled_items": kit_data.get("fulfilled_items", 0),
-                    "shortage_items": kit_data.get("shortage_items", 0),
-                    "in_transit_items": kit_data.get("in_transit_items", 0),
-                    "kit_status": kit_data.get("kit_status", "shortage"),
-                })
-            except Exception as e:
-                print(f"Error calculating kit rate for project {project.id}: {e}")
-                continue
+            stat = calculate_project_kit_statistics(db, project)
+            if stat:
+                statistics.append(stat)
     
     elif group_by == "workshop":
         # 按车间统计
-        from app.models.production import Workshop
-        workshops = db.query(Workshop).all()
-        if workshop_id:
-            workshops = [w for w in workshops if w.id == workshop_id]
-        
-        for workshop in workshops:
-            # 获取该车间的所有项目
-            workshop_projects = [p for p in projects if p.id]  # 简化处理，实际应该关联车间
-            
-            total_kit_rate = 0.0
-            project_count = 0
-            total_items = 0
-            fulfilled_items = 0
-            shortage_items = 0
-            in_transit_items = 0
-            
-            for project in workshop_projects:
-                try:
-                    # 获取项目下所有机台的BOM
-                    machines = db.query(Machine).filter(Machine.project_id == project.id).all()
-                    all_bom_items = []
-                    
-                    for machine in machines:
-                        bom = (
-                            db.query(BomHeader)
-                            .filter(BomHeader.machine_id == machine.id)
-                            .filter(BomHeader.is_latest == True)
-                            .first()
-                        )
-                        if bom:
-                            bom_items = db.query(BomItem).filter(BomItem.bom_id == bom.id).all()
-                            all_bom_items.extend(bom_items)
-                    
-                    # 计算齐套率
-                    kit_data = calculate_kit_rate(db, all_bom_items, "quantity")
-                    
-                    total_kit_rate += kit_data.get("kit_rate", 0.0)
-                    project_count += 1
-                    total_items += kit_data.get("total_items", 0)
-                    fulfilled_items += kit_data.get("fulfilled_items", 0)
-                    shortage_items += kit_data.get("shortage_items", 0)
-                    in_transit_items += kit_data.get("in_transit_items", 0)
-                except:
-                    continue
-            
-            avg_kit_rate = total_kit_rate / project_count if project_count > 0 else 0.0
-            
-            statistics.append({
-                "workshop_id": workshop.id,
-                "workshop_name": workshop.workshop_name,
-                "kit_rate": round(avg_kit_rate, 2),
-                "project_count": project_count,
-                "total_items": total_items,
-                "fulfilled_items": fulfilled_items,
-                "shortage_items": shortage_items,
-                "in_transit_items": in_transit_items,
-            })
+        statistics = calculate_workshop_kit_statistics(db, workshop_id, projects)
     
     elif group_by == "day":
         # 按日期统计
-        current = start_date
-        while current <= end_date:
-            # 简化处理：使用当前数据，实际应该从历史记录表查询
-            total_kit_rate = 0.0
-            project_count = 0
-            
-            for project in projects:
-                try:
-                    # 获取项目下所有机台的BOM
-                    machines = db.query(Machine).filter(Machine.project_id == project.id).all()
-                    all_bom_items = []
-                    
-                    for machine in machines:
-                        bom = (
-                            db.query(BomHeader)
-                            .filter(BomHeader.machine_id == machine.id)
-                            .filter(BomHeader.is_latest == True)
-                            .first()
-                        )
-                        if bom:
-                            bom_items = db.query(BomItem).filter(BomItem.bom_id == bom.id).all()
-                            all_bom_items.extend(bom_items)
-                    
-                    # 计算齐套率
-                    kit_data = calculate_kit_rate(db, all_bom_items, "quantity")
-                    
-                    total_kit_rate += kit_data.get("kit_rate", 0.0)
-                    project_count += 1
-                except:
-                    continue
-            
-            avg_kit_rate = total_kit_rate / project_count if project_count > 0 else 0.0
-            
-            statistics.append({
-                "date": current.isoformat(),
-                "kit_rate": round(avg_kit_rate, 2),
-                "project_count": project_count,
-            })
-            
-            current += timedelta(days=1)
+        statistics = calculate_daily_kit_statistics(db, start_date, end_date, projects)
     
     # 计算汇总
-    if statistics:
-        if group_by in ["project", "workshop"]:
-            avg_kit_rate = sum(s["kit_rate"] for s in statistics) / len(statistics)
-            max_kit_rate = max(s["kit_rate"] for s in statistics)
-            min_kit_rate = min(s["kit_rate"] for s in statistics)
-        else:  # day
-            avg_kit_rate = sum(s["kit_rate"] for s in statistics) / len(statistics) if statistics else 0.0
-            max_kit_rate = max(s["kit_rate"] for s in statistics) if statistics else 0.0
-            min_kit_rate = min(s["kit_rate"] for s in statistics) if statistics else 0.0
-    else:
-        avg_kit_rate = max_kit_rate = min_kit_rate = 0.0
+    summary = calculate_summary_statistics(statistics, group_by)
     
     return ResponseModel(
         code=200,
@@ -2233,11 +2099,6 @@ def get_kit_rate_statistics(
             "period": {"start": str(start_date), "end": str(end_date)},
             "group_by": group_by,
             "statistics": statistics,
-            "summary": {
-                "avg_kit_rate": round(avg_kit_rate, 2),
-                "max_kit_rate": round(max_kit_rate, 2),
-                "min_kit_rate": round(min_kit_rate, 2),
-                "total_count": len(statistics),
-            }
+            "summary": summary
         }
     )

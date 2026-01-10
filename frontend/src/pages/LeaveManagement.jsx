@@ -38,63 +38,8 @@ import { SimpleBarChart, MonthlyTrendChart, SimplePieChart, TrendComparisonCard 
 import { adminApi } from '../services/api'
 
 // Mock data
-const mockLeaveApplications = [
-  {
-    id: 1,
-    employee: '赵工程师',
-    department: '机械部',
-    type: '年假',
-    days: 3,
-    startDate: '2025-01-10',
-    endDate: '2025-01-12',
-    reason: '个人事务',
-    status: 'pending',
-    submitTime: '2025-01-06 11:30',
-    approver: '行政经理',
-  },
-  {
-    id: 2,
-    employee: '钱工程师',
-    department: '电气部',
-    type: '病假',
-    days: 1,
-    startDate: '2025-01-08',
-    endDate: '2025-01-08',
-    reason: '身体不适',
-    status: 'approved',
-    submitTime: '2025-01-07 09:00',
-    approver: '行政经理',
-    approveTime: '2025-01-07 10:30',
-  },
-  {
-    id: 3,
-    employee: '孙工程师',
-    department: '软件部',
-    type: '事假',
-    days: 2,
-    startDate: '2025-01-09',
-    endDate: '2025-01-10',
-    reason: '家庭事务',
-    status: 'rejected',
-    submitTime: '2025-01-06 14:20',
-    approver: '行政经理',
-    rejectReason: '项目紧急，暂不批准',
-  },
-]
-
-const mockLeaveBalance = [
-  {
-    employee: '赵工程师',
-    department: '机械部',
-    annualLeave: 10,
-    usedAnnualLeave: 3,
-    sickLeave: 5,
-    usedSickLeave: 1,
-    personalLeave: 3,
-    usedPersonalLeave: 0,
-  },
-]
-
+// Mock data - 已移除，使用真实API
+// Mock data - 已移除，使用真实API
 export default function LeaveManagement() {
   const [searchText, setSearchText] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')

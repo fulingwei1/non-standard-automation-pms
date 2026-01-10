@@ -35,7 +35,7 @@ def list_hourly_rate_configs(
     role_id: Optional[int] = Query(None, description="角色ID筛选"),
     dept_id: Optional[int] = Query(None, description="部门ID筛选"),
     is_active: Optional[bool] = Query(None, description="是否启用筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hourly_rate:read")),
 ) -> Any:
     """
     获取时薪配置列表
@@ -81,7 +81,7 @@ def create_hourly_rate_config(
     *,
     db: Session = Depends(deps.get_db),
     config_in: HourlyRateConfigCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hourly_rate:create")),
 ) -> Any:
     """
     创建时薪配置
@@ -146,7 +146,7 @@ def get_hourly_rate_config(
     *,
     db: Session = Depends(deps.get_db),
     config_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hourly_rate:read")),
 ) -> Any:
     """
     获取时薪配置详情
@@ -171,7 +171,7 @@ def update_hourly_rate_config(
     db: Session = Depends(deps.get_db),
     config_id: int,
     config_in: HourlyRateConfigUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hourly_rate:update")),
 ) -> Any:
     """
     更新时薪配置
@@ -204,7 +204,7 @@ def delete_hourly_rate_config(
     *,
     db: Session = Depends(deps.get_db),
     config_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hourly_rate:delete")),
 ) -> Any:
     """
     删除时薪配置
@@ -225,7 +225,7 @@ def get_user_hourly_rate(
     db: Session = Depends(deps.get_db),
     user_id: int,
     work_date: Optional[str] = Query(None, description="工作日期（YYYY-MM-DD格式），默认今天"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hourly_rate:read")),
 ) -> Any:
     """
     获取用户时薪（按优先级：用户配置 > 角色配置 > 部门配置 > 默认配置）
@@ -260,7 +260,7 @@ def get_users_hourly_rates(
     db: Session = Depends(deps.get_db),
     user_ids: List[int] = Query(..., description="用户ID列表"),
     work_date: Optional[str] = Query(None, description="工作日期（YYYY-MM-DD格式），默认今天"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hourly_rate:read")),
 ) -> Any:
     """
     批量获取多个用户的时薪
@@ -299,7 +299,7 @@ def get_hourly_rate_history(
     dept_id: Optional[int] = Query(None, description="部门ID筛选"),
     start_date: Optional[str] = Query(None, description="开始日期（YYYY-MM-DD格式）"),
     end_date: Optional[str] = Query(None, description="结束日期（YYYY-MM-DD格式）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hourly_rate:read")),
 ) -> Any:
     """
     获取时薪配置历史记录

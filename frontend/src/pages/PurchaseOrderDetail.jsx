@@ -49,241 +49,7 @@ import { fadeIn, staggerContainer } from '../lib/animations'
 import { purchaseApi } from '../services/api'
 
 // Mock purchase order data
-const mockPO = {
-  id: 'PO-2025-0001',
-  poNumber: 'PO-2025-0001',
-  projectName: 'BMS老化测试设备',
-  supplier: {
-    id: 'SUPP-001',
-    name: '深圳电子元器件有限公司',
-    contact: '张三',
-    phone: '13800000001',
-    email: 'contact@supplier.com',
-    address: '深圳市龙华区',
-    paymentTerm: '2/10 N30',
-  },
-  status: 'confirmed', // draft | submitted | confirmed | shipped | received | invoiced
-  issueDate: '2025-11-15',
-  requiredDate: '2025-12-01',
-  expectedDelivery: '2025-11-25',
-  actualDelivery: null,
-  totalAmount: 185000,
-  taxRate: 13,
-  taxAmount: 24050,
-  totalWithTax: 209050,
-  currency: 'CNY',
-  paymentStatus: 'unpaid', // unpaid | partial | paid
-  paidAmount: 0,
-  invoiceStatus: 'pending', // pending | partial | complete
-  invoicedAmount: 0,
-  items: [
-    {
-      id: 'POL-001',
-      itemNo: 1,
-      materialCode: 'MAT-2025-001',
-      description: '32位MCU芯片 STM32F103',
-      specification: 'LQFP-100',
-      quantity: 500,
-      unit: '个',
-      unitPrice: 45.5,
-      amount: 22750,
-      receivedQty: 0,
-      status: 'confirmed', // draft | confirmed | shipped | received
-      notes: '原厂正品，提供质保',
-    },
-    {
-      id: 'POL-002',
-      itemNo: 2,
-      materialCode: 'MAT-2025-002',
-      description: '电阻 1/4W 10K',
-      specification: '1206',
-      quantity: 2000,
-      unit: '个',
-      unitPrice: 0.15,
-      amount: 300,
-      receivedQty: 0,
-      status: 'confirmed',
-      notes: '',
-    },
-    {
-      id: 'POL-003',
-      itemNo: 3,
-      materialCode: 'MAT-2025-003',
-      description: '铝电解电容',
-      specification: '100uF/16V',
-      quantity: 1000,
-      unit: '个',
-      unitPrice: 0.85,
-      amount: 850,
-      receivedQty: 0,
-      status: 'confirmed',
-      notes: '日化品牌',
-    },
-    {
-      id: 'POL-004',
-      itemNo: 4,
-      materialCode: 'MAT-2025-004',
-      description: '电源模块',
-      specification: '110-240V/12V 5A',
-      quantity: 50,
-      unit: '个',
-      unitPrice: 280,
-      amount: 14000,
-      receivedQty: 0,
-      status: 'confirmed',
-      notes: '含PCB装配',
-    },
-    {
-      id: 'POL-005',
-      itemNo: 5,
-      materialCode: 'MAT-2025-005',
-      description: 'USB连接器',
-      specification: 'Type-C',
-      quantity: 100,
-      unit: '个',
-      unitPrice: 3.2,
-      amount: 320,
-      receivedQty: 0,
-      status: 'confirmed',
-      notes: '',
-    },
-    {
-      id: 'POL-006',
-      itemNo: 6,
-      materialCode: 'MAT-2025-006',
-      description: '焊锡丝 SAC305',
-      specification: '0.8mm',
-      quantity: 5,
-      unit: 'kg',
-      unitPrice: 120,
-      amount: 600,
-      receivedQty: 0,
-      status: 'confirmed',
-      notes: '无铅环保焊锡',
-    },
-    {
-      id: 'POL-007',
-      itemNo: 7,
-      materialCode: 'MAT-2025-007',
-      description: '散热片',
-      specification: '铝合金 50x50x30mm',
-      quantity: 200,
-      unit: '个',
-      unitPrice: 8.5,
-      amount: 1700,
-      receivedQty: 0,
-      status: 'confirmed',
-      notes: '阳极氧化黑色',
-    },
-    {
-      id: 'POL-008',
-      itemNo: 8,
-      materialCode: 'MAT-2025-008',
-      description: '包装材料',
-      specification: '防静电袋+气泡膜',
-      quantity: 100,
-      unit: '套',
-      unitPrice: 12,
-      amount: 1200,
-      receivedQty: 0,
-      status: 'confirmed',
-      notes: '',
-    },
-    {
-      id: 'POL-009',
-      itemNo: 9,
-      materialCode: 'MAT-2025-009',
-      description: '运输费',
-      specification: '快递到指定地址',
-      quantity: 1,
-      unit: '批',
-      unitPrice: 5680,
-      amount: 5680,
-      receivedQty: 0,
-      status: 'confirmed',
-      notes: '包括保险费',
-    },
-  ],
-  timeline: [
-    {
-      stage: 'draft',
-      label: '草稿',
-      date: '2025-11-14',
-      status: 'completed',
-      description: '采购订单创建',
-    },
-    {
-      stage: 'submitted',
-      label: '已提交',
-      date: '2025-11-15',
-      status: 'completed',
-      description: '订单已提交给供应商',
-    },
-    {
-      stage: 'confirmed',
-      label: '已确认',
-      date: '2025-11-16',
-      status: 'completed',
-      description: '供应商已确认订单',
-    },
-    {
-      stage: 'shipped',
-      label: '已发货',
-      date: null,
-      status: 'pending',
-      description: '等待供应商发货',
-      daysLeft: 9,
-    },
-    {
-      stage: 'received',
-      label: '已收货',
-      date: null,
-      status: 'pending',
-      description: '等待物料到达',
-      daysLeft: 16,
-    },
-    {
-      stage: 'invoiced',
-      label: '已开票',
-      date: null,
-      status: 'pending',
-      description: '等待收票和付款',
-    },
-  ],
-  documents: [
-    {
-      id: 'DOC-001',
-      name: 'PO原件.pdf',
-      type: 'pdf',
-      size: '256 KB',
-      uploadDate: '2025-11-15',
-      status: 'active',
-    },
-    {
-      id: 'DOC-002',
-      name: '物料规格书.zip',
-      type: 'zip',
-      size: '3.2 MB',
-      uploadDate: '2025-11-15',
-      status: 'active',
-    },
-    {
-      id: 'DOC-003',
-      name: '报价单.pdf',
-      type: 'pdf',
-      size: '180 KB',
-      uploadDate: '2025-11-14',
-      status: 'active',
-    },
-  ],
-  remarks: '重要物料订单，涉及5条生产线，请及时跟进。',
-  attachedProject: {
-    id: 'PJ250715001',
-    name: 'BMS老化测试设备',
-    stage: 'S3 采购备料',
-  },
-}
-
+// Mock data - 已移除，使用真实API
 const statusConfig = {
   draft: { label: '草稿', color: 'bg-slate-500/20 text-slate-400', icon: FileText },
   submitted: { label: '已提交', color: 'bg-blue-500/20 text-blue-400', icon: Send },
@@ -385,10 +151,7 @@ export default function PurchaseOrderDetail() {
   const navigate = useNavigate()
   const [po, setPo] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-
-  // Map backend status to frontend status
+  const [error, setError] = useState(null)  // Map backend status to frontend status
   const mapBackendStatusToFrontend = (backendStatus) => {
     const statusMap = {
       'DRAFT': 'draft',
@@ -535,18 +298,14 @@ export default function PurchaseOrderDetail() {
       setPo(transformedPO)
     } catch (err) {
       console.error('Failed to load purchase order:', err)
-      if (isDemoAccount) {
-        // For demo accounts, use mock data on error
-        setPo(mockPO)
-        setError(null)
-      } else {
+       else {
         setError(err.response?.data?.detail || err.message || '加载采购订单失败')
         setPo(null)
       }
     } finally {
       setLoading(false)
     }
-  }, [id, isDemoAccount])
+  }, [id])
 
   // Load order when component mounts
   useEffect(() => {

@@ -83,11 +83,7 @@ export default function GoodsReceiptDetail() {
     qualified_qty: 0,
     rejected_qty: 0,
     inspect_result: 'QUALIFIED',
-  })
-  
-  const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-
-  useEffect(() => {
+  })  useEffect(() => {
     loadReceipt()
   }, [id])
 
@@ -96,19 +92,7 @@ export default function GoodsReceiptDetail() {
       setLoading(true)
       setError(null)
       
-      if (isDemoAccount) {
-        // Mock data
-        setReceipt({
-          id: parseInt(id),
-          receipt_no: 'GR-250115-001',
-          order_id: 1,
-          order_no: 'PO-250115-001',
-          supplier_name: '欧姆龙(上海)代理',
-          receipt_date: '2025-01-15',
-          receipt_type: 'NORMAL',
-          status: 'RECEIVED',
-          inspect_status: 'INSPECTING',
-        })
+      )
         setItems([
           {
             id: 1,
@@ -176,17 +160,7 @@ export default function GoodsReceiptDetail() {
     try {
       setLoading(true)
       
-      if (isDemoAccount) {
-        // Mock update
-        const updatedItems = items.map(item =>
-          item.id === inspectingItem.id
-            ? {
-                ...item,
-                inspect_qty: inspectData.inspect_qty,
-                qualified_qty: inspectData.qualified_qty,
-                rejected_qty: inspectData.rejected_qty,
-                inspect_result: inspectData.inspect_result,
-              }
+      
             : item
         )
         setItems(updatedItems)
@@ -216,8 +190,7 @@ export default function GoodsReceiptDetail() {
     try {
       setLoading(true)
       
-      if (isDemoAccount) {
-        setReceipt({ ...receipt, status })
+      )
         toast.success('状态已更新（演示模式）')
       } else {
         await purchaseApi.receipts.updateStatus(id, status)

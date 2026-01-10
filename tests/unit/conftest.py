@@ -2,34 +2,55 @@
 Unit tests fixtures - 不依赖完整应用程序
 """
 
+import os
+import shutil
+import tempfile
+from pathlib import Path
+
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
-
-from app.models.base import Base
 
 
 @pytest.fixture(scope="function")
 def db_engine():
-    """创建测试数据库引擎（内存SQLite）"""
+    """
+    为单元测试提供隔离的 SQLite 引擎：
+    - 以 data/app.db 为模板复制一个临时数据库文件，保留完整 schema
+    - 清空测试涉及的表，保证数据干净
+    - 每个测试函数独享数据库文件，互不影响
+    """
+    template_path = Path(os.getenv("UNIT_TEST_DB_TEMPLATE", "data/app.db"))
+    if not template_path.exists():
+        raise FileNotFoundError(f"无法找到基准数据库文件：{template_path}")
+
+    tmp_db = tempfile.NamedTemporaryFile(suffix=".db")
+    shutil.copyfile(template_path, tmp_db.name)
+
     engine = create_engine(
-        "sqlite:///:memory:",
+        f"sqlite:///{tmp_db.name}",
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
-    # 启用外键约束
-    from sqlalchemy import event
-    @event.listens_for(engine, "connect")
-    def set_sqlite_pragma(dbapi_conn, connection_record):
-        cursor = dbapi_conn.cursor()
-        cursor.execute("PRAGMA foreign_keys=ON")
-        cursor.close()
 
-    Base.metadata.create_all(bind=engine)
+    with engine.begin() as conn:
+        conn.execute(text("PRAGMA foreign_keys=OFF"))
+        conn.execute(text("DELETE FROM task_unified"))
+        conn.execute(text("DELETE FROM projects"))
+        conn.execute(text("DELETE FROM project_stages"))
+        conn.execute(
+            text(
+                "DELETE FROM sqlite_sequence "
+                "WHERE name IN ('task_unified', 'projects', 'project_stages')"
+            )
+        )
+        conn.execute(text("PRAGMA foreign_keys=ON"))
+
     yield engine
-    Base.metadata.drop_all(bind=engine)
+
     engine.dispose()
+    tmp_db.close()
 
 
 @pytest.fixture(scope="function")

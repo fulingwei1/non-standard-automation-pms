@@ -56,7 +56,7 @@ class ManagementRhythmConfig(Base, TimestampMixin):
     # 状态
     is_active = Column(String(10), default='ACTIVE', comment='是否启用:ACTIVE/INACTIVE')
     
-    created_by = Column(Integer, ForeignKey('user.id'), comment='创建人ID')
+    created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
     
     __table_args__ = (
         Index('idx_rhythm_config_level_cycle', 'rhythm_level', 'cycle_type'),
@@ -182,7 +182,7 @@ class StrategicMeeting(Base, TimestampMixin):
     # 状态
     status = Column(String(20), default='SCHEDULED', comment='状态:SCHEDULED/ONGOING/COMPLETED/CANCELLED')
     
-    created_by = Column(Integer, ForeignKey('user.id'), comment='创建人ID')
+    created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
     
     # 关系
     action_items = relationship("MeetingActionItem", back_populates="meeting", cascade="all, delete-orphan")
@@ -207,7 +207,7 @@ class MeetingActionItem(Base, TimestampMixin):
     
     # 行动项信息
     action_description = Column(Text, nullable=False, comment='行动描述')
-    owner_id = Column(Integer, ForeignKey('user.id'), nullable=False, comment='责任人ID')
+    owner_id = Column(Integer, ForeignKey('users.id'), nullable=False, comment='责任人ID')
     owner_name = Column(String(50), comment='责任人姓名')
     
     # 时间
@@ -223,7 +223,7 @@ class MeetingActionItem(Base, TimestampMixin):
     # 优先级
     priority = Column(String(20), default='NORMAL', comment='优先级:LOW/NORMAL/HIGH/URGENT')
     
-    created_by = Column(Integer, ForeignKey('user.id'), comment='创建人ID')
+    created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
     
     # 关系
     meeting = relationship("StrategicMeeting", back_populates="action_items")
@@ -276,7 +276,7 @@ class RhythmDashboardSnapshot(Base, TimestampMixin):
     # 快照时间
     snapshot_date = Column(Date, nullable=False, comment='快照日期')
     
-    created_by = Column(Integer, ForeignKey('user.id'), comment='创建人ID')
+    created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
     
     __table_args__ = (
         Index('idx_dashboard_snapshot_level_cycle', 'rhythm_level', 'cycle_type'),
@@ -347,7 +347,7 @@ class MeetingReport(Base, TimestampMixin):
     status = Column(String(20), default='GENERATED', comment='状态:GENERATED/PUBLISHED/ARCHIVED')
     
     # 生成信息
-    generated_by = Column(Integer, ForeignKey('user.id'), comment='生成人ID')
+    generated_by = Column(Integer, ForeignKey('users.id'), comment='生成人ID')
     generated_at = Column(DateTime, default=datetime.now, comment='生成时间')
     published_at = Column(DateTime, comment='发布时间')
     
@@ -426,7 +426,7 @@ class MeetingReportConfig(Base, TimestampMixin):
     is_default = Column(Boolean, default=False, comment='是否默认配置')
     is_active = Column(Boolean, default=True, comment='是否启用')
     
-    created_by = Column(Integer, ForeignKey('user.id'), comment='创建人ID')
+    created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
     
     __table_args__ = (
         Index('idx_report_config_type', 'report_type'),
@@ -478,7 +478,7 @@ class ReportMetricDefinition(Base, TimestampMixin):
     is_active = Column(Boolean, default=True, comment='是否启用')
     is_system = Column(Boolean, default=False, comment='是否系统预置')
     
-    created_by = Column(Integer, ForeignKey('user.id'), comment='创建人ID')
+    created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
     
     __table_args__ = (
         Index('idx_metric_code', 'metric_code'),

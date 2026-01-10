@@ -51,60 +51,8 @@ import { SimpleBarChart, MonthlyTrendChart, CategoryBreakdownCard } from '../com
 import { adminApi } from '../services/api'
 
 // Mock data
-const mockSupplies = [
-  {
-    id: 1,
-    name: 'A4打印纸',
-    category: '办公耗材',
-    currentStock: 45,
-    minStock: 50,
-    unit: '包',
-    unitPrice: 25.5,
-    status: 'low',
-    supplier: 'XX办公用品公司',
-    lastPurchase: '2024-12-20',
-    totalValue: 1147.5,
-  },
-  {
-    id: 2,
-    name: '黑色签字笔',
-    category: '办公文具',
-    currentStock: 120,
-    minStock: 100,
-    unit: '支',
-    unitPrice: 2.5,
-    status: 'normal',
-    supplier: 'XX办公用品公司',
-    lastPurchase: '2024-12-28',
-    totalValue: 300,
-  },
-  {
-    id: 3,
-    name: '打印机墨盒',
-    category: '办公耗材',
-    currentStock: 8,
-    minStock: 15,
-    unit: '个',
-    unitPrice: 180,
-    status: 'low',
-    supplier: 'XX办公用品公司',
-    lastPurchase: '2024-12-25',
-    totalValue: 1440,
-  },
-]
-
-const mockPurchaseOrders = [
-  {
-    id: 1,
-    orderNo: 'PO-2025-001',
-    supplier: 'XX办公用品公司',
-    totalAmount: 8500,
-    status: 'pending',
-    createDate: '2025-01-06',
-    items: 3,
-  },
-]
-
+// Mock data - 已移除，使用真实API
+// Mock data - 已移除，使用真实API
 export default function OfficeSuppliesManagement() {
   const [searchText, setSearchText] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')

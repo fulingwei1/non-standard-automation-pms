@@ -39,7 +39,7 @@ router = APIRouter()
 def get_import_template_types(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     获取所有模板类型（项目/任务/人员/工时等）
@@ -61,7 +61,7 @@ def download_import_template(
     *,
     db: Session = Depends(deps.get_db),
     template_type: str,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     下载导入模板（按类型下载）
@@ -160,7 +160,7 @@ def preview_import_data(
     db: Session = Depends(deps.get_db),
     file: UploadFile = File(...),
     template_type: str = Query(..., description="模板类型"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     预览导入数据（上传预览）
@@ -261,7 +261,7 @@ def validate_import_data(
     *,
     db: Session = Depends(deps.get_db),
     validate_in: ImportValidateRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     验证导入数据（格式校验）
@@ -345,7 +345,7 @@ def upload_and_import_data(
     file: UploadFile = File(...),
     template_type: str = Query(..., description="模板类型"),
     update_existing: bool = Query(False, description="是否更新已存在的项目"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     上传并导入数据（执行导入）
@@ -361,171 +361,27 @@ def upload_and_import_data(
             detail="Excel处理库未安装，请安装pandas"
         )
     
+    from app.services.project_import_service import (
+        validate_excel_file,
+        parse_excel_data,
+        validate_project_columns,
+        import_projects_from_dataframe
+    )
+    
     # 验证文件类型
-    if not file.filename.endswith(('.xlsx', '.xls')):
-        raise HTTPException(status_code=400, detail="只支持Excel文件(.xlsx, .xls)")
+    validate_excel_file(file.filename)
     
     # 项目导入
     if template_type.upper() == "PROJECT":
         try:
             file_content = file.file.read()
-            df = pd.read_excel(io.BytesIO(file_content))
+            df = parse_excel_data(file_content)
+            validate_project_columns(df)
             
-            # 去除空行
-            df = df.dropna(how='all')
-            
-            if len(df) == 0:
-                raise HTTPException(status_code=400, detail="文件中没有数据")
-            
-            # 验证必需列
-            column_mapping = {
-                '项目编码*': 'project_code',
-                '项目编码': 'project_code',
-                '项目名称*': 'project_name',
-                '项目名称': 'project_name',
-                '客户名称': 'customer_name',
-                '合同编号': 'contract_no',
-                '项目类型': 'project_type',
-                '合同日期': 'contract_date',
-                '合同金额': 'contract_amount',
-                '预算金额': 'budget_amount',
-                '计划开始日期': 'planned_start_date',
-                '计划结束日期': 'planned_end_date',
-                '项目经理': 'pm_name',
-                '项目描述': 'description',
-            }
-            
-            imported_count = 0
-            updated_count = 0
-            failed_rows = []
-            
-            from app.models.project import Customer
-            from app.models.user import User
-            from app.utils.project_utils import init_project_stages
-            from decimal import Decimal
-            
-            for index, row in df.iterrows():
-                try:
-                    # 获取项目编码和名称（必填）
-                    project_code = str(row.get('项目编码*', row.get('项目编码', ''))).strip()
-                    project_name = str(row.get('项目名称*', row.get('项目名称', ''))).strip()
-                    
-                    if not project_code or not project_name:
-                        failed_rows.append({
-                            "row_index": index + 2,
-                            "error": "项目编码和项目名称不能为空"
-                        })
-                        continue
-                    
-                    # 检查项目是否已存在
-                    existing_project = db.query(Project).filter(
-                        Project.project_code == project_code
-                    ).first()
-                    
-                    if existing_project:
-                        if not update_existing:
-                            failed_rows.append({
-                                "row_index": index + 2,
-                                "error": f"项目编码 {project_code} 已存在"
-                            })
-                            continue
-                        
-                        # 更新现有项目
-                        project = existing_project
-                    else:
-                        # 创建新项目
-                        project = Project(
-                            project_code=project_code,
-                            project_name=project_name,
-                            stage="S1",
-                            status="ST01",
-                            health="H1",
-                            is_active=True
-                        )
-                    
-                    # 填充项目信息
-                    if pd.notna(row.get('客户名称')):
-                        customer_name = str(row.get('客户名称')).strip()
-                        # 查找或创建客户
-                        customer = db.query(Customer).filter(
-                            Customer.customer_name == customer_name
-                        ).first()
-                        if customer:
-                            project.customer_id = customer.id
-                            project.customer_name = customer_name
-                            project.customer_contact = customer.contact_person
-                            project.customer_phone = customer.contact_phone
-                    
-                    if pd.notna(row.get('合同编号')):
-                        project.contract_no = str(row.get('合同编号')).strip()
-                    
-                    if pd.notna(row.get('项目类型')):
-                        project.project_type = str(row.get('项目类型')).strip()
-                    
-                    if pd.notna(row.get('合同日期')):
-                        try:
-                            contract_date = pd.to_datetime(row.get('合同日期')).date()
-                            project.contract_date = contract_date
-                        except:
-                            pass
-                    
-                    if pd.notna(row.get('合同金额')):
-                        try:
-                            project.contract_amount = Decimal(str(row.get('合同金额')))
-                        except:
-                            pass
-                    
-                    if pd.notna(row.get('预算金额')):
-                        try:
-                            project.budget_amount = Decimal(str(row.get('预算金额')))
-                        except:
-                            pass
-                    
-                    if pd.notna(row.get('计划开始日期')):
-                        try:
-                            planned_start = pd.to_datetime(row.get('计划开始日期')).date()
-                            project.planned_start_date = planned_start
-                        except:
-                            pass
-                    
-                    if pd.notna(row.get('计划结束日期')):
-                        try:
-                            planned_end = pd.to_datetime(row.get('计划结束日期')).date()
-                            project.planned_end_date = planned_end
-                        except:
-                            pass
-                    
-                    if pd.notna(row.get('项目经理')):
-                        pm_name = str(row.get('项目经理')).strip()
-                        # 查找项目经理
-                        pm = db.query(User).filter(
-                            User.real_name == pm_name
-                        ).first()
-                        if not pm:
-                            pm = db.query(User).filter(
-                                User.username == pm_name
-                            ).first()
-                        if pm:
-                            project.pm_id = pm.id
-                            project.pm_name = pm.real_name or pm.username
-                    
-                    if pd.notna(row.get('项目描述')):
-                        project.description = str(row.get('项目描述')).strip()
-                    
-                    if not existing_project:
-                        db.add(project)
-                        db.flush()
-                        # 初始化项目阶段
-                        init_project_stages(db, project.id)
-                        imported_count += 1
-                    else:
-                        updated_count += 1
-                
-                except Exception as e:
-                    failed_rows.append({
-                        "row_index": index + 2,
-                        "error": str(e)
-                    })
+            # 导入项目
+            imported_count, updated_count, failed_rows = import_projects_from_dataframe(
+                db, df, update_existing
+            )
             
             db.commit()
             
@@ -555,6 +411,8 @@ def upload_and_import_data(
                 message=message
             )
         
+        except HTTPException:
+            raise
         except Exception as e:
             db.rollback()
             raise HTTPException(status_code=400, detail=f"导入失败: {str(e)}")
@@ -570,7 +428,7 @@ def export_project_list(
     *,
     db: Session = Depends(deps.get_db),
     export_in: ExportProjectListRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     导出项目列表（Excel）
@@ -722,7 +580,7 @@ def export_project_detail(
     *,
     db: Session = Depends(deps.get_db),
     export_in: ExportProjectDetailRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     导出项目详情（含任务/成本）
@@ -910,7 +768,7 @@ def export_task_list(
     *,
     db: Session = Depends(deps.get_db),
     export_in: ExportTaskListRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     导出任务列表（Excel）
@@ -1060,7 +918,7 @@ def export_timesheet(
     *,
     db: Session = Depends(deps.get_db),
     export_in: ExportTimesheetRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     导出工时数据（按日期范围，Excel）
@@ -1205,7 +1063,7 @@ def export_workload(
     *,
     db: Session = Depends(deps.get_db),
     export_in: ExportWorkloadRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     导出负荷数据（Excel）

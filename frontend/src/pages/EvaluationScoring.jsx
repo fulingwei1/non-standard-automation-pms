@@ -3,23 +3,16 @@ import { motion } from 'framer-motion'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import {
   Award,
-  Save,
-  Send,
   ArrowLeft,
   User,
   Calendar,
   Briefcase,
-  Target,
-  TrendingUp,
-  AlertCircle,
-  MessageSquare,
-  Star,
-  CheckCircle2,
-  ThumbsUp,
-  FileText
+  AlertCircle
 } from 'lucide-react'
-import { cn } from '../lib/utils'
 import { performanceApi } from '../services/api'
+import { WorkSummaryDisplay } from '../components/evaluation/WorkSummaryDisplay'
+import { ScoringForm } from '../components/evaluation/ScoringForm'
+import { scoringGuidelines, commentTemplates, validateScore, validateComment } from '../utils/evaluationUtils'
 
 const EvaluationScoring = () => {
   const navigate = useNavigate()
@@ -140,47 +133,6 @@ const EvaluationScoring = () => {
     }
   }
 
-  // 评分建议
-  const scoringGuidelines = [
-    { range: '95-100', level: 'A+', description: '远超预期，表现卓越', color: 'text-emerald-400' },
-    { range: '90-94', level: 'A', description: '超出预期，表现优秀', color: 'text-emerald-400' },
-    { range: '85-89', level: 'B+', description: '符合预期，表现良好', color: 'text-blue-400' },
-    { range: '80-84', level: 'B', description: '基本符合预期', color: 'text-blue-400' },
-    { range: '75-79', level: 'C+', description: '略低于预期，需改进', color: 'text-amber-400' },
-    { range: '70-74', level: 'C', description: '低于预期，需重点改进', color: 'text-amber-400' },
-    { range: '60-69', level: 'D', description: '明显低于预期，需密切关注', color: 'text-red-400' }
-  ]
-
-  // 评价建议模板
-  const commentTemplates = [
-    {
-      category: '优秀表现',
-      templates: [
-        '工作态度积极主动，能够独立完成复杂任务，技术能力突出',
-        '按时保质完成工作任务，在项目中发挥了关键作用',
-        '技术攻关能力强，成功解决了多个技术难题',
-        '代码质量高，注重代码规范和可维护性'
-      ]
-    },
-    {
-      category: '良好表现',
-      templates: [
-        '工作完成度良好，基本达到预期目标',
-        '技术能力扎实，能够按时完成分配的任务',
-        '团队协作能力较好，能够与他人有效配合',
-        '学习能力强，能够快速掌握新技术'
-      ]
-    },
-    {
-      category: '需改进',
-      templates: [
-        '工作效率有待提升，部分任务完成进度滞后',
-        '建议加强技术深度学习，提升解决复杂问题的能力',
-        '需要加强与团队的沟通协作',
-        '建议提高代码质量，注重细节'
-      ]
-    }
-  ]
 
   // 处理输入变化
   const handleScoreChange = (value) => {
@@ -224,12 +176,15 @@ const EvaluationScoring = () => {
   // 提交评价
   const handleSubmit = async () => {
     // 验证
-    if (!score || score < 60 || score > 100) {
-      alert('请输入60-100之间的评分')
+    const scoreValidation = validateScore(score)
+    if (!scoreValidation.valid) {
+      alert(scoreValidation.message)
       return
     }
-    if (!comment.trim()) {
-      alert('请填写评价意见')
+
+    const commentValidation = validateComment(comment)
+    if (!commentValidation.valid) {
+      alert(commentValidation.message)
       return
     }
 
@@ -253,18 +208,6 @@ const EvaluationScoring = () => {
       setIsSubmitting(false)
     }
   }
-
-  // 获取评分等级
-  const getScoreLevel = (score) => {
-    if (!score) return null
-    const numScore = Number(score)
-    return scoringGuidelines.find(g => {
-      const [min, max] = g.range.split('-').map(Number)
-      return numScore >= min && numScore <= max
-    })
-  }
-
-  const currentLevel = getScoreLevel(score)
 
   // 动画配置
   const fadeIn = {
@@ -388,223 +331,25 @@ const EvaluationScoring = () => {
 
         {/* 工作总结展示 */}
         <motion.div {...fadeIn} transition={{ delay: 0.4 }}>
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden">
-            <div className="p-6 border-b border-slate-700/50">
-              <h3 className="text-xl font-bold text-white">员工工作总结</h3>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* 工作内容 */}
-              <div>
-                <div className="flex items-center gap-2 text-blue-400 mb-3">
-                  <Target className="h-5 w-5" />
-                  <h4 className="font-bold">本月工作内容</h4>
-                </div>
-                <div className="p-4 bg-slate-900/30 rounded-lg border border-slate-700/50">
-                  <p className="text-slate-300 whitespace-pre-wrap leading-relaxed">
-                    {task.workSummary.workContent}
-                  </p>
-                </div>
-              </div>
-
-              {/* 自我评价 */}
-              <div>
-                <div className="flex items-center gap-2 text-emerald-400 mb-3">
-                  <FileText className="h-5 w-5" />
-                  <h4 className="font-bold">自我评价</h4>
-                </div>
-                <div className="p-4 bg-slate-900/30 rounded-lg border border-slate-700/50">
-                  <p className="text-slate-300 whitespace-pre-wrap leading-relaxed">
-                    {task.workSummary.selfEvaluation}
-                  </p>
-                </div>
-              </div>
-
-              {/* 工作亮点 */}
-              {task.workSummary.highlights && (
-                <div>
-                  <div className="flex items-center gap-2 text-amber-400 mb-3">
-                    <TrendingUp className="h-5 w-5" />
-                    <h4 className="font-bold">工作亮点</h4>
-                  </div>
-                  <div className="p-4 bg-amber-500/10 rounded-lg border border-amber-500/20">
-                    <p className="text-amber-200 whitespace-pre-wrap leading-relaxed">
-                      {task.workSummary.highlights}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* 遇到的问题 */}
-              {task.workSummary.problems && (
-                <div>
-                  <div className="flex items-center gap-2 text-red-400 mb-3">
-                    <AlertCircle className="h-5 w-5" />
-                    <h4 className="font-bold">遇到的问题</h4>
-                  </div>
-                  <div className="p-4 bg-red-500/10 rounded-lg border border-red-500/20">
-                    <p className="text-red-200 whitespace-pre-wrap leading-relaxed">
-                      {task.workSummary.problems}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* 下月计划 */}
-              {task.workSummary.nextMonthPlan && (
-                <div>
-                  <div className="flex items-center gap-2 text-purple-400 mb-3">
-                    <ThumbsUp className="h-5 w-5" />
-                    <h4 className="font-bold">下月工作计划</h4>
-                  </div>
-                  <div className="p-4 bg-slate-900/30 rounded-lg border border-slate-700/50">
-                    <p className="text-slate-300 whitespace-pre-wrap leading-relaxed">
-                      {task.workSummary.nextMonthPlan}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          <WorkSummaryDisplay workSummary={task.workSummary} />
         </motion.div>
 
         {/* 评分表单 */}
         <motion.div {...fadeIn} transition={{ delay: 0.5 }}>
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden">
-            <div className="p-6 border-b border-slate-700/50">
-              <h3 className="text-xl font-bold text-white">评价打分</h3>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* 评分输入 */}
-              <div>
-                <label className="flex items-center gap-2 text-white font-medium mb-3">
-                  <Star className="h-5 w-5 text-amber-400" />
-                  绩效评分
-                  <span className="text-red-400">*</span>
-                  <span className="text-sm text-slate-400 font-normal">(60-100分)</span>
-                </label>
-
-                <div className="flex items-start gap-6">
-                  <div className="flex-shrink-0">
-                    <input
-                      type="number"
-                      min="60"
-                      max="100"
-                      value={score}
-                      onChange={(e) => handleScoreChange(e.target.value)}
-                      placeholder="请输入分数"
-                      className="w-32 h-16 px-4 text-center text-3xl font-bold bg-slate-900/50 border-2 border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
-
-                  {currentLevel && (
-                    <div className="flex-1 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className={cn('text-2xl font-bold', currentLevel.color)}>
-                          {currentLevel.level}
-                        </span>
-                        <span className="text-slate-400">·</span>
-                        <span className="text-slate-300">{currentLevel.description}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 评分指南 */}
-                <div className="mt-4 p-4 bg-slate-900/30 rounded-lg border border-slate-700/50">
-                  <p className="text-sm text-slate-400 mb-3">评分参考标准：</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {scoringGuidelines.map((guide, idx) => (
-                      <div key={idx} className="flex items-center justify-between text-sm">
-                        <span className="text-slate-400">{guide.range}分</span>
-                        <span className={cn('font-medium', guide.color)}>{guide.level}</span>
-                        <span className="text-slate-500">{guide.description}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* 评价意见 */}
-              <div>
-                <label className="flex items-center gap-2 text-white font-medium mb-3">
-                  <MessageSquare className="h-5 w-5 text-blue-400" />
-                  评价意见
-                  <span className="text-red-400">*</span>
-                </label>
-
-                <textarea
-                  value={comment}
-                  onChange={(e) => handleCommentChange(e.target.value)}
-                  placeholder="请填写具体的评价意见，包括优点、不足及改进建议..."
-                  className="w-full h-40 px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none"
-                />
-
-                <p className="text-xs text-slate-500 mt-2">
-                  建议包含：工作表现评价、优点、不足、改进建议等
-                </p>
-
-                {/* 评价模板 */}
-                <div className="mt-4">
-                  <p className="text-sm text-slate-400 mb-3">快速插入模板：</p>
-                  <div className="space-y-3">
-                    {commentTemplates.map((category, idx) => (
-                      <div key={idx}>
-                        <p className="text-xs text-slate-500 mb-2">{category.category}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {category.templates.map((template, tidx) => (
-                            <button
-                              key={tidx}
-                              onClick={() => insertTemplate(template)}
-                              className="px-3 py-1.5 bg-slate-700/50 hover:bg-slate-600 text-slate-300 text-sm rounded-lg transition-colors"
-                            >
-                              {template}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* 操作按钮 */}
-              <div className="flex items-center justify-between pt-6 border-t border-slate-700/50">
-                <div className="flex items-center gap-2 text-sm">
-                  {isDraft && (
-                    <span className="text-amber-400">● 有未保存的修改</span>
-                  )}
-                  {!isDraft && (
-                    <span className="text-emerald-400 flex items-center gap-1">
-                      <CheckCircle2 className="h-4 w-4" />
-                      已保存
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={handleSaveDraft}
-                    disabled={isSaving || !isDraft}
-                    className="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-                  >
-                    <Save className="h-4 w-4" />
-                    {isSaving ? '保存中...' : '保存草稿'}
-                  </button>
-
-                  <button
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-blue-500/50 disabled:to-purple-500/50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-all flex items-center gap-2"
-                  >
-                    <Send className="h-4 w-4" />
-                    {isSubmitting ? '提交中...' : '提交评价'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ScoringForm
+            score={score}
+            comment={comment}
+            isDraft={isDraft}
+            isSaving={isSaving}
+            isSubmitting={isSubmitting}
+            scoringGuidelines={scoringGuidelines}
+            commentTemplates={commentTemplates}
+            onScoreChange={handleScoreChange}
+            onCommentChange={handleCommentChange}
+            onInsertTemplate={insertTemplate}
+            onSaveDraft={handleSaveDraft}
+            onSubmit={handleSubmit}
+          />
         </motion.div>
 
         {/* 提示信息 */}

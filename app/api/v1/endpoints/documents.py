@@ -32,7 +32,7 @@ def read_documents(
     doc_type: Optional[str] = Query(None, description="文档类型筛选"),
     doc_category: Optional[str] = Query(None, description="文档分类筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("document:read")),
 ) -> Any:
     """
     获取文档记录列表（支持分页、筛选）
@@ -70,7 +70,7 @@ def get_project_documents(
     project_id: int,
     machine_id: Optional[int] = Query(None, description="机台ID筛选"),
     doc_type: Optional[str] = Query(None, description="文档类型筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("document:read")),
 ) -> Any:
     """
     获取项目的文档列表
@@ -95,7 +95,7 @@ def read_document(
     *,
     db: Session = Depends(deps.get_db),
     doc_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("document:read")),
 ) -> Any:
     """
     获取文档记录详情
@@ -111,7 +111,7 @@ def create_document(
     *,
     db: Session = Depends(deps.get_db),
     doc_in: ProjectDocumentCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("document:create")),
 ) -> Any:
     """
     创建文档记录
@@ -148,7 +148,7 @@ def create_project_document(
     db: Session = Depends(deps.get_db),
     project_id: int,
     doc_in: ProjectDocumentCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("document:read")),
 ) -> Any:
     """
     为项目创建文档记录
@@ -187,7 +187,7 @@ def update_document(
     db: Session = Depends(deps.get_db),
     doc_id: int,
     doc_in: ProjectDocumentUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("document:update")),
 ) -> Any:
     """
     更新文档记录
@@ -212,7 +212,7 @@ def download_document(
     *,
     db: Session = Depends(deps.get_db),
     doc_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("document:read")),
 ) -> Any:
     """
     下载文档文件
@@ -242,7 +242,7 @@ def get_document_versions(
     *,
     db: Session = Depends(deps.get_db),
     doc_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("document:read")),
 ) -> Any:
     """
     获取文档的所有版本
@@ -276,7 +276,7 @@ def delete_document(
     *,
     db: Session = Depends(deps.get_db),
     doc_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("document:delete")),
 ) -> Any:
     """
     删除文档记录

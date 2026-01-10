@@ -142,12 +142,7 @@ export default function Documents() {
       const errorMessage = err.response?.data?.detail || err.message || '加载文档失败'
       setError(errorMessage)
       
-      // 如果是演示账号，使用空数组
-      const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-      if (isDemoAccount) {
-        setDocuments([])
-        setError(null)
-      } else {
+      // 如果是演示账号，使用空数组       else {
         setDocuments([])
       }
     } finally {

@@ -29,7 +29,7 @@ def read_suppliers(
     supplier_type: Optional[str] = Query(None, description="供应商类型筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
     supplier_level: Optional[str] = Query(None, description="供应商等级筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("supplier:read")),
 ) -> Any:
     """
     获取供应商列表（支持分页、搜索、筛选）
@@ -129,7 +129,7 @@ def read_supplier(
     *,
     db: Session = Depends(deps.get_db),
     supplier_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("supplier:read")),
 ) -> Any:
     """
     获取供应商详情
@@ -145,7 +145,7 @@ def create_supplier(
     *,
     db: Session = Depends(deps.get_db),
     supplier_in: SupplierCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("supplier:create")),
 ) -> Any:
     """
     创建新供应商
@@ -176,7 +176,7 @@ def update_supplier(
     db: Session = Depends(deps.get_db),
     supplier_id: int,
     supplier_in: SupplierUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("supplier:read")),
 ) -> Any:
     """
     更新供应商信息
@@ -203,7 +203,7 @@ def update_supplier_rating(
     quality_rating: Optional[Decimal] = Query(None, ge=0, le=5, description="质量评分"),
     delivery_rating: Optional[Decimal] = Query(None, ge=0, le=5, description="交期评分"),
     service_rating: Optional[Decimal] = Query(None, ge=0, le=5, description="服务评分"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("supplier:read")),
 ) -> Any:
     """
     更新供应商评级
@@ -256,7 +256,7 @@ def get_supplier_materials(
     supplier_id: int,
     page: int = Query(1, ge=1),
     page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("supplier:read")),
 ) -> Any:
     """
     获取供应商的物料列表

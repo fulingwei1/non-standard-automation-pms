@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, or_
 
 from app.api import deps
+from app.core import security
 from app.models import (
     AssemblyStage, AssemblyTemplate, CategoryStageMapping,
     BomItemAssemblyAttrs, MaterialReadiness, ShortageDetail,
@@ -77,7 +78,7 @@ async def update_assembly_stage(
     stage_code: str,
     stage_data: AssemblyStageUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:update"))
 ):
     """更新装配阶段"""
     stage = db.query(AssemblyStage).filter(AssemblyStage.stage_code == stage_code).first()
@@ -133,7 +134,7 @@ async def get_category_mappings(
 async def create_category_mapping(
     mapping_data: CategoryStageMappingCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:create"))
 ):
     """创建物料分类映射"""
     # 检查是否已存在
@@ -160,7 +161,7 @@ async def update_category_mapping(
     mapping_id: int,
     mapping_data: CategoryStageMappingUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:update"))
 ):
     """更新物料分类映射"""
     mapping = db.query(CategoryStageMapping).filter(CategoryStageMapping.id == mapping_id).first()
@@ -182,7 +183,7 @@ async def update_category_mapping(
 async def delete_category_mapping(
     mapping_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:delete"))
 ):
     """删除物料分类映射"""
     mapping = db.query(CategoryStageMapping).filter(CategoryStageMapping.id == mapping_id).first()
@@ -242,7 +243,7 @@ async def batch_set_assembly_attrs(
     bom_id: int,
     batch_data: BomItemAssemblyAttrsBatchCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:create"))
 ):
     """批量设置BOM装配属性"""
     # 验证BOM存在
@@ -287,7 +288,7 @@ async def update_assembly_attr(
     attr_id: int,
     attr_data: BomItemAssemblyAttrsUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:update"))
 ):
     """更新单个物料装配属性"""
     attr = db.query(BomItemAssemblyAttrs).filter(BomItemAssemblyAttrs.id == attr_id).first()
@@ -310,7 +311,7 @@ async def auto_assign_assembly_attrs(
     bom_id: int,
     request: BomAssemblyAttrsAutoRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:create"))
 ):
     """自动分配装配属性（基于物料分类映射）"""
     # 验证BOM存在
@@ -435,7 +436,7 @@ async def smart_recommend_assembly_attrs(
     bom_id: int,
     request: BomAssemblyAttrsAutoRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:create"))
 ):
     """智能推荐装配属性（多级推荐规则）"""
     from app.services.assembly_attr_recommender import AssemblyAttrRecommender
@@ -520,7 +521,7 @@ async def apply_assembly_template(
     bom_id: int,
     request: BomAssemblyAttrsTemplateRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:create"))
 ):
     """套用装配模板"""
     # 验证BOM和模板存在
@@ -725,26 +726,21 @@ def determine_alert_level(
 async def execute_kit_analysis(
     request: MaterialReadinessCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:create"))
 ):
     """执行齐套分析"""
-    # 验证项目
-    project = db.query(Project).filter(Project.id == request.project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
-
-    # 验证BOM
-    bom = db.query(BomHeader).filter(BomHeader.id == request.bom_id).first()
-    if not bom:
-        raise HTTPException(status_code=404, detail="BOM不存在")
-
-    # 验证机台(可选)
-    machine = None
-    if request.machine_id:
-        machine = db.query(Machine).filter(Machine.id == request.machine_id).first()
-        if not machine:
-            raise HTTPException(status_code=404, detail="机台不存在")
-
+    from app.services.assembly_kit_service import (
+        validate_analysis_inputs,
+        initialize_stage_results,
+        analyze_bom_item,
+        calculate_stage_kit_rates
+    )
+    
+    # 验证输入参数
+    project, bom, machine = validate_analysis_inputs(
+        db, request.project_id, request.bom_id, request.machine_id
+    )
+    
     check_date = request.check_date or date.today()
 
     # 获取BOM物料及装配属性
@@ -760,165 +756,33 @@ async def execute_kit_analysis(
 
     stage_map = {s.stage_code: s for s in stages}
 
-    # 按阶段分组统计
-    stage_results = {}
-    for stage in stages:
-        stage_results[stage.stage_code] = {
-            "total": 0,
-            "fulfilled": 0,
-            "blocking_total": 0,
-            "blocking_fulfilled": 0,
-            "stage": stage
-        }
+    # 初始化阶段统计
+    stage_results = initialize_stage_results(stages)
 
     # 缺料明细
     shortage_details = []
 
-    # 遍历BOM物料
+    # 遍历BOM物料进行分析
     for bom_item in bom_items:
-        material = db.query(Material).filter(Material.id == bom_item.material_id).first()
-        if not material:
-            continue
-
-        # 获取装配属性
-        attr = db.query(BomItemAssemblyAttrs).filter(
-            BomItemAssemblyAttrs.bom_item_id == bom_item.id
-        ).first()
-
-        if attr:
-            stage_code = attr.assembly_stage
-            is_blocking = attr.is_blocking
-        else:
-            # 默认分配到机械模组阶段
-            stage_code = "MECH"
-            is_blocking = True
-
-        if stage_code not in stage_results:
-            stage_code = "MECH"
-
-        # 计算可用数量
-        required_qty = bom_item.quantity or Decimal(1)
-        stock_qty, allocated_qty, in_transit_qty, available_qty = calculate_available_qty(
-            db, material.id, check_date
+        detail = analyze_bom_item(
+            db, bom_item, check_date, stage_map, stage_results, calculate_available_qty
         )
-
-        shortage_qty = max(Decimal(0), required_qty - available_qty)
-        is_fulfilled = shortage_qty == 0
-        shortage_rate = (shortage_qty / required_qty * 100) if required_qty > 0 else Decimal(0)
-
-        # 更新阶段统计
-        stage_results[stage_code]["total"] += 1
-        if is_fulfilled:
-            stage_results[stage_code]["fulfilled"] += 1
-
-        if is_blocking:
-            stage_results[stage_code]["blocking_total"] += 1
-            if is_fulfilled:
-                stage_results[stage_code]["blocking_fulfilled"] += 1
-
-        # 记录缺料明细
-        if shortage_qty > 0:
-            # 计算距需求日期的天数
-            days_to_required = 7  # 默认7天
-            if bom_item.required_date:
-                days_to_required = (bom_item.required_date - check_date).days
-            
-            alert_level = determine_alert_level(db, is_blocking, shortage_rate, days_to_required)
-            
-            # 获取预计到货日期（从采购订单）
-            expected_arrival = None
-            try:
-                from app.models import PurchaseOrderItem, PurchaseOrder
-                po_item = db.query(PurchaseOrderItem).join(
-                    PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id
-                ).filter(
-                    PurchaseOrderItem.material_id == material.id,
-                    PurchaseOrder.status.in_(['approved', 'partial_received']),
-                    PurchaseOrder.promised_date.isnot(None)
-                ).order_by(PurchaseOrder.promised_date.asc()).first()
-                
-                if po_item and po_item.order and po_item.order.promised_date:
-                    expected_arrival = po_item.order.promised_date
-            except Exception:
-                pass
-
-            shortage_details.append({
-                "bom_item_id": bom_item.id,
-                "material_id": material.id,
-                "material_code": material.code,
-                "material_name": material.name,
-                "assembly_stage": stage_code,
-                "is_blocking": is_blocking,
-                "required_qty": required_qty,
-                "stock_qty": stock_qty,
-                "allocated_qty": allocated_qty,
-                "in_transit_qty": in_transit_qty,
-                "available_qty": available_qty,
-                "shortage_qty": shortage_qty,
-                "shortage_rate": shortage_rate,
-                "alert_level": alert_level,
-                "expected_arrival": expected_arrival,
-                "required_date": bom_item.required_date
-            })
+        if detail:
+            shortage_details.append(detail)
 
     # 计算各阶段齐套率和是否可开始
-    stage_kit_rates = []
-    can_proceed = True
-    first_blocked_stage = None
-    current_workable_stage = None
-    overall_total = 0
-    overall_fulfilled = 0
-    blocking_total = 0
-    blocking_fulfilled = 0
-    all_blocking_items = []  # 收集所有阻塞物料
-
-    for stage in stages:
-        stats = stage_results.get(stage.stage_code, {"total": 0, "fulfilled": 0, "blocking_total": 0, "blocking_fulfilled": 0})
-
-        total = stats["total"]
-        fulfilled = stats["fulfilled"]
-        b_total = stats["blocking_total"]
-        b_fulfilled = stats["blocking_fulfilled"]
-
-        overall_total += total
-        overall_fulfilled += fulfilled
-        blocking_total += b_total
-        blocking_fulfilled += b_fulfilled
-
-        kit_rate = Decimal(fulfilled / total * 100) if total > 0 else Decimal(100)
-        blocking_rate = Decimal(b_fulfilled / b_total * 100) if b_total > 0 else Decimal(100)
-
-        # 判断是否可开始: 前序阶段都可开始 && 当前阶段阻塞齐套率100%
-        stage_can_start = can_proceed and (blocking_rate == 100)
-
-        if stage_can_start:
-            current_workable_stage = stage.stage_code
-
-        if not stage_can_start and can_proceed:
-            first_blocked_stage = stage.stage_code
-            can_proceed = False
-            # 收集该阶段的阻塞物料
-            for detail in shortage_details:
-                if detail.get("assembly_stage") == stage.stage_code and detail.get("is_blocking"):
-                    all_blocking_items.append(detail)
-
-        stage_kit_rates.append(StageKitRate(
-            stage_code=stage.stage_code,
-            stage_name=stage.stage_name,
-            stage_order=stage.stage_order,
-            total_items=total,
-            fulfilled_items=fulfilled,
-            kit_rate=round(kit_rate, 2),
-            blocking_total=b_total,
-            blocking_fulfilled=b_fulfilled,
-            blocking_rate=round(blocking_rate, 2),
-            can_start=stage_can_start,
-            color_code=stage.color_code
-        ))
+    stage_kit_rates_data, can_proceed, first_blocked_stage, current_workable_stage, overall_stats, all_blocking_items = calculate_stage_kit_rates(
+        stages, stage_results, shortage_details
+    )
+    
+    # 转换为 StageKitRate 对象
+    stage_kit_rates = [
+        StageKitRate(**data) for data in stage_kit_rates_data
+    ]
 
     # 计算整体齐套率
-    overall_kit_rate = Decimal(overall_fulfilled / overall_total * 100) if overall_total > 0 else Decimal(100)
-    blocking_kit_rate = Decimal(blocking_fulfilled / blocking_total * 100) if blocking_total > 0 else Decimal(100)
+    overall_kit_rate = Decimal(overall_stats["fulfilled"] / overall_stats["total"] * 100) if overall_stats["total"] > 0 else Decimal(100)
+    blocking_kit_rate = Decimal(overall_stats["blocking_fulfilled"] / overall_stats["blocking_total"] * 100) if overall_stats["blocking_total"] > 0 else Decimal(100)
     
     # 计算预计完全齐套日期（基于阻塞物料的预计到货日期）
     estimated_ready_date = calculate_estimated_ready_date(db, all_blocking_items, check_date)
@@ -933,11 +797,11 @@ async def execute_kit_analysis(
         overall_kit_rate=round(overall_kit_rate, 2),
         blocking_kit_rate=round(blocking_kit_rate, 2),
         stage_kit_rates=json.dumps({s.stage_code: {"kit_rate": float(s.kit_rate), "blocking_rate": float(s.blocking_rate), "can_start": s.can_start} for s in stage_kit_rates}),
-        total_items=overall_total,
-        fulfilled_items=overall_fulfilled,
+        total_items=overall_stats["total"],
+        fulfilled_items=overall_stats["fulfilled"],
         shortage_items=len(shortage_details),
-        blocking_total=blocking_total,
-        blocking_fulfilled=blocking_fulfilled,
+        blocking_total=overall_stats["blocking_total"],
+        blocking_fulfilled=overall_stats["blocking_fulfilled"],
         can_start=first_blocked_stage is None,
         current_workable_stage=current_workable_stage,
         first_blocked_stage=first_blocked_stage,
@@ -1298,7 +1162,7 @@ async def get_alert_rules(
 async def create_alert_rule(
     rule_data: ShortageAlertRuleCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:create"))
 ):
     """创建预警规则"""
     existing = db.query(ShortageAlertRule).filter(
@@ -1324,7 +1188,7 @@ async def update_alert_rule(
     rule_id: int,
     rule_data: ShortageAlertRuleUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:update"))
 ):
     """更新预警规则"""
     rule = db.query(ShortageAlertRule).filter(ShortageAlertRule.id == rule_id).first()
@@ -1347,7 +1211,7 @@ async def update_alert_rule(
 @router.get("/wechat/config", response_model=ResponseModel)
 async def get_wechat_config(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:read"))
 ):
     """获取企业微信配置（仅显示是否已配置，不返回敏感信息）"""
     from app.core.config import settings
@@ -1374,7 +1238,7 @@ async def get_wechat_config(
 @router.post("/wechat/test", response_model=ResponseModel)
 async def test_wechat_connection(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:read"))
 ):
     """测试企业微信连接"""
     from app.utils.wechat_client import WeChatClient
@@ -1469,7 +1333,7 @@ async def accept_suggestion(
     suggestion_id: int,
     accept_data: SchedulingSuggestionAccept,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:read"))
 ):
     """接受排产建议"""
     suggestion = db.query(SchedulingSuggestion).filter(SchedulingSuggestion.id == suggestion_id).first()
@@ -1497,7 +1361,7 @@ async def reject_suggestion(
     suggestion_id: int,
     reject_data: SchedulingSuggestionReject,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:read"))
 ):
     """拒绝排产建议"""
     suggestion = db.query(SchedulingSuggestion).filter(SchedulingSuggestion.id == suggestion_id).first()
@@ -1701,7 +1565,7 @@ async def get_assembly_templates(
 async def create_assembly_template(
     template_data: AssemblyTemplateCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:read"))
 ):
     """创建装配模板"""
     existing = db.query(AssemblyTemplate).filter(
@@ -1727,7 +1591,7 @@ async def update_assembly_template(
     template_id: int,
     template_data: AssemblyTemplateUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:read"))
 ):
     """更新装配模板"""
     template = db.query(AssemblyTemplate).filter(AssemblyTemplate.id == template_id).first()
@@ -1749,7 +1613,7 @@ async def update_assembly_template(
 async def delete_assembly_template(
     template_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(security.require_permission("assembly_kit:read"))
 ):
     """删除装配模板"""
     template = db.query(AssemblyTemplate).filter(AssemblyTemplate.id == template_id).first()

@@ -42,59 +42,7 @@ import { SimpleBarChart, MonthlyTrendChart, SimplePieChart, TrendComparisonCard 
 import { adminApi } from '../services/api'
 
 // Mock data
-const mockVehicles = [
-  {
-    id: 1,
-    plateNumber: '粤B12345',
-    brand: '丰田凯美瑞',
-    model: '2020款',
-    purchaseDate: '2020-06-15',
-    mileage: 85600,
-    status: 'in_use',
-    driver: '张师傅',
-    purpose: '客户现场服务',
-    destination: '深圳XX科技',
-    startTime: '2025-01-07 08:00',
-    endTime: '2025-01-07 18:00',
-  },
-  {
-    id: 2,
-    plateNumber: '粤B67890',
-    brand: '大众帕萨特',
-    model: '2021款',
-    purchaseDate: '2021-03-20',
-    mileage: 65200,
-    status: 'in_use',
-    driver: '李师傅',
-    purpose: '供应商拜访',
-    destination: '东莞XX电子',
-    startTime: '2025-01-07 09:00',
-    endTime: '2025-01-07 17:00',
-  },
-  {
-    id: 3,
-    plateNumber: '粤B11111',
-    brand: '本田雅阁',
-    model: '2019款',
-    purchaseDate: '2019-08-10',
-    mileage: 125000,
-    status: 'available',
-    nextMaintenance: '2025-01-20',
-    nextMaintenanceMileage: 130000,
-  },
-  {
-    id: 4,
-    plateNumber: '粤B22222',
-    brand: '别克GL8',
-    model: '2022款',
-    purchaseDate: '2022-05-12',
-    mileage: 45200,
-    status: 'maintenance',
-    maintenanceReason: '定期保养',
-    returnDate: '2025-01-08',
-  },
-]
-
+// Mock data - 已移除，使用真实API
 export default function VehicleManagement() {
   const [searchText, setSearchText] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')

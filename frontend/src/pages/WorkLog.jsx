@@ -9,6 +9,12 @@ import {
   Save,
   Edit,
   Trash2,
+  Sparkles,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Briefcase,
+  RefreshCw,
 } from 'lucide-react'
 import { PageHeader } from '../components/layout'
 import {
@@ -31,6 +37,13 @@ import {
 import { Textarea } from '../components/ui/textarea'
 import { cn, formatDate } from '../lib/utils'
 import { workLogApi } from '../services/api'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '../components/ui/dialog'
 
 export default function WorkLog() {
   const [loading, setLoading] = useState(false)
@@ -61,10 +74,32 @@ export default function WorkLog() {
   const [filterStartDate, setFilterStartDate] = useState('')
   const [filterEndDate, setFilterEndDate] = useState('')
   
+  // AI分析相关
+  const [aiAnalysis, setAiAnalysis] = useState(null)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [showAiSuggestions, setShowAiSuggestions] = useState(false)
+  const [suggestedProjects, setSuggestedProjects] = useState([])
+  const [selectedWorkItems, setSelectedWorkItems] = useState([])
+  
   useEffect(() => {
     fetchMentionOptions()
     fetchWorkLogs()
+    fetchSuggestedProjects()
   }, [page, filterStartDate, filterEndDate])
+  
+  // 当工作内容变化时，自动触发AI分析（防抖）
+  useEffect(() => {
+    if (!content.trim() || content.length < 10) {
+      setAiAnalysis(null)
+      return
+    }
+    
+    const timer = setTimeout(() => {
+      handleAiAnalyze()
+    }, 1500) // 1.5秒防抖
+    
+    return () => clearTimeout(timer)
+  }, [content, workDate])
   
   const fetchMentionOptions = async () => {
     try {
@@ -77,6 +112,114 @@ export default function WorkLog() {
       })
     } catch (error) {
       console.error('Failed to fetch mention options:', error)
+    }
+  }
+  
+  const fetchSuggestedProjects = async () => {
+    try {
+      const res = await workLogApi.getSuggestedProjects()
+      const data = res.data?.data || res.data || {}
+      setSuggestedProjects(data.projects || [])
+    } catch (error) {
+      console.error('Failed to fetch suggested projects:', error)
+    }
+  }
+  
+  const handleAiAnalyze = async () => {
+    if (!content.trim() || content.length < 10) {
+      return
+    }
+    
+    setAnalyzing(true)
+    try {
+      const res = await workLogApi.aiAnalyze(content, workDate)
+      const analysisData = res.data?.data || res.data || {}
+      
+      if (analysisData.work_items && analysisData.work_items.length > 0) {
+        setAiAnalysis(analysisData)
+        // 默认选中所有工作项
+        setSelectedWorkItems(analysisData.work_items.map((_, index) => index))
+        setShowAiSuggestions(true)
+      }
+    } catch (error) {
+      console.error('AI分析失败:', error)
+      // AI分析失败不影响工作日志提交
+    } finally {
+      setAnalyzing(false)
+    }
+  }
+  
+  const handleApplyAiSuggestions = () => {
+    if (!aiAnalysis || selectedWorkItems.length === 0) {
+      return
+    }
+    
+    // 应用选中的工作项
+    const itemsToApply = aiAnalysis.work_items.filter((_, index) =>
+      selectedWorkItems.includes(index)
+    )
+    
+    // 这里可以自动创建工作日志和工时记录
+    // 或者提示用户确认
+    setShowAiSuggestions(false)
+    
+    // 显示确认对话框
+    const totalHours = itemsToApply.reduce((sum, item) => sum + (item.hours || 0), 0)
+    const projects = itemsToApply
+      .map(item => item.project_name || '未分配项目')
+      .filter((v, i, a) => a.indexOf(v) === i)
+    
+    if (confirm(
+      `AI分析建议：\n` +
+      `- 共 ${itemsToApply.length} 个工作项\n` +
+      `- 总工时：${totalHours.toFixed(1)} 小时\n` +
+      `- 涉及项目：${projects.join('、')}\n\n` +
+      `是否应用这些建议并自动创建工时记录？`
+    )) {
+      // 应用建议：创建工作日志（含工时信息）
+      handleSubmitWithTimesheet(itemsToApply)
+    }
+  }
+  
+  const handleSubmitWithTimesheet = async (workItems) => {
+    try {
+      // 为每个工作项创建工时记录
+      // 这里需要调用批量创建工时API
+      const timesheets = workItems.map(item => ({
+        project_id: item.project_id,
+        work_date: workDate,
+        work_hours: item.hours,
+        work_type: item.work_type || 'NORMAL',
+        description: item.work_content,
+      }))
+      
+      // 先创建工作日志
+      const workLogData = {
+        work_date: workDate,
+        content: content.trim(),
+        mentioned_projects: workItems
+          .map(item => item.project_id)
+          .filter(Boolean),
+        status: 'SUBMITTED',
+        // 如果有多个工作项，使用第一个的工时作为工作日志的工时
+        work_hours: workItems[0]?.hours || null,
+        project_id: workItems[0]?.project_id || null,
+      }
+      
+      await workLogApi.create(workLogData)
+      
+      // 然后批量创建工时记录
+      if (timesheets.length > 0) {
+        const { timesheetApi } = await import('../services/api')
+        await timesheetApi.batchCreate({ timesheets })
+      }
+      
+      alert('工作日志和工时记录创建成功！')
+      resetForm()
+      fetchWorkLogs()
+    } catch (error) {
+      console.error('Failed to create work log with timesheet:', error)
+      alert('创建失败: ' + (error.response?.data?.detail || error.message))
     }
   }
   
@@ -133,6 +276,10 @@ export default function WorkLog() {
       // 重置表单
       resetForm()
       fetchWorkLogs()
+      
+      // 清除AI分析结果
+      setAiAnalysis(null)
+      setSelectedWorkItems([])
     } catch (error) {
       console.error('Failed to submit work log:', error)
       alert('提交失败: ' + (error.response?.data?.detail || error.message))
@@ -181,7 +328,9 @@ export default function WorkLog() {
     setMentionedMachines([])
     setMentionedUsers([])
     setStatus('SUBMITTED')
-
+    setAiAnalysis(null)
+    setSelectedWorkItems([])
+    setShowAiSuggestions(false)
   }
   
   const getStatusBadge = (status) => {
@@ -242,26 +391,187 @@ export default function WorkLog() {
                 ({wordCount}/{maxWords} 字)
               </span>
             </label>
-            <Textarea
-              value={content}
-              onChange={(e) => {
-                const value = e.target.value
-                if (value.length <= maxWords) {
-                  setContent(value)
-                }
-              }}
-              placeholder="请输入工作内容（不超过300字）..."
-              rows={6}
-              className={cn(
-                wordCount > maxWords && "border-red-500"
+            <div className="relative">
+              <Textarea
+                value={content}
+                onChange={(e) => {
+                  const value = e.target.value
+                  if (value.length <= maxWords) {
+                    setContent(value)
+                    // 清除之前的分析结果
+                    if (value.length < 10) {
+                      setAiAnalysis(null)
+                    }
+                  }
+                }}
+                placeholder="请输入工作内容（不超过300字）...&#10;&#10;💡 提示：输入工作内容后，AI会自动分析并建议工时和项目关联"
+                rows={6}
+                className={cn(
+                  wordCount > maxWords && "border-red-500",
+                  analyzing && "border-blue-500"
+                )}
+              />
+              {analyzing && (
+                <div className="absolute top-2 right-2 flex items-center gap-2 text-blue-500 text-sm">
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  <span>AI分析中...</span>
+                </div>
               )}
-            />
+              {aiAnalysis && !analyzing && (
+                <div className="absolute top-2 right-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAiSuggestions(true)}
+                    className="bg-blue-50 hover:bg-blue-100 border-blue-300"
+                  >
+                    <Sparkles className="h-4 w-4 mr-1" />
+                    查看AI建议
+                  </Button>
+                </div>
+              )}
+            </div>
             {wordCount > maxWords && (
               <p className="text-sm text-red-500 mt-1">
                 字数超出限制，请删除多余内容
               </p>
             )}
+            {aiAnalysis && !analyzing && (
+              <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+                  <Sparkles className="h-4 w-4" />
+                  <span>
+                    AI已分析出 {aiAnalysis.work_items?.length || 0} 个工作项，
+                    总工时 {aiAnalysis.total_hours?.toFixed(1) || 0} 小时
+                    {aiAnalysis.confidence && `（置信度：${(aiAnalysis.confidence * 100).toFixed(0)}%）`}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
+          
+          {/* AI建议对话框 */}
+          <Dialog open={showAiSuggestions} onOpenChange={setShowAiSuggestions}>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-blue-500" />
+                  AI工时建议
+                </DialogTitle>
+              </DialogHeader>
+              
+              {aiAnalysis && (
+                <div className="space-y-4">
+                  <div className="text-sm text-slate-600 dark:text-slate-400">
+                    {aiAnalysis.analysis_notes && (
+                      <p className="mb-2">{aiAnalysis.analysis_notes}</p>
+                    )}
+                    <p>
+                      总工时：<span className="font-bold">{aiAnalysis.total_hours?.toFixed(1)}</span> 小时
+                      {aiAnalysis.confidence && (
+                        <span className="ml-2">
+                          （置信度：{(aiAnalysis.confidence * 100).toFixed(0)}%）
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {aiAnalysis.work_items?.map((item, index) => (
+                      <div
+                        key={index}
+                        className={cn(
+                          "p-4 border rounded-lg",
+                          selectedWorkItems.includes(index)
+                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                            : "border-slate-200 dark:border-slate-700"
+                        )}
+                      >
+                        <div className="flex items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedWorkItems.includes(index)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedWorkItems([...selectedWorkItems, index])
+                              } else {
+                                setSelectedWorkItems(selectedWorkItems.filter(i => i !== index))
+                              }
+                            }}
+                            className="mt-1"
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="font-medium text-sm">{item.work_content}</span>
+                              {item.confidence && (
+                                <Badge variant="outline" className="text-xs">
+                                  {(item.confidence * 100).toFixed(0)}%
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-3 gap-4 text-sm">
+                              <div className="flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-slate-500" />
+                                <span className="font-medium">{item.hours?.toFixed(1)} 小时</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Briefcase className="h-4 w-4 text-slate-500" />
+                                <span className="text-slate-600 dark:text-slate-400">
+                                  {item.project_name || '未分配项目'}
+                                </span>
+                              </div>
+                              <div>
+                                <Badge variant="outline" className="text-xs">
+                                  {item.work_type === 'NORMAL' ? '正常' :
+                                   item.work_type === 'OVERTIME' ? '加班' :
+                                   item.work_type === 'WEEKEND' ? '周末' :
+                                   item.work_type === 'HOLIDAY' ? '节假日' : item.work_type}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {suggestedProjects.length > 0 && (
+                    <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                      <p className="text-sm font-medium mb-2">您参与的项目（按使用频率排序）：</p>
+                      <div className="flex flex-wrap gap-2">
+                        {suggestedProjects.slice(0, 5).map((project) => (
+                          <Badge key={project.id} variant="outline" className="text-xs">
+                            {project.code} - {project.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowAiSuggestions(false)
+                    setSelectedWorkItems([])
+                  }}
+                >
+                  取消
+                </Button>
+                <Button
+                  onClick={handleApplyAiSuggestions}
+                  disabled={selectedWorkItems.length === 0}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  应用选中建议 ({selectedWorkItems.length})
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           
           {/* @提及 */}
           <div className="space-y-3">

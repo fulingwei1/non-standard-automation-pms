@@ -36,60 +36,7 @@ import { fadeIn, staggerContainer } from '../lib/animations'
 import { serviceApi } from '../services/api'
 
 // Mock data
-const mockArticles = [
-  {
-    id: 1,
-    article_no: 'KB-20260106-001',
-    title: '设备常见故障排查指南',
-    category: '故障处理',
-    tags: ['故障排查', '设备维护', '常见问题'],
-    content: '本文档详细介绍了设备常见故障的排查方法和解决方案...',
-    author: '张工程师',
-    view_count: 156,
-    like_count: 23,
-    helpful_count: 45,
-    is_faq: true,
-    is_featured: true,
-    status: '已发布',
-    created_at: '2026-01-06 10:00:00',
-    updated_at: '2026-01-06 10:00:00',
-  },
-  {
-    id: 2,
-    article_no: 'KB-20260105-002',
-    title: '设备操作培训视频',
-    category: '操作指南',
-    tags: ['操作培训', '视频教程'],
-    content: '设备操作培训视频，包含开机、测试流程、日常维护等内容...',
-    author: '王工程师',
-    view_count: 89,
-    like_count: 12,
-    helpful_count: 28,
-    is_faq: false,
-    is_featured: true,
-    status: '已发布',
-    created_at: '2026-01-05 14:00:00',
-    updated_at: '2026-01-05 14:00:00',
-  },
-  {
-    id: 3,
-    article_no: 'KB-20260104-003',
-    title: '软件更新说明',
-    category: '技术文档',
-    tags: ['软件更新', '版本说明'],
-    content: '最新软件版本更新说明，包含新功能和bug修复...',
-    author: '李工程师',
-    view_count: 67,
-    like_count: 8,
-    helpful_count: 15,
-    is_faq: false,
-    is_featured: false,
-    status: '已发布',
-    created_at: '2026-01-04 09:00:00',
-    updated_at: '2026-01-04 09:00:00',
-  },
-]
-
+// Mock data - 已移除，使用真实API
 const categoryConfig = {
   '故障处理': { label: '故障处理', color: 'text-red-400', bg: 'bg-red-500/20' },
   '操作指南': { label: '操作指南', color: 'text-blue-400', bg: 'bg-blue-500/20' },

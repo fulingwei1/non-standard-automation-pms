@@ -4,10 +4,54 @@
 测试核心功能：智能推荐、排产建议、资源分配、企业微信集成
 """
 
+import uuid
 import pytest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
+
+from app.models.project import Customer, Project
+
+
+def _unique_code(prefix: str) -> str:
+    """生成带前缀的唯一编码，避免与真实数据库冲突"""
+    return f"{prefix}-{uuid.uuid4().hex[:6].upper()}"
+
+
+def _ensure_test_customer(db_session: Session) -> Customer:
+    """创建或获取测试客户，避免外键约束失败"""
+    code = "CUST-ASM-DEFAULT"
+    customer = db_session.query(Customer).filter(Customer.customer_code == code).first()
+    if customer:
+        return customer
+
+    customer = Customer(
+        customer_code=code,
+        customer_name="齐套分析测试客户",
+        contact_person="系统",
+        status="ACTIVE",
+    )
+    db_session.add(customer)
+    db_session.flush()
+    return customer
+
+
+def _create_test_project(db_session: Session, **overrides) -> Project:
+    """快速创建满足外键约束的项目记录"""
+    customer = _ensure_test_customer(db_session)
+    project = Project(
+        project_code=overrides.get("project_code", _unique_code("PJ")),
+        project_name=overrides.get("project_name", "测试项目"),
+        priority=overrides.get("priority", "P2"),
+        contract_amount=overrides.get("contract_amount", Decimal("100000")),
+        planned_start_date=overrides.get("planned_start_date", date.today()),
+        planned_end_date=overrides.get("planned_end_date", date.today() + timedelta(days=30)),
+        customer_id=customer.id,
+        customer_name=customer.customer_name,
+    )
+    db_session.add(project)
+    db_session.flush()
+    return project
 
 # 测试数据准备
 @pytest.fixture
@@ -60,7 +104,7 @@ class TestAssemblyAttrRecommender:
         
         # 创建测试数据
         material = Material(
-            material_code="MAT_TEST",
+            material_code=_unique_code("MAT"),
             material_name="测试物料",
             category_id=1
         )
@@ -77,7 +121,7 @@ class TestAssemblyAttrRecommender:
         from app.models import Material
         
         material = Material(
-            material_code="MAT_FRAME",
+            material_code=_unique_code("MAT"),
             material_name="铝型材框架",
             category_id=1
         )
@@ -96,7 +140,7 @@ class TestAssemblyAttrRecommender:
         from app.models import Material, Supplier
         
         supplier = Supplier(
-            supplier_code="SUP001",
+            supplier_code=_unique_code("SUP"),
             supplier_name="测试供应商",
             supplier_type="MACHINING"
         )
@@ -104,7 +148,7 @@ class TestAssemblyAttrRecommender:
         db_session.flush()
         
         material = Material(
-            material_code="MAT_MACH",
+            material_code=_unique_code("MAT"),
             material_name="机加件",
             category_id=1,
             default_supplier_id=supplier.id
@@ -124,25 +168,22 @@ class TestSchedulingSuggestionService:
     def test_priority_score_calculation(self, db_session: Session):
         """测试优先级评分计算"""
         from app.services.scheduling_suggestion_service import SchedulingSuggestionService
-        from app.models import Project, MaterialReadiness
+        from app.models import MaterialReadiness
         
-        project = Project(
-            project_code="PJ_TEST",
-            project_name="测试项目",
+        project = _create_test_project(
+            db_session,
             priority="P1",
             contract_amount=Decimal("1000000"),
             planned_start_date=date.today(),
             planned_end_date=date.today() + timedelta(days=10),
-            customer_id=1
         )
-        db_session.add(project)
-        db_session.flush()
         
         readiness = MaterialReadiness(
-            readiness_no="KR_TEST",
+            readiness_no=_unique_code("KR"),
             project_id=project.id,
-            bom_id=1,
-            blocking_kit_rate=Decimal("85.5")
+            bom_id=None,
+            blocking_kit_rate=Decimal("85.5"),
+            analysis_time=datetime.utcnow(),
         )
         db_session.add(readiness)
         db_session.flush()
@@ -160,8 +201,7 @@ class TestSchedulingSuggestionService:
     def test_deadline_pressure_calculation(self):
         """测试交期压力分计算"""
         from app.services.scheduling_suggestion_service import SchedulingSuggestionService
-        from app.models import Project
-        
+
         # 测试紧急交期（≤7天）
         project_urgent = Project(
             project_code="PJ_URGENT",
@@ -190,14 +230,14 @@ class TestResourceAllocationService:
         from app.models.production import Workstation, Workshop
         
         workshop = Workshop(
-            workshop_code="WS001",
+            workshop_code=_unique_code("WS"),
             workshop_name="测试车间"
         )
         db_session.add(workshop)
         db_session.flush()
         
         workstation = Workstation(
-            workstation_code="ST001",
+            workstation_code=_unique_code("ST"),
             workstation_name="测试工位",
             workshop_id=workshop.id,
             status="IDLE",
@@ -222,14 +262,14 @@ class TestResourceAllocationService:
         from app.models.production import Worker, Workshop
         
         workshop = Workshop(
-            workshop_code="WS001",
+            workshop_code=_unique_code("WS"),
             workshop_name="测试车间"
         )
         db_session.add(workshop)
         db_session.flush()
         
         worker = Worker(
-            worker_no="W001",
+            worker_no=_unique_code("WK"),
             worker_name="测试工人",
             workshop_id=workshop.id,
             status="ACTIVE",
@@ -257,12 +297,14 @@ class TestAssemblyKitOptimizer:
         """测试预计齐套日期优化"""
         from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
         from app.models import MaterialReadiness, ShortageDetail
-        
+
+        project = _create_test_project(db_session)
         readiness = MaterialReadiness(
-            readiness_no="KR_TEST",
-            project_id=1,
-            bom_id=1,
-            estimated_ready_date=date.today() + timedelta(days=20)
+            readiness_no=_unique_code("KR"),
+            project_id=project.id,
+            bom_id=None,
+            estimated_ready_date=date.today() + timedelta(days=20),
+            analysis_time=datetime.utcnow(),
         )
         db_session.add(readiness)
         db_session.flush()
@@ -278,11 +320,13 @@ class TestAssemblyKitOptimizer:
         """测试优化建议生成"""
         from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
         from app.models import MaterialReadiness, ShortageDetail
-        
+
+        project = _create_test_project(db_session)
         readiness = MaterialReadiness(
-            readiness_no="KR_TEST",
-            project_id=1,
-            bom_id=1
+            readiness_no=_unique_code("KR"),
+            project_id=project.id,
+            bom_id=None,
+            analysis_time=datetime.utcnow(),
         )
         db_session.add(readiness)
         db_session.flush()

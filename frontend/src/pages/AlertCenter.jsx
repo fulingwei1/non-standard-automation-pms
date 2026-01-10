@@ -107,89 +107,8 @@ const alertTypeConfig = {
 }
 
 // Mock alert data
-const mockAlerts = [
-  {
-    id: 1,
-    alert_no: 'AL-2501-0023',
-    alert_type: 'PROJ_DELAY',
-    alert_level: 'URGENT',
-    status: 'ACTIVE',
-    title: '项目【XX自动化产线】进度延期15天',
-    content: '计划进度: 80%, 实际进度: 52%',
-    project_id: 1,
-    project_name: 'XX自动化产线项目',
-    metric_value: 15,
-    threshold_value: 14,
-    assigned_to: '张三',
-    assigned_to_role: 'PM',
-    triggered_at: '2025-01-10 09:30:15',
-    acknowledged_at: null,
-  },
-  {
-    id: 2,
-    alert_no: 'AL-2501-0022',
-    alert_type: 'PO_DELIVERY',
-    alert_level: 'URGENT',
-    status: 'ACTIVE',
-    title: '采购单【PO-2501-0015】已超期2天',
-    content: '供应商: XX五金厂, 物料: 轴承(10件)',
-    project_id: 2,
-    project_name: 'YY检测设备项目',
-    metric_value: -2,
-    threshold_value: 0,
-    assigned_to: '李四',
-    assigned_to_role: '采购',
-    triggered_at: '2025-01-10 09:00:00',
-    acknowledged_at: null,
-  },
-  {
-    id: 3,
-    alert_no: 'AL-2501-0021',
-    alert_type: 'COST_OVERRUN',
-    alert_level: 'CRITICAL',
-    status: 'ACKNOWLEDGED',
-    title: '项目【YY检测设备】成本超支12.5%',
-    content: '预算: ¥500,000, 实际: ¥562,500, 超支: ¥62,500',
-    project_id: 2,
-    project_name: 'YY检测设备项目',
-    metric_value: 0.125,
-    threshold_value: 0.10,
-    assigned_to: '张三',
-    assigned_to_role: 'PM',
-    triggered_at: '2025-01-10 07:30:00',
-    acknowledged_at: '2025-01-10 08:30:00',
-  },
-  {
-    id: 4,
-    alert_no: 'AL-2501-0020',
-    alert_type: 'OS_DELIVERY',
-    alert_level: 'WARNING',
-    status: 'ACTIVE',
-    title: '外协单【OC-2501-0010】进度落后，仅完成60%',
-    content: '要求交期: 01-12, 当前进度: 60%',
-    project_id: 3,
-    project_name: 'ZZ包装线项目',
-    metric_value: 0.6,
-    threshold_value: 0.8,
-    assigned_to: '王五',
-    assigned_to_role: '采购',
-    triggered_at: '2025-01-10 06:30:00',
-    acknowledged_at: null,
-  },
-]
-
+// Mock data - 已移除，使用真实API
 // Statistics summary
-const mockStats = {
-  total: 26,
-  urgent: 3,
-  critical: 8,
-  warning: 15,
-  today_new: 12,
-  today_closed: 8,
-  urgent_change: 2,
-  critical_change: 1,
-  warning_change: -3,
-}
 
 export default function AlertCenter() {
   const [alerts, setAlerts] = useState([])
@@ -240,12 +159,7 @@ export default function AlertCenter() {
       
       setProjects(transformedProjects)
     } catch (error) {
-      console.error('Failed to load projects:', error)
-      // 如果是演示账号，使用 mock 数据
-      const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-      if (isDemoAccount) {
-        const mockProjects = [
-          { id: 1, name: 'XX自动化产线项目' },
+      console.error('Failed to load projects:', error)      ,
           { id: 2, name: 'YY检测设备项目' },
           { id: 3, name: 'ZZ包装线项目' },
         ]
@@ -305,15 +219,7 @@ export default function AlertCenter() {
       } else {
         errorMessage = err.message || errorMessage
       }
-      setError(errorMessage)
-      
-      // 如果是演示账号，使用 mock 数据
-      const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-      if (isDemoAccount) {
-        setAlerts(mockAlerts)
-        setTotal(mockAlerts.length)
-        setError(null) // Clear error for demo accounts
-      } else {
+      setError(errorMessage)       else {
         setAlerts([])
         setTotal(0)
       }
@@ -340,12 +246,7 @@ export default function AlertCenter() {
         })
       }
     } catch (error) {
-      console.error('Failed to load statistics:', error)
-      // 如果是演示账号，使用 mock 数据
-      const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-      if (isDemoAccount) {
-        setStats(mockStats)
-      } else {
+      console.error('Failed to load statistics:', error)       else {
         // Calculate from loaded alerts as fallback
         setStats({
           total: alerts.length,

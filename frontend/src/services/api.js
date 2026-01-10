@@ -1188,7 +1188,7 @@ export const bomApi = {
 
 // Notification Management APIs
 export const notificationApi = {
-    list: (params) => api.get('/notifications', { params }),
+    list: (params) => api.get('/notifications/', { params }), // 添加末尾斜杠避免重定向丢失 Authorization header
     get: (id) => api.get(`/notifications/${id}`),
     getUnreadCount: () => api.get('/notifications/unread-count'),
     markRead: (id) => api.put(`/notifications/${id}/read`),
@@ -2097,9 +2097,124 @@ export const workLogApi = {
     getMentionOptions: () => api.get('/work-logs/mentions/options'),
     // 配置相关（管理员）
     getConfig: () => api.get('/work-logs/config'),
+    // AI智能分析
+    aiAnalyze: (content, workDate) => api.post('/work-logs/ai-analyze', { content, work_date: workDate }),
+    getSuggestedProjects: () => api.get('/work-logs/suggested-projects'),
+    // 配置管理（管理员）
     listConfigs: () => api.get('/work-logs/config/list'),
     createConfig: (data) => api.post('/work-logs/config', data),
     updateConfig: (id, data) => api.put(`/work-logs/config/${id}`, data),
+};
+
+// Audit APIs - 权限审计
+export const auditApi = {
+    list: (params) => api.get('/audits', { params }),
+    get: (id) => api.get(`/audits/${id}`),
+};
+
+// Data Import Export APIs - 数据导入导出
+export const dataImportExportApi = {
+    // 导入相关
+    getTemplateTypes: () => api.get('/import/templates'),
+    downloadTemplate: (templateType) => api.get(`/import/templates/${templateType}`, { responseType: 'blob' }),
+    previewImport: (file, templateType) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return api.post('/import/preview', formData, {
+            params: { template_type: templateType },
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+    },
+    validateImport: (data) => api.post('/import/validate', data),
+    uploadImport: (file, templateType, updateExisting = false) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return api.post('/import/upload', formData, {
+            params: { template_type: templateType, update_existing: updateExisting },
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+    },
+    // 导出相关
+    exportProjectList: (data) => api.post('/import/export/project_list', data, { responseType: 'blob' }),
+    exportProjectDetail: (data) => api.post('/import/export/project_detail', data, { responseType: 'blob' }),
+    exportTaskList: (data) => api.post('/import/export/task_list', data, { responseType: 'blob' }),
+    exportTimesheet: (data) => api.post('/import/export/timesheet', data, { responseType: 'blob' }),
+    exportWorkload: (data) => api.post('/import/export/workload', data, { responseType: 'blob' }),
+};
+
+// Hourly Rate APIs - 时薪配置
+export const hourlyRateApi = {
+    list: (params) => api.get('/hourly-rates', { params }),
+    create: (data) => api.post('/hourly-rates', data),
+    get: (id) => api.get(`/hourly-rates/${id}`),
+    update: (id, data) => api.put(`/hourly-rates/${id}`, data),
+    delete: (id) => api.delete(`/hourly-rates/${id}`),
+    getUserHourlyRate: (userId, workDate) => api.get(`/hourly-rates/users/${userId}/hourly-rate`, { params: { work_date: workDate } }),
+    getUsersHourlyRates: (userIds, workDate) => api.post('/hourly-rates/users/batch-hourly-rates', null, { params: { user_ids: userIds, work_date: workDate } }),
+    getHistory: (params) => api.get('/hourly-rates/history', { params }),
+};
+
+// HR Management APIs - 人事管理
+export const hrManagementApi = {
+    // 人事事务
+    transactions: {
+        list: (params) => api.get('/hr/transactions', { params }),
+        create: (data) => api.post('/hr/transactions', data),
+        approve: (id, remark) => api.put(`/hr/transactions/${id}/approve`, null, { params: { approval_remark: remark } }),
+        getStatistics: (params) => api.get('/hr/transactions/statistics', { params }),
+    },
+    // 合同管理
+    contracts: {
+        list: (params) => api.get('/hr/contracts', { params }),
+        create: (data) => api.post('/hr/contracts', data),
+        update: (id, data) => api.put(`/hr/contracts/${id}`, data),
+        renew: (id, newEndDate, durationMonths) => api.post(`/hr/contracts/${id}/renew`, null, { params: { new_end_date: newEndDate, duration_months: durationMonths } }),
+        getExpiring: (days) => api.get('/hr/contracts/expiring', { params: { days } }),
+    },
+    // 合同提醒
+    contractReminders: {
+        list: (params) => api.get('/hr/contract-reminders', { params }),
+        handle: (id, action, remark) => api.put(`/hr/contract-reminders/${id}/handle`, null, { params: { action, remark } }),
+        generate: () => api.post('/hr/contract-reminders/generate'),
+    },
+    // 仪表板
+    dashboard: {
+        getOverview: () => api.get('/hr/dashboard/overview'),
+        getPendingConfirmations: () => api.get('/hr/dashboard/pending-confirmations'),
+    },
+};
+
+// Project Roles APIs - 项目角色管理
+export const projectRolesApi = {
+    // 角色类型
+    roleTypes: {
+        list: (params) => api.get('/project-roles/types', { params }),
+        create: (data) => api.post('/project-roles/types', data),
+        get: (id) => api.get(`/project-roles/types/${id}`),
+        update: (id, data) => api.put(`/project-roles/types/${id}`, data),
+        delete: (id) => api.delete(`/project-roles/types/${id}`),
+    },
+    // 项目角色配置
+    roleConfigs: {
+        list: (projectId) => api.get(`/project-roles/projects/${projectId}/role-configs`),
+        init: (projectId) => api.post(`/project-roles/projects/${projectId}/role-configs/init`),
+        batchUpdate: (projectId, data) => api.put(`/project-roles/projects/${projectId}/role-configs`, data),
+    },
+    // 项目负责人
+    leads: {
+        list: (projectId, includeTeam = false) => api.get(`/project-roles/projects/${projectId}/leads`, { params: { include_team: includeTeam } }),
+        create: (projectId, data) => api.post(`/project-roles/projects/${projectId}/leads`, data),
+        update: (projectId, memberId, data) => api.put(`/project-roles/projects/${projectId}/leads/${memberId}`, data),
+        delete: (projectId, memberId) => api.delete(`/project-roles/projects/${projectId}/leads/${memberId}`),
+    },
+    // 团队成员
+    teamMembers: {
+        list: (projectId, leadId) => api.get(`/project-roles/projects/${projectId}/leads/${leadId}/team`),
+        create: (projectId, leadId, data) => api.post(`/project-roles/projects/${projectId}/leads/${leadId}/team`, data),
+        delete: (projectId, leadId, memberId) => api.delete(`/project-roles/projects/${projectId}/leads/${leadId}/team/${memberId}`),
+    },
+    // 角色概览
+    getRoleOverview: (projectId) => api.get(`/project-roles/projects/${projectId}/role-overview`),
 };
 
 // Report Center APIs - 报表中心

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc, or_, and_
 
 from app.api import deps
+from app.core import security
 from app.models.technical_spec import TechnicalSpecRequirement, SpecMatchRecord
 from app.models.user import User
 from app.models.project import Project
@@ -36,7 +37,7 @@ router = APIRouter()
 @router.get("/requirements", response_model=TechnicalSpecRequirementListResponse)
 def list_requirements(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("technical_spec:read")),
     project_id: Optional[int] = Query(None, description="项目ID"),
     document_id: Optional[int] = Query(None, description="文档ID"),
     material_code: Optional[str] = Query(None, description="物料编码"),
@@ -104,7 +105,7 @@ def list_requirements(
 def get_requirement(
     requirement_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("technical_spec:read")),
 ) -> Any:
     """获取技术规格要求详情"""
     requirement = db.query(TechnicalSpecRequirement).filter(
@@ -137,7 +138,7 @@ def get_requirement(
 def create_requirement(
     requirement_in: TechnicalSpecRequirementCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("technical_spec:create")),
 ) -> Any:
     """创建技术规格要求"""
     # 验证项目存在
@@ -188,7 +189,7 @@ def update_requirement(
     requirement_id: int,
     requirement_in: TechnicalSpecRequirementUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("technical_spec:update")),
 ) -> Any:
     """更新技术规格要求"""
     requirement = db.query(TechnicalSpecRequirement).filter(
@@ -237,7 +238,7 @@ def update_requirement(
 def delete_requirement(
     requirement_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("technical_spec:delete")),
 ) -> Any:
     """删除技术规格要求"""
     requirement = db.query(TechnicalSpecRequirement).filter(
@@ -260,15 +261,21 @@ def delete_requirement(
 def check_spec_match(
     check_request: SpecMatchCheckRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("technical_spec:read")),
 ) -> Any:
     """手动触发规格匹配检查"""
     from app.models.purchase import PurchaseOrderItem
+    from app.services.spec_match_service import (
+        get_project_requirements,
+        check_po_item_match,
+        check_bom_item_match,
+        check_all_po_items,
+        check_all_bom_items,
+        calculate_match_statistics
+    )
     
     # 获取项目的所有规格要求
-    requirements = db.query(TechnicalSpecRequirement).filter(
-        TechnicalSpecRequirement.project_id == check_request.project_id
-    ).all()
+    requirements = get_project_requirements(db, check_request.project_id)
     
     if not requirements:
         return SpecMatchCheckResponse(
@@ -281,9 +288,6 @@ def check_spec_match(
     
     matcher = SpecMatcher()
     results = []
-    matched_count = 0
-    mismatched_count = 0
-    unknown_count = 0
     
     if check_request.match_type == 'PURCHASE_ORDER':
         # 检查采购订单
@@ -296,89 +300,14 @@ def check_spec_match(
             if not po_item:
                 raise HTTPException(status_code=404, detail="采购订单行不存在")
             
-            # 匹配所有相关规格要求
-            for req in requirements:
-                if req.material_code and req.material_code != po_item.material_code:
-                    continue
-                
-                match_result = matcher.match_specification(
-                    requirement=req,
-                    actual_spec=po_item.specification or '',
-                    actual_brand=None,  # 采购订单可能没有品牌字段
-                    actual_model=None
-                )
-                
-                # 保存匹配记录
-                match_record = SpecMatchRecord(
-                    project_id=check_request.project_id,
-                    spec_requirement_id=req.id,
-                    match_type='PURCHASE_ORDER',
-                    match_target_id=po_item.id,
-                    match_status=match_result.match_status,
-                    match_score=match_result.match_score,
-                    differences=match_result.differences
-                )
-                db.add(match_record)
-                
-                results.append(SpecMatchResult(
-                    spec_requirement_id=req.id,
-                    material_name=req.material_name,
-                    match_status=match_result.match_status,
-                    match_score=match_result.match_score,
-                    differences=match_result.differences
-                ))
-                
-                if match_result.match_status == 'MATCHED':
-                    matched_count += 1
-                elif match_result.match_status == 'MISMATCHED':
-                    mismatched_count += 1
-                else:
-                    unknown_count += 1
+            results = check_po_item_match(
+                db, po_item, requirements, check_request.project_id, matcher
+            )
         else:
             # 检查所有采购订单
-            po_items = db.query(PurchaseOrderItem).join(
-                PurchaseOrderItem.order
-            ).filter(
-                PurchaseOrderItem.order.has(project_id=check_request.project_id)
-            ).all()
-            
-            for po_item in po_items:
-                for req in requirements:
-                    if req.material_code and req.material_code != po_item.material_code:
-                        continue
-                    
-                    match_result = matcher.match_specification(
-                        requirement=req,
-                        actual_spec=po_item.specification or '',
-                        actual_brand=None,
-                        actual_model=None
-                    )
-                    
-                    match_record = SpecMatchRecord(
-                        project_id=check_request.project_id,
-                        spec_requirement_id=req.id,
-                        match_type='PURCHASE_ORDER',
-                        match_target_id=po_item.id,
-                        match_status=match_result.match_status,
-                        match_score=match_result.match_score,
-                        differences=match_result.differences
-                    )
-                    db.add(match_record)
-                    
-                    results.append(SpecMatchResult(
-                        spec_requirement_id=req.id,
-                        material_name=req.material_name,
-                        match_status=match_result.match_status,
-                        match_score=match_result.match_score,
-                        differences=match_result.differences
-                    ))
-                    
-                    if match_result.match_status == 'MATCHED':
-                        matched_count += 1
-                    elif match_result.match_status == 'MISMATCHED':
-                        mismatched_count += 1
-                    else:
-                        unknown_count += 1
+            results = check_all_po_items(
+                db, check_request.project_id, requirements, matcher
+            )
     
     elif check_request.match_type == 'BOM':
         # 检查BOM
@@ -391,95 +320,25 @@ def check_spec_match(
             if not bom_item:
                 raise HTTPException(status_code=404, detail="BOM行不存在")
             
-            for req in requirements:
-                if req.material_code and req.material_code != bom_item.material.material_code:
-                    continue
-                
-                match_result = matcher.match_specification(
-                    requirement=req,
-                    actual_spec=bom_item.specification or '',
-                    actual_brand=bom_item.material.brand if bom_item.material else None,
-                    actual_model=None
-                )
-                
-                match_record = SpecMatchRecord(
-                    project_id=check_request.project_id,
-                    spec_requirement_id=req.id,
-                    match_type='BOM',
-                    match_target_id=bom_item.id,
-                    match_status=match_result.match_status,
-                    match_score=match_result.match_score,
-                    differences=match_result.differences
-                )
-                db.add(match_record)
-                
-                results.append(SpecMatchResult(
-                    spec_requirement_id=req.id,
-                    material_name=req.material_name,
-                    match_status=match_result.match_status,
-                    match_score=match_result.match_score,
-                    differences=match_result.differences
-                ))
-                
-                if match_result.match_status == 'MATCHED':
-                    matched_count += 1
-                elif match_result.match_status == 'MISMATCHED':
-                    mismatched_count += 1
-                else:
-                    unknown_count += 1
+            results = check_bom_item_match(
+                db, bom_item, requirements, check_request.project_id, matcher
+            )
         else:
             # 检查所有BOM行
-            bom_items = db.query(BomItem).join(
-                BomItem.header
-            ).filter(
-                BomItem.header.has(project_id=check_request.project_id)
-            ).all()
-            
-            for bom_item in bom_items:
-                for req in requirements:
-                    if req.material_code and req.material_code != bom_item.material.material_code:
-                        continue
-                    
-                    match_result = matcher.match_specification(
-                        requirement=req,
-                        actual_spec=bom_item.specification or '',
-                        actual_brand=bom_item.material.brand if bom_item.material else None,
-                        actual_model=None
-                    )
-                    
-                    match_record = SpecMatchRecord(
-                        project_id=check_request.project_id,
-                        spec_requirement_id=req.id,
-                        match_type='BOM',
-                        match_target_id=bom_item.id,
-                        match_status=match_result.match_status,
-                        match_score=match_result.match_score,
-                        differences=match_result.differences
-                    )
-                    db.add(match_record)
-                    
-                    results.append(SpecMatchResult(
-                        spec_requirement_id=req.id,
-                        material_name=req.material_name,
-                        match_status=match_result.match_status,
-                        match_score=match_result.match_score,
-                        differences=match_result.differences
-                    ))
-                    
-                    if match_result.match_status == 'MATCHED':
-                        matched_count += 1
-                    elif match_result.match_status == 'MISMATCHED':
-                        mismatched_count += 1
-                    else:
-                        unknown_count += 1
+            results = check_all_bom_items(
+                db, check_request.project_id, requirements, matcher
+            )
     
     db.commit()
     
+    # 计算统计
+    stats = calculate_match_statistics(results)
+    
     return SpecMatchCheckResponse(
-        total_checked=len(results),
-        matched_count=matched_count,
-        mismatched_count=mismatched_count,
-        unknown_count=unknown_count,
+        total_checked=stats['total'],
+        matched_count=stats['matched'],
+        mismatched_count=stats['mismatched'],
+        unknown_count=stats['unknown'],
         results=results
     )
 
@@ -487,7 +346,7 @@ def check_spec_match(
 @router.get("/match/records", response_model=SpecMatchRecordListResponse)
 def list_match_records(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("technical_spec:read")),
     project_id: Optional[int] = Query(None, description="项目ID"),
     match_type: Optional[str] = Query(None, description="匹配类型"),
     match_status: Optional[str] = Query(None, description="匹配状态"),
@@ -556,7 +415,7 @@ def list_match_records(
 def extract_requirements(
     extract_request: SpecExtractRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("technical_spec:read")),
 ) -> Any:
     """从文档中提取规格要求"""
     extractor = SpecExtractor()

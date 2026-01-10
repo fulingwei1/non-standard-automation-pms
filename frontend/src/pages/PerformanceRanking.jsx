@@ -24,27 +24,8 @@ import { fadeIn, staggerContainer } from '../lib/animations'
 import { performanceApi, pmoApi } from '../services/api'
 
 // Mock data
-const mockEmployeeRanking = [
-  { rank: 1, name: '张工程师', department: '技术开发部', score: 95.5, change: 2 },
-  { rank: 2, name: '李经理', department: '项目部', score: 93.2, change: 0 },
-  { rank: 3, name: '王总监', department: '销售部', score: 91.8, change: -1 },
-  { rank: 4, name: '赵工程师', department: '技术开发部', score: 90.5, change: 3 },
-  { rank: 5, name: '陈经理', department: '生产部', score: 89.2, change: -2 },
-  { rank: 6, name: '刘工程师', department: '技术开发部', score: 88.5, change: 1 },
-  { rank: 7, name: '周经理', department: '采购部', score: 87.8, change: 0 },
-  { rank: 8, name: '吴工程师', department: '项目部', score: 86.5, change: -1 },
-  { rank: 9, name: '郑经理', department: '销售部', score: 85.2, change: 2 },
-  { rank: 10, name: '孙工程师', department: '生产部', score: 84.8, change: -3 },
-]
-
-const mockDepartmentRanking = [
-  { rank: 1, name: '技术开发部', avgScore: 88.5, employees: 45, excellent: 15 },
-  { rank: 2, name: '项目部', avgScore: 86.2, employees: 35, excellent: 12 },
-  { rank: 3, name: '销售部', avgScore: 85.8, employees: 28, excellent: 9 },
-  { rank: 4, name: '生产部', avgScore: 84.5, employees: 52, excellent: 14 },
-  { rank: 5, name: '采购部', avgScore: 83.2, employees: 8, excellent: 2 },
-]
-
+// Mock data - 已移除，使用真实API
+// Mock data - 已移除，使用真实API
 export default function PerformanceRanking() {
   const [selectedPeriod, setSelectedPeriod] = useState('current')
   const [loading, setLoading] = useState(true)

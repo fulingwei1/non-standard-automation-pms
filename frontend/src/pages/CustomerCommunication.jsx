@@ -36,29 +36,7 @@ import { toast } from '../components/ui/toast'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { serviceApi } from '../services/api'
-
-// Mock data
-const mockCommunications = [
-  {
-    id: 1,
-    communication_no: 'COM-20260106-001',
-    communication_type: '电话',
-    customer_name: '东莞XX电子',
-    customer_contact: '李工',
-    customer_phone: '139****9012',
-    project_code: 'PJ250106002',
-    project_name: 'EOL功能测试设备',
-    communication_date: '2026-01-06',
-    communication_time: '14:30',
-    duration: 25,
-    topic: '设备运行问题',
-    subject: '设备运行异常报警处理',
-    content: '客户反馈设备在运行过程中出现异常报警，已远程指导客户检查设备状态，初步判断为传感器故障，已安排现场服务',
-    follow_up_required: true,
-    follow_up_task: '安排现场服务，检查传感器',
-    follow_up_due_date: '2026-01-08',
-    follow_up_status: '待处理',
-    tags: ['设备故障', '紧急'],
+,
     importance: '高',
     created_by: '当前用户',
     created_at: '2026-01-06 14:30:00',
@@ -222,12 +200,7 @@ export default function CustomerCommunication() {
       setCommunications(transformedCommunications)
     } catch (err) {
       console.error('Failed to load communications:', err)
-      setError(err.response?.data?.detail || err.message || '加载沟通记录失败')
-      // 如果是演示账号，使用 mock 数据
-      const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-      if (isDemoAccount) {
-        setCommunications(mockCommunications)
-      } else {
+      setError(err.response?.data?.detail || err.message || '加载沟通记录失败')       else {
         setCommunications([])
       }
     } finally {

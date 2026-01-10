@@ -201,7 +201,7 @@ class PmoProjectPhase(Base, TimestampMixin):
     __tablename__ = 'pmo_project_phase'
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
-    project_id = Column(Integer, ForeignKey('project.id'), nullable=False, comment='项目ID')
+    project_id = Column(Integer, ForeignKey('projects.id'), nullable=False, comment='项目ID')
     
     # 阶段信息
     phase_code = Column(String(20), nullable=False, comment='阶段编码')
@@ -244,7 +244,7 @@ class PmoChangeRequest(Base, TimestampMixin):
     __tablename__ = 'pmo_change_request'
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
-    project_id = Column(Integer, ForeignKey('project.id'), nullable=False, comment='项目ID')
+    project_id = Column(Integer, ForeignKey('projects.id'), nullable=False, comment='项目ID')
     change_no = Column(String(50), unique=True, nullable=False, comment='变更编号')
     
     # 变更信息
@@ -296,7 +296,7 @@ class PmoProjectRisk(Base, TimestampMixin):
     __tablename__ = 'pmo_project_risk'
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
-    project_id = Column(Integer, ForeignKey('project.id'), nullable=False, comment='项目ID')
+    project_id = Column(Integer, ForeignKey('projects.id'), nullable=False, comment='项目ID')
     risk_no = Column(String(50), unique=True, nullable=False, comment='风险编号')
     
     # 风险信息
@@ -346,7 +346,7 @@ class PmoProjectCost(Base, TimestampMixin):
     __tablename__ = 'pmo_project_cost'
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
-    project_id = Column(Integer, ForeignKey('project.id'), nullable=False, comment='项目ID')
+    project_id = Column(Integer, ForeignKey('projects.id'), nullable=False, comment='项目ID')
     
     # 成本类别
     cost_category = Column(String(50), nullable=False, comment='成本类别')
@@ -385,7 +385,7 @@ class PmoMeeting(Base, TimestampMixin):
     __tablename__ = 'pmo_meeting'
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
-    project_id = Column(Integer, ForeignKey('project.id'), comment='项目ID(可为空表示跨项目会议)')
+    project_id = Column(Integer, ForeignKey('projects.id'), comment='项目ID(可为空表示跨项目会议)')
     
     # 会议信息
     meeting_type = Column(String(20), nullable=False, comment='会议类型')
@@ -431,7 +431,7 @@ class PmoResourceAllocation(Base, TimestampMixin):
     __tablename__ = 'pmo_resource_allocation'
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
-    project_id = Column(Integer, ForeignKey('project.id'), nullable=False, comment='项目ID')
+    project_id = Column(Integer, ForeignKey('projects.id'), nullable=False, comment='项目ID')
     task_id = Column(Integer, comment='任务ID')
     
     # 资源信息
@@ -465,7 +465,7 @@ class PmoProjectClosure(Base, TimestampMixin):
     __tablename__ = 'pmo_project_closure'
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
-    project_id = Column(Integer, ForeignKey('project.id'), nullable=False, unique=True, comment='项目ID')
+    project_id = Column(Integer, ForeignKey('projects.id'), nullable=False, unique=True, comment='项目ID')
     
     # 验收信息
     acceptance_date = Column(Date, comment='验收日期')
@@ -510,4 +510,3 @@ class PmoProjectClosure(Base, TimestampMixin):
     __table_args__ = (
         {'comment': '项目结项表'}
     )
-

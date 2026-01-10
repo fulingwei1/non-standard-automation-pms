@@ -86,29 +86,11 @@ export default function ArrivalTrackingList() {
       console.error('Failed to fetch suppliers:', error)
       setSuppliers([])
     }
-  }
-  const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-  
-  const fetchArrivals = async () => {
+  }  const fetchArrivals = async () => {
     try {
       setLoading(true)
       
-      if (isDemoAccount) {
-        // Use mock data for demo accounts
-        setArrivals([
-          {
-            id: 1,
-            arrival_no: 'AT-250115-001',
-            material_code: 'EL-02-03-0015',
-            material_name: '光电传感器 E3Z-D82',
-            supplier_name: '欧姆龙(上海)代理',
-            expected_qty: 12,
-            expected_date: '2026-01-15',
-            actual_date: null,
-            status: 'PENDING',
-            is_delayed: false,
-            delay_days: null,
-          },
+      ,
           {
             id: 2,
             arrival_no: 'AT-250115-002',
@@ -137,22 +119,7 @@ export default function ArrivalTrackingList() {
       }
     } catch (error) {
       console.error('Failed to fetch arrivals:', error)
-      if (isDemoAccount) {
-        // Use mock data on error for demo accounts
-        setArrivals([
-          {
-            id: 1,
-            arrival_no: 'AT-250115-001',
-            material_code: 'EL-02-03-0015',
-            material_name: '光电传感器 E3Z-D82',
-            supplier_name: '欧姆龙(上海)代理',
-            expected_qty: 12,
-            expected_date: '2026-01-15',
-            actual_date: null,
-            status: 'PENDING',
-            is_delayed: false,
-            delay_days: null,
-          },
+      ,
         ])
       }
     } finally {

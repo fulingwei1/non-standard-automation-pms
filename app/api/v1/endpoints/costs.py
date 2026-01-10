@@ -30,7 +30,7 @@ def read_costs(
     cost_category: Optional[str] = Query(None, description="成本分类筛选"),
     start_date: Optional[str] = Query(None, description="开始日期（YYYY-MM-DD）"),
     end_date: Optional[str] = Query(None, description="结束日期（YYYY-MM-DD）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """
     获取成本记录列表（支持分页、筛选）
@@ -81,7 +81,7 @@ def get_project_costs(
     project_id: int,
     machine_id: Optional[int] = Query(None, description="机台ID筛选"),
     cost_type: Optional[str] = Query(None, description="成本类型筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """
     获取项目的成本记录列表
@@ -163,7 +163,7 @@ def create_cost(
     *,
     db: Session = Depends(deps.get_db),
     cost_in: ProjectCostCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:create")),
 ) -> Any:
     """
     创建成本记录
@@ -205,7 +205,7 @@ def create_project_cost(
     db: Session = Depends(deps.get_db),
     project_id: int,
     cost_in: ProjectCostCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:create")),
 ) -> Any:
     """
     为项目创建成本记录
@@ -248,7 +248,7 @@ def read_cost(
     *,
     db: Session = Depends(deps.get_db),
     cost_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """
     获取成本记录详情
@@ -265,7 +265,7 @@ def update_cost(
     db: Session = Depends(deps.get_db),
     cost_id: int,
     cost_in: ProjectCostUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:update")),
 ) -> Any:
     """
     更新成本记录
@@ -299,7 +299,7 @@ def get_project_cost_summary(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """
     获取项目成本汇总统计
@@ -400,7 +400,7 @@ def delete_cost(
     *,
     db: Session = Depends(deps.get_db),
     cost_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:delete")),
 ) -> Any:
     """
     删除成本记录
@@ -427,7 +427,7 @@ def get_project_cost_analysis(
     db: Session = Depends(deps.get_db),
     project_id: int,
     compare_project_id: Optional[int] = Query(None, description="对比项目ID（可选）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """
     成本对比分析
@@ -515,7 +515,7 @@ def get_project_revenue_detail(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """
     获取项目收入详情
@@ -554,7 +554,7 @@ def get_project_profit_analysis(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """
     项目利润分析
@@ -661,7 +661,7 @@ def get_cost_trends(
     end_date: Optional[date] = Query(None, description="结束日期（默认今天）"),
     group_by: str = Query("day", description="分组方式：day/week/month"),
     cost_type: Optional[str] = Query(None, description="成本类型筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """
     成本趋势分析
@@ -804,7 +804,7 @@ def calculate_project_labor_cost(
     start_date: Optional[str] = Query(None, description="开始日期（YYYY-MM-DD，可选）"),
     end_date: Optional[str] = Query(None, description="结束日期（YYYY-MM-DD，可选）"),
     recalculate: bool = Query(False, description="是否重新计算（删除现有记录重新计算）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """
     计算项目人工成本
@@ -848,7 +848,7 @@ def calculate_all_projects_labor_cost(
     start_date: Optional[str] = Query(None, description="开始日期（YYYY-MM-DD，可选）"),
     end_date: Optional[str] = Query(None, description="结束日期（YYYY-MM-DD，可选）"),
     project_ids: Optional[List[int]] = Query(None, description="项目ID列表（可选，不提供则计算所有项目）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """
     批量计算所有项目的人工成本
@@ -891,7 +891,7 @@ def calculate_monthly_labor_cost(
     year: int = Query(..., description="年份"),
     month: int = Query(..., ge=1, le=12, description="月份"),
     project_ids: Optional[List[int]] = Query(None, description="项目ID列表（可选）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """
     计算指定月份的项目人工成本
@@ -922,7 +922,7 @@ def allocate_cost(
     db: Session = Depends(deps.get_db),
     cost_id: int,
     allocation_request: ProjectCostAllocationRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """
     分摊成本到多个机台或项目
@@ -985,7 +985,7 @@ def get_budget_execution_analysis(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """
     获取项目预算执行情况分析
@@ -1012,7 +1012,7 @@ def get_budget_trend_analysis(
     project_id: int,
     start_date: Optional[str] = Query(None, description="开始日期（YYYY-MM-DD）"),
     end_date: Optional[str] = Query(None, description="结束日期（YYYY-MM-DD）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """
     获取项目预算执行趋势分析（按时间维度）
@@ -1044,7 +1044,7 @@ def generate_cost_review(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """
     手动触发生成项目成本复盘报告
@@ -1083,7 +1083,7 @@ def check_project_budget_alert(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """
     手动检查项目预算执行情况并生成预警
@@ -1121,7 +1121,7 @@ def check_all_projects_budget(
     *,
     db: Session = Depends(deps.get_db),
     project_ids: Optional[List[int]] = Body(None, description="项目ID列表（不提供则检查所有活跃项目）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """
     批量检查项目预算执行情况

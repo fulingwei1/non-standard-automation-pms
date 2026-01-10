@@ -42,7 +42,7 @@ def get_hr_transactions(
     employee_id: Optional[int] = Query(None, description="员工ID"),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Dict[str, Any]:
     """获取人事事务列表"""
     query = db.query(HrTransaction).join(Employee, HrTransaction.employee_id == Employee.id)
@@ -122,7 +122,7 @@ def get_hr_transactions(
 def create_hr_transaction(
     transaction_in: HrTransactionCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:create")),
 ) -> Any:
     """创建人事事务"""
     # 验证员工存在
@@ -146,7 +146,7 @@ def approve_hr_transaction(
     transaction_id: int,
     approval_remark: Optional[str] = None,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Dict[str, Any]:
     """审批人事事务"""
     transaction = db.query(HrTransaction).filter(HrTransaction.id == transaction_id).first()
@@ -207,7 +207,7 @@ def get_transaction_statistics(
     db: Session = Depends(deps.get_db),
     year: Optional[int] = Query(None, description="年份"),
     month: Optional[int] = Query(None, description="月份"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Dict[str, Any]:
     """获取人事事务统计"""
     now = datetime.now()
@@ -281,7 +281,7 @@ def get_contracts(
     employee_id: Optional[int] = Query(None, description="员工ID"),
     status: Optional[str] = Query(None, description="合同状态"),
     expiring_in_days: Optional[int] = Query(None, description="即将到期天数内"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Dict[str, Any]:
     """获取合同列表"""
     query = db.query(EmployeeContract).join(Employee)
@@ -341,7 +341,7 @@ def get_contracts(
 def create_contract(
     contract_in: EmployeeContractCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """创建员工合同"""
     # 验证员工存在
@@ -368,7 +368,7 @@ def update_contract(
     contract_id: int,
     contract_in: EmployeeContractUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """更新员工合同"""
     contract = db.query(EmployeeContract).filter(EmployeeContract.id == contract_id).first()
@@ -390,7 +390,7 @@ def renew_contract(
     new_end_date: date,
     duration_months: Optional[int] = None,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Dict[str, Any]:
     """续签合同"""
     old_contract = db.query(EmployeeContract).filter(EmployeeContract.id == contract_id).first()
@@ -443,7 +443,7 @@ def renew_contract(
 def get_expiring_contracts(
     db: Session = Depends(deps.get_db),
     days: int = Query(60, description="未来多少天内到期"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Dict[str, Any]:
     """获取即将到期的合同（用于提醒）"""
     expiry_date = date.today() + timedelta(days=days)
@@ -506,7 +506,7 @@ def get_contract_reminders(
     page: int = Query(1, ge=1),
     page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
     status: Optional[str] = Query(None, description="状态筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Dict[str, Any]:
     """获取合同到期提醒列表"""
     query = db.query(ContractReminder).join(Employee)
@@ -548,7 +548,7 @@ def handle_contract_reminder(
     action: str = Query(..., description="处理动作: renew, terminate, extend, ignore"),
     remark: Optional[str] = None,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Dict[str, Any]:
     """处理合同到期提醒"""
     reminder = db.query(ContractReminder).filter(ContractReminder.id == reminder_id).first()
@@ -569,7 +569,7 @@ def handle_contract_reminder(
 @router.post("/contract-reminders/generate")
 def generate_contract_reminders(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Dict[str, Any]:
     """
     生成合同到期提醒（手动触发，也可由定时任务调用）
@@ -639,7 +639,7 @@ def generate_contract_reminders(
 @router.get("/dashboard/overview")
 def get_hr_dashboard_overview(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Dict[str, Any]:
     """获取人事管理仪表板概览数据"""
     today = date.today()
@@ -726,7 +726,7 @@ def get_hr_dashboard_overview(
 @router.get("/dashboard/pending-confirmations")
 def get_pending_confirmations(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> List[Dict[str, Any]]:
     """获取待转正员工列表"""
     today = date.today()

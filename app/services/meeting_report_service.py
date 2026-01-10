@@ -41,6 +41,20 @@ class MeetingReportService:
         Returns:
             MeetingReport对象
         """
+        from app.services.meeting_report_helpers import (
+            query_meetings,
+            calculate_meeting_statistics,
+            calculate_action_item_statistics,
+            calculate_completion_rate,
+            collect_key_decisions,
+            collect_strategic_structures,
+            build_meetings_data,
+            calculate_by_level_statistics,
+            calculate_business_metrics,
+            calculate_yoy_comparisons,
+            create_report_record
+        )
+        
         # 计算年度周期
         period_start = date(year, 1, 1)
         period_end = date(year, 12, 31)
@@ -49,92 +63,35 @@ class MeetingReportService:
         report_no = f"MR-{year}-ANNUAL-{datetime.now().strftime('%Y%m%d%H%M%S')}"
         
         # 查询会议
-        query = db.query(StrategicMeeting).filter(
-            and_(
-                StrategicMeeting.meeting_date >= period_start,
-                StrategicMeeting.meeting_date <= period_end
-            )
-        )
-        
-        if rhythm_level:
-            query = query.filter(StrategicMeeting.rhythm_level == rhythm_level)
-        
-        meetings = query.order_by(StrategicMeeting.meeting_date).all()
+        meetings = query_meetings(db, period_start, period_end, rhythm_level)
         
         # 统计会议
-        total_meetings = len(meetings)
-        completed_meetings = len([m for m in meetings if m.status == "COMPLETED"])
+        total_meetings, completed_meetings = calculate_meeting_statistics(meetings)
         
         # 查询行动项
         meeting_ids = [m.id for m in meetings]
-        total_action_items = 0
-        completed_action_items = 0
-        overdue_action_items = 0
+        total_action_items, completed_action_items, overdue_action_items = calculate_action_item_statistics(
+            db, meeting_ids
+        )
         
-        if meeting_ids:
-            total_action_items = db.query(MeetingActionItem).filter(
-                MeetingActionItem.meeting_id.in_(meeting_ids)
-            ).count()
-            
-            completed_action_items = db.query(MeetingActionItem).filter(
-                and_(
-                    MeetingActionItem.meeting_id.in_(meeting_ids),
-                    MeetingActionItem.status == ActionItemStatus.COMPLETED.value
-                )
-            ).count()
-            
-            overdue_action_items = db.query(MeetingActionItem).filter(
-                and_(
-                    MeetingActionItem.meeting_id.in_(meeting_ids),
-                    MeetingActionItem.status == ActionItemStatus.OVERDUE.value
-                )
-            ).count()
+        completion_rate = calculate_completion_rate(completed_action_items, total_action_items)
         
-        completion_rate = f"{(completed_action_items / total_action_items * 100):.1f}%" if total_action_items > 0 else "0%"
-        
-        # 收集关键决策
-        key_decisions = []
-        for meeting in meetings:
-            if meeting.key_decisions:
-                key_decisions.extend(meeting.key_decisions)
-        
-        # 收集战略结构
-        strategic_structures = []
-        for meeting in meetings:
-            if meeting.strategic_structure:
-                strategic_structures.append({
-                    "meeting_id": meeting.id,
-                    "meeting_name": meeting.meeting_name,
-                    "meeting_date": meeting.meeting_date.isoformat(),
-                    "structure": meeting.strategic_structure
-                })
+        # 收集关键决策和战略结构
+        key_decisions = collect_key_decisions(meetings)
+        strategic_structures = collect_strategic_structures(meetings)
         
         # 构建报告数据
         report_data = {
             "summary": {
                 "total_meetings": total_meetings,
                 "completed_meetings": completed_meetings,
-                "completion_rate": f"{(completed_meetings / total_meetings * 100):.1f}%" if total_meetings > 0 else "0%",
+                "completion_rate": calculate_completion_rate(completed_meetings, total_meetings),
                 "total_action_items": total_action_items,
                 "completed_action_items": completed_action_items,
                 "overdue_action_items": overdue_action_items,
                 "action_completion_rate": completion_rate
             },
-            "meetings": [
-                {
-                    "id": m.id,
-                    "meeting_name": m.meeting_name,
-                    "meeting_date": m.meeting_date.isoformat(),
-                    "rhythm_level": m.rhythm_level,
-                    "cycle_type": m.cycle_type,
-                    "status": m.status,
-                    "organizer_name": m.organizer_name,
-                    "action_items_count": db.query(MeetingActionItem).filter(
-                        MeetingActionItem.meeting_id == m.id
-                    ).count()
-                }
-                for m in meetings
-            ],
+            "meetings": build_meetings_data(db, meetings),
             "action_items_summary": {
                 "total": total_action_items,
                 "completed": completed_action_items,
@@ -146,55 +103,28 @@ class MeetingReportService:
         }
         
         # 按层级统计
-        by_level = {}
-        for meeting in meetings:
-            level = meeting.rhythm_level
-            if level not in by_level:
-                by_level[level] = {"total": 0, "completed": 0}
-            by_level[level]["total"] += 1
-            if meeting.status == "COMPLETED":
-                by_level[level]["completed"] += 1
-        
-        report_data["by_level"] = by_level
+        report_data["by_level"] = calculate_by_level_statistics(meetings)
         
         # 如果提供了配置ID，根据配置计算业务指标
         comparison_data = None
         if config_id:
             config = db.query(MeetingReportConfig).filter(MeetingReportConfig.id == config_id).first()
             if config and config.enabled_metrics:
-                metric_service = MetricCalculationService(db)
-                comparison_service = ComparisonCalculationService(db)
-                
-                # 计算启用的指标
-                business_metrics = {}
-                metric_codes = [m.get('metric_code') for m in config.enabled_metrics if m.get('enabled', True)]
-                
-                for metric_code in metric_codes:
-                    try:
-                        result = metric_service.calculate_metric(metric_code, period_start, period_end)
-                        business_metrics[metric_code] = result
-                    except Exception as e:
-                        business_metrics[metric_code] = {
-                            "metric_code": metric_code,
-                            "error": str(e),
-                            "value": None
-                        }
-                
+                business_metrics = calculate_business_metrics(
+                    db, config, period_start, period_end
+                )
                 report_data["business_metrics"] = business_metrics
                 
                 # 计算同比对比（如果配置启用）
                 if config.comparison_config and config.comparison_config.get('enable_yoy', False):
-                    yoy_comparisons = comparison_service.calculate_comparisons_batch(
-                        metric_codes,
-                        year,
-                        month=None,
-                        enable_mom=False,
-                        enable_yoy=True
+                    metric_codes = [m.get('metric_code') for m in config.enabled_metrics if m.get('enabled', True)]
+                    comparison_data = calculate_yoy_comparisons(
+                        db, metric_codes, year, month=None
                     )
-                    comparison_data = {"yoy_comparisons": yoy_comparisons}
         
         # 创建报告记录
-        report = MeetingReport(
+        report = create_report_record(
+            db,
             report_no=report_no,
             report_type="ANNUAL",
             report_title=f"{year}年度会议报告" + (f"（{rhythm_level}）" if rhythm_level else ""),
@@ -205,14 +135,8 @@ class MeetingReportService:
             rhythm_level=rhythm_level or "ALL",
             report_data=report_data,
             comparison_data=comparison_data,
-            status="GENERATED",
-            generated_by=generated_by,
-            generated_at=datetime.now()
+            generated_by=generated_by
         )
-        
-        db.add(report)
-        db.commit()
-        db.refresh(report)
         
         return report
     
@@ -238,12 +162,23 @@ class MeetingReportService:
         Returns:
             MeetingReport对象
         """
-        # 计算月度周期
-        period_start = date(year, month, 1)
-        _, last_day = monthrange(year, month)
-        period_end = date(year, month, last_day)
+        from app.services.meeting_report_helpers import (
+            calculate_periods,
+            query_meetings,
+            calculate_meeting_statistics,
+            calculate_action_item_statistics,
+            calculate_completion_rate,
+            build_comparison_data,
+            collect_key_decisions,
+            build_meetings_data,
+            calculate_by_level_statistics,
+            build_report_summary
+        )
         
-        # 计算上月周期（用于对比）
+        # 计算月度周期
+        period_start, period_end, prev_period_start, prev_period_end = calculate_periods(year, month)
+        
+        # 计算上月年份和月份（用于对比数据）
         if month == 1:
             prev_year = year - 1
             prev_month = 12
@@ -251,221 +186,86 @@ class MeetingReportService:
             prev_year = year
             prev_month = month - 1
         
-        prev_period_start = date(prev_year, prev_month, 1)
-        _, prev_last_day = monthrange(prev_year, prev_month)
-        prev_period_end = date(prev_year, prev_month, prev_last_day)
-        
         # 生成报告编号
         report_no = f"MR-{year}{month:02d}-MONTHLY-{datetime.now().strftime('%Y%m%d%H%M%S')}"
         
-        # 查询本月会议
-        current_query = db.query(StrategicMeeting).filter(
-            and_(
-                StrategicMeeting.meeting_date >= period_start,
-                StrategicMeeting.meeting_date <= period_end
-            )
-        )
-        
-        if rhythm_level:
-            current_query = current_query.filter(StrategicMeeting.rhythm_level == rhythm_level)
-        
-        current_meetings = current_query.order_by(StrategicMeeting.meeting_date).all()
-        
-        # 查询上月会议（用于对比）
-        prev_query = db.query(StrategicMeeting).filter(
-            and_(
-                StrategicMeeting.meeting_date >= prev_period_start,
-                StrategicMeeting.meeting_date <= prev_period_end
-            )
-        )
-        
-        if rhythm_level:
-            prev_query = prev_query.filter(StrategicMeeting.rhythm_level == rhythm_level)
-        
-        prev_meetings = prev_query.all()
+        # 查询本月和上月会议
+        current_meetings = query_meetings(db, period_start, period_end, rhythm_level)
+        prev_meetings = query_meetings(db, prev_period_start, prev_period_end, rhythm_level)
         
         # 统计本月数据
-        current_total_meetings = len(current_meetings)
-        current_completed_meetings = len([m for m in current_meetings if m.status == "COMPLETED"])
-        
+        current_meeting_stats = calculate_meeting_statistics(current_meetings)
         current_meeting_ids = [m.id for m in current_meetings]
-        current_total_action_items = 0
-        current_completed_action_items = 0
-        current_overdue_action_items = 0
-        
-        if current_meeting_ids:
-            current_total_action_items = db.query(MeetingActionItem).filter(
-                MeetingActionItem.meeting_id.in_(current_meeting_ids)
-            ).count()
-            
-            current_completed_action_items = db.query(MeetingActionItem).filter(
-                and_(
-                    MeetingActionItem.meeting_id.in_(current_meeting_ids),
-                    MeetingActionItem.status == ActionItemStatus.COMPLETED.value
-                )
-            ).count()
-            
-            current_overdue_action_items = db.query(MeetingActionItem).filter(
-                and_(
-                    MeetingActionItem.meeting_id.in_(current_meeting_ids),
-                    MeetingActionItem.status == ActionItemStatus.OVERDUE.value
-                )
-            ).count()
-        
-        current_completion_rate = (
-            (current_completed_action_items / current_total_action_items * 100)
-            if current_total_action_items > 0 else 0.0
+        current_action_item_stats = calculate_action_item_statistics(db, current_meeting_ids)
+        current_completion_rate = calculate_completion_rate(
+            current_action_item_stats['completed'],
+            current_action_item_stats['total']
         )
         
         # 统计上月数据（用于对比）
-        prev_total_meetings = len(prev_meetings)
-        prev_completed_meetings = len([m for m in prev_meetings if m.status == "COMPLETED"])
-        
+        prev_meeting_stats = calculate_meeting_statistics(prev_meetings)
         prev_meeting_ids = [m.id for m in prev_meetings]
-        prev_total_action_items = 0
-        prev_completed_action_items = 0
-        
-        if prev_meeting_ids:
-            prev_total_action_items = db.query(MeetingActionItem).filter(
-                MeetingActionItem.meeting_id.in_(prev_meeting_ids)
-            ).count()
-            
-            prev_completed_action_items = db.query(MeetingActionItem).filter(
-                and_(
-                    MeetingActionItem.meeting_id.in_(prev_meeting_ids),
-                    MeetingActionItem.status == ActionItemStatus.COMPLETED.value
-                )
-            ).count()
-        
-        prev_completion_rate = (
-            (prev_completed_action_items / prev_total_action_items * 100)
-            if prev_total_action_items > 0 else 0.0
+        prev_action_item_stats = calculate_action_item_statistics(db, prev_meeting_ids)
+        prev_completion_rate = calculate_completion_rate(
+            prev_action_item_stats['completed'],
+            prev_action_item_stats['total']
         )
         
         # 构建对比数据
-        def calculate_change(current, previous):
-            """计算变化"""
-            change = current - previous
-            change_rate = (change / previous * 100) if previous > 0 else (100 if current > 0 else 0)
-            return {
-                "current": current,
-                "previous": previous,
-                "change": change,
-                "change_rate": f"{change_rate:+.1f}%",
-                "change_abs": abs(change)
-            }
-        
-        comparison_data = {
-            "previous_period": f"{prev_year}-{prev_month:02d}",
-            "current_period": f"{year}-{month:02d}",
-            "meetings_comparison": calculate_change(current_total_meetings, prev_total_meetings),
-            "completed_meetings_comparison": calculate_change(current_completed_meetings, prev_completed_meetings),
-            "action_items_comparison": calculate_change(current_total_action_items, prev_total_action_items),
-            "completed_action_items_comparison": calculate_change(current_completed_action_items, prev_completed_action_items),
-            "completion_rate_comparison": {
-                "current": f"{current_completion_rate:.1f}%",
-                "previous": f"{prev_completion_rate:.1f}%",
-                "change": f"{current_completion_rate - prev_completion_rate:+.1f}%",
-                "change_value": current_completion_rate - prev_completion_rate
-            }
-        }
+        comparison_data = build_comparison_data(
+            year, month, prev_year, prev_month,
+            {
+                **current_meeting_stats,
+                'action_items_total': current_action_item_stats['total'],
+                'action_items_completed': current_action_item_stats['completed']
+            },
+            {
+                **prev_meeting_stats,
+                'action_items_total': prev_action_item_stats['total'],
+                'action_items_completed': prev_action_item_stats['completed']
+            },
+            current_completion_rate,
+            prev_completion_rate
+        )
         
         # 收集关键决策
-        key_decisions = []
-        for meeting in current_meetings:
-            if meeting.key_decisions:
-                key_decisions.extend(meeting.key_decisions)
+        key_decisions = collect_key_decisions(current_meetings)
         
         # 构建报告数据
         report_data = {
-            "summary": {
-                "total_meetings": current_total_meetings,
-                "completed_meetings": current_completed_meetings,
-                "completion_rate": f"{(current_completed_meetings / current_total_meetings * 100):.1f}%" if current_total_meetings > 0 else "0%",
-                "total_action_items": current_total_action_items,
-                "completed_action_items": current_completed_action_items,
-                "overdue_action_items": current_overdue_action_items,
-                "action_completion_rate": f"{current_completion_rate:.1f}%"
-            },
-            "meetings": [
-                {
-                    "id": m.id,
-                    "meeting_name": m.meeting_name,
-                    "meeting_date": m.meeting_date.isoformat(),
-                    "rhythm_level": m.rhythm_level,
-                    "cycle_type": m.cycle_type,
-                    "status": m.status,
-                    "organizer_name": m.organizer_name,
-                    "action_items_count": db.query(MeetingActionItem).filter(
-                        MeetingActionItem.meeting_id == m.id
-                    ).count()
-                }
-                for m in current_meetings
-            ],
+            "summary": build_report_summary(
+                current_meeting_stats,
+                current_action_item_stats,
+                current_completion_rate
+            ),
+            "meetings": build_meetings_data(db, current_meetings),
             "action_items_summary": {
-                "total": current_total_action_items,
-                "completed": current_completed_action_items,
-                "overdue": current_overdue_action_items,
-                "in_progress": current_total_action_items - current_completed_action_items - current_overdue_action_items
+                "total": current_action_item_stats['total'],
+                "completed": current_action_item_stats['completed'],
+                "overdue": current_action_item_stats['overdue'],
+                "in_progress": current_action_item_stats['total'] - current_action_item_stats['completed'] - current_action_item_stats['overdue']
             },
-            "key_decisions": key_decisions
+            "key_decisions": key_decisions,
+            "by_level": calculate_by_level_statistics(current_meetings)
         }
-        
-        # 按层级统计
-        by_level = {}
-        for meeting in current_meetings:
-            level = meeting.rhythm_level
-            if level not in by_level:
-                by_level[level] = {"total": 0, "completed": 0}
-            by_level[level]["total"] += 1
-            if meeting.status == "COMPLETED":
-                by_level[level]["completed"] += 1
-        
-        report_data["by_level"] = by_level
         
         # 如果提供了配置ID，根据配置计算业务指标
         if config_id:
-            config = db.query(MeetingReportConfig).filter(MeetingReportConfig.id == config_id).first()
-            if config and config.enabled_metrics:
-                metric_service = MetricCalculationService(db)
-                comparison_service = ComparisonCalculationService(db)
-                
-                period_start = date(year, month, 1)
-                _, last_day = monthrange(year, month)
-                period_end = date(year, month, last_day)
-                
-                # 计算启用的指标
-                business_metrics = {}
-                metric_codes = [m.get('metric_code') for m in config.enabled_metrics if m.get('enabled', True)]
-                
-                for metric_code in metric_codes:
-                    try:
-                        result = metric_service.calculate_metric(metric_code, period_start, period_end)
-                        business_metrics[metric_code] = result
-                    except Exception as e:
-                        business_metrics[metric_code] = {
-                            "metric_code": metric_code,
-                            "error": str(e),
-                            "value": None
-                        }
-                
+            from app.services.meeting_report_helpers import (
+                calculate_business_metrics,
+                calculate_metric_comparisons
+            )
+            
+            business_metrics = calculate_business_metrics(db, config_id, period_start, period_end)
+            if business_metrics:
                 report_data["business_metrics"] = business_metrics
                 
                 # 计算对比数据（如果配置启用）
-                if config.comparison_config:
-                    enable_mom = config.comparison_config.get('enable_mom', False)
-                    enable_yoy = config.comparison_config.get('enable_yoy', False)
-                    
-                    if enable_mom or enable_yoy:
-                        comparisons = comparison_service.calculate_comparisons_batch(
-                            metric_codes,
-                            year,
-                            month=month,
-                            enable_mom=enable_mom,
-                            enable_yoy=enable_yoy
-                        )
-                        
-                        # 合并到comparison_data中
+                config = db.query(MeetingReportConfig).filter(MeetingReportConfig.id == config_id).first()
+                if config and config.enabled_metrics:
+                    metric_codes = [m.get('metric_code') for m in config.enabled_metrics if m.get('enabled', True)]
+                    comparisons = calculate_metric_comparisons(db, config_id, year, month, metric_codes)
+                    if comparisons:
                         if not comparison_data:
                             comparison_data = {}
                         comparison_data["business_metrics_comparison"] = comparisons

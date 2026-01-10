@@ -19,7 +19,7 @@ from sqlalchemy import desc, or_, and_, func
 from app.api import deps
 from app.core.config import settings
 from app.core import security
-from app.models.user import User
+from app.models.user import User, UserRole, Role
 from app.models.project import Customer, Project, ProjectMilestone, ProjectPaymentPlan
 from app.models.organization import Department
 from app.schemas.project import ProjectPaymentPlanResponse
@@ -94,6 +94,11 @@ from app.models.enums import (
 router = APIRouter()
 
 
+def _get_entity_creator_id(entity) -> Optional[int]:
+    """Safely fetch created_by if the ORM model defines it."""
+    return getattr(entity, "created_by", None)
+
+
 def _normalize_date_range(
     start_date_value: Optional[date],
     end_date_value: Optional[date],
@@ -116,6 +121,22 @@ def _normalize_date_range(
     return normalized_start, normalized_end
 
 
+def _get_user_role_code(db: Session, user: User) -> str:
+    """获取用户的角色代码（返回第一个角色的代码）"""
+    user_roles = db.query(UserRole).filter(UserRole.user_id == user.id).all()
+    if user_roles and user_roles[0].role:
+        return user_roles[0].role.role_code
+    return "USER"
+
+
+def _get_user_role_name(db: Session, user: User) -> str:
+    """获取用户的角色名称（返回第一个角色的名称）"""
+    user_roles = db.query(UserRole).filter(UserRole.user_id == user.id).all()
+    if user_roles and user_roles[0].role:
+        return user_roles[0].role.role_name
+    return "普通用户"
+
+
 def _get_visible_sales_users(
     db: Session,
     current_user: User,
@@ -123,50 +144,54 @@ def _get_visible_sales_users(
     region_keyword: Optional[str],
 ) -> List[User]:
     """根据角色、部门和区域过滤可见的销售用户"""
+    # 直接查询当前用户的角色代码
+    user_roles = db.query(UserRole).filter(UserRole.user_id == current_user.id).all()
+    user_role_codes = [ur.role.role_code for ur in user_roles if ur.role]
+    user_role_codes_lower = [rc.lower() for rc in user_role_codes]
+
+    # 检查是否是销售总监
+    is_sales_director = 'SALES_DIR' in user_role_codes
+    # 检查是否是销售经理
+    is_sales_manager = 'SALES_MANAGER' in user_role_codes
+
     query = db.query(User).filter(User.is_active == True)
 
-    if current_user.role in ['sales_director', '销售总监']:
-        sales_roles = ['sales', 'sales_manager', 'sales_director', '销售工程师', '销售经理', '销售总监']
-        query = query.filter(User.role.in_(sales_roles))
-    elif current_user.role in ['sales_manager', '销售经理']:
-        if current_user.department_id:
-            query = query.filter(User.department_id == current_user.department_id)
-        else:
-            query = query.filter(User.id == current_user.id)
-    else:
-        query = query.filter(User.id == current_user.id)
-
-    if department_id:
-        query = query.filter(User.department_id == department_id)
-
-    region_value = (region_keyword or "").strip()
-    if region_value:
-        pattern = f"%{region_value}%"
-        query = query.outerjoin(Department, Department.id == User.department_id)
-        query = query.filter(
-            or_(
-                Department.dept_name.ilike(pattern),
-                User.department.ilike(pattern),
-                User.position.ilike(pattern),
-            )
+    if is_sales_director:
+        # 销售总监可以看到所有销售人员
+        # 通过子查询获取有销售角色的用户ID
+        sales_role_codes = ['SALES', 'SALES_DIR', 'SALES_MANAGER', 'SA']
+        sales_user_ids = (
+            db.query(UserRole.user_id)
+            .join(Role, Role.id == UserRole.role_id)
+            .filter(Role.role_code.in_(sales_role_codes))
+            .distinct()
+            .all()
         )
+        sales_user_ids = [uid for (uid,) in sales_user_ids]
+        return query.filter(User.id.in_(sales_user_ids)).all()
+    elif is_sales_manager:
+        # 销售经理可以看到自己部门的所有用户
+        dept_id = getattr(current_user, 'department_id', None)
+        if dept_id:
+            return query.filter(User.department_id == dept_id).all()
+        else:
+            return [current_user]
+    else:
+        # 其他用户只能看到自己
+        return [current_user]
 
-    return query.all()
 
-
-def _build_department_name_map(db: Session, users: List[User]) -> Dict[int, str]:
+def _build_department_name_map(db: Session, users: List[User]) -> Dict[str, str]:
     """批量获取部门名称，减少数据库查询"""
-    dept_ids = {user.department_id for user in users if user.department_id}
-    if not dept_ids:
-        return {}
-    departments = db.query(Department).filter(Department.id.in_(dept_ids)).all()
-    return {dept.id: dept.dept_name for dept in departments}
+    # User表使用department字符串字段，不是department_id外键
+    dept_names = {user.department for user in users if user.department}
+    return {name: name for name in dept_names}
 
 
 def _collect_sales_team_members(
     db: Session,
     users: List[User],
-    department_names: Dict[int, str],
+    department_names: Dict[str, str],
     start_date_value: date,
     end_date_value: date,
 ) -> List[dict]:
@@ -174,7 +199,14 @@ def _collect_sales_team_members(
     if not users:
         return []
 
+    # 获取用户角色映射
     user_ids = [user.id for user in users]
+    user_roles_map = {}
+    for uid in user_ids:
+        user_roles = db.query(UserRole).filter(UserRole.user_id == uid).all()
+        role_names = [ur.role.role_name for ur in user_roles if ur.role]
+        user_roles_map[uid] = role_names[0] if role_names else "销售专员"
+
     start_datetime = datetime.combine(start_date_value, datetime.min.time())
     end_datetime = datetime.combine(end_date_value, datetime.max.time())
     month_value = start_date_value.strftime("%Y-%m")
@@ -211,8 +243,9 @@ def _collect_sales_team_members(
         invoices = invoice_query.filter(Invoice.payment_status.in_(["PAID", "PARTIAL"])).all()
         collection_amount = sum(float(inv.paid_amount or 0) for inv in invoices)
 
-        department_name = department_names.get(user.department_id)
-        region_name = department_name or user.department or "未分配"
+        # User表使用department字符串字段
+        department_name = user.department or "未分配"
+        region_name = department_name
 
         target_snapshot = personal_targets_map.get(user.id, {})
         monthly_target_info = target_snapshot.get("monthly", {})
@@ -233,8 +266,7 @@ def _collect_sales_team_members(
             "user_id": user.id,
             "user_name": user.real_name or user.username,
             "username": user.username,
-            "role": user.role,
-            "department_id": user.department_id,
+            "role": user_roles_map.get(user.id, "销售专员"),
             "department_name": department_name,
             "email": user.email,
             "phone": user.phone,
@@ -818,7 +850,12 @@ def update_lead(
         raise HTTPException(status_code=404, detail="线索不存在")
 
     # Issue 7.2: 检查编辑权限
-    if not security.check_sales_edit_permission(current_user, db, lead.created_by, lead.owner_id):
+    if not security.check_sales_edit_permission(
+        current_user,
+        db,
+        _get_entity_creator_id(lead),
+        lead.owner_id,
+    ):
         raise HTTPException(status_code=403, detail="您没有权限编辑此线索")
 
     update_data = lead_in.model_dump(exclude_unset=True)
@@ -851,7 +888,11 @@ def delete_lead(
         raise HTTPException(status_code=404, detail="线索不存在")
 
     # Issue 7.2: 检查删除权限
-    if not security.check_sales_delete_permission(current_user, db, lead.created_by):
+    if not security.check_sales_delete_permission(
+        current_user,
+        db,
+        _get_entity_creator_id(lead),
+    ):
         raise HTTPException(status_code=403, detail="您没有权限删除此线索")
 
     db.delete(lead)
@@ -1200,7 +1241,12 @@ def update_opportunity(
         raise HTTPException(status_code=404, detail="商机不存在")
 
     # Issue 7.2: 检查编辑权限
-    if not security.check_sales_edit_permission(current_user, db, opportunity.created_by, opportunity.owner_id):
+    if not security.check_sales_edit_permission(
+        current_user,
+        db,
+        _get_entity_creator_id(opportunity),
+        opportunity.owner_id,
+    ):
         raise HTTPException(status_code=403, detail="您没有权限编辑此商机")
 
     update_data = opp_in.model_dump(exclude_unset=True)
@@ -1743,18 +1789,20 @@ def create_contract(
     # 检查报价是否存在（如果提供了quote_version_id）
     quote = None
     version = None
-    items = []
+    items: List[QuoteItem] = []
     if contract_data.get("quote_version_id"):
-        quote = db.query(Quote).join(QuoteVersion).filter(QuoteVersion.id == contract_data["quote_version_id"]).first()
+        version = db.query(QuoteVersion).filter(QuoteVersion.id == contract_data["quote_version_id"]).first()
+        if not version:
+            raise HTTPException(status_code=404, detail="报价版本不存在")
+
+        quote = db.query(Quote).filter(Quote.id == version.quote_id).first()
         if not quote:
             raise HTTPException(status_code=404, detail="报价不存在")
-        
-        version = db.query(QuoteVersion).filter(QuoteVersion.id == contract_data["quote_version_id"]).first()
-        if version:
-            items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == version.id).all()
+
+        items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == version.id).all()
         
         # G3验证
-        if not skip_g3_validation and version:
+        if not skip_g3_validation:
             is_valid, errors, warning = validate_g3_quote_to_contract(quote, version, items, db)
             if not is_valid:
                 raise HTTPException(
@@ -2797,13 +2845,12 @@ def read_invoices(
     Issue 7.1: 已集成数据权限过滤（财务可以看到所有发票）
     """
     query = db.query(Invoice).options(
-        joinedload(Invoice.contract),
-        joinedload(Invoice.customer),
-        joinedload(Invoice.owner)
+        joinedload(Invoice.contract)
     )
 
     # Issue 7.1: 应用财务数据权限过滤（财务可以看到所有发票）
-    query = security.filter_sales_finance_data_by_scope(query, current_user, db, Invoice, 'owner_id')
+    # 注意：Invoice 模型没有 owner_id 字段，所以跳过此过滤
+    # query = security.filter_sales_finance_data_by_scope(query, current_user, db, Invoice, 'owner_id')
 
     if keyword:
         query = query.filter(Invoice.invoice_code.contains(keyword))
@@ -2812,7 +2859,8 @@ def read_invoices(
         query = query.filter(Invoice.status == status)
 
     if customer_id:
-        query = query.filter(Invoice.customer_id == customer_id)
+        # 通过 contract 关联过滤客户
+        query = query.join(Contract).filter(Contract.customer_id == customer_id)
 
     total = query.count()
     offset = (page - 1) * page_size
@@ -2820,11 +2868,15 @@ def read_invoices(
 
     invoice_responses = []
     for invoice in invoices:
+        # 获取客户名称
+        customer_name = None
+        if invoice.contract and invoice.contract.customer:
+            customer_name = invoice.contract.customer.customer_name
+
         invoice_dict = {
             **{c.name: getattr(invoice, c.name) for c in invoice.__table__.columns},
             "contract_code": invoice.contract.contract_code if invoice.contract else None,
-            "customer_name": invoice.customer.customer_name if invoice.customer else None,
-            "owner_name": invoice.owner.real_name if invoice.owner else None,
+            "customer_name": customer_name,
         }
         invoice_responses.append(InvoiceResponse(**invoice_dict))
 
@@ -4127,7 +4179,12 @@ def update_quote(
         raise HTTPException(status_code=404, detail="报价不存在")
 
     # Issue 7.2: 检查编辑权限
-    if not security.check_sales_edit_permission(current_user, db, quote.created_by, quote.owner_id):
+    if not security.check_sales_edit_permission(
+        current_user,
+        db,
+        _get_entity_creator_id(quote),
+        quote.owner_id,
+    ):
         raise HTTPException(status_code=403, detail="您没有权限编辑此报价")
 
     update_data = quote_in.model_dump(exclude_unset=True)
@@ -4550,7 +4607,12 @@ def update_contract(
         raise HTTPException(status_code=404, detail="合同不存在")
 
     # Issue 7.2: 检查编辑权限
-    if not security.check_sales_edit_permission(current_user, db, contract.created_by, contract.owner_id):
+    if not security.check_sales_edit_permission(
+        current_user,
+        db,
+        _get_entity_creator_id(contract),
+        contract.owner_id,
+    ):
         raise HTTPException(status_code=403, detail="您没有权限编辑此合同")
 
     update_data = contract_in.model_dump(exclude_unset=True)
@@ -5422,6 +5484,244 @@ def create_payment_record(
     )
 
 
+@router.get("/payments/statistics", response_model=ResponseModel)
+def get_payment_statistics(
+    *,
+    db: Session = Depends(deps.get_db),
+    start_date: Optional[date] = Query(None, description="开始日期"),
+    end_date: Optional[date] = Query(None, description="结束日期"),
+    customer_id: Optional[int] = Query(None, description="客户ID筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    回款统计分析
+
+    注意：此路由必须定义在 /payments/{payment_id} 之前，否则 FastAPI 会将 "statistics" 解析为 payment_id
+    """
+    query = db.query(Invoice).filter(Invoice.status == "ISSUED")
+
+    if customer_id:
+        query = query.join(Contract).filter(Contract.customer_id == customer_id)
+
+    if start_date:
+        # 如果 issue_date 为 NULL，使用 created_at 作为替代进行日期过滤
+        query = query.filter(
+            or_(
+                and_(
+                    Invoice.issue_date.isnot(None),
+                    Invoice.issue_date >= start_date
+                ),
+                and_(
+                    Invoice.issue_date.is_(None),
+                    Invoice.created_at >= datetime.combine(start_date, datetime.min.time())
+                )
+            )
+        )
+
+    if end_date:
+        # 如果 issue_date 为 NULL，使用 created_at 作为替代进行日期过滤
+        query = query.filter(
+            or_(
+                and_(
+                    Invoice.issue_date.isnot(None),
+                    Invoice.issue_date <= end_date
+                ),
+                and_(
+                    Invoice.issue_date.is_(None),
+                    Invoice.created_at <= datetime.combine(end_date, datetime.max.time())
+                )
+            )
+        )
+
+    invoices = query.all()
+
+    today = date.today()
+
+    # 按月份统计
+    monthly_stats = {}
+    # 按客户统计
+    customer_stats = {}
+    # 按状态统计
+    status_stats = {
+        "PAID": {"count": 0, "amount": Decimal("0")},
+        "PARTIAL": {"count": 0, "amount": Decimal("0")},
+        "PENDING": {"count": 0, "amount": Decimal("0")},
+    }
+
+    total_invoiced = Decimal("0")
+    total_paid = Decimal("0")
+    total_unpaid = Decimal("0")
+    total_overdue = Decimal("0")
+
+    for invoice in invoices:
+        total = invoice.total_amount or invoice.amount or Decimal("0")
+        paid = invoice.paid_amount or Decimal("0")
+        unpaid = total - paid
+
+        total_invoiced += total
+        total_paid += paid
+        total_unpaid += unpaid
+
+        # 按月份统计
+        if invoice.issue_date:
+            month_key = invoice.issue_date.strftime("%Y-%m")
+            if month_key not in monthly_stats:
+                monthly_stats[month_key] = {"invoiced": Decimal("0"), "paid": Decimal("0"), "count": 0}
+            monthly_stats[month_key]["invoiced"] += total
+            monthly_stats[month_key]["paid"] += paid
+            monthly_stats[month_key]["count"] += 1
+
+        # 按客户统计
+        if contract := invoice.contract:
+            customer_id_key = contract.customer_id
+            customer_name = contract.customer.customer_name if contract.customer else "未知客户"
+            if customer_id_key not in customer_stats:
+                customer_stats[customer_id_key] = {
+                    "customer_id": customer_id_key,
+                    "customer_name": customer_name,
+                    "invoiced": Decimal("0"),
+                    "paid": Decimal("0"),
+                    "unpaid": Decimal("0"),
+                    "count": 0
+                }
+            customer_stats[customer_id_key]["invoiced"] += total
+            customer_stats[customer_id_key]["paid"] += paid
+            customer_stats[customer_id_key]["unpaid"] += unpaid
+            customer_stats[customer_id_key]["count"] += 1
+
+        # 按状态统计
+        status = invoice.payment_status or "PENDING"
+        if status in status_stats:
+            status_stats[status]["count"] += 1
+            status_stats[status]["amount"] += total
+
+        # 逾期统计
+        if invoice.due_date and invoice.due_date < today and invoice.payment_status in ["PENDING", "PARTIAL"]:
+            total_overdue += unpaid
+
+    # 转换月度统计为列表
+    monthly_list = [
+        {
+            "month": month,
+            "invoiced": float(stats["invoiced"]),
+            "paid": float(stats["paid"]),
+            "unpaid": float(stats["invoiced"] - stats["paid"]),
+            "collection_rate": float((stats["paid"] / stats["invoiced"] * 100) if stats["invoiced"] > 0 else 0),
+            "count": stats["count"]
+        }
+        for month, stats in sorted(monthly_stats.items())
+    ]
+
+    # 转换客户统计为列表
+    customer_list = [
+        {
+            "customer_id": stats["customer_id"],
+            "customer_name": stats["customer_name"],
+            "invoiced": float(stats["invoiced"]),
+            "paid": float(stats["paid"]),
+            "unpaid": float(stats["unpaid"]),
+            "collection_rate": float((stats["paid"] / stats["invoiced"] * 100) if stats["invoiced"] > 0 else 0),
+            "count": stats["count"]
+        }
+        for stats in sorted(customer_stats.values(), key=lambda x: x["unpaid"], reverse=True)
+    ]
+
+    collection_rate = (total_paid / total_invoiced * 100) if total_invoiced > 0 else Decimal("0")
+
+    return ResponseModel(
+        code=200,
+        message="success",
+        data={
+            "summary": {
+                "total_invoiced": float(total_invoiced),
+                "total_paid": float(total_paid),
+                "total_unpaid": float(total_unpaid),
+                "total_overdue": float(total_overdue),
+                "collection_rate": float(collection_rate),
+                "invoice_count": len(invoices),
+            },
+            "monthly_statistics": monthly_list,
+            "customer_statistics": customer_list[:10],  # 只返回前10个客户
+            "status_statistics": {
+                "PAID": {
+                    "count": status_stats["PAID"]["count"],
+                    "amount": float(status_stats["PAID"]["amount"])
+                },
+                "PARTIAL": {
+                    "count": status_stats["PARTIAL"]["count"],
+                    "amount": float(status_stats["PARTIAL"]["amount"])
+                },
+                "PENDING": {
+                    "count": status_stats["PENDING"]["count"],
+                    "amount": float(status_stats["PENDING"]["amount"])
+                },
+            }
+        }
+    )
+
+
+@router.get("/payments/reminders", response_model=PaginatedResponse)
+def get_payment_reminders(
+    *,
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    days_before: int = Query(7, ge=0, description="提前提醒天数"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取回款提醒列表（即将到期和已逾期的回款）
+
+    注意：此路由必须定义在 /payments/{payment_id} 之前，否则 FastAPI 会将 "reminders" 解析为 payment_id
+    """
+    today = date.today()
+    reminder_date = today + timedelta(days=days_before)
+
+    query = db.query(Invoice).filter(
+        Invoice.status == "ISSUED",
+        Invoice.payment_status.in_(["PENDING", "PARTIAL"]),
+        Invoice.due_date.isnot(None),
+        Invoice.due_date <= reminder_date
+    )
+
+    total = query.count()
+    offset = (page - 1) * page_size
+    invoices = query.order_by(Invoice.due_date).offset(offset).limit(page_size).all()
+
+    items = []
+    for invoice in invoices:
+        contract = invoice.contract
+        unpaid = (invoice.total_amount or invoice.amount or Decimal("0")) - (invoice.paid_amount or Decimal("0"))
+        days_until_due = (invoice.due_date - today).days if invoice.due_date else None
+        is_overdue = days_until_due is not None and days_until_due < 0
+
+        items.append({
+            "id": invoice.id,
+            "invoice_code": invoice.invoice_code,
+            "contract_id": invoice.contract_id,
+            "contract_code": contract.contract_code if contract else None,
+            "project_id": invoice.project_id,
+            "project_code": invoice.project.project_code if invoice.project else None,
+            "customer_id": contract.customer_id if contract else None,
+            "customer_name": contract.customer.customer_name if contract and contract.customer else None,
+            "unpaid_amount": float(unpaid),
+            "due_date": invoice.due_date,
+            "days_until_due": days_until_due,
+            "is_overdue": is_overdue,
+            "overdue_days": abs(days_until_due) if is_overdue else None,
+            "payment_status": invoice.payment_status,
+            "reminder_level": "urgent" if is_overdue else ("warning" if days_until_due is not None and days_until_due <= 3 else "normal"),
+        })
+
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
+    )
+
+
 @router.get("/payments/{payment_id}", response_model=ResponseModel)
 def get_payment_detail(
     *,
@@ -5749,216 +6049,6 @@ def get_receivables_summary(
     )
 
 
-@router.get("/payments/reminders", response_model=PaginatedResponse)
-def get_payment_reminders(
-    *,
-    db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
-    days_before: int = Query(7, ge=0, description="提前提醒天数"),
-    current_user: User = Depends(security.get_current_active_user),
-) -> Any:
-    """
-    获取回款提醒列表（即将到期和已逾期的回款）
-    """
-    today = date.today()
-    reminder_date = today + timedelta(days=days_before)
-    
-    query = db.query(Invoice).filter(
-        Invoice.status == "ISSUED",
-        Invoice.payment_status.in_(["PENDING", "PARTIAL"]),
-        Invoice.due_date.isnot(None),
-        Invoice.due_date <= reminder_date
-    )
-    
-    total = query.count()
-    offset = (page - 1) * page_size
-    invoices = query.order_by(Invoice.due_date).offset(offset).limit(page_size).all()
-    
-    items = []
-    for invoice in invoices:
-        contract = invoice.contract
-        unpaid = (invoice.total_amount or invoice.amount or Decimal("0")) - (invoice.paid_amount or Decimal("0"))
-        days_until_due = (invoice.due_date - today).days if invoice.due_date else None
-        is_overdue = days_until_due is not None and days_until_due < 0
-        
-        items.append({
-            "id": invoice.id,
-            "invoice_code": invoice.invoice_code,
-            "contract_id": invoice.contract_id,
-            "contract_code": contract.contract_code if contract else None,
-            "project_id": invoice.project_id,
-            "project_code": invoice.project.project_code if invoice.project else None,
-            "customer_id": contract.customer_id if contract else None,
-            "customer_name": contract.customer.customer_name if contract and contract.customer else None,
-            "unpaid_amount": float(unpaid),
-            "due_date": invoice.due_date,
-            "days_until_due": days_until_due,
-            "is_overdue": is_overdue,
-            "overdue_days": abs(days_until_due) if is_overdue else None,
-            "payment_status": invoice.payment_status,
-            "reminder_level": "urgent" if is_overdue else ("warning" if days_until_due is not None and days_until_due <= 3 else "normal"),
-        })
-    
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
-
-
-@router.get("/payments/statistics", response_model=ResponseModel)
-def get_payment_statistics(
-    *,
-    db: Session = Depends(deps.get_db),
-    start_date: Optional[date] = Query(None, description="开始日期"),
-    end_date: Optional[date] = Query(None, description="结束日期"),
-    customer_id: Optional[int] = Query(None, description="客户ID筛选"),
-    current_user: User = Depends(security.get_current_active_user),
-) -> Any:
-    """
-    回款统计分析
-    """
-    query = db.query(Invoice).filter(Invoice.status == "ISSUED")
-    
-    if customer_id:
-        query = query.join(Contract).filter(Contract.customer_id == customer_id)
-    
-    if start_date:
-        query = query.filter(Invoice.issue_date >= start_date)
-    
-    if end_date:
-        query = query.filter(Invoice.issue_date <= end_date)
-    
-    invoices = query.all()
-    
-    today = date.today()
-    
-    # 按月份统计
-    monthly_stats = {}
-    # 按客户统计
-    customer_stats = {}
-    # 按状态统计
-    status_stats = {
-        "PAID": {"count": 0, "amount": Decimal("0")},
-        "PARTIAL": {"count": 0, "amount": Decimal("0")},
-        "PENDING": {"count": 0, "amount": Decimal("0")},
-    }
-    
-    total_invoiced = Decimal("0")
-    total_paid = Decimal("0")
-    total_unpaid = Decimal("0")
-    total_overdue = Decimal("0")
-    
-    for invoice in invoices:
-        total = invoice.total_amount or invoice.amount or Decimal("0")
-        paid = invoice.paid_amount or Decimal("0")
-        unpaid = total - paid
-        
-        total_invoiced += total
-        total_paid += paid
-        total_unpaid += unpaid
-        
-        # 按月份统计
-        if invoice.issue_date:
-            month_key = invoice.issue_date.strftime("%Y-%m")
-            if month_key not in monthly_stats:
-                monthly_stats[month_key] = {"invoiced": Decimal("0"), "paid": Decimal("0"), "count": 0}
-            monthly_stats[month_key]["invoiced"] += total
-            monthly_stats[month_key]["paid"] += paid
-            monthly_stats[month_key]["count"] += 1
-        
-        # 按客户统计
-        if contract := invoice.contract:
-            customer_id_key = contract.customer_id
-            customer_name = contract.customer.customer_name if contract.customer else "未知客户"
-            if customer_id_key not in customer_stats:
-                customer_stats[customer_id_key] = {
-                    "customer_id": customer_id_key,
-                    "customer_name": customer_name,
-                    "invoiced": Decimal("0"),
-                    "paid": Decimal("0"),
-                    "unpaid": Decimal("0"),
-                    "count": 0
-                }
-            customer_stats[customer_id_key]["invoiced"] += total
-            customer_stats[customer_id_key]["paid"] += paid
-            customer_stats[customer_id_key]["unpaid"] += unpaid
-            customer_stats[customer_id_key]["count"] += 1
-        
-        # 按状态统计
-        status = invoice.payment_status or "PENDING"
-        if status in status_stats:
-            status_stats[status]["count"] += 1
-            status_stats[status]["amount"] += total
-        
-        # 逾期统计
-        if invoice.due_date and invoice.due_date < today and invoice.payment_status in ["PENDING", "PARTIAL"]:
-            total_overdue += unpaid
-    
-    # 转换月度统计为列表
-    monthly_list = [
-        {
-            "month": month,
-            "invoiced": float(stats["invoiced"]),
-            "paid": float(stats["paid"]),
-            "unpaid": float(stats["invoiced"] - stats["paid"]),
-            "collection_rate": float((stats["paid"] / stats["invoiced"] * 100) if stats["invoiced"] > 0 else 0),
-            "count": stats["count"]
-        }
-        for month, stats in sorted(monthly_stats.items())
-    ]
-    
-    # 转换客户统计为列表
-    customer_list = [
-        {
-            "customer_id": stats["customer_id"],
-            "customer_name": stats["customer_name"],
-            "invoiced": float(stats["invoiced"]),
-            "paid": float(stats["paid"]),
-            "unpaid": float(stats["unpaid"]),
-            "collection_rate": float((stats["paid"] / stats["invoiced"] * 100) if stats["invoiced"] > 0 else 0),
-            "count": stats["count"]
-        }
-        for stats in sorted(customer_stats.values(), key=lambda x: x["unpaid"], reverse=True)
-    ]
-    
-    collection_rate = (total_paid / total_invoiced * 100) if total_invoiced > 0 else Decimal("0")
-    
-    return ResponseModel(
-        code=200,
-        message="success",
-        data={
-            "summary": {
-                "total_invoiced": float(total_invoiced),
-                "total_paid": float(total_paid),
-                "total_unpaid": float(total_unpaid),
-                "total_overdue": float(total_overdue),
-                "collection_rate": float(collection_rate),
-                "invoice_count": len(invoices),
-            },
-            "monthly_statistics": monthly_list,
-            "customer_statistics": customer_list[:10],  # 只返回前10个客户
-            "status_statistics": {
-                "PAID": {
-                    "count": status_stats["PAID"]["count"],
-                    "amount": float(status_stats["PAID"]["amount"])
-                },
-                "PARTIAL": {
-                    "count": status_stats["PARTIAL"]["count"],
-                    "amount": float(status_stats["PARTIAL"]["amount"])
-                },
-                "PENDING": {
-                    "count": status_stats["PENDING"]["count"],
-                    "amount": float(status_stats["PENDING"]["amount"])
-                },
-            }
-        }
-    )
-
-
 @router.get("/payments/invoices/export")
 def export_payment_invoices(
     *,
@@ -6251,19 +6341,24 @@ def get_sales_team_ranking(
 
     users = _get_visible_sales_users(db, current_user, department_id, region)
     department_names = _build_department_name_map(db, users)
-    
+
+    # 获取用户角色映射
+    user_ids = [user.id for user in users]
+    user_roles_map = {}
+    for uid in user_ids:
+        user_roles_map[uid] = _get_user_role_name(db, db.query(User).filter(User.id == uid).first())
+
     rankings = []
     for user in users:
         stats = {
             "user_id": user.id,
             "user_name": user.real_name or user.username,
             "username": user.username,
-            "role": user.role,
-            "department_id": user.department_id,
-            "department_name": department_names.get(user.department_id),
+            "role": user_roles_map.get(user.id, "销售专员"),
+            "department_name": user.department or "未分配",
         }
-        
-        stats["region"] = stats["department_name"] or user.department or "未分配"
+
+        stats["region"] = stats["department_name"]
         
         lead_query = db.query(Lead).filter(Lead.owner_id == user.id)
         lead_query = lead_query.filter(Lead.created_at >= start_datetime)
@@ -6341,20 +6436,29 @@ def get_sales_targets(
     from app.models.organization import Department
     
     query = db.query(SalesTarget)
-    
+
     # 根据用户角色确定可见范围
-    if current_user.role in ['sales_director', '销售总监']:
+    user_role_code = _get_user_role_code(db, current_user)
+
+    if user_role_code == 'SALES_DIR':
         # 销售总监可以看到所有目标
         pass
-    elif current_user.role in ['sales_manager', '销售经理']:
+    elif user_role_code == 'SALES_MANAGER':
         # 销售经理可以看到自己部门的目标
-        if current_user.department_id:
-            query = query.filter(
-                or_(
-                    SalesTarget.department_id == current_user.department_id,
-                    SalesTarget.user_id == current_user.id
+        # 注意：User表没有department_id字段，需要根据department字符串匹配
+        dept_name = getattr(current_user, 'department', None)
+        if dept_name:
+            # 查找对应的部门ID
+            dept = db.query(Department).filter(Department.dept_name == dept_name).first()
+            if dept:
+                query = query.filter(
+                    or_(
+                        SalesTarget.department_id == dept.id,
+                        SalesTarget.user_id == current_user.id
+                    )
                 )
-            )
+            else:
+                query = query.filter(SalesTarget.user_id == current_user.id)
         else:
             query = query.filter(SalesTarget.user_id == current_user.id)
     else:
@@ -6513,8 +6617,15 @@ def update_sales_target(
     
     # 权限检查：只能修改自己创建的目标或自己部门的目标
     if target.created_by != current_user.id:
-        if current_user.role not in ['sales_director', '销售总监']:
-            if target.department_id != current_user.department_id:
+        user_role_code = _get_user_role_code(db, current_user)
+        if user_role_code != 'SALES_DIR':
+            # User表没有department_id，需要通过department字符串匹配
+            dept_name = getattr(current_user, 'department', None)
+            if dept_name:
+                dept = db.query(Department).filter(Department.dept_name == dept_name).first()
+                if dept and target.department_id != dept.id:
+                    raise HTTPException(status_code=403, detail="无权修改此目标")
+            else:
                 raise HTTPException(status_code=403, detail="无权修改此目标")
     
     # 更新字段

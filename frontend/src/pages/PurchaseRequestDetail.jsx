@@ -73,53 +73,14 @@ export default function PurchaseRequestDetail() {
   const [approveData, setApproveData] = useState({ approved: true, note: '' })
   const [generating, setGenerating] = useState(false)
 
-  // Check if demo account
-  const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-
-  // Load request data
+  // Check if demo account  // Load request data
   useEffect(() => {
     const loadRequest = async () => {
       try {
         setLoading(true)
         setError(null)
 
-        if (isDemoAccount) {
-          // Mock data
-          setRequest({
-            id: 1,
-            request_no: 'PR-250104-001',
-            project_id: 1,
-            project_name: 'BMS老化测试设备',
-            machine_id: 1,
-            machine_name: 'PN001',
-            request_type: 'NORMAL',
-            request_reason: '项目启动，需要采购关键物料',
-            required_date: '2026-01-15',
-            total_amount: 125680.00,
-            status: 'SUBMITTED',
-            submitted_at: '2026-01-04T10:00:00',
-            approved_by: null,
-            approved_at: null,
-            approval_note: null,
-            requested_by: 1,
-            requested_at: '2026-01-04T10:00:00',
-            requester_name: '张工程师',
-            approver_name: null,
-            remark: '',
-            items: [
-              {
-                id: 1,
-                material_code: 'EL-02-03-0015',
-                material_name: '光电传感器 E3Z-D82',
-                specification: '',
-                unit: '个',
-                quantity: 12,
-                unit_price: 450,
-                amount: 5400,
-                required_date: '2026-01-15',
-                ordered_qty: 0,
-                remark: '',
-              },
+        ,
               {
                 id: 2,
                 material_code: 'ME-03-02-0008',
@@ -153,7 +114,7 @@ export default function PurchaseRequestDetail() {
     if (id) {
       loadRequest()
     }
-  }, [id, isDemoAccount])
+  }, [id])
 
   const handleEdit = () => {
     navigate(`/purchase-requests/${id}/edit`)
@@ -165,10 +126,7 @@ export default function PurchaseRequestDetail() {
     }
 
     try {
-      if (isDemoAccount) {
-        toast.success('采购申请已删除')
-        navigate('/purchase-requests')
-      } else {
+       else {
         await purchaseApi.requests.delete(id)
         toast.success('采购申请已删除')
         navigate('/purchase-requests')
@@ -186,8 +144,7 @@ export default function PurchaseRequestDetail() {
     }
 
     try {
-      if (isDemoAccount) {
-        setRequest({ ...request, status: 'SUBMITTED' })
+      )
         toast.success('采购申请已提交，等待审批')
       } else {
         await purchaseApi.requests.submit(id)
@@ -206,9 +163,7 @@ export default function PurchaseRequestDetail() {
     if (!id) return
     try {
       setGenerating(true)
-      if (isDemoAccount) {
-        toast.success('已生成采购订单')
-      } else {
+       else {
         await purchaseApi.requests.generateOrders(id)
         toast.success('已生成采购订单')
         const res = await purchaseApi.requests.get(id)
@@ -229,8 +184,7 @@ export default function PurchaseRequestDetail() {
     }
 
     try {
-      if (isDemoAccount) {
-        setRequest({ ...request, status: approved ? 'APPROVED' : 'REJECTED' })
+      )
         toast.success(approved ? '采购申请已审批通过' : '采购申请已驳回')
         setShowApproveDialog(false)
       } else {

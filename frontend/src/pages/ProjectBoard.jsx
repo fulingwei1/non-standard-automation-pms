@@ -18,12 +18,7 @@ import {
 } from 'lucide-react'
 
 // 模拟用户数据（后续从 auth context 获取）
-const mockUser = {
-  id: 1,
-  name: '管理员',
-  role: 'admin',
-}
-
+// Mock data - 已移除，使用真实API
 // Mock data removed - using real API only
 
 export default function ProjectBoard() {

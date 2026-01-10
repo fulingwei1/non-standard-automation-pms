@@ -1444,7 +1444,16 @@ def get_response_metrics(
     - 按类型统计响应时效
     - 响应时效排行榜（最快/最慢的项目/责任人）
     """
-    from datetime import timedelta
+    from app.services.alert_response_service import (
+        calculate_response_times,
+        calculate_resolve_times,
+        calculate_response_distribution,
+        calculate_level_metrics,
+        calculate_type_metrics,
+        calculate_project_metrics,
+        calculate_handler_metrics,
+        generate_response_rankings
+    )
     
     query = db.query(AlertRecord).filter(
         AlertRecord.triggered_at.isnot(None)
@@ -1470,166 +1479,21 @@ def get_response_metrics(
         AlertRecord.handle_end_at.isnot(None)
     ).all()
     
-    # 计算响应时间（分钟）
-    response_times = []
-    for alert in acknowledged_alerts:
-        if alert.triggered_at and alert.acknowledged_at:
-            delta = alert.acknowledged_at - alert.triggered_at
-            minutes = delta.total_seconds() / 60
-            response_times.append({
-                'alert': alert,
-                'minutes': minutes,
-                'hours': minutes / 60,
-            })
+    # 计算响应时间和解决时间
+    response_times = calculate_response_times(acknowledged_alerts)
+    resolve_times = calculate_resolve_times(resolved_alerts)
     
-    # 计算解决时间（分钟）
-    resolve_times = []
-    for alert in resolved_alerts:
-        if alert.acknowledged_at and alert.handle_end_at:
-            delta = alert.handle_end_at - alert.acknowledged_at
-            minutes = delta.total_seconds() / 60
-            resolve_times.append({
-                'alert': alert,
-                'minutes': minutes,
-                'hours': minutes / 60,
-            })
-    
-    # 平均响应时间（小时）
+    # 平均响应时间和解决时间
     avg_response_time = sum(rt['hours'] for rt in response_times) / len(response_times) if response_times else 0
-    
-    # 平均解决时间（小时）
     avg_resolve_time = sum(rt['hours'] for rt in resolve_times) / len(resolve_times) if resolve_times else 0
     
-    # 响应时效分布
-    response_distribution = {
-        '<1小时': 0,
-        '1-4小时': 0,
-        '4-8小时': 0,
-        '>8小时': 0,
-    }
-    for rt in response_times:
-        hours = rt['hours']
-        if hours < 1:
-            response_distribution['<1小时'] += 1
-        elif hours < 4:
-            response_distribution['1-4小时'] += 1
-        elif hours < 8:
-            response_distribution['4-8小时'] += 1
-        else:
-            response_distribution['>8小时'] += 1
-    
-    # 按级别统计响应时效
-    response_by_level = {}
-    for rt in response_times:
-        level = rt['alert'].alert_level or 'UNKNOWN'
-        if level not in response_by_level:
-            response_by_level[level] = []
-        response_by_level[level].append(rt['hours'])
-    
-    level_metrics = {}
-    for level, times in response_by_level.items():
-        level_metrics[level] = {
-            'count': len(times),
-            'avg_hours': sum(times) / len(times) if times else 0,
-            'min_hours': min(times) if times else 0,
-            'max_hours': max(times) if times else 0,
-        }
-    
-    # 按类型统计响应时效
-    response_by_type = {}
-    for rt in response_times:
-        rule = rt['alert'].rule
-        rule_type = rule.rule_type if rule else 'UNKNOWN'
-        if rule_type not in response_by_type:
-            response_by_type[rule_type] = []
-        response_by_type[rule_type].append(rt['hours'])
-    
-    type_metrics = {}
-    for rule_type, times in response_by_type.items():
-        type_metrics[rule_type] = {
-            'count': len(times),
-            'avg_hours': sum(times) / len(times) if times else 0,
-            'min_hours': min(times) if times else 0,
-            'max_hours': max(times) if times else 0,
-        }
-    
-    # 按项目统计响应时效
-    response_by_project = {}
-    for rt in response_times:
-        alert = rt['alert']
-        if alert.project_id:
-            project = db.query(Project).filter(Project.id == alert.project_id).first()
-            project_name = project.project_name if project else f"项目{alert.project_id}"
-            if project_name not in response_by_project:
-                response_by_project[project_name] = {
-                    'project_id': alert.project_id,
-                    'times': [],
-                }
-            response_by_project[project_name]['times'].append(rt['hours'])
-    
-    project_metrics = {}
-    for project_name, data in response_by_project.items():
-        times = data['times']
-        project_metrics[project_name] = {
-            'project_id': data['project_id'],
-            'count': len(times),
-            'avg_hours': sum(times) / len(times) if times else 0,
-            'min_hours': min(times) if times else 0,
-            'max_hours': max(times) if times else 0,
-        }
-    
-    # 按责任人统计响应时效
-    response_by_handler = {}
-    for rt in response_times:
-        alert = rt['alert']
-        handler_id = alert.acknowledged_by
-        if handler_id:
-            handler = db.query(User).filter(User.id == handler_id).first()
-            handler_name = handler.username if handler else f"用户{handler_id}"
-            if handler_name not in response_by_handler:
-                response_by_handler[handler_name] = {
-                    'user_id': handler_id,
-                    'times': [],
-                }
-            response_by_handler[handler_name]['times'].append(rt['hours'])
-    
-    handler_metrics = {}
-    for handler_name, data in response_by_handler.items():
-        times = data['times']
-        handler_metrics[handler_name] = {
-            'user_id': data['user_id'],
-            'count': len(times),
-            'avg_hours': sum(times) / len(times) if times else 0,
-            'min_hours': min(times) if times else 0,
-            'max_hours': max(times) if times else 0,
-        }
-    
-    # 响应时效排行榜
-    # 最快的项目（平均响应时间最短）
-    fastest_projects = sorted(
-        [(name, data) for name, data in project_metrics.items()],
-        key=lambda x: x[1]['avg_hours']
-    )[:5]
-    
-    # 最慢的项目（平均响应时间最长）
-    slowest_projects = sorted(
-        [(name, data) for name, data in project_metrics.items()],
-        key=lambda x: x[1]['avg_hours'],
-        reverse=True
-    )[:5]
-    
-    # 最快的责任人（平均响应时间最短）
-    fastest_handlers = sorted(
-        [(name, data) for name, data in handler_metrics.items()],
-        key=lambda x: x[1]['avg_hours']
-    )[:5]
-    
-    # 最慢的责任人（平均响应时间最长）
-    slowest_handlers = sorted(
-        [(name, data) for name, data in handler_metrics.items()],
-        key=lambda x: x[1]['avg_hours'],
-        reverse=True
-    )[:5]
+    # 计算各项指标
+    response_distribution = calculate_response_distribution(response_times)
+    level_metrics = calculate_level_metrics(response_times)
+    type_metrics = calculate_type_metrics(response_times)
+    project_metrics = calculate_project_metrics(response_times, db)
+    handler_metrics = calculate_handler_metrics(response_times, db)
+    rankings = generate_response_rankings(project_metrics, handler_metrics)
     
     return {
         'summary': {
@@ -1677,44 +1541,7 @@ def get_response_metrics(
             }
             for handler_name, data in handler_metrics.items()
         },
-        'rankings': {
-            'fastest_projects': [
-                {
-                    'project_name': name,
-                    'project_id': data['project_id'],
-                    'avg_hours': round(data['avg_hours'], 2),
-                    'count': data['count'],
-                }
-                for name, data in fastest_projects
-            ],
-            'slowest_projects': [
-                {
-                    'project_name': name,
-                    'project_id': data['project_id'],
-                    'avg_hours': round(data['avg_hours'], 2),
-                    'count': data['count'],
-                }
-                for name, data in slowest_projects
-            ],
-            'fastest_handlers': [
-                {
-                    'handler_name': name,
-                    'user_id': data['user_id'],
-                    'avg_hours': round(data['avg_hours'], 2),
-                    'count': data['count'],
-                }
-                for name, data in fastest_handlers
-            ],
-            'slowest_handlers': [
-                {
-                    'handler_name': name,
-                    'user_id': data['user_id'],
-                    'avg_hours': round(data['avg_hours'], 2),
-                    'count': data['count'],
-                }
-                for name, data in slowest_handlers
-            ],
-        },
+        'rankings': rankings,
     }
 
 
@@ -1737,8 +1564,14 @@ def get_efficiency_metrics(
     - 按项目、责任人、类型统计处理效率
     - 处理效率排行榜
     """
-    from datetime import timedelta
     from app.services.alert_rule_engine import AlertRuleEngine
+    from app.services.alert_efficiency_service import (
+        calculate_basic_metrics,
+        calculate_project_metrics,
+        calculate_handler_metrics,
+        calculate_type_metrics,
+        generate_rankings
+    )
     
     query = db.query(AlertRecord).filter(
         AlertRecord.triggered_at.isnot(None)
@@ -1776,207 +1609,30 @@ def get_efficiency_metrics(
             },
         }
     
-    # 已处理预警（状态为 RESOLVED 或 CLOSED）
-    processed_alerts = [a for a in all_alerts if a.status in ['RESOLVED', 'CLOSED']]
-    processed_count = len(processed_alerts)
-    
-    # 处理率
-    processing_rate = processed_count / total_count if total_count > 0 else 0
-    
-    # 及时处理率（在响应时限内处理）
+    # 初始化引擎
     engine = AlertRuleEngine(db)
-    timely_processed = 0
-    for alert in processed_alerts:
-        if alert.triggered_at and alert.acknowledged_at:
-            response_time = (alert.acknowledged_at - alert.triggered_at).total_seconds() / 3600
-            timeout_hours = engine.RESPONSE_TIMEOUT.get(alert.alert_level, 8)
-            if response_time <= timeout_hours:
-                timely_processed += 1
     
-    timely_processing_rate = timely_processed / total_count if total_count > 0 else 0
+    # 计算基础指标
+    basic_metrics = calculate_basic_metrics(all_alerts, engine)
+    processed_count = len([a for a in all_alerts if a.status in ['RESOLVED', 'CLOSED']])
     
-    # 升级率
-    escalated_alerts = [a for a in all_alerts if a.is_escalated]
-    escalation_rate = len(escalated_alerts) / total_count if total_count > 0 else 0
+    # 按维度统计
+    project_metrics = calculate_project_metrics(all_alerts, db, engine)
+    handler_metrics = calculate_handler_metrics(all_alerts, db, engine)
+    type_metrics = calculate_type_metrics(all_alerts, engine)
     
-    # 重复预警率（相同规则、相同目标、在短时间内重复触发）
-    duplicate_count = 0
-    seen_combinations = {}
-    for alert in all_alerts:
-        key = (alert.rule_id, alert.target_type, alert.target_id)
-        if key in seen_combinations:
-            # 检查是否在24小时内重复
-            prev_alert = seen_combinations[key]
-            if alert.triggered_at and prev_alert.triggered_at:
-                time_diff = (alert.triggered_at - prev_alert.triggered_at).total_seconds() / 3600
-                if time_diff < 24:  # 24小时内重复
-                    duplicate_count += 1
-        else:
-            seen_combinations[key] = alert
+    # 生成排行榜
+    rankings = generate_rankings(project_metrics, handler_metrics)
     
-    duplicate_rate = duplicate_count / total_count if total_count > 0 else 0
-    
-    # 按项目统计处理效率
-    efficiency_by_project = {}
-    for alert in all_alerts:
-        if alert.project_id:
-            project = db.query(Project).filter(Project.id == alert.project_id).first()
-            project_name = project.project_name if project else f"项目{alert.project_id}"
-            if project_name not in efficiency_by_project:
-                efficiency_by_project[project_name] = {
-                    'project_id': alert.project_id,
-                    'total': 0,
-                    'processed': 0,
-                    'timely_processed': 0,
-                    'escalated': 0,
-                    'duplicate': 0,
-                }
-            
-            data = efficiency_by_project[project_name]
-            data['total'] += 1
-            if alert.status in ['RESOLVED', 'CLOSED']:
-                data['processed'] += 1
-                # 检查是否及时处理
-                if alert.triggered_at and alert.acknowledged_at:
-                    response_time = (alert.acknowledged_at - alert.triggered_at).total_seconds() / 3600
-                    timeout_hours = engine.RESPONSE_TIMEOUT.get(alert.alert_level, 8)
-                    if response_time <= timeout_hours:
-                        data['timely_processed'] += 1
-            if alert.is_escalated:
-                data['escalated'] += 1
-    
-    # 计算项目效率指标
-    project_metrics = {}
-    for project_name, data in efficiency_by_project.items():
-        project_metrics[project_name] = {
-            'project_id': data['project_id'],
-            'total': data['total'],
-            'processing_rate': data['processed'] / data['total'] if data['total'] > 0 else 0,
-            'timely_processing_rate': data['timely_processed'] / data['total'] if data['total'] > 0 else 0,
-            'escalation_rate': data['escalated'] / data['total'] if data['total'] > 0 else 0,
-            'efficiency_score': (
-                (data['processed'] / data['total'] if data['total'] > 0 else 0) * 0.4 +
-                (data['timely_processed'] / data['total'] if data['total'] > 0 else 0) * 0.4 +
-                (1 - data['escalated'] / data['total'] if data['total'] > 0 else 0) * 0.2
-            ) * 100,  # 效率得分（0-100）
-        }
-    
-    # 按责任人统计处理效率
-    efficiency_by_handler = {}
-    for alert in all_alerts:
-        handler_id = alert.handler_id or alert.acknowledged_by
-        if handler_id:
-            handler = db.query(User).filter(User.id == handler_id).first()
-            handler_name = handler.username if handler else f"用户{handler_id}"
-            if handler_name not in efficiency_by_handler:
-                efficiency_by_handler[handler_name] = {
-                    'user_id': handler_id,
-                    'total': 0,
-                    'processed': 0,
-                    'timely_processed': 0,
-                    'escalated': 0,
-                }
-            
-            data = efficiency_by_handler[handler_name]
-            data['total'] += 1
-            if alert.status in ['RESOLVED', 'CLOSED']:
-                data['processed'] += 1
-                # 检查是否及时处理
-                if alert.triggered_at and alert.acknowledged_at:
-                    response_time = (alert.acknowledged_at - alert.triggered_at).total_seconds() / 3600
-                    timeout_hours = engine.RESPONSE_TIMEOUT.get(alert.alert_level, 8)
-                    if response_time <= timeout_hours:
-                        data['timely_processed'] += 1
-            if alert.is_escalated:
-                data['escalated'] += 1
-    
-    # 计算责任人效率指标
-    handler_metrics = {}
-    for handler_name, data in efficiency_by_handler.items():
-        handler_metrics[handler_name] = {
-            'user_id': data['user_id'],
-            'total': data['total'],
-            'processing_rate': data['processed'] / data['total'] if data['total'] > 0 else 0,
-            'timely_processing_rate': data['timely_processed'] / data['total'] if data['total'] > 0 else 0,
-            'escalation_rate': data['escalated'] / data['total'] if data['total'] > 0 else 0,
-            'efficiency_score': (
-                (data['processed'] / data['total'] if data['total'] > 0 else 0) * 0.4 +
-                (data['timely_processed'] / data['total'] if data['total'] > 0 else 0) * 0.4 +
-                (1 - data['escalated'] / data['total'] if data['total'] > 0 else 0) * 0.2
-            ) * 100,  # 效率得分（0-100）
-        }
-    
-    # 按类型统计处理效率
-    efficiency_by_type = {}
-    for alert in all_alerts:
-        rule = alert.rule
-        rule_type = rule.rule_type if rule else 'UNKNOWN'
-        if rule_type not in efficiency_by_type:
-            efficiency_by_type[rule_type] = {
-                'total': 0,
-                'processed': 0,
-                'timely_processed': 0,
-                'escalated': 0,
-            }
-        
-        data = efficiency_by_type[rule_type]
-        data['total'] += 1
-        if alert.status in ['RESOLVED', 'CLOSED']:
-            data['processed'] += 1
-            # 检查是否及时处理
-            if alert.triggered_at and alert.acknowledged_at:
-                response_time = (alert.acknowledged_at - alert.triggered_at).total_seconds() / 3600
-                timeout_hours = engine.RESPONSE_TIMEOUT.get(alert.alert_level, 8)
-                if response_time <= timeout_hours:
-                    data['timely_processed'] += 1
-        if alert.is_escalated:
-            data['escalated'] += 1
-    
-    # 计算类型效率指标
-    type_metrics = {}
-    for rule_type, data in efficiency_by_type.items():
-        type_metrics[rule_type] = {
-            'total': data['total'],
-            'processing_rate': data['processed'] / data['total'] if data['total'] > 0 else 0,
-            'timely_processing_rate': data['timely_processed'] / data['total'] if data['total'] > 0 else 0,
-            'escalation_rate': data['escalated'] / data['total'] if data['total'] > 0 else 0,
-        }
-    
-    # 处理效率排行榜
-    # 效率最高的项目（效率得分最高）
-    best_projects = sorted(
-        [(name, data) for name, data in project_metrics.items() if data['total'] >= 5],  # 至少5个预警
-        key=lambda x: x[1]['efficiency_score'],
-        reverse=True
-    )[:5]
-    
-    # 效率最低的项目（效率得分最低）
-    worst_projects = sorted(
-        [(name, data) for name, data in project_metrics.items() if data['total'] >= 5],
-        key=lambda x: x[1]['efficiency_score']
-    )[:5]
-    
-    # 效率最高的责任人（效率得分最高）
-    best_handlers = sorted(
-        [(name, data) for name, data in handler_metrics.items() if data['total'] >= 5],
-        key=lambda x: x[1]['efficiency_score'],
-        reverse=True
-    )[:5]
-    
-    # 效率最低的责任人（效率得分最低）
-    worst_handlers = sorted(
-        [(name, data) for name, data in handler_metrics.items() if data['total'] >= 5],
-        key=lambda x: x[1]['efficiency_score']
-    )[:5]
-    
+    # 格式化返回数据
     return {
         'summary': {
             'total': total_count,
             'processed_count': processed_count,
-            'processing_rate': round(processing_rate, 4),
-            'timely_processing_rate': round(timely_processing_rate, 4),
-            'escalation_rate': round(escalation_rate, 4),
-            'duplicate_rate': round(duplicate_rate, 4),
+            'processing_rate': round(basic_metrics['processing_rate'], 4),
+            'timely_processing_rate': round(basic_metrics['timely_processing_rate'], 4),
+            'escalation_rate': round(basic_metrics['escalation_rate'], 4),
+            'duplicate_rate': round(basic_metrics['duplicate_rate'], 4),
         },
         'by_project': {
             project_name: {
@@ -2009,52 +1665,7 @@ def get_efficiency_metrics(
             }
             for rule_type, data in type_metrics.items()
         },
-        'rankings': {
-            'best_projects': [
-                {
-                    'project_name': name,
-                    'project_id': data['project_id'],
-                    'efficiency_score': data['efficiency_score'],
-                    'processing_rate': data['processing_rate'],
-                    'timely_processing_rate': data['timely_processing_rate'],
-                    'total': data['total'],
-                }
-                for name, data in best_projects
-            ],
-            'worst_projects': [
-                {
-                    'project_name': name,
-                    'project_id': data['project_id'],
-                    'efficiency_score': data['efficiency_score'],
-                    'processing_rate': data['processing_rate'],
-                    'timely_processing_rate': data['timely_processing_rate'],
-                    'total': data['total'],
-                }
-                for name, data in worst_projects
-            ],
-            'best_handlers': [
-                {
-                    'handler_name': name,
-                    'user_id': data['user_id'],
-                    'efficiency_score': data['efficiency_score'],
-                    'processing_rate': data['processing_rate'],
-                    'timely_processing_rate': data['timely_processing_rate'],
-                    'total': data['total'],
-                }
-                for name, data in best_handlers
-            ],
-            'worst_handlers': [
-                {
-                    'handler_name': name,
-                    'user_id': data['user_id'],
-                    'efficiency_score': data['efficiency_score'],
-                    'processing_rate': data['processing_rate'],
-                    'timely_processing_rate': data['timely_processing_rate'],
-                    'total': data['total'],
-                }
-                for name, data in worst_handlers
-            ],
-        },
+        'rankings': rankings,
     }
 
 
@@ -2636,203 +2247,62 @@ def export_alerts_pdf(
     包含统计摘要和预警列表
     支持分页
     """
+    import io
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import cm
+    from reportlab.platypus import SimpleDocTemplate
+    
+    from app.services.alert_pdf_service import (
+        build_alert_query,
+        get_pdf_styles,
+        build_pdf_content
+    )
+    
     try:
-        from reportlab.lib.pagesizes import A4
-        from reportlab.lib.units import cm
-        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-        from reportlab.lib.enums import TA_CENTER, TA_LEFT
-        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
-        from reportlab.lib import colors
-        import io
+        # 构建查询
+        query = build_alert_query(
+            db, project_id, alert_level, status, rule_type, start_date, end_date
+        )
+        alerts = query.all()
+        
+        if not alerts:
+            raise HTTPException(status_code=404, detail="没有符合条件的数据")
+        
+        # 创建PDF缓冲区
+        buffer = io.BytesIO()
+        
+        # 创建PDF文档
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=2*cm,
+            leftMargin=2*cm,
+            topMargin=2*cm,
+            bottomMargin=2*cm
+        )
+        
+        # 获取样式
+        title_style, heading_style, normal_style, _ = get_pdf_styles()
+        
+        # 构建PDF内容
+        story = build_pdf_content(db, alerts, title_style, heading_style, normal_style)
+        
+        # 生成PDF
+        doc.build(story)
+        buffer.seek(0)
+        
+        # 生成文件名
+        filename = f"预警报表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        
+        return StreamingResponse(
+            io.BytesIO(buffer.read()),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename*=UTF-8''{filename}"
+            }
+        )
     except ImportError:
         raise HTTPException(
             status_code=500,
             detail="PDF处理库未安装，请安装reportlab: pip install reportlab"
         )
-    
-    # 构建查询（与列表接口一致）
-    query = db.query(AlertRecord).filter(AlertRecord.triggered_at.isnot(None))
-    
-    if project_id:
-        query = query.filter(AlertRecord.project_id == project_id)
-    if alert_level:
-        query = query.filter(AlertRecord.alert_level == alert_level)
-    if status:
-        query = query.filter(AlertRecord.status == status)
-    if rule_type:
-        query = query.join(AlertRule).filter(AlertRule.rule_type == rule_type)
-    if start_date:
-        query = query.filter(AlertRecord.triggered_at >= datetime.combine(start_date, datetime.min.time()))
-    if end_date:
-        query = query.filter(AlertRecord.triggered_at <= datetime.combine(end_date, datetime.max.time()))
-    
-    alerts = query.order_by(AlertRecord.triggered_at.desc()).all()
-    
-    if not alerts:
-        raise HTTPException(status_code=404, detail="没有符合条件的数据")
-    
-    # 创建PDF缓冲区
-    buffer = io.BytesIO()
-    
-    # 创建PDF文档
-    doc = SimpleDocTemplate(
-        buffer,
-        pagesize=A4,
-        rightMargin=2*cm,
-        leftMargin=2*cm,
-        topMargin=2*cm,
-        bottomMargin=2*cm
-    )
-    
-    # 获取样式
-    styles = getSampleStyleSheet()
-    
-    # 创建自定义样式
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=18,
-        textColor=colors.HexColor('#1e40af'),
-        spaceAfter=30,
-        alignment=TA_CENTER,
-        fontName='Helvetica-Bold'
-    )
-    
-    heading_style = ParagraphStyle(
-        'CustomHeading',
-        parent=styles['Heading2'],
-        fontSize=14,
-        textColor=colors.HexColor('#1e40af'),
-        spaceAfter=12,
-        spaceBefore=12,
-        fontName='Helvetica-Bold'
-    )
-    
-    normal_style = styles['Normal']
-    normal_style.fontSize = 10
-    normal_style.leading = 14
-    
-    # 构建PDF内容
-    story = []
-    
-    # 标题
-    story.append(Paragraph("预警报表", title_style))
-    story.append(Spacer(1, 0.5*cm))
-    
-    # 统计摘要
-    story.append(Paragraph("统计摘要", heading_style))
-    
-    # 计算统计
-    total_count = len(alerts)
-    by_level = {}
-    by_status = {}
-    by_type = {}
-    
-    for alert in alerts:
-        level = alert.alert_level
-        by_level[level] = by_level.get(level, 0) + 1
-        
-        status_val = alert.status
-        by_status[status_val] = by_status.get(status_val, 0) + 1
-        
-        rule = alert.rule
-        rule_type = rule.rule_type if rule else 'UNKNOWN'
-        by_type[rule_type] = by_type.get(rule_type, 0) + 1
-    
-    # 统计摘要表格
-    summary_data = [
-        ['统计项', '数量'],
-        ['总预警数', str(total_count)],
-        ['', ''],
-    ]
-    
-    summary_data.append(['按级别统计', ''])
-    for level, count in sorted(by_level.items()):
-        summary_data.append([level, str(count)])
-    
-    summary_data.append(['', ''])
-    summary_data.append(['按状态统计', ''])
-    for status_val, count in sorted(by_status.items()):
-        summary_data.append([status_val, str(count)])
-    
-    summary_table = Table(summary_data, colWidths=[6*cm, 4*cm])
-    summary_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#366092')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    ]))
-    story.append(summary_table)
-    story.append(Spacer(1, 1*cm))
-    
-    # 预警列表
-    story.append(Paragraph("预警列表", heading_style))
-    
-    # 预警列表表格（分页显示，每页最多20条）
-    page_size = 20
-    for page_idx in range(0, len(alerts), page_size):
-        if page_idx > 0:
-            story.append(PageBreak())
-        
-        page_alerts = alerts[page_idx:page_idx + page_size]
-        
-        # 表头
-        table_data = [[
-            '预警编号', '级别', '标题', '项目', '触发时间', '状态', '处理人'
-        ]]
-        
-        # 数据行
-        for alert in page_alerts:
-            rule = alert.rule
-            project = alert.project
-            handler = None
-            if alert.handler_id:
-                handler = db.query(User).filter(User.id == alert.handler_id).first()
-            elif alert.acknowledged_by:
-                handler = db.query(User).filter(User.id == alert.acknowledged_by).first()
-            
-            table_data.append([
-                alert.alert_no,
-                alert.alert_level,
-                alert.alert_title[:30] + '...' if len(alert.alert_title) > 30 else alert.alert_title,
-                project.project_name if project else '',
-                alert.triggered_at.strftime('%Y-%m-%d %H:%M') if alert.triggered_at else '',
-                alert.status,
-                handler.username if handler else '',
-            ])
-        
-        # 创建表格
-        alert_table = Table(table_data, colWidths=[3*cm, 2*cm, 5*cm, 3*cm, 3*cm, 2*cm, 2*cm])
-        alert_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#366092')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-            ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('FONTSIZE', (0, 1), (-1, -1), 9),
-        ]))
-        story.append(alert_table)
-    
-    # 生成PDF
-    doc.build(story)
-    buffer.seek(0)
-    
-    # 生成文件名
-    filename = f"预警报表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-    
-    return StreamingResponse(
-        io.BytesIO(buffer.read()),
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f"attachment; filename*=UTF-8''{filename}"
-        }
-    )

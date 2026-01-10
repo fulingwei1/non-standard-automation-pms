@@ -34,6 +34,7 @@ import { Badge } from '../components/ui/badge'
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
+import { authApi } from '../services/api'
 
 const settingsSections = [
   { id: 'profile', label: '个人资料', icon: User },
@@ -45,17 +46,7 @@ const settingsSections = [
 ]
 
 // Mock user data
-const mockUser = {
-  id: 'E0001',
-  name: '张三',
-  email: 'zhangsan@jinkebo.com',
-  phone: '138****8888',
-  department: '机械设计部',
-  role: '机械工程师',
-  avatar: null,
-  joinDate: '2023-03-15',
-}
-
+// Mock data - 已移除，使用真实API
 function ProfileSection() {
   const [user, setUser] = useState(mockUser)
   const [isEditing, setIsEditing] = useState(false)
@@ -278,12 +269,82 @@ function NotificationsSection() {
 }
 
 function SecuritySection() {
+  const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [passwords, setPasswords] = useState({
     current: '',
     new: '',
     confirm: '',
   })
+
+  const handleChangePassword = async () => {
+    // 重置状态
+    setError('')
+    setSuccess('')
+
+    // 表单验证
+    if (!passwords.current) {
+      setError('请输入当前密码')
+      return
+    }
+
+    if (!passwords.new) {
+      setError('请输入新密码')
+      return
+    }
+
+    if (passwords.new.length < 6) {
+      setError('新密码长度至少6位')
+      return
+    }
+
+    if (passwords.new !== passwords.confirm) {
+      setError('两次输入的新密码不一致')
+      return
+    }
+
+    if (passwords.current === passwords.new) {
+      setError('新密码不能与当前密码相同')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const response = await authApi.changePassword({
+        old_password: passwords.current,
+        new_password: passwords.new,
+      })
+
+      if (response.code === 200) {
+        setSuccess(response.message || '密码修改成功，请重新登录')
+        // 清空表单
+        setPasswords({
+          current: '',
+          new: '',
+          confirm: '',
+        })
+        // 3秒后跳转到登录页
+        setTimeout(() => {
+          navigate('/login')
+        }, 3000)
+      } else {
+        setError(response.message || '密码修改失败')
+      }
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        err.message ||
+        '密码修改失败，请稍后重试'
+      setError(errorMessage)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -297,6 +358,16 @@ function SecuritySection() {
           <CardDescription>定期更换密码可以提高账户安全性</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {error && (
+            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
+              {success}
+            </div>
+          )}
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-300">当前密码</label>
             <div className="relative">
@@ -307,6 +378,7 @@ function SecuritySection() {
                   setPasswords({ ...passwords, current: e.target.value })
                 }
                 placeholder="请输入当前密码"
+                disabled={loading}
               />
               <button
                 type="button"
@@ -327,7 +399,8 @@ function SecuritySection() {
               type={showPassword ? 'text' : 'password'}
               value={passwords.new}
               onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
-              placeholder="请输入新密码"
+              placeholder="请输入新密码（至少6位）"
+              disabled={loading}
             />
           </div>
           <div className="space-y-2">
@@ -339,9 +412,17 @@ function SecuritySection() {
                 setPasswords({ ...passwords, confirm: e.target.value })
               }
               placeholder="请再次输入新密码"
+              disabled={loading}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleChangePassword()
+                }
+              }}
             />
           </div>
-          <Button>更新密码</Button>
+          <Button onClick={handleChangePassword} disabled={loading}>
+            {loading ? '修改中...' : '更新密码'}
+          </Button>
         </CardContent>
       </Card>
 

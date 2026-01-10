@@ -77,7 +77,7 @@ def list_budgets(
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
     budget_type: Optional[str] = Query(None, description="预算类型筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("budget:read")),
 ) -> Any:
     """
     获取预算列表（支持分页、筛选）
@@ -124,7 +124,7 @@ def get_project_budgets(
     db: Session = Depends(deps.get_db),
     project_id: int,
     status: Optional[str] = Query(None, description="状态筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("budget:read")),
 ) -> Any:
     """
     获取项目的预算列表
@@ -160,7 +160,7 @@ def create_budget(
     *,
     db: Session = Depends(deps.get_db),
     budget_in: ProjectBudgetCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("budget:create")),
 ) -> Any:
     """
     创建项目预算
@@ -214,7 +214,7 @@ def get_budget(
     *,
     db: Session = Depends(deps.get_db),
     budget_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("budget:read")),
 ) -> Any:
     """
     获取预算详情
@@ -242,7 +242,7 @@ def update_budget(
     db: Session = Depends(deps.get_db),
     budget_id: int,
     budget_in: ProjectBudgetUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("budget:read")),
 ) -> Any:
     """
     更新预算（只能更新草稿状态的预算）
@@ -279,7 +279,7 @@ def submit_budget(
     *,
     db: Session = Depends(deps.get_db),
     budget_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("budget:read")),
 ) -> Any:
     """
     提交预算审批
@@ -316,7 +316,7 @@ def approve_budget(
     db: Session = Depends(deps.get_db),
     budget_id: int,
     approve_request: ProjectBudgetApproveRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("budget:approve")),
 ) -> Any:
     """
     审批预算
@@ -376,7 +376,7 @@ def delete_budget(
     *,
     db: Session = Depends(deps.get_db),
     budget_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("budget:read")),
 ) -> Any:
     """
     删除预算（只能删除草稿状态的预算）
@@ -401,7 +401,7 @@ def get_budget_items(
     *,
     db: Session = Depends(deps.get_db),
     budget_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("budget:read")),
 ) -> Any:
     """
     获取预算明细列表
@@ -424,7 +424,7 @@ def create_budget_item(
     db: Session = Depends(deps.get_db),
     budget_id: int,
     item_in: ProjectBudgetItemCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("budget:read")),
 ) -> Any:
     """
     创建预算明细
@@ -455,7 +455,7 @@ def update_budget_item(
     db: Session = Depends(deps.get_db),
     item_id: int,
     item_in: ProjectBudgetItemUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("budget:read")),
 ) -> Any:
     """
     更新预算明细
@@ -491,7 +491,7 @@ def delete_budget_item(
     *,
     db: Session = Depends(deps.get_db),
     item_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("budget:read")),
 ) -> Any:
     """
     删除预算明细
@@ -521,7 +521,7 @@ def list_allocation_rules(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
     is_active: Optional[bool] = Query(None, description="是否启用筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("budget:read")),
 ) -> Any:
     """
     获取成本分摊规则列表
@@ -552,7 +552,7 @@ def create_allocation_rule(
     *,
     db: Session = Depends(deps.get_db),
     rule_in: ProjectCostAllocationRuleCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("budget:read")),
 ) -> Any:
     """
     创建成本分摊规则
@@ -573,7 +573,7 @@ def get_allocation_rule(
     *,
     db: Session = Depends(deps.get_db),
     rule_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("budget:read")),
 ) -> Any:
     """
     获取成本分摊规则详情
@@ -591,7 +591,7 @@ def update_allocation_rule(
     db: Session = Depends(deps.get_db),
     rule_id: int,
     rule_in: ProjectCostAllocationRuleUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("budget:read")),
 ) -> Any:
     """
     更新成本分摊规则
@@ -617,7 +617,7 @@ def delete_allocation_rule(
     *,
     db: Session = Depends(deps.get_db),
     rule_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("budget:read")),
 ) -> Any:
     """
     删除成本分摊规则

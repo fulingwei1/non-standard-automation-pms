@@ -29,9 +29,9 @@ class TestProgressAggregation:
             id=1,
             project_code="TEST-001",
             project_name="测试项目",
-            customer="测试客户",
-            current_stage="S4",
-            health_status="H1",
+            customer_name="测试客户",
+            stage="S4",
+            health="H1",
             is_active=True
         )
         db_session.add(project)
@@ -52,6 +52,7 @@ class TestProgressAggregation:
                 project_id=project.id,
                 title=f"测试任务{i}",
                 task_importance="GENERAL",
+                task_type="PROJECT",
                 priority="MEDIUM",
                 status=task_data["status"],
                 progress=task_data["progress"],
@@ -85,9 +86,9 @@ class TestProgressAggregation:
             id=2,
             project_code="TEST-002",
             project_name="测试项目2",
-            customer="测试客户",
-            current_stage="S4",
-            health_status="H1",
+            customer_name="测试客户",
+            stage="S4",
+            health="H1",
             is_active=True
         )
         db_session.add(project)
@@ -101,6 +102,7 @@ class TestProgressAggregation:
                 project_id=project.id,
                 title="活跃任务1",
                 task_importance="GENERAL",
+                task_type="PROJECT",
                 status="IN_PROGRESS",
                 progress=60,
                 assignee_id=1,
@@ -113,6 +115,7 @@ class TestProgressAggregation:
                 project_id=project.id,
                 title="已取消任务",
                 task_importance="GENERAL",
+                task_type="PROJECT",
                 status="CANCELLED",  # 已取消
                 progress=100,         # 即使100%也应被排除
                 assignee_id=1,
@@ -125,6 +128,7 @@ class TestProgressAggregation:
                 project_id=project.id,
                 title="活跃任务2",
                 task_importance="GENERAL",
+                task_type="PROJECT",
                 status="IN_PROGRESS",
                 progress=40,
                 assignee_id=1,
@@ -150,9 +154,9 @@ class TestProgressAggregation:
             id=3,
             project_code="TEST-003",
             project_name="空项目",
-            customer="测试客户",
-            current_stage="S1",
-            health_status="H1",
+            customer_name="测试客户",
+            stage="S1",
+            health="H1",
             progress_pct=0,
             is_active=True
         )
@@ -166,6 +170,7 @@ class TestProgressAggregation:
             project_id=project.id,
             title="临时任务",
             task_importance="GENERAL",
+                task_type="PROJECT",
             status="CANCELLED",
             progress=0,
             assignee_id=1,
@@ -189,9 +194,9 @@ class TestProgressAggregation:
             id=4,
             project_code="TEST-004",
             project_name="零进度项目",
-            customer="测试客户",
-            current_stage="S2",
-            health_status="H1",
+            customer_name="测试客户",
+            stage="S2",
+            health="H1",
             is_active=True
         )
         db_session.add(project)
@@ -205,6 +210,7 @@ class TestProgressAggregation:
                 project_id=project.id,
                 title=f"零进度任务{i}",
                 task_importance="GENERAL",
+                task_type="PROJECT",
                 status="ACCEPTED",
                 progress=0,  # 所有任务0%
                 assignee_id=1,
@@ -227,9 +233,9 @@ class TestProgressAggregation:
             id=5,
             project_code="TEST-005",
             project_name="精度测试",
-            customer="测试客户",
-            current_stage="S4",
-            health_status="H1",
+            customer_name="测试客户",
+            stage="S4",
+            health="H1",
             is_active=True
         )
         db_session.add(project)
@@ -249,6 +255,7 @@ class TestProgressAggregation:
                 project_id=project.id,
                 title=f"精度任务{i}",
                 task_importance="GENERAL",
+                task_type="PROJECT",
                 status="IN_PROGRESS",
                 progress=task_data["progress"],
                 assignee_id=1,
@@ -273,9 +280,9 @@ class TestProgressAggregation:
             id=6,
             project_code="TEST-006",
             project_name="元数据测试",
-            customer="测试客户",
-            current_stage="S4",
-            health_status="H1",
+            customer_name="测试客户",
+            stage="S4",
+            health="H1",
             is_active=True
         )
         db_session.add(project)
@@ -287,6 +294,7 @@ class TestProgressAggregation:
             project_id=project.id,
             title="元数据任务",
             task_importance="GENERAL",
+                task_type="PROJECT",
             status="IN_PROGRESS",
             progress=75,
             assignee_id=1,
@@ -314,9 +322,9 @@ class TestProgressAggregation:
             id=7,
             project_code="TEST-007",
             project_name="触发测试",
-            customer="测试客户",
-            current_stage="S4",
-            health_status="H1",
+            customer_name="测试客户",
+            stage="S4",
+            health="H1",
             progress_pct=0,  # 初始0%
             is_active=True
         )
@@ -329,6 +337,7 @@ class TestProgressAggregation:
             project_id=project.id,
             title="触发任务",
             task_importance="GENERAL",
+                task_type="PROJECT",
             status="ACCEPTED",
             progress=0,  # 初始0%
             assignee_id=1,
@@ -374,9 +383,9 @@ class TestHealthStatusAggregation:
             id=101,
             project_code="HEALTH-001",
             project_name="健康项目",
-            customer="测试客户",
-            current_stage="S4",
-            health_status="H1",
+            customer_name="测试客户",
+            stage="S4",
+            health="H1",
             is_active=True
         )
         db_session.add(project)
@@ -390,6 +399,7 @@ class TestHealthStatusAggregation:
                 project_id=project.id,
                 title=f"任务{i}",
                 task_importance="GENERAL",
+                task_type="PROJECT",
                 status="IN_PROGRESS",
                 progress=50,
                 is_delayed=(i == 1),  # 只有第1个延期
@@ -414,9 +424,9 @@ class TestHealthStatusAggregation:
             id=102,
             project_code="HEALTH-002",
             project_name="风险项目",
-            customer="测试客户",
-            current_stage="S4",
-            health_status="H1",
+            customer_name="测试客户",
+            stage="S4",
+            health="H1",
             is_active=True
         )
         db_session.add(project)
@@ -430,6 +440,7 @@ class TestHealthStatusAggregation:
                 project_id=project.id,
                 title=f"任务{i}",
                 task_importance="GENERAL",
+                task_type="PROJECT",
                 status="IN_PROGRESS",
                 progress=40,
                 is_delayed=(i <= 3),  # 前3个延期
@@ -453,9 +464,9 @@ class TestHealthStatusAggregation:
             id=103,
             project_code="HEALTH-003",
             project_name="部分完成项目",
-            customer="测试客户",
-            current_stage="S4",
-            health_status="H1",
+            customer_name="测试客户",
+            stage="S4",
+            health="H1",
             is_active=True
         )
         db_session.add(project)
@@ -469,6 +480,7 @@ class TestHealthStatusAggregation:
                 project_id=project.id,
                 title=f"已完成任务{i}",
                 task_importance="GENERAL",
+                task_type="PROJECT",
                 status="COMPLETED",
                 progress=100,
                 is_delayed=True,  # 有延期标记
@@ -486,6 +498,7 @@ class TestHealthStatusAggregation:
                 project_id=project.id,
                 title=f"进行中任务{i}",
                 task_importance="GENERAL",
+                task_type="PROJECT",
                 status="IN_PROGRESS",
                 progress=50,
                 is_delayed=False,

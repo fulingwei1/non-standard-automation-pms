@@ -47,97 +47,11 @@ import { fadeIn, staggerContainer } from '../lib/animations'
 import { performanceApi, pmoApi } from '../services/api'
 
 // Fallback mock data (used when API fails)
-const mockCurrentPeriod = {
-  period_code: '2026-Q1',
-  period_name: '2026年第一季度',
-  period_type: 'QUARTERLY',
-  start_date: '2026-01-01',
-  end_date: '2026-03-31',
-  status: 'IN_PROGRESS',
-  progress: 45,
-  days_remaining: 50,
-}
-
-const mockStats = {
-  total_employees: 186,
-  evaluated: 120,
-  pending: 66,
-  excellent: 35,
-  good: 65,
-  qualified: 18,
-  needs_improvement: 2,
-  avg_score: 85.6,
-  completion_rate: 64.5,
-}
-
-const mockPendingTasks = [
-  {
-    id: 1,
-    type: 'evaluation',
-    title: '评价下属绩效',
-    count: 5,
-    deadline: '2026-01-25',
-    priority: 'high',
-  },
-  {
-    id: 2,
-    type: 'self_evaluation',
-    title: '完成自评',
-    count: 1,
-    deadline: '2026-01-20',
-    priority: 'medium',
-  },
-  {
-    id: 3,
-    type: 'appeal',
-    title: '处理绩效申诉',
-    count: 2,
-    deadline: '2026-01-22',
-    priority: 'high',
-  },
-]
-
-const mockRecentResults = [
-  {
-    id: 1,
-    employee_name: '张工程师',
-    department: '技术开发部',
-    period: '2025-12',
-    score: 92.5,
-    level: 'EXCELLENT',
-    rank: 3,
-    trend: 'up',
-  },
-  {
-    id: 2,
-    employee_name: '李经理',
-    department: '项目部',
-    period: '2025-12',
-    score: 88.0,
-    level: 'GOOD',
-    rank: 8,
-    trend: 'stable',
-  },
-  {
-    id: 3,
-    employee_name: '王工程师',
-    department: '生产部',
-    period: '2025-12',
-    score: 85.5,
-    level: 'GOOD',
-    rank: 12,
-    trend: 'down',
-  },
-]
-
-const mockDepartmentPerformance = [
-  { department: '技术开发部', avg_score: 88.5, rank: 1, change: 2 },
-  { department: '项目部', avg_score: 86.2, rank: 2, change: 0 },
-  { department: '销售部', avg_score: 85.8, rank: 3, change: -1 },
-  { department: '生产部', avg_score: 84.5, rank: 4, change: 1 },
-  { department: '采购部', avg_score: 83.2, rank: 5, change: -2 },
-]
-
+// Mock data - 已移除，使用真实API
+// Mock data - 已移除，使用真实API
+// Mock data - 已移除，使用真实API
+// Mock data - 已移除，使用真实API
+// Mock data - 已移除，使用真实API
 const getLevelColor = (level) => {
   const colors = {
     EXCELLENT: 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30',

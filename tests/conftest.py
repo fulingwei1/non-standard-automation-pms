@@ -18,7 +18,7 @@ from app.core.config import settings
 from app.core.security import get_password_hash
 from app.models.base import SessionLocal
 from app.models.organization import Employee
-from app.models.user import User
+from app.models.user import User, Role
 from app.models.project import Customer, Project, ProjectMember
 from app.models.task_center import TaskUnified, TaskApprovalWorkflow
 
@@ -110,6 +110,7 @@ def db_session() -> Generator[Session, None, None]:
 
 ENGINEER_CREDENTIALS: Dict[str, str] = {"username": "engineer_test", "password": "engineer123"}
 PM_CREDENTIALS: Dict[str, str] = {"username": "pm_test", "password": "pm123"}
+REGULAR_USER_CREDENTIALS: Dict[str, str] = {"username": "regular_user", "password": "regular123"}
 
 
 def _get_or_create_employee(db: Session, code: str, name: str, department: str) -> Employee:
@@ -154,6 +155,24 @@ def _get_or_create_user(db: Session, username: str, password: str, real_name: st
     return user
 
 
+def _ensure_role(db: Session, role_code: str, role_name: str) -> Role:
+    """确保角色字典中存在指定角色编码"""
+    role = db.query(Role).filter(Role.role_code == role_code).first()
+    if role:
+        return role
+    role = Role(
+        role_code=role_code,
+        role_name=role_name,
+        description=f"{role_name}（测试自动创建）",
+        is_system=True,
+        is_active=True,
+    )
+    db.add(role)
+    db.commit()
+    db.refresh(role)
+    return role
+
+
 @pytest.fixture(scope="function")
 def engineer_user(db_session: Session) -> User:
     """确保存在用于工程师接口测试的用户"""
@@ -178,6 +197,18 @@ def pm_user(db_session: Session) -> User:
     )
 
 
+@pytest.fixture(scope="function")
+def regular_user(db_session: Session) -> User:
+    """确保存在普通权限的业务用户"""
+    return _get_or_create_user(
+        db_session,
+        username=REGULAR_USER_CREDENTIALS["username"],
+        password=REGULAR_USER_CREDENTIALS["password"],
+        real_name="普通业务用户",
+        department="综合管理部",
+    )
+
+
 def _ensure_customer(db: Session) -> Customer:
     customer = db.query(Customer).filter(Customer.customer_code == "CUST-ENGINEER").first()
     if not customer:
@@ -197,6 +228,8 @@ def _ensure_customer(db: Session) -> Customer:
 @pytest.fixture(scope="function")
 def mock_project(db_session: Session, engineer_user: User, pm_user: User) -> Project:
     """创建用于工程师端测试的项目及成员关系"""
+    _ensure_role(db_session, "PM", "项目经理")
+    _ensure_role(db_session, "ENGINEER", "工程师")
     customer = _ensure_customer(db_session)
     project = Project(
         project_code=f"PJT-{uuid.uuid4().hex[:8].upper()}",
@@ -361,3 +394,23 @@ def pm_auth_headers(client: TestClient, pm_user: User) -> Dict[str, str]:
     assert response.status_code == 200, "PM账号登录失败"
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture(scope="function")
+def regular_user_token(client: TestClient, regular_user: User) -> str:
+    """返回普通业务用户的Bearer Token"""
+    response = client.post(
+        f"{settings.API_V1_PREFIX}/auth/login",
+        data={
+            "username": REGULAR_USER_CREDENTIALS["username"],
+            "password": REGULAR_USER_CREDENTIALS["password"],
+        },
+    )
+    assert response.status_code == 200, "普通业务账号登录失败"
+    return response.json()["access_token"]
+
+
+@pytest.fixture(scope="function")
+def db(db_session: Session) -> Session:
+    """兼容旧测试中引用的 db fixture"""
+    return db_session

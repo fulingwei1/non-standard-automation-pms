@@ -40,7 +40,7 @@ def read_machines(
     stage: Optional[str] = Query(None, description="设备阶段筛选"),
     status: Optional[str] = Query(None, description="设备状态筛选"),
     health: Optional[str] = Query(None, description="健康度筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("machine:read")),
 ) -> Any:
     """
     获取机台列表（支持分页、筛选）
@@ -74,7 +74,7 @@ def get_project_machines(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("machine:read")),
 ) -> Any:
     """
     获取项目的机台列表
@@ -92,7 +92,7 @@ def create_machine(
     *,
     db: Session = Depends(deps.get_db),
     machine_in: MachineCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("machine:create")),
 ) -> Any:
     """
     Create new machine.
@@ -130,7 +130,7 @@ def create_project_machine(
     db: Session = Depends(deps.get_db),
     project_id: int,
     machine_in: MachineCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("machine:read")),
 ) -> Any:
     """
     为项目创建机台
@@ -170,7 +170,7 @@ def read_machine(
     *,
     db: Session = Depends(deps.get_db),
     machine_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("machine:read")),
 ) -> Any:
     """
     Get machine by ID.
@@ -187,7 +187,7 @@ def update_machine(
     db: Session = Depends(deps.get_db),
     machine_id: int,
     machine_in: MachineUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("machine:update")),
 ) -> Any:
     """
     Update a machine.
@@ -213,7 +213,7 @@ def update_machine_progress(
     db: Session = Depends(deps.get_db),
     machine_id: int,
     progress_pct: Decimal = Query(..., ge=0, le=100, description="进度百分比（0-100）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("machine:read")),
 ) -> Any:
     """
     更新机台进度
@@ -234,7 +234,7 @@ def get_machine_bom(
     *,
     db: Session = Depends(deps.get_db),
     machine_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("machine:read")),
 ) -> Any:
     """
     获取机台的BOM列表
@@ -277,7 +277,7 @@ def get_machine_service_history(
     machine_id: int,
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("machine:read")),
 ) -> Any:
     """
     设备档案（服务历史记录）
@@ -350,7 +350,7 @@ def delete_machine(
     *,
     db: Session = Depends(deps.get_db),
     machine_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("machine:delete")),
 ) -> Any:
     """
     删除机台
@@ -389,7 +389,7 @@ async def upload_machine_document(
     version: str = Form("1.0", description="版本号"),
     description: Optional[str] = Form(None, description="描述"),
     machine_stage: Optional[str] = Form(None, description="关联的设备生命周期阶段（S1-S9）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("machine:read")),
 ) -> Any:
     """
     上传设备文档（支持文件上传和版本管理）
@@ -497,7 +497,7 @@ def get_machine_documents(
     machine_id: int,
     doc_type: Optional[str] = Query(None, description="文档类型筛选"),
     group_by_type: bool = Query(True, description="是否按类型分组"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("machine:read")),
 ) -> Any:
     """
     获取设备的所有文档（按类型分类）
@@ -566,7 +566,7 @@ def download_machine_document(
     db: Session = Depends(deps.get_db),
     machine_id: int,
     doc_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("machine:read")),
 ) -> Any:
     """
     下载设备文档
@@ -625,7 +625,7 @@ def get_machine_document_versions(
     db: Session = Depends(deps.get_db),
     machine_id: int,
     doc_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("machine:read")),
 ) -> Any:
     """
     获取设备文档的所有版本

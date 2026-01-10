@@ -1075,200 +1075,31 @@ async def upload_allocation_sheet(
             detail="Excel处理库未安装，请安装pandas和openpyxl"
         )
     
-    # 验证文件类型
-    if not file.filename.endswith(('.xlsx', '.xls')):
-        raise HTTPException(status_code=400, detail="只支持Excel文件(.xlsx, .xls)")
+    from app.services.bonus_allocation_parser import (
+        validate_file_type,
+        save_uploaded_file,
+        read_and_save_file,
+        parse_excel_file,
+        validate_required_columns,
+        parse_allocation_sheet
+    )
     
-    # 保存文件
-    upload_dir = os.path.join(settings.UPLOAD_DIR, "bonus_allocation_sheets")
-    os.makedirs(upload_dir, exist_ok=True)
-    
-    file_ext = Path(file.filename).suffix
-    unique_filename = f"{uuid.uuid4().hex}{file_ext}"
-    file_path = os.path.join(upload_dir, unique_filename)
-    relative_path = os.path.relpath(file_path, settings.UPLOAD_DIR)
-    
-    file_content = await file.read()
-    file_size = len(file_content)
-    
-    with open(file_path, "wb") as f:
-        f.write(file_content)
-    
-    # 解析Excel
+    file_path = None
     try:
-        df = pd.read_excel(io.BytesIO(file_content))
-        df = df.dropna(how='all')  # 删除空行
+        # 验证文件类型
+        validate_file_type(file.filename)
         
-        # 验证必需列（支持两种模式）
-        # 模式1：使用计算记录ID（已有计算记录）
-        # 模式2：使用团队奖金分配ID（从团队奖金分配创建个人记录）
-        has_calculation_id = '计算记录ID*' in df.columns or '计算记录ID' in df.columns
-        has_allocation_id = '团队奖金分配ID*' in df.columns or '团队奖金分配ID' in df.columns
+        # 保存文件
+        file_path, relative_path, _ = save_uploaded_file(file)
+        file_content, file_size = await read_and_save_file(file, file_path)
         
-        if not has_calculation_id and not has_allocation_id:
-            raise HTTPException(
-                status_code=400,
-                detail="Excel文件必须包含'计算记录ID*'或'团队奖金分配ID*'列之一"
-            )
-        
-        column_mapping = {
-            '计算记录ID*': 'calculation_id',
-            '计算记录ID': 'calculation_id',
-            '团队奖金分配ID*': 'team_allocation_id',
-            '团队奖金分配ID': 'team_allocation_id',
-            '受益人ID*': 'user_id',
-            '受益人ID': 'user_id',
-            '受益人姓名': 'user_name',
-            '计算金额*': 'calculated_amount',
-            '计算金额': 'calculated_amount',
-            '发放金额*': 'distributed_amount',
-            '发放金额': 'distributed_amount',
-            '发放日期*': 'distribution_date',
-            '发放日期': 'distribution_date',
-            '发放方式': 'payment_method',
-            '凭证号': 'voucher_no',
-            '付款账户': 'payment_account',
-            '付款备注': 'payment_remark'
-        }
-        
-        # 验证其他必需列
-        required_columns = ['受益人ID*', '发放金额*', '发放日期*']
-        missing_columns = []
-        for col in required_columns:
-            if col not in df.columns:
-                alt_col = col.replace('*', '')
-                if alt_col not in df.columns:
-                    missing_columns.append(col)
-        
-        if missing_columns:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Excel文件缺少必需的列：{', '.join(missing_columns)}"
-            )
+        # 解析Excel
+        df = parse_excel_file(file_content)
+        validate_required_columns(df)
         
         # 解析数据
-        valid_rows = []
-        invalid_rows = []
-        parse_errors = {}
-        
-        for idx, row in df.iterrows():
-            row_num = idx + 2  # Excel行号（从2开始，第1行是表头）
-            errors = []
-            
-            try:
-                # 获取计算记录ID或团队奖金分配ID
-                calc_id = None
-                team_allocation_id = None
-                
-                calc_id_raw = row.get('计算记录ID*') or row.get('计算记录ID')
-                if not pd.isna(calc_id_raw):
-                    calc_id = int(float(calc_id_raw))
-                
-                allocation_id_raw = row.get('团队奖金分配ID*') or row.get('团队奖金分配ID')
-                if not pd.isna(allocation_id_raw):
-                    team_allocation_id = int(float(allocation_id_raw))
-                
-                if not calc_id and not team_allocation_id:
-                    errors.append("必须提供'计算记录ID'或'团队奖金分配ID'之一")
-                
-                # 获取受益人ID
-                user_id = row.get('受益人ID*') or row.get('受益人ID')
-                if pd.isna(user_id):
-                    errors.append("受益人ID不能为空")
-                else:
-                    user_id = int(float(user_id))
-                
-                # 获取计算金额（如果使用团队奖金分配ID，计算金额可选）
-                calc_amount = None
-                calc_amount_raw = row.get('计算金额*') or row.get('计算金额')
-                if not pd.isna(calc_amount_raw):
-                    calc_amount = Decimal(str(float(calc_amount_raw)))
-                elif team_allocation_id:
-                    # 如果使用团队奖金分配ID，计算金额可以从分配记录中获取
-                    pass
-                else:
-                    errors.append("计算金额不能为空")
-                
-                # 获取发放金额
-                dist_amount = row.get('发放金额*') or row.get('发放金额')
-                if pd.isna(dist_amount):
-                    errors.append("发放金额不能为空")
-                else:
-                    dist_amount = Decimal(str(float(dist_amount)))
-                
-                # 获取发放日期
-                dist_date = row.get('发放日期*') or row.get('发放日期')
-                if pd.isna(dist_date):
-                    errors.append("发放日期不能为空")
-                else:
-                    if isinstance(dist_date, str):
-                        dist_date = datetime.strptime(dist_date, '%Y-%m-%d').date()
-                    elif isinstance(dist_date, datetime):
-                        dist_date = dist_date.date()
-                    else:
-                        dist_date = pd.to_datetime(dist_date).date()
-                
-                # 可选字段
-                user_name = row.get('受益人姓名', '')
-                payment_method = row.get('发放方式', '')
-                voucher_no = row.get('凭证号', '')
-                payment_account = row.get('付款账户', '')
-                payment_remark = row.get('付款备注', '')
-                
-                if errors:
-                    invalid_rows.append(row_num)
-                    parse_errors[row_num] = errors
-                else:
-                    # 如果使用团队奖金分配ID，验证分配记录是否存在
-                    if team_allocation_id:
-                        allocation = db.query(TeamBonusAllocation).filter(
-                            TeamBonusAllocation.id == team_allocation_id
-                        ).first()
-                        if not allocation:
-                            errors.append(f"团队奖金分配ID {team_allocation_id} 不存在")
-                            invalid_rows.append(row_num)
-                            parse_errors[row_num] = errors
-                            continue
-                        
-                        # 如果没有提供计算金额，使用发放金额作为计算金额
-                        if calc_amount is None:
-                            calc_amount = dist_amount
-                    else:
-                        # 验证计算记录是否存在
-                        calculation = db.query(BonusCalculation).filter(
-                            BonusCalculation.id == calc_id
-                        ).first()
-                        if not calculation:
-                            errors.append(f"计算记录ID {calc_id} 不存在")
-                            invalid_rows.append(row_num)
-                            parse_errors[row_num] = errors
-                            continue
-                    
-                    # 验证受益人是否存在
-                    user = db.query(User).filter(User.id == user_id).first()
-                    if not user:
-                        errors.append(f"受益人ID {user_id} 不存在")
-                        invalid_rows.append(row_num)
-                        parse_errors[row_num] = errors
-                        continue
-                    
-                    valid_rows.append({
-                        'calculation_id': calc_id,  # 可能为None，如果使用团队奖金分配ID
-                        'team_allocation_id': team_allocation_id,  # 可能为None，如果使用计算记录ID
-                        'user_id': user_id,
-                        'user_name': str(user_name) if user_name else None,
-                        'calculated_amount': float(calc_amount),
-                        'distributed_amount': float(dist_amount),
-                        'distribution_date': dist_date.isoformat(),
-                        'payment_method': str(payment_method) if payment_method else None,
-                        'voucher_no': str(voucher_no) if voucher_no else None,
-                        'payment_account': str(payment_account) if payment_account else None,
-                        'payment_remark': str(payment_remark) if payment_remark else None,
-                    })
-                    
-            except Exception as e:
-                invalid_rows.append(row_num)
-                parse_errors[row_num] = [f"解析错误: {str(e)}"]
+        valid_rows, parse_errors = parse_allocation_sheet(df, db)
+        invalid_rows = list(parse_errors.keys())
         
         # 创建上传记录
         sheet_code = generate_sheet_code()
@@ -1303,7 +1134,7 @@ async def upload_allocation_sheet(
         raise
     except Exception as e:
         # 删除已上传的文件
-        if os.path.exists(file_path):
+        if file_path and os.path.exists(file_path):
             os.remove(file_path)
         raise HTTPException(status_code=500, detail=f"解析Excel文件失败: {str(e)}")
 

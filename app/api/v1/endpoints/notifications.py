@@ -33,7 +33,7 @@ def read_notifications(
     is_read: Optional[bool] = Query(None, description="是否已读筛选"),
     notification_type: Optional[str] = Query(None, description="通知类型筛选"),
     priority: Optional[str] = Query(None, description="优先级筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("notification:read")),
 ) -> Any:
     """
     获取通知列表（分页+已读筛选）
@@ -93,7 +93,7 @@ def read_notifications(
 def get_unread_count(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("notification:read")),
 ) -> Any:
     """
     获取未读数量（角标数字）
@@ -115,7 +115,7 @@ def mark_notification_read(
     *,
     db: Session = Depends(deps.get_db),
     notification_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("notification:read")),
 ) -> Any:
     """
     标记单条通知已读
@@ -148,7 +148,7 @@ def batch_mark_read(
     *,
     db: Session = Depends(deps.get_db),
     request: BatchReadRequest = Body(...),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("notification:read")),
 ) -> Any:
     """
     批量标记已读
@@ -187,7 +187,7 @@ def batch_mark_read(
 def mark_all_read(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("notification:read")),
 ) -> Any:
     """
     全部标记已读
@@ -217,7 +217,7 @@ def delete_notification(
     *,
     db: Session = Depends(deps.get_db),
     notification_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("notification:delete")),
 ) -> Any:
     """
     删除通知
@@ -245,7 +245,7 @@ def delete_notification(
 def get_notification_settings(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("notification:read")),
 ) -> Any:
     """
     获取通知设置（用户偏好）
@@ -289,7 +289,7 @@ def update_notification_settings(
     *,
     db: Session = Depends(deps.get_db),
     settings_in: NotificationSettingsUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("notification:read")),
 ) -> Any:
     """
     更新通知设置

@@ -44,154 +44,135 @@ import { cn, formatCurrency } from '../lib/utils'
 import { staggerContainer } from '../lib/animations'
 import { purchaseApi, supplierApi, costApi, projectApi } from '../services/api'
 
-// Mock cost analysis data for demo accounts
-const mockCostAnalysis = {
-  totalPurchaseCost: 2850000,
-  monthlyTrend: [
-    { month: '2024-10', amount: 1200000, orders: 15 },
-    { month: '2024-11', amount: 1350000, orders: 18 },
-    { month: '2024-12', amount: 1500000, orders: 20 },
-    { month: '2025-01', amount: 1650000, orders: 22 },
-  ],
-  byCategory: [
-    { category: '标准件', amount: 850000, percentage: 29.8 },
-    { category: '电气件', amount: 1200000, percentage: 42.1 },
-    { category: '机械件', amount: 600000, percentage: 21.1 },
-    { category: '其他', amount: 200000, percentage: 7.0 },
-  ],
-  bySupplier: [
-    { supplier: '欧姆龙(上海)代理', amount: 450000, orders: 12, avgPrice: 37500 },
-    { supplier: 'THK(深圳)销售', amount: 380000, orders: 8, avgPrice: 47500 },
-    { supplier: '三菱电机', amount: 320000, orders: 6, avgPrice: 53333 },
-    { supplier: '其他供应商', amount: 1700000, orders: 28, avgPrice: 60714 },
-  ],
-  costSavings: 125000,
-  savingsRate: 4.2,
-}
+// Mock cost analysis data - 已移除，使用真实API
 
 export default function CostAnalysis() {
   const [loading, setLoading] = useState(true)
   const [selectedTab, setSelectedTab] = useState('overview')
   const [timeRange, setTimeRange] = useState('month')
-  const [analysisData, setAnalysisData] = useState(mockCostAnalysis)
-
-  const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
+  const [analysisData, setAnalysisData] = useState({
+    totalPurchaseCost: 0,
+    monthlyTrend: [],
+    byCategory: [],
+    bySupplier: [],
+    costSavings: 0,
+    savingsRate: 0,
+  })
 
   const loadAnalysisData = useCallback(async () => {
     try {
       setLoading(true)
-      
-      if (isDemoAccount) {
-        // Use mock data for demo accounts
-        setAnalysisData(mockCostAnalysis)
-      } else {
-        // Calculate date range
-        const now = new Date()
-        const startDate = timeRange === 'month' 
-          ? new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
-          : timeRange === 'quarter'
-          ? new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1).toISOString().split('T')[0]
-          : new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0]
-        const endDate = now.toISOString().split('T')[0]
 
-        // Load purchase orders
-        const ordersRes = await purchaseApi.orders.list({
-          page: 1,
-          page_size: 1000,
-          start_date: startDate,
-          end_date: endDate,
+      // Calculate date range
+      const now = new Date()
+      const startDate = timeRange === 'month'
+        ? new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
+        : timeRange === 'quarter'
+        ? new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1).toISOString().split('T')[0]
+        : new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0]
+      const endDate = now.toISOString().split('T')[0]
+
+      // Load purchase orders
+      const ordersRes = await purchaseApi.orders.list({
+        page: 1,
+        page_size: 1000,
+        start_date: startDate,
+        end_date: endDate,
+      })
+      const orders = ordersRes.data?.items || ordersRes.data || []
+
+      // Calculate statistics
+      const totalCost = orders.reduce((sum, o) => sum + (parseFloat(o.total_amount || 0)), 0)
+
+      // Group by category
+      const byCategory = {}
+      orders.forEach(order => {
+        order.items?.forEach(item => {
+          const category = item.material_category || item.category || '其他'
+          const itemAmount = parseFloat(item.amount || item.unit_price * item.quantity || 0)
+          byCategory[category] = (byCategory[category] || 0) + itemAmount
         })
-        const orders = ordersRes.data?.items || ordersRes.data || []
+      })
 
-        // Calculate statistics
-        const totalCost = orders.reduce((sum, o) => sum + (parseFloat(o.total_amount || 0)), 0)
-        
-        // Group by category
-        const byCategory = {}
-        orders.forEach(order => {
-          order.items?.forEach(item => {
-            const category = item.material_category || item.category || '其他'
-            const itemAmount = parseFloat(item.amount || item.unit_price * item.quantity || 0)
-            byCategory[category] = (byCategory[category] || 0) + itemAmount
-          })
-        })
-
-        // Group by supplier
-        const bySupplier = {}
-        orders.forEach(order => {
-          const supplier = order.supplier_name || order.supplier?.name || '未知供应商'
-          if (!bySupplier[supplier]) {
-            bySupplier[supplier] = { amount: 0, orders: 0 }
-          }
-          bySupplier[supplier].amount += parseFloat(order.total_amount || 0)
-          bySupplier[supplier].orders += 1
-        })
-
-        // Calculate monthly trend
-        const monthlyTrendMap = {}
-        orders.forEach(order => {
-          const orderDate = order.order_date || order.created_at
-          if (orderDate) {
-            const date = new Date(orderDate)
-            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-            if (!monthlyTrendMap[monthKey]) {
-              monthlyTrendMap[monthKey] = { amount: 0, orders: 0 }
-            }
-            monthlyTrendMap[monthKey].amount += parseFloat(order.total_amount || 0)
-            monthlyTrendMap[monthKey].orders += 1
-          }
-        })
-        const monthlyTrend = Object.entries(monthlyTrendMap)
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([month, data]) => ({
-            month,
-            amount: data.amount,
-            orders: data.orders,
-          }))
-
-        // Calculate cost savings (simplified: compare with previous period)
-        // For now, we'll use a placeholder calculation
-        let costSavings = 0
-        let savingsRate = 0
-        if (monthlyTrend.length >= 2) {
-          const currentMonth = monthlyTrend[monthlyTrend.length - 1]
-          const previousMonth = monthlyTrend[monthlyTrend.length - 2]
-          const avgOrderCostCurrent = currentMonth.orders > 0 ? currentMonth.amount / currentMonth.orders : 0
-          const avgOrderCostPrevious = previousMonth.orders > 0 ? previousMonth.amount / previousMonth.orders : 0
-          if (avgOrderCostPrevious > 0) {
-            const savingsPerOrder = avgOrderCostPrevious - avgOrderCostCurrent
-            costSavings = savingsPerOrder * currentMonth.orders
-            savingsRate = (savingsPerOrder / avgOrderCostPrevious) * 100
-          }
+      // Group by supplier
+      const bySupplier = {}
+      orders.forEach(order => {
+        const supplier = order.supplier_name || order.supplier?.name || '未知供应商'
+        if (!bySupplier[supplier]) {
+          bySupplier[supplier] = { amount: 0, orders: 0 }
         }
+        bySupplier[supplier].amount += parseFloat(order.total_amount || 0)
+        bySupplier[supplier].orders += 1
+      })
 
-        setAnalysisData({
-          totalPurchaseCost: totalCost,
-          monthlyTrend,
-          byCategory: Object.entries(byCategory).map(([category, amount]) => ({
-            category,
-            amount,
-            percentage: totalCost > 0 ? (amount / totalCost) * 100 : 0,
-          })),
-          bySupplier: Object.entries(bySupplier).map(([supplier, data]) => ({
-            supplier,
-            amount: data.amount,
-            orders: data.orders,
-            avgPrice: data.orders > 0 ? data.amount / data.orders : 0,
-          })),
-          costSavings: Math.max(0, costSavings), // Ensure non-negative
-          savingsRate: Math.max(0, savingsRate),
-        })
+      // Calculate monthly trend
+      const monthlyTrendMap = {}
+      orders.forEach(order => {
+        const orderDate = order.order_date || order.created_at
+        if (orderDate) {
+          const date = new Date(orderDate)
+          const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+          if (!monthlyTrendMap[monthKey]) {
+            monthlyTrendMap[monthKey] = { amount: 0, orders: 0 }
+          }
+          monthlyTrendMap[monthKey].amount += parseFloat(order.total_amount || 0)
+          monthlyTrendMap[monthKey].orders += 1
+        }
+      })
+      const monthlyTrend = Object.entries(monthlyTrendMap)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([month, data]) => ({
+          month,
+          amount: data.amount,
+          orders: data.orders,
+        }))
+
+      // Calculate cost savings (simplified: compare with previous period)
+      let costSavings = 0
+      let savingsRate = 0
+      if (monthlyTrend.length >= 2) {
+        const currentMonth = monthlyTrend[monthlyTrend.length - 1]
+        const previousMonth = monthlyTrend[monthlyTrend.length - 2]
+        const avgOrderCostCurrent = currentMonth.orders > 0 ? currentMonth.amount / currentMonth.orders : 0
+        const avgOrderCostPrevious = previousMonth.orders > 0 ? previousMonth.amount / previousMonth.orders : 0
+        if (avgOrderCostPrevious > 0) {
+          const savingsPerOrder = avgOrderCostPrevious - avgOrderCostCurrent
+          costSavings = savingsPerOrder * currentMonth.orders
+          savingsRate = (savingsPerOrder / avgOrderCostPrevious) * 100
+        }
       }
+
+      setAnalysisData({
+        totalPurchaseCost: totalCost,
+        monthlyTrend,
+        byCategory: Object.entries(byCategory).map(([category, amount]) => ({
+          category,
+          amount,
+          percentage: totalCost > 0 ? (amount / totalCost) * 100 : 0,
+        })),
+        bySupplier: Object.entries(bySupplier).map(([supplier, data]) => ({
+          supplier,
+          amount: data.amount,
+          orders: data.orders,
+          avgPrice: data.orders > 0 ? data.amount / data.orders : 0,
+        })),
+        costSavings: Math.max(0, costSavings), // Ensure non-negative
+        savingsRate: Math.max(0, savingsRate),
+      })
     } catch (error) {
       console.error('Failed to load cost analysis:', error)
-      if (isDemoAccount) {
-        setAnalysisData(mockCostAnalysis)
-      }
+      setAnalysisData({
+        totalPurchaseCost: 0,
+        monthlyTrend: [],
+        byCategory: [],
+        bySupplier: [],
+        costSavings: 0,
+        savingsRate: 0,
+      })
     } finally {
       setLoading(false)
     }
-  }, [isDemoAccount, timeRange])
+  }, [timeRange])
 
   useEffect(() => {
     loadAnalysisData()

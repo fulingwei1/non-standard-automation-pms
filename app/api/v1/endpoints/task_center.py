@@ -79,7 +79,7 @@ def log_task_operation(
 def get_task_overview(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """
     任务概览统计（待办/逾期/本周）
@@ -189,7 +189,7 @@ def get_my_tasks(
     keyword: Optional[str] = Query(None, description="关键词搜索（标题/描述）"),
     sort_by: str = Query("deadline", description="排序字段：deadline/priority/created_at"),
     sort_order: str = Query("asc", description="排序方向：asc/desc"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """
     我的任务列表（聚合所有来源）
@@ -333,7 +333,7 @@ def get_task_detail(
     *,
     db: Session = Depends(deps.get_db),
     task_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """
     任务详情
@@ -396,7 +396,7 @@ def create_personal_task(
     *,
     db: Session = Depends(deps.get_db),
     task_in: TaskUnifiedCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:create")),
 ) -> Any:
     """
     创建个人任务（自建任务）
@@ -459,7 +459,7 @@ def update_task_progress(
     db: Session = Depends(deps.get_db),
     task_id: int,
     progress_in: TaskProgressUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:update")),
 ) -> Any:
     """
     更新任务进度
@@ -512,7 +512,7 @@ def complete_task(
     *,
     db: Session = Depends(deps.get_db),
     task_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """
     完成任务
@@ -555,7 +555,7 @@ def transfer_task(
     db: Session = Depends(deps.get_db),
     task_id: int,
     transfer_in: TaskTransferRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:assign")),
 ) -> Any:
     """
     任务转办
@@ -634,7 +634,7 @@ def accept_transferred_task(
     *,
     db: Session = Depends(deps.get_db),
     task_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """
     接收转办任务
@@ -673,7 +673,7 @@ def reject_transferred_task(
     db: Session = Depends(deps.get_db),
     task_id: int,
     reason: Optional[str] = Query(None, description="拒绝原因"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """
     拒绝转办任务
@@ -744,7 +744,7 @@ def create_task_comment(
     db: Session = Depends(deps.get_db),
     task_id: int,
     comment_in: TaskCommentCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """
     任务评论（协作沟通）
@@ -817,7 +817,7 @@ def get_task_comments(
     *,
     db: Session = Depends(deps.get_db),
     task_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """
     获取任务评论列表
@@ -876,7 +876,7 @@ def batch_complete_tasks(
     *,
     db: Session = Depends(deps.get_db),
     task_ids: List[int] = Body(..., description="任务ID列表"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """
     批量完成任务
@@ -925,7 +925,7 @@ def batch_transfer_tasks(
     task_ids: List[int] = Body(..., description="任务ID列表"),
     target_user_id: int = Body(..., description="目标用户ID"),
     transfer_reason: str = Body(..., description="转办原因"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """
     批量转办任务
@@ -983,7 +983,7 @@ def batch_set_priority(
     db: Session = Depends(deps.get_db),
     task_ids: List[int] = Body(..., description="任务ID列表"),
     priority: str = Body(..., description="优先级：URGENT/HIGH/MEDIUM/LOW"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """
     批量设置优先级
@@ -1032,7 +1032,7 @@ def batch_update_progress(
     db: Session = Depends(deps.get_db),
     task_ids: List[int] = Body(..., description="任务ID列表"),
     progress: int = Body(..., ge=0, le=100, description="进度百分比"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """
     批量更新进度
@@ -1086,7 +1086,7 @@ def batch_delete_tasks(
     *,
     db: Session = Depends(deps.get_db),
     task_ids: List[int] = Body(..., description="任务ID列表"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """
     批量删除任务（仅个人任务）
@@ -1130,7 +1130,7 @@ def batch_start_tasks(
     *,
     db: Session = Depends(deps.get_db),
     task_ids: List[int] = Body(..., description="任务ID列表"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """
     批量开始任务
@@ -1180,7 +1180,7 @@ def batch_pause_tasks(
     *,
     db: Session = Depends(deps.get_db),
     task_ids: List[int] = Body(..., description="任务ID列表"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """
     批量暂停任务
@@ -1229,7 +1229,7 @@ def batch_tag_tasks(
     db: Session = Depends(deps.get_db),
     task_ids: List[int] = Body(..., description="任务ID列表"),
     tags: List[str] = Body(..., description="标签列表"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """
     批量打标签
@@ -1276,7 +1276,7 @@ def batch_urge_tasks(
     db: Session = Depends(deps.get_db),
     task_ids: List[int] = Body(..., description="任务ID列表"),
     urge_message: Optional[str] = Body(None, description="催办消息"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """
     批量催办任务（发送催办通知）
@@ -1342,7 +1342,7 @@ def get_batch_operation_statistics(
     db: Session = Depends(deps.get_db),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """
     批量操作统计（操作历史）

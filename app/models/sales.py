@@ -768,7 +768,7 @@ class Invoice(Base, TimestampMixin):
     invoice_code = Column(String(30), unique=True, nullable=False, comment="发票编码")
     contract_id = Column(Integer, ForeignKey("contracts.id"), nullable=False, comment="合同ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID")
-    payment_id = Column(Integer, ForeignKey("payments.id"), comment="关联应收节点ID")
+    payment_id = Column(Integer, ForeignKey("project_payment_plans.id"), comment="关联应收节点ID")
     invoice_type = Column(String(20), comment="发票类型")
     amount = Column(Numeric(12, 2), comment="金额")
     tax_rate = Column(Numeric(5, 2), comment="税率")
@@ -800,7 +800,7 @@ class ReceivableDispute(Base, TimestampMixin):
     __tablename__ = "receivable_disputes"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    payment_id = Column(Integer, ForeignKey("payments.id"), nullable=False, comment="付款节点ID")
+    payment_id = Column(Integer, ForeignKey("project_payment_plans.id"), nullable=False, comment="付款节点ID")
     reason_code = Column(String(30), comment="原因代码")
     description = Column(Text, comment="描述")
     status = Column(String(20), default=DisputeStatusEnum.OPEN, comment="状态")

@@ -49,71 +49,7 @@ import { formatCurrency } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { presaleApi } from '../services/api'
 
-const mockBiddingDetail = {
-  id: 'BID-2025-0001',
-  projectName: '某大型汽车电池测试线体',
-  customerName: '某汽车供应商',
-  bidAmount: 2500000,
-  estimatedCost: 1850000,
-  estimatedMargin: 26,
-  bidDeadline: '2025-01-10',
-  daysLeft: 5,
-
-  // 状态信息
-  status: 'bidding_phase', // inquiry | bidding_phase | technical_evaluation | commercial_evaluation | won | lost
-  documentStatus: 'draft', // draft | review | submitted | approved
-  progress: 60,
-
-  // 投标项目信息
-  projectType: '线体',
-  equipmentType: 'ICT/FCT',
-  industry: '汽车电池',
-  projectScope: '建设完整的电池测试线体，包括10台测试设备，软件系统集成',
-
-  // 技术方案
-  technicalApproach: {
-    mainPoints: [
-      '采用模块化设计，支持灵活扩展',
-      '集成国际领先的测试技术',
-      '提供完整的软件解决方案',
-      '包含3年技术支持和维护'
-    ],
-    deliveryPeriod: '6个月',
-    warranty: '3年',
-    support: '7×24技术支持'
-  },
-
-  // 商务条款
-  commercialTerms: {
-    paymentTerms: '签约30%、进度40%、验收20%、质保10%',
-    deliveryAddress: '客户指定地点',
-    transportCost: '由我方承担',
-    installationService: '包含现场安装和调试'
-  },
-
-  // 团队成员
-  team: [
-    {
-      id: 1,
-      name: '李经理',
-      role: '项目经理',
-      department: '销售部',
-      responsibility: '整体协调'
-    },
-    {
-      id: 2,
-      name: '王工程师',
-      role: '技术负责人',
-      department: '技术部',
-      responsibility: '技术方案'
-    },
-    {
-      id: 3,
-      name: '张工程师',
-      role: '商务经理',
-      department: '商务部',
-      responsibility: '商务谈判'
-    }
+// Mock data - 已移除，使用真实API
   ],
 
   // 文件

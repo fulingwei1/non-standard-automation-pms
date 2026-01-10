@@ -6,6 +6,7 @@
 import { Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { hasProcurementAccess, hasFinanceAccess, hasProductionAccess, hasProjectReviewAccess } from '../../lib/roleConfig'
+import { hasPermission, hasAnyPurchasePermission } from '../../lib/permissionUtils'
 import { Button } from '../ui/button'
 
 /**
@@ -93,19 +94,73 @@ export function ProtectedRoute({
 /**
  * Procurement-specific protected route
  * Wrapper for ProtectedRoute with procurement permission check
+ * 
+ * 支持两种模式：
+ * 1. 粗粒度检查（默认）：使用角色代码检查（向后兼容）
+ * 2. 细粒度检查：使用权限编码检查（推荐）
+ * 
+ * @param {Object} props
+ * @param {React.ReactNode} props.children - Child components
+ * @param {string} props.requiredPermission - 细粒度权限编码（可选），如 'purchase:order:read'
+ * @param {boolean} props.useFineGrained - 是否使用细粒度权限检查（默认：true，如果提供了requiredPermission）
  */
-export function ProcurementProtectedRoute({ children }) {
+export function ProcurementProtectedRoute({ 
+  children, 
+  requiredPermission = null,
+  useFineGrained = null 
+}) {
   const userStr = localStorage.getItem('user')
   let isSuperuser = false
+  let user = null
+  
   if (userStr) {
     try {
-      const user = JSON.parse(userStr)
+      user = JSON.parse(userStr)
       isSuperuser = user.is_superuser === true || user.isSuperuser === true
     } catch {
       // ignore
     }
   }
   
+  // 决定使用哪种检查方式
+  const shouldUseFineGrained = useFineGrained !== null 
+    ? useFineGrained 
+    : (requiredPermission !== null)
+  
+  // 细粒度权限检查
+  if (shouldUseFineGrained) {
+    // 如果指定了具体权限，检查该权限；否则检查是否有任何purchase权限
+    const hasAccess = requiredPermission 
+      ? hasPermission(requiredPermission)
+      : hasAnyPurchasePermission()
+    
+    if (!hasAccess && !isSuperuser) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center justify-center h-[60vh] text-center"
+        >
+          <div className="text-6xl mb-4">🔒</div>
+          <h1 className="text-2xl font-semibold text-white mb-2">无权限访问</h1>
+          <p className="text-slate-400 mb-4">
+            您没有权限访问{requiredPermission ? `此功能（需要权限：${requiredPermission}）` : '采购和物料管理模块'}
+          </p>
+          <Button
+            onClick={() => window.history.back()}
+            variant="default"
+            className="mt-4"
+          >
+            返回上一页
+          </Button>
+        </motion.div>
+      )
+    }
+    
+    return children
+  }
+  
+  // 粗粒度权限检查（向后兼容）
   return (
     <ProtectedRoute
       checkPermission={(role) => hasProcurementAccess(role, isSuperuser)}

@@ -1370,10 +1370,18 @@ def complete_acceptance(
     """
     完成验收（自动触发收款计划开票）
     """
-    from app.models.project import ProjectPaymentPlan, ProjectMilestone
-    from app.models.sales import Invoice, InvoiceStatusEnum, Contract
-    from decimal import Decimal
-    from datetime import timedelta
+    from app.services.acceptance_completion_service import (
+        validate_required_check_items,
+        update_acceptance_order_status,
+        trigger_invoice_on_acceptance,
+        handle_acceptance_status_transition,
+        handle_progress_integration,
+        check_auto_stage_transition_after_acceptance,
+        trigger_warranty_period,
+        trigger_bonus_calculation
+    )
+    
+    logger = logging.getLogger(__name__)
     
     order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
     if not order:
@@ -1383,177 +1391,38 @@ def complete_acceptance(
         raise HTTPException(status_code=400, detail="只能完成进行中状态的验收单")
     
     # AR005: 检查是否所有必检项都已检查
-    pending_items = db.query(AcceptanceOrderItem).filter(
-        AcceptanceOrderItem.order_id == order_id,
-        AcceptanceOrderItem.is_required == True,
-        AcceptanceOrderItem.result_status == "PENDING"
-    ).count()
-    
-    if pending_items > 0:
-        raise HTTPException(status_code=400, detail=f"还有 {pending_items} 个必检项未完成检查")
+    validate_required_check_items(db, order_id)
     
     # AR004: 检查是否存在未闭环的阻塞问题
     validate_completion_rules(db, order_id)
     
-    order.status = "COMPLETED"
-    order.actual_end_date = datetime.now()
-    order.overall_result = complete_in.overall_result
-    order.conclusion = complete_in.conclusion
-    order.conditions = complete_in.conditions
-    
-    db.add(order)
-    db.flush()
+    # 更新验收单状态
+    update_acceptance_order_status(
+        db,
+        order,
+        complete_in.overall_result,
+        complete_in.conclusion,
+        complete_in.conditions
+    )
     
     # Issue 7.4: 如果验收通过，检查是否有绑定的收款计划，自动触发开票
     if auto_trigger_invoice and complete_in.overall_result == "PASSED":
-        try:
-            from app.services.invoice_auto_service import InvoiceAutoService
-            
-            # Issue 7.4: 默认创建发票申请（不直接创建发票），如果需要直接创建发票，可以设置环境变量
-            # AUTO_CREATE_INVOICE_ON_ACCEPTANCE=true
-            import os
-            auto_create_invoice = os.getenv("AUTO_CREATE_INVOICE_ON_ACCEPTANCE", "false").lower() == "true"
-            
-            service = InvoiceAutoService(db)
-            result = service.check_and_create_invoice_request(
-                acceptance_order_id=order_id,
-                auto_create=auto_create_invoice
-            )
-            
-            if result.get("success") and result.get("invoice_requests"):
-                logger.info(f"验收通过，已自动创建 {len(result.get('invoice_requests', []))} 个发票{'申请' if not auto_create_invoice else ''}")
-        except Exception as e:
-            logger.error(f"自动触发开票失败: {e}", exc_info=True)
-            # 自动开票失败不影响验收完成
+        trigger_invoice_on_acceptance(db, order_id, auto_trigger_invoice)
     
     # Sprint 2.2: 验收管理状态联动（FAT/SAT）
-    logger = logging.getLogger(__name__)
-    try:
-        from app.services.status_transition_service import StatusTransitionService
-        transition_service = StatusTransitionService(db)
-        
-        # 根据验收类型和结果更新项目状态
-        if order.acceptance_type == "FAT":
-            if complete_in.overall_result == "PASSED":
-                # FAT通过：状态→ST23，可推进至S8，健康度→H1
-                transition_service.handle_fat_passed(order.project_id, order.machine_id)
-                logger.info(f"FAT验收通过，项目状态已更新")
-            elif complete_in.overall_result == "FAILED":
-                # FAT不通过：状态→ST22，健康度→H2
-                # 获取问题列表
-                issues = db.query(AcceptanceIssue).filter(
-                    AcceptanceIssue.order_id == order_id,
-                    AcceptanceIssue.status != "RESOLVED"
-                ).all()
-                issue_descriptions = [issue.issue_description for issue in issues if issue.issue_description]
-                transition_service.handle_fat_failed(order.project_id, order.machine_id, issue_descriptions)
-                logger.info(f"FAT验收不通过，项目状态已更新")
-        elif order.acceptance_type == "SAT":
-            if complete_in.overall_result == "PASSED":
-                # SAT通过：状态→ST27，可推进至S9
-                transition_service.handle_sat_passed(order.project_id, order.machine_id)
-                logger.info(f"SAT验收通过，项目状态已更新")
-            elif complete_in.overall_result == "FAILED":
-                # SAT不通过：状态→ST26，健康度→H2
-                issues = db.query(AcceptanceIssue).filter(
-                    AcceptanceIssue.order_id == order_id,
-                    AcceptanceIssue.status != "RESOLVED"
-                ).all()
-                issue_descriptions = [issue.issue_description for issue in issues if issue.issue_description]
-                transition_service.handle_sat_failed(order.project_id, order.machine_id, issue_descriptions)
-                logger.info(f"SAT验收不通过，项目状态已更新")
-        elif order.acceptance_type == "FINAL":
-            if complete_in.overall_result == "PASSED":
-                # 终验收通过：可推进至S9
-                transition_service.handle_final_acceptance_passed(order.project_id)
-                logger.info(f"终验收通过，项目可推进至S9")
-    except Exception as e:
-        # 状态联动失败不影响验收完成，记录日志
-        logger.error(f"验收状态联动处理失败: {str(e)}", exc_info=True)
+    handle_acceptance_status_transition(db, order, complete_in.overall_result)
     
     # 验收联动：处理验收结果对进度跟踪的影响
-    try:
-        from app.services.progress_integration_service import ProgressIntegrationService
-        integration_service = ProgressIntegrationService(db)
-        
-        if complete_in.overall_result == "FAILED":
-            # 验收失败：阻塞相关里程碑并生成问题清单
-            blocked_milestones = integration_service.handle_acceptance_failed(order)
-            logger.info(f"验收失败，已阻塞 {len(blocked_milestones)} 个里程碑")
-        elif complete_in.overall_result == "PASSED":
-            # 验收通过：解除相关里程碑阻塞
-            unblocked_milestones = integration_service.handle_acceptance_passed(order)
-            logger.info(f"验收通过，已解除 {len(unblocked_milestones)} 个里程碑阻塞")
-    except Exception as e:
-        # 联动失败不影响验收完成，记录日志
-        logger.error(f"验收联动处理失败: {str(e)}", exc_info=True)
+    handle_progress_integration(db, order, complete_in.overall_result)
     
     # Issue 1.2: FAT/SAT验收通过后自动触发阶段流转检查
-    if complete_in.overall_result == "PASSED" and order.project_id:
-        try:
-            from app.services.status_transition_service import StatusTransitionService
-            transition_service = StatusTransitionService(db)
-            
-            project = db.query(Project).filter(Project.id == order.project_id).first()
-            if project:
-                # 检查是否可以自动推进阶段
-                if order.acceptance_type == "FAT" and project.stage == "S7":
-                    # FAT通过，检查是否可以推进到S8
-                    auto_transition_result = transition_service.check_auto_stage_transition(
-                        order.project_id,
-                        auto_advance=True
-                    )
-                    if auto_transition_result.get("auto_advanced"):
-                        logger.info(f"FAT验收通过后自动推进项目 {order.project_id} 至 S8 阶段")
-                
-                elif order.acceptance_type in ["SAT", "FINAL"] and project.stage == "S8":
-                    # SAT/终验收通过，检查是否可以推进到S9
-                    auto_transition_result = transition_service.check_auto_stage_transition(
-                        order.project_id,
-                        auto_advance=True
-                    )
-                    if auto_transition_result.get("auto_advanced"):
-                        logger.info(f"终验收通过后自动推进项目 {order.project_id} 至 S9 阶段")
-        except Exception as e:
-            # 自动流转失败不影响验收完成，记录日志
-            logger.warning(f"验收通过后自动阶段流转失败：{str(e)}", exc_info=True)
+    check_auto_stage_transition_after_acceptance(db, order, complete_in.overall_result)
     
     # AR007: 如果终验收通过，自动触发质保期
-    if complete_in.overall_result == "PASSED" and order.acceptance_type == "FINAL":
-        try:
-            # 更新项目阶段为S9（质保结项）
-            project = db.query(Project).filter(Project.id == order.project_id).first()
-            if project:
-                project.stage = "S9"
-                project.actual_end_date = date.today()
-                db.add(project)
-                
-                # 更新所有设备状态
-                machines = db.query(Machine).filter(Machine.project_id == order.project_id).all()
-                for machine in machines:
-                    machine.stage = "S9"
-                    machine.status = "COMPLETED"
-                    db.add(machine)
-                
-                logger.info(f"终验收通过，项目 {project.project_code} 已进入质保期（S9阶段）")
-        except Exception as e:
-            # 质保期触发失败不影响验收完成，记录日志
-            logger.error(f"终验收后质保期触发失败: {str(e)}", exc_info=True)
+    trigger_warranty_period(db, order, complete_in.overall_result)
     
     # 如果验收通过，自动触发奖金计算
-    if complete_in.overall_result == "PASSED":
-        try:
-            from app.services.bonus_calculator import BonusCalculator
-            calculator = BonusCalculator(db)
-            
-            # 获取项目信息
-            project = db.query(Project).filter(Project.id == order.project_id).first()
-            if project:
-                # 触发项目验收后的奖金计算
-                calculator.trigger_acceptance_bonus_calculation(project, order)
-        except Exception as e:
-            # 奖金计算失败不影响验收完成，记录日志
-            logger.error(f"验收后奖金计算失败: {str(e)}", exc_info=True)
+    trigger_bonus_calculation(db, order, complete_in.overall_result)
     
     db.commit()
     db.refresh(order)
@@ -2196,6 +2065,16 @@ def generate_pdf_report(
             detail="PDF生成功能不可用，请安装reportlab库：pip install reportlab"
         )
     
+    from app.services.pdf_styles import get_pdf_styles
+    from app.services.pdf_content_builders import (
+        build_basic_info_section,
+        build_statistics_section,
+        build_conclusion_section,
+        build_issues_section,
+        build_signatures_section,
+        build_footer_section
+    )
+    
     # 创建PDF缓冲区
     buffer = BytesIO()
     
@@ -2210,317 +2089,35 @@ def generate_pdf_report(
     )
     
     # 获取样式
-    styles = getSampleStyleSheet()
+    styles = get_pdf_styles()
     
-    # 创建自定义样式
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=18,
-        textColor=colors.HexColor('#1e40af'),
-        spaceAfter=30,
-        alignment=1,  # 居中
-        fontName='Helvetica-Bold'
-    )
-    
-    heading_style = ParagraphStyle(
-        'CustomHeading',
-        parent=styles['Heading2'],
-        fontSize=14,
-        textColor=colors.HexColor('#1e40af'),
-        spaceAfter=12,
-        spaceBefore=12,
-        fontName='Helvetica-Bold'
-    )
-    
-    normal_style = styles['Normal']
-    normal_style.fontSize = 10
-    normal_style.leading = 14
-    
-    # 构建PDF内容
-    story = []
-    
-    # 标题
-    story.append(Paragraph("设备验收报告", title_style))
-    story.append(Spacer(1, 0.5*cm))
-    
-    # 报告基本信息
+    # 获取项目和设备信息
     project = db.query(Project).filter(Project.id == order.project_id).first()
     machine = None
     if order.machine_id:
         machine = db.query(Machine).filter(Machine.id == order.machine_id).first()
     
-    # 验收类型中文
-    type_map = {
-        "FAT": "出厂验收",
-        "SAT": "现场验收",
-        "FINAL": "终验收"
-    }
-    acceptance_type_cn = type_map.get(order.acceptance_type, order.acceptance_type)
+    # 构建PDF内容
+    story = []
     
-    # 基本信息表格
-    info_data = [
-        ["报告编号", report_no],
-        ["验收单号", order.order_no],
-        ["验收类型", acceptance_type_cn],
-        ["版本号", f"V{version}"],
-        ["项目名称", project.project_name if project else "N/A"],
-        ["设备名称", machine.machine_name if machine else "N/A"],
-        ["验收日期", order.actual_end_date.strftime('%Y年%m月%d日') if order.actual_end_date else "N/A"],
-        ["验收地点", order.location or "N/A"],
-    ]
+    # 基本信息部分
+    story.extend(build_basic_info_section(order, project, machine, report_no, version, styles))
     
-    info_table = Table(info_data, colWidths=[4*cm, 10*cm])
-    info_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f3f4f6')),
-        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-    ]))
-    story.append(info_table)
-    story.append(Spacer(1, 0.5*cm))
+    # 验收项目统计部分
+    story.extend(build_statistics_section(order, db, styles))
     
-    # 一、验收项目统计
-    story.append(Paragraph("一、验收项目统计", heading_style))
+    # 验收结论部分
+    story.extend(build_conclusion_section(order, styles))
     
-    # 获取检查项按分类统计
-    items = db.query(AcceptanceOrderItem).filter(
-        AcceptanceOrderItem.order_id == order.id
-    ).order_by(
-        AcceptanceOrderItem.category_code,
-        AcceptanceOrderItem.sort_order
-    ).all()
+    # 验收问题部分
+    story.extend(build_issues_section(order, db, styles))
     
-    # 按分类统计
-    category_stats = {}
-    for item in items:
-        cat_code = item.category_code
-        if cat_code not in category_stats:
-            category_stats[cat_code] = {
-                'name': item.category_name,
-                'total': 0,
-                'passed': 0,
-                'failed': 0,
-                'na': 0,
-                'conditional': 0
-            }
-        
-        stats = category_stats[cat_code]
-        stats['total'] += 1
-        if item.result_status == 'PASSED':
-            stats['passed'] += 1
-        elif item.result_status == 'FAILED':
-            stats['failed'] += 1
-        elif item.result_status == 'NA':
-            stats['na'] += 1
-        elif item.result_status == 'CONDITIONAL':
-            stats['conditional'] += 1
-    
-    # 构建统计表格
-    stats_data = [['分类', '总数', '通过', '不通过', '不适用', '有条件通过', '通过率']]
-    
-    total_all = {'total': 0, 'passed': 0, 'failed': 0, 'na': 0, 'conditional': 0}
-    
-    for cat_code, stats in sorted(category_stats.items()):
-        # 计算通过率（不适用不计入总数，有条件通过按0.8权重）
-        valid_total = stats['total'] - stats['na']
-        if valid_total > 0:
-            effective_passed = stats['passed'] + stats['conditional'] * 0.8
-            pass_rate = (effective_passed / valid_total) * 100
-        else:
-            pass_rate = 100.0
-        
-        stats_data.append([
-            stats['name'],
-            str(stats['total']),
-            str(stats['passed']),
-            str(stats['failed']),
-            str(stats['na']),
-            str(stats['conditional']),
-            f"{pass_rate:.1f}%"
-        ])
-        
-        # 累计总计
-        for key in total_all:
-            total_all[key] += stats[key]
-    
-    # 添加合计行
-    valid_total_all = total_all['total'] - total_all['na']
-    if valid_total_all > 0:
-        effective_passed_all = total_all['passed'] + total_all['conditional'] * 0.8
-        pass_rate_all = (effective_passed_all / valid_total_all) * 100
-    else:
-        pass_rate_all = 100.0
-    
-    stats_data.append([
-        '<b>合计</b>',
-        str(total_all['total']),
-        str(total_all['passed']),
-        str(total_all['failed']),
-        str(total_all['na']),
-        str(total_all['conditional']),
-        f"<b>{pass_rate_all:.1f}%</b>"
-    ])
-    
-    stats_table = Table(stats_data, colWidths=[3*cm, 1.5*cm, 1.5*cm, 1.5*cm, 1.5*cm, 1.5*cm, 2*cm])
-    stats_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 11),
-        ('FONTSIZE', (0, 1), (-1, -1), 9),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#f3f4f6')),
-        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-    ]))
-    story.append(stats_table)
-    story.append(Spacer(1, 0.5*cm))
-    
-    # 二、验收结论
-    story.append(Paragraph("二、验收结论", heading_style))
-    
-    result_map = {
-        "PASSED": "通过",
-        "FAILED": "不通过",
-        "CONDITIONAL": "有条件通过"
-    }
-    result_cn = result_map.get(order.overall_result, order.overall_result or "未填写")
-    
-    conclusion_text = f"本次验收结果：<b>{result_cn}</b>"
-    if order.conclusion:
-        conclusion_text += f"<br/><br/>{order.conclusion}"
-    if order.conditions:
-        conclusion_text += f"<br/><br/>条件说明：{order.conditions}"
-    
-    story.append(Paragraph(conclusion_text, normal_style))
-    story.append(Spacer(1, 0.3*cm))
-    
-    # 三、问题统计
-    issues = db.query(AcceptanceIssue).filter(
-        AcceptanceIssue.order_id == order.id
-    ).all()
-    
-    if issues:
-        story.append(Paragraph("三、验收问题", heading_style))
-        
-        total_issues = len(issues)
-        resolved_issues = len([i for i in issues if i.status in ["RESOLVED", "CLOSED"]])
-        blocking_issues = len([i for i in issues if i.is_blocking])
-        
-        issue_summary = f"""
-        总问题数：{total_issues}个<br/>
-        已解决：{resolved_issues}个<br/>
-        待解决：{total_issues - resolved_issues}个<br/>
-        阻塞问题：{blocking_issues}个
-        """
-        story.append(Paragraph(issue_summary, normal_style))
-        story.append(Spacer(1, 0.3*cm))
-        
-        # 问题列表（仅显示前10个）
-        if len(issues) > 0:
-            issue_data = [['问题编号', '标题', '严重程度', '状态', '是否阻塞']]
-            for issue in issues[:10]:  # 最多显示10个问题
-                severity_map = {
-                    "CRITICAL": "严重",
-                    "MAJOR": "一般",
-                    "MINOR": "轻微"
-                }
-                status_map = {
-                    "OPEN": "待处理",
-                    "PROCESSING": "处理中",
-                    "RESOLVED": "已解决",
-                    "CLOSED": "已关闭",
-                    "DEFERRED": "已延期"
-                }
-                issue_data.append([
-                    issue.issue_no,
-                    issue.title[:20] + "..." if len(issue.title) > 20 else issue.title,
-                    severity_map.get(issue.severity, issue.severity),
-                    status_map.get(issue.status, issue.status),
-                    "是" if issue.is_blocking else "否"
-                ])
-            
-            if len(issues) > 10:
-                issue_data.append([f"（还有 {len(issues) - 10} 个问题未显示）", "", "", "", ""])
-            
-            issue_table = Table(issue_data, colWidths=[2.5*cm, 5*cm, 2*cm, 2*cm, 2*cm])
-            issue_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('FONTSIZE', (0, 1), (-1, -1), 8),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-            ]))
-            story.append(issue_table)
-            story.append(Spacer(1, 0.3*cm))
-    
-    # 四、签字信息
+    # 签字信息部分
     if include_signatures:
-        story.append(Paragraph("四、签字确认", heading_style))
-        
-        signatures = db.query(AcceptanceSignature).filter(
-            AcceptanceSignature.order_id == order.id
-        ).all()
-        
-        if signatures:
-            signature_data = [['签字人类型', '签字人', '角色', '公司', '签字时间']]
-            for sig in signatures:
-                signer_type_map = {
-                    "QA": "质检",
-                    "PM": "项目经理",
-                    "CUSTOMER": "客户",
-                    "WITNESS": "见证人"
-                }
-                signature_data.append([
-                    signer_type_map.get(sig.signer_type, sig.signer_type),
-                    sig.signer_name,
-                    sig.signer_role or "N/A",
-                    sig.signer_company or "N/A",
-                    sig.signed_at.strftime('%Y-%m-%d %H:%M') if sig.signed_at else "N/A"
-                ])
-            
-            sig_table = Table(signature_data, colWidths=[2.5*cm, 3*cm, 2.5*cm, 3*cm, 3*cm])
-            sig_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('FONTSIZE', (0, 1), (-1, -1), 9),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-                ('TOPPADDING', (0, 0), (-1, -1), 8),
-                ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-            ]))
-            story.append(sig_table)
-        else:
-            story.append(Paragraph("暂无签字记录", normal_style))
-        
-        story.append(Spacer(1, 0.3*cm))
+        story.extend(build_signatures_section(order, db, styles))
     
-    # 报告生成信息
-    story.append(Spacer(1, 0.5*cm))
-    story.append(Paragraph(
-        f"报告生成时间：{datetime.now().strftime('%Y年%m月%d日 %H:%M:%S')}<br/>"
-        f"生成人：{current_user.real_name or current_user.username}",
-        ParagraphStyle(
-            'Footer',
-            parent=normal_style,
-            fontSize=9,
-            textColor=colors.grey,
-            alignment=2  # 右对齐
-        )
-    ))
+    # 页脚部分
+    story.extend(build_footer_section(current_user, styles))
     
     # 构建PDF
     doc.build(story)

@@ -60,44 +60,7 @@ import { toast } from '../components/ui/toast'
 import { LoadingCard } from '../components/common'
 import { ErrorMessage } from '../components/common'
 import { EmptyState } from '../components/common'
-
-// Mock data for demo accounts
-const mockBOMs = [
-  { id: 1, bom_no: 'BOM-PJ250108-001', project_id: 1, project_name: 'BMS老化测试设备', machine_id: 1, machine_name: 'PN001', status: 'RELEASED' },
-  { id: 2, bom_no: 'BOM-PJ250108-002', project_id: 1, project_name: 'BMS老化测试设备', machine_id: 2, machine_name: 'PN002', status: 'RELEASED' },
-]
-
-const mockPreview = {
-  bom_id: 1,
-  bom_no: 'BOM-PJ250108-001',
-  project_id: 1,
-  preview: [
-    {
-      supplier_id: 1,
-      supplier_name: '欧姆龙(上海)代理',
-      project_id: 1,
-      project_name: 'BMS老化测试设备',
-      order_type: 'NORMAL',
-      order_title: 'BOM-PJ250108-001 - 欧姆龙(上海)代理',
-      total_amount: 5400,
-      tax_amount: 702,
-      amount_with_tax: 6102,
-      item_count: 1,
-      items: [
-        {
-          item_no: 1,
-          material_code: 'EL-02-03-0015',
-          material_name: '光电传感器 E3Z-D82',
-          specification: '',
-          unit: '个',
-          quantity: 12,
-          unit_price: 450,
-          tax_rate: 13,
-          amount: 5400,
-          tax_amount: 702,
-          amount_with_tax: 6102,
-          required_date: '2026-01-15',
-        },
+,
       ],
     },
     {
@@ -158,16 +121,11 @@ export default function PurchaseOrderFromBOM() {
   // Step 3: Result
   const [createdOrders, setCreatedOrders] = useState([])
 
-  // Check if demo account
-  const isDemoAccount = localStorage.getItem('token')?.startsWith('demo_token_')
-
-  // Load BOMs
+  // Check if demo account  // Load BOMs
   useEffect(() => {
     const loadBOMs = async () => {
       try {
-        if (isDemoAccount) {
-          setBoms(mockBOMs)
-        } else {
+         else {
           // Load released BOMs
           const res = await bomApi.list({ status: 'RELEASED', page_size: 1000 })
           const data = res.data?.data || res.data
@@ -178,15 +136,13 @@ export default function PurchaseOrderFromBOM() {
       }
     }
     loadBOMs()
-  }, [isDemoAccount])
+  }, [])
 
   // Load suppliers
   useEffect(() => {
     const loadSuppliers = async () => {
       try {
-        if (isDemoAccount) {
-          setSuppliers([
-            { id: 1, supplier_name: '欧姆龙(上海)代理' },
+        ,
             { id: 2, supplier_name: 'THK(深圳)销售' },
           ])
         } else {
@@ -198,7 +154,7 @@ export default function PurchaseOrderFromBOM() {
       }
     }
     loadSuppliers()
-  }, [isDemoAccount])
+  }, [])
 
   // Generate preview
   const handleGeneratePreview = async () => {
@@ -211,12 +167,7 @@ export default function PurchaseOrderFromBOM() {
       setLoading(true)
       setError(null)
 
-      if (isDemoAccount) {
-        // Mock preview
-        setPreview(mockPreview)
-        setSelectedBom(mockBOMs.find(b => b.id === parseInt(selectedBomId)))
-        setStep(2)
-      } else {
+       else {
         const params = {
           bom_id: parseInt(selectedBomId),
           create_orders: false, // Preview only
@@ -266,11 +217,7 @@ export default function PurchaseOrderFromBOM() {
       setLoading(true)
       setError(null)
 
-      if (isDemoAccount) {
-        // Mock creation
-        const mockCreated = preview.preview.map((order, index) => ({
-          order_id: 1000 + index,
-          order_no: `PO-${new Date().toISOString().slice(2, 10).replace(/-/g, '')}-${String(index + 1).padStart(3, '0')}`,
+      -${String(index + 1).padStart(3, '0')}`,
           supplier_name: order.supplier_name,
           total_amount: order.amount_with_tax,
         }))

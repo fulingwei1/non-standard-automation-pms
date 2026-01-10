@@ -1,8 +1,8 @@
 # 系统功能与权限映射关系
-> 生成时间：2026-01-09 12:02:44
+> 生成时间：2026-01-10 19:30:45
 
 ## 一、统计概览
-- **API模块数量**：62- **API端点总数**：1427- **数据库权限总数**：3- **代码中使用权限总数**：12
+- **API模块数量**：66- **API端点总数**：1498- **数据库权限总数**：7- **代码中使用权限总数**：13
 ## 二、API端点列表
 | 模块 | 方法 | 路径 | 权限要求 |
 |------|------|------|----------|
@@ -43,6 +43,16 @@
 | acceptance | PUT | /acceptance-orders/{order_id}/complete | - |
 | acceptance | PUT | /acceptance-orders/{order_id}/start | - |
 | acceptance | PUT | /acceptance-templates/{template_id} | - |
+| admin_stats | GET | /admin/stats | - |
+| advantage_products | DELETE | /{product_id} | - |
+| advantage_products | GET | /categories | - |
+| advantage_products | GET | /grouped | - |
+| advantage_products | GET | /simple | - |
+| advantage_products | POST | /categories | - |
+| advantage_products | POST | /check-match | - |
+| advantage_products | POST | /import | - |
+| advantage_products | PUT | /categories/{category_id} | - |
+| advantage_products | PUT | /{product_id} | - |
 | alerts | DELETE | /alert-rules/{rule_id} | - |
 | alerts | DELETE | /alerts/subscriptions/{subscription_id} | - |
 | alerts | GET | /alert-notifications | - |
@@ -390,6 +400,20 @@
 | hourly_rate | POST | / | - |
 | hourly_rate | POST | /users/batch-hourly-rates | - |
 | hourly_rate | PUT | /{config_id} | - |
+| hr_management | GET | /contract-reminders | - |
+| hr_management | GET | /contracts | - |
+| hr_management | GET | /contracts/expiring | - |
+| hr_management | GET | /dashboard/overview | - |
+| hr_management | GET | /dashboard/pending-confirmations | - |
+| hr_management | GET | /transactions | - |
+| hr_management | GET | /transactions/statistics | - |
+| hr_management | POST | /contract-reminders/generate | - |
+| hr_management | POST | /contracts | - |
+| hr_management | POST | /contracts/{contract_id}/renew | - |
+| hr_management | POST | /transactions | - |
+| hr_management | PUT | /contract-reminders/{reminder_id}/handle | - |
+| hr_management | PUT | /contracts/{contract_id} | - |
+| hr_management | PUT | /transactions/{transaction_id}/approve | - |
 | installation_dispatch | GET | /orders | - |
 | installation_dispatch | GET | /orders/{order_id} | - |
 | installation_dispatch | GET | /statistics | - |
@@ -497,6 +521,7 @@
 | materials | GET | / | - |
 | materials | GET | /categories/ | - |
 | materials | GET | /search | - |
+| materials | GET | /suppliers | - |
 | materials | GET | /warehouse/statistics | - |
 | materials | GET | /{material_id} | - |
 | materials | GET | /{material_id}/alternatives | - |
@@ -533,11 +558,18 @@
 | organization | GET | /departments/{dept_id} | - |
 | organization | GET | /departments/{dept_id}/users | - |
 | organization | GET | /employees | - |
+| organization | GET | /employees/import/template | - |
 | organization | GET | /employees/{emp_id} | - |
+| organization | GET | /hr-profiles | - |
+| organization | GET | /hr-profiles/statistics/overview | - |
+| organization | GET | /hr-profiles/{emp_id} | - |
 | organization | POST | /departments | - |
 | organization | POST | /employees | - |
+| organization | POST | /employees/import | - |
+| organization | POST | /hr-profiles/import | - |
 | organization | PUT | /departments/{dept_id} | - |
 | organization | PUT | /employees/{emp_id} | - |
+| organization | PUT | /hr-profiles/{emp_id} | - |
 | outsourcing | GET | /outsourcing-deliveries | - |
 | outsourcing | GET | /outsourcing-inspections | - |
 | outsourcing | GET | /outsourcing-orders | - |
@@ -643,6 +675,13 @@
 | presale | PUT | /presale/tickets/{ticket_id}/complete | - |
 | presale | PUT | /presale/tickets/{ticket_id}/progress | - |
 | presale | PUT | /presale/tickets/{ticket_id}/rating | - |
+| presales_integration | GET | /dashboard | - |
+| presales_integration | GET | /lead/{lead_id}/resource-investment | - |
+| presales_integration | GET | /resource-waste-analysis | - |
+| presales_integration | GET | /salesperson-ranking | - |
+| presales_integration | GET | /salesperson/{salesperson_id}/performance | - |
+| presales_integration | POST | /from-lead | - |
+| presales_integration | POST | /predict-win-rate | - |
 | production | GET | /equipment | - |
 | production | GET | /equipment/{equipment_id} | - |
 | production | GET | /equipment/{equipment_id}/maintenance | - |
@@ -829,102 +868,105 @@
 | project_workspace | GET | /projects/{project_id}/solutions | - |
 | project_workspace | GET | /projects/{project_id}/workspace | - |
 | project_workspace | POST | /projects/{project_id}/meetings/{meeting_id}/link | - |
-| projects | DELETE | /payment-plans/{plan_id} | - |
-| projects | DELETE | /project-reviews/best-practices/{practice_id} | - |
-| projects | DELETE | /project-reviews/lessons/{lesson_id} | - |
-| projects | DELETE | /project-reviews/{review_id} | - |
-| projects | DELETE | /{project_id} | - |
-| projects | GET | / | - |
-| projects | GET | /archived | - |
-| projects | GET | /best-practices | - |
-| projects | GET | /best-practices/categories | - |
-| projects | GET | /best-practices/popular | - |
-| projects | GET | /best-practices/statistics | - |
-| projects | GET | /board | - |
-| projects | GET | /cache/stats | - |
-| projects | GET | /in-production/summary | - |
-| projects | GET | /lessons-learned | - |
-| projects | GET | /lessons-learned/categories | - |
-| projects | GET | /lessons-learned/statistics | - |
-| projects | GET | /project-reviews | - |
-| projects | GET | /project-reviews-old | - |
-| projects | GET | /project-reviews-old/{review_id} | - |
-| projects | GET | /project-reviews/best-practices/{practice_id} | - |
-| projects | GET | /project-reviews/lessons/{lesson_id} | - |
-| projects | GET | /project-reviews/{review_id} | - |
-| projects | GET | /project-reviews/{review_id}/best-practices | - |
-| projects | GET | /project-reviews/{review_id}/lessons | - |
-| projects | GET | /projects/{project_id}/best-practices/recommend | - |
-| projects | GET | /projects/{project_id}/cost-details | - |
-| projects | GET | /projects/{project_id}/cost-summary | - |
-| projects | GET | /stats | - |
-| projects | GET | /templates | - |
-| projects | GET | /templates/recommend | - |
-| projects | GET | /templates/{template_id} | - |
-| projects | GET | /templates/{template_id}/usage-statistics | - |
-| projects | GET | /templates/{template_id}/versions | - |
-| projects | GET | /templates/{template_id}/versions/compare | - |
-| projects | GET | /{project_id} | - |
-| projects | GET | /{project_id}/change-impact | - |
-| projects | GET | /{project_id}/dashboard | - |
-| projects | GET | /{project_id}/gate-check/{target_stage} | - |
-| projects | GET | /{project_id}/health/details | - |
-| projects | GET | /{project_id}/lessons-learned | - |
-| projects | GET | /{project_id}/payment-plans | - |
-| projects | GET | /{project_id}/relations | - |
-| projects | GET | /{project_id}/resource-optimization | - |
-| projects | GET | /{project_id}/risk-matrix | - |
-| projects | GET | /{project_id}/status | - |
-| projects | GET | /{project_id}/status-history | - |
-| projects | GET | /{project_id}/summary | - |
-| projects | GET | /{project_id}/sync-status | - |
-| projects | GET | /{project_id}/timeline | - |
-| projects | POST | / | - |
-| projects | POST | /batch/archive | - |
-| projects | POST | /batch/assign-pm | - |
-| projects | POST | /batch/update-stage | - |
-| projects | POST | /batch/update-status | - |
-| projects | POST | /best-practices/recommend | - |
-| projects | POST | /cache/clear | - |
-| projects | POST | /cache/reset-stats | - |
-| projects | POST | /health/batch-calculate | - |
-| projects | POST | /project-reviews | - |
-| projects | POST | /project-reviews-old | - |
-| projects | POST | /project-reviews/best-practices/{practice_id}/apply | - |
-| projects | POST | /project-reviews/best-practices/{practice_id}/reuse | - |
-| projects | POST | /project-reviews/lessons/batch-update | - |
-| projects | POST | /project-reviews/{review_id}/best-practices | - |
-| projects | POST | /project-reviews/{review_id}/lessons | - |
-| projects | POST | /templates | - |
-| projects | POST | /templates/{template_id}/create-project | - |
-| projects | POST | /templates/{template_id}/versions | - |
-| projects | POST | /templates/{template_id}/versions/{version_id}/rollback | - |
-| projects | POST | /{project_id}/auto-discover-relations | - |
-| projects | POST | /{project_id}/check-auto-transition | - |
-| projects | POST | /{project_id}/clone | - |
-| projects | POST | /{project_id}/health/calculate | - |
-| projects | POST | /{project_id}/payment-plans | - |
-| projects | POST | /{project_id}/stage-advance | - |
-| projects | POST | /{project_id}/stages/init | - |
-| projects | POST | /{project_id}/sync-from-contract | - |
-| projects | POST | /{project_id}/sync-to-contract | - |
-| projects | PUT | /payment-plans/{plan_id} | - |
-| projects | PUT | /project-reviews/best-practices/{practice_id} | - |
-| projects | PUT | /project-reviews/best-practices/{practice_id}/validate | - |
-| projects | PUT | /project-reviews/lessons/{lesson_id} | - |
-| projects | PUT | /project-reviews/lessons/{lesson_id}/resolve | - |
-| projects | PUT | /project-reviews/lessons/{lesson_id}/status | - |
-| projects | PUT | /project-reviews/{review_id} | - |
-| projects | PUT | /project-reviews/{review_id}/archive | - |
-| projects | PUT | /project-reviews/{review_id}/publish | - |
-| projects | PUT | /templates/{template_id} | - |
-| projects | PUT | /templates/{template_id}/versions/{version_id}/publish | - |
-| projects | PUT | /{project_id} | - |
-| projects | PUT | /{project_id}/archive | - |
-| projects | PUT | /{project_id}/health | - |
-| projects | PUT | /{project_id}/stage | - |
-| projects | PUT | /{project_id}/status | - |
-| projects | PUT | /{project_id}/unarchive | - |
+| projects | DELETE | /payment-plans/{plan_id} | project:erp:sync |
+| projects | DELETE | /project-reviews/best-practices/{practice_id} | project:erp:sync |
+| projects | DELETE | /project-reviews/lessons/{lesson_id} | project:erp:sync |
+| projects | DELETE | /project-reviews/{review_id} | project:erp:sync |
+| projects | DELETE | /{project_id} | project:erp:sync |
+| projects | GET | / | project:erp:sync |
+| projects | GET | /archived | project:erp:sync |
+| projects | GET | /best-practices | project:erp:sync |
+| projects | GET | /best-practices/categories | project:erp:sync |
+| projects | GET | /best-practices/popular | project:erp:sync |
+| projects | GET | /best-practices/statistics | project:erp:sync |
+| projects | GET | /board | project:erp:sync |
+| projects | GET | /cache/stats | project:erp:sync |
+| projects | GET | /in-production/summary | project:erp:sync |
+| projects | GET | /lessons-learned | project:erp:sync |
+| projects | GET | /lessons-learned/categories | project:erp:sync |
+| projects | GET | /lessons-learned/statistics | project:erp:sync |
+| projects | GET | /project-reviews | project:erp:sync |
+| projects | GET | /project-reviews-old | project:erp:sync |
+| projects | GET | /project-reviews-old/{review_id} | project:erp:sync |
+| projects | GET | /project-reviews/best-practices/{practice_id} | project:erp:sync |
+| projects | GET | /project-reviews/lessons/{lesson_id} | project:erp:sync |
+| projects | GET | /project-reviews/{review_id} | project:erp:sync |
+| projects | GET | /project-reviews/{review_id}/best-practices | project:erp:sync |
+| projects | GET | /project-reviews/{review_id}/lessons | project:erp:sync |
+| projects | GET | /projects/{project_id}/best-practices/recommend | project:erp:sync |
+| projects | GET | /projects/{project_id}/cost-details | project:erp:sync |
+| projects | GET | /projects/{project_id}/cost-summary | project:erp:sync |
+| projects | GET | /stats | project:erp:sync |
+| projects | GET | /templates | project:erp:sync |
+| projects | GET | /templates/recommend | project:erp:sync |
+| projects | GET | /templates/{template_id} | project:erp:sync |
+| projects | GET | /templates/{template_id}/usage-statistics | project:erp:sync |
+| projects | GET | /templates/{template_id}/versions | project:erp:sync |
+| projects | GET | /templates/{template_id}/versions/compare | project:erp:sync |
+| projects | GET | /{project_id} | project:erp:sync |
+| projects | GET | /{project_id}/change-impact | project:erp:sync |
+| projects | GET | /{project_id}/dashboard | project:erp:sync |
+| projects | GET | /{project_id}/erp-status | project:erp:sync |
+| projects | GET | /{project_id}/gate-check/{target_stage} | project:erp:sync |
+| projects | GET | /{project_id}/health/details | project:erp:sync |
+| projects | GET | /{project_id}/lessons-learned | project:erp:sync |
+| projects | GET | /{project_id}/payment-plans | project:erp:sync |
+| projects | GET | /{project_id}/relations | project:erp:sync |
+| projects | GET | /{project_id}/resource-optimization | project:erp:sync |
+| projects | GET | /{project_id}/risk-matrix | project:erp:sync |
+| projects | GET | /{project_id}/status | project:erp:sync |
+| projects | GET | /{project_id}/status-history | project:erp:sync |
+| projects | GET | /{project_id}/summary | project:erp:sync |
+| projects | GET | /{project_id}/sync-status | project:erp:sync |
+| projects | GET | /{project_id}/timeline | project:erp:sync |
+| projects | POST | / | project:erp:sync |
+| projects | POST | /batch/archive | project:erp:sync |
+| projects | POST | /batch/assign-pm | project:erp:sync |
+| projects | POST | /batch/update-stage | project:erp:sync |
+| projects | POST | /batch/update-status | project:erp:sync |
+| projects | POST | /best-practices/recommend | project:erp:sync |
+| projects | POST | /cache/clear | project:erp:sync |
+| projects | POST | /cache/reset-stats | project:erp:sync |
+| projects | POST | /health/batch-calculate | project:erp:sync |
+| projects | POST | /project-reviews | project:erp:sync |
+| projects | POST | /project-reviews-old | project:erp:sync |
+| projects | POST | /project-reviews/best-practices/{practice_id}/apply | project:erp:sync |
+| projects | POST | /project-reviews/best-practices/{practice_id}/reuse | project:erp:sync |
+| projects | POST | /project-reviews/lessons/batch-update | project:erp:sync |
+| projects | POST | /project-reviews/{review_id}/best-practices | project:erp:sync |
+| projects | POST | /project-reviews/{review_id}/lessons | project:erp:sync |
+| projects | POST | /templates | project:erp:sync |
+| projects | POST | /templates/{template_id}/create-project | project:erp:sync |
+| projects | POST | /templates/{template_id}/versions | project:erp:sync |
+| projects | POST | /templates/{template_id}/versions/{version_id}/rollback | project:erp:sync |
+| projects | POST | /{project_id}/auto-discover-relations | project:erp:sync |
+| projects | POST | /{project_id}/check-auto-transition | project:erp:sync |
+| projects | POST | /{project_id}/clone | project:erp:sync |
+| projects | POST | /{project_id}/health/calculate | project:erp:sync |
+| projects | POST | /{project_id}/payment-plans | project:erp:sync |
+| projects | POST | /{project_id}/stage-advance | project:erp:sync |
+| projects | POST | /{project_id}/stages/init | project:erp:sync |
+| projects | POST | /{project_id}/sync-from-contract | project:erp:sync |
+| projects | POST | /{project_id}/sync-to-contract | project:erp:sync |
+| projects | POST | /{project_id}/sync-to-erp | project:erp:sync |
+| projects | PUT | /payment-plans/{plan_id} | project:erp:sync |
+| projects | PUT | /project-reviews/best-practices/{practice_id} | project:erp:sync |
+| projects | PUT | /project-reviews/best-practices/{practice_id}/validate | project:erp:sync |
+| projects | PUT | /project-reviews/lessons/{lesson_id} | project:erp:sync |
+| projects | PUT | /project-reviews/lessons/{lesson_id}/resolve | project:erp:sync |
+| projects | PUT | /project-reviews/lessons/{lesson_id}/status | project:erp:sync |
+| projects | PUT | /project-reviews/{review_id} | project:erp:sync |
+| projects | PUT | /project-reviews/{review_id}/archive | project:erp:sync |
+| projects | PUT | /project-reviews/{review_id}/publish | project:erp:sync |
+| projects | PUT | /templates/{template_id} | project:erp:sync |
+| projects | PUT | /templates/{template_id}/versions/{version_id}/publish | project:erp:sync |
+| projects | PUT | /{project_id} | project:erp:sync |
+| projects | PUT | /{project_id}/archive | project:erp:sync |
+| projects | PUT | /{project_id}/erp-status | project:erp:sync |
+| projects | PUT | /{project_id}/health | project:erp:sync |
+| projects | PUT | /{project_id}/stage | project:erp:sync |
+| projects | PUT | /{project_id}/status | project:erp:sync |
+| projects | PUT | /{project_id}/unarchive | project:erp:sync |
 | purchase | DELETE | /requests/{request_id} | - |
 | purchase | GET | / | - |
 | purchase | GET | /goods-receipts/ | - |
@@ -1009,18 +1051,19 @@
 | report_center | POST | /export-direct | - |
 | report_center | POST | /generate | - |
 | report_center | POST | /templates/apply | - |
-| roles | GET | / | ROLE_VIEW |
-| roles | GET | /config/all | ROLE_VIEW |
-| roles | GET | /my/nav-groups | ROLE_VIEW |
-| roles | GET | /permissions | ROLE_VIEW |
-| roles | GET | /{role_id} | ROLE_VIEW |
-| roles | GET | /{role_id}/nav-groups | ROLE_VIEW |
-| roles | POST | / | ROLE_VIEW |
-| roles | PUT | /{role_id} | ROLE_VIEW |
-| roles | PUT | /{role_id}/nav-groups | ROLE_VIEW |
-| roles | PUT | /{role_id}/permissions | ROLE_VIEW |
+| roles | GET | / | ROLE_CREATE |
+| roles | GET | /config/all | ROLE_CREATE |
+| roles | GET | /my/nav-groups | ROLE_CREATE |
+| roles | GET | /permissions | ROLE_CREATE |
+| roles | GET | /{role_id} | ROLE_CREATE |
+| roles | GET | /{role_id}/nav-groups | ROLE_CREATE |
+| roles | POST | / | ROLE_CREATE |
+| roles | PUT | /{role_id} | ROLE_CREATE |
+| roles | PUT | /{role_id}/nav-groups | ROLE_CREATE |
+| roles | PUT | /{role_id}/permissions | ROLE_CREATE |
 | sales | DELETE | /cost-templates/{template_id} | - |
 | sales | DELETE | /invoices/{invoice_id} | - |
+| sales | DELETE | /leads/{lead_id} | - |
 | sales | DELETE | /purchase-material-costs/{cost_id} | - |
 | sales | DELETE | /quotes/{quote_id}/items/{item_id} | - |
 | sales | GET | /ai-clarifications | - |
@@ -1052,6 +1095,7 @@
 | sales | GET | /invoices/{invoice_id}/approval-status | - |
 | sales | GET | /invoices/{invoice_id}/approvals | - |
 | sales | GET | /invoices/{invoice_id}/pdf | - |
+| sales | GET | /invoices_old | - |
 | sales | GET | /leads | - |
 | sales | GET | /leads/export | - |
 | sales | GET | /leads/{lead_id} | - |
@@ -1066,7 +1110,9 @@
 | sales | GET | /opportunities/{opp_id} | - |
 | sales | GET | /opportunities/{opp_id}/assessments | - |
 | sales | GET | /opportunities/{opp_id}/requirement-freezes | - |
+| sales | GET | /opportunities/{opp_id}/win-probability | - |
 | sales | GET | /payment-plans | - |
+| sales | GET | /payment-plans/{plan_id}/adjustment-history | - |
 | sales | GET | /payments | - |
 | sales | GET | /payments/export | - |
 | sales | GET | /payments/invoices/export | - |
@@ -1101,8 +1147,14 @@
 | sales | GET | /scoring-rules | - |
 | sales | GET | /statistics/funnel | - |
 | sales | GET | /statistics/opportunities-by-stage | - |
+| sales | GET | /statistics/prediction | - |
+| sales | GET | /statistics/prediction/accuracy | - |
 | sales | GET | /statistics/revenue-forecast | - |
 | sales | GET | /statistics/summary | - |
+| sales | GET | /targets | - |
+| sales | GET | /team | - |
+| sales | GET | /team/export | - |
+| sales | GET | /team/ranking | - |
 | sales | POST | /approval-workflows | - |
 | sales | POST | /assessments/{assessment_id}/evaluate | - |
 | sales | POST | /contract-templates | - |
@@ -1139,6 +1191,7 @@
 | sales | POST | /opportunities/{opp_id}/gate | - |
 | sales | POST | /opportunities/{opp_id}/open-items | - |
 | sales | POST | /opportunities/{opp_id}/requirement-freezes | - |
+| sales | POST | /payment-plans/{plan_id}/adjust | - |
 | sales | POST | /payments | - |
 | sales | POST | /purchase-material-costs | - |
 | sales | POST | /purchase-material-costs/match | - |
@@ -1161,6 +1214,7 @@
 | sales | POST | /quotes/{quote_id}/items/auto-match-cost-suggestions | - |
 | sales | POST | /quotes/{quote_id}/versions | - |
 | sales | POST | /scoring-rules | - |
+| sales | POST | /targets | - |
 | sales | PUT | /ai-clarifications/{clarification_id} | - |
 | sales | PUT | /approval-workflows/{workflow_id} | - |
 | sales | PUT | /contract-templates/{template_id} | - |
@@ -1195,12 +1249,17 @@
 | sales | PUT | /quotes/{quote_id}/send | - |
 | sales | PUT | /quotes/{quote_id}/submit | - |
 | sales | PUT | /scoring-rules/{rule_id}/activate | - |
+| sales | PUT | /targets/{target_id} | - |
+| scheduler | GET | /configs | - |
+| scheduler | GET | /configs/{task_id} | - |
 | scheduler | GET | /jobs | - |
 | scheduler | GET | /metrics | - |
 | scheduler | GET | /metrics/prometheus | - |
 | scheduler | GET | /services/list | - |
 | scheduler | GET | /status | - |
+| scheduler | POST | /configs/sync | - |
 | scheduler | POST | /jobs/{job_id}/trigger | - |
+| scheduler | PUT | /configs/{task_id} | - |
 | service | DELETE | /knowledge-base/{article_id} | - |
 | service | DELETE | /service-records/{record_id}/photos/{photo_index} | - |
 | service | GET | /customer-communications | - |
@@ -1400,13 +1459,20 @@
 | timesheet | GET | /month-summary | - |
 | timesheet | GET | /my-summary | - |
 | timesheet | GET | /pending-approval | - |
+| timesheet | GET | /reports/finance | - |
+| timesheet | GET | /reports/hr | - |
+| timesheet | GET | /reports/project | - |
+| timesheet | GET | /reports/rd | - |
 | timesheet | GET | /statistics | - |
+| timesheet | GET | /sync-status/{timesheet_id} | - |
 | timesheet | GET | /week | - |
 | timesheet | GET | /{timesheet_id} | - |
+| timesheet | POST | /aggregate | - |
 | timesheet | POST | /approve | - |
 | timesheet | POST | /batch | - |
 | timesheet | POST | /reject | - |
 | timesheet | POST | /submit | - |
+| timesheet | POST | /sync | - |
 | timesheet | PUT | /batch-approve | - |
 | timesheet | PUT | /{timesheet_id} | - |
 | timesheet | PUT | /{timesheet_id}/approve | - |
@@ -1415,8 +1481,13 @@
 | users | GET | /{user_id} | USER_VIEW |
 | users | GET | /{user_id}/time-allocation | USER_VIEW |
 | users | POST | / | USER_VIEW |
+| users | POST | /batch-toggle-active | USER_VIEW |
+| users | POST | /create-from-employee/{employee_id} | USER_VIEW |
+| users | POST | /sync-from-employees | USER_VIEW |
 | users | PUT | /{user_id} | USER_VIEW |
+| users | PUT | /{user_id}/reset-password | USER_VIEW |
 | users | PUT | /{user_id}/roles | USER_VIEW |
+| users | PUT | /{user_id}/toggle-active | USER_VIEW |
 | work_log | DELETE | /work-logs/{work_log_id} | work_log:config:create |
 | work_log | GET | /work-logs | work_log:config:create |
 | work_log | GET | /work-logs/config | work_log:config:create |
@@ -1437,9 +1508,13 @@
 ## 三、数据库权限列表
 | 权限编码 | 权限名称 | 模块 | 资源 | 操作 | 来源文件 |
 |---------|---------|------|------|------|----------|
-| ecn:ecn:read | ECN查看 | ecn | read |  | 20260115_ecn_permissions_sqlite.sql |
-| system:user:read | User Read | system | read |  | 20250712_permissions_z_seed_sqlite.sql |
-| system:user:read | User Read | system | read |  | 20250712_permissions_seed_sqlite.sql |
+| ecn:ecn:read | ECN查看 | ecn |  | read | 20260115_ecn_permissions_sqlite.sql |
+| performance:manage | 绩效管理 | performance | performance | manage | 20260120_missing_permissions_sqlite.sql |
+| project:erp:sync | ERP同步 | project | erp | sync | 20260120_missing_permissions_sqlite.sql |
+| system:user:read | 用户查看 | system | user | read | 20260120_missing_permissions_sqlite.sql |
+| system:user:read | User Read | system |  | read | 20250712_permissions_z_seed_sqlite.sql |
+| system:user:read | User Read | system |  | read | 20250712_permissions_seed_sqlite.sql |
+| work_log:config:read | 工作日志配置查看 | work_log | config | read | 20260120_missing_permissions_sqlite.sql |
 
 ## 四、权限使用情况
 | 权限编码 | 使用模块 | 使用文件 |
@@ -1447,12 +1522,13 @@
 | AUDIT_VIEW | audits | audits.py |
 | ROLE_CREATE | roles | roles.py |
 | ROLE_UPDATE | roles | roles.py |
-| ROLE_VIEW | roles | roles.py |
 | USER_CREATE | users | users.py |
 | USER_DELETE | users | users.py |
 | USER_UPDATE | users | users.py |
 | USER_VIEW | users | users.py |
 | performance:manage | performance | performance.py |
+| project:erp:sync | projects | projects.py |
+| project:erp:update | projects | projects.py |
 | work_log:config:create | work_log | work_log.py |
 | work_log:config:read | work_log | work_log.py |
 | work_log:config:update | work_log | work_log.py |
@@ -1461,7 +1537,7 @@
 以下权限在数据库中定义但未在代码中使用：
 
 - `ecn:ecn:read` - ECN查看 (ecn)
-- `system:user:read` - User Read (system)
+- `system:user:read` - 用户查看 (system)
 
 ## 六、未定义的权限
 以下权限在代码中使用但未在数据库中定义：
@@ -1469,12 +1545,10 @@
 - `AUDIT_VIEW`
 - `ROLE_CREATE`
 - `ROLE_UPDATE`
-- `ROLE_VIEW`
 - `USER_CREATE`
 - `USER_DELETE`
 - `USER_UPDATE`
 - `USER_VIEW`
-- `performance:manage`
+- `project:erp:update`
 - `work_log:config:create`
-- `work_log:config:read`
 - `work_log:config:update`
