@@ -12,20 +12,12 @@ const api = axios.create({
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
-        const url = config.url || '';
-        
-        // 调试日志（总是启用，帮助诊断问题）
-        } ${url}`);
-        ? '演示账号token' : `真实token (${token.substring(0, 20)}...)`) : '未找到token');
-        
+
         // 如果是演示账号的 token，不发送 Authorization header，避免后端返回 401
         if (token && !token.startsWith('demo_token_')) {
             config.headers.Authorization = `Bearer ${token}`;
-        } else if (!token) {
-            ');
-        } else {
         }
-        
+
         return config;
     },
     (error) => Promise.reject(error)

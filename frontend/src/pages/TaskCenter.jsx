@@ -962,11 +962,10 @@ export default function TaskCenter() {
           </Card>
         ))}
       </motion.div>
-      )}
 
       {/* Filters */}
       {!error && (
-      <motion.div variants={fadeIn}>
+        <motion.div variants={fadeIn}>
         <Card className="bg-surface-1/50">
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
@@ -1085,7 +1084,6 @@ export default function TaskCenter() {
               : '点击"新建任务"开始工作'}
           </p>
         </motion.div>
-      )}
       )}
     </motion.div>
   )

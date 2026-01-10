@@ -55,8 +55,7 @@ export default function PermissionManagement() {
     try {
       // 检查token是否存在
       const token = localStorage.getItem('token');
-      ? '演示账号token' : `真实token (${token.substring(0, 30)}...)`) : '❌ 未找到token');
-      
+
       if (!token) {
         alert('未找到认证token，请重新登录');
         window.location.href = '/';

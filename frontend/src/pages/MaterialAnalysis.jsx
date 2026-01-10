@@ -1080,7 +1080,7 @@ export default function MaterialAnalysis() {
       })
       const projects = projectsResponse.data?.items || projectsResponse.data || []
 
-      const processData = []
+      let processData = []
       for (const project of projects) {
         try {
           // Get latest readiness analysis for this project

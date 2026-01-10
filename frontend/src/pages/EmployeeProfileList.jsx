@@ -82,12 +82,10 @@ export default function EmployeeProfileList() {
       const response = await staffMatchingApi.getProfiles(params);
       // API 直接返回数组，不是 items 包装
       const data = response.data || response;
-      );
       if (Array.isArray(data)) {
         setProfiles(data);
       } else if (data?.items) {
         setProfiles(data.items);
-      } else {
       }
     } catch (error) {
       console.error('操作失败:', error)
