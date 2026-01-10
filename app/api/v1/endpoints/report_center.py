@@ -96,17 +96,10 @@ def get_role_report_matrix(
     """
     角色-报表权限矩阵（权限配置）
     """
-    # TODO: 从数据库或配置读取权限矩阵
-    matrix = {
-        "PROJECT_MANAGER": ["PROJECT_WEEKLY", "PROJECT_MONTHLY", "COST_ANALYSIS", "RISK_REPORT"],
-        "DEPARTMENT_MANAGER": ["DEPT_WEEKLY", "DEPT_MONTHLY", "WORKLOAD_ANALYSIS"],
-        "ADMINISTRATIVE_MANAGER": ["COMPANY_MONTHLY", "DEPT_MONTHLY", "WORKLOAD_ANALYSIS"],
-        "HR_MANAGER": ["WORKLOAD_ANALYSIS", "DEPT_MONTHLY"],
-        "FINANCE_MANAGER": ["COST_ANALYSIS", "COMPANY_MONTHLY"],
-        "ENGINEER": ["PROJECT_WEEKLY"],
-        "CUSTOM": ["CUSTOM"]  # 所有角色都可以创建自定义报表
-    }
-    
+    from app.services.report_data_generation_service import report_data_service
+
+    matrix = report_data_service.ROLE_REPORT_MATRIX
+
     return RoleReportMatrixResponse(matrix=matrix)
 
 
@@ -122,18 +115,32 @@ def generate_report(
     """
     生成报表（按角色/类型）
     """
-    # TODO: 检查权限
-    
+    from app.services.report_data_generation_service import report_data_service
+
+    # 检查权限
+    if not report_data_service.check_permission(db, current_user, generate_in.report_type, generate_in.role):
+        raise HTTPException(
+            status_code=403,
+            detail=f"您没有权限生成 {generate_in.report_type} 类型的报表"
+        )
+
     # 生成报表编码
     report_code = f"RPT-{datetime.now().strftime('%y%m%d%H%M%S')}"
-    
-    # TODO: 根据报表类型和角色生成数据
-    report_data = {
-        "summary": {},
-        "details": [],
-        "charts": []
-    }
-    
+
+    # 根据报表类型和角色生成数据
+    report_data = report_data_service.generate_report_by_type(
+        db,
+        generate_in.report_type,
+        generate_in.project_id,
+        generate_in.department_id,
+        generate_in.start_date,
+        generate_in.end_date
+    )
+
+    # 如果有错误，返回错误信息
+    if "error" in report_data:
+        raise HTTPException(status_code=400, detail=report_data["error"])
+
     # 创建报表生成记录
     generation = ReportGeneration(
         report_type=generate_in.report_type,
@@ -147,11 +154,11 @@ def generate_report(
         status="GENERATED",
         generated_by=current_user.id
     )
-    
+
     db.add(generation)
     db.commit()
     db.refresh(generation)
-    
+
     return ReportGenerateResponse(
         report_id=generation.id,
         report_code=report_code,
@@ -173,12 +180,25 @@ def preview_report(
     """
     预览报表（简化版预览）
     """
-    # TODO: 生成预览数据
-    preview_data = {
-        "summary": "预览数据",
-        "sections": []
-    }
-    
+    from app.services.report_data_generation_service import report_data_service
+
+    # 生成预览数据（使用默认时间范围）
+    end_date = date.today()
+    start_date = end_date - timedelta(days=7)
+
+    preview_data = report_data_service.generate_report_by_type(
+        db,
+        report_type,
+        project_id,
+        None,  # department_id
+        start_date,
+        end_date
+    )
+
+    # 添加可用的字段列表
+    preview_data["available_fields"] = list(preview_data.get("summary", {}).keys())
+    preview_data["sections"] = [k for k in preview_data.keys() if k not in ["summary", "available_fields", "error"]]
+
     return ReportPreviewResponse(
         report_type=report_type,
         preview_data=preview_data
@@ -195,13 +215,64 @@ def compare_role_perspectives(
     """
     比较角色视角（多角色对比）
     """
-    # TODO: 生成各角色视角的数据并对比
+    from app.services.report_data_generation_service import report_data_service
+
+    # 为每个角色生成报表数据
+    role_data = {}
+    for role in compare_in.roles:
+        report_data = report_data_service.generate_report_by_type(
+            db,
+            compare_in.report_type,
+            compare_in.project_id,
+            compare_in.department_id,
+            compare_in.start_date,
+            compare_in.end_date
+        )
+        role_data[role] = report_data
+
+    # 分析差异
+    differences = []
+    common_points = []
+
+    # 比较摘要数据
+    if role_data:
+        first_role = compare_in.roles[0]
+        first_summary = role_data.get(first_role, {}).get("summary", {})
+
+        for key, value in first_summary.items():
+            is_common = True
+            values_by_role = {}
+
+            for role in compare_in.roles:
+                role_summary = role_data.get(role, {}).get("summary", {})
+                role_value = role_summary.get(key)
+
+                if role != first_role:
+                    if role_value != value:
+                        is_common = False
+
+                values_by_role[role] = role_value
+
+            if is_common and value is not None:
+                common_points.append({
+                    "field": key,
+                    "value": value,
+                    "description": f"所有角色在此项上一致"
+                })
+            elif values_by_role:
+                differences.append({
+                    "field": key,
+                    "values": values_by_role,
+                    "description": f"各角色在此项上存在差异"
+                })
+
     comparison_data = {
         "roles": compare_in.roles,
-        "differences": [],
-        "common_points": []
+        "role_data": role_data,
+        "differences": differences,
+        "common_points": common_points
     }
-    
+
     return ReportCompareResponse(
         report_type=compare_in.report_type,
         comparison_data=comparison_data

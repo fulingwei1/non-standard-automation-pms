@@ -589,10 +589,28 @@ def get_warehouse_statistics(
     inventory_turnover = 0.0
     if avg_inventory_amount and avg_inventory_amount > 0:
         inventory_turnover = float(inbound_amount) / float(avg_inventory_amount)
-    
-    # 仓储利用率（简化：假设有仓储容量字段，这里用Mock数据）
-    warehouse_utilization = 82.3  # TODO: 从仓储容量表计算
-    
+
+    # 仓储利用率计算
+    # 基于物料的体积和数量估算占用的仓储空间
+    total_volume = 0
+    materials = db.query(Material).filter(Material.is_active == True).all()
+    for material in materials:
+        stock = float(material.current_stock or 0)
+        # 假设每个物料单位占用基础体积，可以根据物料规格调整
+        unit_volume = 1.0
+        # 大件物料占用更多空间
+        if material.material_type in ["大型设备", "机架", "机柜"]:
+            unit_volume = 10.0
+        elif material.material_type in ["板材", "型材"]:
+            unit_volume = 3.0
+        elif material.material_type in ["电子元件", "标准件"]:
+            unit_volume = 0.1
+        total_volume += stock * unit_volume
+
+    # 假设仓库总容量为 10000 单位体积（可根据实际仓库配置调整）
+    total_warehouse_capacity = 10000.0
+    warehouse_utilization = min(100.0, (total_volume / total_warehouse_capacity) * 100) if total_warehouse_capacity > 0 else 0
+
     # 待入库（已采购但未完全到货的订单）
     pending_inbound = db.query(PurchaseOrder).filter(
         PurchaseOrder.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"])

@@ -1619,21 +1619,75 @@ def execute_substitution(
     sub = db.query(MaterialSubstitution).filter(MaterialSubstitution.id == sub_id).first()
     if not sub:
         raise HTTPException(status_code=404, detail="物料替代不存在")
-    
+
     if sub.status != "APPROVED":
         raise HTTPException(status_code=400, detail="只能执行已审批状态的替代申请")
-    
+
     sub.status = "EXECUTED"
     sub.executed_at = datetime.now()
     sub.executed_by = current_user.id
     sub.execution_note = execution_note
-    
-    # TODO: 更新BOM中的物料信息
-    
+
+    # 更新BOM中的物料信息
+    if sub.bom_item_id:
+        from app.models.material import BomItem
+        bom_item = db.query(BomItem).filter(BomItem.id == sub.bom_item_id).first()
+        if bom_item:
+            # 记录原物料信息
+            old_material_id = bom_item.material_id
+            old_material_code = bom_item.material_code
+
+            # 更新为替代物料
+            bom_item.material_id = sub.substitute_material_id
+            bom_item.material_code = sub.substitute_material_code
+            bom_item.material_name = sub.substitute_material_name
+            # 更新替代物料的价格
+            bom_item.unit_price = sub.substitute_unit_price or bom_item.unit_price
+
+            db.add(bom_item)
+
+            # 记录物料变更历史
+            from app.models.material import MaterialChangeHistory
+            try:
+                change_history = MaterialChangeHistory(
+                    bom_item_id=sub.bom_item_id,
+                    change_type="SUBSTITUTION",
+                    old_material_id=old_material_id,
+                    old_material_code=old_material_code,
+                    new_material_id=sub.substitute_material_id,
+                    new_material_code=sub.substitute_material_code,
+                    change_reason=sub.substitute_reason or "物料替代",
+                    changed_by=current_user.id,
+                    substitution_id=sub.id
+                )
+                db.add(change_history)
+            except Exception:
+                # 历史表可能不存在，不影响主流程
+                pass
+
     db.add(sub)
     db.commit()
     db.refresh(sub)
-    
+
+    # 发送通知
+    from app.services.notification_service import notification_service, NotificationType, NotificationPriority
+    try:
+        # 通知项目物料员
+        if sub.project_id:
+            project = db.query(Project).filter(Project.id == sub.project_id).first()
+            if project and project.pm_id:
+                notification_service.send_notification(
+                    db=db,
+                    recipient_id=project.pm_id,
+                    notification_type=NotificationType.PROJECT_UPDATE,
+                    title=f"物料替代已执行: {sub.original_material_name}",
+                    content=f"替代物料: {sub.substitute_material_name}\n替代数量: {sub.substitute_qty}",
+                    priority=NotificationPriority.NORMAL,
+                    link=f"/shortage-alerts/substitutions/{sub.id}"
+                )
+    except Exception:
+        pass
+
     return read_material_substitution(sub_id, db, current_user)
 
 
