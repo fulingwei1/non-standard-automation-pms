@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.core.security import get_current_active_user
+from app.core.security import get_current_active_user, has_scheduler_admin_access
 from app.models.user import User
 from app.models.scheduler_config import SchedulerTaskConfig
 from app.schemas.common import ResponseModel
@@ -196,10 +196,10 @@ def trigger_job(
     手动触发指定任务
     注意：需要管理员权限
     """
-    # TODO: 添加管理员权限检查
-    # if not current_user.is_admin:
-    #     raise HTTPException(status_code=403, detail="需要管理员权限")
-    
+    # 检查管理员权限
+    if not has_scheduler_admin_access(current_user):
+        raise HTTPException(status_code=403, detail="需要管理员权限才能手动触发任务")
+
     try:
         from app.utils.scheduler import scheduler
         
@@ -531,10 +531,10 @@ def update_task_config(
     更新定时任务配置（频率、启用状态等）
     注意：需要管理员权限
     """
-    # TODO: 添加管理员权限检查
-    # if not current_user.is_admin:
-    #     raise HTTPException(status_code=403, detail="需要管理员权限")
-    
+    # 检查管理员权限
+    if not has_scheduler_admin_access(current_user):
+        raise HTTPException(status_code=403, detail="需要管理员权限才能更新任务配置")
+
     try:
         config = db.query(SchedulerTaskConfig).filter(
             SchedulerTaskConfig.task_id == task_id
@@ -601,10 +601,10 @@ def sync_task_configs(
     从 scheduler_config.py 同步任务配置到数据库
     用于初始化或更新配置
     """
-    # TODO: 添加管理员权限检查
-    # if not current_user.is_admin:
-    #     raise HTTPException(status_code=403, detail="需要管理员权限")
-    
+    # 检查管理员权限
+    if not has_scheduler_admin_access(current_user):
+        raise HTTPException(status_code=403, detail="需要管理员权限才能同步任务配置")
+
     try:
         from app.utils.scheduler_config import SCHEDULER_TASKS
         

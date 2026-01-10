@@ -433,12 +433,14 @@ def approve_timesheet(
     timesheet = db.query(Timesheet).filter(Timesheet.id == timesheet_id).first()
     if not timesheet:
         raise HTTPException(status_code=404, detail="工时记录不存在")
-    
+
     if timesheet.status != "PENDING":
         raise HTTPException(status_code=400, detail="只能审批待审核状态的记录")
-    
-    # TODO: 检查审批权限
-    
+
+    # 检查审批权限
+    if not security.has_timesheet_approval_access(current_user, db, timesheet.user_id, timesheet.department_id):
+        raise HTTPException(status_code=403, detail="您没有权限审批此工时记录")
+
     timesheet.status = "APPROVED"
     timesheet.approver_id = current_user.id
     timesheet.approver_name = current_user.real_name or current_user.username
@@ -488,9 +490,11 @@ def approve_timesheets(
     
     if not timesheets:
         raise HTTPException(status_code=400, detail="没有待审核的记录")
-    
-    # TODO: 检查审批权限
-    
+
+    # 检查审批权限
+    if not security.check_timesheet_approval_permission(current_user, db, timesheets):
+        raise HTTPException(status_code=403, detail="您没有权限审批这些工时记录")
+
     for ts in timesheets:
         ts.status = "APPROVED"
         ts.approver_id = current_user.id
@@ -772,10 +776,40 @@ def get_pending_approval_timesheets(
     """
     待审核列表（审核人视角）
     """
-    # TODO: 检查审批权限
-    
+    # 过滤出用户有权限审批的工时记录
+    # 项目经理只能看到本项目的工时，部门经理只能看到本部门的工时
     query = db.query(Timesheet).filter(Timesheet.status == "PENDING")
-    
+
+    # 如果不是超级用户，需要根据角色过滤
+    if not current_user.is_superuser:
+        # 检查用户是否是项目经理
+        from app.models.project import Project
+        user_projects = db.query(Project).filter(Project.pm_id == current_user.id).all()
+        project_ids = [p.id for p in user_projects]
+
+        # 检查用户是否是部门经理
+        is_dept_manager = any(
+            ur.role.role_code.lower() in ['dept_manager', 'department_manager', '部门经理']
+            for ur in current_user.roles
+        ) if current_user.roles else False
+
+        # 根据角色过滤数据
+        if project_ids and is_dept_manager:
+            # 既是项目经理又是部门经理，可以看到项目和部门的工时
+            query = query.filter(
+                (Timesheet.project_id.in_(project_ids)) |
+                (Timesheet.department_id == current_user.department_id)
+            )
+        elif project_ids:
+            # 只是项目经理，只能看到项目工时
+            query = query.filter(Timesheet.project_id.in_(project_ids))
+        elif is_dept_manager and current_user.department_id:
+            # 只是部门经理，只能看到部门工时
+            query = query.filter(Timesheet.department_id == current_user.department_id)
+        else:
+            # 其他情况，返回空列表
+            query = query.filter(Timesheet.id == -1)
+
     if user_id:
         query = query.filter(Timesheet.user_id == user_id)
     if project_id:
