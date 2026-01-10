@@ -3,8 +3,8 @@
  * Features: Opportunity list, creation, update, gate management
  */
 
-import { useState, useEffect, useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
 import {
   Search,
   Filter,
@@ -20,8 +20,8 @@ import {
   Edit,
   Eye,
   ArrowRight,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -42,213 +42,238 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../components/ui'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { opportunityApi, customerApi } from '../services/api'
+} from "../components/ui";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { opportunityApi, customerApi } from "../services/api";
 
 // 商机阶段配置
 const stageConfig = {
-  DISCOVERY: { label: '需求澄清', color: 'bg-blue-500', textColor: 'text-blue-400' },
-  QUALIFIED: { label: '商机合格', color: 'bg-emerald-500', textColor: 'text-emerald-400' },
-  PROPOSAL: { label: '方案/报价中', color: 'bg-amber-500', textColor: 'text-amber-400' },
-  NEGOTIATION: { label: '商务谈判', color: 'bg-purple-500', textColor: 'text-purple-400' },
-  WON: { label: '赢单', color: 'bg-green-500', textColor: 'text-green-400' },
-  LOST: { label: '丢单', color: 'bg-red-500', textColor: 'text-red-400' },
-  ON_HOLD: { label: '暂停', color: 'bg-slate-500', textColor: 'text-slate-400' },
-}
+  DISCOVERY: {
+    label: "需求澄清",
+    color: "bg-blue-500",
+    textColor: "text-blue-400",
+  },
+  QUALIFIED: {
+    label: "商机合格",
+    color: "bg-emerald-500",
+    textColor: "text-emerald-400",
+  },
+  PROPOSAL: {
+    label: "方案/报价中",
+    color: "bg-amber-500",
+    textColor: "text-amber-400",
+  },
+  NEGOTIATION: {
+    label: "商务谈判",
+    color: "bg-purple-500",
+    textColor: "text-purple-400",
+  },
+  WON: { label: "赢单", color: "bg-green-500", textColor: "text-green-400" },
+  LOST: { label: "丢单", color: "bg-red-500", textColor: "text-red-400" },
+  ON_HOLD: {
+    label: "暂停",
+    color: "bg-slate-500",
+    textColor: "text-slate-400",
+  },
+};
 
 export default function OpportunityManagement() {
-  const [opportunities, setOpportunities] = useState([])
-  const [customers, setCustomers] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [stageFilter, setStageFilter] = useState('all')
-  const [selectedOpp, setSelectedOpp] = useState(null)
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [showEditDialog, setShowEditDialog] = useState(false)
-  const [showGateDialog, setShowGateDialog] = useState(false)
-  const [showDetailDialog, setShowDetailDialog] = useState(false)
-  const [page, setPage] = useState(1)
-  const [total, setTotal] = useState(0)
-  const pageSize = 20
+  const [opportunities, setOpportunities] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [stageFilter, setStageFilter] = useState("all");
+  const [selectedOpp, setSelectedOpp] = useState(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showGateDialog, setShowGateDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const pageSize = 20;
 
   const [formData, setFormData] = useState({
-    customer_id: '',
-    opp_name: '',
-    project_type: '',
-    equipment_type: '',
-    stage: 'DISCOVERY',
-    est_amount: '',
-    est_margin: '',
-    budget_range: '',
-    decision_chain: '',
-    delivery_window: '',
-    acceptance_basis: '',
+    customer_id: "",
+    opp_name: "",
+    project_type: "",
+    equipment_type: "",
+    stage: "DISCOVERY",
+    est_amount: "",
+    est_margin: "",
+    budget_range: "",
+    decision_chain: "",
+    delivery_window: "",
+    acceptance_basis: "",
     requirement: {
-      product_object: '',
-      ct_seconds: '',
-      interface_desc: '',
-      site_constraints: '',
-      acceptance_criteria: '',
+      product_object: "",
+      ct_seconds: "",
+      interface_desc: "",
+      site_constraints: "",
+      acceptance_criteria: "",
     },
-  })
+  });
 
   const [gateData, setGateData] = useState({
-    gate_status: 'PASS',
-    remark: '',
-  })
+    gate_status: "PASS",
+    remark: "",
+  });
 
   const loadOpportunities = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const params = {
         page,
         page_size: pageSize,
         keyword: searchTerm || undefined,
-        stage: stageFilter !== 'all' ? stageFilter : undefined,
-      }
-      const response = await opportunityApi.list(params)
+        stage: stageFilter !== "all" ? stageFilter : undefined,
+      };
+      const response = await opportunityApi.list(params);
       if (response.data && response.data.items) {
-        setOpportunities(response.data.items)
-        setTotal(response.data.total || 0)
+        setOpportunities(response.data.items);
+        setTotal(response.data.total || 0);
       }
     } catch (error) {
-      console.error('加载商机列表失败:', error)
+      console.error("加载商机列表失败:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const loadCustomers = async () => {
     try {
-      const response = await customerApi.list({ page: 1, page_size: 100 })
+      const response = await customerApi.list({ page: 1, page_size: 100 });
       if (response.data && response.data.items) {
-        setCustomers(response.data.items)
+        setCustomers(response.data.items);
       }
     } catch (error) {
-      console.error('加载客户列表失败:', error)
+      console.error("加载客户列表失败:", error);
     }
-  }
+  };
 
   useEffect(() => {
-    loadOpportunities()
-  }, [page, searchTerm, stageFilter])
+    loadOpportunities();
+  }, [page, searchTerm, stageFilter]);
 
   useEffect(() => {
-    loadCustomers()
-  }, [])
+    loadCustomers();
+  }, []);
 
   const handleCreate = async () => {
     try {
-      await opportunityApi.create(formData)
-      setShowCreateDialog(false)
-      resetForm()
-      loadOpportunities()
+      await opportunityApi.create(formData);
+      setShowCreateDialog(false);
+      resetForm();
+      loadOpportunities();
     } catch (error) {
-      console.error('创建商机失败:', error)
-      alert('创建商机失败: ' + (error.response?.data?.detail || error.message))
+      console.error("创建商机失败:", error);
+      alert("创建商机失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const handleUpdate = async () => {
-    if (!selectedOpp) return
+    if (!selectedOpp) return;
     try {
-      await opportunityApi.update(selectedOpp.id, formData)
-      setShowEditDialog(false)
-      setSelectedOpp(null)
-      loadOpportunities()
+      await opportunityApi.update(selectedOpp.id, formData);
+      setShowEditDialog(false);
+      setSelectedOpp(null);
+      loadOpportunities();
     } catch (error) {
-      console.error('更新商机失败:', error)
-      alert('更新商机失败: ' + (error.response?.data?.detail || error.message))
+      console.error("更新商机失败:", error);
+      alert("更新商机失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const handleSubmitGate = async () => {
-    if (!selectedOpp) return
+    if (!selectedOpp) return;
     try {
-      await opportunityApi.submitGate(selectedOpp.id, gateData)
-      setShowGateDialog(false)
-      setSelectedOpp(null)
-      loadOpportunities()
+      await opportunityApi.submitGate(selectedOpp.id, gateData);
+      setShowGateDialog(false);
+      setSelectedOpp(null);
+      loadOpportunities();
     } catch (error) {
-      console.error('提交阶段门失败:', error)
-      alert('提交阶段门失败: ' + (error.response?.data?.detail || error.message))
+      console.error("提交阶段门失败:", error);
+      alert(
+        "提交阶段门失败: " + (error.response?.data?.detail || error.message),
+      );
     }
-  }
+  };
 
   const handleEdit = (opp) => {
-    setSelectedOpp(opp)
+    setSelectedOpp(opp);
     setFormData({
-      customer_id: opp.customer_id || '',
-      opp_name: opp.opp_name || '',
-      project_type: opp.project_type || '',
-      equipment_type: opp.equipment_type || '',
-      stage: opp.stage || 'DISCOVERY',
-      est_amount: opp.est_amount || '',
-      est_margin: opp.est_margin || '',
-      budget_range: opp.budget_range || '',
-      decision_chain: opp.decision_chain || '',
-      delivery_window: opp.delivery_window || '',
-      acceptance_basis: opp.acceptance_basis || '',
+      customer_id: opp.customer_id || "",
+      opp_name: opp.opp_name || "",
+      project_type: opp.project_type || "",
+      equipment_type: opp.equipment_type || "",
+      stage: opp.stage || "DISCOVERY",
+      est_amount: opp.est_amount || "",
+      est_margin: opp.est_margin || "",
+      budget_range: opp.budget_range || "",
+      decision_chain: opp.decision_chain || "",
+      delivery_window: opp.delivery_window || "",
+      acceptance_basis: opp.acceptance_basis || "",
       requirement: opp.requirement || {
-        product_object: '',
-        ct_seconds: '',
-        interface_desc: '',
-        site_constraints: '',
-        acceptance_criteria: '',
+        product_object: "",
+        ct_seconds: "",
+        interface_desc: "",
+        site_constraints: "",
+        acceptance_criteria: "",
       },
-    })
-    setShowEditDialog(true)
-  }
+    });
+    setShowEditDialog(true);
+  };
 
   const resetForm = () => {
     setFormData({
-      customer_id: '',
-      opp_name: '',
-      project_type: '',
-      equipment_type: '',
-      stage: 'DISCOVERY',
-      est_amount: '',
-      est_margin: '',
-      budget_range: '',
-      decision_chain: '',
-      delivery_window: '',
-      acceptance_basis: '',
+      customer_id: "",
+      opp_name: "",
+      project_type: "",
+      equipment_type: "",
+      stage: "DISCOVERY",
+      est_amount: "",
+      est_margin: "",
+      budget_range: "",
+      decision_chain: "",
+      delivery_window: "",
+      acceptance_basis: "",
       requirement: {
-        product_object: '',
-        ct_seconds: '',
-        interface_desc: '',
-        site_constraints: '',
-        acceptance_criteria: '',
+        product_object: "",
+        ct_seconds: "",
+        interface_desc: "",
+        site_constraints: "",
+        acceptance_criteria: "",
       },
-    })
-  }
+    });
+  };
 
   // 查看详情
   const handleViewDetail = async (opp) => {
     try {
-      const response = await opportunityApi.get(opp.id)
+      const response = await opportunityApi.get(opp.id);
       if (response.data) {
-        setSelectedOpp(response.data)
-        setShowDetailDialog(true)
+        setSelectedOpp(response.data);
+        setShowDetailDialog(true);
       }
     } catch (error) {
-      console.error('加载商机详情失败:', error)
-      setSelectedOpp(opp)
-      setShowDetailDialog(true)
+      console.error("加载商机详情失败:", error);
+      setSelectedOpp(opp);
+      setShowDetailDialog(true);
     }
-  }
+  };
 
   const stats = useMemo(() => {
     return {
       total: total,
-      discovery: opportunities.filter((o) => o.stage === 'DISCOVERY').length,
-      proposal: opportunities.filter((o) => o.stage === 'PROPOSAL').length,
-      won: opportunities.filter((o) => o.stage === 'WON').length,
-      totalAmount: opportunities.reduce((sum, o) => sum + (parseFloat(o.est_amount) || 0), 0),
-    }
-  }, [opportunities, total])
+      discovery: opportunities.filter((o) => o.stage === "DISCOVERY").length,
+      proposal: opportunities.filter((o) => o.stage === "PROPOSAL").length,
+      won: opportunities.filter((o) => o.stage === "WON").length,
+      totalAmount: opportunities.reduce(
+        (sum, o) => sum + (parseFloat(o.est_amount) || 0),
+        0,
+      ),
+    };
+  }, [opportunities, total]);
 
   return (
     <motion.div
@@ -286,7 +311,9 @@ export default function OpportunityManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">需求澄清</p>
-                <p className="text-2xl font-bold text-white">{stats.discovery}</p>
+                <p className="text-2xl font-bold text-white">
+                  {stats.discovery}
+                </p>
               </div>
               <Clock className="h-8 w-8 text-blue-400" />
             </div>
@@ -297,7 +324,9 @@ export default function OpportunityManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">报价中</p>
-                <p className="text-2xl font-bold text-white">{stats.proposal}</p>
+                <p className="text-2xl font-bold text-white">
+                  {stats.proposal}
+                </p>
               </div>
               <DollarSign className="h-8 w-8 text-amber-400" />
             </div>
@@ -335,13 +364,21 @@ export default function OpportunityManagement() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
                   <Filter className="mr-2 h-4 w-4" />
-                  阶段: {stageFilter === 'all' ? '全部' : stageConfig[stageFilter]?.label}
+                  阶段:{" "}
+                  {stageFilter === "all"
+                    ? "全部"
+                    : stageConfig[stageFilter]?.label}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setStageFilter('all')}>全部</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStageFilter("all")}>
+                  全部
+                </DropdownMenuItem>
                 {Object.entries(stageConfig).map(([key, config]) => (
-                  <DropdownMenuItem key={key} onClick={() => setStageFilter(key)}>
+                  <DropdownMenuItem
+                    key={key}
+                    onClick={() => setStageFilter(key)}
+                  >
                     {config.label}
                   </DropdownMenuItem>
                 ))}
@@ -369,7 +406,9 @@ export default function OpportunityManagement() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="text-lg">{opp.opp_code}</CardTitle>
-                      <p className="text-sm text-slate-400 mt-1">{opp.opp_name}</p>
+                      <p className="text-sm text-slate-400 mt-1">
+                        {opp.opp_name}
+                      </p>
                     </div>
                     <Badge className={cn(stageConfig[opp.stage]?.color)}>
                       {stageConfig[opp.stage]?.label}
@@ -418,8 +457,8 @@ export default function OpportunityManagement() {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        setSelectedOpp(opp)
-                        setShowGateDialog(true)
+                        setSelectedOpp(opp);
+                        setShowGateDialog(true);
                       }}
                       className="flex-1"
                     >
@@ -437,7 +476,11 @@ export default function OpportunityManagement() {
       {/* 分页 */}
       {total > pageSize && (
         <div className="flex justify-center gap-2">
-          <Button variant="outline" disabled={page === 1} onClick={() => setPage(page - 1)}>
+          <Button
+            variant="outline"
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+          >
             上一页
           </Button>
           <span className="flex items-center px-4 text-slate-400">
@@ -466,7 +509,9 @@ export default function OpportunityManagement() {
                 <Label>客户 *</Label>
                 <select
                   value={formData.customer_id}
-                  onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, customer_id: e.target.value })
+                  }
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
                 >
                   <option value="">请选择客户</option>
@@ -481,7 +526,9 @@ export default function OpportunityManagement() {
                 <Label>商机名称 *</Label>
                 <Input
                   value={formData.opp_name}
-                  onChange={(e) => setFormData({ ...formData, opp_name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, opp_name: e.target.value })
+                  }
                   placeholder="请输入商机名称"
                 />
               </div>
@@ -489,7 +536,9 @@ export default function OpportunityManagement() {
                 <Label>项目类型</Label>
                 <Input
                   value={formData.project_type}
-                  onChange={(e) => setFormData({ ...formData, project_type: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, project_type: e.target.value })
+                  }
                   placeholder="单机/线体/改造"
                 />
               </div>
@@ -497,7 +546,9 @@ export default function OpportunityManagement() {
                 <Label>设备类型</Label>
                 <Input
                   value={formData.equipment_type}
-                  onChange={(e) => setFormData({ ...formData, equipment_type: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, equipment_type: e.target.value })
+                  }
                   placeholder="ICT/FCT/EOL"
                 />
               </div>
@@ -505,7 +556,9 @@ export default function OpportunityManagement() {
                 <Label>阶段</Label>
                 <select
                   value={formData.stage}
-                  onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, stage: e.target.value })
+                  }
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
                 >
                   {Object.entries(stageConfig).map(([key, config]) => (
@@ -520,7 +573,9 @@ export default function OpportunityManagement() {
                 <Input
                   type="number"
                   value={formData.est_amount}
-                  onChange={(e) => setFormData({ ...formData, est_amount: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, est_amount: e.target.value })
+                  }
                   placeholder="请输入预估金额"
                 />
               </div>
@@ -529,7 +584,9 @@ export default function OpportunityManagement() {
                 <Input
                   type="number"
                   value={formData.est_margin}
-                  onChange={(e) => setFormData({ ...formData, est_margin: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, est_margin: e.target.value })
+                  }
                   placeholder="请输入预估毛利率"
                 />
               </div>
@@ -537,7 +594,9 @@ export default function OpportunityManagement() {
                 <Label>预算范围</Label>
                 <Input
                   value={formData.budget_range}
-                  onChange={(e) => setFormData({ ...formData, budget_range: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, budget_range: e.target.value })
+                  }
                   placeholder="如: 80-120万"
                 />
               </div>
@@ -546,7 +605,9 @@ export default function OpportunityManagement() {
               <Label>决策链</Label>
               <Textarea
                 value={formData.decision_chain}
-                onChange={(e) => setFormData({ ...formData, decision_chain: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, decision_chain: e.target.value })
+                }
                 placeholder="请输入决策链信息"
                 rows={2}
               />
@@ -555,7 +616,9 @@ export default function OpportunityManagement() {
               <Label>交付窗口</Label>
               <Input
                 value={formData.delivery_window}
-                onChange={(e) => setFormData({ ...formData, delivery_window: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, delivery_window: e.target.value })
+                }
                 placeholder="如: 2026年Q2"
               />
             </div>
@@ -563,7 +626,9 @@ export default function OpportunityManagement() {
               <Label>验收依据</Label>
               <Textarea
                 value={formData.acceptance_basis}
-                onChange={(e) => setFormData({ ...formData, acceptance_basis: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, acceptance_basis: e.target.value })
+                }
                 placeholder="请输入验收依据"
                 rows={2}
               />
@@ -578,7 +643,10 @@ export default function OpportunityManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        requirement: { ...formData.requirement, product_object: e.target.value },
+                        requirement: {
+                          ...formData.requirement,
+                          product_object: e.target.value,
+                        },
                       })
                     }
                     placeholder="如: PCB板"
@@ -592,7 +660,10 @@ export default function OpportunityManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        requirement: { ...formData.requirement, ct_seconds: e.target.value },
+                        requirement: {
+                          ...formData.requirement,
+                          ct_seconds: e.target.value,
+                        },
                       })
                     }
                     placeholder="如: 1"
@@ -605,7 +676,10 @@ export default function OpportunityManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        requirement: { ...formData.requirement, interface_desc: e.target.value },
+                        requirement: {
+                          ...formData.requirement,
+                          interface_desc: e.target.value,
+                        },
                       })
                     }
                     placeholder="如: RS232/以太网"
@@ -619,7 +693,10 @@ export default function OpportunityManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        requirement: { ...formData.requirement, site_constraints: e.target.value },
+                        requirement: {
+                          ...formData.requirement,
+                          site_constraints: e.target.value,
+                        },
                       })
                     }
                     placeholder="请输入现场约束条件"
@@ -633,7 +710,10 @@ export default function OpportunityManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        requirement: { ...formData.requirement, acceptance_criteria: e.target.value },
+                        requirement: {
+                          ...formData.requirement,
+                          acceptance_criteria: e.target.value,
+                        },
                       })
                     }
                     placeholder="如: 节拍≤1秒，良率≥99.5%"
@@ -644,7 +724,10 @@ export default function OpportunityManagement() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleCreate}>创建</Button>
@@ -664,7 +747,9 @@ export default function OpportunityManagement() {
               <Label>阶段门状态 *</Label>
               <select
                 value={gateData.gate_status}
-                onChange={(e) => setGateData({ ...gateData, gate_status: e.target.value })}
+                onChange={(e) =>
+                  setGateData({ ...gateData, gate_status: e.target.value })
+                }
                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
               >
                 <option value="PASS">通过</option>
@@ -675,7 +760,9 @@ export default function OpportunityManagement() {
               <Label>备注</Label>
               <Textarea
                 value={gateData.remark}
-                onChange={(e) => setGateData({ ...gateData, remark: e.target.value })}
+                onChange={(e) =>
+                  setGateData({ ...gateData, remark: e.target.value })
+                }
                 placeholder="请输入备注"
                 rows={3}
               />
@@ -717,47 +804,67 @@ export default function OpportunityManagement() {
                   </div>
                   <div>
                     <Label className="text-slate-400">阶段</Label>
-                    <Badge className={cn(stageConfig[selectedOpp.stage]?.color, 'mt-1')}>
+                    <Badge
+                      className={cn(
+                        stageConfig[selectedOpp.stage]?.color,
+                        "mt-1",
+                      )}
+                    >
                       {stageConfig[selectedOpp.stage]?.label}
                     </Badge>
                   </div>
                   <div>
                     <Label className="text-slate-400">项目类型</Label>
-                    <p className="text-white">{selectedOpp.project_type || '-'}</p>
+                    <p className="text-white">
+                      {selectedOpp.project_type || "-"}
+                    </p>
                   </div>
                   <div>
                     <Label className="text-slate-400">设备类型</Label>
-                    <p className="text-white">{selectedOpp.equipment_type || '-'}</p>
+                    <p className="text-white">
+                      {selectedOpp.equipment_type || "-"}
+                    </p>
                   </div>
                   <div>
                     <Label className="text-slate-400">预估金额</Label>
                     <p className="text-white">
                       {selectedOpp.est_amount
-                        ? parseFloat(selectedOpp.est_amount).toLocaleString() + ' 元'
-                        : '-'}
+                        ? parseFloat(selectedOpp.est_amount).toLocaleString() +
+                          " 元"
+                        : "-"}
                     </p>
                   </div>
                   <div>
                     <Label className="text-slate-400">预估毛利率</Label>
                     <p className="text-white">
-                      {selectedOpp.est_margin ? selectedOpp.est_margin + '%' : '-'}
+                      {selectedOpp.est_margin
+                        ? selectedOpp.est_margin + "%"
+                        : "-"}
                     </p>
                   </div>
                   <div>
                     <Label className="text-slate-400">预算范围</Label>
-                    <p className="text-white">{selectedOpp.budget_range || '-'}</p>
+                    <p className="text-white">
+                      {selectedOpp.budget_range || "-"}
+                    </p>
                   </div>
                   <div>
                     <Label className="text-slate-400">交付窗口</Label>
-                    <p className="text-white">{selectedOpp.delivery_window || '-'}</p>
+                    <p className="text-white">
+                      {selectedOpp.delivery_window || "-"}
+                    </p>
                   </div>
                   <div className="col-span-2">
                     <Label className="text-slate-400">决策链</Label>
-                    <p className="text-white mt-1">{selectedOpp.decision_chain || '-'}</p>
+                    <p className="text-white mt-1">
+                      {selectedOpp.decision_chain || "-"}
+                    </p>
                   </div>
                   <div className="col-span-2">
                     <Label className="text-slate-400">验收依据</Label>
-                    <p className="text-white mt-1">{selectedOpp.acceptance_basis || '-'}</p>
+                    <p className="text-white mt-1">
+                      {selectedOpp.acceptance_basis || "-"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -770,29 +877,31 @@ export default function OpportunityManagement() {
                     <div>
                       <Label className="text-slate-400">产品对象</Label>
                       <p className="text-white">
-                        {selectedOpp.requirement.product_object || '-'}
+                        {selectedOpp.requirement.product_object || "-"}
                       </p>
                     </div>
                     <div>
                       <Label className="text-slate-400">节拍 (秒)</Label>
-                      <p className="text-white">{selectedOpp.requirement.ct_seconds || '-'}</p>
+                      <p className="text-white">
+                        {selectedOpp.requirement.ct_seconds || "-"}
+                      </p>
                     </div>
                     <div className="col-span-2">
                       <Label className="text-slate-400">接口/通信协议</Label>
                       <p className="text-white mt-1">
-                        {selectedOpp.requirement.interface_desc || '-'}
+                        {selectedOpp.requirement.interface_desc || "-"}
                       </p>
                     </div>
                     <div className="col-span-2">
                       <Label className="text-slate-400">现场约束</Label>
                       <p className="text-white mt-1">
-                        {selectedOpp.requirement.site_constraints || '-'}
+                        {selectedOpp.requirement.site_constraints || "-"}
                       </p>
                     </div>
                     <div className="col-span-2">
                       <Label className="text-slate-400">验收依据</Label>
                       <p className="text-white mt-1">
-                        {selectedOpp.requirement.acceptance_criteria || '-'}
+                        {selectedOpp.requirement.acceptance_criteria || "-"}
                       </p>
                     </div>
                   </div>
@@ -801,15 +910,15 @@ export default function OpportunityManagement() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDetailDialog(false)}
+            >
               关闭
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </motion.div>
-  )
+  );
 }
-
-
-

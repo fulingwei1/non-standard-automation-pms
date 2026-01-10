@@ -3,9 +3,9 @@
  * 统一处理图表的加载状态、错误状态和空数据状态
  */
 
-import { useState, useEffect } from 'react'
-import { Loader2, AlertCircle, RefreshCw, BarChart3 } from 'lucide-react'
-import { cn } from '../../lib/utils'
+import { useState, useEffect } from "react";
+import { Loader2, AlertCircle, RefreshCw, BarChart3 } from "lucide-react";
+import { cn } from "../../lib/utils";
 
 /**
  * ChartContainer - 图表容器
@@ -25,7 +25,7 @@ export default function ChartContainer({
   loading = false,
   error = null,
   empty = false,
-  emptyText = '暂无数据',
+  emptyText = "暂无数据",
   title,
   description,
   height = 300,
@@ -36,12 +36,21 @@ export default function ChartContainer({
   // 加载状态
   if (loading) {
     return (
-      <div className={cn('bg-surface-100 rounded-xl border border-white/5', className)}>
+      <div
+        className={cn(
+          "bg-surface-100 rounded-xl border border-white/5",
+          className,
+        )}
+      >
         {(title || headerActions) && (
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
             <div>
-              {title && <h3 className="text-sm font-medium text-white">{title}</h3>}
-              {description && <p className="text-xs text-slate-400 mt-0.5">{description}</p>}
+              {title && (
+                <h3 className="text-sm font-medium text-white">{title}</h3>
+              )}
+              {description && (
+                <p className="text-xs text-slate-400 mt-0.5">{description}</p>
+              )}
             </div>
             {headerActions}
           </div>
@@ -54,18 +63,27 @@ export default function ChartContainer({
           <span className="text-sm text-slate-400">加载中...</span>
         </div>
       </div>
-    )
+    );
   }
 
   // 错误状态
   if (error) {
     return (
-      <div className={cn('bg-surface-100 rounded-xl border border-white/5', className)}>
+      <div
+        className={cn(
+          "bg-surface-100 rounded-xl border border-white/5",
+          className,
+        )}
+      >
         {(title || headerActions) && (
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
             <div>
-              {title && <h3 className="text-sm font-medium text-white">{title}</h3>}
-              {description && <p className="text-xs text-slate-400 mt-0.5">{description}</p>}
+              {title && (
+                <h3 className="text-sm font-medium text-white">{title}</h3>
+              )}
+              {description && (
+                <p className="text-xs text-slate-400 mt-0.5">{description}</p>
+              )}
             </div>
             {headerActions}
           </div>
@@ -87,18 +105,27 @@ export default function ChartContainer({
           )}
         </div>
       </div>
-    )
+    );
   }
 
   // 空数据状态
   if (empty) {
     return (
-      <div className={cn('bg-surface-100 rounded-xl border border-white/5', className)}>
+      <div
+        className={cn(
+          "bg-surface-100 rounded-xl border border-white/5",
+          className,
+        )}
+      >
         {(title || headerActions) && (
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
             <div>
-              {title && <h3 className="text-sm font-medium text-white">{title}</h3>}
-              {description && <p className="text-xs text-slate-400 mt-0.5">{description}</p>}
+              {title && (
+                <h3 className="text-sm font-medium text-white">{title}</h3>
+              )}
+              {description && (
+                <p className="text-xs text-slate-400 mt-0.5">{description}</p>
+              )}
             </div>
             {headerActions}
           </div>
@@ -111,26 +138,33 @@ export default function ChartContainer({
           <span className="text-sm text-slate-400">{emptyText}</span>
         </div>
       </div>
-    )
+    );
   }
 
   // 正常渲染
   return (
-    <div className={cn('bg-surface-100 rounded-xl border border-white/5', className)}>
+    <div
+      className={cn(
+        "bg-surface-100 rounded-xl border border-white/5",
+        className,
+      )}
+    >
       {(title || headerActions) && (
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
           <div>
-            {title && <h3 className="text-sm font-medium text-white">{title}</h3>}
-            {description && <p className="text-xs text-slate-400 mt-0.5">{description}</p>}
+            {title && (
+              <h3 className="text-sm font-medium text-white">{title}</h3>
+            )}
+            {description && (
+              <p className="text-xs text-slate-400 mt-0.5">{description}</p>
+            )}
           </div>
           {headerActions}
         </div>
       )}
-      <div className="p-4">
-        {children}
-      </div>
+      <div className="p-4">{children}</div>
     </div>
-  )
+  );
 }
 
 /**
@@ -146,26 +180,26 @@ export function useChartData(fetchFn, deps = [], options = {}) {
     transform = (data) => data,
     cacheKey,
     cacheDuration = 5 * 60 * 1000, // 5分钟缓存
-  } = options
+  } = options;
 
-  const [data, setData] = useState(initialData)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [data, setData] = useState(initialData);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchData = async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     // 检查缓存
     if (cacheKey) {
-      const cached = sessionStorage.getItem(cacheKey)
+      const cached = sessionStorage.getItem(cacheKey);
       if (cached) {
         try {
-          const { data: cachedData, timestamp } = JSON.parse(cached)
+          const { data: cachedData, timestamp } = JSON.parse(cached);
           if (Date.now() - timestamp < cacheDuration) {
-            setData(transform(cachedData))
-            setLoading(false)
-            return
+            setData(transform(cachedData));
+            setLoading(false);
+            return;
           }
         } catch {
           // 缓存解析失败，继续获取
@@ -174,27 +208,30 @@ export function useChartData(fetchFn, deps = [], options = {}) {
     }
 
     try {
-      const result = await fetchFn()
-      const transformedData = transform(result)
-      setData(transformedData)
+      const result = await fetchFn();
+      const transformedData = transform(result);
+      setData(transformedData);
 
       // 保存缓存
       if (cacheKey) {
-        sessionStorage.setItem(cacheKey, JSON.stringify({
-          data: result,
-          timestamp: Date.now(),
-        }))
+        sessionStorage.setItem(
+          cacheKey,
+          JSON.stringify({
+            data: result,
+            timestamp: Date.now(),
+          }),
+        );
       }
     } catch (err) {
-      setError(err.message || '数据加载失败')
+      setError(err.message || "数据加载失败");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchData()
-  }, deps)
+    fetchData();
+  }, deps);
 
   return {
     data,
@@ -202,5 +239,5 @@ export function useChartData(fetchFn, deps = [], options = {}) {
     error,
     refetch: fetchData,
     setData,
-  }
+  };
 }

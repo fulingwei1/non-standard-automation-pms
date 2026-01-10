@@ -412,6 +412,14 @@ async def import_from_excel(
     current_user: User = Depends(security.require_permission("advantage_product:create"))
 ):
     """从 Excel 文件导入优势产品"""
+    from app.services.advantage_product_import_service import (
+        COLUMN_CATEGORY_MAP,
+        clear_existing_data,
+        ensure_categories_exist,
+        parse_product_from_cell,
+        process_product_row
+    )
+    
     try:
         import pandas as pd
     except ImportError:
@@ -438,44 +446,8 @@ async def import_from_excel(
         content = await file.read()
         df = pd.read_excel(io.BytesIO(content), header=None)
 
-        # 类别映射（列索引 -> 类别信息）
-        COLUMN_CATEGORY_MAP = {
-            0: {"code": "HOME_APPLIANCE", "name": "白色家电"},
-            1: {"code": "AUTOMOTIVE", "name": "汽车电子"},
-            2: {"code": "NEW_ENERGY", "name": "新能源"},
-            3: {"code": "SEMICONDUCTOR", "name": "半导体"},
-            4: {"code": "POWER_TOOLS", "name": "电动工具"},
-            5: {"code": "AUTOMATION_LINE", "name": "自动化线体"},
-            6: {"code": "OTHER_EQUIPMENT", "name": "其他设备"},
-            7: {"code": "EDUCATION", "name": "教育实训"}
-        }
-
-        if clear_existing:
-            # 清空现有产品（硬删除）
-            db.query(AdvantageProduct).delete()
-            db.query(AdvantageProductCategory).delete()
-            db.commit()
-
         # 确保类别存在
-        category_id_map = {}
-        for col_idx, cat_info in COLUMN_CATEGORY_MAP.items():
-            existing_cat = db.query(AdvantageProductCategory).filter(
-                AdvantageProductCategory.code == cat_info["code"]
-            ).first()
-
-            if not existing_cat:
-                new_cat = AdvantageProductCategory(
-                    code=cat_info["code"],
-                    name=cat_info["name"],
-                    sort_order=col_idx + 1,
-                    is_active=True
-                )
-                db.add(new_cat)
-                db.flush()
-                category_id_map[col_idx] = new_cat.id
-                categories_created += 1
-            else:
-                category_id_map[col_idx] = existing_cat.id
+        category_id_map, categories_created = ensure_categories_exist(db, clear_existing)
 
         # 处理每一列（每列是一个类别）
         for col_idx in range(min(len(df.columns), 8)):
@@ -491,59 +463,24 @@ async def import_from_excel(
 
                 cell_str = str(cell_value).strip()
 
-                # 检查是否是系列编号（纯编号如 KC2700）
-                if cell_str.startswith("KC") and len(cell_str) <= 10 and cell_str[2:].isdigit():
-                    current_series = cell_str
+                # 检查是否是系列编号
+                product_code, product_name = parse_product_from_cell(cell_str, current_series, row_idx, col_idx)
+                
+                if product_code is None:
+                    current_series = product_name
                     continue
 
-                # 解析产品编码和名称
-                # 格式可能是 "KC2701离线双工位FCT" 或 "离线双工位FCT"
-                product_code = None
-                product_name = cell_str
-
-                if cell_str.startswith("KC"):
-                    # 尝试提取编码
-                    for i in range(6, len(cell_str)):
-                        if not cell_str[i].isdigit():
-                            product_code = cell_str[:i]
-                            product_name = cell_str[i:]
-                            break
-                    if not product_code:
-                        product_code = cell_str
-                        product_name = cell_str
-                else:
-                    # 没有编码，使用系列+行号生成
-                    if current_series:
-                        product_code = f"{current_series}_{row_idx}"
-                    else:
-                        product_code = f"PRD_{col_idx}_{row_idx}"
-
-                # 检查产品是否已存在
-                existing = db.query(AdvantageProduct).filter(
-                    AdvantageProduct.product_code == product_code
-                ).first()
-
-                if existing:
-                    if clear_existing:
-                        # 更新
-                        existing.product_name = product_name
-                        existing.category_id = category_id
-                        existing.series_code = current_series
-                        existing.is_active = True
-                        products_updated += 1
-                    else:
-                        products_skipped += 1
-                else:
-                    # 新建
-                    new_product = AdvantageProduct(
-                        product_code=product_code,
-                        product_name=product_name,
-                        category_id=category_id,
-                        series_code=current_series,
-                        is_active=True
-                    )
-                    db.add(new_product)
+                # 处理产品行
+                is_created, is_updated, is_skipped = process_product_row(
+                    db, product_code, product_name, category_id, current_series, clear_existing
+                )
+                
+                if is_created:
                     products_created += 1
+                elif is_updated:
+                    products_updated += 1
+                elif is_skipped:
+                    products_skipped += 1
 
         db.commit()
 

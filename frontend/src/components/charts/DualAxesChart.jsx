@@ -3,8 +3,8 @@
  * 用于不同量纲数据对比（如金额+百分比）
  */
 
-import { DualAxes } from '@ant-design/plots'
-import { useMemo } from 'react'
+import { DualAxes } from "@ant-design/plots";
+import { useMemo } from "react";
 
 /**
  * DualAxesChart - 双轴图
@@ -20,8 +20,8 @@ import { useMemo } from 'react'
  */
 export default function DualAxesChart({
   data = [],
-  xField = 'date',
-  yField = ['value', 'rate'],
+  xField = "date",
+  yField = ["value", "rate"],
   height = 300,
   geometryOptions,
   leftFormatter,
@@ -34,28 +34,28 @@ export default function DualAxesChart({
   const config = useMemo(() => {
     const defaultGeometryOptions = [
       {
-        geometry: 'column',
+        geometry: "column",
         columnWidthRatio: 0.4,
-        color: colors?.[0] || '#5B8FF9',
+        color: colors?.[0] || "#5B8FF9",
       },
       {
-        geometry: 'line',
+        geometry: "line",
         smooth: true,
         lineStyle: {
           lineWidth: 2,
         },
         point: {
           size: 4,
-          shape: 'circle',
+          shape: "circle",
           style: {
-            fill: 'white',
-            stroke: colors?.[1] || '#5AD8A6',
+            fill: "white",
+            stroke: colors?.[1] || "#5AD8A6",
             lineWidth: 2,
           },
         },
-        color: colors?.[1] || '#5AD8A6',
+        color: colors?.[1] || "#5AD8A6",
       },
-    ]
+    ];
 
     return {
       data: [data, data],
@@ -66,13 +66,13 @@ export default function DualAxesChart({
       xAxis: {
         label: {
           style: {
-            fill: '#94a3b8',
+            fill: "#94a3b8",
             fontSize: 12,
           },
         },
         line: {
           style: {
-            stroke: '#334155',
+            stroke: "#334155",
           },
         },
       },
@@ -81,14 +81,14 @@ export default function DualAxesChart({
           label: {
             formatter: leftFormatter,
             style: {
-              fill: '#94a3b8',
+              fill: "#94a3b8",
               fontSize: 12,
             },
           },
           grid: {
             line: {
               style: {
-                stroke: '#334155',
+                stroke: "#334155",
                 lineDash: [4, 4],
               },
             },
@@ -98,17 +98,17 @@ export default function DualAxesChart({
           label: {
             formatter: rightFormatter,
             style: {
-              fill: '#94a3b8',
+              fill: "#94a3b8",
               fontSize: 12,
             },
           },
         },
       },
       legend: {
-        position: 'top-right',
+        position: "top-right",
         itemName: {
           style: {
-            fill: '#94a3b8',
+            fill: "#94a3b8",
           },
         },
       },
@@ -122,8 +122,18 @@ export default function DualAxesChart({
         },
       },
       ...rest,
-    }
-  }, [data, xField, yField, height, geometryOptions, leftFormatter, rightFormatter, colors, rest])
+    };
+  }, [
+    data,
+    xField,
+    yField,
+    height,
+    geometryOptions,
+    leftFormatter,
+    rightFormatter,
+    colors,
+    rest,
+  ]);
 
   if (!data || data.length === 0) {
     return (
@@ -133,13 +143,15 @@ export default function DualAxesChart({
       >
         暂无数据
       </div>
-    )
+    );
   }
 
   return (
     <div style={style}>
-      {title && <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>}
+      {title && (
+        <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>
+      )}
       <DualAxes {...config} />
     </div>
-  )
+  );
 }

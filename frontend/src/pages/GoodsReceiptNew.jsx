@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   ArrowLeft,
   Save,
@@ -11,26 +11,26 @@ import {
   Calendar,
   Search,
   ChevronRight,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Label } from '../components/ui/label'
-import { Textarea } from '../components/ui/textarea'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
+} from "../components/ui/select";
 import {
   Table,
   TableBody,
@@ -38,141 +38,146 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../components/ui/table'
-import { Badge } from '../components/ui/badge'
-import { cn, formatCurrency, formatDate } from '../lib/utils'
-import { fadeIn } from '../lib/animations'
-import { purchaseApi } from '../services/api'
-import { toast } from '../components/ui/toast'
-import { LoadingCard } from '../components/common'
-import { ErrorMessage } from '../components/common'
+} from "../components/ui/table";
+import { Badge } from "../components/ui/badge";
+import { cn, formatCurrency, formatDate } from "../lib/utils";
+import { fadeIn } from "../lib/animations";
+import { purchaseApi } from "../services/api";
+import { toast } from "../components/ui/toast";
+import { LoadingCard } from "../components/common";
+import { ErrorMessage } from "../components/common";
 
 export default function GoodsReceiptNew() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const orderId = location.state?.orderId || new URLSearchParams(location.search).get('order_id')
-  
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [order, setOrder] = useState(null)
-  const [orderItems, setOrderItems] = useState([])
-  
+  const navigate = useNavigate();
+  const location = useLocation();
+  const orderId =
+    location.state?.orderId ||
+    new URLSearchParams(location.search).get("order_id");
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [order, setOrder] = useState(null);
+  const [orderItems, setOrderItems] = useState([]);
+
   const [formData, setFormData] = useState({
     order_id: orderId ? parseInt(orderId) : null,
-    receipt_date: new Date().toISOString().split('T')[0],
-    receipt_type: 'NORMAL',
-    delivery_note_no: '',
-    logistics_company: '',
-    tracking_no: '',
-    remark: '',
-  })
+    receipt_date: new Date().toISOString().split("T")[0],
+    receipt_type: "NORMAL",
+    delivery_note_no: "",
+    logistics_company: "",
+    tracking_no: "",
+    remark: "",
+  });
 
-  const [selectedItems, setSelectedItems] = useState([])
+  const [selectedItems, setSelectedItems] = useState([]);
 
   useEffect(() => {
-    const targetOrderId = orderId || formData.order_id
+    const targetOrderId = orderId || formData.order_id;
     if (targetOrderId) {
-      loadOrder(targetOrderId)
+      loadOrder(targetOrderId);
     }
-  }, [orderId, formData.order_id])
+  }, [orderId, formData.order_id]);
 
   const loadOrder = async (targetOrderId) => {
     try {
-      setLoading(true)
-      setError(null)
-      const orderIdToLoad = targetOrderId || orderId || formData.order_id
+      setLoading(true);
+      setError(null);
+      const orderIdToLoad = targetOrderId || orderId || formData.order_id;
       if (!orderIdToLoad) {
-        return
+        return;
       }
 
       const [orderRes, itemsRes] = await Promise.all([
         purchaseApi.orders.get(orderIdToLoad),
         purchaseApi.orders.getItems(orderIdToLoad),
-      ])
-      setOrder(orderRes.data || orderRes)
-      setOrderItems(itemsRes.data || itemsRes || [])
+      ]);
+      setOrder(orderRes.data || orderRes);
+      setOrderItems(itemsRes.data || itemsRes || []);
     } catch (err) {
-      console.error('Failed to load order:', err)
-      setError(err.response?.data?.detail || '加载采购订单失败')
+      console.error("Failed to load order:", err);
+      setError(err.response?.data?.detail || "加载采购订单失败");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleAddItem = (item) => {
-    const remainingQty = item.quantity - (item.received_qty || 0)
+    const remainingQty = item.quantity - (item.received_qty || 0);
     if (remainingQty <= 0) {
-      toast.error('该物料已全部收货')
-      return
+      toast.error("该物料已全部收货");
+      return;
     }
-    
-    const exists = selectedItems.find(si => si.order_item_id === item.id)
+
+    const exists = selectedItems.find((si) => si.order_item_id === item.id);
     if (exists) {
-      toast.error('该物料已添加')
-      return
+      toast.error("该物料已添加");
+      return;
     }
-    
-    setSelectedItems([...selectedItems, {
-      order_item_id: item.id,
-      material_code: item.material_code,
-      material_name: item.material_name,
-      specification: item.specification,
-      unit: item.unit,
-      order_qty: item.quantity,
-      received_qty: item.received_qty || 0,
-      remaining_qty: remainingQty,
-      delivery_qty: remainingQty,
-      received_qty_input: remainingQty,
-      unit_price: item.unit_price,
-      remark: '',
-    }])
-  }
+
+    setSelectedItems([
+      ...selectedItems,
+      {
+        order_item_id: item.id,
+        material_code: item.material_code,
+        material_name: item.material_name,
+        specification: item.specification,
+        unit: item.unit,
+        order_qty: item.quantity,
+        received_qty: item.received_qty || 0,
+        remaining_qty: remainingQty,
+        delivery_qty: remainingQty,
+        received_qty_input: remainingQty,
+        unit_price: item.unit_price,
+        remark: "",
+      },
+    ]);
+  };
 
   const handleRemoveItem = (index) => {
-    setSelectedItems(selectedItems.filter((_, i) => i !== index))
-  }
+    setSelectedItems(selectedItems.filter((_, i) => i !== index));
+  };
 
   const handleUpdateItem = (index, field, value) => {
-    const newItems = [...selectedItems]
-    const item = newItems[index]
-    
-    if (field === 'delivery_qty') {
-      const qty = parseFloat(value) || 0
+    const newItems = [...selectedItems];
+    const item = newItems[index];
+
+    if (field === "delivery_qty") {
+      const qty = parseFloat(value) || 0;
       if (qty > item.remaining_qty) {
-        toast.error(`送货数量不能超过剩余数量 ${item.remaining_qty}`)
-        return
+        toast.error(`送货数量不能超过剩余数量 ${item.remaining_qty}`);
+        return;
       }
-      item.delivery_qty = qty
-      item.received_qty_input = qty
-    } else if (field === 'received_qty_input') {
-      const qty = parseFloat(value) || 0
+      item.delivery_qty = qty;
+      item.received_qty_input = qty;
+    } else if (field === "received_qty_input") {
+      const qty = parseFloat(value) || 0;
       if (qty > item.delivery_qty) {
-        toast.error(`实收数量不能超过送货数量 ${item.delivery_qty}`)
-        return
+        toast.error(`实收数量不能超过送货数量 ${item.delivery_qty}`);
+        return;
       }
-      item.received_qty_input = qty
+      item.received_qty_input = qty;
     } else {
-      item[field] = value
+      item[field] = value;
     }
-    
-    setSelectedItems(newItems)
-  }
+
+    setSelectedItems(newItems);
+  };
 
   const handleSubmit = async () => {
     if (!formData.order_id) {
-      toast.error('请选择采购订单')
-      return
+      toast.error("请选择采购订单");
+      return;
     }
-    
+
     if (selectedItems.length === 0) {
-      toast.error('请至少添加一个物料')
-      return
+      toast.error("请至少添加一个物料");
+      return;
     }
-    
+
     try {
-      setLoading(true)
-      setError(null)
-      
+      setLoading(true);
+      setError(null);
+
       const receiptData = {
         order_id: formData.order_id,
         receipt_date: formData.receipt_date,
@@ -181,30 +186,33 @@ export default function GoodsReceiptNew() {
         logistics_company: formData.logistics_company || null,
         tracking_no: formData.tracking_no || null,
         remark: formData.remark || null,
-        items: selectedItems.map(item => ({
+        items: selectedItems.map((item) => ({
           order_item_id: item.order_item_id,
           delivery_qty: item.delivery_qty,
           received_qty: item.received_qty_input,
           remark: item.remark || null,
         })),
-      }
+      };
 
-      const res = await purchaseApi.receipts.create(receiptData)
-      toast.success('收货单创建成功')
-      navigate(`/purchases/receipts/${res.data?.id || res.id}`)
+      const res = await purchaseApi.receipts.create(receiptData);
+      toast.success("收货单创建成功");
+      navigate(`/purchases/receipts/${res.data?.id || res.id}`);
     } catch (err) {
-      console.error('Failed to create receipt:', err)
-      setError(err.response?.data?.detail || '创建收货单失败')
-      toast.error(err.response?.data?.detail || '创建收货单失败')
+      console.error("Failed to create receipt:", err);
+      setError(err.response?.data?.detail || "创建收货单失败");
+      toast.error(err.response?.data?.detail || "创建收货单失败");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const availableItems = orderItems.filter(item => {
-    const remainingQty = item.quantity - (item.received_qty || 0)
-    return remainingQty > 0 && !selectedItems.find(si => si.order_item_id === item.id)
-  })
+  const availableItems = orderItems.filter((item) => {
+    const remainingQty = item.quantity - (item.received_qty || 0);
+    return (
+      remainingQty > 0 &&
+      !selectedItems.find((si) => si.order_item_id === item.id)
+    );
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -213,7 +221,10 @@ export default function GoodsReceiptNew() {
           title="新建收货单"
           description="从采购订单创建收货单"
           actions={
-            <Button variant="outline" onClick={() => navigate('/purchases/receipts')}>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/purchases/receipts")}
+            >
               <ArrowLeft className="w-4 h-4 mr-2" />
               返回
             </Button>
@@ -236,7 +247,10 @@ export default function GoodsReceiptNew() {
               <CardContent>
                 <OrderSelectionForm
                   onSelect={(selectedOrder) => {
-                    setFormData(prev => ({ ...prev, order_id: selectedOrder.id }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      order_id: selectedOrder.id,
+                    }));
                     // loadOrder will be triggered by useEffect when formData.order_id changes
                   }}
                 />
@@ -255,7 +269,9 @@ export default function GoodsReceiptNew() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                       <Label className="text-slate-400">订单编号</Label>
-                      <p className="text-slate-200 font-mono">{order.order_no}</p>
+                      <p className="text-slate-200 font-mono">
+                        {order.order_no}
+                      </p>
                     </div>
                     <div>
                       <Label className="text-slate-400">供应商</Label>
@@ -263,7 +279,9 @@ export default function GoodsReceiptNew() {
                     </div>
                     <div>
                       <Label className="text-slate-400">项目</Label>
-                      <p className="text-slate-200">{order.project_name || '-'}</p>
+                      <p className="text-slate-200">
+                        {order.project_name || "-"}
+                      </p>
                     </div>
                     <div>
                       <Label className="text-slate-400">订单状态</Label>
@@ -286,7 +304,12 @@ export default function GoodsReceiptNew() {
                     <Input
                       type="date"
                       value={formData.receipt_date}
-                      onChange={(e) => setFormData({ ...formData, receipt_date: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          receipt_date: e.target.value,
+                        })
+                      }
                       className="bg-slate-900/50 border-slate-700 text-slate-200"
                     />
                   </div>
@@ -294,7 +317,9 @@ export default function GoodsReceiptNew() {
                     <Label className="text-slate-400">收货类型</Label>
                     <Select
                       value={formData.receipt_type}
-                      onValueChange={(val) => setFormData({ ...formData, receipt_type: val })}
+                      onValueChange={(val) =>
+                        setFormData({ ...formData, receipt_type: val })
+                      }
                     >
                       <SelectTrigger className="bg-slate-900/50 border-slate-700">
                         <SelectValue />
@@ -310,7 +335,12 @@ export default function GoodsReceiptNew() {
                     <Label className="text-slate-400">送货单号</Label>
                     <Input
                       value={formData.delivery_note_no}
-                      onChange={(e) => setFormData({ ...formData, delivery_note_no: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          delivery_note_no: e.target.value,
+                        })
+                      }
                       placeholder="送货单号（可选）"
                       className="bg-slate-900/50 border-slate-700 text-slate-200"
                     />
@@ -319,7 +349,12 @@ export default function GoodsReceiptNew() {
                     <Label className="text-slate-400">物流公司</Label>
                     <Input
                       value={formData.logistics_company}
-                      onChange={(e) => setFormData({ ...formData, logistics_company: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          logistics_company: e.target.value,
+                        })
+                      }
                       placeholder="物流公司（可选）"
                       className="bg-slate-900/50 border-slate-700 text-slate-200"
                     />
@@ -328,7 +363,12 @@ export default function GoodsReceiptNew() {
                     <Label className="text-slate-400">物流单号</Label>
                     <Input
                       value={formData.tracking_no}
-                      onChange={(e) => setFormData({ ...formData, tracking_no: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          tracking_no: e.target.value,
+                        })
+                      }
                       placeholder="物流单号（可选）"
                       className="bg-slate-900/50 border-slate-700 text-slate-200"
                     />
@@ -338,7 +378,9 @@ export default function GoodsReceiptNew() {
                   <Label className="text-slate-400">备注</Label>
                   <Textarea
                     value={formData.remark}
-                    onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, remark: e.target.value })
+                    }
                     placeholder="备注信息（可选）"
                     className="bg-slate-900/50 border-slate-700 text-slate-200"
                     rows={3}
@@ -359,7 +401,8 @@ export default function GoodsReceiptNew() {
                 <CardContent>
                   <div className="space-y-2">
                     {availableItems.map((item) => {
-                      const remainingQty = item.quantity - (item.received_qty || 0)
+                      const remainingQty =
+                        item.quantity - (item.received_qty || 0);
                       return (
                         <div
                           key={item.id}
@@ -367,18 +410,27 @@ export default function GoodsReceiptNew() {
                           onClick={() => handleAddItem(item)}
                         >
                           <div className="flex-1">
-                            <p className="text-slate-200 font-mono text-sm">{item.material_code}</p>
-                            <p className="text-slate-400 text-sm">{item.material_name}</p>
+                            <p className="text-slate-200 font-mono text-sm">
+                              {item.material_code}
+                            </p>
+                            <p className="text-slate-400 text-sm">
+                              {item.material_name}
+                            </p>
                           </div>
                           <div className="text-right">
-                            <p className="text-slate-300">订单: {item.quantity} {item.unit}</p>
-                            <p className="text-slate-400 text-sm">已收: {item.received_qty || 0} | 剩余: {remainingQty}</p>
+                            <p className="text-slate-300">
+                              订单: {item.quantity} {item.unit}
+                            </p>
+                            <p className="text-slate-400 text-sm">
+                              已收: {item.received_qty || 0} | 剩余:{" "}
+                              {remainingQty}
+                            </p>
                           </div>
                           <Button size="sm" variant="ghost" className="ml-4">
                             <Plus className="w-4 h-4" />
                           </Button>
                         </div>
-                      )
+                      );
                     })}
                   </div>
                 </CardContent>
@@ -395,11 +447,21 @@ export default function GoodsReceiptNew() {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-slate-700">
-                        <TableHead className="text-slate-400">物料编码</TableHead>
-                        <TableHead className="text-slate-400">物料名称</TableHead>
-                        <TableHead className="text-slate-400">剩余数量</TableHead>
-                        <TableHead className="text-slate-400">送货数量 *</TableHead>
-                        <TableHead className="text-slate-400">实收数量</TableHead>
+                        <TableHead className="text-slate-400">
+                          物料编码
+                        </TableHead>
+                        <TableHead className="text-slate-400">
+                          物料名称
+                        </TableHead>
+                        <TableHead className="text-slate-400">
+                          剩余数量
+                        </TableHead>
+                        <TableHead className="text-slate-400">
+                          送货数量 *
+                        </TableHead>
+                        <TableHead className="text-slate-400">
+                          实收数量
+                        </TableHead>
                         <TableHead className="text-slate-400">备注</TableHead>
                         <TableHead className="text-slate-400">操作</TableHead>
                       </TableRow>
@@ -407,14 +469,26 @@ export default function GoodsReceiptNew() {
                     <TableBody>
                       {selectedItems.map((item, index) => (
                         <TableRow key={index} className="border-slate-700">
-                          <TableCell className="font-mono text-sm text-slate-200">{item.material_code}</TableCell>
-                          <TableCell className="text-slate-300">{item.material_name}</TableCell>
-                          <TableCell className="text-slate-300">{item.remaining_qty} {item.unit}</TableCell>
+                          <TableCell className="font-mono text-sm text-slate-200">
+                            {item.material_code}
+                          </TableCell>
+                          <TableCell className="text-slate-300">
+                            {item.material_name}
+                          </TableCell>
+                          <TableCell className="text-slate-300">
+                            {item.remaining_qty} {item.unit}
+                          </TableCell>
                           <TableCell>
                             <Input
                               type="number"
                               value={item.delivery_qty}
-                              onChange={(e) => handleUpdateItem(index, 'delivery_qty', e.target.value)}
+                              onChange={(e) =>
+                                handleUpdateItem(
+                                  index,
+                                  "delivery_qty",
+                                  e.target.value,
+                                )
+                              }
                               min={0}
                               max={item.remaining_qty}
                               className="w-24 bg-slate-900/50 border-slate-700 text-slate-200"
@@ -424,7 +498,13 @@ export default function GoodsReceiptNew() {
                             <Input
                               type="number"
                               value={item.received_qty_input}
-                              onChange={(e) => handleUpdateItem(index, 'received_qty_input', e.target.value)}
+                              onChange={(e) =>
+                                handleUpdateItem(
+                                  index,
+                                  "received_qty_input",
+                                  e.target.value,
+                                )
+                              }
                               min={0}
                               max={item.delivery_qty}
                               className="w-24 bg-slate-900/50 border-slate-700 text-slate-200"
@@ -433,7 +513,13 @@ export default function GoodsReceiptNew() {
                           <TableCell>
                             <Input
                               value={item.remark}
-                              onChange={(e) => handleUpdateItem(index, 'remark', e.target.value)}
+                              onChange={(e) =>
+                                handleUpdateItem(
+                                  index,
+                                  "remark",
+                                  e.target.value,
+                                )
+                              }
                               placeholder="备注"
                               className="w-32 bg-slate-900/50 border-slate-700 text-slate-200"
                             />
@@ -457,7 +543,10 @@ export default function GoodsReceiptNew() {
 
             {/* Actions */}
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => navigate('/purchases/receipts')}>
+              <Button
+                variant="outline"
+                onClick={() => navigate("/purchases/receipts")}
+              >
                 取消
               </Button>
               <Button
@@ -465,56 +554,56 @@ export default function GoodsReceiptNew() {
                 disabled={loading || selectedItems.length === 0}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                {loading ? '创建中...' : '创建收货单'}
+                {loading ? "创建中..." : "创建收货单"}
               </Button>
             </div>
           </motion.div>
         )}
       </div>
     </div>
-  )
+  );
 }
 
 // Order Selection Component
 function OrderSelectionForm({ onSelect }) {
-  const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const loadOrders = async () => {
       try {
-        setLoading(true)
+        setLoading(true);
         const res = await purchaseApi.orders.list({
           page: 1,
           page_size: 100,
-          status: 'APPROVED' // Only show approved orders
-        })
-        const data = res.data?.items || res.data || []
-        setOrders(data)
+          status: "APPROVED", // Only show approved orders
+        });
+        const data = res.data?.items || res.data || [];
+        setOrders(data);
       } catch (err) {
-        console.error('Failed to load orders:', err)
+        console.error("Failed to load orders:", err);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    loadOrders()
-  }, [])
+    };
+    loadOrders();
+  }, []);
 
-  const filteredOrders = orders.filter(order => {
+  const filteredOrders = orders.filter((order) => {
     if (searchQuery) {
-      const query = searchQuery.toLowerCase()
+      const query = searchQuery.toLowerCase();
       return (
         order.order_no?.toLowerCase().includes(query) ||
         order.supplier_name?.toLowerCase().includes(query) ||
         order.project_name?.toLowerCase().includes(query)
-      )
+      );
     }
-    return true
-  })
+    return true;
+  });
 
   if (loading) {
-    return <LoadingCard />
+    return <LoadingCard />;
   }
 
   if (filteredOrders.length === 0) {
@@ -524,7 +613,7 @@ function OrderSelectionForm({ onSelect }) {
         title="暂无可收货的采购订单"
         description="请先创建并审批通过采购订单"
       />
-    )
+    );
   }
 
   return (
@@ -547,14 +636,22 @@ function OrderSelectionForm({ onSelect }) {
           >
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <p className="text-slate-200 font-mono font-semibold">{order.order_no}</p>
-                <p className="text-slate-400 text-sm mt-1">{order.supplier_name}</p>
+                <p className="text-slate-200 font-mono font-semibold">
+                  {order.order_no}
+                </p>
+                <p className="text-slate-400 text-sm mt-1">
+                  {order.supplier_name}
+                </p>
                 {order.project_name && (
-                  <p className="text-slate-500 text-xs mt-1">{order.project_name}</p>
+                  <p className="text-slate-500 text-xs mt-1">
+                    {order.project_name}
+                  </p>
                 )}
               </div>
               <div className="text-right">
-                <p className="text-slate-200 font-semibold">¥{formatCurrency(order.total_amount || 0)}</p>
+                <p className="text-slate-200 font-semibold">
+                  ¥{formatCurrency(order.total_amount || 0)}
+                </p>
                 <Badge className="bg-emerald-500 mt-1">{order.status}</Badge>
               </div>
               <ChevronRight className="w-5 h-5 text-slate-400 ml-4" />
@@ -563,6 +660,5 @@ function OrderSelectionForm({ onSelect }) {
         ))}
       </div>
     </div>
-  )
+  );
 }
-

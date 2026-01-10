@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { cn } from '../lib/utils'
-import { rdProjectApi } from '../services/api'
-import { formatDate } from '../lib/utils'
-import { PageHeader } from '../components/layout/PageHeader'
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { cn } from "../lib/utils";
+import { rdProjectApi } from "../services/api";
+import { formatDate } from "../lib/utils";
+import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui'
+} from "../components/ui";
 import {
   ArrowLeft,
   Plus,
@@ -30,103 +30,103 @@ import {
   AlertCircle,
   Edit2,
   Trash2,
-} from 'lucide-react'
+} from "lucide-react";
 
 const statusMap = {
-  DRAFT: { label: '草稿', color: 'secondary' },
-  PENDING: { label: '待审核', color: 'warning' },
-  APPROVED: { label: '已通过', color: 'success' },
-  REJECTED: { label: '已驳回', color: 'danger' },
-}
+  DRAFT: { label: "草稿", color: "secondary" },
+  PENDING: { label: "待审核", color: "warning" },
+  APPROVED: { label: "已通过", color: "success" },
+  REJECTED: { label: "已驳回", color: "danger" },
+};
 
 export default function RdProjectWorklogs() {
-  const { id } = useParams()
-  const navigate = useNavigate()
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true)
-  const [project, setProject] = useState(null)
-  const [worklogs, setWorklogs] = useState([])
-  const [formOpen, setFormOpen] = useState(false)
+  const [loading, setLoading] = useState(true);
+  const [project, setProject] = useState(null);
+  const [worklogs, setWorklogs] = useState([]);
+  const [formOpen, setFormOpen] = useState(false);
   const [formData, setFormData] = useState({
-    work_date: new Date().toISOString().split('T')[0],
-    work_hours: '',
-    work_type: 'NORMAL',
-    description: '',
-  })
-  const [formLoading, setFormLoading] = useState(false)
+    work_date: new Date().toISOString().split("T")[0],
+    work_hours: "",
+    work_type: "NORMAL",
+    description: "",
+  });
+  const [formLoading, setFormLoading] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
     page_size: 20,
     total: 0,
     pages: 0,
-  })
+  });
 
   useEffect(() => {
     if (id) {
-      fetchProject()
-      fetchWorklogs()
+      fetchProject();
+      fetchWorklogs();
     }
-  }, [id, pagination.page])
+  }, [id, pagination.page]);
 
   const fetchProject = async () => {
     try {
-      const response = await rdProjectApi.get(id)
-      const projectData = response.data?.data || response.data || response
-      setProject(projectData)
+      const response = await rdProjectApi.get(id);
+      const projectData = response.data?.data || response.data || response;
+      setProject(projectData);
     } catch (err) {
-      console.error('Failed to fetch project:', err)
+      console.error("Failed to fetch project:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchWorklogs = async () => {
     try {
       const response = await rdProjectApi.getWorklogs(id, {
         page: pagination.page,
         page_size: pagination.page_size,
-      })
-      const data = response.data?.data || response.data || response
-      
+      });
+      const data = response.data?.data || response.data || response;
+
       if (data.items) {
-        setWorklogs(data.items || [])
+        setWorklogs(data.items || []);
         setPagination({
           page: data.page || 1,
           page_size: data.page_size || 20,
           total: data.total || 0,
           pages: data.pages || 0,
-        })
+        });
       } else {
-        setWorklogs(Array.isArray(data) ? data : [])
+        setWorklogs(Array.isArray(data) ? data : []);
       }
     } catch (err) {
-      console.error('Failed to fetch worklogs:', err)
-      setWorklogs([])
+      console.error("Failed to fetch worklogs:", err);
+      setWorklogs([]);
     }
-  }
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setFormLoading(true)
+    e.preventDefault();
+    setFormLoading(true);
     try {
-      await rdProjectApi.createWorklog(id, formData)
-      setFormOpen(false)
+      await rdProjectApi.createWorklog(id, formData);
+      setFormOpen(false);
       setFormData({
-        work_date: new Date().toISOString().split('T')[0],
-        work_hours: '',
-        work_type: 'NORMAL',
-        description: '',
-      })
-      fetchWorklogs()
+        work_date: new Date().toISOString().split("T")[0],
+        work_hours: "",
+        work_type: "NORMAL",
+        description: "",
+      });
+      fetchWorklogs();
     } catch (err) {
-      alert('创建工作日志失败: ' + (err.response?.data?.detail || err.message))
+      alert("创建工作日志失败: " + (err.response?.data?.detail || err.message));
     } finally {
-      setFormLoading(false)
+      setFormLoading(false);
     }
-  }
+  };
 
   if (loading) {
-    return <div className="text-center py-12">加载中...</div>
+    return <div className="text-center py-12">加载中...</div>;
   }
 
   if (!project) {
@@ -134,11 +134,15 @@ export default function RdProjectWorklogs() {
       <div className="text-center py-12">
         <AlertCircle className="h-12 w-12 text-slate-500 mx-auto mb-4" />
         <p className="text-slate-400">研发项目不存在</p>
-        <Button variant="outline" className="mt-4" onClick={() => navigate('/rd-projects')}>
+        <Button
+          variant="outline"
+          className="mt-4"
+          onClick={() => navigate("/rd-projects")}
+        >
           返回列表
         </Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -155,7 +159,9 @@ export default function RdProjectWorklogs() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-white">研发人员工作日志</h1>
-            <p className="text-sm text-slate-400 mt-1">{project.project_name}</p>
+            <p className="text-sm text-slate-400 mt-1">
+              {project.project_name}
+            </p>
           </div>
         </div>
         <Button onClick={() => setFormOpen(true)}>
@@ -170,18 +176,26 @@ export default function RdProjectWorklogs() {
           <div className="grid grid-cols-3 gap-4">
             <div className="p-4 rounded-lg bg-white/[0.03]">
               <p className="text-sm text-slate-400 mb-1">总记录数</p>
-              <p className="text-2xl font-semibold text-white">{pagination.total}</p>
+              <p className="text-2xl font-semibold text-white">
+                {pagination.total}
+              </p>
             </div>
             <div className="p-4 rounded-lg bg-white/[0.03]">
               <p className="text-sm text-slate-400 mb-1">总工时</p>
               <p className="text-2xl font-semibold text-primary">
-                {worklogs.reduce((sum, log) => sum + parseFloat(log.work_hours || 0), 0).toFixed(1)} 小时
+                {worklogs
+                  .reduce(
+                    (sum, log) => sum + parseFloat(log.work_hours || 0),
+                    0,
+                  )
+                  .toFixed(1)}{" "}
+                小时
               </p>
             </div>
             <div className="p-4 rounded-lg bg-white/[0.03]">
               <p className="text-sm text-slate-400 mb-1">参与人数</p>
               <p className="text-2xl font-semibold text-white">
-                {new Set(worklogs.map(log => log.user_id)).size} 人
+                {new Set(worklogs.map((log) => log.user_id)).size} 人
               </p>
             </div>
           </div>
@@ -191,11 +205,13 @@ export default function RdProjectWorklogs() {
       {/* Worklogs List */}
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">工作日志列表</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">
+            工作日志列表
+          </h3>
           {worklogs.length > 0 ? (
             <div className="space-y-3">
               {worklogs.map((log) => {
-                const status = statusMap[log.status] || statusMap.DRAFT
+                const status = statusMap[log.status] || statusMap.DRAFT;
                 return (
                   <div
                     key={log.id}
@@ -207,7 +223,9 @@ export default function RdProjectWorklogs() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium text-white">{log.user_name || '未知用户'}</p>
+                          <p className="font-medium text-white">
+                            {log.user_name || "未知用户"}
+                          </p>
                           <Badge variant={status.color}>{status.label}</Badge>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-slate-400">
@@ -219,9 +237,11 @@ export default function RdProjectWorklogs() {
                             <Clock className="h-4 w-4" />
                             <span>{log.work_hours} 小时</span>
                           </div>
-                          {log.work_type !== 'NORMAL' && (
+                          {log.work_type !== "NORMAL" && (
                             <Badge variant="outline" className="text-xs">
-                              {log.work_type === 'OVERTIME' ? '加班' : log.work_type}
+                              {log.work_type === "OVERTIME"
+                                ? "加班"
+                                : log.work_type}
                             </Badge>
                           )}
                         </div>
@@ -233,7 +253,7 @@ export default function RdProjectWorklogs() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {log.status === 'DRAFT' && (
+                      {log.status === "DRAFT" && (
                         <>
                           <Button variant="ghost" size="icon">
                             <Edit2 className="h-4 w-4" />
@@ -245,7 +265,7 @@ export default function RdProjectWorklogs() {
                       )}
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
           ) : (
@@ -269,18 +289,23 @@ export default function RdProjectWorklogs() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
+                onClick={() =>
+                  setPagination({ ...pagination, page: pagination.page - 1 })
+                }
                 disabled={pagination.page <= 1}
               >
                 上一页
               </Button>
               <span className="text-sm text-slate-400">
-                第 {pagination.page} / {pagination.pages} 页，共 {pagination.total} 条
+                第 {pagination.page} / {pagination.pages} 页，共{" "}
+                {pagination.total} 条
               </span>
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
+                onClick={() =>
+                  setPagination({ ...pagination, page: pagination.page + 1 })
+                }
                 disabled={pagination.page >= pagination.pages}
               >
                 下一页
@@ -377,10 +402,5 @@ export default function RdProjectWorklogs() {
         </DialogContent>
       </Dialog>
     </motion.div>
-  )
+  );
 }
-
-
-
-
-

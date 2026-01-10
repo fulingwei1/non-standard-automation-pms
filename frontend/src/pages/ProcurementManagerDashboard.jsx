@@ -3,8 +3,8 @@
  * Features: Team management, Supplier management, Purchase approval, Cost analysis, Performance monitoring
  */
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import {
   ShoppingCart,
   Package,
@@ -31,8 +31,8 @@ import {
   Calendar,
   Award,
   ClipboardList,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -46,13 +46,12 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../components/ui'
-import { cn, formatCurrency, formatDate } from '../lib/utils'
-import { purchaseApi, supplierApi, progressApi } from '../services/api'
-import { ApiIntegrationError } from '../components/ui'
+} from "../components/ui";
+import { cn, formatCurrency, formatDate } from "../lib/utils";
+import { purchaseApi, supplierApi, progressApi } from "../services/api";
+import { ApiIntegrationError } from "../components/ui";
 
 // Mock statistics - 已移除，使用真实API
-
 
 /* const mockTeamMembers = [
   {
@@ -177,106 +176,132 @@ import { ApiIntegrationError } from '../components/ui'
 // Mock alerts
 const getStatusColor = (status) => {
   const colors = {
-    active: 'bg-emerald-500',
-    pending: 'bg-amber-500',
-    processing: 'bg-blue-500',
-    completed: 'bg-slate-500',
-    excellent: 'bg-emerald-500',
-    good: 'bg-blue-500',
-    warning: 'bg-amber-500',
-  }
-  return colors[status] || 'bg-slate-500'
-}
+    active: "bg-emerald-500",
+    pending: "bg-amber-500",
+    processing: "bg-blue-500",
+    completed: "bg-slate-500",
+    excellent: "bg-emerald-500",
+    good: "bg-blue-500",
+    warning: "bg-amber-500",
+  };
+  return colors[status] || "bg-slate-500";
+};
 
 const getStatusLabel = (status) => {
   const labels = {
-    active: '正常',
-    pending: '待处理',
-    processing: '处理中',
-    completed: '已完成',
-    excellent: '优秀',
-    good: '良好',
-    warning: '需关注',
-  }
-  return labels[status] || status
-}
+    active: "正常",
+    pending: "待处理",
+    processing: "处理中",
+    completed: "已完成",
+    excellent: "优秀",
+    good: "良好",
+    warning: "需关注",
+  };
+  return labels[status] || status;
+};
 
 const getPriorityColor = (priority) => {
   const colors = {
-    high: 'bg-red-500',
-    medium: 'bg-amber-500',
-    low: 'bg-blue-500',
-  }
-  return colors[priority] || 'bg-slate-500'
-}
+    high: "bg-red-500",
+    medium: "bg-amber-500",
+    low: "bg-blue-500",
+  };
+  return colors[priority] || "bg-slate-500";
+};
 
 const getAlertLevelColor = (level) => {
   const colors = {
-    critical: 'bg-red-500',
-    warning: 'bg-amber-500',
-    info: 'bg-blue-500',
-  }
-  return colors[level] || 'bg-slate-500'
-}
+    critical: "bg-red-500",
+    warning: "bg-amber-500",
+    info: "bg-blue-500",
+  };
+  return colors[level] || "bg-slate-500";
+};
 
 export default function ProcurementManagerDashboard() {
-  const [selectedTab, setSelectedTab] = useState('overview')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [filterStatus, setFilterStatus] = useState('all')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [stats, setStats] = useState(null)
-  const [pendingApprovals, setPendingApprovals] = useState([])
-  const [suppliers, setSuppliers] = useState([])
+  const [selectedTab, setSelectedTab] = useState("overview");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [pendingApprovals, setPendingApprovals] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
 
   // Load procurement statistics
   const loadStatistics = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       // Load purchase orders with different statuses
-      const [pendingResponse, inTransitResponse, allOrdersResponse] = await Promise.all([
-        purchaseApi.orders.list({ status: 'SUBMITTED', page: 1, page_size: 100 }),
-        purchaseApi.orders.list({ status: 'CONFIRMED', page: 1, page_size: 100 }),
-        purchaseApi.orders.list({ page: 1, page_size: 100 }),
-      ])
+      const [pendingResponse, inTransitResponse, allOrdersResponse] =
+        await Promise.all([
+          purchaseApi.orders.list({
+            status: "SUBMITTED",
+            page: 1,
+            page_size: 100,
+          }),
+          purchaseApi.orders.list({
+            status: "CONFIRMED",
+            page: 1,
+            page_size: 100,
+          }),
+          purchaseApi.orders.list({ page: 1, page_size: 100 }),
+        ]);
 
-      const pendingOrders = pendingResponse.data?.items || pendingResponse.data || []
-      const inTransitOrders = inTransitResponse.data?.items || inTransitResponse.data || []
-      const allOrders = allOrdersResponse.data?.items || allOrdersResponse.data || []
+      const pendingOrders =
+        pendingResponse.data?.items || pendingResponse.data || [];
+      const inTransitOrders =
+        inTransitResponse.data?.items || inTransitResponse.data || [];
+      const allOrders =
+        allOrdersResponse.data?.items || allOrdersResponse.data || [];
 
       // Load suppliers
-      const suppliersResponse = await supplierApi.list({ page: 1, page_size: 100, is_active: true })
-      const suppliersData = suppliersResponse.data?.items || suppliersResponse.data || []
-      setSuppliers(suppliersData.slice(0, 4))
+      const suppliersResponse = await supplierApi.list({
+        page: 1,
+        page_size: 100,
+        is_active: true,
+      });
+      const suppliersData =
+        suppliersResponse.data?.items || suppliersResponse.data || [];
+      setSuppliers(suppliersData.slice(0, 4));
 
       // Calculate monthly spending (current month)
-      const now = new Date()
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-      const monthlyOrders = allOrders.filter(order => {
-        const orderDate = new Date(order.created_at || order.order_date || '')
-        return orderDate >= startOfMonth
-      })
-      const monthlySpending = monthlyOrders.reduce((sum, order) => 
-        sum + parseFloat(order.total_amount || order.amount_with_tax || 0), 0
-      )
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthlyOrders = allOrders.filter((order) => {
+        const orderDate = new Date(order.created_at || order.order_date || "");
+        return orderDate >= startOfMonth;
+      });
+      const monthlySpending = monthlyOrders.reduce(
+        (sum, order) =>
+          sum + parseFloat(order.total_amount || order.amount_with_tax || 0),
+        0,
+      );
 
       // Transform pending approvals
-      const approvalsData = pendingOrders.map(order => ({
+      const approvalsData = pendingOrders.map((order) => ({
         id: order.id,
-        orderNo: order.order_no || '',
-        supplier: order.supplier_name || '',
+        orderNo: order.order_no || "",
+        supplier: order.supplier_name || "",
         items: `${order.total_items || 0}项物料`,
         amount: parseFloat(order.total_amount || order.amount_with_tax || 0),
-        submitter: order.created_by_name || 'N/A',
-        submitTime: order.created_at || '',
-        priority: parseFloat(order.total_amount || 0) > 100000 ? 'high' : 
-                  parseFloat(order.total_amount || 0) > 50000 ? 'medium' : 'low',
-        daysPending: order.created_at ? 
-          Math.floor((new Date() - new Date(order.created_at)) / (1000 * 60 * 60 * 24)) : 0,
-      }))
-      setPendingApprovals(approvalsData)
+        submitter: order.created_by_name || "N/A",
+        submitTime: order.created_at || "",
+        priority:
+          parseFloat(order.total_amount || 0) > 100000
+            ? "high"
+            : parseFloat(order.total_amount || 0) > 50000
+              ? "medium"
+              : "low",
+        daysPending: order.created_at
+          ? Math.floor(
+              (new Date() - new Date(order.created_at)) / (1000 * 60 * 60 * 24),
+            )
+          : 0,
+      }));
+      setPendingApprovals(approvalsData);
 
       // Calculate stats
       setStats({
@@ -290,22 +315,22 @@ export default function ProcurementManagerDashboard() {
         costSavings: 0, // Can be calculated from price comparisons
         teamSize: 0, // Can be loaded from user management
         activeTeamMembers: 0,
-      })
+      });
     } catch (err) {
-      console.error('Failed to load procurement statistics:', err)
-      setError(err)
-      setStats(null)
-      setPendingApprovals([])
-      setSuppliers([])
+      console.error("Failed to load procurement statistics:", err);
+      setError(err);
+      setStats(null);
+      setPendingApprovals([]);
+      setSuppliers([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   // Load data when component mounts
   useEffect(() => {
-    loadStatistics()
-  }, [loadStatistics])
+    loadStatistics();
+  }, [loadStatistics]);
 
   // Show error state
   if (error && !stats) {
@@ -321,18 +346,20 @@ export default function ProcurementManagerDashboard() {
           onRetry={loadStatistics}
         />
       </div>
-    )
+    );
   }
 
   const filteredApprovals = useMemo(() => {
-    return pendingApprovals.filter(approval => {
-      const matchesSearch = !searchQuery || 
+    return pendingApprovals.filter((approval) => {
+      const matchesSearch =
+        !searchQuery ||
         approval.orderNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        approval.supplier.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesStatus = filterStatus === 'all' || approval.priority === filterStatus
-      return matchesSearch && matchesStatus
-    })
-  }, [searchQuery, filterStatus])
+        approval.supplier.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus =
+        filterStatus === "all" || approval.priority === filterStatus;
+      return matchesSearch && matchesStatus;
+    });
+  }, [searchQuery, filterStatus]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
@@ -461,7 +488,9 @@ export default function ProcurementManagerDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-sm text-slate-400">预算使用率</p>
-                  <p className="text-lg font-bold text-white">{stats?.budgetUsed || 0}%</p>
+                  <p className="text-lg font-bold text-white">
+                    {stats?.budgetUsed || 0}%
+                  </p>
                 </div>
                 <Progress value={stats?.budgetUsed || 0} className="h-2" />
               </CardContent>
@@ -477,7 +506,9 @@ export default function ProcurementManagerDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-sm text-slate-400">按期到货率</p>
-                  <p className="text-lg font-bold text-white">{stats?.onTimeRate || 0}%</p>
+                  <p className="text-lg font-bold text-white">
+                    {stats?.onTimeRate || 0}%
+                  </p>
                 </div>
                 <Progress value={stats?.onTimeRate || 0} className="h-2" />
               </CardContent>
@@ -526,7 +557,11 @@ export default function ProcurementManagerDashboard() {
         </div>
 
         {/* Main Content Tabs */}
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
+        <Tabs
+          value={selectedTab}
+          onValueChange={setSelectedTab}
+          className="space-y-6"
+        >
           <TabsList className="bg-surface-50 border-white/10">
             <TabsTrigger value="overview">采购概览</TabsTrigger>
             <TabsTrigger value="approvals">订单审批</TabsTrigger>
@@ -563,11 +598,24 @@ export default function ProcurementManagerDashboard() {
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">
-                          <Badge className={cn('text-xs', getPriorityColor(approval.priority))}>
-                            {approval.priority === 'high' ? '紧急' : approval.priority === 'medium' ? '中等' : '普通'}
+                          <Badge
+                            className={cn(
+                              "text-xs",
+                              getPriorityColor(approval.priority),
+                            )}
+                          >
+                            {approval.priority === "high"
+                              ? "紧急"
+                              : approval.priority === "medium"
+                                ? "中等"
+                                : "普通"}
                           </Badge>
-                          <span className="text-sm font-semibold text-white">{approval.orderNo}</span>
-                          <span className="text-sm text-slate-400">{approval.supplier}</span>
+                          <span className="text-sm font-semibold text-white">
+                            {approval.orderNo}
+                          </span>
+                          <span className="text-sm text-slate-400">
+                            {approval.supplier}
+                          </span>
                         </div>
                         <span className="text-sm font-semibold text-amber-400">
                           {formatCurrency(approval.amount)}
@@ -575,7 +623,9 @@ export default function ProcurementManagerDashboard() {
                       </div>
                       <div className="flex items-center justify-between text-sm text-slate-400">
                         <span>{approval.items}</span>
-                        <span>{approval.submitter} · {approval.submitTime}</span>
+                        <span>
+                          {approval.submitter} · {approval.submitTime}
+                        </span>
                       </div>
                     </motion.div>
                   ))}
@@ -598,7 +648,14 @@ export default function ProcurementManagerDashboard() {
                         {stats.activeTeamMembers}/{stats.teamSize}
                       </p>
                     </div>
-                    <Progress value={stats.teamSize > 0 ? (stats.activeTeamMembers / stats.teamSize) * 100 : 0} className="h-2" />
+                    <Progress
+                      value={
+                        stats.teamSize > 0
+                          ? (stats.activeTeamMembers / stats.teamSize) * 100
+                          : 0
+                      }
+                      className="h-2"
+                    />
                   </div>
                   <div className="p-4 rounded-lg bg-surface-100 border border-white/5">
                     <div className="flex items-center justify-between mb-2">
@@ -696,14 +753,30 @@ export default function ProcurementManagerDashboard() {
                   <table className="w-full">
                     <thead className="bg-surface-100 border-b border-white/10">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">订单号</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">供应商</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">物料</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">金额</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">提交人</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">提交时间</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">优先级</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">操作</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          订单号
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          供应商
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          物料
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          金额
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          提交人
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          提交时间
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          优先级
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          操作
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/10">
@@ -715,17 +788,36 @@ export default function ProcurementManagerDashboard() {
                           transition={{ delay: index * 0.05 }}
                           className="hover:bg-white/[0.02]"
                         >
-                          <td className="px-6 py-4 text-sm font-semibold text-white">{approval.orderNo}</td>
-                          <td className="px-6 py-4 text-sm text-slate-300">{approval.supplier}</td>
-                          <td className="px-6 py-4 text-sm text-slate-300">{approval.items}</td>
+                          <td className="px-6 py-4 text-sm font-semibold text-white">
+                            {approval.orderNo}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-slate-300">
+                            {approval.supplier}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-slate-300">
+                            {approval.items}
+                          </td>
                           <td className="px-6 py-4 text-sm font-semibold text-amber-400">
                             {formatCurrency(approval.amount)}
                           </td>
-                          <td className="px-6 py-4 text-sm text-slate-300">{approval.submitter}</td>
-                          <td className="px-6 py-4 text-sm text-slate-400">{approval.submitTime}</td>
+                          <td className="px-6 py-4 text-sm text-slate-300">
+                            {approval.submitter}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-slate-400">
+                            {approval.submitTime}
+                          </td>
                           <td className="px-6 py-4">
-                            <Badge className={cn('text-xs', getPriorityColor(approval.priority))}>
-                              {approval.priority === 'high' ? '紧急' : approval.priority === 'medium' ? '中等' : '普通'}
+                            <Badge
+                              className={cn(
+                                "text-xs",
+                                getPriorityColor(approval.priority),
+                              )}
+                            >
+                              {approval.priority === "high"
+                                ? "紧急"
+                                : approval.priority === "medium"
+                                  ? "中等"
+                                  : "普通"}
                             </Badge>
                           </td>
                           <td className="px-6 py-4">
@@ -733,10 +825,18 @@ export default function ProcurementManagerDashboard() {
                               <Button variant="ghost" size="sm">
                                 <Eye className="w-4 h-4" />
                               </Button>
-                              <Button variant="ghost" size="sm" className="text-emerald-400">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-emerald-400"
+                              >
                                 <CheckCircle2 className="w-4 h-4" />
                               </Button>
-                              <Button variant="ghost" size="sm" className="text-red-400">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-400"
+                              >
                                 <XCircle className="w-4 h-4" />
                               </Button>
                             </div>
@@ -758,14 +858,30 @@ export default function ProcurementManagerDashboard() {
                   <table className="w-full">
                     <thead className="bg-surface-100 border-b border-white/10">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">供应商</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">类别</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">评分</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">订单数</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">累计金额</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">按期率</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">质量率</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">操作</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          供应商
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          类别
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          评分
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          订单数
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          累计金额
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          按期率
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          质量率
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          操作
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/10">
@@ -779,31 +895,53 @@ export default function ProcurementManagerDashboard() {
                         >
                           <td className="px-6 py-4">
                             <div>
-                              <p className="text-sm font-semibold text-white">{supplier.name}</p>
-                              <p className="text-xs text-slate-400">最后订单: {supplier.lastOrder}</p>
+                              <p className="text-sm font-semibold text-white">
+                                {supplier.name}
+                              </p>
+                              <p className="text-xs text-slate-400">
+                                最后订单: {supplier.lastOrder}
+                              </p>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm text-slate-300">{supplier.category}</td>
+                          <td className="px-6 py-4 text-sm text-slate-300">
+                            {supplier.category}
+                          </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-1">
-                              <span className="text-sm font-semibold text-amber-400">{supplier.rating}</span>
-                              <span className="text-xs text-slate-400">/5.0</span>
+                              <span className="text-sm font-semibold text-amber-400">
+                                {supplier.rating}
+                              </span>
+                              <span className="text-xs text-slate-400">
+                                /5.0
+                              </span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm text-slate-300">{supplier.totalOrders}</td>
+                          <td className="px-6 py-4 text-sm text-slate-300">
+                            {supplier.totalOrders}
+                          </td>
                           <td className="px-6 py-4 text-sm font-semibold text-white">
                             {formatCurrency(supplier.totalAmount)}
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
-                              <Progress value={supplier.onTimeRate} className="h-2 w-16" />
-                              <span className="text-sm text-slate-400">{supplier.onTimeRate}%</span>
+                              <Progress
+                                value={supplier.onTimeRate}
+                                className="h-2 w-16"
+                              />
+                              <span className="text-sm text-slate-400">
+                                {supplier.onTimeRate}%
+                              </span>
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
-                              <Progress value={supplier.qualityRate} className="h-2 w-16" />
-                              <span className="text-sm text-slate-400">{supplier.qualityRate}%</span>
+                              <Progress
+                                value={supplier.qualityRate}
+                                className="h-2 w-16"
+                              />
+                              <span className="text-sm text-slate-400">
+                                {supplier.qualityRate}%
+                              </span>
                             </div>
                           </td>
                           <td className="px-6 py-4">
@@ -906,14 +1044,22 @@ export default function ProcurementManagerDashboard() {
                     {mockCostAnalysis.monthlyTrend.map((item, index) => (
                       <div key={index}>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-slate-400">{item.month}</span>
+                          <span className="text-sm text-slate-400">
+                            {item.month}
+                          </span>
                           <span className="text-sm font-semibold text-white">
                             {formatCurrency(item.amount)}
                           </span>
                         </div>
-                        <Progress 
-                          value={(item.amount / mockCostAnalysis.monthlyTrend[mockCostAnalysis.monthlyTrend.length - 1].amount) * 100} 
-                          className="h-2" 
+                        <Progress
+                          value={
+                            (item.amount /
+                              mockCostAnalysis.monthlyTrend[
+                                mockCostAnalysis.monthlyTrend.length - 1
+                              ].amount) *
+                            100
+                          }
+                          className="h-2"
                         />
                       </div>
                     ))}
@@ -930,20 +1076,26 @@ export default function ProcurementManagerDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {mockCostAnalysis.categoryDistribution.map((item, index) => (
-                      <div key={index}>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-slate-400">{item.category}</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-white">
-                              {formatCurrency(item.amount)}
+                    {mockCostAnalysis.categoryDistribution.map(
+                      (item, index) => (
+                        <div key={index}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm text-slate-400">
+                              {item.category}
                             </span>
-                            <span className="text-xs text-slate-500">{item.percentage}%</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-white">
+                                {formatCurrency(item.amount)}
+                              </span>
+                              <span className="text-xs text-slate-500">
+                                {item.percentage}%
+                              </span>
+                            </div>
                           </div>
+                          <Progress value={item.percentage} className="h-2" />
                         </div>
-                        <Progress value={item.percentage} className="h-2" />
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -959,14 +1111,23 @@ export default function ProcurementManagerDashboard() {
               <CardContent>
                 <div className="space-y-4">
                   {mockCostAnalysis.topProjects.map((project, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 rounded-lg bg-surface-100 border border-white/5">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-4 rounded-lg bg-surface-100 border border-white/5"
+                    >
                       <div className="flex items-center gap-4">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                          <span className="text-sm font-bold text-white">{index + 1}</span>
+                          <span className="text-sm font-bold text-white">
+                            {index + 1}
+                          </span>
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-white">{project.project}</p>
-                          <p className="text-xs text-slate-400">{project.percentage}%</p>
+                          <p className="text-sm font-semibold text-white">
+                            {project.project}
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            {project.percentage}%
+                          </p>
                         </div>
                       </div>
                       <span className="text-lg font-semibold text-amber-400">
@@ -1001,6 +1162,5 @@ export default function ProcurementManagerDashboard() {
         </Tabs>
       </div>
     </div>
-  )
+  );
 }
-

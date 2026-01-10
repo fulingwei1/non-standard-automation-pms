@@ -3,8 +3,8 @@
  * Features: Receivable list, payment recording, aging analysis, overdue tracking
  */
 
-import { useState, useEffect, useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
 import {
   Search,
   Filter,
@@ -22,8 +22,8 @@ import {
   Plus,
   Eye,
   Edit,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -45,94 +45,106 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   Progress,
-} from '../components/ui'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { receivableApi, paymentApi, invoiceApi } from '../services/api'
+} from "../components/ui";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { receivableApi, paymentApi, invoiceApi } from "../services/api";
 
 // 收款状态配置
 const paymentStatusConfig = {
-  PENDING: { label: '待收款', color: 'bg-blue-500', textColor: 'text-blue-400' },
-  PARTIAL: { label: '部分收款', color: 'bg-amber-500', textColor: 'text-amber-400' },
-  PAID: { label: '已收款', color: 'bg-emerald-500', textColor: 'text-emerald-400' },
-  OVERDUE: { label: '已逾期', color: 'bg-red-500', textColor: 'text-red-400' },
-}
+  PENDING: {
+    label: "待收款",
+    color: "bg-blue-500",
+    textColor: "text-blue-400",
+  },
+  PARTIAL: {
+    label: "部分收款",
+    color: "bg-amber-500",
+    textColor: "text-amber-400",
+  },
+  PAID: {
+    label: "已收款",
+    color: "bg-emerald-500",
+    textColor: "text-emerald-400",
+  },
+  OVERDUE: { label: "已逾期", color: "bg-red-500", textColor: "text-red-400" },
+};
 
 export default function ReceivableManagement() {
-  const [receivables, setReceivables] = useState([])
-  const [agingData, setAgingData] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [overdueOnly, setOverdueOnly] = useState(false)
-  const [selectedReceivable, setSelectedReceivable] = useState(null)
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false)
-  const [page, setPage] = useState(1)
-  const [total, setTotal] = useState(0)
-  const pageSize = 20
+  const [receivables, setReceivables] = useState([]);
+  const [agingData, setAgingData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [overdueOnly, setOverdueOnly] = useState(false);
+  const [selectedReceivable, setSelectedReceivable] = useState(null);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const pageSize = 20;
 
   const [paymentData, setPaymentData] = useState({
-    paid_amount: '',
-    paid_date: new Date().toISOString().split('T')[0],
-    payment_method: '',
-    bank_account: '',
-    remark: '',
-  })
+    paid_amount: "",
+    paid_date: new Date().toISOString().split("T")[0],
+    payment_method: "",
+    bank_account: "",
+    remark: "",
+  });
 
   const loadReceivables = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const params = {
         page,
         page_size: pageSize,
-        payment_status: statusFilter !== 'all' ? statusFilter : undefined,
-      }
+        payment_status: statusFilter !== "all" ? statusFilter : undefined,
+      };
       // 如果只显示逾期，使用逾期接口
       if (overdueOnly) {
-        const response = await receivableApi.list(params)
+        const response = await receivableApi.list(params);
         if (response.data && response.data.items) {
-          setReceivables(response.data.items)
-          setTotal(response.data.total || 0)
+          setReceivables(response.data.items);
+          setTotal(response.data.total || 0);
         }
       } else {
         // 否则使用回款记录列表接口
-        const response = await paymentApi.list(params)
+        const response = await paymentApi.list(params);
         if (response.data && response.data.items) {
-          setReceivables(response.data.items)
-          setTotal(response.data.total || 0)
+          setReceivables(response.data.items);
+          setTotal(response.data.total || 0);
         }
       }
     } catch (error) {
-      console.error('加载应收账款列表失败:', error)
+      console.error("加载应收账款列表失败:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const loadAging = async () => {
     try {
-      const response = await receivableApi.getAging()
+      const response = await receivableApi.getAging();
       if (response.data && response.data.data) {
-        setAgingData(response.data.data)
+        setAgingData(response.data.data);
       } else if (response.data) {
         // 兼容直接返回数据的情况
-        setAgingData(response.data)
+        setAgingData(response.data);
       }
     } catch (error) {
-      console.error('加载账龄分析失败:', error)
+      console.error("加载账龄分析失败:", error);
     }
-  }
+  };
 
   useEffect(() => {
-    loadReceivables()
-  }, [page, searchTerm, statusFilter, overdueOnly])
+    loadReceivables();
+  }, [page, searchTerm, statusFilter, overdueOnly]);
 
   useEffect(() => {
-    loadAging()
-  }, [])
+    loadAging();
+  }, []);
 
   const handleReceivePayment = async () => {
-    if (!selectedReceivable) return
+    if (!selectedReceivable) return;
     try {
       // 使用新的回款登记API
       await paymentApi.create({
@@ -142,51 +154,51 @@ export default function ReceivableManagement() {
         payment_method: paymentData.payment_method || undefined,
         bank_account: paymentData.bank_account || undefined,
         remark: paymentData.remark || undefined,
-      })
-      setShowPaymentDialog(false)
-      setSelectedReceivable(null)
+      });
+      setShowPaymentDialog(false);
+      setSelectedReceivable(null);
       setPaymentData({
-        paid_amount: '',
-        paid_date: new Date().toISOString().split('T')[0],
-        payment_method: '',
-        bank_account: '',
-        remark: '',
-      })
-      loadReceivables()
-      loadAging()
+        paid_amount: "",
+        paid_date: new Date().toISOString().split("T")[0],
+        payment_method: "",
+        bank_account: "",
+        remark: "",
+      });
+      loadReceivables();
+      loadAging();
     } catch (error) {
-      console.error('记录收款失败:', error)
-      alert('记录收款失败: ' + (error.response?.data?.detail || error.message))
+      console.error("记录收款失败:", error);
+      alert("记录收款失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const formatCurrency = (value) => {
-    if (!value) return '0'
-    const num = parseFloat(value)
+    if (!value) return "0";
+    const num = parseFloat(value);
     if (num >= 10000) {
-      return (num / 10000).toFixed(1) + '万'
+      return (num / 10000).toFixed(1) + "万";
     }
-    return num.toLocaleString()
-  }
+    return num.toLocaleString();
+  };
 
-  const [summary, setSummary] = useState(null)
+  const [summary, setSummary] = useState(null);
 
   const loadSummary = async () => {
     try {
-      const response = await receivableApi.getSummary()
+      const response = await receivableApi.getSummary();
       if (response.data && response.data.data) {
-        setSummary(response.data.data)
+        setSummary(response.data.data);
       } else if (response.data) {
-        setSummary(response.data)
+        setSummary(response.data);
       }
     } catch (error) {
-      console.error('加载应收账款统计失败:', error)
+      console.error("加载应收账款统计失败:", error);
     }
-  }
+  };
 
   useEffect(() => {
-    loadSummary()
-  }, [])
+    loadSummary();
+  }, []);
 
   // 导出数据
   const handleExport = () => {
@@ -198,37 +210,43 @@ export default function ReceivableManagement() {
         合同编码: r.contract_code,
         发票金额: r.invoice_amount || r.total_amount || 0,
         已收金额: r.paid_amount || 0,
-        待收金额: r.unpaid_amount || (r.invoice_amount - r.paid_amount) || 0,
-        到期日期: r.due_date || '',
+        待收金额: r.unpaid_amount || r.invoice_amount - r.paid_amount || 0,
+        到期日期: r.due_date || "",
         逾期天数: r.overdue_days || 0,
-        收款状态: paymentStatusConfig[r.payment_status]?.label || r.payment_status,
-      }))
+        收款状态:
+          paymentStatusConfig[r.payment_status]?.label || r.payment_status,
+      }));
 
       // 转换为CSV格式
-      const headers = Object.keys(exportData[0] || {})
+      const headers = Object.keys(exportData[0] || {});
       const csvContent = [
-        headers.join(','),
+        headers.join(","),
         ...exportData.map((row) =>
-          headers.map((header) => `"${row[header] || ''}"`).join(',')
+          headers.map((header) => `"${row[header] || ""}"`).join(","),
         ),
-      ].join('\n')
+      ].join("\n");
 
       // 添加BOM以支持中文
-      const BOM = '\uFEFF'
-      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
-      const link = document.createElement('a')
-      const url = URL.createObjectURL(blob)
-      link.setAttribute('href', url)
-      link.setAttribute('download', `应收账款列表_${new Date().toISOString().split('T')[0]}.csv`)
-      link.style.visibility = 'hidden'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      const BOM = "\uFEFF";
+      const blob = new Blob([BOM + csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `应收账款列表_${new Date().toISOString().split("T")[0]}.csv`,
+      );
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
-      console.error('导出失败:', error)
-      alert('导出失败: ' + error.message)
+      console.error("导出失败:", error);
+      alert("导出失败: " + error.message);
     }
-  }
+  };
 
   const stats = useMemo(() => {
     if (summary) {
@@ -237,15 +255,29 @@ export default function ReceivableManagement() {
         totalUnpaid: summary.unpaid_amount || 0,
         totalOverdue: summary.overdue_amount || 0,
         overdueCount: summary.overdue_count || 0,
-      }
+      };
     }
     return {
       total: total,
-      totalUnpaid: receivables.reduce((sum, r) => sum + (parseFloat(r.unpaid_amount || (r.invoice_amount - r.paid_amount)) || 0), 0),
-      totalOverdue: receivables.filter((r) => r.overdue_days > 0).reduce((sum, r) => sum + (parseFloat(r.unpaid_amount || (r.invoice_amount - r.paid_amount)) || 0), 0),
+      totalUnpaid: receivables.reduce(
+        (sum, r) =>
+          sum +
+          (parseFloat(r.unpaid_amount || r.invoice_amount - r.paid_amount) ||
+            0),
+        0,
+      ),
+      totalOverdue: receivables
+        .filter((r) => r.overdue_days > 0)
+        .reduce(
+          (sum, r) =>
+            sum +
+            (parseFloat(r.unpaid_amount || r.invoice_amount - r.paid_amount) ||
+              0),
+          0,
+        ),
       overdueCount: receivables.filter((r) => r.overdue_days > 0).length,
-    }
-  }, [receivables, total, summary])
+    };
+  }, [receivables, total, summary]);
 
   return (
     <motion.div
@@ -315,7 +347,9 @@ export default function ReceivableManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">逾期笔数</p>
-                <p className="text-2xl font-bold text-white">{stats.overdueCount}</p>
+                <p className="text-2xl font-bold text-white">
+                  {stats.overdueCount}
+                </p>
               </div>
               <Clock className="h-8 w-8 text-red-400" />
             </div>
@@ -341,26 +375,31 @@ export default function ReceivableManagement() {
                 {Object.entries(agingData.aging_buckets || {})
                   .sort(([a], [b]) => {
                     // 排序：0-30, 31-60, 61-90, 90+
-                    const order = { '0-30': 1, '31-60': 2, '61-90': 3, '90+': 4 }
-                    return (order[a] || 99) - (order[b] || 99)
+                    const order = {
+                      "0-30": 1,
+                      "31-60": 2,
+                      "61-90": 3,
+                      "90+": 4,
+                    };
+                    return (order[a] || 99) - (order[b] || 99);
                   })
                   .map(([key, bucket]) => {
                     const labelMap = {
-                      '0-30': '0-30天',
-                      '31-60': '31-60天',
-                      '61-90': '61-90天',
-                      '90+': '90+天',
-                    }
+                      "0-30": "0-30天",
+                      "31-60": "31-60天",
+                      "61-90": "61-90天",
+                      "90+": "90+天",
+                    };
                     const colorMap = {
-                      '0-30': 'bg-emerald-500',
-                      '31-60': 'bg-blue-500',
-                      '61-90': 'bg-amber-500',
-                      '90+': 'bg-red-500',
-                    }
+                      "0-30": "bg-emerald-500",
+                      "31-60": "bg-blue-500",
+                      "61-90": "bg-amber-500",
+                      "90+": "bg-red-500",
+                    };
                     const percentage =
                       agingData.total_unpaid > 0
                         ? ((bucket.amount || 0) / agingData.total_unpaid) * 100
-                        : 0
+                        : 0;
                     return (
                       <Card key={key} className="border-slate-700">
                         <CardContent className="p-4">
@@ -369,7 +408,7 @@ export default function ReceivableManagement() {
                               <span className="text-sm font-medium text-slate-300">
                                 {labelMap[key] || key}
                               </span>
-                              <Badge className={colorMap[key] || 'bg-blue-500'}>
+                              <Badge className={colorMap[key] || "bg-blue-500"}>
                                 {bucket.count || 0} 笔
                               </Badge>
                             </div>
@@ -379,52 +418,62 @@ export default function ReceivableManagement() {
                             <div className="space-y-1">
                               <div className="flex items-center justify-between text-xs">
                                 <span className="text-slate-400">占比</span>
-                                <span className="text-slate-300">{percentage.toFixed(1)}%</span>
+                                <span className="text-slate-300">
+                                  {percentage.toFixed(1)}%
+                                </span>
                               </div>
-                              <Progress
-                                value={percentage}
-                                className="h-2"
-                              />
+                              <Progress value={percentage} className="h-2" />
                             </div>
                           </div>
                         </CardContent>
                       </Card>
-                    )
+                    );
                   })}
               </div>
 
               {/* 账龄分布图表（简化版） */}
               {agingData.total_unpaid > 0 && (
                 <div className="mt-6 pt-6 border-t border-slate-700">
-                  <h4 className="text-sm font-semibold text-slate-300 mb-4">账龄分布</h4>
+                  <h4 className="text-sm font-semibold text-slate-300 mb-4">
+                    账龄分布
+                  </h4>
                   <div className="flex items-end gap-2 h-32">
                     {Object.entries(agingData.aging_buckets || {})
                       .sort(([a], [b]) => {
-                        const order = { '0-30': 1, '31-60': 2, '61-90': 3, '90+': 4 }
-                        return (order[a] || 99) - (order[b] || 99)
+                        const order = {
+                          "0-30": 1,
+                          "31-60": 2,
+                          "61-90": 3,
+                          "90+": 4,
+                        };
+                        return (order[a] || 99) - (order[b] || 99);
                       })
                       .map(([key, bucket]) => {
                         const height =
                           agingData.total_unpaid > 0
-                            ? ((bucket.amount || 0) / agingData.total_unpaid) * 100
-                            : 0
+                            ? ((bucket.amount || 0) / agingData.total_unpaid) *
+                              100
+                            : 0;
                         const colorMap = {
-                          '0-30': 'bg-emerald-500',
-                          '31-60': 'bg-blue-500',
-                          '61-90': 'bg-amber-500',
-                          '90+': 'bg-red-500',
-                        }
+                          "0-30": "bg-emerald-500",
+                          "31-60": "bg-blue-500",
+                          "61-90": "bg-amber-500",
+                          "90+": "bg-red-500",
+                        };
                         const labelMap = {
-                          '0-30': '0-30天',
-                          '31-60': '31-60天',
-                          '61-90': '61-90天',
-                          '90+': '90+天',
-                        }
+                          "0-30": "0-30天",
+                          "31-60": "31-60天",
+                          "61-90": "61-90天",
+                          "90+": "90+天",
+                        };
                         return (
-                          <div key={key} className="flex-1 flex flex-col items-center gap-2">
+                          <div
+                            key={key}
+                            className="flex-1 flex flex-col items-center gap-2"
+                          >
                             <div className="w-full flex flex-col items-center justify-end h-full">
                               <div
-                                className={`w-full ${colorMap[key] || 'bg-blue-500'} rounded-t transition-all hover:opacity-80 cursor-pointer`}
+                                className={`w-full ${colorMap[key] || "bg-blue-500"} rounded-t transition-all hover:opacity-80 cursor-pointer`}
                                 style={{ height: `${height}%` }}
                                 title={`${labelMap[key]}: ${formatCurrency(bucket.amount || 0)}`}
                               />
@@ -436,7 +485,7 @@ export default function ReceivableManagement() {
                               {formatCurrency(bucket.amount || 0)}
                             </span>
                           </div>
-                        )
+                        );
                       })}
                   </div>
                 </div>
@@ -463,16 +512,21 @@ export default function ReceivableManagement() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
                   <Filter className="mr-2 h-4 w-4" />
-                  状态:{' '}
-                  {statusFilter === 'all'
-                    ? '全部'
+                  状态:{" "}
+                  {statusFilter === "all"
+                    ? "全部"
                     : paymentStatusConfig[statusFilter]?.label}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setStatusFilter('all')}>全部</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter("all")}>
+                  全部
+                </DropdownMenuItem>
                 {Object.entries(paymentStatusConfig).map(([key, config]) => (
-                  <DropdownMenuItem key={key} onClick={() => setStatusFilter(key)}>
+                  <DropdownMenuItem
+                    key={key}
+                    onClick={() => setStatusFilter(key)}
+                  >
                     {config.label}
                   </DropdownMenuItem>
                 ))}
@@ -508,10 +562,13 @@ export default function ReceivableManagement() {
           <CardContent>
             <div className="space-y-2">
               {receivables.map((receivable) => {
-                const invoiceAmount = receivable.invoice_amount || receivable.total_amount || 0
-                const paidAmount = receivable.paid_amount || 0
-                const unpaidAmount = receivable.unpaid_amount || (invoiceAmount - paidAmount)
-                const paymentProgress = invoiceAmount > 0 ? (paidAmount / invoiceAmount) * 100 : 0
+                const invoiceAmount =
+                  receivable.invoice_amount || receivable.total_amount || 0;
+                const paidAmount = receivable.paid_amount || 0;
+                const unpaidAmount =
+                  receivable.unpaid_amount || invoiceAmount - paidAmount;
+                const paymentProgress =
+                  invoiceAmount > 0 ? (paidAmount / invoiceAmount) * 100 : 0;
 
                 return (
                   <motion.div
@@ -525,8 +582,14 @@ export default function ReceivableManagement() {
                           <span className="font-semibold text-slate-100">
                             {receivable.invoice_code}
                           </span>
-                          <Badge className={cn(paymentStatusConfig[receivable.payment_status]?.color)}>
-                            {paymentStatusConfig[receivable.payment_status]?.label || receivable.payment_status}
+                          <Badge
+                            className={cn(
+                              paymentStatusConfig[receivable.payment_status]
+                                ?.color,
+                            )}
+                          >
+                            {paymentStatusConfig[receivable.payment_status]
+                              ?.label || receivable.payment_status}
                           </Badge>
                           {receivable.overdue_days > 0 && (
                             <Badge className="bg-red-500">
@@ -535,9 +598,13 @@ export default function ReceivableManagement() {
                           )}
                         </div>
                         <div className="mt-1 flex items-center gap-3 text-sm">
-                          <span className="text-slate-500">{receivable.customer_name}</span>
+                          <span className="text-slate-500">
+                            {receivable.customer_name}
+                          </span>
                           <span className="text-slate-600">|</span>
-                          <span className="text-slate-500">{receivable.contract_code}</span>
+                          <span className="text-slate-500">
+                            {receivable.contract_code}
+                          </span>
                           {receivable.due_date && (
                             <>
                               <span className="text-slate-600">|</span>
@@ -551,7 +618,7 @@ export default function ReceivableManagement() {
                           <Progress value={paymentProgress} className="h-2" />
                           <div className="flex items-center justify-between mt-1 text-xs text-slate-400">
                             <span>
-                              已收: {formatCurrency(paidAmount)} /{' '}
+                              已收: {formatCurrency(paidAmount)} /{" "}
                               {formatCurrency(invoiceAmount)}
                             </span>
                             <span>待收: {formatCurrency(unpaidAmount)}</span>
@@ -565,13 +632,13 @@ export default function ReceivableManagement() {
                         <p className="text-xs text-slate-500">待收金额</p>
                       </div>
                       <div className="ml-4 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                        {receivable.payment_status !== 'PAID' && (
+                        {receivable.payment_status !== "PAID" && (
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              setSelectedReceivable(receivable)
-                              setShowPaymentDialog(true)
+                              setSelectedReceivable(receivable);
+                              setShowPaymentDialog(true);
                             }}
                           >
                             <CreditCard className="h-4 w-4 mr-2" />
@@ -583,7 +650,10 @@ export default function ReceivableManagement() {
                           variant="outline"
                           onClick={() => {
                             // 查看详情
-                            window.open(`/sales/invoices/${receivable.id}`, '_blank')
+                            window.open(
+                              `/sales/invoices/${receivable.id}`,
+                              "_blank",
+                            );
                           }}
                         >
                           <Eye className="h-4 w-4" />
@@ -591,7 +661,7 @@ export default function ReceivableManagement() {
                       </div>
                     </div>
                   </motion.div>
-                )
+                );
               })}
             </div>
           </CardContent>
@@ -601,7 +671,11 @@ export default function ReceivableManagement() {
       {/* 分页 */}
       {total > pageSize && (
         <div className="flex justify-center gap-2">
-          <Button variant="outline" disabled={page === 1} onClick={() => setPage(page - 1)}>
+          <Button
+            variant="outline"
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+          >
             上一页
           </Button>
           <span className="flex items-center px-4 text-slate-400">
@@ -635,9 +709,17 @@ export default function ReceivableManagement() {
                 type="number"
                 step="0.01"
                 min="0"
-                max={selectedReceivable?.unpaid_amount || selectedReceivable?.invoice_amount}
+                max={
+                  selectedReceivable?.unpaid_amount ||
+                  selectedReceivable?.invoice_amount
+                }
                 value={paymentData.paid_amount}
-                onChange={(e) => setPaymentData({ ...paymentData, paid_amount: e.target.value })}
+                onChange={(e) =>
+                  setPaymentData({
+                    ...paymentData,
+                    paid_amount: e.target.value,
+                  })
+                }
                 placeholder={`最大可收: ${formatCurrency(selectedReceivable?.unpaid_amount || selectedReceivable?.invoice_amount)}`}
               />
             </div>
@@ -646,23 +728,35 @@ export default function ReceivableManagement() {
               <Input
                 type="date"
                 value={paymentData.paid_date}
-                onChange={(e) => setPaymentData({ ...paymentData, paid_date: e.target.value })}
-                max={new Date().toISOString().split('T')[0]}
+                onChange={(e) =>
+                  setPaymentData({ ...paymentData, paid_date: e.target.value })
+                }
+                max={new Date().toISOString().split("T")[0]}
               />
             </div>
             <div>
               <Label>收款方式</Label>
               <Input
-                value={paymentData.payment_method || ''}
-                onChange={(e) => setPaymentData({ ...paymentData, payment_method: e.target.value })}
+                value={paymentData.payment_method || ""}
+                onChange={(e) =>
+                  setPaymentData({
+                    ...paymentData,
+                    payment_method: e.target.value,
+                  })
+                }
                 placeholder="如：银行转账、现金等"
               />
             </div>
             <div>
               <Label>收款账户</Label>
               <Input
-                value={paymentData.bank_account || ''}
-                onChange={(e) => setPaymentData({ ...paymentData, bank_account: e.target.value })}
+                value={paymentData.bank_account || ""}
+                onChange={(e) =>
+                  setPaymentData({
+                    ...paymentData,
+                    bank_account: e.target.value,
+                  })
+                }
                 placeholder="收款银行账户"
               />
             </div>
@@ -670,14 +764,19 @@ export default function ReceivableManagement() {
               <Label>备注</Label>
               <Textarea
                 value={paymentData.remark}
-                onChange={(e) => setPaymentData({ ...paymentData, remark: e.target.value })}
+                onChange={(e) =>
+                  setPaymentData({ ...paymentData, remark: e.target.value })
+                }
                 placeholder="请输入备注"
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowPaymentDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleReceivePayment}>确认收款</Button>
@@ -685,6 +784,5 @@ export default function ReceivableManagement() {
         </DialogContent>
       </Dialog>
     </motion.div>
-  )
+  );
 }
-

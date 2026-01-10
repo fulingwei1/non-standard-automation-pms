@@ -1,13 +1,13 @@
-import React, { useMemo } from 'react'
-import { motion } from 'framer-motion'
-import { Settings, AlertCircle } from 'lucide-react'
-import { useWeightConfig } from '../hooks/useWeightConfig'
-import { fadeIn, validateWeights } from '../utils/weightConfigUtils'
-import { CurrentConfigCard } from '../components/weightConfig/CurrentConfigCard'
-import { ImpactStatistics } from '../components/weightConfig/ImpactStatistics'
-import { CalculationExamples } from '../components/weightConfig/CalculationExamples'
-import { ConfigHistory } from '../components/weightConfig/ConfigHistory'
-import { NoticeCard } from '../components/weightConfig/NoticeCard'
+import React, { useMemo } from "react";
+import { motion } from "framer-motion";
+import { Settings, AlertCircle } from "lucide-react";
+import { useWeightConfig } from "../hooks/useWeightConfig";
+import { fadeIn, validateWeights } from "../utils/weightConfigUtils";
+import { CurrentConfigCard } from "../components/weightConfig/CurrentConfigCard";
+import { ImpactStatistics } from "../components/weightConfig/ImpactStatistics";
+import { CalculationExamples } from "../components/weightConfig/CalculationExamples";
+import { ConfigHistory } from "../components/weightConfig/ConfigHistory";
+import { NoticeCard } from "../components/weightConfig/NoticeCard";
 
 const EvaluationWeightConfig = () => {
   const {
@@ -20,14 +20,14 @@ const EvaluationWeightConfig = () => {
     impactStatistics,
     handleWeightChange,
     handleReset,
-    handleSave
-  } = useWeightConfig()
+    handleSave,
+  } = useWeightConfig();
 
   // 验证权重总和
   const { totalWeight, isValid: isValidWeight } = useMemo(
     () => validateWeights(weights),
-    [weights]
-  )
+    [weights],
+  );
 
   // 加载状态
   if (isLoading) {
@@ -38,7 +38,7 @@ const EvaluationWeightConfig = () => {
           <p className="text-slate-400">加载配置中...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -53,8 +53,12 @@ const EvaluationWeightConfig = () => {
         <motion.div {...fadeIn}>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">绩效评价权重配置</h1>
-              <p className="text-slate-400">调整部门经理和项目经理的评价权重分配</p>
+              <h1 className="text-3xl font-bold text-white mb-2">
+                绩效评价权重配置
+              </h1>
+              <p className="text-slate-400">
+                调整部门经理和项目经理的评价权重分配
+              </p>
             </div>
             <Settings className="h-12 w-12 text-blue-400" />
           </div>
@@ -97,7 +101,7 @@ const EvaluationWeightConfig = () => {
         <NoticeCard />
       </motion.div>
     </div>
-  )
-}
+  );
+};
 
-export default EvaluationWeightConfig
+export default EvaluationWeightConfig;

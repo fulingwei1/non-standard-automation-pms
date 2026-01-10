@@ -2,7 +2,7 @@
  * Material Demand Summary Page - 物料需求汇总页面
  * Features: 多项目物料需求汇总、需求与库存对比、自动生成采购需求
  */
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from "react";
 import {
   Package,
   Search,
@@ -16,25 +16,25 @@ import {
   BarChart3,
   Calendar,
   RefreshCw,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
+} from "../components/ui/select";
 import {
   Table,
   TableBody,
@@ -42,7 +42,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../components/ui/table'
+} from "../components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -50,111 +50,117 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui/dialog'
-import { cn, formatCurrency, formatDate } from '../lib/utils'
-import { materialDemandApi, projectApi } from '../services/api'
+} from "../components/ui/dialog";
+import { cn, formatCurrency, formatDate } from "../lib/utils";
+import { materialDemandApi, projectApi } from "../services/api";
 export default function MaterialDemandSummary() {
-  const [loading, setLoading] = useState(true)
-  const [demands, setDemands] = useState([])
-  const [projects, setProjects] = useState([])
-  const [summary, setSummary] = useState(null)
+  const [loading, setLoading] = useState(true);
+  const [demands, setDemands] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [summary, setSummary] = useState(null);
   // Filters
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [filterProject, setFilterProject] = useState('')
-  const [filterMaterial, setFilterMaterial] = useState('')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [filterProject, setFilterProject] = useState("");
+  const [filterMaterial, setFilterMaterial] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   // Dialogs
-  const [showGenerateDialog, setShowGenerateDialog] = useState(false)
-  const [showVsStockDialog, setShowVsStockDialog] = useState(false)
-  const [selectedMaterial, setSelectedMaterial] = useState(null)
-  const [vsStockData, setVsStockData] = useState(null)
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
+  const [showVsStockDialog, setShowVsStockDialog] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] = useState(null);
+  const [vsStockData, setVsStockData] = useState(null);
   // Form state
   const [generateParams, setGenerateParams] = useState({
     project_ids: [],
     material_ids: [],
     supplier_id: null,
-  })
+  });
   useEffect(() => {
-    fetchProjects()
-    fetchDemands()
-  }, [filterProject, filterMaterial, startDate, endDate, searchKeyword])
+    fetchProjects();
+    fetchDemands();
+  }, [filterProject, filterMaterial, startDate, endDate, searchKeyword]);
   const fetchProjects = async () => {
     try {
-      const res = await projectApi.list({ page_size: 1000 })
-      setProjects(res.data?.items || res.data || [])
+      const res = await projectApi.list({ page_size: 1000 });
+      setProjects(res.data?.items || res.data || []);
     } catch (error) {
-      console.error('Failed to fetch projects:', error)
+      console.error("Failed to fetch projects:", error);
     }
-  }
+  };
   const fetchDemands = async () => {
     try {
-      setLoading(true)
-      const params = {}
-      if (filterProject) params.project_id = filterProject
-      if (filterMaterial) params.material_id = filterMaterial
-      if (startDate) params.start_date = startDate
-      if (endDate) params.end_date = endDate
-      if (searchKeyword) params.search = searchKeyword
-      const res = await materialDemandApi.list(params)
-      const demandList = res.data?.items || res.data || []
-      setDemands(demandList)
+      setLoading(true);
+      const params = {};
+      if (filterProject) params.project_id = filterProject;
+      if (filterMaterial) params.material_id = filterMaterial;
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
+      if (searchKeyword) params.search = searchKeyword;
+      const res = await materialDemandApi.list(params);
+      const demandList = res.data?.items || res.data || [];
+      setDemands(demandList);
       // Calculate summary
-      const totalDemand = demandList.reduce((sum, item) => sum + (item.total_demand || 0), 0)
-      const totalProjects = new Set(demandList.map(item => item.project_id)).size
+      const totalDemand = demandList.reduce(
+        (sum, item) => sum + (item.total_demand || 0),
+        0,
+      );
+      const totalProjects = new Set(demandList.map((item) => item.project_id))
+        .size;
       setSummary({
         total_materials: demandList.length,
         total_demand: totalDemand,
         total_projects: totalProjects,
-      })
+      });
     } catch (error) {
-      console.error('Failed to fetch demands:', error)
+      console.error("Failed to fetch demands:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
   const handleViewVsStock = async (materialId) => {
     try {
-      const res = await materialDemandApi.getVsStock(materialId)
-      setSelectedMaterial(demands.find(d => d.material_id === materialId))
-      setVsStockData(res.data || res)
-      setShowVsStockDialog(true)
+      const res = await materialDemandApi.getVsStock(materialId);
+      setSelectedMaterial(demands.find((d) => d.material_id === materialId));
+      setVsStockData(res.data || res);
+      setShowVsStockDialog(true);
     } catch (error) {
-      console.error('Failed to fetch vs stock data:', error)
+      console.error("Failed to fetch vs stock data:", error);
     }
-  }
+  };
   const handleGeneratePR = async () => {
     try {
-      const params = {}
+      const params = {};
       if (generateParams.project_ids.length > 0) {
-        params.project_ids = generateParams.project_ids.join(',')
+        params.project_ids = generateParams.project_ids.join(",");
       }
       if (generateParams.material_ids.length > 0) {
-        params.material_ids = generateParams.material_ids.join(',')
+        params.material_ids = generateParams.material_ids.join(",");
       }
       if (generateParams.supplier_id) {
-        params.supplier_id = generateParams.supplier_id
+        params.supplier_id = generateParams.supplier_id;
       }
-      await materialDemandApi.generatePR(params)
-      setShowGenerateDialog(false)
-      alert('采购需求生成成功')
+      await materialDemandApi.generatePR(params);
+      setShowGenerateDialog(false);
+      alert("采购需求生成成功");
     } catch (error) {
-      console.error('Failed to generate PR:', error)
-      alert('生成采购需求失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to generate PR:", error);
+      alert(
+        "生成采购需求失败: " + (error.response?.data?.detail || error.message),
+      );
     }
-  }
+  };
   const filteredDemands = useMemo(() => {
-    return demands.filter(demand => {
+    return demands.filter((demand) => {
       if (searchKeyword) {
-        const keyword = searchKeyword.toLowerCase()
+        const keyword = searchKeyword.toLowerCase();
         return (
           demand.material_code?.toLowerCase().includes(keyword) ||
           demand.material_name?.toLowerCase().includes(keyword)
-        )
+        );
       }
-      return true
-    })
-  }, [demands, searchKeyword])
+      return true;
+    });
+  }, [demands, searchKeyword]);
   return (
     <div className="space-y-6 p-6">
       <PageHeader
@@ -169,7 +175,9 @@ export default function MaterialDemandSummary() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm text-slate-500 mb-1">物料种类</div>
-                  <div className="text-2xl font-bold">{summary.total_materials || 0}</div>
+                  <div className="text-2xl font-bold">
+                    {summary.total_materials || 0}
+                  </div>
                 </div>
                 <Package className="w-8 h-8 text-blue-500" />
               </div>
@@ -180,7 +188,9 @@ export default function MaterialDemandSummary() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm text-slate-500 mb-1">总需求数量</div>
-                  <div className="text-2xl font-bold">{summary.total_demand || 0}</div>
+                  <div className="text-2xl font-bold">
+                    {summary.total_demand || 0}
+                  </div>
                 </div>
                 <TrendingUp className="w-8 h-8 text-emerald-500" />
               </div>
@@ -191,7 +201,9 @@ export default function MaterialDemandSummary() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm text-slate-500 mb-1">涉及项目</div>
-                  <div className="text-2xl font-bold">{summary.total_projects || 0}</div>
+                  <div className="text-2xl font-bold">
+                    {summary.total_projects || 0}
+                  </div>
                 </div>
                 <BarChart3 className="w-8 h-8 text-violet-500" />
               </div>
@@ -283,13 +295,19 @@ export default function MaterialDemandSummary() {
                       {demand.total_demand || 0}
                     </TableCell>
                     <TableCell className="text-slate-500 text-sm">
-                      {demand.earliest_date ? formatDate(demand.earliest_date) : '-'}
+                      {demand.earliest_date
+                        ? formatDate(demand.earliest_date)
+                        : "-"}
                     </TableCell>
                     <TableCell className="text-slate-500 text-sm">
-                      {demand.latest_date ? formatDate(demand.latest_date) : '-'}
+                      {demand.latest_date
+                        ? formatDate(demand.latest_date)
+                        : "-"}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{demand.demand_count || 0}</Badge>
+                      <Badge variant="outline">
+                        {demand.demand_count || 0}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -319,13 +337,17 @@ export default function MaterialDemandSummary() {
           <DialogBody>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">选择项目（可选）</label>
+                <label className="text-sm font-medium mb-2 block">
+                  选择项目（可选）
+                </label>
                 <Select
-                  value={generateParams.project_ids[0]?.toString() || ''}
-                  onValueChange={(val) => setGenerateParams({
-                    ...generateParams,
-                    project_ids: val ? [parseInt(val)] : []
-                  })}
+                  value={generateParams.project_ids[0]?.toString() || ""}
+                  onValueChange={(val) =>
+                    setGenerateParams({
+                      ...generateParams,
+                      project_ids: val ? [parseInt(val)] : [],
+                    })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="选择项目（留空则包含所有项目）" />
@@ -341,14 +363,20 @@ export default function MaterialDemandSummary() {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">默认供应商（可选）</label>
+                <label className="text-sm font-medium mb-2 block">
+                  默认供应商（可选）
+                </label>
                 <Input
                   type="number"
-                  value={generateParams.supplier_id || ''}
-                  onChange={(e) => setGenerateParams({
-                    ...generateParams,
-                    supplier_id: e.target.value ? parseInt(e.target.value) : null
-                  })}
+                  value={generateParams.supplier_id || ""}
+                  onChange={(e) =>
+                    setGenerateParams({
+                      ...generateParams,
+                      supplier_id: e.target.value
+                        ? parseInt(e.target.value)
+                        : null,
+                    })
+                  }
                   placeholder="供应商ID"
                 />
               </div>
@@ -358,7 +386,10 @@ export default function MaterialDemandSummary() {
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowGenerateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowGenerateDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleGeneratePR}>生成</Button>
@@ -380,22 +411,32 @@ export default function MaterialDemandSummary() {
                   <Card>
                     <CardContent className="pt-4">
                       <div className="text-sm text-slate-500 mb-1">总需求</div>
-                      <div className="text-2xl font-bold">{vsStockData.total_demand || 0}</div>
+                      <div className="text-2xl font-bold">
+                        {vsStockData.total_demand || 0}
+                      </div>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="pt-4">
-                      <div className="text-sm text-slate-500 mb-1">当前库存</div>
-                      <div className="text-2xl font-bold">{vsStockData.current_stock || 0}</div>
+                      <div className="text-sm text-slate-500 mb-1">
+                        当前库存
+                      </div>
+                      <div className="text-2xl font-bold">
+                        {vsStockData.current_stock || 0}
+                      </div>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="pt-4">
                       <div className="text-sm text-slate-500 mb-1">缺口</div>
-                      <div className={cn(
-                        "text-2xl font-bold",
-                        (vsStockData.shortage || 0) > 0 ? 'text-red-600' : 'text-emerald-600'
-                      )}>
+                      <div
+                        className={cn(
+                          "text-2xl font-bold",
+                          (vsStockData.shortage || 0) > 0
+                            ? "text-red-600"
+                            : "text-emerald-600",
+                        )}
+                      >
                         {vsStockData.shortage || 0}
                       </div>
                     </CardContent>
@@ -417,10 +458,12 @@ export default function MaterialDemandSummary() {
                         {vsStockData.details.map((detail, index) => (
                           <TableRow key={index}>
                             <TableCell>{detail.project_name}</TableCell>
-                            <TableCell>{detail.machine_name || '-'}</TableCell>
+                            <TableCell>{detail.machine_name || "-"}</TableCell>
                             <TableCell>{detail.demand_qty}</TableCell>
                             <TableCell className="text-slate-500 text-sm">
-                              {detail.required_date ? formatDate(detail.required_date) : '-'}
+                              {detail.required_date
+                                ? formatDate(detail.required_date)
+                                : "-"}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -432,13 +475,15 @@ export default function MaterialDemandSummary() {
             )}
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowVsStockDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowVsStockDialog(false)}
+            >
               关闭
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-

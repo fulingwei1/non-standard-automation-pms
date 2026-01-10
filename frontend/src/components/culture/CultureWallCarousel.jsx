@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { cultureWallApi } from '../../services/api'
+import { useEffect, useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cultureWallApi } from "../../services/api";
 import {
   Target,
   Heart,
@@ -17,57 +17,57 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-} from 'lucide-react'
-import { Card, CardContent, Badge, Button } from '../ui'
-import { cn } from '../../lib/utils'
+} from "lucide-react";
+import { Card, CardContent, Badge, Button } from "../ui";
+import { cn } from "../../lib/utils";
 
 const contentTypeConfig = {
   STRATEGY: {
-    label: '战略规划',
+    label: "战略规划",
     icon: Target,
-    color: 'bg-purple-500',
-    textColor: 'text-purple-700',
-    bgColor: 'bg-purple-50',
+    color: "bg-purple-500",
+    textColor: "text-purple-700",
+    bgColor: "bg-purple-50",
   },
   CULTURE: {
-    label: '企业文化',
+    label: "企业文化",
     icon: Heart,
-    color: 'bg-red-500',
-    textColor: 'text-red-700',
-    bgColor: 'bg-red-50',
+    color: "bg-red-500",
+    textColor: "text-red-700",
+    bgColor: "bg-red-50",
   },
   IMPORTANT: {
-    label: '重要事项',
+    label: "重要事项",
     icon: AlertCircle,
-    color: 'bg-orange-500',
-    textColor: 'text-orange-700',
-    bgColor: 'bg-orange-50',
+    color: "bg-orange-500",
+    textColor: "text-orange-700",
+    bgColor: "bg-orange-50",
   },
   NOTICE: {
-    label: '通知公告',
+    label: "通知公告",
     icon: Bell,
-    color: 'bg-blue-500',
-    textColor: 'text-blue-700',
-    bgColor: 'bg-blue-50',
+    color: "bg-blue-500",
+    textColor: "text-blue-700",
+    bgColor: "bg-blue-50",
   },
   REWARD: {
-    label: '奖励通报',
+    label: "奖励通报",
     icon: Award,
-    color: 'bg-yellow-500',
-    textColor: 'text-yellow-700',
-    bgColor: 'bg-yellow-50',
+    color: "bg-yellow-500",
+    textColor: "text-yellow-700",
+    bgColor: "bg-yellow-50",
   },
-}
+};
 
 const goalTypeConfig = {
-  MONTHLY: { label: '月度目标', color: 'bg-blue-500' },
-  QUARTERLY: { label: '季度目标', color: 'bg-green-500' },
-}
+  MONTHLY: { label: "月度目标", color: "bg-blue-500" },
+  QUARTERLY: { label: "季度目标", color: "bg-green-500" },
+};
 
 /**
  * 文化墙滚动播放组件
  * 可在工作台页面中嵌入使用，显示企业战略、企业文化、重要事项、通知公告、奖励通报和个人目标
- * 
+ *
  * @param {Object} props
  * @param {boolean} props.autoPlay - 是否自动播放，默认true
  * @param {number} props.interval - 自动播放间隔（毫秒），默认5000
@@ -81,89 +81,103 @@ export default function CultureWallCarousel({
   interval = 5000,
   showControls = true,
   showIndicators = true,
-  height = '400px',
+  height = "400px",
   onItemClick,
 }) {
-  const [loading, setLoading] = useState(true)
-  const [data, setData] = useState(null)
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(autoPlay)
-  const autoPlayIntervalRef = useRef(null)
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(autoPlay);
+  const autoPlayIntervalRef = useRef(null);
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
   useEffect(() => {
     if (isPlaying && data) {
-      const allItems = getAllItems()
+      const allItems = getAllItems();
       if (allItems.length > 1) {
         autoPlayIntervalRef.current = setInterval(() => {
-          setCurrentIndex((prev) => (prev + 1) % allItems.length)
-        }, interval)
+          setCurrentIndex((prev) => (prev + 1) % allItems.length);
+        }, interval);
       }
       return () => {
         if (autoPlayIntervalRef.current) {
-          clearInterval(autoPlayIntervalRef.current)
+          clearInterval(autoPlayIntervalRef.current);
         }
-      }
+      };
     } else if (autoPlayIntervalRef.current) {
-      clearInterval(autoPlayIntervalRef.current)
+      clearInterval(autoPlayIntervalRef.current);
     }
-  }, [isPlaying, data, interval])
+  }, [isPlaying, data, interval]);
 
   const fetchData = async () => {
     try {
-      setLoading(true)
-      const res = await cultureWallApi.summary.get()
-      const summaryData = res.data || res
-      setData(summaryData)
+      setLoading(true);
+      const res = await cultureWallApi.summary.get();
+      const summaryData = res.data || res;
+      setData(summaryData);
     } catch (err) {
-      console.error('Failed to fetch culture wall data:', err)
+      console.error("Failed to fetch culture wall data:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getAllItems = () => {
-    if (!data) return []
-    const items = []
-    
+    if (!data) return [];
+    const items = [];
+
     // 添加各类内容（管理员设置的内容）
-    data.strategies?.forEach((item) => items.push({ ...item, category: 'STRATEGY' }))
-    data.cultures?.forEach((item) => items.push({ ...item, category: 'CULTURE' }))
-    data.important_items?.forEach((item) => items.push({ ...item, category: 'IMPORTANT' }))
-    data.notices?.forEach((item) => items.push({ ...item, category: 'NOTICE' }))
-    data.rewards?.forEach((item) => items.push({ ...item, category: 'REWARD' }))
-    
+    data.strategies?.forEach((item) =>
+      items.push({ ...item, category: "STRATEGY" }),
+    );
+    data.cultures?.forEach((item) =>
+      items.push({ ...item, category: "CULTURE" }),
+    );
+    data.important_items?.forEach((item) =>
+      items.push({ ...item, category: "IMPORTANT" }),
+    );
+    data.notices?.forEach((item) =>
+      items.push({ ...item, category: "NOTICE" }),
+    );
+    data.rewards?.forEach((item) =>
+      items.push({ ...item, category: "REWARD" }),
+    );
+
     // 添加个人目标（如果管理员允许显示）
     // 注意：如果后端返回的personal_goals为空数组，表示管理员禁用了个人目标显示
     // 如果返回了数据，则表示允许显示
     if (data.personal_goals && data.personal_goals.length > 0) {
-      data.personal_goals.forEach((item) => items.push({ ...item, category: 'GOAL' }))
+      data.personal_goals.forEach((item) =>
+        items.push({ ...item, category: "GOAL" }),
+      );
     }
-    
+
     // 添加系统通知
-    data.notifications?.forEach((item) => items.push({ ...item, category: 'NOTIFICATION' }))
-    
-    return items
-  }
+    data.notifications?.forEach((item) =>
+      items.push({ ...item, category: "NOTIFICATION" }),
+    );
+
+    return items;
+  };
 
   const formatDate = (dateStr) => {
-    if (!dateStr) return ''
-    const date = new Date(dateStr)
-    return date.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    })
-  }
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  };
 
   const renderContentItem = (item) => {
-    const config = contentTypeConfig[item.content_type || item.category]
-    if (!config) return null
+    const config = contentTypeConfig[item.content_type || item.category];
+    if (!config) return null;
 
-    const Icon = config.icon
+    const Icon = config.icon;
 
     return (
       <motion.div
@@ -171,16 +185,18 @@ export default function CultureWallCarousel({
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -20 }}
-        className={cn('h-full flex flex-col cursor-pointer', config.bgColor)}
+        className={cn("h-full flex flex-col cursor-pointer", config.bgColor)}
         onClick={() => onItemClick && onItemClick(item)}
       >
         <Card className="h-full border-0 shadow-md hover:shadow-lg transition-shadow">
           <CardContent className="p-4 h-full flex flex-col">
             <div className="flex items-center gap-2 mb-3">
-              <div className={cn('p-1.5 rounded-lg text-white', config.color)}>
+              <div className={cn("p-1.5 rounded-lg text-white", config.color)}>
                 <Icon className="w-4 h-4" />
               </div>
-              <Badge className={cn('text-xs', config.color)}>{config.label}</Badge>
+              <Badge className={cn("text-xs", config.color)}>
+                {config.label}
+              </Badge>
               {item.publish_date && (
                 <span className="ml-2 text-xs text-gray-500">
                   {formatDate(item.publish_date)}
@@ -190,20 +206,24 @@ export default function CultureWallCarousel({
                 <CheckCircle2 className="w-3 h-3 text-green-500 ml-auto" />
               )}
             </div>
-            
-            <h3 className="text-lg font-bold mb-2 line-clamp-2">{item.title}</h3>
-            
+
+            <h3 className="text-lg font-bold mb-2 line-clamp-2">
+              {item.title}
+            </h3>
+
             {item.summary && (
-              <p className="text-sm text-gray-600 mb-3 flex-1 line-clamp-3">{item.summary}</p>
+              <p className="text-sm text-gray-600 mb-3 flex-1 line-clamp-3">
+                {item.summary}
+              </p>
             )}
-            
+
             {item.content && !item.summary && (
               <p className="text-sm text-gray-600 mb-3 flex-1 line-clamp-3">
                 {item.content.substring(0, 150)}
-                {item.content.length > 150 && '...'}
+                {item.content.length > 150 && "..."}
               </p>
             )}
-            
+
             {item.images && item.images.length > 0 && (
               <div className="mb-3">
                 <img
@@ -213,7 +233,7 @@ export default function CultureWallCarousel({
                 />
               </div>
             )}
-            
+
             <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-200">
               {item.published_by_name && (
                 <span className="text-xs text-gray-500">
@@ -227,13 +247,13 @@ export default function CultureWallCarousel({
           </CardContent>
         </Card>
       </motion.div>
-    )
-  }
+    );
+  };
 
   const renderGoalItem = (goal) => {
-    const config = goalTypeConfig[goal.goal_type]
-    const progress = goal.progress || 0
-    const isCompleted = goal.status === 'COMPLETED'
+    const config = goalTypeConfig[goal.goal_type];
+    const progress = goal.progress || 0;
+    const isCompleted = goal.status === "COMPLETED";
 
     return (
       <motion.div
@@ -247,35 +267,42 @@ export default function CultureWallCarousel({
         <Card className="h-full border-2 border-blue-200 shadow-md hover:shadow-lg transition-shadow">
           <CardContent className="p-4 h-full flex flex-col">
             <div className="flex items-center gap-2 mb-3">
-              <div className={cn('p-1.5 rounded-lg text-white', config.color)}>
+              <div className={cn("p-1.5 rounded-lg text-white", config.color)}>
                 <TrendingUp className="w-4 h-4" />
               </div>
-              <Badge className={cn('text-xs', config.color)}>{config.label}</Badge>
+              <Badge className={cn("text-xs", config.color)}>
+                {config.label}
+              </Badge>
               <span className="ml-2 text-xs text-gray-500">{goal.period}</span>
               {isCompleted && (
                 <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto" />
               )}
             </div>
-            
-            <h3 className="text-lg font-bold mb-2 line-clamp-2">{goal.title}</h3>
-            
+
+            <h3 className="text-lg font-bold mb-2 line-clamp-2">
+              {goal.title}
+            </h3>
+
             {goal.description && (
-              <p className="text-sm text-gray-600 mb-3 flex-1 line-clamp-2">{goal.description}</p>
+              <p className="text-sm text-gray-600 mb-3 flex-1 line-clamp-2">
+                {goal.description}
+              </p>
             )}
-            
+
             {goal.target_value && (
               <div className="mb-3">
                 <div className="flex items-center justify-between text-xs mb-1.5">
                   <span className="text-gray-600">目标进度</span>
                   <span className="font-medium">
-                    {goal.current_value || 0} / {goal.target_value} {goal.unit || ''}
+                    {goal.current_value || 0} / {goal.target_value}{" "}
+                    {goal.unit || ""}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className={cn(
-                      'h-2 rounded-full transition-all',
-                      isCompleted ? 'bg-green-500' : 'bg-blue-500'
+                      "h-2 rounded-full transition-all",
+                      isCompleted ? "bg-green-500" : "bg-blue-500",
                     )}
                     style={{ width: `${progress}%` }}
                   />
@@ -285,7 +312,7 @@ export default function CultureWallCarousel({
                 </div>
               </div>
             )}
-            
+
             {goal.end_date && (
               <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-auto pt-3 border-t border-gray-200">
                 <Clock className="w-3 h-3" />
@@ -295,8 +322,8 @@ export default function CultureWallCarousel({
           </CardContent>
         </Card>
       </motion.div>
-    )
-  }
+    );
+  };
 
   const renderNotificationItem = (notification) => {
     return (
@@ -316,13 +343,17 @@ export default function CultureWallCarousel({
               </div>
               <Badge className="bg-blue-500 text-xs">系统通知</Badge>
             </div>
-            
-            <h3 className="text-lg font-bold mb-2 line-clamp-2">{notification.title}</h3>
-            
+
+            <h3 className="text-lg font-bold mb-2 line-clamp-2">
+              {notification.title}
+            </h3>
+
             {notification.content && (
-              <p className="text-sm text-gray-600 mb-3 flex-1 line-clamp-3">{notification.content}</p>
+              <p className="text-sm text-gray-600 mb-3 flex-1 line-clamp-3">
+                {notification.content}
+              </p>
             )}
-            
+
             {notification.created_at && (
               <div className="text-xs text-gray-500 mt-auto pt-3 border-t border-gray-200">
                 {formatDate(notification.created_at)}
@@ -331,20 +362,20 @@ export default function CultureWallCarousel({
           </CardContent>
         </Card>
       </motion.div>
-    )
-  }
+    );
+  };
 
   const renderItem = (item) => {
-    if (item.category === 'GOAL') {
-      return renderGoalItem(item)
-    } else if (item.category === 'NOTIFICATION') {
-      return renderNotificationItem(item)
+    if (item.category === "GOAL") {
+      return renderGoalItem(item);
+    } else if (item.category === "NOTIFICATION") {
+      return renderNotificationItem(item);
     } else {
-      return renderContentItem(item)
+      return renderContentItem(item);
     }
-  }
+  };
 
-  const allItems = getAllItems()
+  const allItems = getAllItems();
 
   if (loading) {
     return (
@@ -356,7 +387,7 @@ export default function CultureWallCarousel({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (!data || allItems.length === 0) {
@@ -369,7 +400,7 @@ export default function CultureWallCarousel({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -424,13 +455,19 @@ export default function CultureWallCarousel({
         {allItems.length > 1 && (
           <>
             <button
-              onClick={() => setCurrentIndex((prev) => (prev - 1 + allItems.length) % allItems.length)}
+              onClick={() =>
+                setCurrentIndex(
+                  (prev) => (prev - 1 + allItems.length) % allItems.length,
+                )
+              }
               className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setCurrentIndex((prev) => (prev + 1) % allItems.length)}
+              onClick={() =>
+                setCurrentIndex((prev) => (prev + 1) % allItems.length)
+              }
               className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
@@ -446,8 +483,10 @@ export default function CultureWallCarousel({
                 key={index}
                 onClick={() => setCurrentIndex(index)}
                 className={cn(
-                  'h-1.5 rounded-full transition-all',
-                  index === currentIndex ? 'bg-blue-600 w-6' : 'bg-gray-300 w-1.5'
+                  "h-1.5 rounded-full transition-all",
+                  index === currentIndex
+                    ? "bg-blue-600 w-6"
+                    : "bg-gray-300 w-1.5",
                 )}
               />
             ))}
@@ -455,5 +494,5 @@ export default function CultureWallCarousel({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

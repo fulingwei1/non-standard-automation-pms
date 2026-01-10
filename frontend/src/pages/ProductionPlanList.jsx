@@ -2,8 +2,8 @@
  * Production Plan List Page - 生产计划列表页面
  * Features: 生产计划列表、创建、审批、发布
  */
-import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Calendar,
   Plus,
@@ -16,26 +16,26 @@ import {
   AlertTriangle,
   FileText,
   TrendingUp,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
-import { Progress } from '../components/ui/progress'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
+import { Progress } from "../components/ui/progress";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
+} from "../components/ui/select";
 import {
   Table,
   TableBody,
@@ -43,7 +43,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../components/ui/table'
+} from "../components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -51,146 +51,150 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui/dialog'
-import { cn, formatDate } from '../lib/utils'
-import { productionApi, projectApi } from '../services/api'
+} from "../components/ui/dialog";
+import { cn, formatDate } from "../lib/utils";
+import { productionApi, projectApi } from "../services/api";
 const statusConfigs = {
-  DRAFT: { label: '草稿', color: 'bg-slate-500' },
-  SUBMITTED: { label: '已提交', color: 'bg-blue-500' },
-  APPROVED: { label: '已批准', color: 'bg-emerald-500' },
-  PUBLISHED: { label: '已发布', color: 'bg-violet-500' },
-  EXECUTING: { label: '执行中', color: 'bg-amber-500' },
-  COMPLETED: { label: '已完成', color: 'bg-green-500' },
-  CANCELLED: { label: '已取消', color: 'bg-gray-500' },
-}
+  DRAFT: { label: "草稿", color: "bg-slate-500" },
+  SUBMITTED: { label: "已提交", color: "bg-blue-500" },
+  APPROVED: { label: "已批准", color: "bg-emerald-500" },
+  PUBLISHED: { label: "已发布", color: "bg-violet-500" },
+  EXECUTING: { label: "执行中", color: "bg-amber-500" },
+  COMPLETED: { label: "已完成", color: "bg-green-500" },
+  CANCELLED: { label: "已取消", color: "bg-gray-500" },
+};
 const typeConfigs = {
-  MASTER: { label: '主计划', color: 'bg-blue-500' },
-  WORKSHOP: { label: '车间计划', color: 'bg-purple-500' },
-}
+  MASTER: { label: "主计划", color: "bg-blue-500" },
+  WORKSHOP: { label: "车间计划", color: "bg-purple-500" },
+};
 export default function ProductionPlanList() {
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [plans, setPlans] = useState([])
-  const [projects, setProjects] = useState([])
-  const [workshops, setWorkshops] = useState([])
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [plans, setPlans] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [workshops, setWorkshops] = useState([]);
   // Filters
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [filterType, setFilterType] = useState('')
-  const [filterProject, setFilterProject] = useState('')
-  const [filterWorkshop, setFilterWorkshop] = useState('')
-  const [filterStatus, setFilterStatus] = useState('')
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterProject, setFilterProject] = useState("");
+  const [filterWorkshop, setFilterWorkshop] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
   // Dialogs
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [showDetailDialog, setShowDetailDialog] = useState(false)
-  const [selectedPlan, setSelectedPlan] = useState(null)
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
   // Form state
   const [newPlan, setNewPlan] = useState({
-    plan_name: '',
-    plan_type: 'MASTER',
+    plan_name: "",
+    plan_type: "MASTER",
     project_id: null,
     workshop_id: null,
-    plan_start_date: '',
-    plan_end_date: '',
-    description: '',
-    remark: '',
-  })
+    plan_start_date: "",
+    plan_end_date: "",
+    description: "",
+    remark: "",
+  });
   useEffect(() => {
-    fetchProjects()
-    fetchWorkshops()
-    fetchPlans()
-  }, [filterType, filterProject, filterWorkshop, filterStatus, searchKeyword])
+    fetchProjects();
+    fetchWorkshops();
+    fetchPlans();
+  }, [filterType, filterProject, filterWorkshop, filterStatus, searchKeyword]);
   const fetchProjects = async () => {
     try {
-      const res = await projectApi.list({ page_size: 1000 })
-      setProjects(res.data?.items || res.data || [])
+      const res = await projectApi.list({ page_size: 1000 });
+      setProjects(res.data?.items || res.data || []);
     } catch (error) {
-      console.error('Failed to fetch projects:', error)
+      console.error("Failed to fetch projects:", error);
     }
-  }
+  };
   const fetchWorkshops = async () => {
     try {
-      const res = await productionApi.workshops.list({ page_size: 1000 })
-      setWorkshops(res.data?.items || res.data || [])
+      const res = await productionApi.workshops.list({ page_size: 1000 });
+      setWorkshops(res.data?.items || res.data || []);
     } catch (error) {
-      console.error('Failed to fetch workshops:', error)
+      console.error("Failed to fetch workshops:", error);
     }
-  }
+  };
   const fetchPlans = async () => {
     try {
-      setLoading(true)
-      const params = {}
-      if (filterType) params.plan_type = filterType
-      if (filterProject) params.project_id = filterProject
-      if (filterWorkshop) params.workshop_id = filterWorkshop
-      if (filterStatus) params.status = filterStatus
-      if (searchKeyword) params.search = searchKeyword
-      const res = await productionApi.productionPlans.list(params)
-      const planList = res.data?.items || res.data || []
-      setPlans(planList)
+      setLoading(true);
+      const params = {};
+      if (filterType) params.plan_type = filterType;
+      if (filterProject) params.project_id = filterProject;
+      if (filterWorkshop) params.workshop_id = filterWorkshop;
+      if (filterStatus) params.status = filterStatus;
+      if (searchKeyword) params.search = searchKeyword;
+      const res = await productionApi.productionPlans.list(params);
+      const planList = res.data?.items || res.data || [];
+      setPlans(planList);
     } catch (error) {
-      console.error('Failed to fetch plans:', error)
+      console.error("Failed to fetch plans:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
   const handleCreatePlan = async () => {
-    if (!newPlan.plan_name || !newPlan.plan_start_date || !newPlan.plan_end_date) {
-      alert('请填写计划名称和日期')
-      return
+    if (
+      !newPlan.plan_name ||
+      !newPlan.plan_start_date ||
+      !newPlan.plan_end_date
+    ) {
+      alert("请填写计划名称和日期");
+      return;
     }
     try {
-      await productionApi.productionPlans.create(newPlan)
-      setShowCreateDialog(false)
+      await productionApi.productionPlans.create(newPlan);
+      setShowCreateDialog(false);
       setNewPlan({
-        plan_name: '',
-        plan_type: 'MASTER',
+        plan_name: "",
+        plan_type: "MASTER",
         project_id: null,
         workshop_id: null,
-        plan_start_date: '',
-        plan_end_date: '',
-        description: '',
-        remark: '',
-      })
-      fetchPlans()
+        plan_start_date: "",
+        plan_end_date: "",
+        description: "",
+        remark: "",
+      });
+      fetchPlans();
     } catch (error) {
-      console.error('Failed to create plan:', error)
-      alert('创建计划失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to create plan:", error);
+      alert("创建计划失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
   const handleViewDetail = async (planId) => {
     try {
-      const res = await productionApi.productionPlans.get(planId)
-      setSelectedPlan(res.data || res)
-      setShowDetailDialog(true)
+      const res = await productionApi.productionPlans.get(planId);
+      setSelectedPlan(res.data || res);
+      setShowDetailDialog(true);
     } catch (error) {
-      console.error('Failed to fetch plan detail:', error)
+      console.error("Failed to fetch plan detail:", error);
     }
-  }
+  };
   const handlePublish = async (planId) => {
-    if (!confirm('确认发布此生产计划？')) return
+    if (!confirm("确认发布此生产计划？")) return;
     try {
-      await productionApi.productionPlans.publish(planId)
-      fetchPlans()
+      await productionApi.productionPlans.publish(planId);
+      fetchPlans();
       if (showDetailDialog) {
-        handleViewDetail(planId)
+        handleViewDetail(planId);
       }
     } catch (error) {
-      console.error('Failed to publish plan:', error)
-      alert('发布失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to publish plan:", error);
+      alert("发布失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
   const filteredPlans = useMemo(() => {
-    return plans.filter(plan => {
+    return plans.filter((plan) => {
       if (searchKeyword) {
-        const keyword = searchKeyword.toLowerCase()
+        const keyword = searchKeyword.toLowerCase();
         return (
           plan.plan_no?.toLowerCase().includes(keyword) ||
           plan.plan_name?.toLowerCase().includes(keyword)
-        )
+        );
       }
-      return true
-    })
-  }, [plans, searchKeyword])
+      return true;
+    });
+  }, [plans, searchKeyword]);
   return (
     <div className="space-y-6 p-6">
       <PageHeader
@@ -310,14 +314,20 @@ export default function ProductionPlanList() {
                       {plan.plan_name}
                     </TableCell>
                     <TableCell>
-                      <Badge className={typeConfigs[plan.plan_type]?.color || 'bg-slate-500'}>
+                      <Badge
+                        className={
+                          typeConfigs[plan.plan_type]?.color || "bg-slate-500"
+                        }
+                      >
                         {typeConfigs[plan.plan_type]?.label || plan.plan_type}
                       </Badge>
                     </TableCell>
-                    <TableCell>{plan.project_name || '-'}</TableCell>
-                    <TableCell>{plan.workshop_name || '-'}</TableCell>
+                    <TableCell>{plan.project_name || "-"}</TableCell>
+                    <TableCell>{plan.workshop_name || "-"}</TableCell>
                     <TableCell className="text-slate-500 text-sm">
-                      {plan.plan_start_date ? formatDate(plan.plan_start_date) : '-'}
+                      {plan.plan_start_date
+                        ? formatDate(plan.plan_start_date)
+                        : "-"}
                       {plan.plan_end_date && (
                         <>
                           <span className="mx-1">-</span>
@@ -330,11 +340,18 @@ export default function ProductionPlanList() {
                         <div className="flex items-center justify-between text-xs">
                           <span>{plan.progress || 0}%</span>
                         </div>
-                        <Progress value={plan.progress || 0} className="h-1.5" />
+                        <Progress
+                          value={plan.progress || 0}
+                          className="h-1.5"
+                        />
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={statusConfigs[plan.status]?.color || 'bg-slate-500'}>
+                      <Badge
+                        className={
+                          statusConfigs[plan.status]?.color || "bg-slate-500"
+                        }
+                      >
                         {statusConfigs[plan.status]?.label || plan.status}
                       </Badge>
                     </TableCell>
@@ -347,7 +364,7 @@ export default function ProductionPlanList() {
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
-                        {plan.status === 'APPROVED' && (
+                        {plan.status === "APPROVED" && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -374,19 +391,27 @@ export default function ProductionPlanList() {
           <DialogBody>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">计划名称 *</label>
+                <label className="text-sm font-medium mb-2 block">
+                  计划名称 *
+                </label>
                 <Input
                   value={newPlan.plan_name}
-                  onChange={(e) => setNewPlan({ ...newPlan, plan_name: e.target.value })}
+                  onChange={(e) =>
+                    setNewPlan({ ...newPlan, plan_name: e.target.value })
+                  }
                   placeholder="请输入计划名称"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">计划类型</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    计划类型
+                  </label>
                   <Select
                     value={newPlan.plan_type}
-                    onValueChange={(val) => setNewPlan({ ...newPlan, plan_type: val })}
+                    onValueChange={(val) =>
+                      setNewPlan({ ...newPlan, plan_type: val })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -403,8 +428,13 @@ export default function ProductionPlanList() {
                 <div>
                   <label className="text-sm font-medium mb-2 block">项目</label>
                   <Select
-                    value={newPlan.project_id?.toString() || ''}
-                    onValueChange={(val) => setNewPlan({ ...newPlan, project_id: val ? parseInt(val) : null })}
+                    value={newPlan.project_id?.toString() || ""}
+                    onValueChange={(val) =>
+                      setNewPlan({
+                        ...newPlan,
+                        project_id: val ? parseInt(val) : null,
+                      })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="选择项目" />
@@ -420,12 +450,17 @@ export default function ProductionPlanList() {
                   </Select>
                 </div>
               </div>
-              {newPlan.plan_type === 'WORKSHOP' && (
+              {newPlan.plan_type === "WORKSHOP" && (
                 <div>
                   <label className="text-sm font-medium mb-2 block">车间</label>
                   <Select
-                    value={newPlan.workshop_id?.toString() || ''}
-                    onValueChange={(val) => setNewPlan({ ...newPlan, workshop_id: val ? parseInt(val) : null })}
+                    value={newPlan.workshop_id?.toString() || ""}
+                    onValueChange={(val) =>
+                      setNewPlan({
+                        ...newPlan,
+                        workshop_id: val ? parseInt(val) : null,
+                      })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="选择车间" />
@@ -443,19 +478,30 @@ export default function ProductionPlanList() {
               )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">计划开始日期 *</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    计划开始日期 *
+                  </label>
                   <Input
                     type="date"
                     value={newPlan.plan_start_date}
-                    onChange={(e) => setNewPlan({ ...newPlan, plan_start_date: e.target.value })}
+                    onChange={(e) =>
+                      setNewPlan({
+                        ...newPlan,
+                        plan_start_date: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">计划结束日期 *</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    计划结束日期 *
+                  </label>
                   <Input
                     type="date"
                     value={newPlan.plan_end_date}
-                    onChange={(e) => setNewPlan({ ...newPlan, plan_end_date: e.target.value })}
+                    onChange={(e) =>
+                      setNewPlan({ ...newPlan, plan_end_date: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -464,14 +510,19 @@ export default function ProductionPlanList() {
                 <textarea
                   className="w-full min-h-[80px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={newPlan.description}
-                  onChange={(e) => setNewPlan({ ...newPlan, description: e.target.value })}
+                  onChange={(e) =>
+                    setNewPlan({ ...newPlan, description: e.target.value })
+                  }
                   placeholder="计划描述..."
                 />
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleCreatePlan}>创建</Button>
@@ -496,38 +547,55 @@ export default function ProductionPlanList() {
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">状态</div>
-                    <Badge className={statusConfigs[selectedPlan.status]?.color}>
+                    <Badge
+                      className={statusConfigs[selectedPlan.status]?.color}
+                    >
                       {statusConfigs[selectedPlan.status]?.label}
                     </Badge>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">计划类型</div>
-                    <Badge className={typeConfigs[selectedPlan.plan_type]?.color}>
+                    <Badge
+                      className={typeConfigs[selectedPlan.plan_type]?.color}
+                    >
                       {typeConfigs[selectedPlan.plan_type]?.label}
                     </Badge>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">项目</div>
-                    <div>{selectedPlan.project_name || '-'}</div>
+                    <div>{selectedPlan.project_name || "-"}</div>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">车间</div>
-                    <div>{selectedPlan.workshop_name || '-'}</div>
+                    <div>{selectedPlan.workshop_name || "-"}</div>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">进度</div>
                     <div className="space-y-1">
-                      <div className="text-lg font-bold">{selectedPlan.progress || 0}%</div>
-                      <Progress value={selectedPlan.progress || 0} className="h-2" />
+                      <div className="text-lg font-bold">
+                        {selectedPlan.progress || 0}%
+                      </div>
+                      <Progress
+                        value={selectedPlan.progress || 0}
+                        className="h-2"
+                      />
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">计划开始</div>
-                    <div>{selectedPlan.plan_start_date ? formatDate(selectedPlan.plan_start_date) : '-'}</div>
+                    <div>
+                      {selectedPlan.plan_start_date
+                        ? formatDate(selectedPlan.plan_start_date)
+                        : "-"}
+                    </div>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">计划结束</div>
-                    <div>{selectedPlan.plan_end_date ? formatDate(selectedPlan.plan_end_date) : '-'}</div>
+                    <div>
+                      {selectedPlan.plan_end_date
+                        ? formatDate(selectedPlan.plan_end_date)
+                        : "-"}
+                    </div>
                   </div>
                 </div>
                 {selectedPlan.description && (
@@ -540,10 +608,13 @@ export default function ProductionPlanList() {
             )}
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDetailDialog(false)}
+            >
               关闭
             </Button>
-            {selectedPlan && selectedPlan.status === 'APPROVED' && (
+            {selectedPlan && selectedPlan.status === "APPROVED" && (
               <Button onClick={() => handlePublish(selectedPlan.id)}>
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 发布计划
@@ -553,6 +624,5 @@ export default function ProductionPlanList() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-

@@ -1,17 +1,17 @@
-import React from 'react'
+import React from "react";
 import {
   Target,
   FileText,
   TrendingUp,
   AlertCircle,
-  ThumbsUp
-} from 'lucide-react'
+  ThumbsUp,
+} from "lucide-react";
 
 /**
  * 工作总结展示组件
  */
 export const WorkSummaryDisplay = ({ workSummary }) => {
-  if (!workSummary) return null
+  if (!workSummary) return null;
 
   return (
     <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden">
@@ -96,5 +96,5 @@ export const WorkSummaryDisplay = ({ workSummary }) => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};

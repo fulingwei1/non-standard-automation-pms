@@ -3,8 +3,8 @@
  * 管理线索和商机的未决事项
  */
 
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Plus,
   CheckCircle2,
@@ -14,8 +14,8 @@ import {
   User,
   Edit,
   Trash2,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -36,102 +36,108 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui'
-import { technicalAssessmentApi } from '../services/api'
+} from "../components/ui";
+import { technicalAssessmentApi } from "../services/api";
 
 const itemTypeConfig = {
-  INTERFACE: '接口',
-  TAKT: '节拍',
-  ACCEPTANCE: '验收',
-  SAMPLE: '样品',
-  SITE: '现场',
-  REGULATION: '法规',
-  BUSINESS: '商务',
-  OTHER: '其他',
-}
+  INTERFACE: "接口",
+  TAKT: "节拍",
+  ACCEPTANCE: "验收",
+  SAMPLE: "样品",
+  SITE: "现场",
+  REGULATION: "法规",
+  BUSINESS: "商务",
+  OTHER: "其他",
+};
 
 const statusConfig = {
-  PENDING: { label: '待确认', color: 'bg-yellow-500' },
-  REPLIED: { label: '已回复', color: 'bg-blue-500' },
-  VERIFIED: { label: '已验证', color: 'bg-green-500' },
-  CLOSED: { label: '已关闭', color: 'bg-gray-500' },
-}
+  PENDING: { label: "待确认", color: "bg-yellow-500" },
+  REPLIED: { label: "已回复", color: "bg-blue-500" },
+  VERIFIED: { label: "已验证", color: "bg-green-500" },
+  CLOSED: { label: "已关闭", color: "bg-gray-500" },
+};
 
 export default function OpenItemsManagement() {
-  const { sourceType, sourceId } = useParams()
-  const navigate = useNavigate()
-  
-  const [items, setItems] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [editingItem, setEditingItem] = useState(null)
+  const { sourceType, sourceId } = useParams();
+  const navigate = useNavigate();
+
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({
-    item_type: '',
-    description: '',
-    responsible_party: '',
+    item_type: "",
+    description: "",
+    responsible_party: "",
     responsible_person_id: null,
-    due_date: '',
+    due_date: "",
     blocks_quotation: false,
-  })
+  });
 
   useEffect(() => {
-    loadItems()
-  }, [sourceType, sourceId])
+    loadItems();
+  }, [sourceType, sourceId]);
 
   const loadItems = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const response = await technicalAssessmentApi.getOpenItems({
         source_type: sourceType?.toUpperCase(),
         source_id: parseInt(sourceId),
-      })
-      setItems(response.data.items || response.data || [])
+      });
+      setItems(response.data.items || response.data || []);
     } catch (error) {
-      console.error('加载未决事项失败:', error)
+      console.error("加载未决事项失败:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleCreate = async () => {
     try {
-      let response
-      if (sourceType === 'lead') {
-        response = await technicalAssessmentApi.createOpenItemForLead(parseInt(sourceId), formData)
+      let response;
+      if (sourceType === "lead") {
+        response = await technicalAssessmentApi.createOpenItemForLead(
+          parseInt(sourceId),
+          formData,
+        );
       } else {
-        response = await technicalAssessmentApi.createOpenItemForOpportunity(parseInt(sourceId), formData)
+        response = await technicalAssessmentApi.createOpenItemForOpportunity(
+          parseInt(sourceId),
+          formData,
+        );
       }
-      
-      setShowCreateDialog(false)
+
+      setShowCreateDialog(false);
       setFormData({
-        item_type: '',
-        description: '',
-        responsible_party: '',
+        item_type: "",
+        description: "",
+        responsible_party: "",
         responsible_person_id: null,
-        due_date: '',
+        due_date: "",
         blocks_quotation: false,
-      })
-      await loadItems()
+      });
+      await loadItems();
     } catch (error) {
-      console.error('创建未决事项失败:', error)
-      alert('创建失败: ' + (error.response?.data?.detail || error.message))
+      console.error("创建未决事项失败:", error);
+      alert("创建失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const handleClose = async (itemId) => {
-    if (!confirm('确定要关闭此未决事项吗？')) return
-    
+    if (!confirm("确定要关闭此未决事项吗？")) return;
+
     try {
-      await technicalAssessmentApi.closeOpenItem(itemId)
-      await loadItems()
+      await technicalAssessmentApi.closeOpenItem(itemId);
+      await loadItems();
     } catch (error) {
-      console.error('关闭未决事项失败:', error)
-      alert('关闭失败: ' + (error.response?.data?.detail || error.message))
+      console.error("关闭未决事项失败:", error);
+      alert("关闭失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   if (loading) {
-    return <div className="p-6">加载中...</div>
+    return <div className="p-6">加载中...</div>;
   }
 
   return (
@@ -139,9 +145,13 @@ export default function OpenItemsManagement() {
       <PageHeader
         title="未决事项管理"
         breadcrumbs={[
-          { label: '销售管理', path: '/sales' },
-          { label: sourceType === 'lead' ? '线索管理' : '商机管理', path: sourceType === 'lead' ? '/sales/leads' : '/sales/opportunities' },
-          { label: '未决事项', path: '' },
+          { label: "销售管理", path: "/sales" },
+          {
+            label: sourceType === "lead" ? "线索管理" : "商机管理",
+            path:
+              sourceType === "lead" ? "/sales/leads" : "/sales/opportunities",
+          },
+          { label: "未决事项", path: "" },
         ]}
       />
 
@@ -150,7 +160,10 @@ export default function OpenItemsManagement() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>未决事项列表</CardTitle>
-              <Button onClick={() => setShowCreateDialog(true)} className="bg-blue-600 hover:bg-blue-700">
+              <Button
+                onClick={() => setShowCreateDialog(true)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 新建未决事项
               </Button>
@@ -166,10 +179,16 @@ export default function OpenItemsManagement() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge className={statusConfig[item.status]?.color || 'bg-gray-500'}>
+                          <Badge
+                            className={
+                              statusConfig[item.status]?.color || "bg-gray-500"
+                            }
+                          >
                             {statusConfig[item.status]?.label || item.status}
                           </Badge>
-                          <Badge variant="outline">{itemTypeConfig[item.item_type] || item.item_type}</Badge>
+                          <Badge variant="outline">
+                            {itemTypeConfig[item.item_type] || item.item_type}
+                          </Badge>
                           {item.blocks_quotation && (
                             <Badge className="bg-red-500">阻塞报价</Badge>
                           )}
@@ -181,12 +200,15 @@ export default function OpenItemsManagement() {
                             <span>责任人: {item.responsible_person_name}</span>
                           )}
                           {item.due_date && (
-                            <span>截止日期: {new Date(item.due_date).toLocaleDateString()}</span>
+                            <span>
+                              截止日期:{" "}
+                              {new Date(item.due_date).toLocaleDateString()}
+                            </span>
                           )}
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        {item.status !== 'CLOSED' && (
+                        {item.status !== "CLOSED" && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -216,14 +238,18 @@ export default function OpenItemsManagement() {
               <Label>问题类型</Label>
               <Select
                 value={formData.item_type}
-                onValueChange={(value) => setFormData({...formData, item_type: value})}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, item_type: value })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="选择问题类型" />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(itemTypeConfig).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -232,7 +258,9 @@ export default function OpenItemsManagement() {
               <Label>问题描述</Label>
               <Textarea
                 value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 placeholder="请输入问题描述"
                 rows={4}
               />
@@ -241,7 +269,12 @@ export default function OpenItemsManagement() {
               <Label>责任方</Label>
               <Input
                 value={formData.responsible_party}
-                onChange={(e) => setFormData({...formData, responsible_party: e.target.value})}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    responsible_party: e.target.value,
+                  })
+                }
                 placeholder="客户/销售/售前/工程等"
               />
             </div>
@@ -250,7 +283,9 @@ export default function OpenItemsManagement() {
               <Input
                 type="date"
                 value={formData.due_date}
-                onChange={(e) => setFormData({...formData, due_date: e.target.value})}
+                onChange={(e) =>
+                  setFormData({ ...formData, due_date: e.target.value })
+                }
               />
             </div>
             <div className="flex items-center gap-2">
@@ -258,23 +293,32 @@ export default function OpenItemsManagement() {
                 type="checkbox"
                 id="blocks_quotation"
                 checked={formData.blocks_quotation}
-                onChange={(e) => setFormData({...formData, blocks_quotation: e.target.checked})}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    blocks_quotation: e.target.checked,
+                  })
+                }
               />
               <Label htmlFor="blocks_quotation">阻塞报价</Label>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>取消</Button>
-            <Button onClick={handleCreate} className="bg-blue-600 hover:bg-blue-700">创建</Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
+              取消
+            </Button>
+            <Button
+              onClick={handleCreate}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              创建
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-
-
-
-
-
-

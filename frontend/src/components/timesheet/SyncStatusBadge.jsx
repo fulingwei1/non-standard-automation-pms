@@ -1,37 +1,37 @@
-import { CheckCircle2, XCircle, Clock, AlertCircle } from 'lucide-react'
-import { Badge } from '../ui/badge'
-import { cn } from '../../lib/utils'
+import { CheckCircle2, XCircle, Clock, AlertCircle } from "lucide-react";
+import { Badge } from "../ui/badge";
+import { cn } from "../../lib/utils";
 
 /**
  * 工时记录同步状态徽章组件
  * 显示同步到财务/研发/HR/项目的状态
  */
-export function SyncStatusBadge({ syncStatus, size = 'sm' }) {
+export function SyncStatusBadge({ syncStatus, size = "sm" }) {
   if (!syncStatus) {
     return (
       <Badge variant="outline" className="text-xs">
         <Clock className="w-3 h-3 mr-1" />
         未同步
       </Badge>
-    )
+    );
   }
 
   const statusMap = {
-    finance: { label: '财务', key: 'finance' },
-    rd: { label: '研发', key: 'rd' },
-    hr: { label: 'HR', key: 'hr' },
-    project: { label: '项目', key: 'project' },
-  }
+    finance: { label: "财务", key: "finance" },
+    rd: { label: "研发", key: "rd" },
+    hr: { label: "HR", key: "hr" },
+    project: { label: "项目", key: "project" },
+  };
 
   const allSynced = Object.values(statusMap).every(
-    ({ key }) => syncStatus[key]?.status === 'synced'
-  )
+    ({ key }) => syncStatus[key]?.status === "synced",
+  );
   const hasError = Object.values(statusMap).some(
-    ({ key }) => syncStatus[key]?.status === 'error'
-  )
+    ({ key }) => syncStatus[key]?.status === "error",
+  );
   const hasPending = Object.values(statusMap).some(
-    ({ key }) => syncStatus[key]?.status === 'pending'
-  )
+    ({ key }) => syncStatus[key]?.status === "pending",
+  );
 
   if (allSynced) {
     return (
@@ -39,7 +39,7 @@ export function SyncStatusBadge({ syncStatus, size = 'sm' }) {
         <CheckCircle2 className="w-3 h-3 mr-1" />
         已同步
       </Badge>
-    )
+    );
   }
 
   if (hasError) {
@@ -48,16 +48,19 @@ export function SyncStatusBadge({ syncStatus, size = 'sm' }) {
         <XCircle className="w-3 h-3 mr-1" />
         同步失败
       </Badge>
-    )
+    );
   }
 
   if (hasPending) {
     return (
-      <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-500">
+      <Badge
+        variant="outline"
+        className="text-xs border-yellow-500 text-yellow-500"
+      >
         <Clock className="w-3 h-3 mr-1 animate-spin" />
         同步中
       </Badge>
-    )
+    );
   }
 
   return (
@@ -65,7 +68,7 @@ export function SyncStatusBadge({ syncStatus, size = 'sm' }) {
       <AlertCircle className="w-3 h-3 mr-1" />
       部分同步
     </Badge>
-  )
+  );
 }
 
 /**
@@ -74,61 +77,58 @@ export function SyncStatusBadge({ syncStatus, size = 'sm' }) {
 export function SyncStatusDetail({ syncStatus, className }) {
   if (!syncStatus) {
     return (
-      <div className={cn('text-xs text-slate-400', className)}>未同步</div>
-    )
+      <div className={cn("text-xs text-slate-400", className)}>未同步</div>
+    );
   }
 
   const statusMap = {
-    finance: { label: '财务', icon: '💰' },
-    rd: { label: '研发', icon: '🔬' },
-    hr: { label: 'HR', icon: '👥' },
-    project: { label: '项目', icon: '📊' },
-  }
+    finance: { label: "财务", icon: "💰" },
+    rd: { label: "研发", icon: "🔬" },
+    hr: { label: "HR", icon: "👥" },
+    project: { label: "项目", icon: "📊" },
+  };
 
   return (
-    <div className={cn('flex flex-wrap gap-2', className)}>
+    <div className={cn("flex flex-wrap gap-2", className)}>
       {Object.entries(statusMap).map(([key, { label, icon }]) => {
-        const status = syncStatus[key]?.status
+        const status = syncStatus[key]?.status;
         const getStatusColor = () => {
           switch (status) {
-            case 'synced':
-              return 'text-green-500'
-            case 'error':
-              return 'text-red-500'
-            case 'pending':
-              return 'text-yellow-500'
+            case "synced":
+              return "text-green-500";
+            case "error":
+              return "text-red-500";
+            case "pending":
+              return "text-yellow-500";
             default:
-              return 'text-slate-400'
+              return "text-slate-400";
           }
-        }
+        };
 
         const getStatusIcon = () => {
           switch (status) {
-            case 'synced':
-              return <CheckCircle2 className="w-3 h-3" />
-            case 'error':
-              return <XCircle className="w-3 h-3" />
-            case 'pending':
-              return <Clock className="w-3 h-3 animate-spin" />
+            case "synced":
+              return <CheckCircle2 className="w-3 h-3" />;
+            case "error":
+              return <XCircle className="w-3 h-3" />;
+            case "pending":
+              return <Clock className="w-3 h-3 animate-spin" />;
             default:
-              return <AlertCircle className="w-3 h-3" />
+              return <AlertCircle className="w-3 h-3" />;
           }
-        }
+        };
 
         return (
           <div
             key={key}
-            className={cn(
-              'flex items-center gap-1 text-xs',
-              getStatusColor()
-            )}
-            title={`${label}: ${status || '未同步'}`}
+            className={cn("flex items-center gap-1 text-xs", getStatusColor())}
+            title={`${label}: ${status || "未同步"}`}
           >
             {getStatusIcon()}
             <span>{label}</span>
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

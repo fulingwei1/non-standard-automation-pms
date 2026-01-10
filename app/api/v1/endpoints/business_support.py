@@ -106,143 +106,29 @@ async def get_business_support_dashboard(
     获取商务支持工作台统计数据
     包括：进行中合同数、待回款金额、逾期款项、开票率、投标数、验收率等
     """
+    from app.services.business_support_dashboard_service import (
+        count_active_contracts,
+        calculate_pending_amount,
+        calculate_overdue_amount,
+        calculate_invoice_rate,
+        count_active_bidding,
+        calculate_acceptance_rate,
+        get_urgent_tasks,
+        get_today_todos
+    )
+    
     try:
-        # 进行中合同数
-        active_contracts = (
-            db.query(Contract)
-            .filter(Contract.status.in_(["SIGNED", "EXECUTING"]))
-            .count()
-        )
-        
-        # 待回款金额（从项目回款计划表计算）
-        # 使用原生SQL查询project_payment_plans表
-        from sqlalchemy import text
-        today_str = today.strftime("%Y-%m-%d")
-        
-        # 待回款金额 = 计划金额 - 实际收款金额（状态为PENDING或PARTIAL的）
-        pending_result = db.execute(text("""
-            SELECT COALESCE(SUM(planned_amount - actual_amount), 0) as pending
-            FROM project_payment_plans
-            WHERE status IN ('PENDING', 'PARTIAL', 'INVOICED')
-        """)).fetchone()
-        pending_amount = Decimal(str(pending_result[0])) if pending_result else Decimal("0")
-        
-        # 逾期款项 = 计划日期已过但未完全收款的
-        overdue_result = db.execute(text("""
-            SELECT COALESCE(SUM(planned_amount - actual_amount), 0) as overdue
-            FROM project_payment_plans
-            WHERE status IN ('PENDING', 'PARTIAL', 'INVOICED')
-            AND planned_date < :today
-        """), {"today": today_str}).fetchone()
-        overdue_amount = Decimal(str(overdue_result[0])) if overdue_result else Decimal("0")
-        
-        # 本月开票率
         today = date.today()
-        month_start = date(today.year, today.month, 1)
-        month_invoices = (
-            db.query(Invoice)
-            .filter(
-                Invoice.issue_date >= month_start,
-                Invoice.issue_date <= today,
-                Invoice.status == "ISSUED"
-            )
-            .count()
-        )
-        total_invoices = db.query(Invoice).count()
-        invoice_rate = Decimal("0") if total_invoices == 0 else Decimal(month_invoices) / Decimal(total_invoices) * 100
         
-        # 进行中投标数
-        active_bidding = (
-            db.query(BiddingProject)
-            .filter(BiddingProject.status.in_(["draft", "preparing", "submitted"]))
-            .count()
-        )
-        
-        # 验收按期率（从验收模块查询）
-        from app.models.acceptance import AcceptanceOrder
-        total_acceptance = db.query(AcceptanceOrder).count()
-        if total_acceptance > 0:
-            # 查询已完成的验收单，检查是否按期完成
-            # 注意：这里假设有planned_complete_date和completed_at字段，如果没有则使用简化逻辑
-            try:
-                on_time_acceptance = (
-                    db.query(AcceptanceOrder)
-                    .filter(AcceptanceOrder.status == "COMPLETED")
-                    .count()
-                )
-                # 简化计算：已完成验收数 / 总验收数
-                acceptance_rate = Decimal(on_time_acceptance) / Decimal(total_acceptance) * 100
-            except:
-                # 如果字段不存在，使用默认值
-                acceptance_rate = Decimal("92")
-        else:
-            acceptance_rate = Decimal("0")
-        
-        # 紧急任务（从任务中心获取）
-        from app.models.task_center import TaskUnified
-        from datetime import timedelta
-        today_start = datetime.combine(today, datetime.min.time())
-        today_end = datetime.combine(today, datetime.max.time())
-        
-        urgent_tasks_query = (
-            db.query(TaskUnified)
-            .filter(
-                TaskUnified.assignee_id == current_user.id,
-                TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"]),
-                or_(
-                    TaskUnified.is_urgent == True,
-                    TaskUnified.priority == "URGENT"
-                )
-            )
-            .order_by(TaskUnified.deadline.asc())
-            .limit(10)
-        )
-        urgent_tasks_list = urgent_tasks_query.all()
-        urgent_tasks = [
-            {
-                "id": task.id,
-                "type": task.task_type or "other",
-                "title": task.title,
-                "target": task.description or "",
-                "deadline": task.deadline.strftime("%Y-%m-%d") if task.deadline else None,
-                "daysLeft": (task.deadline.date() - today).days if task.deadline else None,
-                "priority": "high",
-                "status": task.status.lower()
-            }
-            for task in urgent_tasks_list
-        ]
-        
-        # 今日待办（从任务中心获取）
-        today_todos_query = (
-            db.query(TaskUnified)
-            .filter(
-                TaskUnified.assignee_id == current_user.id,
-                TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"]),
-                or_(
-                    TaskUnified.deadline == today,
-                    and_(
-                        TaskUnified.deadline.isnot(None),
-                        TaskUnified.deadline < today_start
-                    )
-                )
-            )
-            .order_by(TaskUnified.priority.desc(), TaskUnified.deadline.asc())
-            .limit(20)
-        )
-        today_todos_list = today_todos_query.all()
-        today_todos = [
-            {
-                "id": task.id,
-                "type": task.task_type or "other",
-                "title": task.title,
-                "target": task.description or "",
-                "deadline": task.deadline.strftime("%Y-%m-%d") if task.deadline else None,
-                "daysLeft": (task.deadline.date() - today).days if task.deadline else None,
-                "priority": task.priority.lower() if task.priority else "medium",
-                "status": task.status.lower()
-            }
-            for task in today_todos_list
-        ]
+        # 计算各项统计
+        active_contracts = count_active_contracts(db)
+        pending_amount = calculate_pending_amount(db, today)
+        overdue_amount = calculate_overdue_amount(db, today)
+        invoice_rate = calculate_invoice_rate(db, today)
+        active_bidding = count_active_bidding(db)
+        acceptance_rate = calculate_acceptance_rate(db)
+        urgent_tasks = get_urgent_tasks(db, current_user.id, today)
+        today_todos = get_today_todos(db, current_user.id, today)
         
         dashboard_data = BusinessSupportDashboardResponse(
             active_contracts_count=active_contracts,

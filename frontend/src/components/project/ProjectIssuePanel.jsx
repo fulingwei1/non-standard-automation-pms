@@ -1,36 +1,53 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Card, CardContent, CardHeader, CardTitle, Badge, Button, Tabs, TabsContent, TabsList, TabsTrigger } from '../ui'
-import { AlertCircle, CheckCircle2, XCircle, Clock, Search } from 'lucide-react'
-import { formatDate } from '../../lib/utils'
-import { projectWorkspaceApi } from '../../services/api'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Badge,
+  Button,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../ui";
+import {
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Search,
+} from "lucide-react";
+import { formatDate } from "../../lib/utils";
+import { projectWorkspaceApi } from "../../services/api";
 
 export default function ProjectIssuePanel({ projectId }) {
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [issues, setIssues] = useState([])
-  const [solutions, setSolutions] = useState(null)
-  const [activeTab, setActiveTab] = useState('all')
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [issues, setIssues] = useState([]);
+  const [solutions, setSolutions] = useState(null);
+  const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
-    fetchIssueData()
-  }, [projectId])
+    fetchIssueData();
+  }, [projectId]);
 
   const fetchIssueData = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const [issuesRes, solutionsRes] = await Promise.all([
         projectWorkspaceApi.getIssues(projectId),
         projectWorkspaceApi.getSolutions(projectId),
-      ])
-      setIssues(issuesRes.data?.issues || [])
-      setSolutions(solutionsRes.data)
+      ]);
+      setIssues(issuesRes.data?.issues || []);
+      setSolutions(solutionsRes.data);
     } catch (error) {
-      console.error('Failed to load issue data:', error)
+      console.error("Failed to load issue data:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -39,22 +56,27 @@ export default function ProjectIssuePanel({ projectId }) {
           <div className="text-center text-gray-500">加载中...</div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
-  const openIssues = issues.filter((i) => i.status === 'OPEN' || i.status === 'IN_PROGRESS')
+  const openIssues = issues.filter(
+    (i) => i.status === "OPEN" || i.status === "IN_PROGRESS",
+  );
   const resolvedIssues = issues.filter(
-    (i) => i.status === 'RESOLVED' || i.status === 'CLOSED' || i.status === 'VERIFIED'
-  )
+    (i) =>
+      i.status === "RESOLVED" ||
+      i.status === "CLOSED" ||
+      i.status === "VERIFIED",
+  );
 
   const filteredIssues =
-    activeTab === 'all'
+    activeTab === "all"
       ? issues
-      : activeTab === 'open'
-      ? openIssues
-      : activeTab === 'resolved'
-      ? resolvedIssues
-      : issues.filter((i) => i.has_solution)
+      : activeTab === "open"
+        ? openIssues
+        : activeTab === "resolved"
+          ? resolvedIssues
+          : issues.filter((i) => i.has_solution);
 
   return (
     <div className="space-y-6">
@@ -69,13 +91,17 @@ export default function ProjectIssuePanel({ projectId }) {
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-gray-500">待处理</p>
-            <p className="text-2xl font-bold text-orange-600">{openIssues.length}</p>
+            <p className="text-2xl font-bold text-orange-600">
+              {openIssues.length}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-gray-500">已解决</p>
-            <p className="text-2xl font-bold text-green-600">{resolvedIssues.length}</p>
+            <p className="text-2xl font-bold text-green-600">
+              {resolvedIssues.length}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -128,11 +154,11 @@ export default function ProjectIssuePanel({ projectId }) {
                           <div className="flex items-center gap-2">
                             <Badge
                               variant={
-                                issue.severity === 'CRITICAL'
-                                  ? 'destructive'
-                                  : issue.severity === 'MAJOR'
-                                  ? 'default'
-                                  : 'secondary'
+                                issue.severity === "CRITICAL"
+                                  ? "destructive"
+                                  : issue.severity === "MAJOR"
+                                    ? "default"
+                                    : "secondary"
                               }
                             >
                               {issue.severity}
@@ -154,9 +180,10 @@ export default function ProjectIssuePanel({ projectId }) {
                         </div>
                         <Badge
                           variant={
-                            issue.status === 'RESOLVED' || issue.status === 'CLOSED'
-                              ? 'default'
-                              : 'secondary'
+                            issue.status === "RESOLVED" ||
+                            issue.status === "CLOSED"
+                              ? "default"
+                              : "secondary"
                           }
                         >
                           {issue.status}
@@ -230,7 +257,7 @@ export default function ProjectIssuePanel({ projectId }) {
                   {solution.solution && (
                     <div className="mt-2 p-3 bg-gray-50 rounded text-sm">
                       {solution.solution.substring(0, 200)}
-                      {solution.solution.length > 200 && '...'}
+                      {solution.solution.length > 200 && "..."}
                     </div>
                   )}
                 </div>
@@ -240,5 +267,5 @@ export default function ProjectIssuePanel({ projectId }) {
         </Card>
       )}
     </div>
-  )
+  );
 }

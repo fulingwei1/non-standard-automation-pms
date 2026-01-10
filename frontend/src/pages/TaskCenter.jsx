@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ListTodo,
   Calendar,
@@ -21,24 +21,24 @@ import {
   Zap,
   Wrench,
   Package,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
-import { Progress } from '../components/ui/progress'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { getRoleInfo, isEngineerRole } from '../lib/roleConfig'
-import { progressApi, projectApi, taskCenterApi } from '../services/api'
-import { ApiIntegrationError } from '../components/ui'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
+import { Progress } from "../components/ui/progress";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { getRoleInfo, isEngineerRole } from "../lib/roleConfig";
+import { progressApi, projectApi, taskCenterApi } from "../services/api";
+import { ApiIntegrationError } from "../components/ui";
 
 // Mock task data removed - 使用真实API
 
@@ -46,65 +46,65 @@ import { ApiIntegrationError } from '../components/ui'
 // Mock data - 已移除，使用真实API
 const statusConfigs = {
   pending: {
-    label: '待开始',
+    label: "待开始",
     icon: Circle,
-    color: 'text-slate-400',
-    bgColor: 'bg-slate-500/10',
+    color: "text-slate-400",
+    bgColor: "bg-slate-500/10",
   },
   in_progress: {
-    label: '进行中',
+    label: "进行中",
     icon: PlayCircle,
-    color: 'text-blue-400',
-    bgColor: 'bg-blue-500/10',
+    color: "text-blue-400",
+    bgColor: "bg-blue-500/10",
   },
   blocked: {
-    label: '阻塞',
+    label: "阻塞",
     icon: PauseCircle,
-    color: 'text-red-400',
-    bgColor: 'bg-red-500/10',
+    color: "text-red-400",
+    bgColor: "bg-red-500/10",
   },
   completed: {
-    label: '已完成',
+    label: "已完成",
     icon: CheckCircle2,
-    color: 'text-emerald-400',
-    bgColor: 'bg-emerald-500/10',
+    color: "text-emerald-400",
+    bgColor: "bg-emerald-500/10",
   },
-}
+};
 
 const priorityConfigs = {
-  low: { label: '低', color: 'text-slate-400', flagColor: 'text-slate-400' },
-  medium: { label: '中', color: 'text-blue-400', flagColor: 'text-blue-400' },
-  high: { label: '高', color: 'text-amber-400', flagColor: 'text-amber-400' },
-  critical: { label: '紧急', color: 'text-red-400', flagColor: 'text-red-400' },
-}
+  low: { label: "低", color: "text-slate-400", flagColor: "text-slate-400" },
+  medium: { label: "中", color: "text-blue-400", flagColor: "text-blue-400" },
+  high: { label: "高", color: "text-amber-400", flagColor: "text-amber-400" },
+  critical: { label: "紧急", color: "text-red-400", flagColor: "text-red-400" },
+};
 
 // Assembly task card for workers (装配技工专用任务卡片)
 function AssemblyTaskCard({ task, onStatusChange, onStepToggle }) {
-  const [expanded, setExpanded] = useState(true)
-  const status = statusConfigs[task.status]
-  const priority = priorityConfigs[task.priority]
-  const StatusIcon = status.icon
+  const [expanded, setExpanded] = useState(true);
+  const status = statusConfigs[task.status];
+  const priority = priorityConfigs[task.priority];
+  const StatusIcon = status.icon;
 
   const isOverdue =
-    task.status !== 'completed' && new Date(task.dueDate) < new Date()
+    task.status !== "completed" && new Date(task.dueDate) < new Date();
 
-  const partsReady = task.parts?.filter(p => p.ready).length || 0
-  const partsTotal = task.parts?.length || 0
-  const stepsCompleted = task.instructions?.filter(s => s.done).length || 0
-  const stepsTotal = task.instructions?.length || 0
+  const partsReady = task.parts?.filter((p) => p.ready).length || 0;
+  const partsTotal = task.parts?.length || 0;
+  const stepsCompleted = task.instructions?.filter((s) => s.done).length || 0;
+  const stepsTotal = task.instructions?.length || 0;
 
   return (
     <motion.div
       layout
       className={cn(
-        'rounded-2xl border overflow-hidden',
-        task.status === 'blocked'
-          ? 'bg-red-500/5 border-red-500/30'
+        "rounded-2xl border overflow-hidden",
+        task.status === "blocked"
+          ? "bg-red-500/5 border-red-500/30"
           : isOverdue
-          ? 'bg-amber-500/5 border-amber-500/30'
-          : task.status === 'in_progress'
-          ? 'bg-blue-500/5 border-blue-500/30'
-          : 'bg-surface-1 border-border'
+            ? "bg-amber-500/5 border-amber-500/30"
+            : task.status === "in_progress"
+              ? "bg-blue-500/5 border-blue-500/30"
+              : "bg-surface-1 border-border",
       )}
     >
       {/* Header - larger touch target for workers */}
@@ -112,24 +112,28 @@ function AssemblyTaskCard({ task, onStatusChange, onStepToggle }) {
         <div className="flex items-start gap-4">
           <button
             onClick={() => {
-              if (task.status === 'pending') onStatusChange(task.id, 'in_progress')
-              else if (task.status === 'in_progress' && stepsCompleted === stepsTotal) 
-                onStatusChange(task.id, 'completed')
+              if (task.status === "pending")
+                onStatusChange(task.id, "in_progress");
+              else if (
+                task.status === "in_progress" &&
+                stepsCompleted === stepsTotal
+              )
+                onStatusChange(task.id, "completed");
             }}
             className={cn(
-              'p-3 rounded-xl transition-colors',
+              "p-3 rounded-xl transition-colors",
               status.bgColor,
-              task.status !== 'blocked' && 'hover:bg-accent/20 active:scale-95'
+              task.status !== "blocked" && "hover:bg-accent/20 active:scale-95",
             )}
           >
-            <StatusIcon className={cn('w-8 h-8', status.color)} />
+            <StatusIcon className={cn("w-8 h-8", status.color)} />
           </button>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <Badge 
-                variant="outline" 
-                className={cn('text-xs', priority.color, 'border-current')}
+              <Badge
+                variant="outline"
+                className={cn("text-xs", priority.color, "border-current")}
               >
                 {priority.label}优先级
               </Badge>
@@ -153,13 +157,18 @@ function AssemblyTaskCard({ task, onStatusChange, onStepToggle }) {
         )}
 
         {/* Progress */}
-        {task.status === 'in_progress' && (
+        {task.status === "in_progress" && (
           <div className="mt-4">
             <div className="flex items-center justify-between text-sm mb-2">
               <span className="text-slate-400">进度</span>
-              <span className="text-white font-medium">{stepsCompleted}/{stepsTotal} 步骤</span>
+              <span className="text-white font-medium">
+                {stepsCompleted}/{stepsTotal} 步骤
+              </span>
             </div>
-            <Progress value={(stepsCompleted / stepsTotal) * 100 || 0} className="h-2" />
+            <Progress
+              value={(stepsCompleted / stepsTotal) * 100 || 0}
+              className="h-2"
+            />
           </div>
         )}
 
@@ -167,8 +176,8 @@ function AssemblyTaskCard({ task, onStatusChange, onStepToggle }) {
         <div className="flex items-center gap-6 mt-4 text-sm">
           <span
             className={cn(
-              'flex items-center gap-2',
-              isOverdue ? 'text-red-400' : 'text-slate-400'
+              "flex items-center gap-2",
+              isOverdue ? "text-red-400" : "text-slate-400",
             )}
           >
             <Calendar className="w-4 h-4" />
@@ -201,7 +210,7 @@ function AssemblyTaskCard({ task, onStatusChange, onStepToggle }) {
             {expanded && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
+                animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden"
               >
@@ -210,14 +219,14 @@ function AssemblyTaskCard({ task, onStatusChange, onStepToggle }) {
                     <div
                       key={idx}
                       className={cn(
-                        'flex items-center gap-2 p-2 rounded-lg text-sm',
-                        part.ready ? 'bg-emerald-500/10' : 'bg-amber-500/10'
+                        "flex items-center gap-2 p-2 rounded-lg text-sm",
+                        part.ready ? "bg-emerald-500/10" : "bg-amber-500/10",
                       )}
                     >
                       <div
                         className={cn(
-                          'w-5 h-5 rounded-full flex items-center justify-center',
-                          part.ready ? 'bg-emerald-500' : 'bg-amber-500'
+                          "w-5 h-5 rounded-full flex items-center justify-center",
+                          part.ready ? "bg-emerald-500" : "bg-amber-500",
                         )}
                       >
                         {part.ready ? (
@@ -226,7 +235,11 @@ function AssemblyTaskCard({ task, onStatusChange, onStepToggle }) {
                           <Clock className="w-3 h-3 text-white" />
                         )}
                       </div>
-                      <span className={part.ready ? 'text-emerald-300' : 'text-amber-300'}>
+                      <span
+                        className={
+                          part.ready ? "text-emerald-300" : "text-amber-300"
+                        }
+                      >
                         {part.name} x{part.qty}
                       </span>
                     </div>
@@ -251,18 +264,18 @@ function AssemblyTaskCard({ task, onStatusChange, onStepToggle }) {
                 key={step.step}
                 onClick={() => onStepToggle(task.id, step.step)}
                 className={cn(
-                  'w-full flex items-center gap-3 p-3 rounded-xl text-left transition-colors',
+                  "w-full flex items-center gap-3 p-3 rounded-xl text-left transition-colors",
                   step.done
-                    ? 'bg-emerald-500/10'
-                    : 'bg-surface-2/50 hover:bg-surface-2'
+                    ? "bg-emerald-500/10"
+                    : "bg-surface-2/50 hover:bg-surface-2",
                 )}
               >
                 <div
                   className={cn(
-                    'w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0',
+                    "w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0",
                     step.done
-                      ? 'bg-emerald-500 border-emerald-500'
-                      : 'border-slate-500'
+                      ? "bg-emerald-500 border-emerald-500"
+                      : "border-slate-500",
                   )}
                 >
                   {step.done ? (
@@ -273,10 +286,8 @@ function AssemblyTaskCard({ task, onStatusChange, onStepToggle }) {
                 </div>
                 <span
                   className={cn(
-                    'text-sm',
-                    step.done
-                      ? 'text-emerald-300 line-through'
-                      : 'text-white'
+                    "text-sm",
+                    step.done ? "text-emerald-300 line-through" : "text-white",
                   )}
                 >
                   {step.desc}
@@ -302,38 +313,38 @@ function AssemblyTaskCard({ task, onStatusChange, onStepToggle }) {
         <div className="px-5 py-3 bg-surface-2/30 border-t border-border/30">
           <p className="text-xs text-slate-400">
             <span className="font-medium">所需工具：</span>
-            {task.tools.join('、')}
+            {task.tools.join("、")}
           </p>
         </div>
       )}
     </motion.div>
-  )
+  );
 }
 
 function TaskCard({ task, onStatusChange }) {
-  const [expanded, setExpanded] = useState(false)
-  const status = statusConfigs[task.status]
-  const priority = priorityConfigs[task.priority]
-  const StatusIcon = status.icon
+  const [expanded, setExpanded] = useState(false);
+  const status = statusConfigs[task.status];
+  const priority = priorityConfigs[task.priority];
+  const StatusIcon = status.icon;
 
   const isOverdue =
-    task.status !== 'completed' && new Date(task.dueDate) < new Date()
+    task.status !== "completed" && new Date(task.dueDate) < new Date();
 
   const daysUntilDue = Math.ceil(
-    (new Date(task.dueDate) - new Date()) / (1000 * 60 * 60 * 24)
-  )
+    (new Date(task.dueDate) - new Date()) / (1000 * 60 * 60 * 24),
+  );
 
   return (
     <motion.div
       layout
       whileHover={{ scale: 1.005 }}
       className={cn(
-        'rounded-xl border overflow-hidden transition-colors',
-        task.status === 'blocked'
-          ? 'bg-red-500/5 border-red-500/30'
+        "rounded-xl border overflow-hidden transition-colors",
+        task.status === "blocked"
+          ? "bg-red-500/5 border-red-500/30"
           : isOverdue
-          ? 'bg-amber-500/5 border-amber-500/30'
-          : 'bg-surface-1 border-border'
+            ? "bg-amber-500/5 border-amber-500/30"
+            : "bg-surface-1 border-border",
       )}
     >
       <div className="p-4">
@@ -341,22 +352,26 @@ function TaskCard({ task, onStatusChange }) {
         <div className="flex items-start gap-3">
           <button
             onClick={() => {
-              if (task.status === 'pending') onStatusChange(task.id, 'in_progress')
-              else if (task.status === 'in_progress') onStatusChange(task.id, 'completed')
+              if (task.status === "pending")
+                onStatusChange(task.id, "in_progress");
+              else if (task.status === "in_progress")
+                onStatusChange(task.id, "completed");
             }}
             className={cn(
-              'mt-0.5 p-1 rounded-lg transition-colors',
+              "mt-0.5 p-1 rounded-lg transition-colors",
               status.bgColor,
-              task.status !== 'blocked' && 'hover:bg-accent/20'
+              task.status !== "blocked" && "hover:bg-accent/20",
             )}
           >
-            <StatusIcon className={cn('w-5 h-5', status.color)} />
+            <StatusIcon className={cn("w-5 h-5", status.color)} />
           </button>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <Flag className={cn('w-3.5 h-3.5', priority.flagColor)} />
-              <span className="font-mono text-xs text-slate-500">{task.id}</span>
+              <Flag className={cn("w-3.5 h-3.5", priority.flagColor)} />
+              <span className="font-mono text-xs text-slate-500">
+                {task.id}
+              </span>
             </div>
             <h3 className="font-medium text-white mb-1">{task.title}</h3>
             <div className="flex items-center gap-2 text-xs text-slate-400">
@@ -381,7 +396,7 @@ function TaskCard({ task, onStatusChange }) {
         )}
 
         {/* Progress */}
-        {task.status === 'in_progress' && (
+        {task.status === "in_progress" && (
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs mb-1">
               <span className="text-slate-400">进度</span>
@@ -395,8 +410,8 @@ function TaskCard({ task, onStatusChange }) {
         <div className="flex items-center gap-4 mt-3 text-xs">
           <span
             className={cn(
-              'flex items-center gap-1',
-              isOverdue ? 'text-red-400' : 'text-slate-400'
+              "flex items-center gap-1",
+              isOverdue ? "text-red-400" : "text-slate-400",
             )}
           >
             <Calendar className="w-3 h-3" />
@@ -418,7 +433,11 @@ function TaskCard({ task, onStatusChange }) {
         {task.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-3">
             {task.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-[10px] px-1.5">
+              <Badge
+                key={tag}
+                variant="secondary"
+                className="text-[10px] px-1.5"
+              >
                 {tag}
               </Badge>
             ))}
@@ -432,7 +451,10 @@ function TaskCard({ task, onStatusChange }) {
               onClick={() => setExpanded(!expanded)}
               className="w-full flex items-center justify-between text-xs text-slate-400 hover:text-white transition-colors"
             >
-              <span>子任务 ({task.subTasks.filter((st) => st.completed).length}/{task.subTasks.length})</span>
+              <span>
+                子任务 ({task.subTasks.filter((st) => st.completed).length}/
+                {task.subTasks.length})
+              </span>
               <motion.span animate={{ rotate: expanded ? 90 : 0 }}>
                 <ChevronRight className="w-4 h-4" />
               </motion.span>
@@ -442,7 +464,7 @@ function TaskCard({ task, onStatusChange }) {
               {expanded && (
                 <motion.div
                   initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
+                  animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   className="overflow-hidden"
                 >
@@ -454,10 +476,10 @@ function TaskCard({ task, onStatusChange }) {
                       >
                         <div
                           className={cn(
-                            'w-3.5 h-3.5 rounded-full border flex items-center justify-center',
+                            "w-3.5 h-3.5 rounded-full border flex items-center justify-center",
                             subTask.completed
-                              ? 'bg-emerald-500 border-emerald-500'
-                              : 'border-slate-500'
+                              ? "bg-emerald-500 border-emerald-500"
+                              : "border-slate-500",
                           )}
                         >
                           {subTask.completed && (
@@ -467,8 +489,8 @@ function TaskCard({ task, onStatusChange }) {
                         <span
                           className={cn(
                             subTask.completed
-                              ? 'text-slate-500 line-through'
-                              : 'text-slate-300'
+                              ? "text-slate-500 line-through"
+                              : "text-slate-300",
                           )}
                         >
                           {subTask.title}
@@ -491,103 +513,104 @@ function TaskCard({ task, onStatusChange }) {
         )}
       </div>
     </motion.div>
-  )
+  );
 }
 
 export default function TaskCenter() {
   // Get current user role
-  const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
-  const role = currentUser?.role || 'admin'
-  const userId = currentUser?.id
-  const isWorker = isEngineerRole(role) || role === 'assembler'
-  const roleInfo = getRoleInfo(role)
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const role = currentUser?.role || "admin";
+  const userId = currentUser?.id;
+  const isWorker = isEngineerRole(role) || role === "assembler";
+  const roleInfo = getRoleInfo(role);
 
   // State management
-  const [tasks, setTasks] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [viewMode, setViewMode] = useState('list') // list | kanban
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedProject, setSelectedProject] = useState(null)
-  const [projects, setProjects] = useState([])
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [viewMode, setViewMode] = useState("list"); // list | kanban
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [projects, setProjects] = useState([]);
 
   // Load projects for filtering
   useEffect(() => {
     const loadProjects = async () => {
       try {
-        const response = await projectApi.list({ page_size: 100 })
+        const response = await projectApi.list({ page_size: 100 });
         // Handle PaginatedResponse format
-        const data = response.data || response
-        setProjects(data.items || data || [])
+        const data = response.data || response;
+        setProjects(data.items || data || []);
       } catch (err) {
-        console.error('Failed to load projects:', err)
-        setProjects([])
+        console.error("Failed to load projects:", err);
+        setProjects([]);
       }
-    }
-    loadProjects()
-  }, [])
+    };
+    loadProjects();
+  }, []);
 
   // Load tasks from API
   const loadTasks = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       // Use task-center API to get unified tasks
       const params = {
         page: 1,
         page_size: 100,
-      }
+      };
 
       // Filter by project if selected
       if (selectedProject) {
-        params.project_id = selectedProject
+        params.project_id = selectedProject;
       }
 
       // Filter by status
-      if (statusFilter !== 'all') {
+      if (statusFilter !== "all") {
         // Map frontend status to backend status
         const statusMap = {
-          'pending': 'PENDING',
-          'in_progress': 'IN_PROGRESS',
-          'blocked': 'BLOCKED',
-          'completed': 'COMPLETED',
-        }
-        params.status = statusMap[statusFilter] || statusFilter
+          pending: "PENDING",
+          in_progress: "IN_PROGRESS",
+          blocked: "BLOCKED",
+          completed: "COMPLETED",
+        };
+        params.status = statusMap[statusFilter] || statusFilter;
       }
 
       // Search keyword
       if (searchQuery) {
-        params.keyword = searchQuery
+        params.keyword = searchQuery;
       }
 
       // Fetch tasks from task-center API (aggregates all task sources)
-      const response = await taskCenterApi.getMyTasks(params)
+      const response = await taskCenterApi.getMyTasks(params);
       // Handle PaginatedResponse format
-      const data = response.data || response
-      const tasksData = data.items || data || []
-      
+      const data = response.data || response;
+      const tasksData = data.items || data || [];
+
       // Transform backend task format to frontend format
-      const transformedTasks = tasksData.map(task => {
+      const transformedTasks = tasksData.map((task) => {
         const statusMap = {
-          'PENDING': 'pending',
-          'ACCEPTED': 'pending',
-          'IN_PROGRESS': 'in_progress',
-          'BLOCKED': 'blocked',
-          'COMPLETED': 'completed',
-          'CLOSED': 'completed',
-        }
+          PENDING: "pending",
+          ACCEPTED: "pending",
+          IN_PROGRESS: "in_progress",
+          BLOCKED: "blocked",
+          COMPLETED: "completed",
+          CLOSED: "completed",
+        };
         return {
           id: task.id?.toString() || task.task_code,
-          title: task.title || '',
+          title: task.title || "",
           projectId: task.project_id?.toString(),
-          projectName: task.project_name || '',
-          status: statusMap[task.status] || task.status?.toLowerCase() || 'pending',
-          priority: task.priority?.toLowerCase() || 'medium',
+          projectName: task.project_name || "",
+          status:
+            statusMap[task.status] || task.status?.toLowerCase() || "pending",
+          priority: task.priority?.toLowerCase() || "medium",
           progress: task.progress || 0,
-          assignee: task.assignee_name || '',
-          dueDate: task.deadline || task.plan_end_date || '',
+          assignee: task.assignee_name || "",
+          dueDate: task.deadline || task.plan_end_date || "",
           estimatedHours: task.estimated_hours || 0,
           actualHours: task.actual_hours || 0,
           tags: task.tags || [],
@@ -595,125 +618,131 @@ export default function TaskCenter() {
           blockedBy: null,
           sourceType: task.source_type,
           sourceName: task.source_name,
-        }
-      })
-      
-      setTasks(transformedTasks)
+        };
+      });
+
+      setTasks(transformedTasks);
     } catch (err) {
-      console.error('Failed to load tasks:', err)
-      setError(err.response?.data?.detail || err.message || '加载任务失败')
-      setTasks([]) // 不再使用mock数据，显示空列表
+      console.error("Failed to load tasks:", err);
+      setError(err.response?.data?.detail || err.message || "加载任务失败");
+      setTasks([]); // 不再使用mock数据，显示空列表
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [statusFilter, searchQuery, selectedProject, isWorker, userId])
+  }, [statusFilter, searchQuery, selectedProject, isWorker, userId]);
 
   // Load tasks when filters change
   useEffect(() => {
-    loadTasks()
-  }, [loadTasks])
+    loadTasks();
+  }, [loadTasks]);
 
   // Helper function to map backend status to frontend status
   const mapBackendStatusToFrontend = (backendStatus) => {
     const statusMap = {
-      'PENDING': 'pending',
-      'ACCEPTED': 'pending',
-      'IN_PROGRESS': 'in_progress',
-      'BLOCKED': 'blocked',
-      'COMPLETED': 'completed',
-      'CLOSED': 'completed',
-    }
-    return statusMap[backendStatus] || backendStatus?.toLowerCase() || 'pending'
-  }
+      PENDING: "pending",
+      ACCEPTED: "pending",
+      IN_PROGRESS: "in_progress",
+      BLOCKED: "blocked",
+      COMPLETED: "completed",
+      CLOSED: "completed",
+    };
+    return (
+      statusMap[backendStatus] || backendStatus?.toLowerCase() || "pending"
+    );
+  };
 
   // Helper function to map frontend status to backend status
   const mapFrontendStatusToBackend = (frontendStatus) => {
     const statusMap = {
-      'pending': 'PENDING',
-      'in_progress': 'IN_PROGRESS',
-      'blocked': 'BLOCKED',
-      'completed': 'COMPLETED',
-    }
-    return statusMap[frontendStatus] || frontendStatus?.toUpperCase()
-  }
+      pending: "PENDING",
+      in_progress: "IN_PROGRESS",
+      blocked: "BLOCKED",
+      completed: "COMPLETED",
+    };
+    return statusMap[frontendStatus] || frontendStatus?.toUpperCase();
+  };
 
   const filteredTasks = tasks.filter((task) => {
-    if (statusFilter !== 'all' && task.status !== statusFilter) return false
-    if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false
+    if (statusFilter !== "all" && task.status !== statusFilter) return false;
+    if (
+      searchQuery &&
+      !task.title.toLowerCase().includes(searchQuery.toLowerCase())
+    ) {
+      return false;
     }
-    return true
-  })
+    return true;
+  });
 
   const handleStatusChange = async (taskId, newStatus) => {
     try {
-      const taskIdNum = parseInt(taskId)
-      const backendStatus = mapFrontendStatusToBackend(newStatus)
-      
+      const taskIdNum = parseInt(taskId);
+      const backendStatus = mapFrontendStatusToBackend(newStatus);
+
       // Update task status via task-center API
-      if (newStatus === 'completed') {
-        await taskCenterApi.completeTask(taskIdNum)
+      if (newStatus === "completed") {
+        await taskCenterApi.completeTask(taskIdNum);
       } else {
         await taskCenterApi.updateTask(taskIdNum, {
           status: backendStatus,
-          progress: newStatus === 'completed' ? 100 : undefined,
-        })
+          progress: newStatus === "completed" ? 100 : undefined,
+        });
       }
 
       // Refresh tasks list
-      await loadTasks()
+      await loadTasks();
     } catch (err) {
-      console.error('Failed to update task status:', err)
-      alert('更新任务状态失败: ' + (err.response?.data?.detail || err.message))
+      console.error("Failed to update task status:", err);
+      alert("更新任务状态失败: " + (err.response?.data?.detail || err.message));
     }
-  }
+  };
 
   const handleStepToggle = async (taskId, stepNumber) => {
     try {
-      const task = tasks.find(t => t.id === taskId)
-      if (!task) return
+      const task = tasks.find((t) => t.id === taskId);
+      if (!task) return;
 
       const newInstructions = task.instructions.map((step) =>
-        step.step === stepNumber ? { ...step, done: !step.done } : step
-      )
-      const stepsCompleted = newInstructions.filter((s) => s.done).length
-      const progress = task.instructions.length > 0 
-        ? Math.round((stepsCompleted / task.instructions.length) * 100)
-        : task.progress
+        step.step === stepNumber ? { ...step, done: !step.done } : step,
+      );
+      const stepsCompleted = newInstructions.filter((s) => s.done).length;
+      const progress =
+        task.instructions.length > 0
+          ? Math.round((stepsCompleted / task.instructions.length) * 100)
+          : task.progress;
 
       // Update task progress via API
-      const taskIdNum = parseInt(taskId.replace('T', ''))
+      const taskIdNum = parseInt(taskId.replace("T", ""));
       await progressApi.tasks.updateProgress(taskIdNum, {
         progress_percent: progress,
         update_note: `更新步骤 ${stepNumber} 的状态`,
-      })
+      });
 
       // Update local state
       setTasks((prev) =>
         prev.map((t) => {
-          if (t.id !== taskId) return t
-          return { ...t, instructions: newInstructions, progress }
-        })
-      )
+          if (t.id !== taskId) return t;
+          return { ...t, instructions: newInstructions, progress };
+        }),
+      );
     } catch (err) {
-      console.error('Failed to update task step:', err)
-      alert('更新任务步骤失败: ' + (err.response?.data?.detail || err.message))
+      console.error("Failed to update task step:", err);
+      alert("更新任务步骤失败: " + (err.response?.data?.detail || err.message));
     }
-  }
+  };
 
   // Stats
   const stats = {
     total: tasks.length,
-    inProgress: tasks.filter((t) => t.status === 'in_progress').length,
-    blocked: tasks.filter((t) => t.status === 'blocked').length,
-    completed: tasks.filter((t) => t.status === 'completed').length,
+    inProgress: tasks.filter((t) => t.status === "in_progress").length,
+    blocked: tasks.filter((t) => t.status === "blocked").length,
+    completed: tasks.filter((t) => t.status === "completed").length,
     overdue: tasks.filter(
-      (t) => t.status !== 'completed' && new Date(t.dueDate) < new Date()
+      (t) => t.status !== "completed" && new Date(t.dueDate) < new Date(),
     ).length,
-  }
+  };
 
   // Worker-specific view (装配技工专用界面)
-  if (role === 'assembler') {
+  if (role === "assembler") {
     return (
       <motion.div
         variants={staggerContainer}
@@ -727,21 +756,50 @@ export default function TaskCenter() {
         />
 
         {/* Quick stats for workers */}
-        <motion.div variants={fadeIn} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <motion.div
+          variants={fadeIn}
+          className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        >
           {[
-            { label: '进行中', value: stats.inProgress, icon: PlayCircle, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-            { label: '待开始', value: tasks.filter(t => t.status === 'pending').length, icon: Circle, color: 'text-slate-400', bg: 'bg-slate-500/10' },
-            { label: '已阻塞', value: stats.blocked, icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-500/10' },
-            { label: '已完成', value: stats.completed, icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+            {
+              label: "进行中",
+              value: stats.inProgress,
+              icon: PlayCircle,
+              color: "text-blue-400",
+              bg: "bg-blue-500/10",
+            },
+            {
+              label: "待开始",
+              value: tasks.filter((t) => t.status === "pending").length,
+              icon: Circle,
+              color: "text-slate-400",
+              bg: "bg-slate-500/10",
+            },
+            {
+              label: "已阻塞",
+              value: stats.blocked,
+              icon: AlertTriangle,
+              color: "text-red-400",
+              bg: "bg-red-500/10",
+            },
+            {
+              label: "已完成",
+              value: stats.completed,
+              icon: CheckCircle2,
+              color: "text-emerald-400",
+              bg: "bg-emerald-500/10",
+            },
           ].map((stat, index) => (
-            <Card key={index} className={cn('bg-surface-1/50', stat.bg)}>
+            <Card key={index} className={cn("bg-surface-1/50", stat.bg)}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-400">{stat.label}</p>
-                    <p className="text-3xl font-bold text-white mt-1">{stat.value}</p>
+                    <p className="text-3xl font-bold text-white mt-1">
+                      {stat.value}
+                    </p>
                   </div>
-                  <stat.icon className={cn('w-8 h-8', stat.color)} />
+                  <stat.icon className={cn("w-8 h-8", stat.color)} />
                 </div>
               </CardContent>
             </Card>
@@ -752,15 +810,17 @@ export default function TaskCenter() {
         <motion.div variants={fadeIn}>
           <div className="flex gap-2 overflow-x-auto pb-2">
             {[
-              { value: 'all', label: '全部任务' },
-              { value: 'in_progress', label: '进行中' },
-              { value: 'pending', label: '待开始' },
-              { value: 'blocked', label: '已阻塞' },
-              { value: 'completed', label: '已完成' },
+              { value: "all", label: "全部任务" },
+              { value: "in_progress", label: "进行中" },
+              { value: "pending", label: "待开始" },
+              { value: "blocked", label: "已阻塞" },
+              { value: "completed", label: "已完成" },
             ].map((filter) => (
               <Button
                 key={filter.value}
-                variant={statusFilter === filter.value ? 'default' : 'secondary'}
+                variant={
+                  statusFilter === filter.value ? "default" : "secondary"
+                }
                 size="lg"
                 onClick={() => setStatusFilter(filter.value)}
                 className="whitespace-nowrap"
@@ -789,12 +849,14 @@ export default function TaskCenter() {
             <Wrench className="w-16 h-16 mx-auto text-slate-600 mb-4" />
             <h3 className="text-lg font-medium text-slate-400">暂无任务</h3>
             <p className="text-sm text-slate-500 mt-1">
-              {statusFilter !== 'all' ? '没有符合条件的任务' : '今日没有分配的装配任务'}
+              {statusFilter !== "all"
+                ? "没有符合条件的任务"
+                : "今日没有分配的装配任务"}
             </p>
           </motion.div>
         )}
       </motion.div>
-    )
+    );
   }
 
   // Regular view for managers and engineers
@@ -807,7 +869,9 @@ export default function TaskCenter() {
     >
       <PageHeader
         title="任务中心"
-        description={isWorker ? '查看和更新您的任务进度' : '管理团队任务，跟踪进度'}
+        description={
+          isWorker ? "查看和更新您的任务进度" : "管理团队任务，跟踪进度"
+        }
         actions={
           !isWorker && (
             <Button>
@@ -819,22 +883,52 @@ export default function TaskCenter() {
       />
 
       {/* Stats */}
-      <motion.div variants={fadeIn} className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <motion.div
+        variants={fadeIn}
+        className="grid grid-cols-2 md:grid-cols-5 gap-4"
+      >
         {[
-          { label: '全部任务', value: stats.total, icon: ListTodo, color: 'text-blue-400' },
-          { label: '进行中', value: stats.inProgress, icon: PlayCircle, color: 'text-blue-400' },
-          { label: '阻塞', value: stats.blocked, icon: PauseCircle, color: 'text-red-400' },
-          { label: '已完成', value: stats.completed, icon: CheckCircle2, color: 'text-emerald-400' },
-          { label: '已逾期', value: stats.overdue, icon: AlertTriangle, color: 'text-amber-400' },
+          {
+            label: "全部任务",
+            value: stats.total,
+            icon: ListTodo,
+            color: "text-blue-400",
+          },
+          {
+            label: "进行中",
+            value: stats.inProgress,
+            icon: PlayCircle,
+            color: "text-blue-400",
+          },
+          {
+            label: "阻塞",
+            value: stats.blocked,
+            icon: PauseCircle,
+            color: "text-red-400",
+          },
+          {
+            label: "已完成",
+            value: stats.completed,
+            icon: CheckCircle2,
+            color: "text-emerald-400",
+          },
+          {
+            label: "已逾期",
+            value: stats.overdue,
+            icon: AlertTriangle,
+            color: "text-amber-400",
+          },
         ].map((stat, index) => (
           <Card key={index} className="bg-surface-1/50">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-400">{stat.label}</p>
-                  <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
+                  <p className="text-2xl font-bold text-white mt-1">
+                    {stat.value}
+                  </p>
                 </div>
-                <stat.icon className={cn('w-6 h-6', stat.color)} />
+                <stat.icon className={cn("w-6 h-6", stat.color)} />
               </div>
             </CardContent>
           </Card>
@@ -843,66 +937,71 @@ export default function TaskCenter() {
 
       {/* Filters */}
       {!error && (
-      <motion.div variants={fadeIn}>
-        <Card className="bg-surface-1/50">
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-              <div className="flex items-center gap-2 flex-wrap">
-                {[
-                  { value: 'all', label: '全部' },
-                  { value: 'in_progress', label: '进行中' },
-                  { value: 'pending', label: '待开始' },
-                  { value: 'blocked', label: '阻塞' },
-                  { value: 'completed', label: '已完成' },
-                ].map((filter) => (
-                  <Button
-                    key={filter.value}
-                    variant={statusFilter === filter.value ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setStatusFilter(filter.value)}
-                  >
-                    {filter.label}
-                  </Button>
-                ))}
-              </div>
-              <div className="flex items-center gap-2 w-full md:w-auto">
-                <div className="relative flex-1 md:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input
-                    placeholder="搜索任务..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
-                  />
+        <motion.div variants={fadeIn}>
+          <Card className="bg-surface-1/50">
+            <CardContent className="p-4">
+              <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {[
+                    { value: "all", label: "全部" },
+                    { value: "in_progress", label: "进行中" },
+                    { value: "pending", label: "待开始" },
+                    { value: "blocked", label: "阻塞" },
+                    { value: "completed", label: "已完成" },
+                  ].map((filter) => (
+                    <Button
+                      key={filter.value}
+                      variant={
+                        statusFilter === filter.value ? "default" : "ghost"
+                      }
+                      size="sm"
+                      onClick={() => setStatusFilter(filter.value)}
+                    >
+                      {filter.label}
+                    </Button>
+                  ))}
                 </div>
-                <div className="flex border border-border rounded-lg overflow-hidden">
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                    className="rounded-none"
-                  >
-                    列表
-                  </Button>
-                  <Button
-                    variant={viewMode === 'kanban' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('kanban')}
-                    className="rounded-none"
-                  >
-                    看板
-                  </Button>
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                  <div className="relative flex-1 md:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      placeholder="搜索任务..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
+                  <div className="flex border border-border rounded-lg overflow-hidden">
+                    <Button
+                      variant={viewMode === "list" ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("list")}
+                      className="rounded-none"
+                    >
+                      列表
+                    </Button>
+                    <Button
+                      variant={viewMode === "kanban" ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("kanban")}
+                      className="rounded-none"
+                    >
+                      看板
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
 
       {/* Task List */}
-      {!error && viewMode === 'list' && (
-        <motion.div variants={fadeIn} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {!error && viewMode === "list" && (
+        <motion.div
+          variants={fadeIn}
+          className="grid grid-cols-1 lg:grid-cols-2 gap-4"
+        >
           {filteredTasks.map((task) => (
             <TaskCard
               key={task.id}
@@ -914,55 +1013,59 @@ export default function TaskCenter() {
       )}
 
       {/* Kanban View */}
-      {viewMode === 'kanban' && (
+      {viewMode === "kanban" && (
         <motion.div variants={fadeIn} className="overflow-x-auto pb-4">
           <div className="flex gap-4 min-w-max">
-            {['pending', 'in_progress', 'blocked', 'completed'].map((status) => {
-              const config = statusConfigs[status]
-              const statusTasks = filteredTasks.filter((t) => t.status === status)
+            {["pending", "in_progress", "blocked", "completed"].map(
+              (status) => {
+                const config = statusConfigs[status];
+                const statusTasks = filteredTasks.filter(
+                  (t) => t.status === status,
+                );
 
-              return (
-                <div key={status} className="w-80">
-                  <div className="flex items-center gap-2 mb-4 px-2">
-                    <config.icon className={cn('w-4 h-4', config.color)} />
-                    <h3 className="font-medium text-white">{config.label}</h3>
-                    <Badge variant="secondary" className="ml-auto">
-                      {statusTasks.length}
-                    </Badge>
+                return (
+                  <div key={status} className="w-80">
+                    <div className="flex items-center gap-2 mb-4 px-2">
+                      <config.icon className={cn("w-4 h-4", config.color)} />
+                      <h3 className="font-medium text-white">{config.label}</h3>
+                      <Badge variant="secondary" className="ml-auto">
+                        {statusTasks.length}
+                      </Badge>
+                    </div>
+                    <div className="space-y-3">
+                      {statusTasks.map((task) => (
+                        <TaskCard
+                          key={task.id}
+                          task={task}
+                          onStatusChange={handleStatusChange}
+                        />
+                      ))}
+                      {statusTasks.length === 0 && (
+                        <div className="p-8 text-center text-slate-500 border border-dashed border-border rounded-xl">
+                          暂无任务
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="space-y-3">
-                    {statusTasks.map((task) => (
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        onStatusChange={handleStatusChange}
-                      />
-                    ))}
-                    {statusTasks.length === 0 && (
-                      <div className="p-8 text-center text-slate-500 border border-dashed border-border rounded-xl">
-                        暂无任务
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+                );
+              },
+            )}
           </div>
         </motion.div>
       )}
 
       {/* Empty State */}
-      {filteredTasks.length === 0 && viewMode === 'list' && (
+      {filteredTasks.length === 0 && viewMode === "list" && (
         <motion.div variants={fadeIn} className="text-center py-16">
           <ListTodo className="w-16 h-16 mx-auto text-slate-600 mb-4" />
           <h3 className="text-lg font-medium text-slate-400">暂无任务</h3>
           <p className="text-sm text-slate-500 mt-1">
-            {searchQuery || statusFilter !== 'all'
-              ? '没有符合条件的任务'
+            {searchQuery || statusFilter !== "all"
+              ? "没有符合条件的任务"
               : '点击"新建任务"开始工作'}
           </p>
         </motion.div>
       )}
     </motion.div>
-  )
+  );
 }

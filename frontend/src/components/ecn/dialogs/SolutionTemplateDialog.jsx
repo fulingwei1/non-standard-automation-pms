@@ -10,9 +10,9 @@ import {
   DialogBody,
   DialogFooter,
   DialogDescription,
-} from '../../ui/dialog'
-import { Button } from '../../ui/button'
-import { Input } from '../../ui/input'
+} from "../../ui/dialog";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
 
 export default function SolutionTemplateDialog({
   open,
@@ -57,20 +57,22 @@ export default function SolutionTemplateDialog({
               关键词（用逗号分隔）
             </label>
             <Input
-              value={form.keywords.join(', ')}
+              value={form.keywords.join(", ")}
               onChange={(e) => {
                 const keywords = e.target.value
-                  .split(',')
+                  .split(",")
                   .map((k) => k.trim())
-                  .filter((k) => k)
-                setForm({ ...form, keywords })
+                  .filter((k) => k);
+                setForm({ ...form, keywords });
               }}
               placeholder="输入关键词，用逗号分隔"
             />
           </div>
           {ecn?.solution && (
             <div>
-              <label className="text-sm font-medium mb-2 block">解决方案内容</label>
+              <label className="text-sm font-medium mb-2 block">
+                解决方案内容
+              </label>
               <div className="p-3 bg-slate-50 rounded text-sm whitespace-pre-wrap">
                 {ecn.solution}
               </div>
@@ -85,5 +87,5 @@ export default function SolutionTemplateDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

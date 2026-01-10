@@ -2,13 +2,13 @@
  * 最佳实践推荐页面
  * 基于项目信息智能推荐最佳实践
  */
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { cn } from '../lib/utils'
-import { projectReviewApi, projectApi } from '../services/api'
-import { formatDate } from '../lib/utils'
-import { PageHeader } from '../components/layout/PageHeader'
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { cn } from "../lib/utils";
+import { projectReviewApi, projectApi } from "../services/api";
+import { formatDate } from "../lib/utils";
+import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
@@ -20,7 +20,7 @@ import {
   TabsList,
   TabsTrigger,
   TabsContent,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Search,
   Sparkles,
@@ -31,7 +31,7 @@ import {
   Eye,
   Target,
   Filter,
-} from 'lucide-react'
+} from "lucide-react";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -39,135 +39,157 @@ const staggerContainer = {
     opacity: 1,
     transition: { staggerChildren: 0.05, delayChildren: 0.1 },
   },
-}
+};
 
 const staggerChild = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
-}
+};
 
 const getValidationBadge = (status) => {
   const badges = {
-    PENDING: { label: '待验证', variant: 'secondary', color: 'text-slate-400' },
-    VALIDATED: { label: '已验证', variant: 'success', color: 'text-emerald-400' },
-    REJECTED: { label: '已拒绝', variant: 'destructive', color: 'text-red-400' },
-  }
-  return badges[status] || badges.PENDING
-}
+    PENDING: { label: "待验证", variant: "secondary", color: "text-slate-400" },
+    VALIDATED: {
+      label: "已验证",
+      variant: "success",
+      color: "text-emerald-400",
+    },
+    REJECTED: {
+      label: "已拒绝",
+      variant: "destructive",
+      color: "text-red-400",
+    },
+  };
+  return badges[status] || badges.PENDING;
+};
 
 export default function BestPracticeRecommendations() {
-  const { projectId } = useParams()
-  const navigate = useNavigate()
+  const { projectId } = useParams();
+  const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true)
-  const [recommendations, setRecommendations] = useState([])
-  const [popularPractices, setPopularPractices] = useState([])
-  const [project, setProject] = useState(null)
-  const [activeTab, setActiveTab] = useState('recommend')
+  const [loading, setLoading] = useState(true);
+  const [recommendations, setRecommendations] = useState([]);
+  const [popularPractices, setPopularPractices] = useState([]);
+  const [project, setProject] = useState(null);
+  const [activeTab, setActiveTab] = useState("recommend");
 
   // 推荐参数
-  const [projectType, setProjectType] = useState('')
-  const [currentStage, setCurrentStage] = useState('')
-  const [category, setCategory] = useState('')
+  const [projectType, setProjectType] = useState("");
+  const [currentStage, setCurrentStage] = useState("");
+  const [category, setCategory] = useState("");
 
   useEffect(() => {
     if (projectId) {
-      fetchProject()
-      fetchRecommendations()
+      fetchProject();
+      fetchRecommendations();
     } else {
-      setLoading(false)
+      setLoading(false);
     }
-    fetchPopularPractices()
-  }, [projectId])
+    fetchPopularPractices();
+  }, [projectId]);
 
   useEffect(() => {
     if (!projectId && (projectType || currentStage || category)) {
-      fetchManualRecommendations()
+      fetchManualRecommendations();
     }
-  }, [projectType, currentStage, category])
+  }, [projectType, currentStage, category]);
 
   const fetchProject = async () => {
     try {
-      const res = await projectApi.get(projectId)
-      const data = res.data || res
-      setProject(data)
-      setProjectType(data.project_type || '')
-      setCurrentStage(data.stage || '')
+      const res = await projectApi.get(projectId);
+      const data = res.data || res;
+      setProject(data);
+      setProjectType(data.project_type || "");
+      setCurrentStage(data.stage || "");
     } catch (err) {
-      console.error('Failed to fetch project:', err)
+      console.error("Failed to fetch project:", err);
     }
-  }
+  };
 
   const fetchRecommendations = async () => {
-    if (!projectId) return
+    if (!projectId) return;
     try {
-      setLoading(true)
-      const res = await projectReviewApi.getProjectBestPracticeRecommendations(projectId, 20)
-      const data = res.data || res
-      setRecommendations(data.recommendations || [])
+      setLoading(true);
+      const res = await projectReviewApi.getProjectBestPracticeRecommendations(
+        projectId,
+        20,
+      );
+      const data = res.data || res;
+      setRecommendations(data.recommendations || []);
     } catch (err) {
-      console.error('Failed to fetch recommendations:', err)
-      setRecommendations([])
+      console.error("Failed to fetch recommendations:", err);
+      setRecommendations([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchManualRecommendations = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const res = await projectReviewApi.recommendBestPractices({
         project_type: projectType || undefined,
         current_stage: currentStage || undefined,
         category: category || undefined,
         limit: 20,
-      })
-      const data = res.data || res
-      setRecommendations(data.recommendations || [])
+      });
+      const data = res.data || res;
+      setRecommendations(data.recommendations || []);
     } catch (err) {
-      console.error('Failed to fetch recommendations:', err)
-      setRecommendations([])
+      console.error("Failed to fetch recommendations:", err);
+      setRecommendations([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchPopularPractices = async () => {
     try {
-      const res = await projectReviewApi.getPopularBestPractices({ page: 1, page_size: 10 })
-      const data = res.data || res
-      setPopularPractices(data.items || data || [])
+      const res = await projectReviewApi.getPopularBestPractices({
+        page: 1,
+        page_size: 10,
+      });
+      const data = res.data || res;
+      setPopularPractices(data.items || data || []);
     } catch (err) {
-      console.error('Failed to fetch popular practices:', err)
-      setPopularPractices([])
+      console.error("Failed to fetch popular practices:", err);
+      setPopularPractices([]);
     }
-  }
+  };
 
   const handleApplyPractice = async (practiceId, targetProjectId) => {
     try {
-      await projectReviewApi.applyBestPractice(practiceId, targetProjectId, '从推荐页面应用')
-      alert('最佳实践应用成功！')
-      fetchRecommendations()
-      fetchPopularPractices()
+      await projectReviewApi.applyBestPractice(
+        practiceId,
+        targetProjectId,
+        "从推荐页面应用",
+      );
+      alert("最佳实践应用成功！");
+      fetchRecommendations();
+      fetchPopularPractices();
     } catch (err) {
-      console.error('Failed to apply practice:', err)
-      alert('应用失败: ' + (err.response?.data?.detail || err.message))
+      console.error("Failed to apply practice:", err);
+      alert("应用失败: " + (err.response?.data?.detail || err.message));
     }
-  }
+  };
 
   const handleViewReview = (reviewId) => {
-    navigate(`/projects/reviews/${reviewId}`)
-  }
+    navigate(`/projects/reviews/${reviewId}`);
+  };
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={staggerContainer}
-    >
+    <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
       <PageHeader
-        title={projectId ? `最佳实践推荐 - ${project?.project_name || project?.project_code}` : '最佳实践推荐'}
-        description={projectId ? '基于项目信息智能推荐最佳实践' : '手动配置条件推荐最佳实践'}
+        title={
+          projectId
+            ? `最佳实践推荐 - ${project?.project_name || project?.project_code}`
+            : "最佳实践推荐"
+        }
+        description={
+          projectId
+            ? "基于项目信息智能推荐最佳实践"
+            : "手动配置条件推荐最佳实践"
+        }
         action={
           !projectId && (
             <Button onClick={fetchManualRecommendations} variant="outline">
@@ -178,7 +200,11 @@ export default function BestPracticeRecommendations() {
         }
       />
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6"
+      >
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="recommend">智能推荐</TabsTrigger>
           <TabsTrigger value="popular">热门实践</TabsTrigger>
@@ -191,7 +217,9 @@ export default function BestPracticeRecommendations() {
               <CardContent className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="text-sm text-slate-400 mb-2 block">项目类型</label>
+                    <label className="text-sm text-slate-400 mb-2 block">
+                      项目类型
+                    </label>
                     <Input
                       placeholder="输入项目类型..."
                       value={projectType}
@@ -199,7 +227,9 @@ export default function BestPracticeRecommendations() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm text-slate-400 mb-2 block">当前阶段</label>
+                    <label className="text-sm text-slate-400 mb-2 block">
+                      当前阶段
+                    </label>
                     <select
                       value={currentStage}
                       onChange={(e) => setCurrentStage(e.target.value)}
@@ -218,7 +248,9 @@ export default function BestPracticeRecommendations() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-sm text-slate-400 mb-2 block">分类</label>
+                    <label className="text-sm text-slate-400 mb-2 block">
+                      分类
+                    </label>
                     <Input
                       placeholder="输入分类..."
                       value={category}
@@ -250,23 +282,39 @@ export default function BestPracticeRecommendations() {
           ) : (
             <motion.div variants={staggerContainer} className="space-y-4">
               {recommendations.map((rec, index) => {
-                const practice = rec.practice || rec
-                const matchScore = rec.match_score || 0
-                const matchReasons = rec.match_reasons || []
-                const validationBadge = getValidationBadge(practice.validation_status)
+                const practice = rec.practice || rec;
+                const matchScore = rec.match_score || 0;
+                const matchReasons = rec.match_reasons || [];
+                const validationBadge = getValidationBadge(
+                  practice.validation_status,
+                );
 
                 return (
-                  <motion.div key={practice.id || index} variants={staggerChild}>
+                  <motion.div
+                    key={practice.id || index}
+                    variants={staggerChild}
+                  >
                     <Card className="hover:border-primary/50 transition-colors">
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between">
                           <div className="flex-1 space-y-3">
                             <div className="flex items-center gap-3">
                               <div className="flex items-center gap-2">
-                                <Star className={cn('h-5 w-5', matchScore > 0.7 ? 'text-yellow-400 fill-yellow-400' : 'text-slate-400')} />
-                                <h3 className="text-lg font-semibold text-white">{practice.title}</h3>
+                                <Star
+                                  className={cn(
+                                    "h-5 w-5",
+                                    matchScore > 0.7
+                                      ? "text-yellow-400 fill-yellow-400"
+                                      : "text-slate-400",
+                                  )}
+                                />
+                                <h3 className="text-lg font-semibold text-white">
+                                  {practice.title}
+                                </h3>
                               </div>
-                              <Badge variant={validationBadge.variant}>{validationBadge.label}</Badge>
+                              <Badge variant={validationBadge.variant}>
+                                {validationBadge.label}
+                              </Badge>
                               {matchScore > 0 && (
                                 <Badge variant="info" className="gap-1">
                                   <Target className="h-3 w-3" />
@@ -274,11 +322,17 @@ export default function BestPracticeRecommendations() {
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-slate-300 line-clamp-2">{practice.description}</p>
+                            <p className="text-slate-300 line-clamp-2">
+                              {practice.description}
+                            </p>
                             {matchReasons.length > 0 && (
                               <div className="flex flex-wrap gap-2">
                                 {matchReasons.map((reason, idx) => (
-                                  <Badge key={idx} variant="secondary" className="text-xs">
+                                  <Badge
+                                    key={idx}
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
                                     {reason}
                                   </Badge>
                                 ))}
@@ -286,29 +340,41 @@ export default function BestPracticeRecommendations() {
                             )}
                             <div className="flex items-center gap-4 text-sm text-slate-400">
                               {practice.project_code && (
-                                <span>来源: {practice.project_code} {practice.project_name}</span>
+                                <span>
+                                  来源: {practice.project_code}{" "}
+                                  {practice.project_name}
+                                </span>
                               )}
-                              {practice.category && <span>分类: {practice.category}</span>}
+                              {practice.category && (
+                                <span>分类: {practice.category}</span>
+                              )}
                               {practice.reuse_count > 0 && (
                                 <span className="text-emerald-400">
                                   复用 {practice.reuse_count} 次
                                 </span>
                               )}
                               {practice.last_reused_at && (
-                                <span>最后复用: {formatDate(practice.last_reused_at)}</span>
+                                <span>
+                                  最后复用:{" "}
+                                  {formatDate(practice.last_reused_at)}
+                                </span>
                               )}
                             </div>
                             {practice.context && (
                               <div className="mt-3 p-3 bg-surface-2 rounded-md">
                                 <p className="text-sm text-slate-300">
-                                  <span className="font-medium">适用场景:</span> {practice.context}
+                                  <span className="font-medium">适用场景:</span>{" "}
+                                  {practice.context}
                                 </p>
                               </div>
                             )}
                             {practice.benefits && (
                               <div className="mt-2 p-3 bg-surface-2 rounded-md">
                                 <p className="text-sm text-slate-300">
-                                  <span className="font-medium">带来的收益:</span> {practice.benefits}
+                                  <span className="font-medium">
+                                    带来的收益:
+                                  </span>{" "}
+                                  {practice.benefits}
                                 </p>
                               </div>
                             )}
@@ -317,7 +383,9 @@ export default function BestPracticeRecommendations() {
                             {projectId && (
                               <Button
                                 size="sm"
-                                onClick={() => handleApplyPractice(practice.id, projectId)}
+                                onClick={() =>
+                                  handleApplyPractice(practice.id, projectId)
+                                }
                                 className="gap-2"
                               >
                                 <ArrowRight className="h-4 w-4" />
@@ -327,7 +395,9 @@ export default function BestPracticeRecommendations() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleViewReview(practice.review_id)}
+                              onClick={() =>
+                                handleViewReview(practice.review_id)
+                              }
                             >
                               <Eye className="h-4 w-4 mr-2" />
                               查看复盘
@@ -337,7 +407,7 @@ export default function BestPracticeRecommendations() {
                       </CardContent>
                     </Card>
                   </motion.div>
-                )
+                );
               })}
             </motion.div>
           )}
@@ -353,7 +423,9 @@ export default function BestPracticeRecommendations() {
           ) : (
             <motion.div variants={staggerContainer} className="space-y-4">
               {popularPractices.map((practice) => {
-                const validationBadge = getValidationBadge(practice.validation_status)
+                const validationBadge = getValidationBadge(
+                  practice.validation_status,
+                );
 
                 return (
                   <motion.div key={practice.id} variants={staggerChild}>
@@ -363,8 +435,12 @@ export default function BestPracticeRecommendations() {
                           <div className="flex-1 space-y-3">
                             <div className="flex items-center gap-3">
                               <TrendingUp className="h-5 w-5 text-emerald-400" />
-                              <h3 className="text-lg font-semibold text-white">{practice.title}</h3>
-                              <Badge variant={validationBadge.variant}>{validationBadge.label}</Badge>
+                              <h3 className="text-lg font-semibold text-white">
+                                {practice.title}
+                              </h3>
+                              <Badge variant={validationBadge.variant}>
+                                {validationBadge.label}
+                              </Badge>
                               {practice.reuse_count > 0 && (
                                 <Badge variant="success" className="gap-1">
                                   <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
@@ -372,12 +448,19 @@ export default function BestPracticeRecommendations() {
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-slate-300 line-clamp-2">{practice.description}</p>
+                            <p className="text-slate-300 line-clamp-2">
+                              {practice.description}
+                            </p>
                             <div className="flex items-center gap-4 text-sm text-slate-400">
                               {practice.project_code && (
-                                <span>来源: {practice.project_code} {practice.project_name}</span>
+                                <span>
+                                  来源: {practice.project_code}{" "}
+                                  {practice.project_name}
+                                </span>
                               )}
-                              {practice.category && <span>分类: {practice.category}</span>}
+                              {practice.category && (
+                                <span>分类: {practice.category}</span>
+                              )}
                               {practice.reuse_count > 0 && (
                                 <span className="text-emerald-400">
                                   复用 {practice.reuse_count} 次
@@ -389,7 +472,9 @@ export default function BestPracticeRecommendations() {
                             {projectId && (
                               <Button
                                 size="sm"
-                                onClick={() => handleApplyPractice(practice.id, projectId)}
+                                onClick={() =>
+                                  handleApplyPractice(practice.id, projectId)
+                                }
                                 className="gap-2"
                               >
                                 <ArrowRight className="h-4 w-4" />
@@ -399,7 +484,9 @@ export default function BestPracticeRecommendations() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleViewReview(practice.review_id)}
+                              onClick={() =>
+                                handleViewReview(practice.review_id)
+                              }
                             >
                               <Eye className="h-4 w-4 mr-2" />
                               查看复盘
@@ -409,16 +496,12 @@ export default function BestPracticeRecommendations() {
                       </CardContent>
                     </Card>
                   </motion.div>
-                )
+                );
               })}
             </motion.div>
           )}
         </TabsContent>
       </Tabs>
     </motion.div>
-  )
+  );
 }
-
-
-
-

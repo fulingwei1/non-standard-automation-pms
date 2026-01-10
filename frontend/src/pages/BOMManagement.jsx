@@ -2,8 +2,8 @@
  * BOM Management Page - BOM管理页面
  * Features: BOM列表、详情、版本管理、导入导出、发布审批
  */
-import { useState, useEffect, useMemo } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Package,
   Plus,
@@ -24,31 +24,31 @@ import {
   Copy,
   RefreshCw,
   X,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../components/ui/tabs'
+} from "../components/ui/tabs";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
+} from "../components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -56,7 +56,7 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui/dialog'
+} from "../components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -64,175 +64,175 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../components/ui/table'
-import { formatCurrency, formatDate } from '../lib/utils'
-import { bomApi, projectApi, machineApi } from '../services/api'
+} from "../components/ui/table";
+import { formatCurrency, formatDate } from "../lib/utils";
+import { bomApi, projectApi, machineApi } from "../services/api";
 const statusConfigs = {
-  DRAFT: { label: '草稿', color: 'bg-slate-500' },
-  REVIEWING: { label: '审核中', color: 'bg-blue-500' },
-  APPROVED: { label: '已审批', color: 'bg-emerald-500' },
-  RELEASED: { label: '已发布', color: 'bg-violet-500' },
-  OBSOLETE: { label: '已废弃', color: 'bg-red-500' },
-}
+  DRAFT: { label: "草稿", color: "bg-slate-500" },
+  REVIEWING: { label: "审核中", color: "bg-blue-500" },
+  APPROVED: { label: "已审批", color: "bg-emerald-500" },
+  RELEASED: { label: "已发布", color: "bg-violet-500" },
+  OBSOLETE: { label: "已废弃", color: "bg-red-500" },
+};
 export default function BOMManagement() {
-  const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const machineId = searchParams.get('machine_id')
-  const projectId = searchParams.get('project_id')
-  const [loading, setLoading] = useState(true)
-  const [boms, setBoms] = useState([])
-  const [selectedBom, setSelectedBom] = useState(null)
-  const [bomItems, setBomItems] = useState([])
-  const [versions, setVersions] = useState([])
-  const [projects, setProjects] = useState([])
-  const [machines, setMachines] = useState([])
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const machineId = searchParams.get("machine_id");
+  const projectId = searchParams.get("project_id");
+  const [loading, setLoading] = useState(true);
+  const [boms, setBoms] = useState([]);
+  const [selectedBom, setSelectedBom] = useState(null);
+  const [bomItems, setBomItems] = useState([]);
+  const [versions, setVersions] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [machines, setMachines] = useState([]);
   // Filters
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [filterProject, setFilterProject] = useState(projectId || '')
-  const [filterMachine, setFilterMachine] = useState(machineId || '')
-  const [filterStatus, setFilterStatus] = useState('')
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [filterProject, setFilterProject] = useState(projectId || "");
+  const [filterMachine, setFilterMachine] = useState(machineId || "");
+  const [filterStatus, setFilterStatus] = useState("");
   // Dialogs
-  const [showBomDetail, setShowBomDetail] = useState(false)
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [showVersionDialog, setShowVersionDialog] = useState(false)
-  const [showImportDialog, setShowImportDialog] = useState(false)
-  const [showReleaseDialog, setShowReleaseDialog] = useState(false)
+  const [showBomDetail, setShowBomDetail] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showVersionDialog, setShowVersionDialog] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showReleaseDialog, setShowReleaseDialog] = useState(false);
   // Form states
   const [newBom, setNewBom] = useState({
-    bom_name: '',
+    bom_name: "",
     machine_id: machineId ? parseInt(machineId) : null,
-    version: '1.0',
-    remark: '',
-  })
-  const [importFile, setImportFile] = useState(null)
-  const [releaseNote, setReleaseNote] = useState('')
+    version: "1.0",
+    remark: "",
+  });
+  const [importFile, setImportFile] = useState(null);
+  const [releaseNote, setReleaseNote] = useState("");
   useEffect(() => {
-    fetchProjects()
+    fetchProjects();
     if (filterProject) {
-      fetchMachines(filterProject)
+      fetchMachines(filterProject);
     }
-  }, [])
+  }, []);
   useEffect(() => {
-    fetchBOMs()
-  }, [filterProject, filterMachine, filterStatus, searchKeyword])
+    fetchBOMs();
+  }, [filterProject, filterMachine, filterStatus, searchKeyword]);
   const fetchProjects = async () => {
     try {
-      const res = await projectApi.list({ page_size: 1000 })
-      setProjects(res.data?.items || res.data || [])
+      const res = await projectApi.list({ page_size: 1000 });
+      setProjects(res.data?.items || res.data || []);
     } catch (error) {
-      console.error('Failed to fetch projects:', error)
+      console.error("Failed to fetch projects:", error);
     }
-  }
+  };
   const fetchMachines = async (projId) => {
     try {
-      const res = await machineApi.list({ project_id: projId })
-      setMachines(res.data?.items || res.data || [])
+      const res = await machineApi.list({ project_id: projId });
+      setMachines(res.data?.items || res.data || []);
     } catch (error) {
-      console.error('Failed to fetch machines:', error)
+      console.error("Failed to fetch machines:", error);
     }
-  }
+  };
   const fetchBOMs = async () => {
     try {
-      setLoading(true)
-      const params = {}
-      if (filterProject) params.project_id = filterProject
-      if (filterMachine) params.machine_id = filterMachine
-      if (filterStatus) params.status = filterStatus
-      if (searchKeyword) params.search = searchKeyword
-      const res = await bomApi.list(params)
-      const bomList = res.data?.items || res.data || []
-      setBoms(bomList)
+      setLoading(true);
+      const params = {};
+      if (filterProject) params.project_id = filterProject;
+      if (filterMachine) params.machine_id = filterMachine;
+      if (filterStatus) params.status = filterStatus;
+      if (searchKeyword) params.search = searchKeyword;
+      const res = await bomApi.list(params);
+      const bomList = res.data?.items || res.data || [];
+      setBoms(bomList);
     } catch (error) {
-      console.error('Failed to fetch BOMs:', error)
+      console.error("Failed to fetch BOMs:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
   const fetchBOMDetail = async (bomId) => {
     try {
       const [bomRes, itemsRes, versionsRes] = await Promise.all([
         bomApi.get(bomId),
         bomApi.getItems(bomId),
         bomApi.getVersions(bomId),
-      ])
-      setSelectedBom(bomRes.data || bomRes)
-      setBomItems(itemsRes.data || itemsRes || [])
-      setVersions(versionsRes.data || versionsRes || [])
-      setShowBomDetail(true)
+      ]);
+      setSelectedBom(bomRes.data || bomRes);
+      setBomItems(itemsRes.data || itemsRes || []);
+      setVersions(versionsRes.data || versionsRes || []);
+      setShowBomDetail(true);
     } catch (error) {
-      console.error('Failed to fetch BOM detail:', error)
+      console.error("Failed to fetch BOM detail:", error);
     }
-  }
+  };
   const handleCreateBOM = async () => {
     if (!newBom.machine_id || !newBom.bom_name) {
-      alert('请填写BOM名称并选择机台')
-      return
+      alert("请填写BOM名称并选择机台");
+      return;
     }
     try {
-      await bomApi.create(newBom.machine_id, newBom)
-      setShowCreateDialog(false)
-      setNewBom({ bom_name: '', machine_id: null, version: '1.0', remark: '' })
-      fetchBOMs()
+      await bomApi.create(newBom.machine_id, newBom);
+      setShowCreateDialog(false);
+      setNewBom({ bom_name: "", machine_id: null, version: "1.0", remark: "" });
+      fetchBOMs();
     } catch (error) {
-      console.error('Failed to create BOM:', error)
-      alert('创建BOM失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to create BOM:", error);
+      alert("创建BOM失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
   const handleReleaseBOM = async () => {
-    if (!selectedBom) return
+    if (!selectedBom) return;
     try {
-      await bomApi.release(selectedBom.id, releaseNote)
-      setShowReleaseDialog(false)
-      setReleaseNote('')
-      fetchBOMDetail(selectedBom.id)
-      fetchBOMs()
+      await bomApi.release(selectedBom.id, releaseNote);
+      setShowReleaseDialog(false);
+      setReleaseNote("");
+      fetchBOMDetail(selectedBom.id);
+      fetchBOMs();
     } catch (error) {
-      console.error('Failed to release BOM:', error)
-      alert('发布BOM失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to release BOM:", error);
+      alert("发布BOM失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
   const handleImport = async () => {
-    if (!importFile || !selectedBom) return
+    if (!importFile || !selectedBom) return;
     try {
-      await bomApi.import(selectedBom.id, importFile)
-      setShowImportDialog(false)
-      setImportFile(null)
-      fetchBOMDetail(selectedBom.id)
-      alert('导入成功')
+      await bomApi.import(selectedBom.id, importFile);
+      setShowImportDialog(false);
+      setImportFile(null);
+      fetchBOMDetail(selectedBom.id);
+      alert("导入成功");
     } catch (error) {
-      console.error('Failed to import BOM:', error)
-      alert('导入失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to import BOM:", error);
+      alert("导入失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
   const handleExport = async (bomId) => {
     try {
-      const res = await bomApi.export(bomId)
-      const url = window.URL.createObjectURL(new Blob([res.data]))
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', `BOM_${bomId}.xlsx`)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
+      const res = await bomApi.export(bomId);
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `BOM_${bomId}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
     } catch (error) {
-      console.error('Failed to export BOM:', error)
-      alert('导出失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to export BOM:", error);
+      alert("导出失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
   const filteredBoms = useMemo(() => {
-    return boms.filter(bom => {
+    return boms.filter((bom) => {
       if (searchKeyword) {
-        const keyword = searchKeyword.toLowerCase()
+        const keyword = searchKeyword.toLowerCase();
         return (
           bom.bom_no?.toLowerCase().includes(keyword) ||
           bom.bom_name?.toLowerCase().includes(keyword) ||
           bom.project_name?.toLowerCase().includes(keyword) ||
           bom.machine_name?.toLowerCase().includes(keyword)
-        )
+        );
       }
-      return true
-    })
-  }, [boms, searchKeyword])
+      return true;
+    });
+  }, [boms, searchKeyword]);
   return (
     <div className="space-y-6 p-6">
       <PageHeader
@@ -252,11 +252,14 @@ export default function BOMManagement() {
                 className="pl-10"
               />
             </div>
-            <Select value={filterProject} onValueChange={(val) => {
-              setFilterProject(val)
-              setFilterMachine('')
-              if (val) fetchMachines(val)
-            }}>
+            <Select
+              value={filterProject}
+              onValueChange={(val) => {
+                setFilterProject(val);
+                setFilterMachine("");
+                if (val) fetchMachines(val);
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>
@@ -269,7 +272,11 @@ export default function BOMManagement() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={filterMachine} onValueChange={setFilterMachine} disabled={!filterProject}>
+            <Select
+              value={filterMachine}
+              onValueChange={setFilterMachine}
+              disabled={!filterProject}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="选择机台" />
               </SelectTrigger>
@@ -303,9 +310,7 @@ export default function BOMManagement() {
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>BOM列表</CardTitle>
-            <CardDescription>
-              共 {filteredBoms.length} 个BOM
-            </CardDescription>
+            <CardDescription>共 {filteredBoms.length} 个BOM</CardDescription>
           </div>
           <Button onClick={() => setShowCreateDialog(true)}>
             <Plus className="w-4 h-4 mr-2" />
@@ -336,10 +341,14 @@ export default function BOMManagement() {
               <TableBody>
                 {filteredBoms.map((bom) => (
                   <TableRow key={bom.id}>
-                    <TableCell className="font-mono text-sm">{bom.bom_no}</TableCell>
-                    <TableCell className="font-medium">{bom.bom_name}</TableCell>
-                    <TableCell>{bom.project_name || '-'}</TableCell>
-                    <TableCell>{bom.machine_name || '-'}</TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {bom.bom_no}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {bom.bom_name}
+                    </TableCell>
+                    <TableCell>{bom.project_name || "-"}</TableCell>
+                    <TableCell>{bom.machine_name || "-"}</TableCell>
                     <TableCell>
                       <Badge variant="outline">{bom.version}</Badge>
                       {bom.is_latest && (
@@ -347,12 +356,18 @@ export default function BOMManagement() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge className={statusConfigs[bom.status]?.color || 'bg-slate-500'}>
+                      <Badge
+                        className={
+                          statusConfigs[bom.status]?.color || "bg-slate-500"
+                        }
+                      >
                         {statusConfigs[bom.status]?.label || bom.status}
                       </Badge>
                     </TableCell>
                     <TableCell>{bom.total_items || 0}</TableCell>
-                    <TableCell>{formatCurrency(bom.total_amount || 0)}</TableCell>
+                    <TableCell>
+                      {formatCurrency(bom.total_amount || 0)}
+                    </TableCell>
                     <TableCell className="text-slate-500 text-sm">
                       {formatDate(bom.updated_at)}
                     </TableCell>
@@ -419,7 +434,7 @@ export default function BOMManagement() {
                         <Download className="w-4 h-4 mr-2" />
                         导出
                       </Button>
-                      {selectedBom.status === 'APPROVED' && (
+                      {selectedBom.status === "APPROVED" && (
                         <Button
                           size="sm"
                           onClick={() => setShowReleaseDialog(true)}
@@ -455,11 +470,13 @@ export default function BOMManagement() {
                           </TableCell>
                           <TableCell>{item.material_name}</TableCell>
                           <TableCell className="text-slate-500">
-                            {item.specification || '-'}
+                            {item.specification || "-"}
                           </TableCell>
                           <TableCell>{item.unit}</TableCell>
                           <TableCell>{item.quantity}</TableCell>
-                          <TableCell>{formatCurrency(item.unit_price || 0)}</TableCell>
+                          <TableCell>
+                            {formatCurrency(item.unit_price || 0)}
+                          </TableCell>
                           <TableCell className="font-medium">
                             {formatCurrency(item.amount || 0)}
                           </TableCell>
@@ -467,7 +484,9 @@ export default function BOMManagement() {
                             <Badge variant="outline">{item.source_type}</Badge>
                           </TableCell>
                           <TableCell className="text-slate-500 text-sm">
-                            {item.required_date ? formatDate(item.required_date) : '-'}
+                            {item.required_date
+                              ? formatDate(item.required_date)
+                              : "-"}
                           </TableCell>
                           <TableCell>
                             {item.is_key_item && (
@@ -493,7 +512,9 @@ export default function BOMManagement() {
                               {version.is_latest && (
                                 <Badge className="bg-emerald-500">最新</Badge>
                               )}
-                              <Badge className={statusConfigs[version.status]?.color}>
+                              <Badge
+                                className={statusConfigs[version.status]?.color}
+                              >
                                 {statusConfigs[version.status]?.label}
                               </Badge>
                               <span className="text-sm text-slate-500">
@@ -505,8 +526,8 @@ export default function BOMManagement() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => {
-                                  setSelectedBom(version)
-                                  fetchBOMDetail(version.id)
+                                  setSelectedBom(version);
+                                  fetchBOMDetail(version.id);
                                 }}
                               >
                                 <Eye className="w-4 h-4 mr-2" />
@@ -531,11 +552,11 @@ export default function BOMManagement() {
                     </div>
                     <div>
                       <div className="text-sm text-slate-500 mb-1">项目</div>
-                      <div>{selectedBom.project_name || '-'}</div>
+                      <div>{selectedBom.project_name || "-"}</div>
                     </div>
                     <div>
                       <div className="text-sm text-slate-500 mb-1">机台</div>
-                      <div>{selectedBom.machine_name || '-'}</div>
+                      <div>{selectedBom.machine_name || "-"}</div>
                     </div>
                     <div>
                       <div className="text-sm text-slate-500 mb-1">版本</div>
@@ -543,12 +564,16 @@ export default function BOMManagement() {
                     </div>
                     <div>
                       <div className="text-sm text-slate-500 mb-1">状态</div>
-                      <Badge className={statusConfigs[selectedBom.status]?.color}>
+                      <Badge
+                        className={statusConfigs[selectedBom.status]?.color}
+                      >
                         {statusConfigs[selectedBom.status]?.label}
                       </Badge>
                     </div>
                     <div>
-                      <div className="text-sm text-slate-500 mb-1">物料数量</div>
+                      <div className="text-sm text-slate-500 mb-1">
+                        物料数量
+                      </div>
                       <div>{selectedBom.total_items || 0}</div>
                     </div>
                     <div>
@@ -580,12 +605,20 @@ export default function BOMManagement() {
               <div>
                 <label className="text-sm font-medium mb-2 block">项目</label>
                 <Select
-                  value={newBom.machine_id ? projects.find(p => 
-                    machines.find(m => m.id === newBom.machine_id)?.project_id === p.id
-                  )?.id?.toString() || '' : ''}
+                  value={
+                    newBom.machine_id
+                      ? projects
+                          .find(
+                            (p) =>
+                              machines.find((m) => m.id === newBom.machine_id)
+                                ?.project_id === p.id,
+                          )
+                          ?.id?.toString() || ""
+                      : ""
+                  }
                   onValueChange={(val) => {
-                    fetchMachines(val)
-                    setNewBom({ ...newBom, machine_id: null })
+                    fetchMachines(val);
+                    setNewBom({ ...newBom, machine_id: null });
                   }}
                 >
                   <SelectTrigger>
@@ -603,8 +636,10 @@ export default function BOMManagement() {
               <div>
                 <label className="text-sm font-medium mb-2 block">机台</label>
                 <Select
-                  value={newBom.machine_id?.toString() || ''}
-                  onValueChange={(val) => setNewBom({ ...newBom, machine_id: parseInt(val) })}
+                  value={newBom.machine_id?.toString() || ""}
+                  onValueChange={(val) =>
+                    setNewBom({ ...newBom, machine_id: parseInt(val) })
+                  }
                   disabled={!newBom.machine_id && machines.length === 0}
                 >
                   <SelectTrigger>
@@ -612,7 +647,10 @@ export default function BOMManagement() {
                   </SelectTrigger>
                   <SelectContent>
                     {machines.map((machine) => (
-                      <SelectItem key={machine.id} value={machine.id.toString()}>
+                      <SelectItem
+                        key={machine.id}
+                        value={machine.id.toString()}
+                      >
                         {machine.machine_name}
                       </SelectItem>
                     ))}
@@ -620,10 +658,14 @@ export default function BOMManagement() {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">BOM名称</label>
+                <label className="text-sm font-medium mb-2 block">
+                  BOM名称
+                </label>
                 <Input
                   value={newBom.bom_name}
-                  onChange={(e) => setNewBom({ ...newBom, bom_name: e.target.value })}
+                  onChange={(e) =>
+                    setNewBom({ ...newBom, bom_name: e.target.value })
+                  }
                   placeholder="请输入BOM名称"
                 />
               </div>
@@ -631,7 +673,9 @@ export default function BOMManagement() {
                 <label className="text-sm font-medium mb-2 block">版本</label>
                 <Input
                   value={newBom.version}
-                  onChange={(e) => setNewBom({ ...newBom, version: e.target.value })}
+                  onChange={(e) =>
+                    setNewBom({ ...newBom, version: e.target.value })
+                  }
                   placeholder="1.0"
                 />
               </div>
@@ -639,14 +683,19 @@ export default function BOMManagement() {
                 <label className="text-sm font-medium mb-2 block">备注</label>
                 <Input
                   value={newBom.remark}
-                  onChange={(e) => setNewBom({ ...newBom, remark: e.target.value })}
+                  onChange={(e) =>
+                    setNewBom({ ...newBom, remark: e.target.value })
+                  }
                   placeholder="备注信息"
                 />
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleCreateBOM}>创建</Button>
@@ -662,7 +711,9 @@ export default function BOMManagement() {
           <DialogBody>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">选择文件</label>
+                <label className="text-sm font-medium mb-2 block">
+                  选择文件
+                </label>
                 <Input
                   type="file"
                   accept=".xlsx,.xls"
@@ -672,7 +723,10 @@ export default function BOMManagement() {
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowImportDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowImportDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleImport} disabled={!importFile}>
@@ -690,7 +744,9 @@ export default function BOMManagement() {
           <DialogBody>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">变更说明</label>
+                <label className="text-sm font-medium mb-2 block">
+                  变更说明
+                </label>
                 <Input
                   value={releaseNote}
                   onChange={(e) => setReleaseNote(e.target.value)}
@@ -700,7 +756,10 @@ export default function BOMManagement() {
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowReleaseDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowReleaseDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleReleaseBOM}>发布</Button>
@@ -708,6 +767,5 @@ export default function BOMManagement() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-

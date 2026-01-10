@@ -1,7 +1,5 @@
-
-
-import { useState, useMemo, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText,
   CheckCircle2,
@@ -37,8 +35,8 @@ import {
   FileCheck,
   Calculator,
   CreditCard,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -54,83 +52,83 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '../components/ui'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { businessSupportApi } from '../services/api'
+} from "../components/ui";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { businessSupportApi } from "../services/api";
 
 // Statistics configuration - will be populated from API
 const getStatConfig = (dashboardData) => ({
   activeContracts: {
-    label: '进行中合同',
+    label: "进行中合同",
     value: dashboardData.active_contracts_count || 0,
-    unit: '个',
+    unit: "个",
     icon: Briefcase,
-    color: 'text-blue-400',
-    bg: 'bg-blue-500/10',
+    color: "text-blue-400",
+    bg: "bg-blue-500/10",
   },
   pendingAmount: {
-    label: '待回款金额',
+    label: "待回款金额",
     value: dashboardData.pending_amount || 0,
-    unit: '元',
+    unit: "元",
     icon: DollarSign,
-    color: 'text-amber-400',
-    bg: 'bg-amber-500/10',
-    format: 'currency',
+    color: "text-amber-400",
+    bg: "bg-amber-500/10",
+    format: "currency",
   },
   overdueAmount: {
-    label: '逾期款项',
+    label: "逾期款项",
     value: dashboardData.overdue_amount || 0,
-    unit: '元',
+    unit: "元",
     icon: AlertTriangle,
-    color: 'text-red-400',
-    bg: 'bg-red-500/10',
-    format: 'currency',
+    color: "text-red-400",
+    bg: "bg-red-500/10",
+    format: "currency",
   },
   invoiceRate: {
-    label: '本月开票率',
+    label: "本月开票率",
     value: Math.round(dashboardData.invoice_rate || 0),
-    unit: '%',
+    unit: "%",
     icon: Receipt,
-    color: 'text-emerald-400',
-    bg: 'bg-emerald-500/10',
+    color: "text-emerald-400",
+    bg: "bg-emerald-500/10",
   },
   bidCount: {
-    label: '进行中投标',
+    label: "进行中投标",
     value: dashboardData.active_bidding_count || 0,
-    unit: '个',
+    unit: "个",
     icon: Target,
-    color: 'text-purple-400',
-    bg: 'bg-purple-500/10',
+    color: "text-purple-400",
+    bg: "bg-purple-500/10",
   },
   acceptanceRate: {
-    label: '验收按期率',
+    label: "验收按期率",
     value: Math.round(dashboardData.acceptance_rate || 0),
-    unit: '%',
+    unit: "%",
     icon: CheckCircle2,
-    color: 'text-cyan-400',
-    bg: 'bg-cyan-500/10',
+    color: "text-cyan-400",
+    bg: "bg-cyan-500/10",
   },
-})
+});
 
 // Task priority colors
 const priorityColors = {
-  high: { bg: 'bg-red-500/20', text: 'text-red-400', label: '紧急' },
-  medium: { bg: 'bg-amber-500/20', text: 'text-amber-400', label: '中等' },
-  low: { bg: 'bg-blue-500/20', text: 'text-blue-400', label: '普通' },
-}
+  high: { bg: "bg-red-500/20", text: "text-red-400", label: "紧急" },
+  medium: { bg: "bg-amber-500/20", text: "text-amber-400", label: "中等" },
+  low: { bg: "bg-blue-500/20", text: "text-blue-400", label: "普通" },
+};
 
 // Task type configuration
 const taskTypeConfig = {
-  contract: { icon: FileText, label: '合同', color: 'text-blue-400' },
-  bidding: { icon: Target, label: '投标', color: 'text-purple-400' },
-  invoice: { icon: Receipt, label: '开票', color: 'text-amber-400' },
-  payment: { icon: DollarSign, label: '催款', color: 'text-red-400' },
-  acceptance: { icon: CheckCircle2, label: '验收', color: 'text-emerald-400' },
-  shipping: { icon: Package, label: '出货', color: 'text-cyan-400' },
-  document: { icon: Archive, label: '归档', color: 'text-slate-400' },
-  customer: { icon: Building2, label: '客户', color: 'text-indigo-400' },
-}
+  contract: { icon: FileText, label: "合同", color: "text-blue-400" },
+  bidding: { icon: Target, label: "投标", color: "text-purple-400" },
+  invoice: { icon: Receipt, label: "开票", color: "text-amber-400" },
+  payment: { icon: DollarSign, label: "催款", color: "text-red-400" },
+  acceptance: { icon: CheckCircle2, label: "验收", color: "text-emerald-400" },
+  shipping: { icon: Package, label: "出货", color: "text-cyan-400" },
+  document: { icon: Archive, label: "归档", color: "text-slate-400" },
+  customer: { icon: Building2, label: "客户", color: "text-indigo-400" },
+};
 
 // Mock data for todos
 // Mock data - 已移除，使用真实API
@@ -140,31 +138,31 @@ const taskTypeConfig = {
 // Mock data - 已移除，使用真实API
 // Helper functions
 const formatCurrency = (value) => {
-  return new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency: 'CNY',
+  return new Intl.NumberFormat("zh-CN", {
+    style: "currency",
+    currency: "CNY",
     minimumFractionDigits: 0,
-  }).format(value)
-}
+  }).format(value);
+};
 
 const getDaysColor = (daysLeft) => {
-  if (daysLeft === 0) return 'text-red-400'
-  if (daysLeft <= 2) return 'text-orange-400'
-  if (daysLeft <= 7) return 'text-amber-400'
-  return 'text-cyan-400'
-}
+  if (daysLeft === 0) return "text-red-400";
+  if (daysLeft <= 2) return "text-orange-400";
+  if (daysLeft <= 7) return "text-amber-400";
+  return "text-cyan-400";
+};
 
 const StatCard = ({ config, value }) => {
-  const Icon = config.icon
-  const isValueCurrency = config.format === 'currency'
-  
+  const Icon = config.icon;
+  const isValueCurrency = config.format === "currency";
+
   // Format currency with simplified display for large amounts
-  let displayValue = value
+  let displayValue = value;
   if (isValueCurrency) {
     if (value >= 10000) {
-      displayValue = `¥${(value / 10000).toFixed(0)}万`
+      displayValue = `¥${(value / 10000).toFixed(0)}万`;
     } else {
-      displayValue = formatCurrency(value)
+      displayValue = formatCurrency(value);
     }
   }
 
@@ -172,32 +170,38 @@ const StatCard = ({ config, value }) => {
     <motion.div
       variants={fadeIn}
       className="relative overflow-hidden rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-5 backdrop-blur transition-all hover:border-slate-600/80 hover:shadow-lg"
-      style={{ height: '140px' }}
+      style={{ height: "140px" }}
     >
       <div className="flex items-start justify-between h-full">
         <div className="flex-1 flex flex-col justify-between">
-          <p className="text-sm font-normal text-slate-400 mb-2">{config.label}</p>
+          <p className="text-sm font-normal text-slate-400 mb-2">
+            {config.label}
+          </p>
           <div>
-            <p className={cn('text-2xl font-bold mb-1', config.color)}>{displayValue}</p>
+            <p className={cn("text-2xl font-bold mb-1", config.color)}>
+              {displayValue}
+            </p>
             {!isValueCurrency && (
-              <p className="text-xs font-normal text-slate-500">{config.unit}</p>
+              <p className="text-xs font-normal text-slate-500">
+                {config.unit}
+              </p>
             )}
           </div>
         </div>
-        <div className={cn('rounded-lg p-3 bg-opacity-20', config.bg)}>
-          <Icon className={cn('h-6 w-6', config.color)} />
+        <div className={cn("rounded-lg p-3 bg-opacity-20", config.bg)}>
+          <Icon className={cn("h-6 w-6", config.color)} />
         </div>
       </div>
       {/* Background glow effect */}
       <div className="absolute right-0 bottom-0 h-20 w-20 rounded-full bg-gradient-to-br from-purple-500/10 to-transparent blur-2xl opacity-30" />
     </motion.div>
-  )
-}
+  );
+};
 
 const TodoItem = ({ todo, onComplete }) => {
-  const typeConfig = taskTypeConfig[todo.type]
-  const priorityConfig = priorityColors[todo.priority]
-  const Icon = typeConfig.icon
+  const typeConfig = taskTypeConfig[todo.type];
+  const priorityConfig = priorityColors[todo.priority];
+  const Icon = typeConfig.icon;
 
   return (
     <motion.div
@@ -205,8 +209,8 @@ const TodoItem = ({ todo, onComplete }) => {
       className="group flex items-start gap-3 rounded-lg border border-slate-700/50 bg-slate-800/40 p-4 transition-all hover:border-slate-600/80 hover:bg-slate-800/60"
     >
       <div className="relative mt-1 flex-shrink-0">
-        <div className={cn('rounded-lg p-2', priorityConfig.bg)}>
-          <Icon className={cn('h-5 w-5', typeConfig.color)} />
+        <div className={cn("rounded-lg p-2", priorityConfig.bg)}>
+          <Icon className={cn("h-5 w-5", typeConfig.color)} />
         </div>
       </div>
 
@@ -219,13 +223,26 @@ const TodoItem = ({ todo, onComplete }) => {
               <Badge variant="outline" className="bg-slate-700/40 text-xs">
                 {typeConfig.label}
               </Badge>
-              <Badge className={cn('text-xs', priorityConfig.bg, priorityConfig.text)}>
+              <Badge
+                className={cn(
+                  "text-xs",
+                  priorityConfig.bg,
+                  priorityConfig.text,
+                )}
+              >
                 {priorityConfig.label}
               </Badge>
               {todo.daysLeft === 0 ? (
-                <span className="text-xs font-medium text-red-400">今天截止</span>
+                <span className="text-xs font-medium text-red-400">
+                  今天截止
+                </span>
               ) : (
-                <span className={cn('text-xs font-medium', getDaysColor(todo.daysLeft))}>
+                <span
+                  className={cn(
+                    "text-xs font-medium",
+                    getDaysColor(todo.daysLeft),
+                  )}
+                >
                   {todo.daysLeft}天截止
                 </span>
               )}
@@ -245,8 +262,8 @@ const TodoItem = ({ todo, onComplete }) => {
         </Button>
       </div>
     </motion.div>
-  )
-}
+  );
+};
 
 const ContractCard = ({ contract }) => {
   return (
@@ -261,7 +278,9 @@ const ContractCard = ({ contract }) => {
               <Briefcase className="h-4 w-4 text-blue-400" />
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-slate-100">{contract.projectName}</p>
+              <p className="font-semibold text-slate-100">
+                {contract.projectName}
+              </p>
               <p className="text-sm text-slate-400">{contract.customerName}</p>
               <p className="mt-1 text-xs text-slate-500">{contract.id}</p>
             </div>
@@ -280,9 +299,11 @@ const ContractCard = ({ contract }) => {
         <div className="flex items-center justify-between">
           <span className="text-sm text-slate-400">回款进度:</span>
           <span className="text-sm font-medium text-slate-300">
-            {contract.paidAmount >= 10000 
-              ? `¥${(contract.paidAmount / 10000).toFixed(1)}万` 
-              : formatCurrency(contract.paidAmount)} / {contract.contractAmount >= 10000
+            {contract.paidAmount >= 10000
+              ? `¥${(contract.paidAmount / 10000).toFixed(1)}万`
+              : formatCurrency(contract.paidAmount)}{" "}
+            /{" "}
+            {contract.contractAmount >= 10000
               ? `¥${(contract.contractAmount / 10000).toFixed(1)}万`
               : formatCurrency(contract.contractAmount)}
           </span>
@@ -301,20 +322,20 @@ const ContractCard = ({ contract }) => {
             <span className="text-slate-400">└─ {stage.type}</span>
             <div className="flex items-center gap-2">
               <span className="font-medium text-slate-300">
-                {stage.amount >= 10000 
+                {stage.amount >= 10000
                   ? `¥${(stage.amount / 10000).toFixed(1)}万`
                   : formatCurrency(stage.amount)}
               </span>
               <Badge
                 variant="outline"
                 className={cn(
-                  'text-xs',
-                  stage.status === 'paid'
-                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                    : 'bg-slate-700/40 text-slate-400 border-slate-600/30'
+                  "text-xs",
+                  stage.status === "paid"
+                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                    : "bg-slate-700/40 text-slate-400 border-slate-600/30",
                 )}
               >
-                {stage.status === 'paid' ? '已到账' : '待回款'}
+                {stage.status === "paid" ? "已到账" : "待回款"}
               </Badge>
             </div>
           </div>
@@ -326,10 +347,10 @@ const ContractCard = ({ contract }) => {
         <Badge
           variant="outline"
           className={cn(
-            'text-xs',
-            contract.invoiceStatus === 'complete'
-              ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-              : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+            "text-xs",
+            contract.invoiceStatus === "complete"
+              ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+              : "bg-amber-500/20 text-amber-400 border-amber-500/30",
           )}
         >
           <Receipt className="mr-1 h-3 w-3" />
@@ -338,37 +359,42 @@ const ContractCard = ({ contract }) => {
         <Badge
           variant="outline"
           className={cn(
-            'text-xs',
-            contract.acceptanceStatus === 'completed'
-              ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-              : contract.acceptanceStatus === 'in_progress'
-              ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-              : 'bg-slate-500/20 text-slate-400 border-slate-500/30'
+            "text-xs",
+            contract.acceptanceStatus === "completed"
+              ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+              : contract.acceptanceStatus === "in_progress"
+                ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
+                : "bg-slate-500/20 text-slate-400 border-slate-500/30",
           )}
         >
           <CheckCircle2 className="mr-1 h-3 w-3" />
-          验收: {contract.acceptanceStatus === 'completed' ? '已完成' : contract.acceptanceStatus === 'in_progress' ? '进行中' : '待开始'}
+          验收:{" "}
+          {contract.acceptanceStatus === "completed"
+            ? "已完成"
+            : contract.acceptanceStatus === "in_progress"
+              ? "进行中"
+              : "待开始"}
         </Badge>
       </div>
     </motion.div>
-  )
-}
+  );
+};
 
 const BiddingCard = ({ bid }) => {
   const statusMap = {
-    inquiry: '询价阶段',
-    bidding_phase: '投标中',
-    technical_evaluation: '技术评标',
-    commercial_evaluation: '商务评标',
-    won: '中标',
-    lost: '未中标',
-  }
+    inquiry: "询价阶段",
+    bidding_phase: "投标中",
+    technical_evaluation: "技术评标",
+    commercial_evaluation: "商务评标",
+    won: "中标",
+    lost: "未中标",
+  };
 
   const documentStatusMap = {
-    draft: '编制中',
-    review: '审核中',
-    submitted: '已提交',
-  }
+    draft: "编制中",
+    review: "审核中",
+    submitted: "已提交",
+  };
 
   return (
     <motion.div
@@ -380,7 +406,7 @@ const BiddingCard = ({ bid }) => {
           <p className="font-semibold text-slate-100">{bid.projectName}</p>
           <p className="mt-1 text-sm text-slate-400">{bid.customerName}</p>
           <p className="mt-2 text-lg font-bold text-purple-400">
-            {bid.bidAmount >= 10000 
+            {bid.bidAmount >= 10000
               ? `¥${(bid.bidAmount / 10000).toFixed(0)}万`
               : formatCurrency(bid.bidAmount)}
           </p>
@@ -389,18 +415,19 @@ const BiddingCard = ({ bid }) => {
           <Badge
             variant="outline"
             className={cn(
-              'text-xs mb-2 block',
-              bid.status === 'won'
-                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                : bid.status === 'technical_evaluation' || bid.status === 'commercial_evaluation'
-                ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                : 'bg-slate-500/20 text-slate-400 border-slate-500/30'
+              "text-xs mb-2 block",
+              bid.status === "won"
+                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                : bid.status === "technical_evaluation" ||
+                    bid.status === "commercial_evaluation"
+                  ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
+                  : "bg-slate-500/20 text-slate-400 border-slate-500/30",
             )}
           >
             {statusMap[bid.status]}
           </Badge>
-          <Badge 
-            variant="outline" 
+          <Badge
+            variant="outline"
             className="block text-xs bg-slate-700/40 text-slate-400 border-slate-600/30"
           >
             {documentStatusMap[bid.documentStatus]}
@@ -412,7 +439,9 @@ const BiddingCard = ({ bid }) => {
       <div className="mt-3 space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs text-slate-400">标书进度</span>
-          <span className="text-xs font-medium text-slate-300">{bid.progress}%</span>
+          <span className="text-xs font-medium text-slate-300">
+            {bid.progress}%
+          </span>
         </div>
         <Progress value={bid.progress} className="h-2 bg-slate-700/50" />
       </div>
@@ -421,21 +450,21 @@ const BiddingCard = ({ bid }) => {
       <div className="mt-3 flex items-center gap-2 text-xs text-slate-400">
         <Calendar className="h-3 w-3" />
         <span>
-          📅 截止日期:{' '}
-          <span className={cn('font-medium', getDaysColor(bid.daysLeft))}>
+          📅 截止日期:{" "}
+          <span className={cn("font-medium", getDaysColor(bid.daysLeft))}>
             {bid.daysLeft}天后
           </span>
         </span>
       </div>
     </motion.div>
-  )
-}
+  );
+};
 
 export default function BusinessSupportWorkstation() {
-  const [completedTodos, setCompletedTodos] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  
+  const [completedTodos, setCompletedTodos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   // Dashboard data state
   const [dashboardData, setDashboardData] = useState({
     active_contracts_count: 0,
@@ -446,17 +475,17 @@ export default function BusinessSupportWorkstation() {
     acceptance_rate: 0,
     urgent_tasks: [],
     today_todos: [],
-  })
+  });
 
   // Load dashboard data
   const loadDashboard = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
-      
-      const response = await businessSupportApi.dashboard()
-      const data = response.data?.data || response.data || {}
-      
+      setLoading(true);
+      setError(null);
+
+      const response = await businessSupportApi.dashboard();
+      const data = response.data?.data || response.data || {};
+
       setDashboardData({
         active_contracts_count: data.active_contracts_count || 0,
         pending_amount: parseFloat(data.pending_amount || 0),
@@ -466,32 +495,37 @@ export default function BusinessSupportWorkstation() {
         acceptance_rate: parseFloat(data.acceptance_rate || 0),
         urgent_tasks: data.urgent_tasks || [],
         today_todos: data.today_todos || [],
-      })
+      });
     } catch (err) {
-      console.error('Failed to load dashboard:', err)
-      setError(err.response?.data?.detail || err.message || '加载工作台数据失败')
+      console.error("Failed to load dashboard:", err);
+      setError(
+        err.response?.data?.detail || err.message || "加载工作台数据失败",
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   // Load dashboard when component mounts
   useEffect(() => {
-    loadDashboard()
-  }, [loadDashboard])
+    loadDashboard();
+  }, [loadDashboard]);
 
   const handleCompleteTodo = (todoId) => {
-    setCompletedTodos([...completedTodos, todoId])
-  }
+    setCompletedTodos([...completedTodos, todoId]);
+  };
 
   // Use API data instead of mock data
-  const urgentTodos = (dashboardData.urgent_tasks || []).filter(
-    (todo) => {
-      const daysLeft = todo.daysLeft !== null && todo.daysLeft !== undefined ? todo.daysLeft : 999
-      return daysLeft <= 3 && !completedTodos.includes(todo.id)
-    }
-  )
-  const allTodos = (dashboardData.today_todos || []).filter((todo) => !completedTodos.includes(todo.id))
+  const urgentTodos = (dashboardData.urgent_tasks || []).filter((todo) => {
+    const daysLeft =
+      todo.daysLeft !== null && todo.daysLeft !== undefined
+        ? todo.daysLeft
+        : 999;
+    return daysLeft <= 3 && !completedTodos.includes(todo.id);
+  });
+  const allTodos = (dashboardData.today_todos || []).filter(
+    (todo) => !completedTodos.includes(todo.id),
+  );
 
   return (
     <div className="space-y-6 pb-8">
@@ -537,11 +571,7 @@ export default function BusinessSupportWorkstation() {
           className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
         >
           {Object.entries(getStatConfig(dashboardData)).map(([key, config]) => (
-            <StatCard
-              key={key}
-              config={config}
-              value={config.value}
-            />
+            <StatCard key={key} config={config} value={config.value} />
           ))}
         </motion.div>
       )}
@@ -636,22 +666,62 @@ export default function BusinessSupportWorkstation() {
               </CardHeader>
               <CardContent className="space-y-1">
                 {[
-                  { icon: Plus, label: '新建合同', color: 'text-blue-400', bg: 'bg-blue-500/10' },
-                  { icon: FileCheck, label: '合同审核', color: 'text-slate-400', bg: 'bg-slate-500/10' },
-                  { icon: Receipt, label: '申请开票', color: 'text-amber-400', bg: 'bg-amber-500/10' },
-                  { icon: Package, label: '出货审批', color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
-                  { icon: Target, label: '投标管理', color: 'text-purple-400', bg: 'bg-purple-500/10' },
-                  { icon: DollarSign, label: '催款跟进', color: 'text-red-400', bg: 'bg-red-500/10' },
-                  { icon: Building2, label: '客户管理', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-                  { icon: Archive, label: '文件归档', color: 'text-slate-500', bg: 'bg-slate-500/10' },
+                  {
+                    icon: Plus,
+                    label: "新建合同",
+                    color: "text-blue-400",
+                    bg: "bg-blue-500/10",
+                  },
+                  {
+                    icon: FileCheck,
+                    label: "合同审核",
+                    color: "text-slate-400",
+                    bg: "bg-slate-500/10",
+                  },
+                  {
+                    icon: Receipt,
+                    label: "申请开票",
+                    color: "text-amber-400",
+                    bg: "bg-amber-500/10",
+                  },
+                  {
+                    icon: Package,
+                    label: "出货审批",
+                    color: "text-cyan-400",
+                    bg: "bg-cyan-500/10",
+                  },
+                  {
+                    icon: Target,
+                    label: "投标管理",
+                    color: "text-purple-400",
+                    bg: "bg-purple-500/10",
+                  },
+                  {
+                    icon: DollarSign,
+                    label: "催款跟进",
+                    color: "text-red-400",
+                    bg: "bg-red-500/10",
+                  },
+                  {
+                    icon: Building2,
+                    label: "客户管理",
+                    color: "text-indigo-400",
+                    bg: "bg-indigo-500/10",
+                  },
+                  {
+                    icon: Archive,
+                    label: "文件归档",
+                    color: "text-slate-500",
+                    bg: "bg-slate-500/10",
+                  },
                 ].map((item, idx) => (
                   <Button
                     key={idx}
                     variant="ghost"
                     className="w-full justify-start gap-3 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 transition-colors"
                   >
-                    <div className={cn('p-1.5 rounded', item.bg)}>
-                      <item.icon className={cn('h-4 w-4', item.color)} />
+                    <div className={cn("p-1.5 rounded", item.bg)}>
+                      <item.icon className={cn("h-4 w-4", item.color)} />
                     </div>
                     <span>{item.label}</span>
                   </Button>
@@ -668,16 +738,41 @@ export default function BusinessSupportWorkstation() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {[
-                  { label: '新签合同', value: 3, unit: '份', color: 'text-blue-400', progress: 75 },
-                  { label: '回款完成率', value: 78, unit: '%', color: 'text-emerald-400', progress: 78 },
-                  { label: '开票及时率', value: 92, unit: '%', color: 'text-purple-400', progress: 92 },
-                  { label: '文件流转', value: 28, unit: '份', color: 'text-amber-400', progress: 70 },
+                  {
+                    label: "新签合同",
+                    value: 3,
+                    unit: "份",
+                    color: "text-blue-400",
+                    progress: 75,
+                  },
+                  {
+                    label: "回款完成率",
+                    value: 78,
+                    unit: "%",
+                    color: "text-emerald-400",
+                    progress: 78,
+                  },
+                  {
+                    label: "开票及时率",
+                    value: 92,
+                    unit: "%",
+                    color: "text-purple-400",
+                    progress: 92,
+                  },
+                  {
+                    label: "文件流转",
+                    value: 28,
+                    unit: "份",
+                    color: "text-amber-400",
+                    progress: 70,
+                  },
                 ].map((metric, idx) => (
                   <div key={idx} className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-400">{metric.label}</span>
-                      <span className={cn('font-semibold', metric.color)}>
-                        {metric.value}{metric.unit}
+                      <span className={cn("font-semibold", metric.color)}>
+                        {metric.value}
+                        {metric.unit}
                       </span>
                     </div>
                     <Progress
@@ -760,7 +855,10 @@ export default function BusinessSupportWorkstation() {
                 <Target className="h-5 w-5 text-purple-400" />
                 进行中的投标
               </CardTitle>
-              <Badge variant="outline" className="bg-purple-500/20 text-purple-400 border-purple-500/30">
+              <Badge
+                variant="outline"
+                className="bg-purple-500/20 text-purple-400 border-purple-500/30"
+              >
                 {mockBidding.length} 个项目
               </Badge>
             </div>
@@ -780,5 +878,5 @@ export default function BusinessSupportWorkstation() {
         </Card>
       </motion.div>
     </div>
-  )
+  );
 }

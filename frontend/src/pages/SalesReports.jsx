@@ -3,8 +3,8 @@
  * Features: Sales trends, Performance analysis, Customer analysis, Revenue forecasting
  */
 
-import { useState, useMemo, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useMemo, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   BarChart3,
   TrendingUp,
@@ -24,8 +24,8 @@ import {
   ChevronRight,
   ArrowUpRight,
   ArrowDownRight,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -35,96 +35,100 @@ import {
   Badge,
   Progress,
   ApiIntegrationError,
-} from '../components/ui'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { salesStatisticsApi } from '../services/api'
+} from "../components/ui";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { salesStatisticsApi } from "../services/api";
 
 // Mock data removed - using real API only
 
 const formatCurrency = (value) => {
   if (value >= 10000) {
-    return `¥${(value / 10000).toFixed(1)}万`
+    return `¥${(value / 10000).toFixed(1)}万`;
   }
-  return new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency: 'CNY',
+  return new Intl.NumberFormat("zh-CN", {
+    style: "currency",
+    currency: "CNY",
     minimumFractionDigits: 0,
-  }).format(value)
-}
+  }).format(value);
+};
 
 export default function SalesReports() {
-  const [selectedPeriod, setSelectedPeriod] = useState('month')
-  const [selectedReport, setSelectedReport] = useState('overview')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [monthlySales, setMonthlySales] = useState(null)
-  const [customerAnalysis, setCustomerAnalysis] = useState(null)
-  const [productAnalysis, setProductAnalysis] = useState(null)
-  const [regionalAnalysis, setRegionalAnalysis] = useState(null)
+  const [selectedPeriod, setSelectedPeriod] = useState("month");
+  const [selectedReport, setSelectedReport] = useState("overview");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [monthlySales, setMonthlySales] = useState(null);
+  const [customerAnalysis, setCustomerAnalysis] = useState(null);
+  const [productAnalysis, setProductAnalysis] = useState(null);
+  const [regionalAnalysis, setRegionalAnalysis] = useState(null);
 
   // Fetch data from API
   const fetchData = async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
-      const [monthlyRes, customerRes, productRes, regionalRes] = await Promise.allSettled([
-        salesStatisticsApi.getMonthlyTrend({ period: selectedPeriod }),
-        salesStatisticsApi.getByCustomer({ limit: 10 }),
-        salesStatisticsApi.getByProduct({ limit: 10 }),
-        salesStatisticsApi.getByRegion(),
-      ])
+      const [monthlyRes, customerRes, productRes, regionalRes] =
+        await Promise.allSettled([
+          salesStatisticsApi.getMonthlyTrend({ period: selectedPeriod }),
+          salesStatisticsApi.getByCustomer({ limit: 10 }),
+          salesStatisticsApi.getByProduct({ limit: 10 }),
+          salesStatisticsApi.getByRegion(),
+        ]);
 
       // 检查是否有失败的请求
-      const failedRequests = [monthlyRes, customerRes, productRes, regionalRes].filter(
-        res => res.status === 'rejected'
-      )
+      const failedRequests = [
+        monthlyRes,
+        customerRes,
+        productRes,
+        regionalRes,
+      ].filter((res) => res.status === "rejected");
 
       if (failedRequests.length > 0) {
         // 使用第一个失败的错误
-        throw failedRequests[0].reason
+        throw failedRequests[0].reason;
       }
 
       // 设置成功的数据
-      if (monthlyRes.status === 'fulfilled' && monthlyRes.value.data) {
-        setMonthlySales(monthlyRes.value.data)
+      if (monthlyRes.status === "fulfilled" && monthlyRes.value.data) {
+        setMonthlySales(monthlyRes.value.data);
       } else {
-        setMonthlySales([])
+        setMonthlySales([]);
       }
-      
-      if (customerRes.status === 'fulfilled' && customerRes.value.data) {
-        setCustomerAnalysis(customerRes.value.data)
+
+      if (customerRes.status === "fulfilled" && customerRes.value.data) {
+        setCustomerAnalysis(customerRes.value.data);
       } else {
-        setCustomerAnalysis([])
+        setCustomerAnalysis([]);
       }
-      
-      if (productRes.status === 'fulfilled' && productRes.value.data) {
-        setProductAnalysis(productRes.value.data)
+
+      if (productRes.status === "fulfilled" && productRes.value.data) {
+        setProductAnalysis(productRes.value.data);
       } else {
-        setProductAnalysis([])
+        setProductAnalysis([]);
       }
-      
-      if (regionalRes.status === 'fulfilled' && regionalRes.value.data) {
-        setRegionalAnalysis(regionalRes.value.data)
+
+      if (regionalRes.status === "fulfilled" && regionalRes.value.data) {
+        setRegionalAnalysis(regionalRes.value.data);
       } else {
-        setRegionalAnalysis([])
+        setRegionalAnalysis([]);
       }
     } catch (err) {
-      console.error('销售报表 API 调用失败:', err)
-      setError(err)
+      console.error("销售报表 API 调用失败:", err);
+      setError(err);
       // 清空所有数据
-      setMonthlySales(null)
-      setCustomerAnalysis(null)
-      setProductAnalysis(null)
-      setRegionalAnalysis(null)
+      setMonthlySales(null);
+      setCustomerAnalysis(null);
+      setProductAnalysis(null);
+      setRegionalAnalysis(null);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchData()
-  }, [selectedPeriod])
+    fetchData();
+  }, [selectedPeriod]);
 
   // 如果有错误，显示错误组件
   if (error) {
@@ -140,7 +144,7 @@ export default function SalesReports() {
           onRetry={fetchData}
         />
       </div>
-    )
+    );
   }
 
   // 如果正在加载
@@ -153,7 +157,7 @@ export default function SalesReports() {
         />
         <div className="text-center py-16 text-slate-400">加载中...</div>
       </div>
-    )
+    );
   }
 
   // 如果数据为空
@@ -170,11 +174,13 @@ export default function SalesReports() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
-  const currentMonth = monthlySales[monthlySales.length - 1]
-  const avgAchievement = monthlySales.reduce((sum, m) => sum + (m.achieved / m.target * 100), 0) / monthlySales.length
+  const currentMonth = monthlySales[monthlySales.length - 1];
+  const avgAchievement =
+    monthlySales.reduce((sum, m) => sum + (m.achieved / m.target) * 100, 0) /
+    monthlySales.length;
 
   return (
     <motion.div
@@ -218,12 +224,16 @@ export default function SalesReports() {
                   {currentMonth.growth > 0 ? (
                     <>
                       <ArrowUpRight className="w-3 h-3 text-emerald-400" />
-                      <span className="text-xs text-emerald-400">+{currentMonth.growth}%</span>
+                      <span className="text-xs text-emerald-400">
+                        +{currentMonth.growth}%
+                      </span>
                     </>
                   ) : (
                     <>
                       <ArrowDownRight className="w-3 h-3 text-red-400" />
-                      <span className="text-xs text-red-400">{currentMonth.growth}%</span>
+                      <span className="text-xs text-red-400">
+                        {currentMonth.growth}%
+                      </span>
                     </>
                   )}
                   <span className="text-xs text-slate-500">vs 上月</span>
@@ -234,9 +244,16 @@ export default function SalesReports() {
               </div>
             </div>
             <div className="mt-3">
-              <Progress value={(currentMonth.achieved / currentMonth.target * 100)} className="h-1.5" />
+              <Progress
+                value={(currentMonth.achieved / currentMonth.target) * 100}
+                className="h-1.5"
+              />
               <p className="text-xs text-slate-500 mt-1">
-                目标完成率 {((currentMonth.achieved / currentMonth.target) * 100).toFixed(1)}%
+                目标完成率{" "}
+                {((currentMonth.achieved / currentMonth.target) * 100).toFixed(
+                  1,
+                )}
+                %
               </p>
             </div>
           </CardContent>
@@ -265,7 +282,9 @@ export default function SalesReports() {
               <div>
                 <p className="text-sm text-slate-400">累计销售额</p>
                 <p className="text-2xl font-bold text-white mt-1">
-                  {formatCurrency(monthlySales.reduce((sum, m) => sum + m.achieved, 0))}
+                  {formatCurrency(
+                    monthlySales.reduce((sum, m) => sum + m.achieved, 0),
+                  )}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">近7个月累计</p>
               </div>
@@ -308,24 +327,32 @@ export default function SalesReports() {
             <CardContent>
               <div className="space-y-4">
                 {monthlySales.map((item, index) => {
-                  const achievementRate = (item.achieved / item.target * 100)
+                  const achievementRate = (item.achieved / item.target) * 100;
                   return (
                     <div key={item.month} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-slate-300">{item.month}</span>
                         <div className="flex items-center gap-4">
-                          <span className="text-slate-400">目标: {formatCurrency(item.target)}</span>
-                          <span className="text-white font-medium">完成: {formatCurrency(item.achieved)}</span>
+                          <span className="text-slate-400">
+                            目标: {formatCurrency(item.target)}
+                          </span>
+                          <span className="text-white font-medium">
+                            完成: {formatCurrency(item.achieved)}
+                          </span>
                           {item.growth > 0 ? (
-                            <span className="text-emerald-400 text-xs">+{item.growth}%</span>
+                            <span className="text-emerald-400 text-xs">
+                              +{item.growth}%
+                            </span>
                           ) : (
-                            <span className="text-red-400 text-xs">{item.growth}%</span>
+                            <span className="text-red-400 text-xs">
+                              {item.growth}%
+                            </span>
                           )}
                         </div>
                       </div>
                       <Progress value={achievementRate} className="h-2" />
                     </div>
-                  )
+                  );
                 })}
               </div>
             </CardContent>
@@ -345,43 +372,56 @@ export default function SalesReports() {
               <div className="space-y-4">
                 {customerAnalysis && customerAnalysis.length > 0 ? (
                   customerAnalysis.map((customer, index) => (
-                  <div
-                    key={customer.name}
-                    className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className={cn(
-                          'w-6 h-6 rounded flex items-center justify-center text-xs font-bold text-white',
-                          index === 0 && 'bg-gradient-to-br from-amber-500 to-orange-500',
-                          index === 1 && 'bg-gradient-to-br from-blue-500 to-cyan-500',
-                          index === 2 && 'bg-gradient-to-br from-purple-500 to-pink-500',
-                          index >= 3 && 'bg-slate-600',
-                        )}>
-                          {index + 1}
+                    <div
+                      key={customer.name}
+                      className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={cn(
+                              "w-6 h-6 rounded flex items-center justify-center text-xs font-bold text-white",
+                              index === 0 &&
+                                "bg-gradient-to-br from-amber-500 to-orange-500",
+                              index === 1 &&
+                                "bg-gradient-to-br from-blue-500 to-cyan-500",
+                              index === 2 &&
+                                "bg-gradient-to-br from-purple-500 to-pink-500",
+                              index >= 3 && "bg-slate-600",
+                            )}
+                          >
+                            {index + 1}
+                          </div>
+                          <div>
+                            <p className="font-medium text-white text-sm">
+                              {customer.name}
+                            </p>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                              {customer.projects} 个项目
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-white text-sm">{customer.name}</p>
-                          <p className="text-xs text-slate-400 mt-0.5">
-                            {customer.projects} 个项目
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-white">
+                            {formatCurrency(customer.amount)}
                           </p>
+                          {customer.growth > 0 ? (
+                            <p className="text-xs text-emerald-400">
+                              +{customer.growth}%
+                            </p>
+                          ) : (
+                            <p className="text-xs text-red-400">
+                              {customer.growth}%
+                            </p>
+                          )}
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-white">
-                          {formatCurrency(customer.amount)}
-                        </p>
-                        {customer.growth > 0 ? (
-                          <p className="text-xs text-emerald-400">+{customer.growth}%</p>
-                        ) : (
-                          <p className="text-xs text-red-400">{customer.growth}%</p>
-                        )}
                       </div>
                     </div>
-                  </div>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-slate-500 text-sm">暂无客户数据</div>
+                  <div className="text-center py-8 text-slate-500 text-sm">
+                    暂无客户数据
+                  </div>
                 )}
               </div>
             </CardContent>
@@ -401,25 +441,34 @@ export default function SalesReports() {
               <div className="space-y-4">
                 {productAnalysis && productAnalysis.length > 0 ? (
                   productAnalysis.map((product, index) => (
-                  <div
-                    key={product.name}
-                    className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-white text-sm">{product.name}</span>
-                      <span className="text-white font-bold">{formatCurrency(product.amount)}</span>
+                    <div
+                      key={product.name}
+                      className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-white text-sm">
+                          {product.name}
+                        </span>
+                        <span className="text-white font-bold">
+                          {formatCurrency(product.amount)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs mb-2">
+                        <span className="text-slate-400">
+                          {product.count} 台 · 均价{" "}
+                          {formatCurrency(product.avgPrice)}
+                        </span>
+                        <span className="text-slate-400">
+                          占比 {product.ratio}%
+                        </span>
+                      </div>
+                      <Progress value={product.ratio} className="h-1.5" />
                     </div>
-                    <div className="flex items-center justify-between text-xs mb-2">
-                      <span className="text-slate-400">
-                        {product.count} 台 · 均价 {formatCurrency(product.avgPrice)}
-                      </span>
-                      <span className="text-slate-400">占比 {product.ratio}%</span>
-                    </div>
-                    <Progress value={product.ratio} className="h-1.5" />
-                  </div>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-slate-500 text-sm">暂无产品数据</div>
+                  <div className="text-center py-8 text-slate-500 text-sm">
+                    暂无产品数据
+                  </div>
                 )}
               </div>
             </CardContent>
@@ -439,32 +488,45 @@ export default function SalesReports() {
               <div className="space-y-4">
                 {regionalAnalysis && regionalAnalysis.length > 0 ? (
                   regionalAnalysis.map((region, index) => (
-                  <div
-                    key={region.region}
-                    className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <p className="font-medium text-white text-sm">{region.region}</p>
-                        <p className="text-xs text-slate-400 mt-0.5">
-                          {region.customers} 个客户
-                        </p>
+                    <div
+                      key={region.region}
+                      className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="font-medium text-white text-sm">
+                            {region.region}
+                          </p>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            {region.customers} 个客户
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-white">
+                            {formatCurrency(region.amount)}
+                          </p>
+                          <p className="text-xs text-emerald-400">
+                            +{region.growth}%
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-white">
-                          {formatCurrency(region.amount)}
-                        </p>
-                        <p className="text-xs text-emerald-400">+{region.growth}%</p>
-                      </div>
+                      <Progress
+                        value={
+                          (region.amount /
+                            regionalAnalysis.reduce(
+                              (sum, r) => sum + r.amount,
+                              0,
+                            )) *
+                          100
+                        }
+                        className="h-1.5 mt-2"
+                      />
                     </div>
-                    <Progress
-                      value={(region.amount / regionalAnalysis.reduce((sum, r) => sum + r.amount, 0)) * 100}
-                      className="h-1.5 mt-2"
-                    />
-                  </div>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-slate-500 text-sm">暂无区域数据</div>
+                  <div className="text-center py-8 text-slate-500 text-sm">
+                    暂无区域数据
+                  </div>
                 )}
               </div>
             </CardContent>
@@ -472,6 +534,5 @@ export default function SalesReports() {
         </motion.div>
       </div>
     </motion.div>
-  )
+  );
 }
-

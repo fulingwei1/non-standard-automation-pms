@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { cn } from '../lib/utils'
-import { pmoApi } from '../services/api'
-import { formatDate, formatCurrency } from '../lib/utils'
-import { PageHeader } from '../components/layout/PageHeader'
-import { logger } from '../utils/logger'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { cn } from "../lib/utils";
+import { pmoApi } from "../services/api";
+import { formatDate, formatCurrency } from "../lib/utils";
+import { PageHeader } from "../components/layout/PageHeader";
+import { logger } from "../utils/logger";
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import {
   Badge,
   Input,
   SkeletonCard,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Plus,
   Search,
@@ -32,7 +32,7 @@ import {
   Clock,
   Eye,
   AlertCircle,
-} from 'lucide-react'
+} from "lucide-react";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -40,96 +40,96 @@ const staggerContainer = {
     opacity: 1,
     transition: { staggerChildren: 0.05, delayChildren: 0.1 },
   },
-}
+};
 
 const staggerChild = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
-}
+};
 
 const getStatusBadge = (status) => {
   const badges = {
-    DRAFT: { label: '草稿', variant: 'secondary' },
-    SUBMITTED: { label: '已提交', variant: 'info' },
-    REVIEWING: { label: '评审中', variant: 'warning' },
-    APPROVED: { label: '已通过', variant: 'success' },
-    REJECTED: { label: '已驳回', variant: 'danger' },
-  }
-  return badges[status] || badges.DRAFT
-}
+    DRAFT: { label: "草稿", variant: "secondary" },
+    SUBMITTED: { label: "已提交", variant: "info" },
+    REVIEWING: { label: "评审中", variant: "warning" },
+    APPROVED: { label: "已通过", variant: "success" },
+    REJECTED: { label: "已驳回", variant: "danger" },
+  };
+  return badges[status] || badges.DRAFT;
+};
 
 export default function InitiationManagement() {
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [initiations, setInitiations] = useState([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
-  const [pageSize] = useState(20)
-  const [keyword, setKeyword] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const navigate = useNavigate()
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [initiations, setInitiations] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [keyword, setKeyword] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchData()
-  }, [page, keyword, statusFilter])
+    fetchData();
+  }, [page, keyword, statusFilter]);
 
   const fetchData = async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
       const params = {
         page,
         page_size: pageSize,
         keyword: keyword || undefined,
         status: statusFilter || undefined,
-      }
-      const res = await pmoApi.initiations.list(params)
-      const data = res.data
+      };
+      const res = await pmoApi.initiations.list(params);
+      const data = res.data;
 
       // Handle PaginatedResponse format
-      if (data && typeof data === 'object' && 'items' in data) {
-        const itemsArray = Array.isArray(data.items) ? data.items : []
-        setInitiations(itemsArray)
-        setTotal(data.total || 0)
+      if (data && typeof data === "object" && "items" in data) {
+        const itemsArray = Array.isArray(data.items) ? data.items : [];
+        setInitiations(itemsArray);
+        setTotal(data.total || 0);
       } else if (Array.isArray(data)) {
-        setInitiations(data)
-        setTotal(data.length)
+        setInitiations(data);
+        setTotal(data.length);
       } else {
-        logger.warn('无法识别数据格式:', data)
-        setInitiations([])
-        setTotal(0)
+        logger.warn("无法识别数据格式:", data);
+        setInitiations([]);
+        setTotal(0);
       }
     } catch (err) {
-      logger.error('获取数据失败:', err)
-      setError(err.response?.data?.detail || err.message || '加载数据失败')
-      setInitiations([])
-      setTotal(0)
+      logger.error("获取数据失败:", err);
+      setError(err.response?.data?.detail || err.message || "加载数据失败");
+      setInitiations([]);
+      setTotal(0);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleCreate = async (formData) => {
     try {
-      await pmoApi.initiations.create(formData)
-      setCreateDialogOpen(false)
-      fetchData()
+      await pmoApi.initiations.create(formData);
+      setCreateDialogOpen(false);
+      fetchData();
     } catch (err) {
-      console.error('Failed to create initiation:', err)
-      alert('创建失败: ' + (err.response?.data?.detail || err.message))
+      console.error("Failed to create initiation:", err);
+      alert("创建失败: " + (err.response?.data?.detail || err.message));
     }
-  }
+  };
 
   const handleSubmit = async (id) => {
     try {
-      await pmoApi.initiations.submit(id)
-      fetchData()
+      await pmoApi.initiations.submit(id);
+      fetchData();
     } catch (err) {
-      console.error('Failed to submit initiation:', err)
-      alert('提交失败: ' + (err.response?.data?.detail || err.message))
+      console.error("Failed to submit initiation:", err);
+      alert("提交失败: " + (err.response?.data?.detail || err.message));
     }
-  }
+  };
 
   return (
     <div>
@@ -137,10 +137,7 @@ export default function InitiationManagement() {
         title="立项管理"
         description="项目立项申请与评审管理"
         action={
-          <Button
-            onClick={() => setCreateDialogOpen(true)}
-            className="gap-2"
-          >
+          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
             新建申请
           </Button>
@@ -210,107 +207,116 @@ export default function InitiationManagement() {
       ) : error ? null : (
         <>
           {initiations.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4">
-          {initiations.map((initiation) => {
-            if (!initiation || !initiation.id) {
-              return null
-            }
-            const statusBadge = getStatusBadge(initiation.status)
-            return (
-              <motion.div key={initiation.id} variants={staggerChild}>
-                <Card className="hover:bg-white/[0.02] transition-colors">
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-indigo-500/10 ring-1 ring-primary/20">
-                          <FileText className="h-5 w-5 text-primary" />
+            <div className="grid grid-cols-1 gap-4">
+              {initiations.map((initiation) => {
+                if (!initiation || !initiation.id) {
+                  return null;
+                }
+                const statusBadge = getStatusBadge(initiation.status);
+                return (
+                  <motion.div key={initiation.id} variants={staggerChild}>
+                    <Card className="hover:bg-white/[0.02] transition-colors">
+                      <CardContent className="p-5">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-indigo-500/10 ring-1 ring-primary/20">
+                              <FileText className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-white">
+                                {initiation.project_name}
+                              </h3>
+                              <p className="text-xs text-slate-500">
+                                {initiation.application_no}
+                              </p>
+                            </div>
+                          </div>
+                          <Badge variant={statusBadge.variant}>
+                            {statusBadge.label}
+                          </Badge>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-white">
-                            {initiation.project_name}
-                          </h3>
-                          <p className="text-xs text-slate-500">
-                            {initiation.application_no}
-                          </p>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4 text-sm">
+                          <div>
+                            <span className="text-slate-400">客户名称</span>
+                            <p className="text-white mt-1">
+                              {initiation.customer_name}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-slate-400">合同金额</span>
+                            <p className="text-white mt-1">
+                              {initiation.contract_amount
+                                ? formatCurrency(initiation.contract_amount)
+                                : "未设置"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-slate-400">申请人</span>
+                            <p className="text-white mt-1">
+                              {initiation.applicant_name || "未知"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-slate-400">申请时间</span>
+                            <p className="text-white mt-1">
+                              {initiation.apply_time
+                                ? formatDate(initiation.apply_time)
+                                : "未设置"}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <Badge variant={statusBadge.variant}>
-                        {statusBadge.label}
-                      </Badge>
-                    </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4 text-sm">
-                      <div>
-                        <span className="text-slate-400">客户名称</span>
-                        <p className="text-white mt-1">{initiation.customer_name}</p>
-                      </div>
-                      <div>
-                        <span className="text-slate-400">合同金额</span>
-                        <p className="text-white mt-1">
-                          {initiation.contract_amount
-                            ? formatCurrency(initiation.contract_amount)
-                            : '未设置'}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-slate-400">申请人</span>
-                        <p className="text-white mt-1">
-                          {initiation.applicant_name || '未知'}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-slate-400">申请时间</span>
-                        <p className="text-white mt-1">
-                          {initiation.apply_time
-                            ? formatDate(initiation.apply_time)
-                            : '未设置'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                      <div className="flex items-center gap-2">
-                        {initiation.status === 'DRAFT' && (
+                        <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                          <div className="flex items-center gap-2">
+                            {initiation.status === "DRAFT" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleSubmit(initiation.id)}
+                              >
+                                提交评审
+                              </Button>
+                            )}
+                            {initiation.status === "APPROVED" &&
+                              initiation.project_id && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    navigate(
+                                      `/projects/${initiation.project_id}`,
+                                    )
+                                  }
+                                >
+                                  查看项目
+                                </Button>
+                              )}
+                          </div>
                           <Button
                             size="sm"
-                            variant="outline"
-                            onClick={() => handleSubmit(initiation.id)}
+                            variant="ghost"
+                            onClick={() =>
+                              navigate(`/pmo/initiations/${initiation.id}`)
+                            }
                           >
-                            提交评审
+                            <Eye className="h-4 w-4 mr-2" />
+                            查看详情
                           </Button>
-                        )}
-                        {initiation.status === 'APPROVED' && initiation.project_id && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => navigate(`/projects/${initiation.project_id}`)}
-                          >
-                            查看项目
-                          </Button>
-                        )}
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => navigate(`/pmo/initiations/${initiation.id}`)}
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        查看详情
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )
-          })}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="p-12 text-center text-slate-500">
-            暂无立项申请
-          </CardContent>
-        </Card>
-      )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-12 text-center text-slate-500">
+                暂无立项申请
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
 
@@ -346,48 +352,48 @@ export default function InitiationManagement() {
         onSubmit={handleCreate}
       />
     </div>
-  )
+  );
 }
 
 function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {
   const [formData, setFormData] = useState({
-    project_name: '',
-    project_type: 'NEW',
-    project_level: '',
-    customer_name: '',
-    contract_no: '',
-    contract_amount: '',
-    required_start_date: '',
-    required_end_date: '',
-    requirement_summary: '',
-    technical_difficulty: '',
-    estimated_hours: '',
-    resource_requirements: '',
-    risk_assessment: '',
-  })
+    project_name: "",
+    project_type: "NEW",
+    project_level: "",
+    customer_name: "",
+    contract_no: "",
+    contract_amount: "",
+    required_start_date: "",
+    required_end_date: "",
+    requirement_summary: "",
+    technical_difficulty: "",
+    estimated_hours: "",
+    resource_requirements: "",
+    risk_assessment: "",
+  });
 
   const handleSubmit = () => {
     if (!formData.project_name || !formData.customer_name) {
-      alert('请填写项目名称和客户名称')
-      return
+      alert("请填写项目名称和客户名称");
+      return;
     }
-    onSubmit(formData)
+    onSubmit(formData);
     setFormData({
-      project_name: '',
-      project_type: 'NEW',
-      project_level: '',
-      customer_name: '',
-      contract_no: '',
-      contract_amount: '',
-      required_start_date: '',
-      required_end_date: '',
-      requirement_summary: '',
-      technical_difficulty: '',
-      estimated_hours: '',
-      resource_requirements: '',
-      risk_assessment: '',
-    })
-  }
+      project_name: "",
+      project_type: "NEW",
+      project_level: "",
+      customer_name: "",
+      contract_no: "",
+      contract_amount: "",
+      required_start_date: "",
+      required_end_date: "",
+      requirement_summary: "",
+      technical_difficulty: "",
+      estimated_hours: "",
+      resource_requirements: "",
+      risk_assessment: "",
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -445,7 +451,10 @@ function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {
                   type="number"
                   value={formData.contract_amount}
                   onChange={(e) =>
-                    setFormData({ ...formData, contract_amount: e.target.value })
+                    setFormData({
+                      ...formData,
+                      contract_amount: e.target.value,
+                    })
                   }
                   placeholder="请输入合同金额"
                 />
@@ -492,7 +501,10 @@ function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {
               <textarea
                 value={formData.requirement_summary}
                 onChange={(e) =>
-                  setFormData({ ...formData, requirement_summary: e.target.value })
+                  setFormData({
+                    ...formData,
+                    requirement_summary: e.target.value,
+                  })
                 }
                 placeholder="请输入需求概述"
                 className="w-full px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
@@ -509,6 +521,5 @@ function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

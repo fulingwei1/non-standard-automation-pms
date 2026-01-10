@@ -3,8 +3,8 @@
  * Features: Production overview, workshop management, production plans, work orders, team management
  */
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Factory,
@@ -36,8 +36,8 @@ import {
   XCircle,
   ArrowUpRight,
   ArrowDownRight,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -51,24 +51,25 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../components/ui'
-import { cn } from '../lib/utils'
-import { productionApi, shortageApi, projectApi, materialApi, alertApi } from '../services/api'
-import { ApiIntegrationError } from '../components/ui'
+} from "../components/ui";
+import { cn } from "../lib/utils";
+import {
+  productionApi,
+  shortageApi,
+  projectApi,
+  materialApi,
+  alertApi,
+} from "../services/api";
+import { ApiIntegrationError } from "../components/ui";
 
 // Mock data - 已移除，使用真实API
 
-
-
-
-
-
 export default function ProductionManagerDashboard() {
-  const [selectedTab, setSelectedTab] = useState('overview')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [filterStatus, setFilterStatus] = useState('all')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [selectedTab, setSelectedTab] = useState("overview");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // State for API data
   const [productionStats, setProductionStats] = useState({
@@ -80,46 +81,55 @@ export default function ProductionManagerDashboard() {
     activeWorkers: 0,
     totalWorkstations: 0,
     activeWorkstations: 0,
-  })
-  const [workshops, setWorkshops] = useState([])
-  const [productionPlans, setProductionPlans] = useState([])
-  const [workOrders, setWorkOrders] = useState([])
-  const [productionDaily, setProductionDaily] = useState(null)
-  const [shortageDaily, setShortageDaily] = useState(null)
-  const [dailyError, setDailyError] = useState(null)
-  const [workerRankings, setWorkerRankings] = useState([])
-  const [rankingType, setRankingType] = useState('efficiency')
-  const [rankingLoading, setRankingLoading] = useState(false)
-  const [inProductionProjects, setInProductionProjects] = useState([])
-  const [projectsLoading, setProjectsLoading] = useState(false)
-  const [materialSearchResults, setMaterialSearchResults] = useState([])
-  const [materialSearchKeyword, setMaterialSearchKeyword] = useState('')
-  const [materialSearchLoading, setMaterialSearchLoading] = useState(false)
-  const [alerts, setAlerts] = useState([])
+  });
+  const [workshops, setWorkshops] = useState([]);
+  const [productionPlans, setProductionPlans] = useState([]);
+  const [workOrders, setWorkOrders] = useState([]);
+  const [productionDaily, setProductionDaily] = useState(null);
+  const [shortageDaily, setShortageDaily] = useState(null);
+  const [dailyError, setDailyError] = useState(null);
+  const [workerRankings, setWorkerRankings] = useState([]);
+  const [rankingType, setRankingType] = useState("efficiency");
+  const [rankingLoading, setRankingLoading] = useState(false);
+  const [inProductionProjects, setInProductionProjects] = useState([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+  const [materialSearchResults, setMaterialSearchResults] = useState([]);
+  const [materialSearchKeyword, setMaterialSearchKeyword] = useState("");
+  const [materialSearchLoading, setMaterialSearchLoading] = useState(false);
+  const [alerts, setAlerts] = useState([]);
 
   // Map backend status to frontend status
   const mapBackendStatus = (backendStatus) => {
     const statusMap = {
-      'DRAFT': 'draft',
-      'SUBMITTED': 'submitted',
-      'APPROVED': 'approved',
-      'PUBLISHED': 'published',
-      'EXECUTING': 'executing',
-      'PENDING': 'pending',
-      'ASSIGNED': 'assigned',
-      'STARTED': 'started',
-      'COMPLETED': 'completed',
-    }
-    return statusMap[backendStatus] || backendStatus?.toLowerCase() || 'pending'
-  }
+      DRAFT: "draft",
+      SUBMITTED: "submitted",
+      APPROVED: "approved",
+      PUBLISHED: "published",
+      EXECUTING: "executing",
+      PENDING: "pending",
+      ASSIGNED: "assigned",
+      STARTED: "started",
+      COMPLETED: "completed",
+    };
+    return (
+      statusMap[backendStatus] || backendStatus?.toLowerCase() || "pending"
+    );
+  };
 
   const teamStats = useMemo(() => {
-    const overall = productionDaily?.overall || {}
-    const skill = overall.skill_distribution || {}
-    const shouldAttend = overall.should_attend ?? productionStats.totalWorkers ?? 0
-    const actualAttend = overall.actual_attend ?? productionStats.activeWorkers ?? 0
-    const attendanceRate = shouldAttend > 0 ? Math.round((actualAttend / shouldAttend) * 100) : 0
-    const efficiency = overall.efficiency ?? overall.completion_rate ?? productionStats.completionRate ?? 0
+    const overall = productionDaily?.overall || {};
+    const skill = overall.skill_distribution || {};
+    const shouldAttend =
+      overall.should_attend ?? productionStats.totalWorkers ?? 0;
+    const actualAttend =
+      overall.actual_attend ?? productionStats.activeWorkers ?? 0;
+    const attendanceRate =
+      shouldAttend > 0 ? Math.round((actualAttend / shouldAttend) * 100) : 0;
+    const efficiency =
+      overall.efficiency ??
+      overall.completion_rate ??
+      productionStats.completionRate ??
+      0;
 
     return {
       totalWorkers: shouldAttend || productionStats.totalWorkers || 0,
@@ -133,16 +143,16 @@ export default function ProductionManagerDashboard() {
         intermediate: skill.intermediate || 0,
         junior: skill.junior || 0,
       },
-    }
-  }, [productionDaily, productionStats])
+    };
+  }, [productionDaily, productionStats]);
 
   // Load dashboard data
   const loadDashboard = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
-      const response = await productionApi.dashboard()
-      const dashboardData = response.data || response
+      setLoading(true);
+      setError(null);
+      const response = await productionApi.dashboard();
+      const dashboardData = response.data || response;
       if (dashboardData) {
         setProductionStats({
           inProductionProjects: dashboardData.in_production_projects || 0,
@@ -153,84 +163,99 @@ export default function ProductionManagerDashboard() {
           activeWorkers: dashboardData.active_workers || 0,
           totalWorkstations: dashboardData.total_workstations || 0,
           activeWorkstations: dashboardData.active_workstations || 0,
-        })
+        });
       }
     } catch (err) {
-      console.error('Failed to load dashboard:', err)
-      setError(err.response?.data?.detail || err.message || '加载仪表板数据失败')
+      console.error("Failed to load dashboard:", err);
+      setError(
+        err.response?.data?.detail || err.message || "加载仪表板数据失败",
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
-  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedDate, setSelectedDate] = useState("");
 
   const loadDailySnapshots = useCallback(async (dateFilter) => {
     try {
-      setDailyError(null)
+      setDailyError(null);
       const [prodRes, shortageRes] = await Promise.all([
         dateFilter
-          ? productionApi.reports.daily({ page: 1, page_size: 100, start_date: dateFilter, end_date: dateFilter })
+          ? productionApi.reports.daily({
+              page: 1,
+              page_size: 100,
+              start_date: dateFilter,
+              end_date: dateFilter,
+            })
           : productionApi.reports.latestDaily(),
         dateFilter
           ? shortageApi.statistics.dailyReportByDate(dateFilter)
           : shortageApi.statistics.latestDailyReport(),
-      ])
-      const prodPayload = dateFilter ? (prodRes?.data ?? prodRes) : (prodRes?.data?.data ?? prodRes?.data)
-      let prodData = prodPayload
+      ]);
+      const prodPayload = dateFilter
+        ? (prodRes?.data ?? prodRes)
+        : (prodRes?.data?.data ?? prodRes?.data);
+      let prodData = prodPayload;
       if (dateFilter) {
-        const items = prodPayload?.items || []
+        const items = prodPayload?.items || [];
         if (items.length) {
           const normalized = items.map((item) => ({
             ...item,
             completion_rate: item.completion_rate ?? 0,
-          }))
+          }));
           prodData = {
             date: dateFilter,
             overall: normalized.find((report) => !report.workshop_id) || null,
             workshops: normalized.filter((report) => report.workshop_id),
-          }
+          };
         } else {
-          prodData = null
+          prodData = null;
         }
       }
       if (prodData) {
-        setProductionDaily(prodData)
+        setProductionDaily(prodData);
         if (prodData.overall) {
           setProductionStats((prev) => ({
             ...prev,
             todayOutput: prodData.overall.completed_qty ?? prev.todayOutput,
-            completionRate: prodData.overall.completion_rate ?? prev.completionRate,
+            completionRate:
+              prodData.overall.completion_rate ?? prev.completionRate,
             totalWorkers: prodData.overall.should_attend ?? prev.totalWorkers,
             activeWorkers: prodData.overall.actual_attend ?? prev.activeWorkers,
-          }))
+          }));
         }
       } else if (dateFilter) {
-        setProductionDaily(null)
-        setDailyError('该日期没有生产日报数据')
+        setProductionDaily(null);
+        setDailyError("该日期没有生产日报数据");
       }
-      const shortageData = shortageRes?.data?.data ?? shortageRes?.data
+      const shortageData = shortageRes?.data?.data ?? shortageRes?.data;
       if (shortageData) {
-        setShortageDaily(shortageData)
+        setShortageDaily(shortageData);
       } else if (dateFilter) {
-        setShortageDaily(null)
-        setDailyError('该日期没有缺料日报数据')
+        setShortageDaily(null);
+        setDailyError("该日期没有缺料日报数据");
       }
     } catch (err) {
-      console.error('Failed to load daily snapshots:', err)
-      setDailyError(err.response?.data?.detail || err.message || '日报数据加载失败')
+      console.error("Failed to load daily snapshots:", err);
+      setDailyError(
+        err.response?.data?.detail || err.message || "日报数据加载失败",
+      );
     }
-  }, [])
+  }, []);
 
   // Load workshops
   const loadWorkshops = useCallback(async () => {
     try {
-      const response = await productionApi.workshops.list({ page: 1, page_size: 100 })
-      const workshopsData = response.data?.items || response.data || []
-      const transformedWorkshops = workshopsData.map(ws => ({
+      const response = await productionApi.workshops.list({
+        page: 1,
+        page_size: 100,
+      });
+      const workshopsData = response.data?.items || response.data || [];
+      const transformedWorkshops = workshopsData.map((ws) => ({
         id: ws.id,
-        name: ws.workshop_name || '',
-        type: ws.workshop_type || 'MACHINING',
+        name: ws.workshop_name || "",
+        type: ws.workshop_type || "MACHINING",
         capacity: ws.capacity || 0,
         currentLoad: ws.current_load || 0,
         activeWorkstations: ws.active_workstations || 0,
@@ -238,207 +263,227 @@ export default function ProductionManagerDashboard() {
         workers: ws.workers || 0,
         activeWorkers: ws.active_workers || 0,
         todayOutput: ws.today_output || 0,
-        status: ws.current_load > 90 ? 'warning' : 'normal',
-      }))
-      setWorkshops(transformedWorkshops)
+        status: ws.current_load > 90 ? "warning" : "normal",
+      }));
+      setWorkshops(transformedWorkshops);
     } catch (err) {
-      console.error('Failed to load workshops:', err)
-      setWorkshops([]) // 不再使用mock数据
+      console.error("Failed to load workshops:", err);
+      setWorkshops([]); // 不再使用mock数据
     }
-  }, [])
+  }, []);
 
   // Load production plans
   const loadProductionPlans = useCallback(async () => {
     try {
-      const params = { page: 1, page_size: 100 }
-      if (filterStatus !== 'all') {
+      const params = { page: 1, page_size: 100 };
+      if (filterStatus !== "all") {
         const statusMap = {
-          'executing': 'EXECUTING',
-          'approved': 'APPROVED',
-          'published': 'PUBLISHED',
-          'draft': 'DRAFT',
-        }
-        params.status = statusMap[filterStatus] || filterStatus
+          executing: "EXECUTING",
+          approved: "APPROVED",
+          published: "PUBLISHED",
+          draft: "DRAFT",
+        };
+        params.status = statusMap[filterStatus] || filterStatus;
       }
-      const response = await productionApi.productionPlans.list(params)
-      const plansData = response.data?.items || response.data || []
-      const transformedPlans = plansData.map(plan => ({
+      const response = await productionApi.productionPlans.list(params);
+      const plansData = response.data?.items || response.data || [];
+      const transformedPlans = plansData.map((plan) => ({
         id: plan.id,
-        planCode: plan.plan_no || '',
-        projectName: plan.project_name || '',
-        machineName: plan.machine_name || '',
-        startDate: plan.start_date || '',
-        endDate: plan.end_date || '',
+        planCode: plan.plan_no || "",
+        projectName: plan.project_name || "",
+        machineName: plan.machine_name || "",
+        startDate: plan.start_date || "",
+        endDate: plan.end_date || "",
         status: mapBackendStatus(plan.status),
         progress: plan.progress || 0,
         totalQuantity: plan.total_quantity || 0,
         completedQuantity: plan.completed_quantity || 0,
-        priority: plan.priority?.toLowerCase() || 'normal',
-      }))
-      setProductionPlans(transformedPlans)
+        priority: plan.priority?.toLowerCase() || "normal",
+      }));
+      setProductionPlans(transformedPlans);
     } catch (err) {
-      console.error('Failed to load production plans:', err)
-      setProductionPlans([]) // 不再使用mock数据
+      console.error("Failed to load production plans:", err);
+      setProductionPlans([]); // 不再使用mock数据
     }
-  }, [filterStatus])
+  }, [filterStatus]);
 
   // Load work orders
   const loadWorkOrders = useCallback(async () => {
     try {
-      const params = { page: 1, page_size: 100 }
-      if (filterStatus !== 'all') {
+      const params = { page: 1, page_size: 100 };
+      if (filterStatus !== "all") {
         const statusMap = {
-          'started': 'STARTED',
-          'assigned': 'ASSIGNED',
-          'completed': 'COMPLETED',
-          'pending': 'PENDING',
-        }
-        params.status = statusMap[filterStatus] || filterStatus
+          started: "STARTED",
+          assigned: "ASSIGNED",
+          completed: "COMPLETED",
+          pending: "PENDING",
+        };
+        params.status = statusMap[filterStatus] || filterStatus;
       }
-      const response = await productionApi.workOrders.list(params)
-      const ordersData = response.data?.items || response.data || []
-      const transformedOrders = ordersData.map(order => ({
+      const response = await productionApi.workOrders.list(params);
+      const ordersData = response.data?.items || response.data || [];
+      const transformedOrders = ordersData.map((order) => ({
         id: order.id,
-        orderCode: order.work_order_no || '',
-        projectName: order.project_name || '',
-        machineName: order.machine_name || '',
-        workshopName: order.workshop_name || '',
-        workstationName: order.workstation_name || '',
-        workerName: order.worker_name || '',
-        startDate: order.start_date || '',
-        endDate: order.end_date || '',
+        orderCode: order.work_order_no || "",
+        projectName: order.project_name || "",
+        machineName: order.machine_name || "",
+        workshopName: order.workshop_name || "",
+        workstationName: order.workstation_name || "",
+        workerName: order.worker_name || "",
+        startDate: order.start_date || "",
+        endDate: order.end_date || "",
         status: mapBackendStatus(order.status),
         progress: order.progress || 0,
         quantity: order.quantity || 0,
         completedQuantity: order.completed_quantity || 0,
-        priority: order.priority?.toLowerCase() || 'normal',
-      }))
-      setWorkOrders(transformedOrders)
+        priority: order.priority?.toLowerCase() || "normal",
+      }));
+      setWorkOrders(transformedOrders);
     } catch (err) {
-      console.error('Failed to load work orders:', err)
-      setWorkOrders([]) // 不再使用mock数据
+      console.error("Failed to load work orders:", err);
+      setWorkOrders([]); // 不再使用mock数据
     }
-  }, [filterStatus])
+  }, [filterStatus]);
 
   // Load worker rankings
   const loadWorkerRankings = useCallback(async () => {
     try {
-      setRankingLoading(true)
-      const today = new Date()
-      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
+      setRankingLoading(true);
+      const today = new Date();
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
       const params = {
         ranking_type: rankingType,
-        period_start: monthStart.toISOString().split('T')[0],
-        period_end: today.toISOString().split('T')[0],
+        period_start: monthStart.toISOString().split("T")[0],
+        period_end: today.toISOString().split("T")[0],
         limit: 20,
-      }
-      const response = await productionApi.reports.workerRanking(params)
-      const rankings = response.data || response
-      setWorkerRankings(Array.isArray(rankings) ? rankings : [])
+      };
+      const response = await productionApi.reports.workerRanking(params);
+      const rankings = response.data || response;
+      setWorkerRankings(Array.isArray(rankings) ? rankings : []);
     } catch (err) {
-      console.error('Failed to load worker rankings:', err)
-      setWorkerRankings([])
+      console.error("Failed to load worker rankings:", err);
+      setWorkerRankings([]);
     } finally {
-      setRankingLoading(false)
+      setRankingLoading(false);
     }
-  }, [rankingType])
+  }, [rankingType]);
 
   // Load in-production projects
   const loadInProductionProjects = useCallback(async () => {
     try {
-      setProjectsLoading(true)
-      const response = await projectApi.getInProductionSummary({})
-      const projects = response.data || response
-      setInProductionProjects(Array.isArray(projects) ? projects : [])
+      setProjectsLoading(true);
+      const response = await projectApi.getInProductionSummary({});
+      const projects = response.data || response;
+      setInProductionProjects(Array.isArray(projects) ? projects : []);
     } catch (err) {
-      console.error('Failed to load in-production projects:', err)
-      setInProductionProjects([])
+      console.error("Failed to load in-production projects:", err);
+      setInProductionProjects([]);
     } finally {
-      setProjectsLoading(false)
+      setProjectsLoading(false);
     }
-  }, [])
+  }, []);
 
   // Load material search
   const loadMaterialSearch = useCallback(async (keyword) => {
     if (!keyword || keyword.trim().length < 2) {
-      setMaterialSearchResults([])
-      return
+      setMaterialSearchResults([]);
+      return;
     }
     try {
-      setMaterialSearchLoading(true)
+      setMaterialSearchLoading(true);
       const response = await materialApi.search({
         keyword: keyword.trim(),
         page: 1,
         page_size: 20,
-      })
-      const data = response.data || response
-      const items = data.items || data
-      setMaterialSearchResults(Array.isArray(items) ? items : [])
+      });
+      const data = response.data || response;
+      const items = data.items || data;
+      setMaterialSearchResults(Array.isArray(items) ? items : []);
     } catch (err) {
-      console.error('Failed to search materials:', err)
-      setMaterialSearchResults([])
+      console.error("Failed to search materials:", err);
+      setMaterialSearchResults([]);
     } finally {
-      setMaterialSearchLoading(false)
+      setMaterialSearchLoading(false);
     }
-  }, [])
+  }, []);
 
   const loadAlerts = useCallback(async () => {
     try {
-      const response = await alertApi.list({ page: 1, page_size: 6, status: 'PENDING' })
-      const payload = response.data?.items || response.data?.data?.items || response.data?.data || response.data || []
-      const list = Array.isArray(payload) ? payload : payload.items || []
+      const response = await alertApi.list({
+        page: 1,
+        page_size: 6,
+        status: "PENDING",
+      });
+      const payload =
+        response.data?.items ||
+        response.data?.data?.items ||
+        response.data?.data ||
+        response.data ||
+        [];
+      const list = Array.isArray(payload) ? payload : payload.items || [];
       const normalized = list.map((alert) => {
         const levelMap = {
-          URGENT: 'critical',
-          CRITICAL: 'critical',
-          WARNING: 'warning',
-          INFO: 'info',
-        }
+          URGENT: "critical",
+          CRITICAL: "critical",
+          WARNING: "warning",
+          INFO: "info",
+        };
         const statusMap = {
-          PENDING: 'pending',
-          HANDLING: 'processing',
-          RESOLVED: 'resolved',
-          CLOSED: 'closed',
-        }
-        const triggeredAt = alert.triggered_at ? new Date(alert.triggered_at) : null
-        const timestamp = triggeredAt && !isNaN(triggeredAt.getTime())
-          ? `${triggeredAt.getMonth() + 1}-${triggeredAt.getDate()} ${triggeredAt.getHours().toString().padStart(2, '0')}:${triggeredAt.getMinutes().toString().padStart(2, '0')}`
-          : ''
+          PENDING: "pending",
+          HANDLING: "processing",
+          RESOLVED: "resolved",
+          CLOSED: "closed",
+        };
+        const triggeredAt = alert.triggered_at
+          ? new Date(alert.triggered_at)
+          : null;
+        const timestamp =
+          triggeredAt && !isNaN(triggeredAt.getTime())
+            ? `${triggeredAt.getMonth() + 1}-${triggeredAt.getDate()} ${triggeredAt.getHours().toString().padStart(2, "0")}:${triggeredAt.getMinutes().toString().padStart(2, "0")}`
+            : "";
         return {
           id: alert.id,
-          level: levelMap[alert.alert_level?.toUpperCase?.()] || 'warning',
-          title: alert.alert_title || alert.rule_name || '异常预警',
-          content: alert.alert_content || alert.target_name || alert.target_type || '请查看详情',
-          projectCode: alert.project_name || alert.project_code || alert.alert_no || '未关联项目',
-          workshop: alert.target_name || alert.target_type || '—',
+          level: levelMap[alert.alert_level?.toUpperCase?.()] || "warning",
+          title: alert.alert_title || alert.rule_name || "异常预警",
+          content:
+            alert.alert_content ||
+            alert.target_name ||
+            alert.target_type ||
+            "请查看详情",
+          projectCode:
+            alert.project_name ||
+            alert.project_code ||
+            alert.alert_no ||
+            "未关联项目",
+          workshop: alert.target_name || alert.target_type || "—",
           createdAt: timestamp,
-          status: statusMap[alert.status?.toUpperCase?.()] || 'pending',
-        }
-      })
-      setAlerts(normalized)
+          status: statusMap[alert.status?.toUpperCase?.()] || "pending",
+        };
+      });
+      setAlerts(normalized);
     } catch (err) {
-      console.error('Failed to load alerts:', err)
-      setAlerts([])
+      console.error("Failed to load alerts:", err);
+      setAlerts([]);
     }
-  }, [])
+  }, []);
 
   // Load data when component mounts or tab changes
   useEffect(() => {
-    if (selectedTab === 'overview') {
-      loadDashboard()
-      loadWorkshops()
-      loadDailySnapshots(selectedDate || null)
-      loadAlerts()
-    } else if (selectedTab === 'workshops') {
-      loadWorkshops()
-    } else if (selectedTab === 'plans') {
-      loadProductionPlans()
-    } else if (selectedTab === 'orders') {
-      loadWorkOrders()
-    } else if (selectedTab === 'performance') {
-      loadWorkerRankings()
-    } else if (selectedTab === 'projects') {
-      loadInProductionProjects()
+    if (selectedTab === "overview") {
+      loadDashboard();
+      loadWorkshops();
+      loadDailySnapshots(selectedDate || null);
+      loadAlerts();
+    } else if (selectedTab === "workshops") {
+      loadWorkshops();
+    } else if (selectedTab === "plans") {
+      loadProductionPlans();
+    } else if (selectedTab === "orders") {
+      loadWorkOrders();
+    } else if (selectedTab === "performance") {
+      loadWorkerRankings();
+    } else if (selectedTab === "projects") {
+      loadInProductionProjects();
     }
   }, [
     selectedTab,
@@ -453,107 +498,115 @@ export default function ProductionManagerDashboard() {
     loadWorkerRankings,
     loadInProductionProjects,
     loadAlerts,
-  ])
+  ]);
 
   // Material search with debounce
   useEffect(() => {
     const timer = setTimeout(() => {
       if (materialSearchKeyword) {
-        loadMaterialSearch(materialSearchKeyword)
+        loadMaterialSearch(materialSearchKeyword);
       } else {
-        setMaterialSearchResults([])
+        setMaterialSearchResults([]);
       }
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [materialSearchKeyword, loadMaterialSearch])
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [materialSearchKeyword, loadMaterialSearch]);
 
   const filteredPlans = useMemo(() => {
-    return productionPlans.filter(plan => {
-      const matchesSearch = !searchQuery || 
+    return productionPlans.filter((plan) => {
+      const matchesSearch =
+        !searchQuery ||
         plan.projectName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        plan.planCode.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesStatus = filterStatus === 'all' || plan.status === filterStatus
-      return matchesSearch && matchesStatus
-    })
-  }, [productionPlans, searchQuery, filterStatus])
+        plan.planCode.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus =
+        filterStatus === "all" || plan.status === filterStatus;
+      return matchesSearch && matchesStatus;
+    });
+  }, [productionPlans, searchQuery, filterStatus]);
 
   const filteredWorkOrders = useMemo(() => {
-    return workOrders.filter(order => {
-      const matchesSearch = !searchQuery || 
+    return workOrders.filter((order) => {
+      const matchesSearch =
+        !searchQuery ||
         order.projectName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.orderCode.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesStatus = filterStatus === 'all' || order.status === filterStatus
-      return matchesSearch && matchesStatus
-    })
-  }, [workOrders, searchQuery, filterStatus])
+        order.orderCode.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus =
+        filterStatus === "all" || order.status === filterStatus;
+      return matchesSearch && matchesStatus;
+    });
+  }, [workOrders, searchQuery, filterStatus]);
 
   const getStatusColor = (status) => {
     const colors = {
-      executing: 'bg-blue-500',
-      approved: 'bg-emerald-500',
-      published: 'bg-purple-500',
-      draft: 'bg-slate-500',
-      started: 'bg-blue-500',
-      assigned: 'bg-amber-500',
-      completed: 'bg-emerald-500',
-      pending: 'bg-slate-500',
-    }
-    return colors[status] || 'bg-slate-500'
-  }
+      executing: "bg-blue-500",
+      approved: "bg-emerald-500",
+      published: "bg-purple-500",
+      draft: "bg-slate-500",
+      started: "bg-blue-500",
+      assigned: "bg-amber-500",
+      completed: "bg-emerald-500",
+      pending: "bg-slate-500",
+    };
+    return colors[status] || "bg-slate-500";
+  };
 
   const getStatusLabel = (status) => {
     const labels = {
-      executing: '执行中',
-      approved: '已审批',
-      published: '已发布',
-      draft: '草稿',
-      started: '已开工',
-      assigned: '已派工',
-      completed: '已完工',
-      pending: '待处理',
-    }
-    return labels[status] || status
-  }
+      executing: "执行中",
+      approved: "已审批",
+      published: "已发布",
+      draft: "草稿",
+      started: "已开工",
+      assigned: "已派工",
+      completed: "已完工",
+      pending: "待处理",
+    };
+    return labels[status] || status;
+  };
 
   const getPriorityColor = (priority) => {
     const colors = {
-      high: 'bg-red-500',
-      normal: 'bg-amber-500',
-      low: 'bg-slate-500',
-    }
-    return colors[priority] || 'bg-slate-500'
-  }
+      high: "bg-red-500",
+      normal: "bg-amber-500",
+      low: "bg-slate-500",
+    };
+    return colors[priority] || "bg-slate-500";
+  };
 
   const getAlertLevelColor = (level) => {
     const colors = {
-      critical: 'bg-red-500',
-      warning: 'bg-amber-500',
-      info: 'bg-blue-500',
-    }
-    return colors[level] || 'bg-slate-500'
-  }
+      critical: "bg-red-500",
+      warning: "bg-amber-500",
+      info: "bg-blue-500",
+    };
+    return colors[level] || "bg-slate-500";
+  };
 
   const getAlertStatusConfig = (status) => {
     const configs = {
-      pending: { label: '待处理', className: 'bg-amber-500/20 text-amber-400' },
-      processing: { label: '处理中', className: 'bg-blue-500/20 text-blue-400' },
-      resolved: { label: '已处理', className: 'bg-emerald-500/20 text-emerald-400' },
-      closed: { label: '已关闭', className: 'bg-slate-500/20 text-slate-400' },
-    }
-    return configs[status] || configs.pending
-  }
+      pending: { label: "待处理", className: "bg-amber-500/20 text-amber-400" },
+      processing: {
+        label: "处理中",
+        className: "bg-blue-500/20 text-blue-400",
+      },
+      resolved: {
+        label: "已处理",
+        className: "bg-emerald-500/20 text-emerald-400",
+      },
+      closed: { label: "已关闭", className: "bg-slate-500/20 text-slate-400" },
+    };
+    return configs[status] || configs.pending;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-      <PageHeader
-        title="生产管理"
-        subtitle="生产部经理工作台"
-        icon={Factory}
-      />
+      <PageHeader title="生产管理" subtitle="生产部经理工作台" icon={Factory} />
 
       <div className="container mx-auto px-4 py-6 space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
-          <div>{selectedDate ? `当前日期：${selectedDate}` : '显示最新日报数据'}</div>
+          <div>
+            {selectedDate ? `当前日期：${selectedDate}` : "显示最新日报数据"}
+          </div>
           <div className="flex items-center gap-2">
             <Input
               type="date"
@@ -562,7 +615,11 @@ export default function ProductionManagerDashboard() {
               className="bg-slate-900/50 border-slate-700 text-sm"
             />
             {selectedDate && (
-              <Button variant="ghost" className="text-slate-300" onClick={() => setSelectedDate('')}>
+              <Button
+                variant="ghost"
+                className="text-slate-300"
+                onClick={() => setSelectedDate("")}
+              >
                 清空
               </Button>
             )}
@@ -582,7 +639,9 @@ export default function ProductionManagerDashboard() {
                     <Activity className="w-5 h-5 text-emerald-400" />
                     今日生产
                   </CardTitle>
-                  <p className="text-sm text-slate-400">{productionDaily.date}</p>
+                  <p className="text-sm text-slate-400">
+                    {productionDaily.date}
+                  </p>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-4">
                   <div>
@@ -597,7 +656,10 @@ export default function ProductionManagerDashboard() {
                   <div>
                     <p className="text-sm text-slate-400">完成率</p>
                     <p className="text-3xl font-semibold text-emerald-400">
-                      {(productionDaily.overall?.completion_rate ?? 0).toFixed(1)}%
+                      {(productionDaily.overall?.completion_rate ?? 0).toFixed(
+                        1,
+                      )}
+                      %
                     </p>
                     <Progress
                       value={productionDaily.overall?.completion_rate || 0}
@@ -607,13 +669,15 @@ export default function ProductionManagerDashboard() {
                   <div>
                     <p className="text-sm text-slate-400">实工 / 计划</p>
                     <p className="text-lg text-white">
-                      {productionDaily.overall?.actual_hours ?? 0}h / {productionDaily.overall?.plan_hours ?? 0}h
+                      {productionDaily.overall?.actual_hours ?? 0}h /{" "}
+                      {productionDaily.overall?.plan_hours ?? 0}h
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-slate-400">到岗 / 应到</p>
                     <p className="text-lg text-white">
-                      {productionDaily.overall?.actual_attend ?? 0} / {productionDaily.overall?.should_attend ?? 0}
+                      {productionDaily.overall?.actual_attend ?? 0} /{" "}
+                      {productionDaily.overall?.should_attend ?? 0}
                     </p>
                   </div>
                 </CardContent>
@@ -659,25 +723,32 @@ export default function ProductionManagerDashboard() {
                       {shortageDaily.arrivals?.on_time_rate ?? 0}%
                     </p>
                     <p className="text-xs text-slate-500">
-                      实到 {shortageDaily.arrivals?.actual ?? 0} / 计划 {shortageDaily.arrivals?.expected ?? 0}
+                      实到 {shortageDaily.arrivals?.actual ?? 0} / 计划{" "}
+                      {shortageDaily.arrivals?.expected ?? 0}
                     </p>
                   </div>
                   <div className="text-xs text-slate-500 col-span-2">
-                    响应 {shortageDaily.response?.avg_response_minutes ?? 0} 分钟 · 解决 {shortageDaily.response?.avg_resolve_hours ?? 0} 小时 ·
-                    停工 {shortageDaily.stoppage?.count ?? 0} 次
+                    响应 {shortageDaily.response?.avg_response_minutes ?? 0}{" "}
+                    分钟 · 解决 {shortageDaily.response?.avg_resolve_hours ?? 0}{" "}
+                    小时 · 停工 {shortageDaily.stoppage?.count ?? 0} 次
                   </div>
                   <div className="col-span-2 grid grid-cols-4 gap-2 text-xs text-slate-400">
-                    {['level1', 'level2', 'level3', 'level4'].map((levelKey, idx) => {
-                      const labels = ['一级', '二级', '三级', '四级']
-                      return (
-                        <div key={levelKey} className="rounded bg-slate-800/60 px-2 py-1 text-center">
-                          <p>{labels[idx]}</p>
-                          <p className="text-base text-white">
-                            {shortageDaily.alerts?.levels?.[levelKey] ?? 0}
-                          </p>
-                        </div>
-                      )
-                    })}
+                    {["level1", "level2", "level3", "level4"].map(
+                      (levelKey, idx) => {
+                        const labels = ["一级", "二级", "三级", "四级"];
+                        return (
+                          <div
+                            key={levelKey}
+                            className="rounded bg-slate-800/60 px-2 py-1 text-center"
+                          >
+                            <p>{labels[idx]}</p>
+                            <p className="text-base text-white">
+                              {shortageDaily.alerts?.levels?.[levelKey] ?? 0}
+                            </p>
+                          </div>
+                        );
+                      },
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -792,7 +863,11 @@ export default function ProductionManagerDashboard() {
         </div>
 
         {/* 主要内容区域 */}
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
+        <Tabs
+          value={selectedTab}
+          onValueChange={setSelectedTab}
+          className="space-y-6"
+        >
           <TabsList className="bg-surface-50 border-white/10">
             <TabsTrigger value="overview">生产概览</TabsTrigger>
             <TabsTrigger value="workshops">车间管理</TabsTrigger>
@@ -836,29 +911,45 @@ export default function ProductionManagerDashboard() {
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className={cn(
-                            'w-3 h-3 rounded-full',
-                            workshop.status === 'normal' ? 'bg-emerald-500' : 'bg-amber-500'
-                          )} />
-                          <h4 className="font-semibold text-white">{workshop.name}</h4>
-                          <Badge className={cn(
-                            'text-xs',
-                            workshop.status === 'normal' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
-                          )}>
-                            {workshop.status === 'normal' ? '正常' : '负荷高'}
+                          <div
+                            className={cn(
+                              "w-3 h-3 rounded-full",
+                              workshop.status === "normal"
+                                ? "bg-emerald-500"
+                                : "bg-amber-500",
+                            )}
+                          />
+                          <h4 className="font-semibold text-white">
+                            {workshop.name}
+                          </h4>
+                          <Badge
+                            className={cn(
+                              "text-xs",
+                              workshop.status === "normal"
+                                ? "bg-emerald-500/20 text-emerald-400"
+                                : "bg-amber-500/20 text-amber-400",
+                            )}
+                          >
+                            {workshop.status === "normal" ? "正常" : "负荷高"}
                           </Badge>
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-slate-400">负荷率</p>
-                          <p className="text-lg font-bold text-white">{workshop.currentLoad}%</p>
+                          <p className="text-lg font-bold text-white">
+                            {workshop.currentLoad}%
+                          </p>
                         </div>
                       </div>
-                      <Progress value={workshop.currentLoad} className="h-2 mb-3" />
+                      <Progress
+                        value={workshop.currentLoad}
+                        className="h-2 mb-3"
+                      />
                       <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
                           <p className="text-slate-400">工位</p>
                           <p className="text-white font-semibold">
-                            {workshop.activeWorkstations}/{workshop.totalWorkstations}
+                            {workshop.activeWorkstations}/
+                            {workshop.totalWorkstations}
                           </p>
                         </div>
                         <div>
@@ -869,7 +960,9 @@ export default function ProductionManagerDashboard() {
                         </div>
                         <div>
                           <p className="text-slate-400">今日产出</p>
-                          <p className="text-white font-semibold">{workshop.todayOutput}</p>
+                          <p className="text-white font-semibold">
+                            {workshop.todayOutput}
+                          </p>
                         </div>
                       </div>
                     </motion.div>
@@ -893,7 +986,10 @@ export default function ProductionManagerDashboard() {
                         {teamStats.todayAttendance}%
                       </p>
                     </div>
-                    <Progress value={teamStats.todayAttendance} className="h-2" />
+                    <Progress
+                      value={teamStats.todayAttendance}
+                      className="h-2"
+                    />
                   </div>
                   <div className="p-4 rounded-lg bg-surface-100 border border-white/5">
                     <div className="flex items-center justify-between mb-2">
@@ -902,7 +998,10 @@ export default function ProductionManagerDashboard() {
                         {teamStats.averageEfficiency}%
                       </p>
                     </div>
-                    <Progress value={teamStats.averageEfficiency} className="h-2" />
+                    <Progress
+                      value={teamStats.averageEfficiency}
+                      className="h-2"
+                    />
                   </div>
                   <div className="p-4 rounded-lg bg-surface-100 border border-white/5">
                     <div className="flex items-center justify-between mb-2">
@@ -945,20 +1044,38 @@ export default function ProductionManagerDashboard() {
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">
-                          <Badge className={cn('text-xs', getStatusColor(plan.status))}>
+                          <Badge
+                            className={cn(
+                              "text-xs",
+                              getStatusColor(plan.status),
+                            )}
+                          >
                             {getStatusLabel(plan.status)}
                           </Badge>
-                          <span className="text-sm text-slate-400">{plan.planCode}</span>
-                          <span className="text-sm font-semibold text-white">{plan.projectName}</span>
+                          <span className="text-sm text-slate-400">
+                            {plan.planCode}
+                          </span>
+                          <span className="text-sm font-semibold text-white">
+                            {plan.projectName}
+                          </span>
                         </div>
-                        <Badge className={cn('text-xs', getPriorityColor(plan.priority))}>
-                          {plan.priority === 'high' ? '高优先级' : '普通'}
+                        <Badge
+                          className={cn(
+                            "text-xs",
+                            getPriorityColor(plan.priority),
+                          )}
+                        >
+                          {plan.priority === "high" ? "高优先级" : "普通"}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-4 text-sm text-slate-400">
                         <span>{plan.workshop}</span>
-                        <span>{plan.startDate} ~ {plan.endDate}</span>
-                        <span>工单: {plan.completedOrders}/{plan.workOrders}</span>
+                        <span>
+                          {plan.startDate} ~ {plan.endDate}
+                        </span>
+                        <span>
+                          工单: {plan.completedOrders}/{plan.workOrders}
+                        </span>
                       </div>
                       <Progress value={plan.progress} className="h-2 mt-3" />
                     </motion.div>
@@ -985,11 +1102,15 @@ export default function ProductionManagerDashboard() {
                           <Factory className="w-5 h-5 text-primary" />
                           {workshop.name}
                         </CardTitle>
-                        <Badge className={cn(
-                          'text-xs',
-                          workshop.status === 'normal' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
-                        )}>
-                          {workshop.status === 'normal' ? '正常' : '负荷高'}
+                        <Badge
+                          className={cn(
+                            "text-xs",
+                            workshop.status === "normal"
+                              ? "bg-emerald-500/20 text-emerald-400"
+                              : "bg-amber-500/20 text-amber-400",
+                          )}
+                        >
+                          {workshop.status === "normal" ? "正常" : "负荷高"}
                         </Badge>
                       </div>
                     </CardHeader>
@@ -997,15 +1118,21 @@ export default function ProductionManagerDashboard() {
                       <div>
                         <div className="flex items-center justify-between mb-2">
                           <p className="text-sm text-slate-400">负荷率</p>
-                          <p className="text-lg font-bold text-white">{workshop.currentLoad}%</p>
+                          <p className="text-lg font-bold text-white">
+                            {workshop.currentLoad}%
+                          </p>
                         </div>
-                        <Progress value={workshop.currentLoad} className="h-2" />
+                        <Progress
+                          value={workshop.currentLoad}
+                          className="h-2"
+                        />
                       </div>
                       <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
                         <div>
                           <p className="text-xs text-slate-400 mb-1">工位</p>
                           <p className="text-lg font-semibold text-white">
-                            {workshop.activeWorkstations}/{workshop.totalWorkstations}
+                            {workshop.activeWorkstations}/
+                            {workshop.totalWorkstations}
                           </p>
                         </div>
                         <div>
@@ -1015,15 +1142,25 @@ export default function ProductionManagerDashboard() {
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-400 mb-1">今日产出</p>
-                          <p className="text-lg font-semibold text-white">{workshop.todayOutput}</p>
+                          <p className="text-xs text-slate-400 mb-1">
+                            今日产出
+                          </p>
+                          <p className="text-lg font-semibold text-white">
+                            {workshop.todayOutput}
+                          </p>
                         </div>
                         <div>
                           <p className="text-xs text-slate-400 mb-1">产能</p>
-                          <p className="text-lg font-semibold text-white">{workshop.capacity}%</p>
+                          <p className="text-lg font-semibold text-white">
+                            {workshop.capacity}%
+                          </p>
                         </div>
                       </div>
-                      <Button variant="outline" className="w-full mt-4" size="sm">
+                      <Button
+                        variant="outline"
+                        className="w-full mt-4"
+                        size="sm"
+                      >
                         <Eye className="w-4 h-4 mr-2" />
                         查看详情
                       </Button>
@@ -1071,14 +1208,30 @@ export default function ProductionManagerDashboard() {
                   <table className="w-full">
                     <thead className="bg-surface-100 border-b border-white/10">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">计划编号</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">项目</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">车间</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">计划时间</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">进度</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">优先级</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">状态</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">操作</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          计划编号
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          项目
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          车间
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          计划时间
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          进度
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          优先级
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          状态
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">
+                          操作
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/10">
@@ -1090,30 +1243,53 @@ export default function ProductionManagerDashboard() {
                           transition={{ delay: index * 0.05 }}
                           className="hover:bg-white/[0.02]"
                         >
-                          <td className="px-6 py-4 text-sm text-white">{plan.planCode}</td>
+                          <td className="px-6 py-4 text-sm text-white">
+                            {plan.planCode}
+                          </td>
                           <td className="px-6 py-4">
                             <div>
-                              <p className="text-sm font-semibold text-white">{plan.projectName}</p>
-                              <p className="text-xs text-slate-400">{plan.projectCode}</p>
+                              <p className="text-sm font-semibold text-white">
+                                {plan.projectName}
+                              </p>
+                              <p className="text-xs text-slate-400">
+                                {plan.projectCode}
+                              </p>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm text-slate-300">{plan.workshop}</td>
+                          <td className="px-6 py-4 text-sm text-slate-300">
+                            {plan.workshop}
+                          </td>
                           <td className="px-6 py-4 text-sm text-slate-300">
                             {plan.startDate} ~ {plan.endDate}
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
-                              <Progress value={plan.progress} className="h-2 w-24" />
-                              <span className="text-sm text-slate-400">{plan.progress}%</span>
+                              <Progress
+                                value={plan.progress}
+                                className="h-2 w-24"
+                              />
+                              <span className="text-sm text-slate-400">
+                                {plan.progress}%
+                              </span>
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <Badge className={cn('text-xs', getPriorityColor(plan.priority))}>
-                              {plan.priority === 'high' ? '高' : '普通'}
+                            <Badge
+                              className={cn(
+                                "text-xs",
+                                getPriorityColor(plan.priority),
+                              )}
+                            >
+                              {plan.priority === "high" ? "高" : "普通"}
                             </Badge>
                           </td>
                           <td className="px-6 py-4">
-                            <Badge className={cn('text-xs', getStatusColor(plan.status))}>
+                            <Badge
+                              className={cn(
+                                "text-xs",
+                                getStatusColor(plan.status),
+                              )}
+                            >
                               {getStatusLabel(plan.status)}
                             </Badge>
                           </td>
@@ -1180,31 +1356,53 @@ export default function ProductionManagerDashboard() {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-3">
-                            <Badge className={cn('text-xs', getStatusColor(order.status))}>
+                            <Badge
+                              className={cn(
+                                "text-xs",
+                                getStatusColor(order.status),
+                              )}
+                            >
                               {getStatusLabel(order.status)}
                             </Badge>
-                            <span className="text-sm font-semibold text-white">{order.orderCode}</span>
-                            <span className="text-sm text-slate-400">{order.projectName}</span>
-                            <Badge className={cn('text-xs', getPriorityColor(order.priority))}>
-                              {order.priority === 'high' ? '高优先级' : '普通'}
+                            <span className="text-sm font-semibold text-white">
+                              {order.orderCode}
+                            </span>
+                            <span className="text-sm text-slate-400">
+                              {order.projectName}
+                            </span>
+                            <Badge
+                              className={cn(
+                                "text-xs",
+                                getPriorityColor(order.priority),
+                              )}
+                            >
+                              {order.priority === "high" ? "高优先级" : "普通"}
                             </Badge>
                           </div>
                           <div className="grid grid-cols-4 gap-4 text-sm mb-4">
                             <div>
                               <p className="text-slate-400 mb-1">车间/工位</p>
-                              <p className="text-white">{order.workshop} / {order.workstation}</p>
+                              <p className="text-white">
+                                {order.workshop} / {order.workstation}
+                              </p>
                             </div>
                             <div>
                               <p className="text-slate-400 mb-1">负责人</p>
-                              <p className="text-white">{order.assignedWorker}</p>
+                              <p className="text-white">
+                                {order.assignedWorker}
+                              </p>
                             </div>
                             <div>
                               <p className="text-slate-400 mb-1">计划时间</p>
-                              <p className="text-white">{order.plannedStart} ~ {order.plannedEnd}</p>
+                              <p className="text-white">
+                                {order.plannedStart} ~ {order.plannedEnd}
+                              </p>
                             </div>
                             <div>
                               <p className="text-slate-400 mb-1">完成数量</p>
-                              <p className="text-white">{order.completedQuantity}/{order.quantity}</p>
+                              <p className="text-white">
+                                {order.completedQuantity}/{order.quantity}
+                              </p>
                             </div>
                           </div>
                           <Progress value={order.progress} className="h-2" />
@@ -1239,46 +1437,70 @@ export default function ProductionManagerDashboard() {
                   <div className="grid grid-cols-2 gap-6">
                     <div className="p-4 rounded-lg bg-surface-100 border border-white/5">
                       <p className="text-sm text-slate-400 mb-2">总人数</p>
-                      <p className="text-3xl font-bold text-white">{teamStats.totalWorkers}</p>
+                      <p className="text-3xl font-bold text-white">
+                        {teamStats.totalWorkers}
+                      </p>
                       <div className="mt-4 flex items-center gap-4 text-sm">
                         <div>
                           <p className="text-slate-400">在岗</p>
-                          <p className="text-white font-semibold">{teamStats.activeWorkers}</p>
+                          <p className="text-white font-semibold">
+                            {teamStats.activeWorkers}
+                          </p>
                         </div>
                         <div>
                           <p className="text-slate-400">请假</p>
-                          <p className="text-white font-semibold">{teamStats.onLeave}</p>
+                          <p className="text-white font-semibold">
+                            {teamStats.onLeave}
+                          </p>
                         </div>
                       </div>
                     </div>
                     <div className="p-4 rounded-lg bg-surface-100 border border-white/5">
                       <p className="text-sm text-slate-400 mb-2">今日出勤率</p>
-                      <p className="text-3xl font-bold text-white">{teamStats.todayAttendance}%</p>
-                      <Progress value={teamStats.todayAttendance} className="h-2 mt-4" />
+                      <p className="text-3xl font-bold text-white">
+                        {teamStats.todayAttendance}%
+                      </p>
+                      <Progress
+                        value={teamStats.todayAttendance}
+                        className="h-2 mt-4"
+                      />
                     </div>
                     <div className="p-4 rounded-lg bg-surface-100 border border-white/5">
                       <p className="text-sm text-slate-400 mb-2">平均效率</p>
-                      <p className="text-3xl font-bold text-white">{teamStats.averageEfficiency}%</p>
-                      <Progress value={teamStats.averageEfficiency} className="h-2 mt-4" />
+                      <p className="text-3xl font-bold text-white">
+                        {teamStats.averageEfficiency}%
+                      </p>
+                      <Progress
+                        value={teamStats.averageEfficiency}
+                        className="h-2 mt-4"
+                      />
                     </div>
                     <div className="p-4 rounded-lg bg-surface-100 border border-white/5">
                       <p className="text-sm text-slate-400 mb-2">技能分布</p>
                       <div className="mt-2 space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-slate-400">专家</span>
-                          <span className="text-white font-semibold">{teamStats.skillDistribution.expert}</span>
+                          <span className="text-white font-semibold">
+                            {teamStats.skillDistribution.expert}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-slate-400">高级</span>
-                          <span className="text-white font-semibold">{teamStats.skillDistribution.senior}</span>
+                          <span className="text-white font-semibold">
+                            {teamStats.skillDistribution.senior}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-slate-400">中级</span>
-                          <span className="text-white font-semibold">{teamStats.skillDistribution.intermediate}</span>
+                          <span className="text-white font-semibold">
+                            {teamStats.skillDistribution.intermediate}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-slate-400">初级</span>
-                          <span className="text-white font-semibold">{teamStats.skillDistribution.junior}</span>
+                          <span className="text-white font-semibold">
+                            {teamStats.skillDistribution.junior}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -1339,9 +1561,13 @@ export default function ProductionManagerDashboard() {
               </CardHeader>
               <CardContent>
                 {rankingLoading ? (
-                  <div className="text-center py-8 text-slate-400">加载中...</div>
+                  <div className="text-center py-8 text-slate-400">
+                    加载中...
+                  </div>
                 ) : workerRankings.length === 0 ? (
-                  <div className="text-center py-8 text-slate-400">暂无数据</div>
+                  <div className="text-center py-8 text-slate-400">
+                    暂无数据
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     {workerRankings.map((worker, index) => (
@@ -1354,33 +1580,49 @@ export default function ProductionManagerDashboard() {
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            <div className={cn(
-                              'w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg',
-                              worker.rank <= 3 ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-700 text-slate-300'
-                            )}>
+                            <div
+                              className={cn(
+                                "w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg",
+                                worker.rank <= 3
+                                  ? "bg-amber-500/20 text-amber-400"
+                                  : "bg-slate-700 text-slate-300",
+                              )}
+                            >
                               {worker.rank}
                             </div>
                             <div>
-                              <p className="font-semibold text-white">{worker.worker_name}</p>
-                              <p className="text-xs text-slate-400">{worker.workshop_name || '未分配车间'}</p>
+                              <p className="font-semibold text-white">
+                                {worker.worker_name}
+                              </p>
+                              <p className="text-xs text-slate-400">
+                                {worker.workshop_name || "未分配车间"}
+                              </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-6 text-sm">
                             <div className="text-center">
                               <p className="text-slate-400">效率</p>
-                              <p className="text-white font-semibold">{worker.efficiency.toFixed(1)}%</p>
+                              <p className="text-white font-semibold">
+                                {worker.efficiency.toFixed(1)}%
+                              </p>
                             </div>
                             <div className="text-center">
                               <p className="text-slate-400">产出</p>
-                              <p className="text-white font-semibold">{worker.output}</p>
+                              <p className="text-white font-semibold">
+                                {worker.output}
+                              </p>
                             </div>
                             <div className="text-center">
                               <p className="text-slate-400">质量率</p>
-                              <p className="text-white font-semibold">{worker.quality_rate.toFixed(1)}%</p>
+                              <p className="text-white font-semibold">
+                                {worker.quality_rate.toFixed(1)}%
+                              </p>
                             </div>
                             <div className="text-center">
                               <p className="text-slate-400">工时</p>
-                              <p className="text-white font-semibold">{worker.total_hours.toFixed(1)}h</p>
+                              <p className="text-white font-semibold">
+                                {worker.total_hours.toFixed(1)}h
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -1403,9 +1645,13 @@ export default function ProductionManagerDashboard() {
               </CardHeader>
               <CardContent>
                 {projectsLoading ? (
-                  <div className="text-center py-8 text-slate-400">加载中...</div>
+                  <div className="text-center py-8 text-slate-400">
+                    加载中...
+                  </div>
                 ) : inProductionProjects.length === 0 ? (
-                  <div className="text-center py-8 text-slate-400">暂无在产项目</div>
+                  <div className="text-center py-8 text-slate-400">
+                    暂无在产项目
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     {inProductionProjects.map((project, index) => (
@@ -1419,38 +1665,58 @@ export default function ProductionManagerDashboard() {
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <Badge className={cn(
-                                'text-xs',
-                                project.health === 'H1' ? 'bg-emerald-500/20 text-emerald-400' :
-                                project.health === 'H2' ? 'bg-amber-500/20 text-amber-400' :
-                                project.health === 'H3' ? 'bg-red-500/20 text-red-400' :
-                                'bg-slate-500/20 text-slate-400'
-                              )}>
-                                {project.health === 'H1' ? '正常' :
-                                 project.health === 'H2' ? '有风险' :
-                                 project.health === 'H3' ? '阻塞' : '已完结'}
+                              <Badge
+                                className={cn(
+                                  "text-xs",
+                                  project.health === "H1"
+                                    ? "bg-emerald-500/20 text-emerald-400"
+                                    : project.health === "H2"
+                                      ? "bg-amber-500/20 text-amber-400"
+                                      : project.health === "H3"
+                                        ? "bg-red-500/20 text-red-400"
+                                        : "bg-slate-500/20 text-slate-400",
+                                )}
+                              >
+                                {project.health === "H1"
+                                  ? "正常"
+                                  : project.health === "H2"
+                                    ? "有风险"
+                                    : project.health === "H3"
+                                      ? "阻塞"
+                                      : "已完结"}
                               </Badge>
-                              <span className="text-sm font-semibold text-white">{project.project_name}</span>
-                              <span className="text-xs text-slate-400">{project.project_code}</span>
+                              <span className="text-sm font-semibold text-white">
+                                {project.project_name}
+                              </span>
+                              <span className="text-xs text-slate-400">
+                                {project.project_code}
+                              </span>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-slate-400 mb-2">
                               <span>阶段: {project.stage}</span>
                               <span>进度: {project.progress.toFixed(1)}%</span>
                               {project.next_milestone && (
-                                <span>下个里程碑: {project.next_milestone}</span>
+                                <span>
+                                  下个里程碑: {project.next_milestone}
+                                </span>
                               )}
                             </div>
                             {project.overdue_milestones_count > 0 && (
                               <div className="flex items-center gap-2 text-xs text-red-400">
                                 <AlertTriangle className="w-4 h-4" />
-                                <span>有 {project.overdue_milestones_count} 个里程碑已逾期</span>
+                                <span>
+                                  有 {project.overdue_milestones_count}{" "}
+                                  个里程碑已逾期
+                                </span>
                               </div>
                             )}
                           </div>
                           <div className="text-right">
-                            <p className="text-xs text-slate-400 mb-1">计划完成</p>
+                            <p className="text-xs text-slate-400 mb-1">
+                              计划完成
+                            </p>
                             <p className="text-sm text-white">
-                              {project.planned_end_date || '未设置'}
+                              {project.planned_end_date || "未设置"}
                             </p>
                           </div>
                         </div>
@@ -1522,7 +1788,9 @@ export default function ProductionManagerDashboard() {
                     className="bg-surface-100 border-white/10"
                   />
                   {materialSearchLoading && (
-                    <div className="text-center py-4 text-slate-400">搜索中...</div>
+                    <div className="text-center py-4 text-slate-400">
+                      搜索中...
+                    </div>
                   )}
                   {materialSearchResults.length > 0 && (
                     <div className="space-y-2">
@@ -1533,19 +1801,29 @@ export default function ProductionManagerDashboard() {
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <p className="font-semibold text-white">{material.material_name}</p>
-                              <p className="text-xs text-slate-400">{material.material_code}</p>
+                              <p className="font-semibold text-white">
+                                {material.material_name}
+                              </p>
+                              <p className="text-xs text-slate-400">
+                                {material.material_code}
+                              </p>
                               {material.specification && (
-                                <p className="text-xs text-slate-500 mt-1">{material.specification}</p>
+                                <p className="text-xs text-slate-500 mt-1">
+                                  {material.specification}
+                                </p>
                               )}
                             </div>
                             <div className="text-right text-sm">
                               <div className="mb-1">
                                 <span className="text-slate-400">库存: </span>
-                                <span className={cn(
-                                  'font-semibold',
-                                  material.current_stock > 0 ? 'text-emerald-400' : 'text-red-400'
-                                )}>
+                                <span
+                                  className={cn(
+                                    "font-semibold",
+                                    material.current_stock > 0
+                                      ? "text-emerald-400"
+                                      : "text-red-400",
+                                  )}
+                                >
                                   {material.current_stock} {material.unit}
                                 </span>
                               </div>
@@ -1564,7 +1842,9 @@ export default function ProductionManagerDashboard() {
                                 </span>
                               </div>
                               {material.supplier_name && (
-                                <p className="text-xs text-slate-500 mt-1">供应商: {material.supplier_name}</p>
+                                <p className="text-xs text-slate-500 mt-1">
+                                  供应商: {material.supplier_name}
+                                </p>
                               )}
                             </div>
                           </div>
@@ -1572,9 +1852,13 @@ export default function ProductionManagerDashboard() {
                       ))}
                     </div>
                   )}
-                  {materialSearchKeyword && !materialSearchLoading && materialSearchResults.length === 0 && (
-                    <div className="text-center py-8 text-slate-400">未找到匹配的物料</div>
-                  )}
+                  {materialSearchKeyword &&
+                    !materialSearchLoading &&
+                    materialSearchResults.length === 0 && (
+                      <div className="text-center py-8 text-slate-400">
+                        未找到匹配的物料
+                      </div>
+                    )}
                 </div>
               </CardContent>
             </Card>
@@ -1595,7 +1879,7 @@ export default function ProductionManagerDashboard() {
                     </div>
                   ) : (
                     alerts.map((alert, index) => {
-                      const statusConfig = getAlertStatusConfig(alert.status)
+                      const statusConfig = getAlertStatusConfig(alert.status);
                       return (
                         <motion.div
                           key={alert.id}
@@ -1607,26 +1891,46 @@ export default function ProductionManagerDashboard() {
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
-                                <Badge className={cn('text-xs', getAlertLevelColor(alert.level))}>
-                                  {alert.level === 'critical' ? '严重' : alert.level === 'warning' ? '警告' : '提示'}
+                                <Badge
+                                  className={cn(
+                                    "text-xs",
+                                    getAlertLevelColor(alert.level),
+                                  )}
+                                >
+                                  {alert.level === "critical"
+                                    ? "严重"
+                                    : alert.level === "warning"
+                                      ? "警告"
+                                      : "提示"}
                                 </Badge>
-                                <span className="text-sm font-semibold text-white">{alert.title}</span>
-                                <span className="text-xs text-slate-400">{alert.createdAt}</span>
+                                <span className="text-sm font-semibold text-white">
+                                  {alert.title}
+                                </span>
+                                <span className="text-xs text-slate-400">
+                                  {alert.createdAt}
+                                </span>
                               </div>
-                              <p className="text-sm text-slate-300 mb-2">{alert.content}</p>
+                              <p className="text-sm text-slate-300 mb-2">
+                                {alert.content}
+                              </p>
                               <div className="flex items-center gap-4 text-xs text-slate-400">
                                 <span>{alert.projectCode}</span>
                                 <span>{alert.workshop}</span>
                               </div>
                             </div>
                             <div className="ml-4">
-                              <Badge className={cn('text-xs', statusConfig.className)}>
+                              <Badge
+                                className={cn(
+                                  "text-xs",
+                                  statusConfig.className,
+                                )}
+                              >
                                 {statusConfig.label}
                               </Badge>
                             </div>
                           </div>
                         </motion.div>
-                      )
+                      );
                     })
                   )}
                 </div>
@@ -1636,5 +1940,5 @@ export default function ProductionManagerDashboard() {
         </Tabs>
       </div>
     </div>
-  )
+  );
 }

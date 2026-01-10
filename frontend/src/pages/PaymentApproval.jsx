@@ -3,8 +3,8 @@
  * Features: Payment approval, Payment query, Approval history, Batch approval
  */
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ClipboardCheck,
   Search,
@@ -26,8 +26,8 @@ import {
   Receipt,
   ShoppingCart,
   Users,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -43,200 +43,239 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '../components/ui'
-import { cn, formatCurrency, formatDate } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { invoiceApi, purchaseApi } from '../services/api'
-import { toast } from '../components/ui/toast'
+} from "../components/ui";
+import { cn, formatCurrency, formatDate } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { invoiceApi, purchaseApi } from "../services/api";
+import { toast } from "../components/ui/toast";
 
 // Mock payment approvals (reuse from FinanceManagerDashboard)
 // Mock data - 已移除，使用真实API
 const typeConfig = {
-  purchase: { label: '采购付款', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: ShoppingCart },
-  outsourcing: { label: '外协付款', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30', icon: Receipt },
-  expense: { label: '费用报销', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30', icon: FileText },
-  salary: { label: '工资发放', color: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30', icon: Users },
-}
+  purchase: {
+    label: "采购付款",
+    color: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+    icon: ShoppingCart,
+  },
+  outsourcing: {
+    label: "外协付款",
+    color: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+    icon: Receipt,
+  },
+  expense: {
+    label: "费用报销",
+    color: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+    icon: FileText,
+  },
+  salary: {
+    label: "工资发放",
+    color: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+    icon: Users,
+  },
+};
 
 export default function PaymentApproval() {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedType, setSelectedType] = useState('all')
-  const [selectedPriority, setSelectedPriority] = useState('all')
-  const [selectedPayment, setSelectedPayment] = useState(null)
-  const [showApprovalDialog, setShowApprovalDialog] = useState(false)
-  const [approvalAction, setApprovalAction] = useState(null) // 'approve' or 'reject'
-  const [approvalComment, setApprovalComment] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [pendingPayments, setPendingPayments] = useState([])
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedPriority, setSelectedPriority] = useState("all");
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  const [approvalAction, setApprovalAction] = useState(null); // 'approve' or 'reject'
+  const [approvalComment, setApprovalComment] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [pendingPayments, setPendingPayments] = useState([]);
 
   // Filter payments
   const filteredPayments = useMemo(() => {
-    return pendingPayments.filter(payment => {
-      const matchesSearch = !searchTerm ||
+    return pendingPayments.filter((payment) => {
+      const matchesSearch =
+        !searchTerm ||
         payment.orderNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
         payment.projectName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         payment.supplier?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        payment.submitter.toLowerCase().includes(searchTerm.toLowerCase())
-      
-      const matchesType = selectedType === 'all' || payment.type === selectedType
-      const matchesPriority = selectedPriority === 'all' || payment.priority === selectedPriority
+        payment.submitter.toLowerCase().includes(searchTerm.toLowerCase());
 
-      return matchesSearch && matchesType && matchesPriority
-    })
-  }, [searchTerm, selectedType, selectedPriority])
+      const matchesType =
+        selectedType === "all" || payment.type === selectedType;
+      const matchesPriority =
+        selectedPriority === "all" || payment.priority === selectedPriority;
+
+      return matchesSearch && matchesType && matchesPriority;
+    });
+  }, [searchTerm, selectedType, selectedPriority]);
 
   // Statistics
   const stats = useMemo(() => {
     return {
       total: filteredPayments.length,
       totalAmount: filteredPayments.reduce((sum, p) => sum + p.amount, 0),
-      urgent: filteredPayments.filter(p => p.priority === 'high' || p.priority === 'urgent').length,
+      urgent: filteredPayments.filter(
+        (p) => p.priority === "high" || p.priority === "urgent",
+      ).length,
       urgentAmount: filteredPayments
-        .filter(p => p.priority === 'high' || p.priority === 'urgent')
+        .filter((p) => p.priority === "high" || p.priority === "urgent")
         .reduce((sum, p) => sum + p.amount, 0),
-    }
-  }, [filteredPayments])
+    };
+  }, [filteredPayments]);
 
   const handleApprove = (payment) => {
-    setSelectedPayment(payment)
-    setApprovalAction('approve')
-    setShowApprovalDialog(true)
-  }
+    setSelectedPayment(payment);
+    setApprovalAction("approve");
+    setShowApprovalDialog(true);
+  };
 
   const handleReject = (payment) => {
-    setSelectedPayment(payment)
-    setApprovalAction('reject')
-    setShowApprovalDialog(true)
-  }
+    setSelectedPayment(payment);
+    setApprovalAction("reject");
+    setShowApprovalDialog(true);
+  };
 
   // Load pending approvals
   const loadPendingPayments = useCallback(async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       // Load pending invoices (status = PENDING or IN_APPROVAL)
-      const invoiceResponse = await invoiceApi.list({
-        status: 'PENDING,IN_APPROVAL',
-        page: 1,
-        page_size: 100,
-      }).catch(() => ({ data: { items: [] } }))
-      
-      const invoices = invoiceResponse.data?.items || invoiceResponse.data || []
-      
+      const invoiceResponse = await invoiceApi
+        .list({
+          status: "PENDING,IN_APPROVAL",
+          page: 1,
+          page_size: 100,
+        })
+        .catch(() => ({ data: { items: [] } }));
+
+      const invoices =
+        invoiceResponse.data?.items || invoiceResponse.data || [];
+
       // Transform invoices to payment format
-      const invoicePayments = invoices.map(inv => ({
+      const invoicePayments = invoices.map((inv) => ({
         id: inv.id,
-        type: 'invoice',
-        typeLabel: '发票审批',
+        type: "invoice",
+        typeLabel: "发票审批",
         orderNo: inv.invoice_code || `INV-${inv.id}`,
-        projectName: inv.project_name || '',
+        projectName: inv.project_name || "",
         projectId: inv.project_id,
         amount: inv.total_amount || inv.amount || 0,
-        submitter: inv.created_by_name || '系统',
-        submitTime: inv.created_at || '',
-        priority: inv.amount > 100000 ? 'high' : 'medium',
-        daysPending: inv.created_at ? Math.floor((new Date() - new Date(inv.created_at)) / (1000 * 60 * 60 * 24)) : 0,
-        dueDate: inv.due_date || '',
-        description: inv.remark || '',
+        submitter: inv.created_by_name || "系统",
+        submitTime: inv.created_at || "",
+        priority: inv.amount > 100000 ? "high" : "medium",
+        daysPending: inv.created_at
+          ? Math.floor(
+              (new Date() - new Date(inv.created_at)) / (1000 * 60 * 60 * 24),
+            )
+          : 0,
+        dueDate: inv.due_date || "",
+        description: inv.remark || "",
         status: inv.status,
         raw: inv, // Keep original data
-      }))
-      
+      }));
+
       // Load pending purchase orders
-      const poResponse = await purchaseApi.orders.list({
-        status: 'SUBMITTED',
-        page: 1,
-        page_size: 100,
-      }).catch(() => ({ data: { items: [] } }))
-      
-      const purchaseOrders = poResponse.data?.items || poResponse.data || []
-      const poPayments = purchaseOrders.map(po => ({
+      const poResponse = await purchaseApi.orders
+        .list({
+          status: "SUBMITTED",
+          page: 1,
+          page_size: 100,
+        })
+        .catch(() => ({ data: { items: [] } }));
+
+      const purchaseOrders = poResponse.data?.items || poResponse.data || [];
+      const poPayments = purchaseOrders.map((po) => ({
         id: po.id,
-        type: 'purchase',
-        typeLabel: '采购付款',
+        type: "purchase",
+        typeLabel: "采购付款",
         orderNo: po.order_no || `PO-${po.id}`,
-        supplier: po.supplier_name || '',
-        projectName: po.project_name || '',
+        supplier: po.supplier_name || "",
+        projectName: po.project_name || "",
         projectId: po.project_id,
         amount: po.amount_with_tax || po.total_amount || 0,
-        submitter: po.created_by_name || '系统',
-        submitTime: po.created_at || '',
-        priority: (po.amount_with_tax || po.total_amount || 0) > 100000 ? 'high' : 'medium',
-        daysPending: po.created_at ? Math.floor((new Date() - new Date(po.created_at)) / (1000 * 60 * 60 * 24)) : 0,
-        dueDate: po.required_date || '',
-        description: po.order_title || '',
+        submitter: po.created_by_name || "系统",
+        submitTime: po.created_at || "",
+        priority:
+          (po.amount_with_tax || po.total_amount || 0) > 100000
+            ? "high"
+            : "medium",
+        daysPending: po.created_at
+          ? Math.floor(
+              (new Date() - new Date(po.created_at)) / (1000 * 60 * 60 * 24),
+            )
+          : 0,
+        dueDate: po.required_date || "",
+        description: po.order_title || "",
         status: po.status,
         raw: po,
-      }))
-      
+      }));
+
       // Combine all payments
-      const allPayments = [...invoicePayments, ...poPayments]
-      
+      const allPayments = [...invoicePayments, ...poPayments];
+
       // If no real data, use mock data as fallback
       if (allPayments.length === 0) {
-        setPendingPayments(mockPendingPayments)
+        setPendingPayments(mockPendingPayments);
       } else {
-        setPendingPayments(allPayments)
+        setPendingPayments(allPayments);
       }
     } catch (error) {
-      console.error('Failed to load pending payments:', error)
+      console.error("Failed to load pending payments:", error);
       // Use mock data as fallback
-      setPendingPayments(mockPendingPayments)
+      setPendingPayments(mockPendingPayments);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    loadPendingPayments()
-  }, [loadPendingPayments])
+    loadPendingPayments();
+  }, [loadPendingPayments]);
 
   const handleConfirmApproval = async () => {
-    if (!selectedPayment) return
-    
+    if (!selectedPayment) return;
+
     // Validate rejection reason
-    if (approvalAction === 'reject' && !approvalComment.trim()) {
-      toast.error('请输入拒绝原因')
-      return
+    if (approvalAction === "reject" && !approvalComment.trim()) {
+      toast.error("请输入拒绝原因");
+      return;
     }
-    
+
     try {
-      setLoading(true)
-      const isApprove = approvalAction === 'approve'
-      
+      setLoading(true);
+      const isApprove = approvalAction === "approve";
+
       // Call appropriate API based on payment type
-      if (selectedPayment.type === 'invoice' && selectedPayment.raw) {
+      if (selectedPayment.type === "invoice" && selectedPayment.raw) {
         // For invoices, use invoice approval API
         await invoiceApi.approve(selectedPayment.raw.id, {
           approved: isApprove,
           remark: approvalComment,
-        })
-        toast.success(isApprove ? '发票审批通过' : '发票已驳回')
-      } else if (selectedPayment.type === 'purchase' && selectedPayment.raw) {
+        });
+        toast.success(isApprove ? "发票审批通过" : "发票已驳回");
+      } else if (selectedPayment.type === "purchase" && selectedPayment.raw) {
         // For purchase orders, use purchase order approval API
         await purchaseApi.orders.approve(selectedPayment.raw.id, {
           approved: isApprove,
           approval_note: approvalComment,
-        })
-        toast.success(isApprove ? '采购订单审批通过' : '采购订单已驳回')
+        });
+        toast.success(isApprove ? "采购订单审批通过" : "采购订单已驳回");
       } else {
         // For other types, show message
-        toast.info('该类型付款审批功能待完善')
+        toast.info("该类型付款审批功能待完善");
       }
-      
-      setShowApprovalDialog(false)
-      setSelectedPayment(null)
-      setApprovalAction(null)
-      setApprovalComment('')
-      
+
+      setShowApprovalDialog(false);
+      setSelectedPayment(null);
+      setApprovalAction(null);
+      setApprovalComment("");
+
       // Reload pending payments
-      await loadPendingPayments()
+      await loadPendingPayments();
     } catch (error) {
-      console.error('Failed to approve/reject payment:', error)
-      toast.error('审批失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to approve/reject payment:", error);
+      toast.error(
+        "审批失败: " + (error.response?.data?.detail || error.message),
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <motion.div
@@ -307,7 +346,9 @@ export default function PaymentApproval() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-slate-400 mb-2">紧急事项</p>
-                <p className="text-2xl font-bold text-red-400">{stats.urgent}</p>
+                <p className="text-2xl font-bold text-red-400">
+                  {stats.urgent}
+                </p>
                 <p className="text-xs text-slate-500 mt-1">笔</p>
               </div>
               <div className="p-2 bg-red-500/20 rounded-lg">
@@ -355,7 +396,9 @@ export default function PaymentApproval() {
               >
                 <option value="all">全部类型</option>
                 {Object.entries(typeConfig).map(([key, val]) => (
-                  <option key={key} value={key}>{val.label}</option>
+                  <option key={key} value={key}>
+                    {val.label}
+                  </option>
                 ))}
               </select>
               <select
@@ -383,7 +426,10 @@ export default function PaymentApproval() {
                 <ClipboardCheck className="h-5 w-5 text-amber-400" />
                 待审批付款
               </CardTitle>
-              <Badge variant="outline" className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+              <Badge
+                variant="outline"
+                className="bg-amber-500/20 text-amber-400 border-amber-500/30"
+              >
                 {filteredPayments.length}笔
               </Badge>
             </div>
@@ -391,8 +437,8 @@ export default function PaymentApproval() {
           <CardContent>
             <div className="space-y-3">
               {filteredPayments.map((payment) => {
-                const typeConf = typeConfig[payment.type]
-                const TypeIcon = typeConf?.icon || FileText
+                const typeConf = typeConfig[payment.type];
+                const TypeIcon = typeConf?.icon || FileText;
                 return (
                   <div
                     key={payment.id}
@@ -401,17 +447,25 @@ export default function PaymentApproval() {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="outline" className={cn('text-xs', typeConf?.color)}>
+                          <Badge
+                            variant="outline"
+                            className={cn("text-xs", typeConf?.color)}
+                          >
                             <TypeIcon className="w-3 h-3 mr-1" />
                             {payment.typeLabel}
                           </Badge>
-                          {payment.priority === 'high' || payment.priority === 'urgent' ? (
+                          {payment.priority === "high" ||
+                          payment.priority === "urgent" ? (
                             <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
-                              {payment.priority === 'urgent' ? '紧急' : '高优先级'}
+                              {payment.priority === "urgent"
+                                ? "紧急"
+                                : "高优先级"}
                             </Badge>
                           ) : null}
                           <span className="text-sm text-slate-400">
-                            {payment.daysPending > 0 ? `待审批${payment.daysPending}天` : '今日提交'}
+                            {payment.daysPending > 0
+                              ? `待审批${payment.daysPending}天`
+                              : "今日提交"}
                           </span>
                         </div>
                         <div className="font-medium text-white text-sm mb-1">
@@ -427,19 +481,25 @@ export default function PaymentApproval() {
                           {payment.department && (
                             <div>部门: {payment.department}</div>
                           )}
-                          <div>申请人: {payment.submitter} · {payment.submitTime.split(' ')[1]}</div>
+                          <div>
+                            申请人: {payment.submitter} ·{" "}
+                            {payment.submitTime.split(" ")[1]}
+                          </div>
                           {payment.description && (
-                            <div className="text-slate-500 mt-1">{payment.description}</div>
+                            <div className="text-slate-500 mt-1">
+                              {payment.description}
+                            </div>
                           )}
                         </div>
-                        {payment.attachments && payment.attachments.length > 0 && (
-                          <div className="flex items-center gap-2 mt-2">
-                            <FileText className="w-3 h-3 text-slate-500" />
-                            <span className="text-xs text-slate-500">
-                              {payment.attachments.length}个附件
-                            </span>
-                          </div>
-                        )}
+                        {payment.attachments &&
+                          payment.attachments.length > 0 && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <FileText className="w-3 h-3 text-slate-500" />
+                              <span className="text-xs text-slate-500">
+                                {payment.attachments.length}个附件
+                              </span>
+                            </div>
+                          )}
                       </div>
                       <div className="text-right ml-4">
                         <div className="text-lg font-bold text-amber-400 mb-2">
@@ -481,7 +541,7 @@ export default function PaymentApproval() {
                       </div>
                     </div>
                   </div>
-                )
+                );
               })}
               {filteredPayments.length === 0 && (
                 <div className="text-center py-12 text-slate-500">
@@ -498,13 +558,17 @@ export default function PaymentApproval() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {approvalAction === 'approve' ? '审批通过' : '审批拒绝'}
+              {approvalAction === "approve" ? "审批通过" : "审批拒绝"}
             </DialogTitle>
             <DialogDescription>
               {selectedPayment && (
                 <div className="mt-2">
-                  <p className="text-sm text-slate-400">单号: {selectedPayment.orderNo}</p>
-                  <p className="text-sm text-slate-400">金额: {formatCurrency(selectedPayment.amount)}</p>
+                  <p className="text-sm text-slate-400">
+                    单号: {selectedPayment.orderNo}
+                  </p>
+                  <p className="text-sm text-slate-400">
+                    金额: {formatCurrency(selectedPayment.amount)}
+                  </p>
                 </div>
               )}
             </DialogDescription>
@@ -512,34 +576,50 @@ export default function PaymentApproval() {
           <div className="py-4 space-y-4">
             <div className="space-y-2">
               <label className="text-sm text-slate-400">
-                {approvalAction === 'approve' ? '审批意见' : '拒绝原因'}
-                {approvalAction === 'reject' && <span className="text-red-400"> *</span>}
+                {approvalAction === "approve" ? "审批意见" : "拒绝原因"}
+                {approvalAction === "reject" && (
+                  <span className="text-red-400"> *</span>
+                )}
               </label>
               <textarea
                 value={approvalComment}
                 onChange={(e) => setApprovalComment(e.target.value)}
-                placeholder={approvalAction === 'approve' ? '请输入审批意见（可选）' : '请输入拒绝原因（必填）'}
+                placeholder={
+                  approvalAction === "approve"
+                    ? "请输入审批意见（可选）"
+                    : "请输入拒绝原因（必填）"
+                }
                 className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white resize-none h-24"
-                required={approvalAction === 'reject'}
+                required={approvalAction === "reject"}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowApprovalDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowApprovalDialog(false)}
+            >
               取消
             </Button>
             <Button
-              className={approvalAction === 'approve' ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-red-500 hover:bg-red-600'}
+              className={
+                approvalAction === "approve"
+                  ? "bg-emerald-500 hover:bg-emerald-600"
+                  : "bg-red-500 hover:bg-red-600"
+              }
               onClick={handleConfirmApproval}
             >
-              {approvalAction === 'approve' ? '确认通过' : '确认拒绝'}
+              {approvalAction === "approve" ? "确认通过" : "确认拒绝"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Payment Detail Dialog */}
-      <Dialog open={!!selectedPayment && !showApprovalDialog} onOpenChange={() => setSelectedPayment(null)}>
+      <Dialog
+        open={!!selectedPayment && !showApprovalDialog}
+        onOpenChange={() => setSelectedPayment(null)}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>付款详情</DialogTitle>
@@ -549,11 +629,15 @@ export default function PaymentApproval() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm text-slate-400">单号</label>
-                  <p className="text-white font-medium">{selectedPayment.orderNo}</p>
+                  <p className="text-white font-medium">
+                    {selectedPayment.orderNo}
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm text-slate-400">类型</label>
-                  <p className="text-white font-medium">{selectedPayment.typeLabel}</p>
+                  <p className="text-white font-medium">
+                    {selectedPayment.typeLabel}
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm text-slate-400">金额</label>
@@ -594,22 +678,26 @@ export default function PaymentApproval() {
                   <p className="text-white">{selectedPayment.description}</p>
                 </div>
               )}
-              {selectedPayment.attachments && selectedPayment.attachments.length > 0 && (
-                <div>
-                  <label className="text-sm text-slate-400">附件</label>
-                  <div className="space-y-2 mt-2">
-                    {selectedPayment.attachments.map((file, index) => (
-                      <div key={index} className="flex items-center gap-2 p-2 bg-slate-800/40 rounded">
-                        <FileText className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm text-white">{file}</span>
-                        <Button variant="ghost" size="sm" className="ml-auto">
-                          下载
-                        </Button>
-                      </div>
-                    ))}
+              {selectedPayment.attachments &&
+                selectedPayment.attachments.length > 0 && (
+                  <div>
+                    <label className="text-sm text-slate-400">附件</label>
+                    <div className="space-y-2 mt-2">
+                      {selectedPayment.attachments.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 p-2 bg-slate-800/40 rounded"
+                        >
+                          <FileText className="w-4 h-4 text-slate-400" />
+                          <span className="text-sm text-white">{file}</span>
+                          <Button variant="ghost" size="sm" className="ml-auto">
+                            下载
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           )}
           <DialogFooter>
@@ -633,7 +721,5 @@ export default function PaymentApproval() {
         </DialogContent>
       </Dialog>
     </motion.div>
-  )
+  );
 }
-
-

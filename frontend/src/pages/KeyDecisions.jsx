@@ -1,10 +1,15 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Crown, CheckCircle2, Clock, XCircle } from 'lucide-react'
-import { PageHeader } from '../components/layout'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Badge } from '../components/ui/badge'
-import { fadeIn, staggerContainer } from '../lib/animations'
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Crown, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { PageHeader } from "../components/layout";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { fadeIn, staggerContainer } from "../lib/animations";
 
 export default function KeyDecisions() {
   return (
@@ -21,8 +26,5 @@ export default function KeyDecisions() {
         </motion.div>
       </div>
     </div>
-  )
+  );
 }
-
-
-

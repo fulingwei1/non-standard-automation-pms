@@ -3168,133 +3168,28 @@ async def get_sales_monthly_report(
     current_user: User = Depends(deps.get_current_user)
 ):
     """获取销售月报"""
+    from app.services.sales_monthly_report_service import (
+        parse_month_string,
+        calculate_month_range,
+        calculate_contract_statistics,
+        calculate_order_statistics,
+        calculate_receipt_statistics,
+        calculate_invoice_statistics,
+        calculate_bidding_statistics
+    )
+    
     try:
-        from datetime import timedelta
-        from sqlalchemy import text
-        
-        # 确定报表周期
-        if month:
-            try:
-                year, month_num = map(int, month.split("-"))
-                month_start = date(year, month_num, 1)
-                if month_num == 12:
-                    month_end = date(year + 1, 1, 1) - timedelta(days=1)
-                else:
-                    month_end = date(year, month_num + 1, 1) - timedelta(days=1)
-            except:
-                raise HTTPException(status_code=400, detail="月份格式错误，应为YYYY-MM")
-        else:
-            today = date.today()
-            year = today.year
-            month_num = today.month
-            month_start = date(year, month_num, 1)
-            if month_num == 12:
-                month_end = date(year + 1, 1, 1) - timedelta(days=1)
-            else:
-                month_end = date(year, month_num + 1, 1) - timedelta(days=1)
-        
+        # 解析月份并计算日期范围
+        year, month_num = parse_month_string(month)
+        month_start, month_end = calculate_month_range(year, month_num)
         month_str = f"{year}-{month_num:02d}"
         
-        # 使用与日报类似的逻辑，但统计周期为一个月
-        # 1. 合同统计
-        new_contracts = (
-            db.query(Contract)
-            .filter(
-                Contract.signed_date >= month_start,
-                Contract.signed_date <= month_end,
-                Contract.status.in_(["SIGNED", "EXECUTING"])
-            )
-            .all()
-        )
-        new_contracts_count = len(new_contracts)
-        new_contracts_amount = sum(c.contract_amount or Decimal("0") for c in new_contracts)
-        
-        active_contracts = db.query(Contract).filter(Contract.status.in_(["SIGNED", "EXECUTING"])).count()
-        completed_contracts = db.query(Contract).filter(Contract.status == "COMPLETED").count()
-        
-        # 2. 订单统计
-        new_orders = (
-            db.query(SalesOrder)
-            .filter(
-                func.date(SalesOrder.created_at) >= month_start,
-                func.date(SalesOrder.created_at) <= month_end
-            )
-            .all()
-        )
-        new_orders_count = len(new_orders)
-        new_orders_amount = sum(o.order_amount or Decimal("0") for o in new_orders)
-        
-        # 3. 回款统计
-        planned_result = db.execute(text("""
-            SELECT COALESCE(SUM(planned_amount), 0) as planned
-            FROM project_payment_plans
-            WHERE planned_date >= :start_date
-            AND planned_date <= :end_date
-        """), {"start_date": month_start.strftime("%Y-%m-%d"), "end_date": month_end.strftime("%Y-%m-%d")}).fetchone()
-        planned_receipt_amount = Decimal(str(planned_result[0])) if planned_result and planned_result[0] else Decimal("0")
-        
-        actual_result = db.execute(text("""
-            SELECT COALESCE(SUM(actual_amount), 0) as actual
-            FROM project_payment_plans
-            WHERE planned_date >= :start_date
-            AND planned_date <= :end_date
-            AND actual_amount > 0
-        """), {"start_date": month_start.strftime("%Y-%m-%d"), "end_date": month_end.strftime("%Y-%m-%d")}).fetchone()
-        actual_receipt_amount = Decimal(str(actual_result[0])) if actual_result and actual_result[0] else Decimal("0")
-        
-        receipt_completion_rate = (actual_receipt_amount / planned_receipt_amount * 100) if planned_receipt_amount > 0 else Decimal("0")
-        
-        overdue_result = db.execute(text("""
-            SELECT COALESCE(SUM(planned_amount - actual_amount), 0) as overdue
-            FROM project_payment_plans
-            WHERE planned_date < :end_date
-            AND status IN ('PENDING', 'PARTIAL', 'INVOICED')
-        """), {"end_date": month_end.strftime("%Y-%m-%d")}).fetchone()
-        overdue_amount = Decimal(str(overdue_result[0])) if overdue_result and overdue_result[0] else Decimal("0")
-        
-        # 4. 开票统计
-        invoices = (
-            db.query(Invoice)
-            .filter(
-                func.date(Invoice.issue_date) >= month_start,
-                func.date(Invoice.issue_date) <= month_end,
-                Invoice.status == "ISSUED"
-            )
-            .all()
-        )
-        invoices_count = len(invoices)
-        invoices_amount = sum(i.invoice_amount or Decimal("0") for i in invoices)
-        
-        total_needed = db.execute(text("""
-            SELECT COUNT(*) as count
-            FROM project_payment_plans
-            WHERE planned_date <= :end_date
-            AND status IN ('PENDING', 'PARTIAL', 'INVOICED')
-        """), {"end_date": month_end.strftime("%Y-%m-%d")}).fetchone()
-        invoice_rate = (Decimal(invoices_count) / Decimal(total_needed[0]) * 100) if total_needed and total_needed[0] > 0 else Decimal("0")
-        
-        # 5. 投标统计
-        new_bidding = (
-            db.query(BiddingProject)
-            .filter(
-                func.date(BiddingProject.created_at) >= month_start,
-                func.date(BiddingProject.created_at) <= month_end
-            )
-            .count()
-        )
-        
-        won_bidding = (
-            db.query(BiddingProject)
-            .filter(
-                BiddingProject.result_date >= month_start,
-                BiddingProject.result_date <= month_end,
-                BiddingProject.bid_result == "won"
-            )
-            .count()
-        )
-        
-        total_bidding = db.query(BiddingProject).count()
-        bidding_win_rate = (Decimal(won_bidding) / Decimal(total_bidding) * 100) if total_bidding > 0 else Decimal("0")
+        # 计算各项统计
+        contract_stats = calculate_contract_statistics(db, month_start, month_end)
+        order_stats = calculate_order_statistics(db, month_start, month_end)
+        receipt_stats = calculate_receipt_statistics(db, month_start, month_end)
+        invoice_stats = calculate_invoice_statistics(db, month_start, month_end)
+        bidding_stats = calculate_bidding_statistics(db, month_start, month_end)
         
         return ResponseModel(
             code=200,
@@ -3302,22 +3197,22 @@ async def get_sales_monthly_report(
             data=SalesReportResponse(
                 report_date=month_str,
                 report_type="monthly",
-                new_contracts_count=new_contracts_count,
-                new_contracts_amount=new_contracts_amount,
-                active_contracts_count=active_contracts,
-                completed_contracts_count=completed_contracts,
-                new_orders_count=new_orders_count,
-                new_orders_amount=new_orders_amount,
-                planned_receipt_amount=planned_receipt_amount,
-                actual_receipt_amount=actual_receipt_amount,
-                receipt_completion_rate=receipt_completion_rate,
-                overdue_amount=overdue_amount,
-                invoices_count=invoices_count,
-                invoices_amount=invoices_amount,
-                invoice_rate=invoice_rate,
-                new_bidding_count=new_bidding,
-                won_bidding_count=won_bidding,
-                bidding_win_rate=bidding_win_rate
+                new_contracts_count=contract_stats["new_contracts_count"],
+                new_contracts_amount=contract_stats["new_contracts_amount"],
+                active_contracts_count=contract_stats["active_contracts"],
+                completed_contracts_count=contract_stats["completed_contracts"],
+                new_orders_count=order_stats["new_orders_count"],
+                new_orders_amount=order_stats["new_orders_amount"],
+                planned_receipt_amount=receipt_stats["planned_receipt_amount"],
+                actual_receipt_amount=receipt_stats["actual_receipt_amount"],
+                receipt_completion_rate=receipt_stats["receipt_completion_rate"],
+                overdue_amount=receipt_stats["overdue_amount"],
+                invoices_count=invoice_stats["invoices_count"],
+                invoices_amount=invoice_stats["invoices_amount"],
+                invoice_rate=invoice_stats["invoice_rate"],
+                new_bidding_count=bidding_stats["new_bidding"],
+                won_bidding_count=bidding_stats["won_bidding"],
+                bidding_win_rate=bidding_stats["bidding_win_rate"]
             )
         )
     except HTTPException:

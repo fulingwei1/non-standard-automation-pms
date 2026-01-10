@@ -1,6 +1,6 @@
-import React from 'react'
-import { Star, MessageSquare, Save, Send, CheckCircle2 } from 'lucide-react'
-import { cn } from '../../lib/utils'
+import React from "react";
+import { Star, MessageSquare, Save, Send, CheckCircle2 } from "lucide-react";
+import { cn } from "../../lib/utils";
 
 /**
  * 评分表单组件
@@ -17,19 +17,19 @@ export const ScoringForm = ({
   onCommentChange,
   onInsertTemplate,
   onSaveDraft,
-  onSubmit
+  onSubmit,
 }) => {
   // 获取评分等级
   const getScoreLevel = (score) => {
-    if (!score) return null
-    const numScore = Number(score)
-    return scoringGuidelines.find(g => {
-      const [min, max] = g.range.split('-').map(Number)
-      return numScore >= min && numScore <= max
-    })
-  }
+    if (!score) return null;
+    const numScore = Number(score);
+    return scoringGuidelines.find((g) => {
+      const [min, max] = g.range.split("-").map(Number);
+      return numScore >= min && numScore <= max;
+    });
+  };
 
-  const currentLevel = getScoreLevel(score)
+  const currentLevel = getScoreLevel(score);
 
   return (
     <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden">
@@ -44,7 +44,9 @@ export const ScoringForm = ({
             <Star className="h-5 w-5 text-amber-400" />
             绩效评分
             <span className="text-red-400">*</span>
-            <span className="text-sm text-slate-400 font-normal">(60-100分)</span>
+            <span className="text-sm text-slate-400 font-normal">
+              (60-100分)
+            </span>
           </label>
 
           <div className="flex items-start gap-6">
@@ -63,11 +65,15 @@ export const ScoringForm = ({
             {currentLevel && (
               <div className="flex-1 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className={cn('text-2xl font-bold', currentLevel.color)}>
+                  <span
+                    className={cn("text-2xl font-bold", currentLevel.color)}
+                  >
                     {currentLevel.level}
                   </span>
                   <span className="text-slate-400">·</span>
-                  <span className="text-slate-300">{currentLevel.description}</span>
+                  <span className="text-slate-300">
+                    {currentLevel.description}
+                  </span>
                 </div>
               </div>
             )}
@@ -78,9 +84,14 @@ export const ScoringForm = ({
             <p className="text-sm text-slate-400 mb-3">评分参考标准：</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {scoringGuidelines.map((guide, idx) => (
-                <div key={idx} className="flex items-center justify-between text-sm">
+                <div
+                  key={idx}
+                  className="flex items-center justify-between text-sm"
+                >
                   <span className="text-slate-400">{guide.range}分</span>
-                  <span className={cn('font-medium', guide.color)}>{guide.level}</span>
+                  <span className={cn("font-medium", guide.color)}>
+                    {guide.level}
+                  </span>
                   <span className="text-slate-500">{guide.description}</span>
                 </div>
               ))}
@@ -113,7 +124,9 @@ export const ScoringForm = ({
             <div className="space-y-3">
               {commentTemplates.map((category, idx) => (
                 <div key={idx}>
-                  <p className="text-xs text-slate-500 mb-2">{category.category}</p>
+                  <p className="text-xs text-slate-500 mb-2">
+                    {category.category}
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {category.templates.map((template, tidx) => (
                       <button
@@ -152,7 +165,7 @@ export const ScoringForm = ({
               className="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2"
             >
               <Save className="h-4 w-4" />
-              {isSaving ? '保存中...' : '保存草稿'}
+              {isSaving ? "保存中..." : "保存草稿"}
             </button>
 
             <button
@@ -161,11 +174,11 @@ export const ScoringForm = ({
               className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-blue-500/50 disabled:to-purple-500/50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-all flex items-center gap-2"
             >
               <Send className="h-4 w-4" />
-              {isSubmitting ? '提交中...' : '提交评价'}
+              {isSubmitting ? "提交中..." : "提交评价"}
             </button>
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};

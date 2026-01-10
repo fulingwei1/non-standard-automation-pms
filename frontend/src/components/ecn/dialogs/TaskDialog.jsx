@@ -9,17 +9,17 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../../ui/dialog'
-import { Button } from '../../ui/button'
-import { Input } from '../../ui/input'
-import { Textarea } from '../../ui/textarea'
+} from "../../ui/dialog";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Textarea } from "../../ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../ui/select'
+} from "../../ui/select";
 
 export default function TaskDialog({
   open,
@@ -39,9 +39,7 @@ export default function TaskDialog({
             <label className="text-sm font-medium mb-2 block">任务名称 *</label>
             <Input
               value={form.task_name}
-              onChange={(e) =>
-                setForm({ ...form, task_name: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, task_name: e.target.value })}
               placeholder="请输入任务名称"
             />
           </div>
@@ -126,5 +124,5 @@ export default function TaskDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

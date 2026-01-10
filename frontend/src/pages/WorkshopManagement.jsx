@@ -2,8 +2,8 @@
  * Workshop Management Page - 车间管理页面
  * Features: 车间列表、创建、编辑、工位管理
  */
-import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Factory,
   Plus,
@@ -15,26 +15,26 @@ import {
   Settings,
   CheckCircle2,
   XCircle,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
-import { Progress } from '../components/ui/progress'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
+import { Progress } from "../components/ui/progress";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
+} from "../components/ui/select";
 import {
   Table,
   TableBody,
@@ -42,7 +42,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../components/ui/table'
+} from "../components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -50,153 +50,153 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui/dialog'
-import { cn, formatDate } from '../lib/utils'
-import { productionApi, userApi } from '../services/api'
+} from "../components/ui/dialog";
+import { cn, formatDate } from "../lib/utils";
+import { productionApi, userApi } from "../services/api";
 
 const typeConfigs = {
-  MACHINING: { label: '机加车间', color: 'bg-blue-500' },
-  ASSEMBLY: { label: '装配车间', color: 'bg-purple-500' },
-  DEBUGGING: { label: '调试车间', color: 'bg-emerald-500' },
-}
+  MACHINING: { label: "机加车间", color: "bg-blue-500" },
+  ASSEMBLY: { label: "装配车间", color: "bg-purple-500" },
+  DEBUGGING: { label: "调试车间", color: "bg-emerald-500" },
+};
 
 export default function WorkshopManagement() {
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [workshops, setWorkshops] = useState([])
-  const [managers, setManagers] = useState([])
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [workshops, setWorkshops] = useState([]);
+  const [managers, setManagers] = useState([]);
   // Filters
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [filterType, setFilterType] = useState('')
-  const [filterActive, setFilterActive] = useState('')
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterActive, setFilterActive] = useState("");
   // Dialogs
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [showEditDialog, setShowEditDialog] = useState(false)
-  const [showDetailDialog, setShowDetailDialog] = useState(false)
-  const [selectedWorkshop, setSelectedWorkshop] = useState(null)
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [selectedWorkshop, setSelectedWorkshop] = useState(null);
   // Form state
   const [workshopForm, setWorkshopForm] = useState({
-    workshop_code: '',
-    workshop_name: '',
-    workshop_type: 'MACHINING',
+    workshop_code: "",
+    workshop_name: "",
+    workshop_type: "MACHINING",
     manager_id: null,
-    location: '',
+    location: "",
     capacity_hours: 0,
-    description: '',
+    description: "",
     is_active: true,
-  })
+  });
 
   useEffect(() => {
-    fetchManagers()
-    fetchWorkshops()
-  }, [filterType, filterActive, searchKeyword])
+    fetchManagers();
+    fetchWorkshops();
+  }, [filterType, filterActive, searchKeyword]);
 
   const fetchManagers = async () => {
     try {
-      const res = await userApi.list({ page_size: 1000 })
-      setManagers(res.data?.items || res.data || [])
+      const res = await userApi.list({ page_size: 1000 });
+      setManagers(res.data?.items || res.data || []);
     } catch (error) {
-      console.error('Failed to fetch managers:', error)
+      console.error("Failed to fetch managers:", error);
     }
-  }
+  };
 
   const fetchWorkshops = async () => {
     try {
-      setLoading(true)
-      const params = { page: 1, page_size: 100 }
-      if (filterType) params.workshop_type = filterType
-      if (filterActive !== '') params.is_active = filterActive === 'true'
-      if (searchKeyword) params.search = searchKeyword
-      const res = await productionApi.workshops.list(params)
-      const workshopList = res.data?.items || res.data || []
-      setWorkshops(workshopList)
+      setLoading(true);
+      const params = { page: 1, page_size: 100 };
+      if (filterType) params.workshop_type = filterType;
+      if (filterActive !== "") params.is_active = filterActive === "true";
+      if (searchKeyword) params.search = searchKeyword;
+      const res = await productionApi.workshops.list(params);
+      const workshopList = res.data?.items || res.data || [];
+      setWorkshops(workshopList);
     } catch (error) {
-      console.error('Failed to fetch workshops:', error)
+      console.error("Failed to fetch workshops:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleCreate = async () => {
     if (!workshopForm.workshop_code || !workshopForm.workshop_name) {
-      alert('请填写车间编码和名称')
-      return
+      alert("请填写车间编码和名称");
+      return;
     }
     try {
-      await productionApi.workshops.create(workshopForm)
-      setShowCreateDialog(false)
-      resetForm()
-      fetchWorkshops()
+      await productionApi.workshops.create(workshopForm);
+      setShowCreateDialog(false);
+      resetForm();
+      fetchWorkshops();
     } catch (error) {
-      console.error('Failed to create workshop:', error)
-      alert('创建车间失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to create workshop:", error);
+      alert("创建车间失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const handleEdit = async () => {
-    if (!selectedWorkshop) return
+    if (!selectedWorkshop) return;
     try {
-      await productionApi.workshops.update(selectedWorkshop.id, workshopForm)
-      setShowEditDialog(false)
-      resetForm()
-      fetchWorkshops()
+      await productionApi.workshops.update(selectedWorkshop.id, workshopForm);
+      setShowEditDialog(false);
+      resetForm();
+      fetchWorkshops();
     } catch (error) {
-      console.error('Failed to update workshop:', error)
-      alert('更新车间失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to update workshop:", error);
+      alert("更新车间失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const handleViewDetail = async (workshopId) => {
     try {
-      const res = await productionApi.workshops.get(workshopId)
-      setSelectedWorkshop(res.data || res)
-      setShowDetailDialog(true)
+      const res = await productionApi.workshops.get(workshopId);
+      setSelectedWorkshop(res.data || res);
+      setShowDetailDialog(true);
     } catch (error) {
-      console.error('Failed to fetch workshop detail:', error)
+      console.error("Failed to fetch workshop detail:", error);
     }
-  }
+  };
 
   const handleEditClick = (workshop) => {
-    setSelectedWorkshop(workshop)
+    setSelectedWorkshop(workshop);
     setWorkshopForm({
       workshop_code: workshop.workshop_code,
       workshop_name: workshop.workshop_name,
       workshop_type: workshop.workshop_type,
       manager_id: workshop.manager_id,
-      location: workshop.location || '',
+      location: workshop.location || "",
       capacity_hours: workshop.capacity_hours || 0,
-      description: workshop.description || '',
+      description: workshop.description || "",
       is_active: workshop.is_active !== false,
-    })
-    setShowEditDialog(true)
-  }
+    });
+    setShowEditDialog(true);
+  };
 
   const resetForm = () => {
     setWorkshopForm({
-      workshop_code: '',
-      workshop_name: '',
-      workshop_type: 'MACHINING',
+      workshop_code: "",
+      workshop_name: "",
+      workshop_type: "MACHINING",
       manager_id: null,
-      location: '',
+      location: "",
       capacity_hours: 0,
-      description: '',
+      description: "",
       is_active: true,
-    })
-    setSelectedWorkshop(null)
-  }
+    });
+    setSelectedWorkshop(null);
+  };
 
   const filteredWorkshops = useMemo(() => {
-    return workshops.filter(ws => {
+    return workshops.filter((ws) => {
       if (searchKeyword) {
-        const keyword = searchKeyword.toLowerCase()
+        const keyword = searchKeyword.toLowerCase();
         return (
           ws.workshop_code?.toLowerCase().includes(keyword) ||
           ws.workshop_name?.toLowerCase().includes(keyword)
-        )
+        );
       }
-      return true
-    })
-  }, [workshops, searchKeyword])
+      return true;
+    });
+  }, [workshops, searchKeyword]);
 
   return (
     <div className="space-y-6 p-6">
@@ -287,12 +287,18 @@ export default function WorkshopManagement() {
                       {workshop.workshop_name}
                     </TableCell>
                     <TableCell>
-                      <Badge className={typeConfigs[workshop.workshop_type]?.color || 'bg-slate-500'}>
-                        {typeConfigs[workshop.workshop_type]?.label || workshop.workshop_type}
+                      <Badge
+                        className={
+                          typeConfigs[workshop.workshop_type]?.color ||
+                          "bg-slate-500"
+                        }
+                      >
+                        {typeConfigs[workshop.workshop_type]?.label ||
+                          workshop.workshop_type}
                       </Badge>
                     </TableCell>
-                    <TableCell>{workshop.manager_name || '-'}</TableCell>
-                    <TableCell>{workshop.location || '-'}</TableCell>
+                    <TableCell>{workshop.manager_name || "-"}</TableCell>
+                    <TableCell>{workshop.location || "-"}</TableCell>
                     <TableCell>{workshop.capacity_hours || 0}</TableCell>
                     <TableCell>
                       {workshop.is_active !== false ? (
@@ -326,7 +332,9 @@ export default function WorkshopManagement() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => navigate(`/workshops/${workshop.id}/task-board`)}
+                          onClick={() =>
+                            navigate(`/workshops/${workshop.id}/task-board`)
+                          }
                         >
                           <Wrench className="w-4 h-4" />
                         </Button>
@@ -349,28 +357,46 @@ export default function WorkshopManagement() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">车间编码 *</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    车间编码 *
+                  </label>
                   <Input
                     value={workshopForm.workshop_code}
-                    onChange={(e) => setWorkshopForm({ ...workshopForm, workshop_code: e.target.value })}
+                    onChange={(e) =>
+                      setWorkshopForm({
+                        ...workshopForm,
+                        workshop_code: e.target.value,
+                      })
+                    }
                     placeholder="请输入车间编码"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">车间名称 *</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    车间名称 *
+                  </label>
                   <Input
                     value={workshopForm.workshop_name}
-                    onChange={(e) => setWorkshopForm({ ...workshopForm, workshop_name: e.target.value })}
+                    onChange={(e) =>
+                      setWorkshopForm({
+                        ...workshopForm,
+                        workshop_name: e.target.value,
+                      })
+                    }
                     placeholder="请输入车间名称"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">车间类型</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    车间类型
+                  </label>
                   <Select
                     value={workshopForm.workshop_type}
-                    onValueChange={(val) => setWorkshopForm({ ...workshopForm, workshop_type: val })}
+                    onValueChange={(val) =>
+                      setWorkshopForm({ ...workshopForm, workshop_type: val })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -385,10 +411,17 @@ export default function WorkshopManagement() {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">车间主管</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    车间主管
+                  </label>
                   <Select
-                    value={workshopForm.manager_id?.toString() || ''}
-                    onValueChange={(val) => setWorkshopForm({ ...workshopForm, manager_id: val ? parseInt(val) : null })}
+                    value={workshopForm.manager_id?.toString() || ""}
+                    onValueChange={(val) =>
+                      setWorkshopForm({
+                        ...workshopForm,
+                        manager_id: val ? parseInt(val) : null,
+                      })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="选择主管" />
@@ -409,16 +442,28 @@ export default function WorkshopManagement() {
                   <label className="text-sm font-medium mb-2 block">位置</label>
                   <Input
                     value={workshopForm.location}
-                    onChange={(e) => setWorkshopForm({ ...workshopForm, location: e.target.value })}
+                    onChange={(e) =>
+                      setWorkshopForm({
+                        ...workshopForm,
+                        location: e.target.value,
+                      })
+                    }
                     placeholder="车间位置"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">产能（小时）</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    产能（小时）
+                  </label>
                   <Input
                     type="number"
                     value={workshopForm.capacity_hours}
-                    onChange={(e) => setWorkshopForm({ ...workshopForm, capacity_hours: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      setWorkshopForm({
+                        ...workshopForm,
+                        capacity_hours: parseFloat(e.target.value) || 0,
+                      })
+                    }
                     placeholder="0"
                   />
                 </div>
@@ -428,14 +473,22 @@ export default function WorkshopManagement() {
                 <textarea
                   className="w-full min-h-[80px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={workshopForm.description}
-                  onChange={(e) => setWorkshopForm({ ...workshopForm, description: e.target.value })}
+                  onChange={(e) =>
+                    setWorkshopForm({
+                      ...workshopForm,
+                      description: e.target.value,
+                    })
+                  }
                   placeholder="车间描述..."
                 />
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleCreate}>创建</Button>
@@ -452,28 +505,46 @@ export default function WorkshopManagement() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">车间编码 *</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    车间编码 *
+                  </label>
                   <Input
                     value={workshopForm.workshop_code}
-                    onChange={(e) => setWorkshopForm({ ...workshopForm, workshop_code: e.target.value })}
+                    onChange={(e) =>
+                      setWorkshopForm({
+                        ...workshopForm,
+                        workshop_code: e.target.value,
+                      })
+                    }
                     placeholder="请输入车间编码"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">车间名称 *</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    车间名称 *
+                  </label>
                   <Input
                     value={workshopForm.workshop_name}
-                    onChange={(e) => setWorkshopForm({ ...workshopForm, workshop_name: e.target.value })}
+                    onChange={(e) =>
+                      setWorkshopForm({
+                        ...workshopForm,
+                        workshop_name: e.target.value,
+                      })
+                    }
                     placeholder="请输入车间名称"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">车间类型</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    车间类型
+                  </label>
                   <Select
                     value={workshopForm.workshop_type}
-                    onValueChange={(val) => setWorkshopForm({ ...workshopForm, workshop_type: val })}
+                    onValueChange={(val) =>
+                      setWorkshopForm({ ...workshopForm, workshop_type: val })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -488,10 +559,17 @@ export default function WorkshopManagement() {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">车间主管</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    车间主管
+                  </label>
                   <Select
-                    value={workshopForm.manager_id?.toString() || ''}
-                    onValueChange={(val) => setWorkshopForm({ ...workshopForm, manager_id: val ? parseInt(val) : null })}
+                    value={workshopForm.manager_id?.toString() || ""}
+                    onValueChange={(val) =>
+                      setWorkshopForm({
+                        ...workshopForm,
+                        manager_id: val ? parseInt(val) : null,
+                      })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="选择主管" />
@@ -512,16 +590,28 @@ export default function WorkshopManagement() {
                   <label className="text-sm font-medium mb-2 block">位置</label>
                   <Input
                     value={workshopForm.location}
-                    onChange={(e) => setWorkshopForm({ ...workshopForm, location: e.target.value })}
+                    onChange={(e) =>
+                      setWorkshopForm({
+                        ...workshopForm,
+                        location: e.target.value,
+                      })
+                    }
                     placeholder="车间位置"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">产能（小时）</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    产能（小时）
+                  </label>
                   <Input
                     type="number"
                     value={workshopForm.capacity_hours}
-                    onChange={(e) => setWorkshopForm({ ...workshopForm, capacity_hours: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      setWorkshopForm({
+                        ...workshopForm,
+                        capacity_hours: parseFloat(e.target.value) || 0,
+                      })
+                    }
                     placeholder="0"
                   />
                 </div>
@@ -531,7 +621,12 @@ export default function WorkshopManagement() {
                 <textarea
                   className="w-full min-h-[80px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={workshopForm.description}
-                  onChange={(e) => setWorkshopForm({ ...workshopForm, description: e.target.value })}
+                  onChange={(e) =>
+                    setWorkshopForm({
+                      ...workshopForm,
+                      description: e.target.value,
+                    })
+                  }
                   placeholder="车间描述..."
                 />
               </div>
@@ -540,7 +635,12 @@ export default function WorkshopManagement() {
                   <input
                     type="checkbox"
                     checked={workshopForm.is_active}
-                    onChange={(e) => setWorkshopForm({ ...workshopForm, is_active: e.target.checked })}
+                    onChange={(e) =>
+                      setWorkshopForm({
+                        ...workshopForm,
+                        is_active: e.target.checked,
+                      })
+                    }
                   />
                   <span className="text-sm">启用</span>
                 </label>
@@ -569,7 +669,9 @@ export default function WorkshopManagement() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-sm text-slate-500 mb-1">车间编码</div>
-                    <div className="font-mono">{selectedWorkshop.workshop_code}</div>
+                    <div className="font-mono">
+                      {selectedWorkshop.workshop_code}
+                    </div>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">车间名称</div>
@@ -577,20 +679,26 @@ export default function WorkshopManagement() {
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">车间类型</div>
-                    <Badge className={typeConfigs[selectedWorkshop.workshop_type]?.color}>
+                    <Badge
+                      className={
+                        typeConfigs[selectedWorkshop.workshop_type]?.color
+                      }
+                    >
                       {typeConfigs[selectedWorkshop.workshop_type]?.label}
                     </Badge>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">车间主管</div>
-                    <div>{selectedWorkshop.manager_name || '-'}</div>
+                    <div>{selectedWorkshop.manager_name || "-"}</div>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">位置</div>
-                    <div>{selectedWorkshop.location || '-'}</div>
+                    <div>{selectedWorkshop.location || "-"}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-slate-500 mb-1">产能（小时）</div>
+                    <div className="text-sm text-slate-500 mb-1">
+                      产能（小时）
+                    </div>
                     <div>{selectedWorkshop.capacity_hours || 0}</div>
                   </div>
                   <div>
@@ -612,14 +720,19 @@ export default function WorkshopManagement() {
             )}
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDetailDialog(false)}
+            >
               关闭
             </Button>
             {selectedWorkshop && (
-              <Button onClick={() => {
-                setShowDetailDialog(false)
-                handleEditClick(selectedWorkshop)
-              }}>
+              <Button
+                onClick={() => {
+                  setShowDetailDialog(false);
+                  handleEditClick(selectedWorkshop);
+                }}
+              >
                 <Edit className="w-4 h-4 mr-2" />
                 编辑
               </Button>
@@ -628,9 +741,5 @@ export default function WorkshopManagement() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-
-
-
-

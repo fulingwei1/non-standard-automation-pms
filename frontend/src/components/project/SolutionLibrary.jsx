@@ -1,48 +1,56 @@
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, Badge, Button, Input } from '../ui'
-import { BookOpen, Search, Plus, Star, Copy } from 'lucide-react'
-import { formatDate } from '../../lib/utils'
-import { projectWorkspaceApi } from '../../services/api'
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Badge,
+  Button,
+  Input,
+} from "../ui";
+import { BookOpen, Search, Plus, Star, Copy } from "lucide-react";
+import { formatDate } from "../../lib/utils";
+import { projectWorkspaceApi } from "../../services/api";
 
 export default function SolutionLibrary({ projectId, onApplyTemplate }) {
-  const [loading, setLoading] = useState(true)
-  const [templates, setTemplates] = useState([])
-  const [searchQuery, setSearchQuery] = useState('')
-  const [filterType, setFilterType] = useState('all')
+  const [loading, setLoading] = useState(true);
+  const [templates, setTemplates] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState("all");
 
   useEffect(() => {
-    fetchTemplates()
-  }, [projectId])
+    fetchTemplates();
+  }, [projectId]);
 
   const fetchTemplates = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       // TODO: 实现解决方案模板API
       // const response = await solutionTemplateApi.list({ project_id: projectId })
       // setTemplates(response.data)
-      setTemplates([])
+      setTemplates([]);
     } catch (error) {
-      console.error('Failed to load solution templates:', error)
+      console.error("Failed to load solution templates:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const filteredTemplates = templates.filter((template) => {
     if (searchQuery) {
-      const query = searchQuery.toLowerCase()
+      const query = searchQuery.toLowerCase();
       if (
         !template.template_name.toLowerCase().includes(query) &&
         !template.solution.toLowerCase().includes(query)
       ) {
-        return false
+        return false;
       }
     }
-    if (filterType !== 'all' && template.issue_type !== filterType) {
-      return false
+    if (filterType !== "all" && template.issue_type !== filterType) {
+      return false;
     }
-    return true
-  })
+    return true;
+  });
 
   if (loading) {
     return (
@@ -51,7 +59,7 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
           <div className="text-center text-gray-500">加载中...</div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -117,7 +125,7 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
                     )}
                     <div className="p-3 bg-gray-50 rounded text-sm">
                       {template.solution.substring(0, 300)}
-                      {template.solution.length > 300 && '...'}
+                      {template.solution.length > 300 && "..."}
                     </div>
                   </div>
                 </div>
@@ -137,7 +145,9 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => onApplyTemplate && onApplyTemplate(template)}
+                      onClick={() =>
+                        onApplyTemplate && onApplyTemplate(template)
+                      }
                     >
                       <Copy className="h-4 w-4 mr-1" />
                       应用模板
@@ -149,12 +159,12 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
           </div>
         ) : (
           <div className="text-center py-12 text-gray-500">
-            {searchQuery || filterType !== 'all'
-              ? '没有找到匹配的模板'
-              : '暂无解决方案模板'}
+            {searchQuery || filterType !== "all"
+              ? "没有找到匹配的模板"
+              : "暂无解决方案模板"}
           </div>
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

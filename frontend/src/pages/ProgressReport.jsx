@@ -2,8 +2,8 @@
  * Progress Report Page - 进度填报页面
  * Features: 日报/周报填报，任务进度更新
  */
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Calendar,
@@ -14,25 +14,25 @@ import {
   Save,
   FileText,
   AlertTriangle,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
-import { Progress } from '../components/ui/progress'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
+import { Progress } from "../components/ui/progress";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
+} from "../components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -40,76 +40,78 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui/dialog'
-import { cn, formatDate } from '../lib/utils'
-import { progressApi, projectApi } from '../services/api'
+} from "../components/ui/dialog";
+import { cn, formatDate } from "../lib/utils";
+import { progressApi, projectApi } from "../services/api";
 export default function ProgressReport() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [project, setProject] = useState(null)
-  const [tasks, setTasks] = useState([])
-  const [reportType, setReportType] = useState('DAILY') // DAILY or WEEKLY
-  const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0])
-  const [reportContent, setReportContent] = useState('')
-  const [taskProgress, setTaskProgress] = useState({})
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [project, setProject] = useState(null);
+  const [tasks, setTasks] = useState([]);
+  const [reportType, setReportType] = useState("DAILY"); // DAILY or WEEKLY
+  const [reportDate, setReportDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
+  const [reportContent, setReportContent] = useState("");
+  const [taskProgress, setTaskProgress] = useState({});
   // Dialogs
-  const [showTaskProgressDialog, setShowTaskProgressDialog] = useState(false)
-  const [selectedTask, setSelectedTask] = useState(null)
-  const [progressValue, setProgressValue] = useState(0)
-  const [progressNote, setProgressNote] = useState('')
+  const [showTaskProgressDialog, setShowTaskProgressDialog] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [progressValue, setProgressValue] = useState(0);
+  const [progressNote, setProgressNote] = useState("");
   useEffect(() => {
     if (id) {
-      fetchProject()
-      fetchTasks()
+      fetchProject();
+      fetchTasks();
     }
-  }, [id])
+  }, [id]);
   const fetchProject = async () => {
     try {
-      const res = await projectApi.get(id)
-      setProject(res.data || res)
+      const res = await projectApi.get(id);
+      setProject(res.data || res);
     } catch (error) {
-      console.error('Failed to fetch project:', error)
+      console.error("Failed to fetch project:", error);
     }
-  }
+  };
   const fetchTasks = async () => {
     try {
-      setLoading(true)
-      const res = await progressApi.tasks.list({ project_id: id })
-      const taskList = res.data?.items || res.data || []
-      setTasks(taskList)
+      setLoading(true);
+      const res = await progressApi.tasks.list({ project_id: id });
+      const taskList = res.data?.items || res.data || [];
+      setTasks(taskList);
       // Initialize task progress
-      const progressMap = {}
-      taskList.forEach(task => {
-        progressMap[task.id] = task.progress || 0
-      })
-      setTaskProgress(progressMap)
+      const progressMap = {};
+      taskList.forEach((task) => {
+        progressMap[task.id] = task.progress || 0;
+      });
+      setTaskProgress(progressMap);
     } catch (error) {
-      console.error('Failed to fetch tasks:', error)
+      console.error("Failed to fetch tasks:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
   const handleUpdateTaskProgress = async () => {
-    if (!selectedTask) return
+    if (!selectedTask) return;
     try {
       await progressApi.tasks.updateProgress(selectedTask.id, {
         progress: progressValue,
         note: progressNote,
-      })
-      setShowTaskProgressDialog(false)
-      setProgressValue(0)
-      setProgressNote('')
-      fetchTasks()
+      });
+      setShowTaskProgressDialog(false);
+      setProgressValue(0);
+      setProgressNote("");
+      fetchTasks();
     } catch (error) {
-      console.error('Failed to update task progress:', error)
-      alert('更新进度失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to update task progress:", error);
+      alert("更新进度失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
   const handleSubmitReport = async () => {
     if (!reportContent.trim()) {
-      alert('请填写报告内容')
-      return
+      alert("请填写报告内容");
+      return;
     }
     try {
       await progressApi.reports.create({
@@ -118,49 +120,49 @@ export default function ProgressReport() {
         report_date: reportDate,
         content: reportContent,
         task_progress: taskProgress,
-      })
-      alert('提交成功')
-      setReportContent('')
-      setTaskProgress({})
+      });
+      alert("提交成功");
+      setReportContent("");
+      setTaskProgress({});
     } catch (error) {
-      console.error('Failed to submit report:', error)
-      alert('提交失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to submit report:", error);
+      alert("提交失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
   const openTaskProgressDialog = (task) => {
-    setSelectedTask(task)
-    setProgressValue(taskProgress[task.id] || task.progress || 0)
-    setProgressNote('')
-    setShowTaskProgressDialog(true)
-  }
+    setSelectedTask(task);
+    setProgressValue(taskProgress[task.id] || task.progress || 0);
+    setProgressNote("");
+    setShowTaskProgressDialog(true);
+  };
   const getStatusColor = (status) => {
     switch (status) {
-      case 'COMPLETED':
-        return 'bg-emerald-500'
-      case 'IN_PROGRESS':
-        return 'bg-blue-500'
-      case 'BLOCKED':
-        return 'bg-red-500'
-      case 'PENDING':
-        return 'bg-slate-300'
+      case "COMPLETED":
+        return "bg-emerald-500";
+      case "IN_PROGRESS":
+        return "bg-blue-500";
+      case "BLOCKED":
+        return "bg-red-500";
+      case "PENDING":
+        return "bg-slate-300";
       default:
-        return 'bg-slate-300'
+        return "bg-slate-300";
     }
-  }
+  };
   const getStatusLabel = (status) => {
     switch (status) {
-      case 'COMPLETED':
-        return '已完成'
-      case 'IN_PROGRESS':
-        return '进行中'
-      case 'BLOCKED':
-        return '阻塞'
-      case 'PENDING':
-        return '待开始'
+      case "COMPLETED":
+        return "已完成";
+      case "IN_PROGRESS":
+        return "进行中";
+      case "BLOCKED":
+        return "阻塞";
+      case "PENDING":
+        return "待开始";
       default:
-        return '未知'
+        return "未知";
     }
-  }
+  };
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
@@ -174,7 +176,7 @@ export default function ProgressReport() {
             返回项目
           </Button>
           <PageHeader
-            title={`${project?.project_name || '项目'} - 进度填报`}
+            title={`${project?.project_name || "项目"} - 进度填报`}
             description="填写日报或周报，更新任务进度"
           />
         </div>
@@ -219,7 +221,7 @@ export default function ProgressReport() {
           ) : (
             <div className="space-y-3">
               {tasks.map((task) => {
-                const progress = taskProgress[task.id] || task.progress || 0
+                const progress = taskProgress[task.id] || task.progress || 0;
                 return (
                   <div
                     key={task.id}
@@ -236,7 +238,8 @@ export default function ProgressReport() {
                         <div className="flex items-center gap-4 text-sm text-slate-500">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />
-                            {formatDate(task.planned_start_date)} - {formatDate(task.planned_end_date)}
+                            {formatDate(task.planned_start_date)} -{" "}
+                            {formatDate(task.planned_end_date)}
                           </div>
                           {task.assignee_name && (
                             <div className="flex items-center gap-1">
@@ -247,7 +250,9 @@ export default function ProgressReport() {
                         </div>
                       </div>
                       <div className="text-right mr-4">
-                        <div className="text-2xl font-bold text-slate-700">{progress}%</div>
+                        <div className="text-2xl font-bold text-slate-700">
+                          {progress}%
+                        </div>
                         <div className="text-xs text-slate-500">完成度</div>
                       </div>
                       <Button
@@ -261,7 +266,7 @@ export default function ProgressReport() {
                     </div>
                     <Progress value={progress} className="h-2" />
                   </div>
-                )
+                );
               })}
             </div>
           )}
@@ -275,7 +280,9 @@ export default function ProgressReport() {
         <CardContent>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">今日/本周工作内容</label>
+              <label className="text-sm font-medium mb-2 block">
+                今日/本周工作内容
+              </label>
               <textarea
                 className="w-full min-h-[120px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={reportContent}
@@ -284,7 +291,7 @@ export default function ProgressReport() {
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setReportContent('')}>
+              <Button variant="outline" onClick={() => setReportContent("")}>
                 清空
               </Button>
               <Button onClick={handleSubmitReport}>
@@ -296,7 +303,10 @@ export default function ProgressReport() {
         </CardContent>
       </Card>
       {/* Task Progress Dialog */}
-      <Dialog open={showTaskProgressDialog} onOpenChange={setShowTaskProgressDialog}>
+      <Dialog
+        open={showTaskProgressDialog}
+        onOpenChange={setShowTaskProgressDialog}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>更新任务进度</DialogTitle>
@@ -309,20 +319,26 @@ export default function ProgressReport() {
                   <div className="font-medium">{selectedTask.task_name}</div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">完成进度 (%)</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    完成进度 (%)
+                  </label>
                   <div className="space-y-2">
                     <Input
                       type="number"
                       min="0"
                       max="100"
                       value={progressValue}
-                      onChange={(e) => setProgressValue(parseInt(e.target.value) || 0)}
+                      onChange={(e) =>
+                        setProgressValue(parseInt(e.target.value) || 0)
+                      }
                     />
                     <Progress value={progressValue} className="h-2" />
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">进度说明</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    进度说明
+                  </label>
                   <textarea
                     className="w-full min-h-[80px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={progressNote}
@@ -334,16 +350,16 @@ export default function ProgressReport() {
             )}
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowTaskProgressDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowTaskProgressDialog(false)}
+            >
               取消
             </Button>
-            <Button onClick={handleUpdateTaskProgress}>
-              保存
-            </Button>
+            <Button onClick={handleUpdateTaskProgress}>保存</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-

@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { cn } from '../lib/utils'
-import { projectWorkspaceApi, projectContributionApi } from '../services/api'
-import { formatDate, formatCurrency } from '../lib/utils'
-import { PageHeader } from '../components/layout/PageHeader'
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { cn } from "../lib/utils";
+import { projectWorkspaceApi, projectContributionApi } from "../services/api";
+import { formatDate, formatCurrency } from "../lib/utils";
+import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
@@ -19,11 +19,11 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../components/ui'
-import ProjectBonusPanel from '../components/project/ProjectBonusPanel'
-import ProjectMeetingPanel from '../components/project/ProjectMeetingPanel'
-import ProjectIssuePanel from '../components/project/ProjectIssuePanel'
-import SolutionLibrary from '../components/project/SolutionLibrary'
+} from "../components/ui";
+import ProjectBonusPanel from "../components/project/ProjectBonusPanel";
+import ProjectMeetingPanel from "../components/project/ProjectMeetingPanel";
+import ProjectIssuePanel from "../components/project/ProjectIssuePanel";
+import SolutionLibrary from "../components/project/SolutionLibrary";
 import {
   ArrowLeft,
   Briefcase,
@@ -38,30 +38,30 @@ import {
   MessageSquare,
   BookOpen,
   Activity,
-} from 'lucide-react'
+} from "lucide-react";
 
 export default function ProjectWorkspace() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [workspaceData, setWorkspaceData] = useState(null)
-  const [activeTab, setActiveTab] = useState('overview')
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [workspaceData, setWorkspaceData] = useState(null);
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
-    fetchWorkspaceData()
-  }, [id])
+    fetchWorkspaceData();
+  }, [id]);
 
   const fetchWorkspaceData = async () => {
     try {
-      setLoading(true)
-      const response = await projectWorkspaceApi.getWorkspace(id)
-      setWorkspaceData(response.data)
+      setLoading(true);
+      const response = await projectWorkspaceApi.getWorkspace(id);
+      setWorkspaceData(response.data);
     } catch (error) {
-      console.error('Failed to load workspace data:', error)
+      console.error("Failed to load workspace data:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -73,7 +73,7 @@ export default function ProjectWorkspace() {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   if (!workspaceData) {
@@ -86,10 +86,19 @@ export default function ProjectWorkspace() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
-  const { project, team, tasks, bonus, meetings, issues, solutions, documents } = workspaceData
+  const {
+    project,
+    team,
+    tasks,
+    bonus,
+    meetings,
+    issues,
+    solutions,
+    documents,
+  } = workspaceData;
 
   return (
     <div className="p-6 space-y-6">
@@ -156,7 +165,9 @@ export default function ProjectWorkspace() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">合同金额</p>
-                <p className="text-2xl font-bold">{formatCurrency(project.contract_amount)}</p>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(project.contract_amount)}
+                </p>
               </div>
               <DollarSign className="h-8 w-8 text-green-500" />
             </div>
@@ -194,7 +205,9 @@ export default function ProjectWorkspace() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-medium">{member.user_name}</p>
-                        <p className="text-sm text-gray-500">{member.role_code}</p>
+                        <p className="text-sm text-gray-500">
+                          {member.role_code}
+                        </p>
                       </div>
                       <Badge variant="outline">{member.allocation_pct}%</Badge>
                     </div>
@@ -226,10 +239,16 @@ export default function ProjectWorkspace() {
                   >
                     <div className="flex-1">
                       <p className="font-medium">{task.title}</p>
-                      <p className="text-sm text-gray-500">{task.assignee_name}</p>
+                      <p className="text-sm text-gray-500">
+                        {task.assignee_name}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant={task.status === 'COMPLETED' ? 'default' : 'secondary'}>
+                      <Badge
+                        variant={
+                          task.status === "COMPLETED" ? "default" : "secondary"
+                        }
+                      >
                         {task.status}
                       </Badge>
                       <Progress value={task.progress} className="w-20" />
@@ -258,7 +277,7 @@ export default function ProjectWorkspace() {
             projectId={id}
             onApplyTemplate={(template) => {
               // TODO: 实现应用模板逻辑
-              console.log('Apply template:', template)
+              console.log("Apply template:", template);
             }}
           />
         </TabsContent>
@@ -284,14 +303,20 @@ export default function ProjectWorkspace() {
                         <p className="font-medium">{doc.doc_name}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <Badge variant="outline">{doc.doc_type}</Badge>
-                          <span className="text-sm text-gray-500">v{doc.version}</span>
+                          <span className="text-sm text-gray-500">
+                            v{doc.version}
+                          </span>
                           <span className="text-sm text-gray-500">
                             {formatDate(doc.created_at)}
                           </span>
                         </div>
                       </div>
                     </div>
-                    <Badge variant={doc.status === 'APPROVED' ? 'default' : 'secondary'}>
+                    <Badge
+                      variant={
+                        doc.status === "APPROVED" ? "default" : "secondary"
+                      }
+                    >
                       {doc.status}
                     </Badge>
                   </div>
@@ -302,5 +327,5 @@ export default function ProjectWorkspace() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

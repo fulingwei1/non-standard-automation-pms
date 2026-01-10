@@ -1,28 +1,28 @@
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from '../ui'
-import { Award, TrendingUp, DollarSign, Clock } from 'lucide-react'
-import { formatCurrency } from '../../lib/utils'
-import { projectWorkspaceApi } from '../../services/api'
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from "../ui";
+import { Award, TrendingUp, DollarSign, Clock } from "lucide-react";
+import { formatCurrency } from "../../lib/utils";
+import { projectWorkspaceApi } from "../../services/api";
 
 export default function ProjectBonusPanel({ projectId }) {
-  const [loading, setLoading] = useState(true)
-  const [bonusData, setBonusData] = useState(null)
+  const [loading, setLoading] = useState(true);
+  const [bonusData, setBonusData] = useState(null);
 
   useEffect(() => {
-    fetchBonusData()
-  }, [projectId])
+    fetchBonusData();
+  }, [projectId]);
 
   const fetchBonusData = async () => {
     try {
-      setLoading(true)
-      const response = await projectWorkspaceApi.getBonuses(projectId)
-      setBonusData(response.data)
+      setLoading(true);
+      const response = await projectWorkspaceApi.getBonuses(projectId);
+      setBonusData(response.data);
     } catch (error) {
-      console.error('Failed to load bonus data:', error)
+      console.error("Failed to load bonus data:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -31,7 +31,7 @@ export default function ProjectBonusPanel({ projectId }) {
           <div className="text-center text-gray-500">加载中...</div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (!bonusData) {
@@ -41,10 +41,10 @@ export default function ProjectBonusPanel({ projectId }) {
           无法加载奖金数据
         </CardContent>
       </Card>
-    )
+    );
   }
 
-  const { rules, calculations, statistics, member_summary } = bonusData
+  const { rules, calculations, statistics, member_summary } = bonusData;
 
   return (
     <div className="space-y-6">
@@ -175,11 +175,19 @@ export default function ProjectBonusPanel({ projectId }) {
                 >
                   <div>
                     <p className="font-medium">{calc.user_name}</p>
-                    <p className="text-sm text-gray-500">{calc.calculation_code}</p>
+                    <p className="text-sm text-gray-500">
+                      {calc.calculation_code}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold">{formatCurrency(calc.calculated_amount)}</p>
-                    <Badge variant={calc.status === 'APPROVED' ? 'default' : 'secondary'}>
+                    <p className="font-bold">
+                      {formatCurrency(calc.calculated_amount)}
+                    </p>
+                    <Badge
+                      variant={
+                        calc.status === "APPROVED" ? "default" : "secondary"
+                      }
+                    >
                       {calc.status}
                     </Badge>
                   </div>
@@ -190,5 +198,5 @@ export default function ProjectBonusPanel({ projectId }) {
         </Card>
       )}
     </div>
-  )
+  );
 }

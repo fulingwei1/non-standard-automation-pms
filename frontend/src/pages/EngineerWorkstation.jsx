@@ -3,9 +3,9 @@
  * Features: Gantt chart, Calendar view, Task list with design deliverables
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar,
   Clock,
@@ -35,8 +35,8 @@ import {
   Layers,
   Target,
   TrendingUp,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -44,16 +44,16 @@ import {
   Input,
   Badge,
   Progress,
-} from '../components/ui'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { taskCenterApi, progressApi, projectApi } from '../services/api'
+} from "../components/ui";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { taskCenterApi, progressApi, projectApi } from "../services/api";
 
 // Import engineer components
-import GanttChart from '../components/engineer/GanttChart'
-import CalendarView from '../components/engineer/CalendarView'
-import TaskDetailPanel from '../components/engineer/TaskDetailPanel'
-import { ApiIntegrationError } from '../components/ui'
+import GanttChart from "../components/engineer/GanttChart";
+import CalendarView from "../components/engineer/CalendarView";
+import TaskDetailPanel from "../components/engineer/TaskDetailPanel";
+import { ApiIntegrationError } from "../components/ui";
 
 // Mock task data for mechanical engineer - 已移除，使用真实API
 // const mockEngineerTasks = [
@@ -256,35 +256,75 @@ import { ApiIntegrationError } from '../components/ui'
 
 // Task type configs
 const taskTypeConfigs = {
-  design: { label: '结构设计', color: 'text-blue-400', bgColor: 'bg-blue-500/10', icon: Box },
-  drawing: { label: '出图', color: 'text-emerald-400', bgColor: 'bg-emerald-500/10', icon: FileText },
-  bom: { label: 'BOM', color: 'text-amber-400', bgColor: 'bg-amber-500/10', icon: Layers },
-  review: { label: '评审', color: 'text-purple-400', bgColor: 'bg-purple-500/10', icon: ClipboardCheck },
-}
+  design: {
+    label: "结构设计",
+    color: "text-blue-400",
+    bgColor: "bg-blue-500/10",
+    icon: Box,
+  },
+  drawing: {
+    label: "出图",
+    color: "text-emerald-400",
+    bgColor: "bg-emerald-500/10",
+    icon: FileText,
+  },
+  bom: {
+    label: "BOM",
+    color: "text-amber-400",
+    bgColor: "bg-amber-500/10",
+    icon: Layers,
+  },
+  review: {
+    label: "评审",
+    color: "text-purple-400",
+    bgColor: "bg-purple-500/10",
+    icon: ClipboardCheck,
+  },
+};
 
 // Status configs
 const statusConfigs = {
-  pending: { label: '待开始', icon: Circle, color: 'text-slate-400', bgColor: 'bg-slate-500/10' },
-  in_progress: { label: '进行中', icon: PlayCircle, color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
-  blocked: { label: '已阻塞', icon: PauseCircle, color: 'text-red-400', bgColor: 'bg-red-500/10' },
-  completed: { label: '已完成', icon: CheckCircle2, color: 'text-emerald-400', bgColor: 'bg-emerald-500/10' },
-}
+  pending: {
+    label: "待开始",
+    icon: Circle,
+    color: "text-slate-400",
+    bgColor: "bg-slate-500/10",
+  },
+  in_progress: {
+    label: "进行中",
+    icon: PlayCircle,
+    color: "text-blue-400",
+    bgColor: "bg-blue-500/10",
+  },
+  blocked: {
+    label: "已阻塞",
+    icon: PauseCircle,
+    color: "text-red-400",
+    bgColor: "bg-red-500/10",
+  },
+  completed: {
+    label: "已完成",
+    icon: CheckCircle2,
+    color: "text-emerald-400",
+    bgColor: "bg-emerald-500/10",
+  },
+};
 
 // Priority configs
 const priorityConfigs = {
-  low: { label: '低', color: 'text-slate-400', flagColor: 'text-slate-400' },
-  medium: { label: '中', color: 'text-blue-400', flagColor: 'text-blue-400' },
-  high: { label: '高', color: 'text-amber-400', flagColor: 'text-amber-400' },
-  critical: { label: '紧急', color: 'text-red-400', flagColor: 'text-red-400' },
-}
+  low: { label: "低", color: "text-slate-400", flagColor: "text-slate-400" },
+  medium: { label: "中", color: "text-blue-400", flagColor: "text-blue-400" },
+  high: { label: "高", color: "text-amber-400", flagColor: "text-amber-400" },
+  critical: { label: "紧急", color: "text-red-400", flagColor: "text-red-400" },
+};
 
 // View modes
 const VIEW_MODES = {
-  gantt: { id: 'gantt', label: '甘特图', icon: BarChart3 },
-  calendar: { id: 'calendar', label: '日历', icon: CalendarDays },
-  list: { id: 'list', label: '列表', icon: List },
-  project: { id: 'project', label: '项目视图', icon: Briefcase },
-}
+  gantt: { id: "gantt", label: "甘特图", icon: BarChart3 },
+  calendar: { id: "calendar", label: "日历", icon: CalendarDays },
+  list: { id: "list", label: "列表", icon: List },
+  project: { id: "project", label: "项目视图", icon: Briefcase },
+};
 
 // Stats Card Component
 function StatsCard({ label, value, icon: Icon, color, onClick, active }) {
@@ -294,10 +334,10 @@ function StatsCard({ label, value, icon: Icon, color, onClick, active }) {
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={cn(
-        'cursor-pointer rounded-xl border p-4 transition-all',
+        "cursor-pointer rounded-xl border p-4 transition-all",
         active
-          ? 'bg-primary/10 border-primary/30'
-          : 'bg-surface-1/50 border-border hover:border-border/80'
+          ? "bg-primary/10 border-primary/30"
+          : "bg-surface-1/50 border-border hover:border-border/80",
       )}
     >
       <div className="flex items-center justify-between">
@@ -305,22 +345,25 @@ function StatsCard({ label, value, icon: Icon, color, onClick, active }) {
           <p className="text-sm text-slate-400">{label}</p>
           <p className="text-2xl font-bold text-white mt-1">{value}</p>
         </div>
-        <Icon className={cn('w-6 h-6', color)} />
+        <Icon className={cn("w-6 h-6", color)} />
       </div>
     </motion.div>
-  )
+  );
 }
 
 // Task List Item Component (for list view)
 function TaskListItem({ task, onClick, isSelected }) {
-  const status = statusConfigs[task.status]
-  const priority = priorityConfigs[task.priority]
-  const taskType = taskTypeConfigs[task.type]
-  const StatusIcon = status.icon
-  const TypeIcon = taskType.icon
+  const status = statusConfigs[task.status];
+  const priority = priorityConfigs[task.priority];
+  const taskType = taskTypeConfigs[task.type];
+  const StatusIcon = status.icon;
+  const TypeIcon = taskType.icon;
 
-  const isOverdue = task.status !== 'completed' && new Date(task.plannedEnd) < new Date()
-  const daysUntilDue = Math.ceil((new Date(task.plannedEnd) - new Date()) / (1000 * 60 * 60 * 24))
+  const isOverdue =
+    task.status !== "completed" && new Date(task.plannedEnd) < new Date();
+  const daysUntilDue = Math.ceil(
+    (new Date(task.plannedEnd) - new Date()) / (1000 * 60 * 60 * 24),
+  );
 
   return (
     <motion.div
@@ -328,35 +371,38 @@ function TaskListItem({ task, onClick, isSelected }) {
       whileHover={{ scale: 1.005 }}
       onClick={() => onClick(task)}
       className={cn(
-        'rounded-xl border p-4 cursor-pointer transition-all',
+        "rounded-xl border p-4 cursor-pointer transition-all",
         isSelected
-          ? 'bg-primary/10 border-primary/30'
-          : task.status === 'blocked'
-          ? 'bg-red-500/5 border-red-500/30 hover:border-red-500/50'
-          : isOverdue
-          ? 'bg-amber-500/5 border-amber-500/30 hover:border-amber-500/50'
-          : 'bg-surface-1/50 border-border hover:border-border/80'
+          ? "bg-primary/10 border-primary/30"
+          : task.status === "blocked"
+            ? "bg-red-500/5 border-red-500/30 hover:border-red-500/50"
+            : isOverdue
+              ? "bg-amber-500/5 border-amber-500/30 hover:border-amber-500/50"
+              : "bg-surface-1/50 border-border hover:border-border/80",
       )}
     >
       <div className="flex items-start gap-4">
         {/* Status Icon */}
-        <div className={cn('mt-0.5 p-2 rounded-lg', status.bgColor)}>
-          <StatusIcon className={cn('w-5 h-5', status.color)} />
+        <div className={cn("mt-0.5 p-2 rounded-lg", status.bgColor)}>
+          <StatusIcon className={cn("w-5 h-5", status.color)} />
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <Badge variant="outline" className={cn('text-xs', taskType.color, taskType.bgColor)}>
+            <Badge
+              variant="outline"
+              className={cn("text-xs", taskType.color, taskType.bgColor)}
+            >
               <TypeIcon className="w-3 h-3 mr-1" />
               {taskType.label}
             </Badge>
-            <Flag className={cn('w-3.5 h-3.5', priority.flagColor)} />
+            <Flag className={cn("w-3.5 h-3.5", priority.flagColor)} />
             <span className="text-xs text-slate-500">{task.machineNo}</span>
           </div>
 
           <h3 className="font-medium text-white mb-1">{task.titleCn}</h3>
-          
+
           <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
             <Folder className="w-3 h-3" />
             <span className="text-accent truncate">{task.projectName}</span>
@@ -373,18 +419,22 @@ function TaskListItem({ task, onClick, isSelected }) {
 
           {/* Meta info */}
           <div className="flex items-center gap-4 text-xs text-slate-400">
-            <span className={cn(
-              'flex items-center gap-1',
-              isOverdue ? 'text-red-400' : daysUntilDue <= 3 ? 'text-amber-400' : ''
-            )}>
-              <Calendar className="w-3 h-3" />
-              {isOverdue ? (
-                `逾期 ${Math.abs(daysUntilDue)} 天`
-              ) : daysUntilDue <= 3 && daysUntilDue >= 0 ? (
-                `剩余 ${daysUntilDue} 天`
-              ) : (
-                task.plannedEnd
+            <span
+              className={cn(
+                "flex items-center gap-1",
+                isOverdue
+                  ? "text-red-400"
+                  : daysUntilDue <= 3
+                    ? "text-amber-400"
+                    : "",
               )}
+            >
+              <Calendar className="w-3 h-3" />
+              {isOverdue
+                ? `逾期 ${Math.abs(daysUntilDue)} 天`
+                : daysUntilDue <= 3 && daysUntilDue >= 0
+                  ? `剩余 ${daysUntilDue} 天`
+                  : task.plannedEnd}
             </span>
             <span className="flex items-center gap-1">
               <Timer className="w-3 h-3" />
@@ -411,183 +461,188 @@ function TaskListItem({ task, onClick, isSelected }) {
         <ChevronRight className="w-5 h-5 text-slate-500" />
       </div>
     </motion.div>
-  )
+  );
 }
 
 // Main Component
 export default function EngineerWorkstation() {
-  const navigate = useNavigate()
-  const [tasks, setTasks] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [viewMode, setViewMode] = useState('gantt')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [projectFilter, setProjectFilter] = useState('all')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedTask, setSelectedTask] = useState(null)
-  const [detailPanelOpen, setDetailPanelOpen] = useState(false)
+  const navigate = useNavigate();
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [viewMode, setViewMode] = useState("gantt");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [projectFilter, setProjectFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [detailPanelOpen, setDetailPanelOpen] = useState(false);
 
   // Map backend status to frontend status
   const mapBackendStatus = (backendStatus) => {
     const statusMap = {
-      'PENDING': 'pending',
-      'ACCEPTED': 'pending',
-      'IN_PROGRESS': 'in_progress',
-      'COMPLETED': 'completed',
-      'DONE': 'completed',
-      'BLOCKED': 'blocked',
-      'CANCELLED': 'cancelled',
-    }
-    return statusMap[backendStatus] || backendStatus?.toLowerCase() || 'pending'
-  }
+      PENDING: "pending",
+      ACCEPTED: "pending",
+      IN_PROGRESS: "in_progress",
+      COMPLETED: "completed",
+      DONE: "completed",
+      BLOCKED: "blocked",
+      CANCELLED: "cancelled",
+    };
+    return (
+      statusMap[backendStatus] || backendStatus?.toLowerCase() || "pending"
+    );
+  };
 
   // Map frontend status to backend status
   const mapFrontendStatus = (frontendStatus) => {
     const statusMap = {
-      'pending': 'PENDING',
-      'in_progress': 'IN_PROGRESS',
-      'completed': 'COMPLETED',
-      'blocked': 'BLOCKED',
-    }
-    return statusMap[frontendStatus] || frontendStatus?.toUpperCase()
-  }
+      pending: "PENDING",
+      in_progress: "IN_PROGRESS",
+      completed: "COMPLETED",
+      blocked: "BLOCKED",
+    };
+    return statusMap[frontendStatus] || frontendStatus?.toUpperCase();
+  };
 
   // Load engineer tasks
   const loadTasks = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       const params = {
         page: 1,
         page_size: 100,
+      };
+
+      if (statusFilter !== "all") {
+        params.status = mapFrontendStatus(statusFilter);
       }
 
-      if (statusFilter !== 'all') {
-        params.status = mapFrontendStatus(statusFilter)
-      }
-
-      if (projectFilter !== 'all') {
-        params.project_id = parseInt(projectFilter)
+      if (projectFilter !== "all") {
+        params.project_id = parseInt(projectFilter);
       }
 
       if (searchQuery) {
-        params.keyword = searchQuery
+        params.keyword = searchQuery;
       }
 
-      const response = await taskCenterApi.myTasks(params)
-      const tasksData = response.data?.items || response.data || []
+      const response = await taskCenterApi.myTasks(params);
+      const tasksData = response.data?.items || response.data || [];
 
       // Transform backend tasks to frontend format
-      const transformedTasks = tasksData.map(task => ({
+      const transformedTasks = tasksData.map((task) => ({
         id: task.id?.toString(),
-        title: task.title || '',
-        titleCn: task.title || task.description || '',
-        projectId: task.project_id?.toString() || '',
-        projectName: task.project_name || '',
-        machineNo: task.source_name || '',
-        type: task.task_type?.toLowerCase() || 'design',
+        title: task.title || "",
+        titleCn: task.title || task.description || "",
+        projectId: task.project_id?.toString() || "",
+        projectName: task.project_name || "",
+        machineNo: task.source_name || "",
+        type: task.task_type?.toLowerCase() || "design",
         status: mapBackendStatus(task.status),
-        priority: task.priority?.toLowerCase() || 'medium',
+        priority: task.priority?.toLowerCase() || "medium",
         progress: task.progress || 0,
-        plannedStart: task.plan_start_date || task.plan_start || '',
-        plannedEnd: task.plan_end_date || task.deadline || '',
+        plannedStart: task.plan_start_date || task.plan_start || "",
+        plannedEnd: task.plan_end_date || task.deadline || "",
         actualStart: task.actual_start_date || null,
         actualEnd: task.actual_end_date || null,
         estimatedHours: task.estimated_hours || 0,
         actualHours: parseFloat(task.actual_hours || 0),
-        assignee: task.assignee_name || '',
-        reviewer: task.assigner_name || '',
+        assignee: task.assignee_name || "",
+        reviewer: task.assigner_name || "",
         milestone: null,
         milestoneDate: null,
         dependencies: [],
         deliverables: [],
         bomItems: 0,
-        reviewStatus: 'pending',
-        notes: task.description || '',
-      }))
+        reviewStatus: "pending",
+        notes: task.description || "",
+      }));
 
-      setTasks(transformedTasks)
+      setTasks(transformedTasks);
     } catch (err) {
-      console.error('Failed to load engineer tasks:', err)
-      setError(err.response?.data?.detail || err.message || '加载任务列表失败')
-      setTasks([]) // 不再使用mock数据，显示空列表
+      console.error("Failed to load engineer tasks:", err);
+      setError(err.response?.data?.detail || err.message || "加载任务列表失败");
+      setTasks([]); // 不再使用mock数据，显示空列表
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [statusFilter, projectFilter, searchQuery])
+  }, [statusFilter, projectFilter, searchQuery]);
 
   // Load tasks when component mounts or filters change
   useEffect(() => {
-    loadTasks()
-  }, [loadTasks])
+    loadTasks();
+  }, [loadTasks]);
 
   // Get unique projects for filter
   const projects = useMemo(() => {
-    const projectSet = new Set(tasks.map(t => t.projectId))
-    return Array.from(projectSet).map(id => {
-      const task = tasks.find(t => t.projectId === id)
-      return { id, name: task.projectName }
-    })
-  }, [tasks])
+    const projectSet = new Set(tasks.map((t) => t.projectId));
+    return Array.from(projectSet).map((id) => {
+      const task = tasks.find((t) => t.projectId === id);
+      return { id, name: task.projectName };
+    });
+  }, [tasks]);
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
-    return tasks.filter(task => {
-      if (statusFilter !== 'all' && task.status !== statusFilter) return false
-      if (projectFilter !== 'all' && task.projectId !== projectFilter) return false
+    return tasks.filter((task) => {
+      if (statusFilter !== "all" && task.status !== statusFilter) return false;
+      if (projectFilter !== "all" && task.projectId !== projectFilter)
+        return false;
       if (searchQuery) {
-        const query = searchQuery.toLowerCase()
+        const query = searchQuery.toLowerCase();
         return (
           task.titleCn.toLowerCase().includes(query) ||
           task.projectName.toLowerCase().includes(query)
-        )
+        );
       }
-      return true
-    })
-  }, [tasks, statusFilter, projectFilter, searchQuery])
+      return true;
+    });
+  }, [tasks, statusFilter, projectFilter, searchQuery]);
 
   // Calculate stats
   const stats = useMemo(() => {
-    const today = new Date()
-    const weekEnd = new Date(today)
-    weekEnd.setDate(weekEnd.getDate() + 7)
+    const today = new Date();
+    const weekEnd = new Date(today);
+    weekEnd.setDate(weekEnd.getDate() + 7);
 
     return {
-      inProgress: tasks.filter(t => t.status === 'in_progress').length,
-      pending: tasks.filter(t => t.status === 'pending').length,
-      completed: tasks.filter(t => t.status === 'completed').length,
-      dueThisWeek: tasks.filter(t => {
-        const dueDate = new Date(t.plannedEnd)
-        return t.status !== 'completed' && dueDate >= today && dueDate <= weekEnd
+      inProgress: tasks.filter((t) => t.status === "in_progress").length,
+      pending: tasks.filter((t) => t.status === "pending").length,
+      completed: tasks.filter((t) => t.status === "completed").length,
+      dueThisWeek: tasks.filter((t) => {
+        const dueDate = new Date(t.plannedEnd);
+        return (
+          t.status !== "completed" && dueDate >= today && dueDate <= weekEnd
+        );
       }).length,
-      overdue: tasks.filter(t => {
-        return t.status !== 'completed' && new Date(t.plannedEnd) < today
+      overdue: tasks.filter((t) => {
+        return t.status !== "completed" && new Date(t.plannedEnd) < today;
       }).length,
-    }
-  }, [tasks])
+    };
+  }, [tasks]);
 
   // Handle task selection
   const handleTaskSelect = (task) => {
-    setSelectedTask(task)
-    setDetailPanelOpen(true)
-  }
+    setSelectedTask(task);
+    setDetailPanelOpen(true);
+  };
 
   // Handle task update
   const handleTaskUpdate = (taskId, updates) => {
-    setTasks(prev => prev.map(t => 
-      t.id === taskId ? { ...t, ...updates } : t
-    ))
+    setTasks((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, ...updates } : t)),
+    );
     if (selectedTask?.id === taskId) {
-      setSelectedTask(prev => ({ ...prev, ...updates }))
+      setSelectedTask((prev) => ({ ...prev, ...updates }));
     }
-  }
+  };
 
   // Close detail panel
   const handleCloseDetail = () => {
-    setDetailPanelOpen(false)
-    setTimeout(() => setSelectedTask(null), 300)
-  }
+    setDetailPanelOpen(false);
+    setTimeout(() => setSelectedTask(null), 300);
+  };
 
   // Show error state
   if (error && tasks.length === 0) {
@@ -603,7 +658,7 @@ export default function EngineerWorkstation() {
           onRetry={loadTasks}
         />
       </div>
-    )
+    );
   }
 
   if (loading) {
@@ -617,7 +672,7 @@ export default function EngineerWorkstation() {
           <div className="text-slate-400">加载中...</div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -646,30 +701,41 @@ export default function EngineerWorkstation() {
       />
 
       {/* Stats Cards */}
-      <motion.div variants={fadeIn} className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <motion.div
+        variants={fadeIn}
+        className="grid grid-cols-2 md:grid-cols-5 gap-4"
+      >
         <StatsCard
           label="进行中"
           value={stats.inProgress}
           icon={PlayCircle}
           color="text-blue-400"
-          onClick={() => setStatusFilter(statusFilter === 'in_progress' ? 'all' : 'in_progress')}
-          active={statusFilter === 'in_progress'}
+          onClick={() =>
+            setStatusFilter(
+              statusFilter === "in_progress" ? "all" : "in_progress",
+            )
+          }
+          active={statusFilter === "in_progress"}
         />
         <StatsCard
           label="待开始"
           value={stats.pending}
           icon={Circle}
           color="text-slate-400"
-          onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}
-          active={statusFilter === 'pending'}
+          onClick={() =>
+            setStatusFilter(statusFilter === "pending" ? "all" : "pending")
+          }
+          active={statusFilter === "pending"}
         />
         <StatsCard
           label="已完成"
           value={stats.completed}
           icon={CheckCircle2}
           color="text-emerald-400"
-          onClick={() => setStatusFilter(statusFilter === 'completed' ? 'all' : 'completed')}
-          active={statusFilter === 'completed'}
+          onClick={() =>
+            setStatusFilter(statusFilter === "completed" ? "all" : "completed")
+          }
+          active={statusFilter === "completed"}
         />
         <StatsCard
           label="本周到期"
@@ -695,7 +761,7 @@ export default function EngineerWorkstation() {
                 {Object.values(VIEW_MODES).map((mode) => (
                   <Button
                     key={mode.id}
-                    variant={viewMode === mode.id ? 'default' : 'ghost'}
+                    variant={viewMode === mode.id ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setViewMode(mode.id)}
                     className="gap-2"
@@ -715,8 +781,10 @@ export default function EngineerWorkstation() {
                   className="h-9 px-3 rounded-lg bg-surface-2 border border-border text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
                 >
                   <option value="all">全部项目</option>
-                  {projects.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
                   ))}
                 </select>
 
@@ -751,12 +819,14 @@ export default function EngineerWorkstation() {
 
       {/* Main Content Area */}
       <motion.div variants={fadeIn} className="relative">
-        <div className={cn(
-          'transition-all duration-300',
-          detailPanelOpen ? 'mr-96' : ''
-        )}>
+        <div
+          className={cn(
+            "transition-all duration-300",
+            detailPanelOpen ? "mr-96" : "",
+          )}
+        >
           {/* Gantt View */}
-          {viewMode === 'gantt' && (
+          {viewMode === "gantt" && (
             <GanttChart
               tasks={filteredTasks}
               onTaskSelect={handleTaskSelect}
@@ -765,7 +835,7 @@ export default function EngineerWorkstation() {
           )}
 
           {/* Calendar View */}
-          {viewMode === 'calendar' && (
+          {viewMode === "calendar" && (
             <CalendarView
               tasks={filteredTasks}
               onTaskSelect={handleTaskSelect}
@@ -774,9 +844,9 @@ export default function EngineerWorkstation() {
           )}
 
           {/* List View */}
-          {viewMode === 'list' && (
+          {viewMode === "list" && (
             <div className="space-y-3">
-              {filteredTasks.map(task => (
+              {filteredTasks.map((task) => (
                 <TaskListItem
                   key={task.id}
                   task={task}
@@ -788,11 +858,15 @@ export default function EngineerWorkstation() {
               {filteredTasks.length === 0 && (
                 <div className="text-center py-16">
                   <Box className="w-16 h-16 mx-auto text-slate-600 mb-4" />
-                  <h3 className="text-lg font-medium text-slate-400">暂无任务</h3>
+                  <h3 className="text-lg font-medium text-slate-400">
+                    暂无任务
+                  </h3>
                   <p className="text-sm text-slate-500 mt-1">
-                    {searchQuery || statusFilter !== 'all' || projectFilter !== 'all'
-                      ? '没有符合条件的任务'
-                      : '当前没有分配给您的设计任务'}
+                    {searchQuery ||
+                    statusFilter !== "all" ||
+                    projectFilter !== "all"
+                      ? "没有符合条件的任务"
+                      : "当前没有分配给您的设计任务"}
                   </p>
                 </div>
               )}
@@ -800,14 +874,14 @@ export default function EngineerWorkstation() {
           )}
 
           {/* Project View - 按项目分组展示 */}
-          {viewMode === 'project' && (
+          {viewMode === "project" && (
             <div className="space-y-6">
               {(() => {
                 // 按项目分组
-                const tasksByProject = {}
-                filteredTasks.forEach(task => {
-                  const projectId = task.projectId || 'other'
-                  const projectName = task.projectName || '未分配项目'
+                const tasksByProject = {};
+                filteredTasks.forEach((task) => {
+                  const projectId = task.projectId || "other";
+                  const projectName = task.projectName || "未分配项目";
                   if (!tasksByProject[projectId]) {
                     tasksByProject[projectId] = {
                       projectId,
@@ -818,67 +892,86 @@ export default function EngineerWorkstation() {
                         inProgress: 0,
                         completed: 0,
                         pending: 0,
-                      }
-                    }
+                      },
+                    };
                   }
-                  tasksByProject[projectId].tasks.push(task)
-                  tasksByProject[projectId].stats.total++
-                  if (task.status === 'in_progress') tasksByProject[projectId].stats.inProgress++
-                  else if (task.status === 'completed') tasksByProject[projectId].stats.completed++
-                  else if (task.status === 'pending') tasksByProject[projectId].stats.pending++
-                })
+                  tasksByProject[projectId].tasks.push(task);
+                  tasksByProject[projectId].stats.total++;
+                  if (task.status === "in_progress")
+                    tasksByProject[projectId].stats.inProgress++;
+                  else if (task.status === "completed")
+                    tasksByProject[projectId].stats.completed++;
+                  else if (task.status === "pending")
+                    tasksByProject[projectId].stats.pending++;
+                });
 
-                const projectGroups = Object.values(tasksByProject)
+                const projectGroups = Object.values(tasksByProject);
 
                 if (projectGroups.length === 0) {
                   return (
                     <div className="text-center py-16">
                       <Box className="w-16 h-16 mx-auto text-slate-600 mb-4" />
-                      <h3 className="text-lg font-medium text-slate-400">暂无任务</h3>
+                      <h3 className="text-lg font-medium text-slate-400">
+                        暂无任务
+                      </h3>
                       <p className="text-sm text-slate-500 mt-1">
-                        {searchQuery || statusFilter !== 'all' || projectFilter !== 'all'
-                          ? '没有符合条件的任务'
-                          : '当前没有分配给您的设计任务'}
+                        {searchQuery ||
+                        statusFilter !== "all" ||
+                        projectFilter !== "all"
+                          ? "没有符合条件的任务"
+                          : "当前没有分配给您的设计任务"}
                       </p>
                     </div>
-                  )
+                  );
                 }
 
-                return projectGroups.map(group => (
+                return projectGroups.map((group) => (
                   <Card key={group.projectId} className="bg-surface-1/50">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
                           <Briefcase className="w-5 h-5 text-primary" />
                           <div>
-                            <h3 className="text-lg font-semibold">{group.projectName}</h3>
-                            <p className="text-sm text-slate-400">{group.projectId}</p>
+                            <h3 className="text-lg font-semibold">
+                              {group.projectName}
+                            </h3>
+                            <p className="text-sm text-slate-400">
+                              {group.projectId}
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="text-right">
                             <p className="text-sm text-slate-400">总任务</p>
-                            <p className="text-xl font-bold">{group.stats.total}</p>
+                            <p className="text-xl font-bold">
+                              {group.stats.total}
+                            </p>
                           </div>
                           <div className="text-right">
                             <p className="text-sm text-slate-400">进行中</p>
-                            <p className="text-xl font-bold text-blue-400">{group.stats.inProgress}</p>
+                            <p className="text-xl font-bold text-blue-400">
+                              {group.stats.inProgress}
+                            </p>
                           </div>
                           <div className="text-right">
                             <p className="text-sm text-slate-400">已完成</p>
-                            <p className="text-xl font-bold text-emerald-400">{group.stats.completed}</p>
+                            <p className="text-xl font-bold text-emerald-400">
+                              {group.stats.completed}
+                            </p>
                           </div>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => navigate(`/projects/${group.projectId}/workspace`)}
+                            onClick={() =>
+                              navigate(`/projects/${group.projectId}/workspace`)
+                            }
                           >
                             查看工作空间
                           </Button>
                         </div>
                       </div>
                       <div className="space-y-2">
-                        {group.tasks.map(task => (
+                        {group.tasks.map((task) => (
                           <TaskListItem
                             key={task.id}
                             task={task}
@@ -889,7 +982,7 @@ export default function EngineerWorkstation() {
                       </div>
                     </CardContent>
                   </Card>
-                ))
+                ));
               })()}
             </div>
           )}
@@ -910,6 +1003,5 @@ export default function EngineerWorkstation() {
         </AnimatePresence>
       </motion.div>
     </motion.div>
-  )
+  );
 }
-

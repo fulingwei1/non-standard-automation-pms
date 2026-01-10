@@ -772,6 +772,13 @@ def apply_cost_allocation(
     应用费用分摊规则
     根据分摊规则将共享费用分摊到多个研发项目
     """
+    from app.services.cost_allocation_service import (
+        query_allocatable_costs,
+        get_target_project_ids,
+        calculate_allocation_rates,
+        create_allocated_cost
+    )
+    
     # 验证分摊规则是否存在
     rule = db.query(RdCostAllocationRule).filter(RdCostAllocationRule.id == rule_id).first()
     if not rule:
@@ -781,20 +788,7 @@ def apply_cost_allocation(
         raise HTTPException(status_code=400, detail="分摊规则未启用")
     
     # 查询需要分摊的费用
-    query = db.query(RdCost).filter(
-        RdCost.status == 'APPROVED',
-        RdCost.is_allocated == False  # 只分摊未分摊的费用
-    )
-    
-    # 如果指定了费用ID列表，则只分摊这些费用
-    if cost_ids:
-        query = query.filter(RdCost.id.in_(cost_ids))
-    else:
-        # 根据规则的适用范围筛选费用
-        if rule.cost_type_ids:
-            query = query.filter(RdCost.cost_type_id.in_(rule.cost_type_ids))
-    
-    costs = query.all()
+    costs = query_allocatable_costs(db, rule, cost_ids)
     
     if not costs:
         return ResponseModel(
@@ -803,14 +797,8 @@ def apply_cost_allocation(
             data={"allocated_count": 0}
         )
     
-    # 获取规则适用的项目列表
-    target_project_ids = rule.project_ids if rule.project_ids else []
-    if not target_project_ids:
-        # 如果没有指定项目，则分摊到所有已审批的研发项目
-        projects = db.query(RdProject).filter(
-            RdProject.status.in_(['APPROVED', 'IN_PROGRESS'])
-        ).all()
-        target_project_ids = [p.id for p in projects]
+    # 获取目标项目列表
+    target_project_ids = get_target_project_ids(db, rule)
     
     if not target_project_ids:
         return ResponseModel(
@@ -819,95 +807,16 @@ def apply_cost_allocation(
             data={"allocated_count": 0}
         )
     
-    # 根据分摊依据计算分摊比例
-    allocation_rates = {}
+    # 计算分摊比例
+    allocation_rates = calculate_allocation_rates(db, rule, target_project_ids)
     
-    if rule.allocation_basis == 'HOURS':
-        # 按工时分摊：计算每个项目的工时占比
-        total_hours = Decimal(0)
-        project_hours = {}
-        
-        for project_id in target_project_ids:
-            project = db.query(RdProject).filter(RdProject.id == project_id).first()
-            if project and project.total_hours:
-                hours = Decimal(str(project.total_hours))
-                project_hours[project_id] = hours
-                total_hours += hours
-        
-        if total_hours > 0:
-            for project_id, hours in project_hours.items():
-                allocation_rates[project_id] = float(hours / total_hours * 100)
-        else:
-            # 如果总工时为0，则平均分摊
-            rate = 100.0 / len(target_project_ids)
-            for project_id in target_project_ids:
-                allocation_rates[project_id] = rate
-    elif rule.allocation_basis == 'REVENUE':
-        # 按收入分摊：需要从项目模块获取收入数据
-        # TODO: 从项目模块获取收入数据
-        # 暂时使用平均分摊
-        rate = 100.0 / len(target_project_ids)
-        for project_id in target_project_ids:
-            allocation_rates[project_id] = rate
-    elif rule.allocation_basis == 'HEADCOUNT':
-        # 按人数分摊：计算每个项目的参与人数占比
-        total_participants = 0
-        project_participants = {}
-        
-        for project_id in target_project_ids:
-            project = db.query(RdProject).filter(RdProject.id == project_id).first()
-            if project and project.participant_count:
-                participants = project.participant_count
-                project_participants[project_id] = participants
-                total_participants += participants
-        
-        if total_participants > 0:
-            for project_id, participants in project_participants.items():
-                allocation_rates[project_id] = float(participants / total_participants * 100)
-        else:
-            # 如果总人数为0，则平均分摊
-            rate = 100.0 / len(target_project_ids)
-            for project_id in target_project_ids:
-                allocation_rates[project_id] = rate
-    else:
-        # 默认平均分摊
-        rate = 100.0 / len(target_project_ids)
-        for project_id in target_project_ids:
-            allocation_rates[project_id] = rate
-    
-    # 应用分摊规则，创建分摊后的费用记录
+    # 应用分摊规则
     allocated_count = 0
     
     for cost in costs:
         # 为每个目标项目创建分摊后的费用记录
         for project_id, rate in allocation_rates.items():
-            # 计算分摊金额
-            allocated_amount = cost.cost_amount * Decimal(str(rate)) / 100
-            
-            # 创建分摊后的费用记录
-            allocated_cost = RdCost(
-                cost_no=generate_cost_no(db),
-                rd_project_id=project_id,
-                cost_type_id=cost.cost_type_id,
-                cost_date=cost.cost_date,
-                cost_amount=allocated_amount,
-                cost_description=f"{cost.cost_description or ''}（分摊自费用{cost.cost_no}）",
-                source_type='ALLOCATED',
-                source_id=cost.id,
-                is_allocated=True,
-                allocation_rule_id=rule_id,
-                allocation_rate=Decimal(str(rate)),
-                deductible_amount=allocated_amount * (cost.deductible_amount / cost.cost_amount) if cost.deductible_amount and cost.cost_amount > 0 else None,
-                status='APPROVED',  # 分摊的费用直接审批通过
-                remark=f"由规则{rule.rule_name}自动分摊"
-            )
-            
-            db.add(allocated_cost)
-            
-            # 更新目标项目的总费用
-            project = db.query(RdProject).filter(RdProject.id == project_id).first()
-            if project:
-                project.total_cost = (project.total_cost or 0) + allocated_amount
+            create_allocated_cost(db, cost, project_id, rate, rule_id, generate_cost_no)
         
         # 标记原费用为已分摊
         cost.is_allocated = True

@@ -3,9 +3,9 @@
  * 显示物料调拨申请的详细信息，支持审批、执行等操作
  */
 
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRightLeft,
@@ -17,8 +17,8 @@ import {
   Package,
   AlertTriangle,
   FileText,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -36,110 +36,124 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui'
-import { cn, formatDate } from '../lib/utils'
-import { fadeIn } from '../lib/animations'
-import { shortageApi } from '../services/api'
+} from "../components/ui";
+import { cn, formatDate } from "../lib/utils";
+import { fadeIn } from "../lib/animations";
+import { shortageApi } from "../services/api";
 
 const statusConfigs = {
-  DRAFT: { label: '草稿', color: 'bg-slate-500', icon: FileText },
-  PENDING: { label: '待审批', color: 'bg-blue-500', icon: Clock },
-  APPROVED: { label: '已批准', color: 'bg-emerald-500', icon: CheckCircle2 },
-  REJECTED: { label: '已拒绝', color: 'bg-red-500', icon: XCircle },
-  EXECUTED: { label: '已执行', color: 'bg-purple-500', icon: CheckCircle2 },
-  CANCELLED: { label: '已取消', color: 'bg-slate-400', icon: XCircle },
-}
+  DRAFT: { label: "草稿", color: "bg-slate-500", icon: FileText },
+  PENDING: { label: "待审批", color: "bg-blue-500", icon: Clock },
+  APPROVED: { label: "已批准", color: "bg-emerald-500", icon: CheckCircle2 },
+  REJECTED: { label: "已拒绝", color: "bg-red-500", icon: XCircle },
+  EXECUTED: { label: "已执行", color: "bg-purple-500", icon: CheckCircle2 },
+  CANCELLED: { label: "已取消", color: "bg-slate-400", icon: XCircle },
+};
 
 const urgentLevelConfigs = {
-  NORMAL: { label: '普通', color: 'text-slate-400', bgColor: 'bg-slate-500/10' },
-  URGENT: { label: '紧急', color: 'text-amber-400', bgColor: 'bg-amber-500/10' },
-  CRITICAL: { label: '特急', color: 'text-red-400', bgColor: 'bg-red-500/10' },
-}
+  NORMAL: {
+    label: "普通",
+    color: "text-slate-400",
+    bgColor: "bg-slate-500/10",
+  },
+  URGENT: {
+    label: "紧急",
+    color: "text-amber-400",
+    bgColor: "bg-amber-500/10",
+  },
+  CRITICAL: { label: "特急", color: "text-red-400", bgColor: "bg-red-500/10" },
+};
 
 export default function TransferDetail() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const [transfer, setTransfer] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [actionLoading, setActionLoading] = useState(false)
-  const [showApproveDialog, setShowApproveDialog] = useState(false)
-  const [showExecuteDialog, setShowExecuteDialog] = useState(false)
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [transfer, setTransfer] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [showExecuteDialog, setShowExecuteDialog] = useState(false);
   const [approvalData, setApprovalData] = useState({
     approved: true,
-    approval_note: '',
-  })
+    approval_note: "",
+  });
   const [executionData, setExecutionData] = useState({
-    actual_qty: '',
-    execution_note: '',
-  })
+    actual_qty: "",
+    execution_note: "",
+  });
 
   useEffect(() => {
-    loadTransfer()
-  }, [id])
+    loadTransfer();
+  }, [id]);
 
   const loadTransfer = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const res = await shortageApi.transfers.get(id)
-      setTransfer(res.data)
+      const res = await shortageApi.transfers.get(id);
+      setTransfer(res.data);
       if (res.data.transfer_qty) {
-        setExecutionData((prev) => ({ ...prev, actual_qty: String(res.data.transfer_qty) }))
+        setExecutionData((prev) => ({
+          ...prev,
+          actual_qty: String(res.data.transfer_qty),
+        }));
       }
     } catch (error) {
-      console.error('加载物料调拨详情失败', error)
+      console.error("加载物料调拨详情失败", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleApprove = async () => {
-    setActionLoading(true)
+    setActionLoading(true);
     try {
       await shortageApi.transfers.approve(
         id,
         approvalData.approved,
-        approvalData.approval_note
-      )
-      setShowApproveDialog(false)
-      setApprovalData({ approved: true, approval_note: '' })
-      await loadTransfer()
+        approvalData.approval_note,
+      );
+      setShowApproveDialog(false);
+      setApprovalData({ approved: true, approval_note: "" });
+      await loadTransfer();
     } catch (error) {
-      console.error('审批失败', error)
-      alert('审批失败：' + (error.response?.data?.detail || error.message))
+      console.error("审批失败", error);
+      alert("审批失败：" + (error.response?.data?.detail || error.message));
     } finally {
-      setActionLoading(false)
+      setActionLoading(false);
     }
-  }
+  };
 
   const handleExecute = async () => {
-    if (!executionData.actual_qty || parseFloat(executionData.actual_qty) <= 0) {
-      alert('请输入有效的实际调拨数量')
-      return
+    if (
+      !executionData.actual_qty ||
+      parseFloat(executionData.actual_qty) <= 0
+    ) {
+      alert("请输入有效的实际调拨数量");
+      return;
     }
-    setActionLoading(true)
+    setActionLoading(true);
     try {
       await shortageApi.transfers.execute(
         id,
         parseFloat(executionData.actual_qty),
-        executionData.execution_note
-      )
-      setShowExecuteDialog(false)
-      setExecutionData({ actual_qty: '', execution_note: '' })
-      await loadTransfer()
+        executionData.execution_note,
+      );
+      setShowExecuteDialog(false);
+      setExecutionData({ actual_qty: "", execution_note: "" });
+      await loadTransfer();
     } catch (error) {
-      console.error('执行调拨失败', error)
-      alert('执行调拨失败：' + (error.response?.data?.detail || error.message))
+      console.error("执行调拨失败", error);
+      alert("执行调拨失败：" + (error.response?.data?.detail || error.message));
     } finally {
-      setActionLoading(false)
+      setActionLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-muted-foreground">加载中...</div>
       </div>
-    )
+    );
   }
 
   if (!transfer) {
@@ -147,21 +161,22 @@ export default function TransferDetail() {
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <XCircle className="h-12 w-12 text-muted-foreground" />
         <div className="text-muted-foreground">物料调拨申请不存在</div>
-        <Button variant="outline" onClick={() => navigate('/shortage')}>
+        <Button variant="outline" onClick={() => navigate("/shortage")}>
           返回列表
         </Button>
       </div>
-    )
+    );
   }
 
-  const status = statusConfigs[transfer.status] || statusConfigs.DRAFT
-  const urgent = urgentLevelConfigs[transfer.urgent_level] || urgentLevelConfigs.NORMAL
-  const StatusIcon = status.icon
+  const status = statusConfigs[transfer.status] || statusConfigs.DRAFT;
+  const urgent =
+    urgentLevelConfigs[transfer.urgent_level] || urgentLevelConfigs.NORMAL;
+  const StatusIcon = status.icon;
 
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/shortage')}>
+        <Button variant="ghost" size="sm" onClick={() => navigate("/shortage")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           返回
         </Button>
@@ -185,10 +200,16 @@ export default function TransferDetail() {
               <div className="flex items-center justify-between">
                 <CardTitle>基本信息</CardTitle>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className={cn(urgent.bgColor, urgent.color)}>
+                  <Badge
+                    variant="outline"
+                    className={cn(urgent.bgColor, urgent.color)}
+                  >
                     {urgent.label}
                   </Badge>
-                  <Badge variant="outline" className={cn(status.color, 'text-white')}>
+                  <Badge
+                    variant="outline"
+                    className={cn(status.color, "text-white")}
+                  >
                     <StatusIcon className="h-3 w-3 mr-1" />
                     {status.label}
                   </Badge>
@@ -226,7 +247,9 @@ export default function TransferDetail() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm text-muted-foreground">调出项目</div>
-                  <div className="font-medium">{transfer.from_project_name || '总库存'}</div>
+                  <div className="font-medium">
+                    {transfer.from_project_name || "总库存"}
+                  </div>
                   {transfer.from_location && (
                     <div className="text-xs text-muted-foreground mt-1">
                       位置：{transfer.from_location}
@@ -243,19 +266,27 @@ export default function TransferDetail() {
                   )}
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">可调拨数量</div>
+                  <div className="text-sm text-muted-foreground">
+                    可调拨数量
+                  </div>
                   <div className="font-medium">{transfer.available_qty}</div>
                 </div>
                 {transfer.actual_qty && (
                   <div>
-                    <div className="text-sm text-muted-foreground">实际调拨数量</div>
+                    <div className="text-sm text-muted-foreground">
+                      实际调拨数量
+                    </div>
                     <div className="font-medium">{transfer.actual_qty}</div>
                   </div>
                 )}
               </div>
               <div>
-                <div className="text-sm text-muted-foreground mb-2">调拨原因</div>
-                <div className="p-3 rounded-lg bg-surface-2">{transfer.transfer_reason}</div>
+                <div className="text-sm text-muted-foreground mb-2">
+                  调拨原因
+                </div>
+                <div className="p-3 rounded-lg bg-surface-2">
+                  {transfer.transfer_reason}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -271,14 +302,19 @@ export default function TransferDetail() {
                   <div>
                     <div className="text-sm text-muted-foreground">审批人</div>
                     <div className="font-medium">
-                      {transfer.approver_name} - {formatDate(transfer.approved_at)}
+                      {transfer.approver_name} -{" "}
+                      {formatDate(transfer.approved_at)}
                     </div>
                   </div>
                 )}
                 {transfer.executed_at && (
                   <div>
-                    <div className="text-sm text-muted-foreground">执行时间</div>
-                    <div className="font-medium">{formatDate(transfer.executed_at)}</div>
+                    <div className="text-sm text-muted-foreground">
+                      执行时间
+                    </div>
+                    <div className="font-medium">
+                      {formatDate(transfer.executed_at)}
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -292,7 +328,9 @@ export default function TransferDetail() {
                 <CardTitle>备注</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-sm whitespace-pre-wrap">{transfer.remark}</div>
+                <div className="text-sm whitespace-pre-wrap">
+                  {transfer.remark}
+                </div>
               </CardContent>
             </Card>
           )}
@@ -305,7 +343,7 @@ export default function TransferDetail() {
               <CardTitle>操作</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {transfer.status === 'DRAFT' && (
+              {transfer.status === "DRAFT" && (
                 <Button
                   className="w-full"
                   variant="outline"
@@ -316,7 +354,7 @@ export default function TransferDetail() {
                   审批
                 </Button>
               )}
-              {transfer.status === 'PENDING' && (
+              {transfer.status === "PENDING" && (
                 <Button
                   className="w-full"
                   variant="outline"
@@ -327,7 +365,7 @@ export default function TransferDetail() {
                   审批
                 </Button>
               )}
-              {transfer.status === 'APPROVED' && (
+              {transfer.status === "APPROVED" && (
                 <Button
                   className="w-full"
                   onClick={() => setShowExecuteDialog(true)}
@@ -340,7 +378,7 @@ export default function TransferDetail() {
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => navigate('/shortage')}
+                onClick={() => navigate("/shortage")}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 返回列表
@@ -356,7 +394,13 @@ export default function TransferDetail() {
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <div className={cn('rounded-full p-2', status.color, 'bg-opacity-10')}>
+                  <div
+                    className={cn(
+                      "rounded-full p-2",
+                      status.color,
+                      "bg-opacity-10",
+                    )}
+                  >
                     <StatusIcon className="h-4 w-4" />
                   </div>
                   <div className="flex-1">
@@ -374,7 +418,8 @@ export default function TransferDetail() {
                     <div className="flex-1">
                       <div className="font-medium">已审批</div>
                       <div className="text-sm text-muted-foreground">
-                        {transfer.approver_name} - {formatDate(transfer.approved_at)}
+                        {transfer.approver_name} -{" "}
+                        {formatDate(transfer.approved_at)}
                       </div>
                     </div>
                   </div>
@@ -416,8 +461,10 @@ export default function TransferDetail() {
                 <div className="flex gap-2 mt-2">
                   <Button
                     type="button"
-                    variant={approvalData.approved ? 'default' : 'outline'}
-                    onClick={() => setApprovalData((prev) => ({ ...prev, approved: true }))}
+                    variant={approvalData.approved ? "default" : "outline"}
+                    onClick={() =>
+                      setApprovalData((prev) => ({ ...prev, approved: true }))
+                    }
                     className="flex-1"
                   >
                     <CheckCircle2 className="h-4 w-4 mr-2" />
@@ -425,8 +472,10 @@ export default function TransferDetail() {
                   </Button>
                   <Button
                     type="button"
-                    variant={!approvalData.approved ? 'default' : 'outline'}
-                    onClick={() => setApprovalData((prev) => ({ ...prev, approved: false }))}
+                    variant={!approvalData.approved ? "default" : "outline"}
+                    onClick={() =>
+                      setApprovalData((prev) => ({ ...prev, approved: false }))
+                    }
                     className="flex-1"
                   >
                     <XCircle className="h-4 w-4 mr-2" />
@@ -441,7 +490,10 @@ export default function TransferDetail() {
                   placeholder="请输入审批意见..."
                   value={approvalData.approval_note}
                   onChange={(e) =>
-                    setApprovalData((prev) => ({ ...prev, approval_note: e.target.value }))
+                    setApprovalData((prev) => ({
+                      ...prev,
+                      approval_note: e.target.value,
+                    }))
                   }
                   rows={4}
                 />
@@ -449,11 +501,14 @@ export default function TransferDetail() {
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowApproveDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowApproveDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleApprove} disabled={actionLoading}>
-              {actionLoading ? '提交中...' : '提交'}
+              {actionLoading ? "提交中..." : "提交"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -476,7 +531,10 @@ export default function TransferDetail() {
                   min="0"
                   value={executionData.actual_qty}
                   onChange={(e) =>
-                    setExecutionData((prev) => ({ ...prev, actual_qty: e.target.value }))
+                    setExecutionData((prev) => ({
+                      ...prev,
+                      actual_qty: e.target.value,
+                    }))
                   }
                   placeholder="请输入实际调拨数量"
                 />
@@ -491,7 +549,10 @@ export default function TransferDetail() {
                   placeholder="请输入执行说明..."
                   value={executionData.execution_note}
                   onChange={(e) =>
-                    setExecutionData((prev) => ({ ...prev, execution_note: e.target.value }))
+                    setExecutionData((prev) => ({
+                      ...prev,
+                      execution_note: e.target.value,
+                    }))
                   }
                   rows={4}
                 />
@@ -499,16 +560,18 @@ export default function TransferDetail() {
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowExecuteDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowExecuteDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleExecute} disabled={actionLoading}>
-              {actionLoading ? '执行中...' : '确认执行'}
+              {actionLoading ? "执行中..." : "确认执行"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-

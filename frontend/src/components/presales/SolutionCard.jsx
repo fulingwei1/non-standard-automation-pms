@@ -2,8 +2,8 @@
  * 方案卡片组件
  * 用于在列表和网格视图中展示技术方案摘要
  */
-import React from 'react'
-import { motion } from 'framer-motion'
+import React from "react";
+import { motion } from "framer-motion";
 import {
   FileText,
   Calendar,
@@ -17,31 +17,39 @@ import {
   Archive,
   Trash2,
   MoreHorizontal,
-} from 'lucide-react'
-import { Button } from '../ui/button'
-import { Badge } from '../ui/badge'
-import { Progress } from '../ui/progress'
+} from "lucide-react";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Progress } from "../ui/progress";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../ui/dropdown-menu'
-import { cn } from '../../lib/utils'
-import { fadeIn } from '../../lib/animations'
+} from "../ui/dropdown-menu";
+import { cn } from "../../lib/utils";
+import { fadeIn } from "../../lib/animations";
 
 // 方案状态配置
 const solutionStatuses = {
-  draft: { name: '草稿', color: 'bg-slate-500' },
-  in_progress: { name: '编写中', color: 'bg-blue-500' },
-  reviewing: { name: '评审中', color: 'bg-amber-500' },
-  published: { name: '已发布', color: 'bg-emerald-500' },
-  archived: { name: '已归档', color: 'bg-slate-600' },
-}
+  draft: { name: "草稿", color: "bg-slate-500" },
+  in_progress: { name: "编写中", color: "bg-blue-500" },
+  reviewing: { name: "评审中", color: "bg-amber-500" },
+  published: { name: "已发布", color: "bg-emerald-500" },
+  archived: { name: "已归档", color: "bg-slate-600" },
+};
 
-export function SolutionCard({ solution, onView, onEdit, onCopy, onArchive, onDelete }) {
-  const statusConfig = solutionStatuses[solution.status] || solutionStatuses.draft
+export function SolutionCard({
+  solution,
+  onView,
+  onEdit,
+  onCopy,
+  onArchive,
+  onDelete,
+}) {
+  const statusConfig =
+    solutionStatuses[solution.status] || solutionStatuses.draft;
 
   return (
     <motion.div
@@ -52,7 +60,7 @@ export function SolutionCard({ solution, onView, onEdit, onCopy, onArchive, onDe
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-            <Badge className={cn('text-xs', statusConfig.color)}>
+            <Badge className={cn("text-xs", statusConfig.color)}>
               {statusConfig.name}
             </Badge>
             <Badge variant="outline" className="text-xs">
@@ -93,7 +101,10 @@ export function SolutionCard({ solution, onView, onEdit, onCopy, onArchive, onDe
               <Archive className="w-4 h-4 mr-2" />
               归档
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-400" onClick={() => onDelete?.(solution)}>
+            <DropdownMenuItem
+              className="text-red-400"
+              onClick={() => onDelete?.(solution)}
+            >
               <Trash2 className="w-4 h-4 mr-2" />
               删除
             </DropdownMenuItem>
@@ -102,7 +113,9 @@ export function SolutionCard({ solution, onView, onEdit, onCopy, onArchive, onDe
       </div>
 
       {solution.description && (
-        <p className="text-xs text-slate-500 line-clamp-2 mb-3">{solution.description}</p>
+        <p className="text-xs text-slate-500 line-clamp-2 mb-3">
+          {solution.description}
+        </p>
       )}
 
       {solution.tags && solution.tags.length > 0 && (
@@ -131,15 +144,17 @@ export function SolutionCard({ solution, onView, onEdit, onCopy, onArchive, onDe
         )}
       </div>
 
-      {solution.status !== 'published' && solution.status !== 'archived' && solution.progress !== undefined && (
-        <div className="space-y-1 mb-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-400">进度</span>
-            <span className="text-white">{solution.progress}%</span>
+      {solution.status !== "published" &&
+        solution.status !== "archived" &&
+        solution.progress !== undefined && (
+          <div className="space-y-1 mb-3">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400">进度</span>
+              <span className="text-white">{solution.progress}%</span>
+            </div>
+            <Progress value={solution.progress} className="h-1.5" />
           </div>
-          <Progress value={solution.progress} className="h-1.5" />
-        </div>
-      )}
+        )}
 
       <div className="flex items-center justify-between text-xs pt-3 border-t border-white/5">
         <div className="flex items-center gap-3 text-slate-500">
@@ -153,12 +168,13 @@ export function SolutionCard({ solution, onView, onEdit, onCopy, onArchive, onDe
           </span>
         </div>
         {solution.amount && (
-          <span className="text-emerald-400 font-medium">¥{solution.amount}万</span>
+          <span className="text-emerald-400 font-medium">
+            ¥{solution.amount}万
+          </span>
         )}
       </div>
     </motion.div>
-  )
+  );
 }
 
-export default SolutionCard
-
+export default SolutionCard;

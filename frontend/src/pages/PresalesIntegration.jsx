@@ -1,59 +1,82 @@
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { TrendingUp, Users, DollarSign, BarChart3, AlertTriangle } from 'lucide-react'
-import { PageHeader } from '../components/layout'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Label } from '../components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
-import { presalesIntegrationApi } from '../services/api'
-import { fadeIn } from '../lib/animations'
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  TrendingUp,
+  Users,
+  DollarSign,
+  BarChart3,
+  AlertTriangle,
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
+import { presalesIntegrationApi } from "../services/api";
+import { fadeIn } from "../lib/animations";
 
 export default function PresalesIntegration() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [dashboardData, setDashboardData] = useState(null)
-  const [winRatePrediction, setWinRatePrediction] = useState(null)
-  const [resourceWaste, setResourceWaste] = useState(null)
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [winRatePrediction, setWinRatePrediction] = useState(null);
+  const [resourceWaste, setResourceWaste] = useState(null);
 
   useEffect(() => {
-    loadDashboard()
-  }, [])
+    loadDashboard();
+  }, []);
 
   const loadDashboard = async () => {
     try {
-      setLoading(true)
-      const response = await presalesIntegrationApi.getDashboard()
-      const data = response.data?.data || response.data || response
-      setDashboardData(data)
+      setLoading(true);
+      const response = await presalesIntegrationApi.getDashboard();
+      const data = response.data?.data || response.data || response;
+      setDashboardData(data);
     } catch (err) {
-      console.error('Failed to load dashboard:', err)
-      setError(err.response?.data?.detail || err.message || '加载数据失败')
+      console.error("Failed to load dashboard:", err);
+      setError(err.response?.data?.detail || err.message || "加载数据失败");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handlePredictWinRate = async () => {
     // 这里需要用户输入数据，简化处理
-    setError('此功能需要输入线索评估数据')
-  }
+    setError("此功能需要输入线索评估数据");
+  };
 
   const handleLoadResourceWaste = async (period) => {
     try {
-      setLoading(true)
-      const response = await presalesIntegrationApi.getResourceWasteAnalysis(period)
-      const data = response.data?.data || response.data || response
-      setResourceWaste(data)
+      setLoading(true);
+      const response =
+        await presalesIntegrationApi.getResourceWasteAnalysis(period);
+      const data = response.data?.data || response.data || response;
+      setResourceWaste(data);
     } catch (err) {
-      console.error('Failed to load resource waste:', err)
-      setError(err.response?.data?.detail || err.message || '加载数据失败')
+      console.error("Failed to load resource waste:", err);
+      setError(err.response?.data?.detail || err.message || "加载数据失败");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <motion.div
@@ -79,7 +102,9 @@ export default function PresalesIntegration() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">年度线索总数</p>
-                  <p className="text-2xl font-bold">{dashboardData.total_leads_ytd || 0}</p>
+                  <p className="text-2xl font-bold">
+                    {dashboardData.total_leads_ytd || 0}
+                  </p>
                 </div>
                 <BarChart3 className="h-8 w-8 text-blue-500" />
               </div>
@@ -91,7 +116,9 @@ export default function PresalesIntegration() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">中标线索</p>
-                  <p className="text-2xl font-bold">{dashboardData.won_leads_ytd || 0}</p>
+                  <p className="text-2xl font-bold">
+                    {dashboardData.won_leads_ytd || 0}
+                  </p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-green-500" />
               </div>
@@ -106,7 +133,7 @@ export default function PresalesIntegration() {
                   <p className="text-2xl font-bold">
                     {dashboardData.overall_win_rate
                       ? `${(dashboardData.overall_win_rate * 100).toFixed(1)}%`
-                      : '0%'}
+                      : "0%"}
                   </p>
                 </div>
                 <DollarSign className="h-8 w-8 text-purple-500" />
@@ -119,7 +146,9 @@ export default function PresalesIntegration() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">浪费工时</p>
-                  <p className="text-2xl font-bold">{dashboardData.total_wasted_hours || 0}</p>
+                  <p className="text-2xl font-bold">
+                    {dashboardData.total_wasted_hours || 0}
+                  </p>
                 </div>
                 <AlertTriangle className="h-8 w-8 text-red-500" />
               </div>
@@ -143,7 +172,8 @@ export default function PresalesIntegration() {
                 <CardTitle>月度统计</CardTitle>
               </CardHeader>
               <CardContent>
-                {dashboardData.monthly_stats && dashboardData.monthly_stats.length > 0 ? (
+                {dashboardData.monthly_stats &&
+                dashboardData.monthly_stats.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
@@ -210,8 +240,9 @@ export default function PresalesIntegration() {
                   />
                   <Button
                     onClick={() => {
-                      const period = document.getElementById('waste-period').value
-                      if (period) handleLoadResourceWaste(period)
+                      const period =
+                        document.getElementById("waste-period").value;
+                      if (period) handleLoadResourceWaste(period);
                     }}
                   >
                     查询
@@ -224,7 +255,9 @@ export default function PresalesIntegration() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                       <div className="text-sm text-gray-600">总线索数</div>
-                      <div className="text-xl font-bold">{resourceWaste.total_leads || 0}</div>
+                      <div className="text-xl font-bold">
+                        {resourceWaste.total_leads || 0}
+                      </div>
                     </div>
                     <div>
                       <div className="text-sm text-gray-600">中标数</div>
@@ -243,7 +276,7 @@ export default function PresalesIntegration() {
                       <div className="text-xl font-bold text-orange-600">
                         {resourceWaste.waste_rate
                           ? `${(resourceWaste.waste_rate * 100).toFixed(1)}%`
-                          : '0%'}
+                          : "0%"}
                       </div>
                     </div>
                   </div>
@@ -264,5 +297,5 @@ export default function PresalesIntegration() {
         </TabsContent>
       </Tabs>
     </motion.div>
-  )
+  );
 }

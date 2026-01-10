@@ -3,8 +3,8 @@
  * Features: Lead list, creation, update, convert to opportunity
  */
 
-import { useState, useEffect, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   Filter,
@@ -25,8 +25,8 @@ import {
   Eye,
   ArrowRight,
   X,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -47,97 +47,105 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../components/ui'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { leadApi, customerApi } from '../services/api'
+} from "../components/ui";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { leadApi, customerApi } from "../services/api";
 
 // 线索状态配置
 const statusConfig = {
-  NEW: { label: '待跟进', color: 'bg-blue-500', textColor: 'text-blue-400' },
-  QUALIFYING: { label: '资格评估中', color: 'bg-amber-500', textColor: 'text-amber-400' },
-  INVALID: { label: '无效', color: 'bg-red-500', textColor: 'text-red-400' },
-  CONVERTED: { label: '已转商机', color: 'bg-emerald-500', textColor: 'text-emerald-400' },
-}
+  NEW: { label: "待跟进", color: "bg-blue-500", textColor: "text-blue-400" },
+  QUALIFYING: {
+    label: "资格评估中",
+    color: "bg-amber-500",
+    textColor: "text-amber-400",
+  },
+  INVALID: { label: "无效", color: "bg-red-500", textColor: "text-red-400" },
+  CONVERTED: {
+    label: "已转商机",
+    color: "bg-emerald-500",
+    textColor: "text-emerald-400",
+  },
+};
 
 export default function LeadManagement() {
-  const [leads, setLeads] = useState([])
-  const [customers, setCustomers] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [viewMode, setViewMode] = useState('grid')
-  const [selectedLead, setSelectedLead] = useState(null)
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [showEditDialog, setShowEditDialog] = useState(false)
-  const [showConvertDialog, setShowConvertDialog] = useState(false)
-  const [showDetailDialog, setShowDetailDialog] = useState(false)
-  const [showFollowUpDialog, setShowFollowUpDialog] = useState(false)
-  const [followUps, setFollowUps] = useState([])
-  const [page, setPage] = useState(1)
-  const [total, setTotal] = useState(0)
-  const pageSize = 20
+  const [leads, setLeads] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [viewMode, setViewMode] = useState("grid");
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showConvertDialog, setShowConvertDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [showFollowUpDialog, setShowFollowUpDialog] = useState(false);
+  const [followUps, setFollowUps] = useState([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const pageSize = 20;
 
   // 表单数据
   const [formData, setFormData] = useState({
-    customer_name: '',
-    source: '',
-    industry: '',
-    contact_name: '',
-    contact_phone: '',
-    demand_summary: '',
-    status: 'NEW',
-  })
+    customer_name: "",
+    source: "",
+    industry: "",
+    contact_name: "",
+    contact_phone: "",
+    demand_summary: "",
+    status: "NEW",
+  });
 
   // 跟进记录表单
   const [followUpData, setFollowUpData] = useState({
-    follow_up_type: 'CALL',
-    content: '',
-    next_action: '',
-    next_action_at: '',
-  })
+    follow_up_type: "CALL",
+    content: "",
+    next_action: "",
+    next_action_at: "",
+  });
 
   // 加载线索列表
   const loadLeads = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const params = {
         page,
         page_size: pageSize,
         keyword: searchTerm || undefined,
-        status: statusFilter !== 'all' ? statusFilter : undefined,
-      }
-      const response = await leadApi.list(params)
+        status: statusFilter !== "all" ? statusFilter : undefined,
+      };
+      const response = await leadApi.list(params);
       if (response.data && response.data.items) {
-        setLeads(response.data.items)
-        setTotal(response.data.total || 0)
+        setLeads(response.data.items);
+        setTotal(response.data.total || 0);
       }
     } catch (error) {
-      console.error('加载线索列表失败:', error)
+      console.error("加载线索列表失败:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // 加载客户列表
   const loadCustomers = async () => {
     try {
-      const response = await customerApi.list({ page: 1, page_size: 100 })
+      const response = await customerApi.list({ page: 1, page_size: 100 });
       if (response.data && response.data.items) {
-        setCustomers(response.data.items)
+        setCustomers(response.data.items);
       }
     } catch (error) {
-      console.error('加载客户列表失败:', error)
+      console.error("加载客户列表失败:", error);
     }
-  }
+  };
 
   useEffect(() => {
-    loadLeads()
-  }, [page, searchTerm, statusFilter])
+    loadLeads();
+  }, [page, searchTerm, statusFilter]);
 
   useEffect(() => {
-    loadCustomers()
-  }, [])
+    loadCustomers();
+  }, []);
 
   // 筛选线索
   const filteredLeads = useMemo(() => {
@@ -145,126 +153,129 @@ export default function LeadManagement() {
       const matchesSearch =
         lead.lead_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         lead.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.contact_name?.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesStatus = statusFilter === 'all' || lead.status === statusFilter
-      return matchesSearch && matchesStatus
-    })
-  }, [leads, searchTerm, statusFilter])
+        lead.contact_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus =
+        statusFilter === "all" || lead.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [leads, searchTerm, statusFilter]);
 
   // 统计数据
   const stats = useMemo(() => {
     return {
       total: total,
-      new: leads.filter((l) => l.status === 'NEW').length,
-      qualifying: leads.filter((l) => l.status === 'QUALIFYING').length,
-      converted: leads.filter((l) => l.status === 'CONVERTED').length,
-    }
-  }, [leads, total])
+      new: leads.filter((l) => l.status === "NEW").length,
+      qualifying: leads.filter((l) => l.status === "QUALIFYING").length,
+      converted: leads.filter((l) => l.status === "CONVERTED").length,
+    };
+  }, [leads, total]);
 
   // 创建线索
   const handleCreate = async () => {
     try {
-      await leadApi.create(formData)
-      setShowCreateDialog(false)
+      await leadApi.create(formData);
+      setShowCreateDialog(false);
       setFormData({
-        customer_name: '',
-        source: '',
-        industry: '',
-        contact_name: '',
-        contact_phone: '',
-        demand_summary: '',
-        status: 'NEW',
-      })
-      loadLeads()
+        customer_name: "",
+        source: "",
+        industry: "",
+        contact_name: "",
+        contact_phone: "",
+        demand_summary: "",
+        status: "NEW",
+      });
+      loadLeads();
     } catch (error) {
-      console.error('创建线索失败:', error)
-      alert('创建线索失败: ' + (error.response?.data?.detail || error.message))
+      console.error("创建线索失败:", error);
+      alert("创建线索失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   // 更新线索
   const handleUpdate = async () => {
-    if (!selectedLead) return
+    if (!selectedLead) return;
     try {
-      await leadApi.update(selectedLead.id, formData)
-      setShowEditDialog(false)
-      setSelectedLead(null)
-      loadLeads()
+      await leadApi.update(selectedLead.id, formData);
+      setShowEditDialog(false);
+      setSelectedLead(null);
+      loadLeads();
     } catch (error) {
-      console.error('更新线索失败:', error)
-      alert('更新线索失败: ' + (error.response?.data?.detail || error.message))
+      console.error("更新线索失败:", error);
+      alert("更新线索失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   // 打开编辑对话框
   const handleEdit = (lead) => {
-    setSelectedLead(lead)
+    setSelectedLead(lead);
     setFormData({
-      customer_name: lead.customer_name || '',
-      source: lead.source || '',
-      industry: lead.industry || '',
-      contact_name: lead.contact_name || '',
-      contact_phone: lead.contact_phone || '',
-      demand_summary: lead.demand_summary || '',
-      status: lead.status || 'NEW',
-    })
-    setShowEditDialog(true)
-  }
+      customer_name: lead.customer_name || "",
+      source: lead.source || "",
+      industry: lead.industry || "",
+      contact_name: lead.contact_name || "",
+      contact_phone: lead.contact_phone || "",
+      demand_summary: lead.demand_summary || "",
+      status: lead.status || "NEW",
+    });
+    setShowEditDialog(true);
+  };
 
   // 线索转商机
   const handleConvert = async (customerId) => {
-    if (!selectedLead) return
+    if (!selectedLead) return;
     try {
-      await leadApi.convert(selectedLead.id, customerId)
-      setShowConvertDialog(false)
-      setSelectedLead(null)
-      loadLeads()
-      alert('线索已成功转为商机')
+      await leadApi.convert(selectedLead.id, customerId);
+      setShowConvertDialog(false);
+      setSelectedLead(null);
+      loadLeads();
+      alert("线索已成功转为商机");
     } catch (error) {
-      console.error('转商机失败:', error)
-      alert('转商机失败: ' + (error.response?.data?.detail || error.message))
+      console.error("转商机失败:", error);
+      alert("转商机失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   // 查看详情
   const handleViewDetail = async (lead) => {
-    setSelectedLead(lead)
-    setShowDetailDialog(true)
+    setSelectedLead(lead);
+    setShowDetailDialog(true);
     // 加载跟进记录
     try {
-      const response = await leadApi.getFollowUps(lead.id)
+      const response = await leadApi.getFollowUps(lead.id);
       if (response.data) {
-        setFollowUps(response.data)
+        setFollowUps(response.data);
       }
     } catch (error) {
-      console.error('加载跟进记录失败:', error)
-      setFollowUps([])
+      console.error("加载跟进记录失败:", error);
+      setFollowUps([]);
     }
-  }
+  };
 
   // 添加跟进记录
   const handleAddFollowUp = async () => {
-    if (!selectedLead) return
+    if (!selectedLead) return;
     try {
-      await leadApi.createFollowUp(selectedLead.id, followUpData)
-      setShowFollowUpDialog(false)
+      await leadApi.createFollowUp(selectedLead.id, followUpData);
+      setShowFollowUpDialog(false);
       setFollowUpData({
-        follow_up_type: 'CALL',
-        content: '',
-        next_action: '',
-        next_action_at: '',
-      })
+        follow_up_type: "CALL",
+        content: "",
+        next_action: "",
+        next_action_at: "",
+      });
       // 重新加载跟进记录
-      const response = await leadApi.getFollowUps(selectedLead.id)
+      const response = await leadApi.getFollowUps(selectedLead.id);
       if (response.data) {
-        setFollowUps(response.data)
+        setFollowUps(response.data);
       }
-      loadLeads() // 刷新列表
+      loadLeads(); // 刷新列表
     } catch (error) {
-      console.error('添加跟进记录失败:', error)
-      alert('添加跟进记录失败: ' + (error.response?.data?.detail || error.message))
+      console.error("添加跟进记录失败:", error);
+      alert(
+        "添加跟进记录失败: " + (error.response?.data?.detail || error.message),
+      );
     }
-  }
+  };
 
   return (
     <motion.div
@@ -313,7 +324,9 @@ export default function LeadManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">评估中</p>
-                <p className="text-2xl font-bold text-white">{stats.qualifying}</p>
+                <p className="text-2xl font-bold text-white">
+                  {stats.qualifying}
+                </p>
               </div>
               <AlertTriangle className="h-8 w-8 text-amber-400" />
             </div>
@@ -324,7 +337,9 @@ export default function LeadManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">已转化</p>
-                <p className="text-2xl font-bold text-white">{stats.converted}</p>
+                <p className="text-2xl font-bold text-white">
+                  {stats.converted}
+                </p>
               </div>
               <CheckCircle2 className="h-8 w-8 text-emerald-400" />
             </div>
@@ -349,13 +364,21 @@ export default function LeadManagement() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
                   <Filter className="mr-2 h-4 w-4" />
-                  状态: {statusFilter === 'all' ? '全部' : statusConfig[statusFilter]?.label}
+                  状态:{" "}
+                  {statusFilter === "all"
+                    ? "全部"
+                    : statusConfig[statusFilter]?.label}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setStatusFilter('all')}>全部</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter("all")}>
+                  全部
+                </DropdownMenuItem>
                 {Object.entries(statusConfig).map(([key, config]) => (
-                  <DropdownMenuItem key={key} onClick={() => setStatusFilter(key)}>
+                  <DropdownMenuItem
+                    key={key}
+                    onClick={() => setStatusFilter(key)}
+                  >
                     {config.label}
                   </DropdownMenuItem>
                 ))}
@@ -363,16 +386,16 @@ export default function LeadManagement() {
             </DropdownMenu>
             <div className="flex gap-2">
               <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
+                variant={viewMode === "grid" ? "default" : "outline"}
                 size="icon"
-                onClick={() => setViewMode('grid')}
+                onClick={() => setViewMode("grid")}
               >
                 <LayoutGrid className="h-4 w-4" />
               </Button>
               <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
+                variant={viewMode === "list" ? "default" : "outline"}
                 size="icon"
-                onClick={() => setViewMode('list')}
+                onClick={() => setViewMode("list")}
               >
                 <List className="h-4 w-4" />
               </Button>
@@ -390,7 +413,7 @@ export default function LeadManagement() {
             <p className="text-slate-400">暂无线索数据</p>
           </CardContent>
         </Card>
-      ) : viewMode === 'grid' ? (
+      ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredLeads.map((lead) => (
             <motion.div
@@ -403,8 +426,12 @@ export default function LeadManagement() {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-lg">{lead.lead_code}</CardTitle>
-                      <p className="text-sm text-slate-400 mt-1">{lead.customer_name}</p>
+                      <CardTitle className="text-lg">
+                        {lead.lead_code}
+                      </CardTitle>
+                      <p className="text-sm text-slate-400 mt-1">
+                        {lead.customer_name}
+                      </p>
                     </div>
                     <Badge className={cn(statusConfig[lead.status]?.color)}>
                       {statusConfig[lead.status]?.label}
@@ -432,7 +459,9 @@ export default function LeadManagement() {
                       </div>
                     )}
                     {lead.demand_summary && (
-                      <p className="text-slate-400 line-clamp-2 mt-2">{lead.demand_summary}</p>
+                      <p className="text-slate-400 line-clamp-2 mt-2">
+                        {lead.demand_summary}
+                      </p>
                     )}
                   </div>
                   <div className="flex gap-2 mt-4">
@@ -454,13 +483,13 @@ export default function LeadManagement() {
                       <Edit className="mr-2 h-4 w-4" />
                       编辑
                     </Button>
-                    {lead.status !== 'CONVERTED' && (
+                    {lead.status !== "CONVERTED" && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          setSelectedLead(lead)
-                          setShowConvertDialog(true)
+                          setSelectedLead(lead);
+                          setShowConvertDialog(true);
                         }}
                         className="flex-1"
                       >
@@ -492,12 +521,23 @@ export default function LeadManagement() {
                 </thead>
                 <tbody>
                   {filteredLeads.map((lead) => (
-                    <tr key={lead.id} className="border-b border-slate-800 hover:bg-slate-800/50">
+                    <tr
+                      key={lead.id}
+                      className="border-b border-slate-800 hover:bg-slate-800/50"
+                    >
                       <td className="p-4 text-white">{lead.lead_code}</td>
-                      <td className="p-4 text-slate-300">{lead.customer_name}</td>
-                      <td className="p-4 text-slate-300">{lead.contact_name || '-'}</td>
-                      <td className="p-4 text-slate-300">{lead.contact_phone || '-'}</td>
-                      <td className="p-4 text-slate-300">{lead.source || '-'}</td>
+                      <td className="p-4 text-slate-300">
+                        {lead.customer_name}
+                      </td>
+                      <td className="p-4 text-slate-300">
+                        {lead.contact_name || "-"}
+                      </td>
+                      <td className="p-4 text-slate-300">
+                        {lead.contact_phone || "-"}
+                      </td>
+                      <td className="p-4 text-slate-300">
+                        {lead.source || "-"}
+                      </td>
                       <td className="p-4">
                         <Badge className={cn(statusConfig[lead.status]?.color)}>
                           {statusConfig[lead.status]?.label}
@@ -505,19 +545,27 @@ export default function LeadManagement() {
                       </td>
                       <td className="p-4">
                         <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => handleViewDetail(lead)}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewDetail(lead)}
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleEdit(lead)}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(lead)}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          {lead.status !== 'CONVERTED' && (
+                          {lead.status !== "CONVERTED" && (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => {
-                                setSelectedLead(lead)
-                                setShowConvertDialog(true)
+                                setSelectedLead(lead);
+                                setShowConvertDialog(true);
                               }}
                             >
                               <ArrowRight className="h-4 w-4" />
@@ -570,7 +618,9 @@ export default function LeadManagement() {
                 <Label>客户名称 *</Label>
                 <Input
                   value={formData.customer_name}
-                  onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, customer_name: e.target.value })
+                  }
                   placeholder="请输入客户名称"
                 />
               </div>
@@ -578,7 +628,9 @@ export default function LeadManagement() {
                 <Label>来源</Label>
                 <Input
                   value={formData.source}
-                  onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, source: e.target.value })
+                  }
                   placeholder="展会/转介绍/网络等"
                 />
               </div>
@@ -586,7 +638,9 @@ export default function LeadManagement() {
                 <Label>行业</Label>
                 <Input
                   value={formData.industry}
-                  onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, industry: e.target.value })
+                  }
                   placeholder="请输入行业"
                 />
               </div>
@@ -594,7 +648,9 @@ export default function LeadManagement() {
                 <Label>联系人</Label>
                 <Input
                   value={formData.contact_name}
-                  onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, contact_name: e.target.value })
+                  }
                   placeholder="请输入联系人"
                 />
               </div>
@@ -602,7 +658,9 @@ export default function LeadManagement() {
                 <Label>联系电话</Label>
                 <Input
                   value={formData.contact_phone}
-                  onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, contact_phone: e.target.value })
+                  }
                   placeholder="请输入联系电话"
                 />
               </div>
@@ -610,7 +668,9 @@ export default function LeadManagement() {
                 <Label>状态</Label>
                 <select
                   value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, status: e.target.value })
+                  }
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
                 >
                   {Object.entries(statusConfig).map(([key, config]) => (
@@ -625,14 +685,19 @@ export default function LeadManagement() {
               <Label>需求摘要</Label>
               <Textarea
                 value={formData.demand_summary}
-                onChange={(e) => setFormData({ ...formData, demand_summary: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, demand_summary: e.target.value })
+                }
                 placeholder="请输入需求摘要"
                 rows={4}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleCreate}>创建</Button>
@@ -653,42 +718,54 @@ export default function LeadManagement() {
                 <Label>客户名称 *</Label>
                 <Input
                   value={formData.customer_name}
-                  onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, customer_name: e.target.value })
+                  }
                 />
               </div>
               <div>
                 <Label>来源</Label>
                 <Input
                   value={formData.source}
-                  onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, source: e.target.value })
+                  }
                 />
               </div>
               <div>
                 <Label>行业</Label>
                 <Input
                   value={formData.industry}
-                  onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, industry: e.target.value })
+                  }
                 />
               </div>
               <div>
                 <Label>联系人</Label>
                 <Input
                   value={formData.contact_name}
-                  onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, contact_name: e.target.value })
+                  }
                 />
               </div>
               <div>
                 <Label>联系电话</Label>
                 <Input
                   value={formData.contact_phone}
-                  onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, contact_phone: e.target.value })
+                  }
                 />
               </div>
               <div>
                 <Label>状态</Label>
                 <select
                   value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, status: e.target.value })
+                  }
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
                 >
                   {Object.entries(statusConfig).map(([key, config]) => (
@@ -703,7 +780,9 @@ export default function LeadManagement() {
               <Label>需求摘要</Label>
               <Textarea
                 value={formData.demand_summary}
-                onChange={(e) => setFormData({ ...formData, demand_summary: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, demand_summary: e.target.value })
+                }
                 rows={4}
               />
             </div>
@@ -722,9 +801,7 @@ export default function LeadManagement() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>线索转商机</DialogTitle>
-            <DialogDescription>
-              选择客户后，将线索转为商机
-            </DialogDescription>
+            <DialogDescription>选择客户后，将线索转为商机</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -733,9 +810,9 @@ export default function LeadManagement() {
                 id="customer-select"
                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
                 onChange={(e) => {
-                  const customerId = parseInt(e.target.value)
+                  const customerId = parseInt(e.target.value);
                   if (customerId) {
-                    handleConvert(customerId)
+                    handleConvert(customerId);
                   }
                 }}
               >
@@ -749,7 +826,10 @@ export default function LeadManagement() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowConvertDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowConvertDialog(false)}
+            >
               取消
             </Button>
           </DialogFooter>
@@ -775,7 +855,12 @@ export default function LeadManagement() {
                   </div>
                   <div>
                     <Label className="text-slate-400">状态</Label>
-                    <Badge className={cn(statusConfig[selectedLead.status]?.color, 'mt-1')}>
+                    <Badge
+                      className={cn(
+                        statusConfig[selectedLead.status]?.color,
+                        "mt-1",
+                      )}
+                    >
                       {statusConfig[selectedLead.status]?.label}
                     </Badge>
                   </div>
@@ -785,31 +870,39 @@ export default function LeadManagement() {
                   </div>
                   <div>
                     <Label className="text-slate-400">来源</Label>
-                    <p className="text-white">{selectedLead.source || '-'}</p>
+                    <p className="text-white">{selectedLead.source || "-"}</p>
                   </div>
                   <div>
                     <Label className="text-slate-400">行业</Label>
-                    <p className="text-white">{selectedLead.industry || '-'}</p>
+                    <p className="text-white">{selectedLead.industry || "-"}</p>
                   </div>
                   <div>
                     <Label className="text-slate-400">联系人</Label>
-                    <p className="text-white">{selectedLead.contact_name || '-'}</p>
+                    <p className="text-white">
+                      {selectedLead.contact_name || "-"}
+                    </p>
                   </div>
                   <div>
                     <Label className="text-slate-400">联系电话</Label>
-                    <p className="text-white">{selectedLead.contact_phone || '-'}</p>
+                    <p className="text-white">
+                      {selectedLead.contact_phone || "-"}
+                    </p>
                   </div>
                   <div>
                     <Label className="text-slate-400">创建时间</Label>
                     <p className="text-white">
                       {selectedLead.created_at
-                        ? new Date(selectedLead.created_at).toLocaleString('zh-CN')
-                        : '-'}
+                        ? new Date(selectedLead.created_at).toLocaleString(
+                            "zh-CN",
+                          )
+                        : "-"}
                     </p>
                   </div>
                   <div className="col-span-2">
                     <Label className="text-slate-400">需求摘要</Label>
-                    <p className="text-white mt-1">{selectedLead.demand_summary || '-'}</p>
+                    <p className="text-white mt-1">
+                      {selectedLead.demand_summary || "-"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -818,7 +911,7 @@ export default function LeadManagement() {
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">跟进记录</h3>
-                  {selectedLead.status !== 'CONVERTED' && (
+                  {selectedLead.status !== "CONVERTED" && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -830,7 +923,9 @@ export default function LeadManagement() {
                   )}
                 </div>
                 {followUps.length === 0 ? (
-                  <p className="text-center text-slate-400 py-8">暂无跟进记录</p>
+                  <p className="text-center text-slate-400 py-8">
+                    暂无跟进记录
+                  </p>
                 ) : (
                   <div className="space-y-3">
                     {followUps.map((followUp) => (
@@ -839,17 +934,23 @@ export default function LeadManagement() {
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
-                                <Badge variant="outline">{followUp.follow_up_type}</Badge>
+                                <Badge variant="outline">
+                                  {followUp.follow_up_type}
+                                </Badge>
                                 <span className="text-sm text-slate-400">
-                                  {followUp.creator_name || '未知'}
+                                  {followUp.creator_name || "未知"}
                                 </span>
                                 <span className="text-sm text-slate-500">
                                   {followUp.created_at
-                                    ? new Date(followUp.created_at).toLocaleString('zh-CN')
-                                    : ''}
+                                    ? new Date(
+                                        followUp.created_at,
+                                      ).toLocaleString("zh-CN")
+                                    : ""}
                                 </span>
                               </div>
-                              <p className="text-white mb-2">{followUp.content}</p>
+                              <p className="text-white mb-2">
+                                {followUp.content}
+                              </p>
                               {followUp.next_action && (
                                 <p className="text-sm text-slate-400">
                                   下次行动: {followUp.next_action}
@@ -857,8 +958,10 @@ export default function LeadManagement() {
                               )}
                               {followUp.next_action_at && (
                                 <p className="text-sm text-slate-400">
-                                  行动时间:{' '}
-                                  {new Date(followUp.next_action_at).toLocaleDateString('zh-CN')}
+                                  行动时间:{" "}
+                                  {new Date(
+                                    followUp.next_action_at,
+                                  ).toLocaleDateString("zh-CN")}
                                 </p>
                               )}
                             </div>
@@ -872,7 +975,10 @@ export default function LeadManagement() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDetailDialog(false)}
+            >
               关闭
             </Button>
           </DialogFooter>
@@ -892,7 +998,10 @@ export default function LeadManagement() {
               <select
                 value={followUpData.follow_up_type}
                 onChange={(e) =>
-                  setFollowUpData({ ...followUpData, follow_up_type: e.target.value })
+                  setFollowUpData({
+                    ...followUpData,
+                    follow_up_type: e.target.value,
+                  })
                 }
                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
               >
@@ -907,7 +1016,9 @@ export default function LeadManagement() {
               <Label>跟进内容 *</Label>
               <Textarea
                 value={followUpData.content}
-                onChange={(e) => setFollowUpData({ ...followUpData, content: e.target.value })}
+                onChange={(e) =>
+                  setFollowUpData({ ...followUpData, content: e.target.value })
+                }
                 placeholder="请输入跟进内容"
                 rows={4}
               />
@@ -917,7 +1028,10 @@ export default function LeadManagement() {
               <Input
                 value={followUpData.next_action}
                 onChange={(e) =>
-                  setFollowUpData({ ...followUpData, next_action: e.target.value })
+                  setFollowUpData({
+                    ...followUpData,
+                    next_action: e.target.value,
+                  })
                 }
                 placeholder="如：发送报价单"
               />
@@ -928,13 +1042,19 @@ export default function LeadManagement() {
                 type="date"
                 value={followUpData.next_action_at}
                 onChange={(e) =>
-                  setFollowUpData({ ...followUpData, next_action_at: e.target.value })
+                  setFollowUpData({
+                    ...followUpData,
+                    next_action_at: e.target.value,
+                  })
                 }
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowFollowUpDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowFollowUpDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleAddFollowUp}>保存</Button>
@@ -942,8 +1062,5 @@ export default function LeadManagement() {
         </DialogContent>
       </Dialog>
     </motion.div>
-  )
+  );
 }
-
-
-

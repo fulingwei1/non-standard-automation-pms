@@ -3239,141 +3239,40 @@ def get_project_timeline(
     
     包含项目生命周期中的所有重要事件：状态变更、里程碑、任务、成本、文档等
     """
-    # 检查项目访问权限
     from app.utils.permission_helpers import check_project_access_or_raise
+    from app.services.project_timeline_service import (
+        collect_status_change_events,
+        collect_milestone_events,
+        collect_task_events,
+        collect_cost_events,
+        collect_document_events,
+        add_project_created_event
+    )
+    
+    # 检查项目访问权限
     project = check_project_access_or_raise(db, current_user, project_id)
     
     events = []
     
-    # 1. 状态变更历史
+    # 收集各类事件
     if not event_type or event_type == "STATUS_CHANGE":
-        status_logs = db.query(ProjectStatusLog).filter(
-            ProjectStatusLog.project_id == project_id
-        ).all()
-        
-        for log in status_logs:
-            event = TimelineEvent(
-                event_type=log.change_type or "STATUS_CHANGE",
-                event_time=log.changed_at or datetime.now(),
-                title=f"状态变更: {log.change_type}",
-                description=f"{log.old_stage or ''} → {log.new_stage or ''}, {log.old_status or ''} → {log.new_status or ''}",
-                user_name=log.changer.username if log.changer else None,
-                related_id=log.id,
-                related_type="status_log",
-            )
-            events.append(event)
+        events.extend(collect_status_change_events(db, project_id))
     
-    # 2. 里程碑事件
     if not event_type or event_type == "MILESTONE":
-        milestones = db.query(ProjectMilestone).filter(
-            ProjectMilestone.project_id == project_id
-        ).all()
-        
-        for milestone in milestones:
-            # 里程碑创建
-            if milestone.created_at:
-                event = TimelineEvent(
-                    event_type="MILESTONE_CREATED",
-                    event_time=milestone.created_at,
-                    title=f"创建里程碑: {milestone.milestone_name}",
-                    description=f"计划日期: {milestone.planned_date.isoformat() if milestone.planned_date else '未设置'}",
-                    related_id=milestone.id,
-                    related_type="milestone",
-                )
-                events.append(event)
-            
-            # 里程碑完成
-            if milestone.status == "COMPLETED" and milestone.actual_date:
-                event = TimelineEvent(
-                    event_type="MILESTONE_COMPLETED",
-                    event_time=milestone.actual_date,
-                    title=f"里程碑完成: {milestone.milestone_name}",
-                    description=f"实际完成日期: {milestone.actual_date.isoformat()}",
-                    related_id=milestone.id,
-                    related_type="milestone",
-                )
-                events.append(event)
+        events.extend(collect_milestone_events(db, project_id))
     
-    # 3. 任务事件
     if not event_type or event_type == "TASK":
-        tasks = db.query(Task).filter(
-            Task.project_id == project_id
-        ).all()
-        
-        for task in tasks:
-            # 任务创建
-            if task.created_at:
-                event = TimelineEvent(
-                    event_type="TASK_CREATED",
-                    event_time=task.created_at,
-                    title=f"创建任务: {task.task_name}",
-                    description=f"负责人: {task.owner_name or '未分配'}",
-                    related_id=task.id,
-                    related_type="task",
-                )
-                events.append(event)
-            
-            # 任务完成
-            if task.status == "COMPLETED" and task.actual_end:
-                event = TimelineEvent(
-                    event_type="TASK_COMPLETED",
-                    event_time=task.actual_end,
-                    title=f"任务完成: {task.task_name}",
-                    description=f"完成进度: {task.progress_pct}%",
-                    related_id=task.id,
-                    related_type="task",
-                )
-                events.append(event)
+        events.extend(collect_task_events(db, project_id))
     
-    # 4. 成本记录
     if not event_type or event_type == "COST":
-        from app.models.project import ProjectCost
-        costs = db.query(ProjectCost).filter(
-            ProjectCost.project_id == project_id
-        ).all()
-        
-        for cost in costs:
-            if cost.created_at:
-                event = TimelineEvent(
-                    event_type="COST_RECORDED",
-                    event_time=cost.created_at,
-                    title=f"成本记录: {cost.cost_name or cost.cost_type}",
-                    description=f"金额: {cost.cost_amount}元, 类型: {cost.cost_type}",
-                    related_id=cost.id,
-                    related_type="cost",
-                )
-                events.append(event)
+        events.extend(collect_cost_events(db, project_id))
     
-    # 5. 文档上传
     if not event_type or event_type == "DOCUMENT":
-        from app.models.project import ProjectDocument
-        documents = db.query(ProjectDocument).filter(
-            ProjectDocument.project_id == project_id
-        ).all()
-        
-        for doc in documents:
-            if doc.created_at:
-                event = TimelineEvent(
-                    event_type="DOCUMENT_UPLOADED",
-                    event_time=doc.created_at,
-                    title=f"上传文档: {doc.doc_name}",
-                    description=f"类型: {doc.doc_type}, 分类: {doc.doc_category}",
-                    related_id=doc.id,
-                    related_type="document",
-                )
-                events.append(event)
+        events.extend(collect_document_events(db, project_id))
     
-    # 6. 项目创建
+    # 添加项目创建事件
     if project.created_at:
-        event = TimelineEvent(
-            event_type="PROJECT_CREATED",
-            event_time=project.created_at,
-            title="项目创建",
-            description=f"项目编码: {project.project_code}",
-            related_id=project.id,
-            related_type="project",
-        )
-        events.append(event)
+        events.append(add_project_created_event(project))
     
     # 按时间排序
     events.sort(key=lambda x: x.event_time, reverse=True)

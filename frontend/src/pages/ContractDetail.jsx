@@ -3,9 +3,9 @@
  * Shows contract information, payment tracking, documents, and actions
  */
 
-import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   FileText,
   DollarSign,
@@ -30,8 +30,8 @@ import {
   Printer,
   Loader2,
   ArrowLeft,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -47,25 +47,33 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '../components/ui'
-import { cn, formatCurrency, formatDate } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { contractApi } from '../services/api'
+} from "../components/ui";
+import { cn, formatCurrency, formatDate } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { contractApi } from "../services/api";
 
 // Mock contract detail data
 // Mock data - 已移除，使用真实API
 const PaymentStageBar = ({ payment, index }) => {
   const statusConfig = {
-    paid: { color: 'bg-emerald-500', textColor: 'text-emerald-400', label: '已到账' },
-    pending: {
-      color: 'bg-slate-500',
-      textColor: 'text-slate-400',
-      label: '待收款',
+    paid: {
+      color: "bg-emerald-500",
+      textColor: "text-emerald-400",
+      label: "已到账",
     },
-    overdue: { color: 'bg-red-500', textColor: 'text-red-400', label: '已逾期' },
-  }
+    pending: {
+      color: "bg-slate-500",
+      textColor: "text-slate-400",
+      label: "待收款",
+    },
+    overdue: {
+      color: "bg-red-500",
+      textColor: "text-red-400",
+      label: "已逾期",
+    },
+  };
 
-  const config = statusConfig[payment.status]
+  const config = statusConfig[payment.status];
 
   return (
     <motion.div
@@ -79,62 +87,62 @@ const PaymentStageBar = ({ payment, index }) => {
           <span className="text-sm font-semibold text-slate-200">
             {payment.type}
           </span>
-          <span className={cn('text-sm font-bold', config.textColor)}>
+          <span className={cn("text-sm font-bold", config.textColor)}>
             {formatCurrency(payment.amount)}
           </span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-slate-700/50">
           <motion.div
             initial={{ width: 0 }}
-            animate={{ width: `${(payment.amount / mockContractDetail.contractAmount) * 100}%` }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-            className={cn('h-full transition-all', config.color)}
+            animate={{
+              width: `${(payment.amount / mockContractDetail.contractAmount) * 100}%`,
+            }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className={cn("h-full transition-all", config.color)}
           />
         </div>
         <div className="mt-1 flex items-center justify-between">
-          <Badge className={cn('text-xs', `bg-${config.color.split('-')[1]}-500/20`)}>
+          <Badge
+            className={cn("text-xs", `bg-${config.color.split("-")[1]}-500/20`)}
+          >
             {config.label}
           </Badge>
           <span className="text-xs text-slate-500">
             {payment.dueDate}
-            {payment.status === 'paid' && payment.paidDate && (
+            {payment.status === "paid" && payment.paidDate && (
               <> / 实付: {payment.paidDate}</>
             )}
           </span>
         </div>
       </div>
     </motion.div>
-  )
-}
+  );
+};
 
 const MilestoneTimeline = ({ milestones }) => {
   return (
     <div className="relative space-y-4">
       {milestones.map((milestone, idx) => (
-        <motion.div
-          key={idx}
-          variants={fadeIn}
-          className="relative flex gap-4"
-        >
+        <motion.div key={idx} variants={fadeIn} className="relative flex gap-4">
           {/* Timeline dot */}
           <div className="flex flex-col items-center">
             <div
               className={cn(
-                'relative z-10 h-4 w-4 rounded-full border-2',
-                milestone.status === 'completed'
-                  ? 'border-emerald-400 bg-emerald-500/20'
-                  : milestone.status === 'in_progress'
-                    ? 'border-blue-400 bg-blue-500/20'
-                    : 'border-slate-600 bg-slate-700/20'
+                "relative z-10 h-4 w-4 rounded-full border-2",
+                milestone.status === "completed"
+                  ? "border-emerald-400 bg-emerald-500/20"
+                  : milestone.status === "in_progress"
+                    ? "border-blue-400 bg-blue-500/20"
+                    : "border-slate-600 bg-slate-700/20",
               )}
             />
             {idx < milestones.length - 1 && (
               <div
                 className={cn(
-                  'mt-1 h-12 w-0.5',
-                  milestone.status === 'completed'
-                    ? 'bg-emerald-500/30'
-                    : 'bg-slate-700/30'
+                  "mt-1 h-12 w-0.5",
+                  milestone.status === "completed"
+                    ? "bg-emerald-500/30"
+                    : "bg-slate-700/30",
                 )}
               />
             )}
@@ -147,7 +155,7 @@ const MilestoneTimeline = ({ milestones }) => {
                 <h4 className="font-semibold text-slate-100">
                   {milestone.name}
                 </h4>
-                {milestone.status === 'completed' && (
+                {milestone.status === "completed" && (
                   <CheckCircle2 className="h-5 w-5 text-emerald-400" />
                 )}
               </div>
@@ -166,53 +174,53 @@ const MilestoneTimeline = ({ milestones }) => {
         </motion.div>
       ))}
     </div>
-  )
-}
+  );
+};
 
 export default function ContractDetail() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [contract, setContract] = useState(mockContractDetail)
-  const [activeTab, setActiveTab] = useState('overview') // overview | payments | deliverables | milestones | documents | notes
-  const [showEditDialog, setShowEditDialog] = useState(false)
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [contract, setContract] = useState(mockContractDetail);
+  const [activeTab, setActiveTab] = useState("overview"); // overview | payments | deliverables | milestones | documents | notes
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   // Load contract data from API with fallback to mock data
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
-        const res = await contractApi.get(id)
+        const res = await contractApi.get(id);
         if (res.data) {
-          setContract(res.data)
+          setContract(res.data);
         }
       } catch (err) {
-        console.log('Contract detail API unavailable, using mock data')
+        console.log("Contract detail API unavailable, using mock data");
       }
-      setLoading(false)
-    }
+      setLoading(false);
+    };
     if (id) {
-      fetchData()
+      fetchData();
     } else {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [id])
+  }, [id]);
 
   const statusConfig = {
-    draft: { label: '草稿', color: 'bg-slate-500/20 text-slate-400' },
-    review: { label: '审批中', color: 'bg-blue-500/20 text-blue-400' },
-    signed: { label: '已签订', color: 'bg-purple-500/20 text-purple-400' },
-    active: { label: '执行中', color: 'bg-emerald-500/20 text-emerald-400' },
-    closed: { label: '已结案', color: 'bg-slate-500/20 text-slate-400' },
-    cancelled: { label: '已取消', color: 'bg-red-500/20 text-red-400' },
-  }
+    draft: { label: "草稿", color: "bg-slate-500/20 text-slate-400" },
+    review: { label: "审批中", color: "bg-blue-500/20 text-blue-400" },
+    signed: { label: "已签订", color: "bg-purple-500/20 text-purple-400" },
+    active: { label: "执行中", color: "bg-emerald-500/20 text-emerald-400" },
+    closed: { label: "已结案", color: "bg-slate-500/20 text-slate-400" },
+    cancelled: { label: "已取消", color: "bg-red-500/20 text-red-400" },
+  };
 
   const completedDeliverables = contract.deliverables.filter(
-    (d) => d.status === 'completed'
-  ).length
+    (d) => d.status === "completed",
+  ).length;
   const completedMilestones = contract.milestones.filter(
-    (m) => m.status === 'completed'
-  ).length
+    (m) => m.status === "completed",
+  ).length;
 
   return (
     <div className="space-y-6 pb-8">
@@ -220,12 +228,12 @@ export default function ContractDetail() {
         title={contract.projectName}
         description={`${contract.customer.name} | ${contract.id}`}
         breadcrumb={[
-          { label: '商务工作台', path: '/business-support' },
-          { label: '合同管理', path: '/contracts' },
+          { label: "商务工作台", path: "/business-support" },
+          { label: "合同管理", path: "/contracts" },
           { label: contract.projectName },
         ]}
         action={{
-          label: '编辑合同',
+          label: "编辑合同",
           icon: Edit,
           onClick: () => setShowEditDialog(true),
         }}
@@ -361,7 +369,7 @@ export default function ContractDetail() {
                       {deliverable.name}
                     </span>
                     <div className="flex items-center gap-2">
-                      {deliverable.status === 'completed' && (
+                      {deliverable.status === "completed" && (
                         <>
                           <span className="text-xs text-slate-500">
                             {deliverable.completedDate}
@@ -369,7 +377,7 @@ export default function ContractDetail() {
                           <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                         </>
                       )}
-                      {deliverable.status === 'in_progress' && (
+                      {deliverable.status === "in_progress" && (
                         <>
                           <span className="text-xs text-slate-500">
                             截止: {deliverable.dueDate}
@@ -377,7 +385,7 @@ export default function ContractDetail() {
                           <Clock className="h-4 w-4 text-blue-400" />
                         </>
                       )}
-                      {deliverable.status === 'pending' && (
+                      {deliverable.status === "pending" && (
                         <>
                           <span className="text-xs text-slate-500">
                             截止: {deliverable.dueDate}
@@ -443,11 +451,15 @@ export default function ContractDetail() {
                 <div className="mt-1 space-y-1">
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-slate-500" />
-                    <p className="text-slate-200">{contract.customer.contact.phone}</p>
+                    <p className="text-slate-200">
+                      {contract.customer.contact.phone}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-slate-500" />
-                    <p className="text-slate-200">{contract.customer.contact.email}</p>
+                    <p className="text-slate-200">
+                      {contract.customer.contact.email}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -500,5 +512,5 @@ export default function ContractDetail() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -3,8 +3,8 @@
  * Features: Zoom controls, project grouping, progress bars, milestones, today line
  */
 
-import { useState, useMemo, useRef, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useMemo, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   ChevronLeft,
   ChevronRight,
@@ -14,109 +14,119 @@ import {
   Flag,
   Diamond,
   AlertTriangle,
-} from 'lucide-react'
-import { Button } from '../ui'
-import { cn } from '../../lib/utils'
+} from "lucide-react";
+import { Button } from "../ui";
+import { cn } from "../../lib/utils";
 
 // Zoom levels configuration
 const ZOOM_LEVELS = {
-  day: { unit: 'day', dayWidth: 60, format: 'dd', headerFormat: 'yyyy年MM月' },
-  week: { unit: 'week', dayWidth: 30, format: 'dd', headerFormat: 'yyyy年MM月' },
-  month: { unit: 'month', dayWidth: 12, format: 'dd', headerFormat: 'yyyy年MM月' },
-}
+  day: { unit: "day", dayWidth: 60, format: "dd", headerFormat: "yyyy年MM月" },
+  week: {
+    unit: "week",
+    dayWidth: 30,
+    format: "dd",
+    headerFormat: "yyyy年MM月",
+  },
+  month: {
+    unit: "month",
+    dayWidth: 12,
+    format: "dd",
+    headerFormat: "yyyy年MM月",
+  },
+};
 
 // Helper: Format date
 const formatDate = (date, format) => {
-  if (!date) return ''
-  const d = new Date(date)
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  
+  if (!date) return "";
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+
   switch (format) {
-    case 'yyyy年MM月':
-      return `${year}年${month}月`
-    case 'MM-dd':
-      return `${month}-${day}`
-    case 'dd':
-      return day
+    case "yyyy年MM月":
+      return `${year}年${month}月`;
+    case "MM-dd":
+      return `${month}-${day}`;
+    case "dd":
+      return day;
     default:
-      return `${year}-${month}-${day}`
+      return `${year}-${month}-${day}`;
   }
-}
+};
 
 // Helper: Get days between two dates
 const getDaysBetween = (start, end) => {
-  const startDate = new Date(start)
-  const endDate = new Date(end)
-  return Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))
-}
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  return Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+};
 
 // Helper: Add days to date
 const addDays = (date, days) => {
-  const result = new Date(date)
-  result.setDate(result.getDate() + days)
-  return result
-}
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+};
 
 // Helper: Get date range for tasks
 const getDateRange = (tasks) => {
   if (tasks.length === 0) {
-    const today = new Date()
+    const today = new Date();
     return {
       start: addDays(today, -7),
       end: addDays(today, 30),
-    }
+    };
   }
 
-  let minDate = new Date(tasks[0].plannedStart)
-  let maxDate = new Date(tasks[0].plannedEnd)
+  let minDate = new Date(tasks[0].plannedStart);
+  let maxDate = new Date(tasks[0].plannedEnd);
 
-  tasks.forEach(task => {
-    const start = new Date(task.plannedStart)
-    const end = new Date(task.plannedEnd)
-    if (start < minDate) minDate = start
-    if (end > maxDate) maxDate = end
-  })
+  tasks.forEach((task) => {
+    const start = new Date(task.plannedStart);
+    const end = new Date(task.plannedEnd);
+    if (start < minDate) minDate = start;
+    if (end > maxDate) maxDate = end;
+  });
 
   // Add padding
   return {
     start: addDays(minDate, -3),
     end: addDays(maxDate, 7),
-  }
-}
+  };
+};
 
 // Status colors for task bars
 const statusColors = {
   pending: {
-    bg: 'bg-slate-600',
-    progress: 'bg-slate-400',
-    border: 'border-slate-500',
+    bg: "bg-slate-600",
+    progress: "bg-slate-400",
+    border: "border-slate-500",
   },
   in_progress: {
-    bg: 'bg-blue-900/50',
-    progress: 'bg-gradient-to-r from-blue-500 to-blue-400',
-    border: 'border-blue-500/50',
+    bg: "bg-blue-900/50",
+    progress: "bg-gradient-to-r from-blue-500 to-blue-400",
+    border: "border-blue-500/50",
   },
   blocked: {
-    bg: 'bg-red-900/50',
-    progress: 'bg-gradient-to-r from-red-500 to-red-400',
-    border: 'border-red-500/50',
+    bg: "bg-red-900/50",
+    progress: "bg-gradient-to-r from-red-500 to-red-400",
+    border: "border-red-500/50",
   },
   completed: {
-    bg: 'bg-emerald-900/50',
-    progress: 'bg-gradient-to-r from-emerald-500 to-emerald-400',
-    border: 'border-emerald-500/50',
+    bg: "bg-emerald-900/50",
+    progress: "bg-gradient-to-r from-emerald-500 to-emerald-400",
+    border: "border-emerald-500/50",
   },
-}
+};
 
 // Priority colors
 const priorityColors = {
-  low: 'text-slate-400',
-  medium: 'text-blue-400',
-  high: 'text-amber-400',
-  critical: 'text-red-400',
-}
+  low: "text-slate-400",
+  medium: "text-blue-400",
+  high: "text-amber-400",
+  critical: "text-red-400",
+};
 
 // Gantt Task Bar Component
 function GanttTaskBar({
@@ -127,8 +137,9 @@ function GanttTaskBar({
   onClick,
   isSelected,
 }) {
-  const colors = statusColors[task.status]
-  const isOverdue = task.status !== 'completed' && new Date(task.plannedEnd) < new Date()
+  const colors = statusColors[task.status];
+  const isOverdue =
+    task.status !== "completed" && new Date(task.plannedEnd) < new Date();
 
   return (
     <motion.div
@@ -137,23 +148,23 @@ function GanttTaskBar({
       whileHover={{ scale: 1.02 }}
       onClick={() => onClick(task)}
       className={cn(
-        'absolute h-8 rounded-md cursor-pointer transition-all border',
+        "absolute h-8 rounded-md cursor-pointer transition-all border",
         colors.bg,
         colors.border,
-        isSelected && 'ring-2 ring-primary ring-offset-2 ring-offset-surface-0',
-        isOverdue && 'ring-1 ring-red-500'
+        isSelected && "ring-2 ring-primary ring-offset-2 ring-offset-surface-0",
+        isOverdue && "ring-1 ring-red-500",
       )}
       style={{
         left: `${startOffset}px`,
         width: `${Math.max(width, dayWidth)}px`,
-        top: '50%',
-        transform: 'translateY(-50%)',
-        transformOrigin: 'left center',
+        top: "50%",
+        transform: "translateY(-50%)",
+        transformOrigin: "left center",
       }}
     >
       {/* Progress fill */}
       <div
-        className={cn('h-full rounded-md', colors.progress)}
+        className={cn("h-full rounded-md", colors.progress)}
         style={{ width: `${task.progress}%` }}
       />
 
@@ -178,7 +189,7 @@ function GanttTaskBar({
         </div>
       )}
     </motion.div>
-  )
+  );
 }
 
 // Milestone marker component
@@ -186,146 +197,156 @@ function MilestoneMarker({ label, offset }) {
   return (
     <div
       className="absolute flex flex-col items-center"
-      style={{ left: `${offset}px`, top: '50%', transform: 'translate(-50%, -50%)' }}
+      style={{
+        left: `${offset}px`,
+        top: "50%",
+        transform: "translate(-50%, -50%)",
+      }}
     >
       <Diamond className="w-4 h-4 text-purple-400 fill-purple-400" />
       <span className="text-[10px] text-purple-400 mt-1 whitespace-nowrap">
         {label}
       </span>
     </div>
-  )
+  );
 }
 
 // Main GanttChart Component
-export default function GanttChart({
-  tasks,
-  onTaskSelect,
-  selectedTaskId,
-}) {
-  const [zoom, setZoom] = useState('week')
-  const [scrollLeft, setScrollLeft] = useState(0)
-  const chartRef = useRef(null)
-  const headerRef = useRef(null)
+export default function GanttChart({ tasks, onTaskSelect, selectedTaskId }) {
+  const [zoom, setZoom] = useState("week");
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const chartRef = useRef(null);
+  const headerRef = useRef(null);
 
-  const zoomConfig = ZOOM_LEVELS[zoom]
-  const { dayWidth } = zoomConfig
+  const zoomConfig = ZOOM_LEVELS[zoom];
+  const { dayWidth } = zoomConfig;
 
   // Calculate date range
-  const dateRange = useMemo(() => getDateRange(tasks), [tasks])
-  const totalDays = getDaysBetween(dateRange.start, dateRange.end)
-  const totalWidth = totalDays * dayWidth
+  const dateRange = useMemo(() => getDateRange(tasks), [tasks]);
+  const totalDays = getDaysBetween(dateRange.start, dateRange.end);
+  const totalWidth = totalDays * dayWidth;
 
   // Generate date headers
   const dateHeaders = useMemo(() => {
-    const headers = []
-    let currentDate = new Date(dateRange.start)
-    let currentMonth = null
+    const headers = [];
+    let currentDate = new Date(dateRange.start);
+    let currentMonth = null;
 
     while (currentDate <= dateRange.end) {
-      const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`
-      
+      const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`;
+
       if (monthKey !== currentMonth) {
         headers.push({
-          type: 'month',
+          type: "month",
           date: new Date(currentDate),
-          label: formatDate(currentDate, 'yyyy年MM月'),
-        })
-        currentMonth = monthKey
+          label: formatDate(currentDate, "yyyy年MM月"),
+        });
+        currentMonth = monthKey;
       }
 
       headers.push({
-        type: 'day',
+        type: "day",
         date: new Date(currentDate),
-        label: formatDate(currentDate, 'dd'),
+        label: formatDate(currentDate, "dd"),
         isToday: currentDate.toDateString() === new Date().toDateString(),
         isWeekend: currentDate.getDay() === 0 || currentDate.getDay() === 6,
-      })
+      });
 
-      currentDate = addDays(currentDate, 1)
+      currentDate = addDays(currentDate, 1);
     }
 
-    return headers
-  }, [dateRange, zoom])
+    return headers;
+  }, [dateRange, zoom]);
 
   // Group tasks by project
   const groupedTasks = useMemo(() => {
-    const groups = {}
-    tasks.forEach(task => {
+    const groups = {};
+    tasks.forEach((task) => {
       if (!groups[task.projectId]) {
         groups[task.projectId] = {
           projectId: task.projectId,
           projectName: task.projectName,
           tasks: [],
-        }
+        };
       }
-      groups[task.projectId].tasks.push(task)
-    })
-    return Object.values(groups)
-  }, [tasks])
+      groups[task.projectId].tasks.push(task);
+    });
+    return Object.values(groups);
+  }, [tasks]);
 
   // Calculate task position
   const getTaskPosition = (task) => {
-    const startDate = new Date(task.plannedStart)
-    const endDate = new Date(task.plannedEnd)
-    const startOffset = getDaysBetween(dateRange.start, startDate) * dayWidth
-    const duration = getDaysBetween(startDate, endDate) + 1
-    const width = duration * dayWidth
+    const startDate = new Date(task.plannedStart);
+    const endDate = new Date(task.plannedEnd);
+    const startOffset = getDaysBetween(dateRange.start, startDate) * dayWidth;
+    const duration = getDaysBetween(startDate, endDate) + 1;
+    const width = duration * dayWidth;
 
-    return { startOffset, width }
-  }
+    return { startOffset, width };
+  };
 
   // Get today line position
   const todayOffset = useMemo(() => {
-    const today = new Date()
-    if (today < dateRange.start || today > dateRange.end) return null
-    return getDaysBetween(dateRange.start, today) * dayWidth
-  }, [dateRange, dayWidth])
+    const today = new Date();
+    if (today < dateRange.start || today > dateRange.end) return null;
+    return getDaysBetween(dateRange.start, today) * dayWidth;
+  }, [dateRange, dayWidth]);
 
   // Sync scroll between header and chart
   const handleScroll = (e) => {
-    const left = e.target.scrollLeft
-    setScrollLeft(left)
+    const left = e.target.scrollLeft;
+    setScrollLeft(left);
     if (headerRef.current) {
-      headerRef.current.scrollLeft = left
+      headerRef.current.scrollLeft = left;
     }
-  }
+  };
 
   // Zoom controls
   const handleZoomIn = () => {
-    if (zoom === 'month') setZoom('week')
-    else if (zoom === 'week') setZoom('day')
-  }
+    if (zoom === "month") setZoom("week");
+    else if (zoom === "week") setZoom("day");
+  };
 
   const handleZoomOut = () => {
-    if (zoom === 'day') setZoom('week')
-    else if (zoom === 'week') setZoom('month')
-  }
+    if (zoom === "day") setZoom("week");
+    else if (zoom === "week") setZoom("month");
+  };
 
   // Scroll to today
   const scrollToToday = () => {
     if (todayOffset && chartRef.current) {
-      const containerWidth = chartRef.current.clientWidth
-      chartRef.current.scrollLeft = todayOffset - containerWidth / 2
+      const containerWidth = chartRef.current.clientWidth;
+      chartRef.current.scrollLeft = todayOffset - containerWidth / 2;
     }
-  }
+  };
 
   // Initial scroll to today
   useEffect(() => {
-    scrollToToday()
-  }, [zoom])
+    scrollToToday();
+  }, [zoom]);
 
   return (
     <div className="bg-surface-1 rounded-xl border border-border overflow-hidden">
       {/* Toolbar */}
       <div className="flex items-center justify-between p-3 border-b border-border bg-surface-2/50">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={handleZoomOut} disabled={zoom === 'month'}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleZoomOut}
+            disabled={zoom === "month"}
+          >
             <ZoomOut className="w-4 h-4" />
           </Button>
           <span className="text-sm text-slate-400 min-w-16 text-center">
-            {zoom === 'day' ? '日视图' : zoom === 'week' ? '周视图' : '月视图'}
+            {zoom === "day" ? "日视图" : zoom === "week" ? "周视图" : "月视图"}
           </span>
-          <Button variant="ghost" size="sm" onClick={handleZoomIn} disabled={zoom === 'day'}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleZoomIn}
+            disabled={zoom === "day"}
+          >
             <ZoomIn className="w-4 h-4" />
           </Button>
         </div>
@@ -340,30 +361,39 @@ export default function GanttChart({
       <div
         ref={headerRef}
         className="overflow-hidden border-b border-border bg-surface-2/30"
-        style={{ marginLeft: '200px' }}
+        style={{ marginLeft: "200px" }}
       >
         <div
           className="flex"
-          style={{ width: `${totalWidth}px`, transform: `translateX(-${scrollLeft}px)` }}
+          style={{
+            width: `${totalWidth}px`,
+            transform: `translateX(-${scrollLeft}px)`,
+          }}
         >
-          {dateHeaders.filter(h => h.type === 'day').map((header, index) => (
-            <div
-              key={index}
-              className={cn(
-                'flex-shrink-0 text-center py-2 border-r border-border/30',
-                header.isToday && 'bg-primary/10',
-                header.isWeekend && 'bg-slate-800/30'
-              )}
-              style={{ width: `${dayWidth}px` }}
-            >
-              <span className={cn(
-                'text-xs',
-                header.isToday ? 'text-primary font-bold' : 'text-slate-400'
-              )}>
-                {header.label}
-              </span>
-            </div>
-          ))}
+          {dateHeaders
+            .filter((h) => h.type === "day")
+            .map((header, index) => (
+              <div
+                key={index}
+                className={cn(
+                  "flex-shrink-0 text-center py-2 border-r border-border/30",
+                  header.isToday && "bg-primary/10",
+                  header.isWeekend && "bg-slate-800/30",
+                )}
+                style={{ width: `${dayWidth}px` }}
+              >
+                <span
+                  className={cn(
+                    "text-xs",
+                    header.isToday
+                      ? "text-primary font-bold"
+                      : "text-slate-400",
+                  )}
+                >
+                  {header.label}
+                </span>
+              </div>
+            ))}
         </div>
       </div>
 
@@ -386,14 +416,21 @@ export default function GanttChart({
                   key={task.id}
                   onClick={() => onTaskSelect(task)}
                   className={cn(
-                    'h-12 px-3 flex items-center border-b border-border/50 cursor-pointer transition-colors',
+                    "h-12 px-3 flex items-center border-b border-border/50 cursor-pointer transition-colors",
                     selectedTaskId === task.id
-                      ? 'bg-primary/10'
-                      : 'hover:bg-surface-2/50'
+                      ? "bg-primary/10"
+                      : "hover:bg-surface-2/50",
                   )}
                 >
-                  <Flag className={cn('w-3 h-3 mr-2', priorityColors[task.priority])} />
-                  <span className="text-sm text-white truncate">{task.titleCn}</span>
+                  <Flag
+                    className={cn(
+                      "w-3 h-3 mr-2",
+                      priorityColors[task.priority],
+                    )}
+                  />
+                  <span className="text-sm text-white truncate">
+                    {task.titleCn}
+                  </span>
                 </div>
               ))}
             </div>
@@ -412,19 +449,24 @@ export default function GanttChart({
           className="flex-1 overflow-x-auto"
           onScroll={handleScroll}
         >
-          <div style={{ width: `${totalWidth}px`, minHeight: '200px' }}>
+          <div style={{ width: `${totalWidth}px`, minHeight: "200px" }}>
             {/* Grid Background */}
-            <div className="absolute inset-0 flex pointer-events-none" style={{ width: `${totalWidth}px` }}>
-              {dateHeaders.filter(h => h.type === 'day').map((header, index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    'flex-shrink-0 border-r border-border/20',
-                    header.isWeekend && 'bg-slate-800/20'
-                  )}
-                  style={{ width: `${dayWidth}px`, height: '100%' }}
-                />
-              ))}
+            <div
+              className="absolute inset-0 flex pointer-events-none"
+              style={{ width: `${totalWidth}px` }}
+            >
+              {dateHeaders
+                .filter((h) => h.type === "day")
+                .map((header, index) => (
+                  <div
+                    key={index}
+                    className={cn(
+                      "flex-shrink-0 border-r border-border/20",
+                      header.isWeekend && "bg-slate-800/20",
+                    )}
+                    style={{ width: `${dayWidth}px`, height: "100%" }}
+                  />
+                ))}
             </div>
 
             {/* Today Line */}
@@ -447,9 +489,12 @@ export default function GanttChart({
 
                 {/* Task bars */}
                 {group.tasks.map((task) => {
-                  const { startOffset, width } = getTaskPosition(task)
+                  const { startOffset, width } = getTaskPosition(task);
                   return (
-                    <div key={task.id} className="h-12 relative border-b border-border/50">
+                    <div
+                      key={task.id}
+                      className="h-12 relative border-b border-border/50"
+                    >
                       <GanttTaskBar
                         task={task}
                         startOffset={startOffset}
@@ -464,11 +509,16 @@ export default function GanttChart({
                         <MilestoneMarker
                           date={task.milestoneDate}
                           label={task.milestone}
-                          offset={getDaysBetween(dateRange.start, new Date(task.milestoneDate)) * dayWidth}
+                          offset={
+                            getDaysBetween(
+                              dateRange.start,
+                              new Date(task.milestoneDate),
+                            ) * dayWidth
+                          }
                         />
                       )}
                     </div>
-                  )
+                  );
                 })}
               </div>
             ))}
@@ -504,6 +554,5 @@ export default function GanttChart({
         </div>
       </div>
     </div>
-  )
+  );
 }
-

@@ -3,9 +3,9 @@
  * 显示到货跟踪的详细信息，支持状态更新、跟催、收货等操作
  */
 
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   ArrowLeft,
   Truck,
@@ -18,8 +18,8 @@ import {
   XCircle,
   Phone,
   Mail,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -42,131 +42,137 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui'
-import { cn, formatDate } from '../lib/utils'
-import { fadeIn } from '../lib/animations'
-import { shortageApi } from '../services/api'
+} from "../components/ui";
+import { cn, formatDate } from "../lib/utils";
+import { fadeIn } from "../lib/animations";
+import { shortageApi } from "../services/api";
 
 const statusConfigs = {
-  PENDING: { label: '待处理', color: 'bg-slate-500', icon: Clock },
-  IN_TRANSIT: { label: '在途', color: 'bg-blue-500', icon: Truck },
-  DELAYED: { label: '延迟', color: 'bg-red-500', icon: AlertTriangle },
-  RECEIVED: { label: '已收货', color: 'bg-emerald-500', icon: CheckCircle2 },
-  CANCELLED: { label: '已取消', color: 'bg-slate-400', icon: XCircle },
-}
+  PENDING: { label: "待处理", color: "bg-slate-500", icon: Clock },
+  IN_TRANSIT: { label: "在途", color: "bg-blue-500", icon: Truck },
+  DELAYED: { label: "延迟", color: "bg-red-500", icon: AlertTriangle },
+  RECEIVED: { label: "已收货", color: "bg-emerald-500", icon: CheckCircle2 },
+  CANCELLED: { label: "已取消", color: "bg-slate-400", icon: XCircle },
+};
 
 export default function ArrivalDetail() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const [arrival, setArrival] = useState(null)
-  const [followUps, setFollowUps] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [actionLoading, setActionLoading] = useState(false)
-  const [showReceiveDialog, setShowReceiveDialog] = useState(false)
-  const [showFollowUpDialog, setShowFollowUpDialog] = useState(false)
-  const [receiveQty, setReceiveQty] = useState('')
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [arrival, setArrival] = useState(null);
+  const [followUps, setFollowUps] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [showReceiveDialog, setShowReceiveDialog] = useState(false);
+  const [showFollowUpDialog, setShowFollowUpDialog] = useState(false);
+  const [receiveQty, setReceiveQty] = useState("");
   const [followUpData, setFollowUpData] = useState({
-    follow_up_type: 'CALL',
-    follow_up_note: '',
-    supplier_response: '',
-    next_follow_up_date: '',
-  })
+    follow_up_type: "CALL",
+    follow_up_note: "",
+    supplier_response: "",
+    next_follow_up_date: "",
+  });
 
   useEffect(() => {
-    loadArrival()
-    loadFollowUps()
-  }, [id])
+    loadArrival();
+    loadFollowUps();
+  }, [id]);
 
   const loadArrival = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const res = await shortageApi.arrivals.get(id)
-      setArrival(res.data)
+      const res = await shortageApi.arrivals.get(id);
+      setArrival(res.data);
       if (res.data.expected_qty) {
-        setReceiveQty(String(res.data.expected_qty))
+        setReceiveQty(String(res.data.expected_qty));
       }
     } catch (error) {
-      console.error('加载到货跟踪详情失败', error)
+      console.error("加载到货跟踪详情失败", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const loadFollowUps = async () => {
     try {
-      const res = await shortageApi.arrivals.getFollowUps(id, { page: 1, page_size: 50 })
-      setFollowUps(res.data.items || [])
+      const res = await shortageApi.arrivals.getFollowUps(id, {
+        page: 1,
+        page_size: 50,
+      });
+      setFollowUps(res.data.items || []);
     } catch (error) {
-      console.error('加载跟催记录失败', error)
+      console.error("加载跟催记录失败", error);
     }
-  }
+  };
 
   const handleReceive = async () => {
     if (!receiveQty || parseFloat(receiveQty) <= 0) {
-      alert('请输入有效的实收数量')
-      return
+      alert("请输入有效的实收数量");
+      return;
     }
-    setActionLoading(true)
+    setActionLoading(true);
     try {
-      await shortageApi.arrivals.receive(id, parseFloat(receiveQty))
-      setShowReceiveDialog(false)
-      await loadArrival()
+      await shortageApi.arrivals.receive(id, parseFloat(receiveQty));
+      setShowReceiveDialog(false);
+      await loadArrival();
     } catch (error) {
-      console.error('确认收货失败', error)
-      alert('确认收货失败：' + (error.response?.data?.detail || error.message))
+      console.error("确认收货失败", error);
+      alert("确认收货失败：" + (error.response?.data?.detail || error.message));
     } finally {
-      setActionLoading(false)
+      setActionLoading(false);
     }
-  }
+  };
 
   const handleCreateFollowUp = async () => {
     if (!followUpData.follow_up_note.trim()) {
-      alert('请输入跟催内容')
-      return
+      alert("请输入跟催内容");
+      return;
     }
-    setActionLoading(true)
+    setActionLoading(true);
     try {
       await shortageApi.arrivals.createFollowUp(id, {
         ...followUpData,
         next_follow_up_date: followUpData.next_follow_up_date || null,
-      })
-      setShowFollowUpDialog(false)
+      });
+      setShowFollowUpDialog(false);
       setFollowUpData({
-        follow_up_type: 'CALL',
-        follow_up_note: '',
-        supplier_response: '',
-        next_follow_up_date: '',
-      })
-      await loadFollowUps()
-      await loadArrival()
+        follow_up_type: "CALL",
+        follow_up_note: "",
+        supplier_response: "",
+        next_follow_up_date: "",
+      });
+      await loadFollowUps();
+      await loadArrival();
     } catch (error) {
-      console.error('创建跟催记录失败', error)
-      alert('创建跟催记录失败：' + (error.response?.data?.detail || error.message))
+      console.error("创建跟催记录失败", error);
+      alert(
+        "创建跟催记录失败：" + (error.response?.data?.detail || error.message),
+      );
     } finally {
-      setActionLoading(false)
+      setActionLoading(false);
     }
-  }
+  };
 
   const handleUpdateStatus = async (status) => {
-    if (!confirm(`确认要将状态更新为"${statusConfigs[status]?.label}"吗？`)) return
-    setActionLoading(true)
+    if (!confirm(`确认要将状态更新为"${statusConfigs[status]?.label}"吗？`))
+      return;
+    setActionLoading(true);
     try {
-      await shortageApi.arrivals.updateStatus(id, status)
-      await loadArrival()
+      await shortageApi.arrivals.updateStatus(id, status);
+      await loadArrival();
     } catch (error) {
-      console.error('更新状态失败', error)
-      alert('更新状态失败：' + (error.response?.data?.detail || error.message))
+      console.error("更新状态失败", error);
+      alert("更新状态失败：" + (error.response?.data?.detail || error.message));
     } finally {
-      setActionLoading(false)
+      setActionLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-muted-foreground">加载中...</div>
       </div>
-    )
+    );
   }
 
   if (!arrival) {
@@ -174,20 +180,20 @@ export default function ArrivalDetail() {
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <XCircle className="h-12 w-12 text-muted-foreground" />
         <div className="text-muted-foreground">到货跟踪不存在</div>
-        <Button variant="outline" onClick={() => navigate('/shortage')}>
+        <Button variant="outline" onClick={() => navigate("/shortage")}>
           返回列表
         </Button>
       </div>
-    )
+    );
   }
 
-  const status = statusConfigs[arrival.status] || statusConfigs.PENDING
-  const StatusIcon = status.icon
+  const status = statusConfigs[arrival.status] || statusConfigs.PENDING;
+  const StatusIcon = status.icon;
 
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/shortage')}>
+        <Button variant="ghost" size="sm" onClick={() => navigate("/shortage")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           返回
         </Button>
@@ -210,7 +216,10 @@ export default function ArrivalDetail() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>基本信息</CardTitle>
-                <Badge variant="outline" className={cn(status.color, 'text-white')}>
+                <Badge
+                  variant="outline"
+                  className={cn(status.color, "text-white")}
+                >
                   <StatusIcon className="h-3 w-3 mr-1" />
                   {status.label}
                 </Badge>
@@ -237,41 +246,65 @@ export default function ArrivalDetail() {
                 {arrival.supplier_name && (
                   <>
                     <div>
-                      <div className="text-sm text-muted-foreground">供应商</div>
+                      <div className="text-sm text-muted-foreground">
+                        供应商
+                      </div>
                       <div className="font-medium">{arrival.supplier_name}</div>
                     </div>
                     <div>
-                      <div className="text-sm text-muted-foreground">供应商ID</div>
-                      <div className="font-medium">{arrival.supplier_id || '-'}</div>
+                      <div className="text-sm text-muted-foreground">
+                        供应商ID
+                      </div>
+                      <div className="font-medium">
+                        {arrival.supplier_id || "-"}
+                      </div>
                     </div>
                   </>
                 )}
                 <div>
-                  <div className="text-sm text-muted-foreground">预期到货日期</div>
-                  <div className="font-medium">{formatDate(arrival.expected_date)}</div>
+                  <div className="text-sm text-muted-foreground">
+                    预期到货日期
+                  </div>
+                  <div className="font-medium">
+                    {formatDate(arrival.expected_date)}
+                  </div>
                 </div>
                 {arrival.actual_date && (
                   <div>
-                    <div className="text-sm text-muted-foreground">实际到货日期</div>
-                    <div className="font-medium">{formatDate(arrival.actual_date)}</div>
+                    <div className="text-sm text-muted-foreground">
+                      实际到货日期
+                    </div>
+                    <div className="font-medium">
+                      {formatDate(arrival.actual_date)}
+                    </div>
                   </div>
                 )}
                 {arrival.is_delayed && (
                   <div>
-                    <div className="text-sm text-muted-foreground">延迟天数</div>
-                    <div className="font-medium text-red-400">{arrival.delay_days} 天</div>
+                    <div className="text-sm text-muted-foreground">
+                      延迟天数
+                    </div>
+                    <div className="font-medium text-red-400">
+                      {arrival.delay_days} 天
+                    </div>
                   </div>
                 )}
                 {arrival.received_qty > 0 && (
                   <div>
-                    <div className="text-sm text-muted-foreground">实收数量</div>
+                    <div className="text-sm text-muted-foreground">
+                      实收数量
+                    </div>
                     <div className="font-medium">{arrival.received_qty}</div>
                   </div>
                 )}
                 {arrival.received_at && (
                   <div>
-                    <div className="text-sm text-muted-foreground">收货时间</div>
-                    <div className="font-medium">{formatDate(arrival.received_at)}</div>
+                    <div className="text-sm text-muted-foreground">
+                      收货时间
+                    </div>
+                    <div className="font-medium">
+                      {formatDate(arrival.received_at)}
+                    </div>
                   </div>
                 )}
               </div>
@@ -292,7 +325,9 @@ export default function ArrivalDetail() {
                   添加跟催
                 </Button>
               </div>
-              <CardDescription>共 {arrival.follow_up_count || 0} 次跟催</CardDescription>
+              <CardDescription>
+                共 {arrival.follow_up_count || 0} 次跟催
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {followUps.length === 0 ? (
@@ -308,7 +343,9 @@ export default function ArrivalDetail() {
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline">{followUp.follow_up_type}</Badge>
+                          <Badge variant="outline">
+                            {followUp.follow_up_type}
+                          </Badge>
                           <span className="text-sm text-muted-foreground">
                             {followUp.followed_by_name}
                           </span>
@@ -317,7 +354,9 @@ export default function ArrivalDetail() {
                           {formatDate(followUp.followed_at)}
                         </span>
                       </div>
-                      <div className="text-sm mb-2">{followUp.follow_up_note}</div>
+                      <div className="text-sm mb-2">
+                        {followUp.follow_up_note}
+                      </div>
                       {followUp.supplier_response && (
                         <div className="text-sm text-muted-foreground bg-surface-2 p-2 rounded mt-2">
                           <div className="font-medium mb-1">供应商反馈：</div>
@@ -343,7 +382,9 @@ export default function ArrivalDetail() {
                 <CardTitle>备注</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-sm whitespace-pre-wrap">{arrival.remark}</div>
+                <div className="text-sm whitespace-pre-wrap">
+                  {arrival.remark}
+                </div>
               </CardContent>
             </Card>
           )}
@@ -356,18 +397,18 @@ export default function ArrivalDetail() {
               <CardTitle>操作</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {arrival.status === 'PENDING' && (
+              {arrival.status === "PENDING" && (
                 <Button
                   className="w-full"
                   variant="outline"
-                  onClick={() => handleUpdateStatus('IN_TRANSIT')}
+                  onClick={() => handleUpdateStatus("IN_TRANSIT")}
                   disabled={actionLoading}
                 >
                   <Truck className="h-4 w-4 mr-2" />
                   标记在途
                 </Button>
               )}
-              {arrival.status === 'IN_TRANSIT' && (
+              {arrival.status === "IN_TRANSIT" && (
                 <>
                   <Button
                     className="w-full"
@@ -388,21 +429,22 @@ export default function ArrivalDetail() {
                   </Button>
                 </>
               )}
-              {arrival.status !== 'RECEIVED' && arrival.status !== 'CANCELLED' && (
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  onClick={() => setShowFollowUpDialog(true)}
-                  disabled={actionLoading}
-                >
-                  <Phone className="h-4 w-4 mr-2" />
-                  添加跟催
-                </Button>
-              )}
+              {arrival.status !== "RECEIVED" &&
+                arrival.status !== "CANCELLED" && (
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={() => setShowFollowUpDialog(true)}
+                    disabled={actionLoading}
+                  >
+                    <Phone className="h-4 w-4 mr-2" />
+                    添加跟催
+                  </Button>
+                )}
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => navigate('/shortage')}
+                onClick={() => navigate("/shortage")}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 返回列表
@@ -418,7 +460,13 @@ export default function ArrivalDetail() {
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <div className={cn('rounded-full p-2', status.color, 'bg-opacity-10')}>
+                  <div
+                    className={cn(
+                      "rounded-full p-2",
+                      status.color,
+                      "bg-opacity-10",
+                    )}
+                  >
                     <StatusIcon className="h-4 w-4" />
                   </div>
                   <div className="flex-1">
@@ -476,11 +524,14 @@ export default function ArrivalDetail() {
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowReceiveDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowReceiveDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleReceive} disabled={actionLoading}>
-              {actionLoading ? '确认中...' : '确认收货'}
+              {actionLoading ? "确认中..." : "确认收货"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -499,7 +550,10 @@ export default function ArrivalDetail() {
                 <Select
                   value={followUpData.follow_up_type}
                   onValueChange={(value) =>
-                    setFollowUpData((prev) => ({ ...prev, follow_up_type: value }))
+                    setFollowUpData((prev) => ({
+                      ...prev,
+                      follow_up_type: value,
+                    }))
                   }
                 >
                   <SelectTrigger id="follow_up_type">
@@ -520,7 +574,10 @@ export default function ArrivalDetail() {
                   placeholder="请输入跟催内容..."
                   value={followUpData.follow_up_note}
                   onChange={(e) =>
-                    setFollowUpData((prev) => ({ ...prev, follow_up_note: e.target.value }))
+                    setFollowUpData((prev) => ({
+                      ...prev,
+                      follow_up_note: e.target.value,
+                    }))
                   }
                   rows={4}
                 />
@@ -532,7 +589,10 @@ export default function ArrivalDetail() {
                   placeholder="供应商的反馈信息..."
                   value={followUpData.supplier_response}
                   onChange={(e) =>
-                    setFollowUpData((prev) => ({ ...prev, supplier_response: e.target.value }))
+                    setFollowUpData((prev) => ({
+                      ...prev,
+                      supplier_response: e.target.value,
+                    }))
                   }
                   rows={3}
                 />
@@ -544,23 +604,28 @@ export default function ArrivalDetail() {
                   type="date"
                   value={followUpData.next_follow_up_date}
                   onChange={(e) =>
-                    setFollowUpData((prev) => ({ ...prev, next_follow_up_date: e.target.value }))
+                    setFollowUpData((prev) => ({
+                      ...prev,
+                      next_follow_up_date: e.target.value,
+                    }))
                   }
                 />
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowFollowUpDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowFollowUpDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleCreateFollowUp} disabled={actionLoading}>
-              {actionLoading ? '提交中...' : '提交'}
+              {actionLoading ? "提交中..." : "提交"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-

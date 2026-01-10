@@ -7,8 +7,6 @@ from typing import Dict, Any, List, Optional
 from datetime import date, timedelta
 from sqlalchemy.orm import Session
 
-from app.models.user import User
-from app.models.organization import Department
 from app.models.progress import Task
 from app.models.pmo import PmoResourceAllocation
 from app.schemas.workload import (

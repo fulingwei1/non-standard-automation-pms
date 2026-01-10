@@ -2,7 +2,7 @@
  * HRStatisticsTab Component
  * 统计分析 Tab 组件
  */
-import { motion } from 'framer-motion'
+import { motion } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -10,7 +10,7 @@ import {
   CardTitle,
   Button,
   Progress,
-} from '../../ui'
+} from "../../ui";
 import {
   Users,
   Clock,
@@ -21,10 +21,10 @@ import {
   BarChart3,
   PieChart,
   Activity,
-} from 'lucide-react'
-import { fadeIn } from '../../../lib/animations'
-import { cn } from '../../../lib/utils'
-import { cn } from '../../../lib/utils'
+} from "lucide-react";
+import { fadeIn } from "../../../lib/animations";
+import { cn } from "../../../lib/utils";
+import { cn } from "../../../lib/utils";
 
 export default function HRStatisticsTab({
   statisticsPeriod,
@@ -50,21 +50,23 @@ export default function HRStatisticsTab({
               <div className="flex items-center gap-4">
                 <span className="text-sm text-slate-400">统计周期:</span>
                 <div className="flex items-center gap-2">
-                  {['month', 'quarter', 'year'].map((period) => (
+                  {["month", "quarter", "year"].map((period) => (
                     <Button
                       key={period}
-                      variant={statisticsPeriod === period ? 'default' : 'outline'}
+                      variant={
+                        statisticsPeriod === period ? "default" : "outline"
+                      }
                       size="sm"
                       onClick={() => {
-                        setStatisticsPeriod(period)
+                        setStatisticsPeriod(period);
                         // TODO: Reload statistics data
                       }}
                     >
-                      {period === 'month'
-                        ? '月度'
-                        : period === 'quarter'
-                        ? '季度'
-                        : '年度'}
+                      {period === "month"
+                        ? "月度"
+                        : period === "quarter"
+                          ? "季度"
+                          : "年度"}
                     </Button>
                   ))}
                 </div>
@@ -109,7 +111,9 @@ export default function HRStatisticsTab({
                 {mockEmployeeAgeDistribution.map((item, index) => (
                   <div key={index}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-slate-300">{item.range}</span>
+                      <span className="text-sm text-slate-300">
+                        {item.range}
+                      </span>
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-semibold text-white">
                           {item.count}人
@@ -119,7 +123,10 @@ export default function HRStatisticsTab({
                         </span>
                       </div>
                     </div>
-                    <Progress value={item.percentage} className="h-2 bg-slate-700/50" />
+                    <Progress
+                      value={item.percentage}
+                      className="h-2 bg-slate-700/50"
+                    />
                   </div>
                 ))}
               </div>
@@ -127,7 +134,8 @@ export default function HRStatisticsTab({
                 <div className="flex items-center justify-between text-xs text-slate-400">
                   <span>平均年龄: {mockHRStats.avgAge} 岁</span>
                   <span>
-                    最集中: 31-35岁 ({mockEmployeeAgeDistribution[2].percentage}%)
+                    最集中: 31-35岁 ({mockEmployeeAgeDistribution[2].percentage}
+                    %)
                   </span>
                 </div>
               </div>
@@ -149,7 +157,9 @@ export default function HRStatisticsTab({
                 {mockEmployeeTenureDistribution.map((item, index) => (
                   <div key={index}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-slate-300">{item.range}</span>
+                      <span className="text-sm text-slate-300">
+                        {item.range}
+                      </span>
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-semibold text-white">
                           {item.count}人
@@ -159,7 +169,10 @@ export default function HRStatisticsTab({
                         </span>
                       </div>
                     </div>
-                    <Progress value={item.percentage} className="h-2 bg-slate-700/50" />
+                    <Progress
+                      value={item.percentage}
+                      className="h-2 bg-slate-700/50"
+                    />
                   </div>
                 ))}
               </div>
@@ -167,7 +180,8 @@ export default function HRStatisticsTab({
                 <div className="flex items-center justify-between text-xs text-slate-400">
                   <span>平均工龄: {mockHRStats.avgTenure} 年</span>
                   <span>
-                    最集中: 1-3年 ({mockEmployeeTenureDistribution[1].percentage}%)
+                    最集中: 1-3年 (
+                    {mockEmployeeTenureDistribution[1].percentage}%)
                   </span>
                 </div>
               </div>
@@ -192,7 +206,9 @@ export default function HRStatisticsTab({
                 {mockEmployeeEducationDistribution.map((item, index) => (
                   <div key={index}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-slate-300">{item.level}</span>
+                      <span className="text-sm text-slate-300">
+                        {item.level}
+                      </span>
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-semibold text-white">
                           {item.count}人
@@ -202,7 +218,10 @@ export default function HRStatisticsTab({
                         </span>
                       </div>
                     </div>
-                    <Progress value={item.percentage} className="h-2 bg-slate-700/50" />
+                    <Progress
+                      value={item.percentage}
+                      className="h-2 bg-slate-700/50"
+                    />
                   </div>
                 ))}
               </div>
@@ -228,7 +247,9 @@ export default function HRStatisticsTab({
                         <span className="text-sm font-medium text-white">
                           {dept.department}
                         </span>
-                        <span className="text-xs text-slate-400">#{dept.rank}</span>
+                        <span className="text-xs text-slate-400">
+                          #{dept.rank}
+                        </span>
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-semibold text-white">
@@ -236,18 +257,21 @@ export default function HRStatisticsTab({
                         </span>
                         <span
                           className={cn(
-                            'text-xs',
+                            "text-xs",
                             dept.trend > 0
-                              ? 'text-emerald-400'
-                              : 'text-red-400'
+                              ? "text-emerald-400"
+                              : "text-red-400",
                           )}
                         >
-                          {dept.trend > 0 ? '+' : ''}
+                          {dept.trend > 0 ? "+" : ""}
                           {dept.trend}%
                         </span>
                       </div>
                     </div>
-                    <Progress value={dept.avgScore} className="h-2 bg-slate-700/50" />
+                    <Progress
+                      value={dept.avgScore}
+                      className="h-2 bg-slate-700/50"
+                    />
                   </div>
                 ))}
               </div>
@@ -256,5 +280,5 @@ export default function HRStatisticsTab({
         </motion.div>
       </div>
     </div>
-  )
+  );
 }

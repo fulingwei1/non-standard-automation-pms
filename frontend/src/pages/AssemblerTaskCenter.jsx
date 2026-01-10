@@ -7,8 +7,8 @@
  * 4. 装配图纸查看
  * 5. 任务完成确认（含工时填报）
  */
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Wrench,
   Clock,
@@ -39,8 +39,8 @@ import {
   RotateCw,
   MessageSquare,
   ClipboardCheck,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -56,37 +56,59 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '../components/ui'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
+} from "../components/ui";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
 
 // 模拟装配任务数据
 // Mock data - 已移除，使用真实API
 // 状态配置
 const statusConfigs = {
-  pending: { label: '待开始', icon: Circle, color: 'text-slate-400', bgColor: 'bg-slate-500/10' },
-  in_progress: { label: '进行中', icon: PlayCircle, color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
-  blocked: { label: '阻塞', icon: PauseCircle, color: 'text-red-400', bgColor: 'bg-red-500/10' },
-  completed: { label: '已完成', icon: CheckCircle2, color: 'text-emerald-400', bgColor: 'bg-emerald-500/10' },
-}
+  pending: {
+    label: "待开始",
+    icon: Circle,
+    color: "text-slate-400",
+    bgColor: "bg-slate-500/10",
+  },
+  in_progress: {
+    label: "进行中",
+    icon: PlayCircle,
+    color: "text-blue-400",
+    bgColor: "bg-blue-500/10",
+  },
+  blocked: {
+    label: "阻塞",
+    icon: PauseCircle,
+    color: "text-red-400",
+    bgColor: "bg-red-500/10",
+  },
+  completed: {
+    label: "已完成",
+    icon: CheckCircle2,
+    color: "text-emerald-400",
+    bgColor: "bg-emerald-500/10",
+  },
+};
 
 const priorityConfigs = {
-  low: { label: '低', color: 'text-slate-400', bgColor: 'bg-slate-500/10' },
-  medium: { label: '中', color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
-  high: { label: '高', color: 'text-amber-400', bgColor: 'bg-amber-500/10' },
-}
+  low: { label: "低", color: "text-slate-400", bgColor: "bg-slate-500/10" },
+  medium: { label: "中", color: "text-blue-400", bgColor: "bg-blue-500/10" },
+  high: { label: "高", color: "text-amber-400", bgColor: "bg-amber-500/10" },
+};
 
 // ============ 缺料反馈对话框组件 ============
 function MaterialShortageDialog({ open, onClose, task, material }) {
-  const [description, setDescription] = useState('')
-  const [urgency, setUrgency] = useState('normal')
-  const [quantity, setQuantity] = useState(material?.qty - material?.received || 0)
+  const [description, setDescription] = useState("");
+  const [urgency, setUrgency] = useState("normal");
+  const [quantity, setQuantity] = useState(
+    material?.qty - material?.received || 0,
+  );
 
   const handleSubmit = () => {
     // TODO: Call API to submit shortage feedback
     // TODO: 调用API提交
-    onClose()
-  }
+    onClose();
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -105,7 +127,9 @@ function MaterialShortageDialog({ open, onClose, task, material }) {
           {/* 任务信息 */}
           <div className="p-3 rounded-lg bg-surface-2/50 text-sm">
             <p className="text-slate-400">任务：{task?.title}</p>
-            <p className="text-slate-400">设备：{task?.machineNo} · {task?.workstation}</p>
+            <p className="text-slate-400">
+              设备：{task?.machineNo} · {task?.workstation}
+            </p>
           </div>
 
           {/* 物料信息 */}
@@ -153,18 +177,18 @@ function MaterialShortageDialog({ open, onClose, task, material }) {
             <label className="text-sm font-medium text-white">紧急程度</label>
             <div className="flex gap-2">
               {[
-                { value: 'normal', label: '一般', color: 'bg-slate-500' },
-                { value: 'urgent', label: '紧急', color: 'bg-amber-500' },
-                { value: 'critical', label: '非常紧急', color: 'bg-red-500' },
+                { value: "normal", label: "一般", color: "bg-slate-500" },
+                { value: "urgent", label: "紧急", color: "bg-amber-500" },
+                { value: "critical", label: "非常紧急", color: "bg-red-500" },
               ].map((opt) => (
                 <button
                   key={opt.value}
                   onClick={() => setUrgency(opt.value)}
                   className={cn(
-                    'flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all',
+                    "flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all",
                     urgency === opt.value
                       ? `${opt.color} text-white`
-                      : 'bg-surface-2 text-slate-400 hover:bg-surface-3'
+                      : "bg-surface-2 text-slate-400 hover:bg-surface-3",
                   )}
                 >
                   {opt.label}
@@ -181,17 +205,19 @@ function MaterialShortageDialog({ open, onClose, task, material }) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="请描述缺料影响和备选方案..."
               className={cn(
-                'w-full h-24 px-3 py-2 rounded-lg resize-none',
-                'bg-surface-2 border border-border',
-                'text-white placeholder:text-slate-500',
-                'focus:outline-none focus:ring-2 focus:ring-primary/50'
+                "w-full h-24 px-3 py-2 rounded-lg resize-none",
+                "bg-surface-2 border border-border",
+                "text-white placeholder:text-slate-500",
+                "focus:outline-none focus:ring-2 focus:ring-primary/50",
               )}
             />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>取消</Button>
+          <Button variant="ghost" onClick={onClose}>
+            取消
+          </Button>
           <Button onClick={handleSubmit}>
             <Send className="w-4 h-4 mr-1" />
             提交反馈
@@ -199,30 +225,30 @@ function MaterialShortageDialog({ open, onClose, task, material }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // ============ 质量反馈对话框组件 ============
 function QualityFeedbackDialog({ open, onClose, task, material }) {
-  const [issueType, setIssueType] = useState('dimension')
-  const [description, setDescription] = useState('')
-  const [severity, setSeverity] = useState('minor')
-  const [photos, setPhotos] = useState([])
+  const [issueType, setIssueType] = useState("dimension");
+  const [description, setDescription] = useState("");
+  const [severity, setSeverity] = useState("minor");
+  const [photos, setPhotos] = useState([]);
 
   const issueTypes = [
-    { value: 'dimension', label: '尺寸偏差' },
-    { value: 'surface', label: '表面缺陷' },
-    { value: 'function', label: '功能异常' },
-    { value: 'damage', label: '运输损坏' },
-    { value: 'mismatch', label: '型号不符' },
-    { value: 'other', label: '其他问题' },
-  ]
+    { value: "dimension", label: "尺寸偏差" },
+    { value: "surface", label: "表面缺陷" },
+    { value: "function", label: "功能异常" },
+    { value: "damage", label: "运输损坏" },
+    { value: "mismatch", label: "型号不符" },
+    { value: "other", label: "其他问题" },
+  ];
 
   const handleSubmit = () => {
     // TODO: Call API to submit quality feedback
     // TODO: 调用API提交
-    onClose()
-  }
+    onClose();
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -255,10 +281,10 @@ function QualityFeedbackDialog({ open, onClose, task, material }) {
                   key={type.value}
                   onClick={() => setIssueType(type.value)}
                   className={cn(
-                    'py-2 px-3 rounded-lg text-xs font-medium transition-all',
+                    "py-2 px-3 rounded-lg text-xs font-medium transition-all",
                     issueType === type.value
-                      ? 'bg-primary text-white'
-                      : 'bg-surface-2 text-slate-400 hover:bg-surface-3'
+                      ? "bg-primary text-white"
+                      : "bg-surface-2 text-slate-400 hover:bg-surface-3",
                   )}
                 >
                   {type.label}
@@ -272,18 +298,33 @@ function QualityFeedbackDialog({ open, onClose, task, material }) {
             <label className="text-sm font-medium text-white">严重程度</label>
             <div className="flex gap-2">
               {[
-                { value: 'minor', label: '轻微', desc: '可继续使用', color: 'bg-yellow-500' },
-                { value: 'major', label: '严重', desc: '影响使用', color: 'bg-orange-500' },
-                { value: 'critical', label: '致命', desc: '无法使用', color: 'bg-red-500' },
+                {
+                  value: "minor",
+                  label: "轻微",
+                  desc: "可继续使用",
+                  color: "bg-yellow-500",
+                },
+                {
+                  value: "major",
+                  label: "严重",
+                  desc: "影响使用",
+                  color: "bg-orange-500",
+                },
+                {
+                  value: "critical",
+                  label: "致命",
+                  desc: "无法使用",
+                  color: "bg-red-500",
+                },
               ].map((opt) => (
                 <button
                   key={opt.value}
                   onClick={() => setSeverity(opt.value)}
                   className={cn(
-                    'flex-1 py-2 px-2 rounded-lg transition-all text-center',
+                    "flex-1 py-2 px-2 rounded-lg transition-all text-center",
                     severity === opt.value
                       ? `${opt.color} text-white`
-                      : 'bg-surface-2 text-slate-400 hover:bg-surface-3'
+                      : "bg-surface-2 text-slate-400 hover:bg-surface-3",
                   )}
                 >
                   <div className="text-sm font-medium">{opt.label}</div>
@@ -301,10 +342,10 @@ function QualityFeedbackDialog({ open, onClose, task, material }) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="请详细描述质量问题..."
               className={cn(
-                'w-full h-24 px-3 py-2 rounded-lg resize-none',
-                'bg-surface-2 border border-border',
-                'text-white placeholder:text-slate-500',
-                'focus:outline-none focus:ring-2 focus:ring-primary/50'
+                "w-full h-24 px-3 py-2 rounded-lg resize-none",
+                "bg-surface-2 border border-border",
+                "text-white placeholder:text-slate-500",
+                "focus:outline-none focus:ring-2 focus:ring-primary/50",
               )}
             />
           </div>
@@ -315,18 +356,25 @@ function QualityFeedbackDialog({ open, onClose, task, material }) {
             <div className="flex gap-2">
               <button
                 className={cn(
-                  'w-20 h-20 rounded-lg border-2 border-dashed border-border',
-                  'flex flex-col items-center justify-center gap-1',
-                  'text-slate-400 hover:text-white hover:border-primary/50',
-                  'transition-all'
+                  "w-20 h-20 rounded-lg border-2 border-dashed border-border",
+                  "flex flex-col items-center justify-center gap-1",
+                  "text-slate-400 hover:text-white hover:border-primary/50",
+                  "transition-all",
                 )}
               >
                 <Camera className="w-6 h-6" />
                 <span className="text-[10px]">拍照</span>
               </button>
               {photos.map((photo, i) => (
-                <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden">
-                  <img src={photo} alt="" className="w-full h-full object-cover" />
+                <div
+                  key={i}
+                  className="relative w-20 h-20 rounded-lg overflow-hidden"
+                >
+                  <img
+                    src={photo}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
                   <button className="absolute top-1 right-1 p-0.5 rounded-full bg-black/50">
                     <X className="w-3 h-3" />
                   </button>
@@ -337,27 +385,32 @@ function QualityFeedbackDialog({ open, onClose, task, material }) {
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>取消</Button>
-          <Button onClick={handleSubmit} className="bg-red-500 hover:bg-red-600">
+          <Button variant="ghost" onClick={onClose}>
+            取消
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            className="bg-red-500 hover:bg-red-600"
+          >
             <Send className="w-4 h-4 mr-1" />
             提交反馈
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // ============ 图纸查看对话框组件 ============
 function DrawingViewerDialog({ open, onClose, task }) {
-  const [selectedDrawing, setSelectedDrawing] = useState(null)
-  const [zoom, setZoom] = useState(100)
+  const [selectedDrawing, setSelectedDrawing] = useState(null);
+  const [zoom, setZoom] = useState(100);
 
   useEffect(() => {
     if (task?.drawings?.length > 0 && !selectedDrawing) {
-      setSelectedDrawing(task.drawings[0])
+      setSelectedDrawing(task.drawings[0]);
     }
-  }, [task, selectedDrawing])
+  }, [task, selectedDrawing]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -380,14 +433,18 @@ function DrawingViewerDialog({ open, onClose, task }) {
                 key={drawing.id}
                 onClick={() => setSelectedDrawing(drawing)}
                 className={cn(
-                  'w-full p-3 rounded-lg text-left transition-all',
+                  "w-full p-3 rounded-lg text-left transition-all",
                   selectedDrawing?.id === drawing.id
-                    ? 'bg-primary/20 border border-primary/50'
-                    : 'bg-surface-2 hover:bg-surface-3 border border-transparent'
+                    ? "bg-primary/20 border border-primary/50"
+                    : "bg-surface-2 hover:bg-surface-3 border border-transparent",
                 )}
               >
-                <p className="text-sm font-medium text-white truncate">{drawing.name}</p>
-                <p className="text-xs text-slate-400 capitalize">{drawing.type}</p>
+                <p className="text-sm font-medium text-white truncate">
+                  {drawing.name}
+                </p>
+                <p className="text-xs text-slate-400 capitalize">
+                  {drawing.type}
+                </p>
               </button>
             ))}
 
@@ -404,7 +461,7 @@ function DrawingViewerDialog({ open, onClose, task }) {
             {/* 工具栏 */}
             <div className="flex items-center justify-between p-2 border-b border-border bg-surface-2/50">
               <span className="text-sm text-slate-400">
-                {selectedDrawing?.name || '请选择图纸'}
+                {selectedDrawing?.name || "请选择图纸"}
               </span>
               <div className="flex items-center gap-1">
                 <Button
@@ -414,7 +471,9 @@ function DrawingViewerDialog({ open, onClose, task }) {
                 >
                   <ZoomOut className="w-4 h-4" />
                 </Button>
-                <span className="text-xs text-slate-400 w-12 text-center">{zoom}%</span>
+                <span className="text-xs text-slate-400 w-12 text-center">
+                  {zoom}%
+                </span>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -463,26 +522,28 @@ function DrawingViewerDialog({ open, onClose, task }) {
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>关闭</Button>
+          <Button variant="ghost" onClick={onClose}>
+            关闭
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // ============ 任务完成确认对话框（含工时填报）============
 function TaskCompleteDialog({ open, onClose, task, onComplete }) {
-  const [hours, setHours] = useState(task?.actualHours || 0)
-  const [notes, setNotes] = useState('')
-  const [issues, setIssues] = useState([])
+  const [hours, setHours] = useState(task?.actualHours || 0);
+  const [notes, setNotes] = useState("");
+  const [issues, setIssues] = useState([]);
 
-  const remainingSteps = task?.steps?.filter(s => !s.completed) || []
+  const remainingSteps = task?.steps?.filter((s) => !s.completed) || [];
 
   const handleSubmit = () => {
     // TODO: Call API to confirm completion
-    onComplete && onComplete(task.id, hours)
-    onClose()
-  }
+    onComplete && onComplete(task.id, hours);
+    onClose();
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -492,9 +553,7 @@ function TaskCompleteDialog({ open, onClose, task, onComplete }) {
             <ClipboardCheck className="w-5 h-5 text-emerald-400" />
             确认完成任务
           </DialogTitle>
-          <DialogDescription>
-            确认任务完成并填报工时
-          </DialogDescription>
+          <DialogDescription>确认任务完成并填报工时</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -513,7 +572,7 @@ function TaskCompleteDialog({ open, onClose, task, onComplete }) {
                 ⚠️ 以下步骤尚未完成：
               </p>
               <ul className="text-xs text-amber-300/80 space-y-1">
-                {remainingSteps.map(step => (
+                {remainingSteps.map((step) => (
                   <li key={step.id}>• {step.title}</li>
                 ))}
               </ul>
@@ -563,65 +622,74 @@ function TaskCompleteDialog({ open, onClose, task, onComplete }) {
               onChange={(e) => setNotes(e.target.value)}
               placeholder="记录完工情况、遇到的问题等..."
               className={cn(
-                'w-full h-20 px-3 py-2 rounded-lg resize-none',
-                'bg-surface-2 border border-border',
-                'text-white placeholder:text-slate-500',
-                'focus:outline-none focus:ring-2 focus:ring-primary/50'
+                "w-full h-20 px-3 py-2 rounded-lg resize-none",
+                "bg-surface-2 border border-border",
+                "text-white placeholder:text-slate-500",
+                "focus:outline-none focus:ring-2 focus:ring-primary/50",
               )}
             />
           </div>
 
           {/* 遗留问题 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-white">遗留问题 (可选)</label>
+            <label className="text-sm font-medium text-white">
+              遗留问题 (可选)
+            </label>
             <div className="flex flex-wrap gap-2">
-              {['需要复检', '有轻微偏差', '待补充物料', '建议优化工艺'].map((issue) => (
-                <button
-                  key={issue}
-                  onClick={() => {
-                    if (issues.includes(issue)) {
-                      setIssues(issues.filter(i => i !== issue))
-                    } else {
-                      setIssues([...issues, issue])
-                    }
-                  }}
-                  className={cn(
-                    'px-3 py-1 rounded-full text-xs font-medium transition-all',
-                    issues.includes(issue)
-                      ? 'bg-primary text-white'
-                      : 'bg-surface-2 text-slate-400 hover:bg-surface-3'
-                  )}
-                >
-                  {issue}
-                </button>
-              ))}
+              {["需要复检", "有轻微偏差", "待补充物料", "建议优化工艺"].map(
+                (issue) => (
+                  <button
+                    key={issue}
+                    onClick={() => {
+                      if (issues.includes(issue)) {
+                        setIssues(issues.filter((i) => i !== issue));
+                      } else {
+                        setIssues([...issues, issue]);
+                      }
+                    }}
+                    className={cn(
+                      "px-3 py-1 rounded-full text-xs font-medium transition-all",
+                      issues.includes(issue)
+                        ? "bg-primary text-white"
+                        : "bg-surface-2 text-slate-400 hover:bg-surface-3",
+                    )}
+                  >
+                    {issue}
+                  </button>
+                ),
+              )}
             </div>
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>取消</Button>
-          <Button onClick={handleSubmit} className="bg-emerald-500 hover:bg-emerald-600">
+          <Button variant="ghost" onClick={onClose}>
+            取消
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            className="bg-emerald-500 hover:bg-emerald-600"
+          >
             <CheckCircle2 className="w-4 h-4 mr-1" />
             确认完成
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // ============ 任务卡片组件 ============
 function AssemblyTaskCard({ task, onAction }) {
-  const [expanded, setExpanded] = useState(false)
-  const [materialsExpanded, setMaterialsExpanded] = useState(false)
-  const status = statusConfigs[task.status]
-  const priority = priorityConfigs[task.priority]
-  const StatusIcon = status.icon
+  const [expanded, setExpanded] = useState(false);
+  const [materialsExpanded, setMaterialsExpanded] = useState(false);
+  const status = statusConfigs[task.status];
+  const priority = priorityConfigs[task.priority];
+  const StatusIcon = status.icon;
 
-  const hasShortage = task.materials?.some(m => m.status === 'shortage')
-  const completedSteps = task.steps?.filter(s => s.completed).length || 0
-  const totalSteps = task.steps?.length || 0
+  const hasShortage = task.materials?.some((m) => m.status === "shortage");
+  const completedSteps = task.steps?.filter((s) => s.completed).length || 0;
+  const totalSteps = task.steps?.length || 0;
 
   return (
     <motion.div
@@ -629,23 +697,25 @@ function AssemblyTaskCard({ task, onAction }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        'rounded-xl border overflow-hidden',
-        task.status === 'blocked'
-          ? 'bg-red-500/5 border-red-500/30'
+        "rounded-xl border overflow-hidden",
+        task.status === "blocked"
+          ? "bg-red-500/5 border-red-500/30"
           : hasShortage
-          ? 'bg-amber-500/5 border-amber-500/30'
-          : 'bg-surface-1 border-border'
+            ? "bg-amber-500/5 border-amber-500/30"
+            : "bg-surface-1 border-border",
       )}
     >
       <div className="p-4">
         {/* 头部信息 */}
         <div className="flex items-start gap-3 mb-3">
-          <div className={cn('p-2 rounded-lg', status.bgColor)}>
-            <StatusIcon className={cn('w-5 h-5', status.color)} />
+          <div className={cn("p-2 rounded-lg", status.bgColor)}>
+            <StatusIcon className={cn("w-5 h-5", status.color)} />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <Badge className={cn('text-xs', priority.bgColor, priority.color)}>
+              <Badge
+                className={cn("text-xs", priority.bgColor, priority.color)}
+              >
                 {priority.label}优先级
               </Badge>
               <Badge variant="outline" className="text-xs">
@@ -668,13 +738,18 @@ function AssemblyTaskCard({ task, onAction }) {
         )}
 
         {/* 进度信息 */}
-        {task.status !== 'completed' && (
+        {task.status !== "completed" && (
           <div className="mb-3">
             <div className="flex items-center justify-between text-sm mb-1">
               <span className="text-slate-400">进度</span>
-              <span className="text-white">{completedSteps}/{totalSteps} 步骤</span>
+              <span className="text-white">
+                {completedSteps}/{totalSteps} 步骤
+              </span>
             </div>
-            <Progress value={(completedSteps / totalSteps) * 100} className="h-2" />
+            <Progress
+              value={(completedSteps / totalSteps) * 100}
+              className="h-2"
+            />
           </div>
         )}
 
@@ -706,9 +781,16 @@ function AssemblyTaskCard({ task, onAction }) {
               className="w-full flex items-center justify-between py-2 text-sm"
             >
               <span className="flex items-center gap-2">
-                <Package className={cn('w-4 h-4', hasShortage ? 'text-amber-400' : 'text-emerald-400')} />
+                <Package
+                  className={cn(
+                    "w-4 h-4",
+                    hasShortage ? "text-amber-400" : "text-emerald-400",
+                  )}
+                />
                 <span className="text-slate-300">
-                  物料准备 ({task.materials.filter(m => m.status === 'ok').length}/{task.materials.length})
+                  物料准备 (
+                  {task.materials.filter((m) => m.status === "ok").length}/
+                  {task.materials.length})
                 </span>
                 {hasShortage && (
                   <Badge className="text-[10px] bg-amber-500/20 text-amber-400">
@@ -716,17 +798,19 @@ function AssemblyTaskCard({ task, onAction }) {
                   </Badge>
                 )}
               </span>
-              <ChevronRight className={cn(
-                'w-4 h-4 text-slate-400 transition-transform',
-                materialsExpanded && 'rotate-90'
-              )} />
+              <ChevronRight
+                className={cn(
+                  "w-4 h-4 text-slate-400 transition-transform",
+                  materialsExpanded && "rotate-90",
+                )}
+              />
             </button>
 
             <AnimatePresence>
               {materialsExpanded && (
                 <motion.div
                   initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
+                  animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   className="overflow-hidden"
                 >
@@ -735,30 +819,37 @@ function AssemblyTaskCard({ task, onAction }) {
                       <div
                         key={material.id}
                         className={cn(
-                          'flex items-center justify-between p-2 rounded-lg',
-                          material.status === 'shortage' ? 'bg-amber-500/10' : 'bg-surface-2/50'
+                          "flex items-center justify-between p-2 rounded-lg",
+                          material.status === "shortage"
+                            ? "bg-amber-500/10"
+                            : "bg-surface-2/50",
                         )}
                       >
                         <div className="flex items-center gap-2">
-                          {material.status === 'ok' ? (
+                          {material.status === "ok" ? (
                             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                           ) : (
                             <AlertTriangle className="w-4 h-4 text-amber-400" />
                           )}
                           <div>
-                            <p className="text-sm text-white">{material.name}</p>
+                            <p className="text-sm text-white">
+                              {material.name}
+                            </p>
                             <p className="text-xs text-slate-400">
-                              {material.spec} × {material.received}/{material.qty}
+                              {material.spec} × {material.received}/
+                              {material.qty}
                             </p>
                           </div>
                         </div>
-                        {material.status === 'shortage' && (
+                        {material.status === "shortage" && (
                           <div className="flex gap-1">
                             <Button
                               variant="ghost"
                               size="sm"
                               className="h-7 text-xs text-amber-400"
-                              onClick={() => onAction('shortage', task, material)}
+                              onClick={() =>
+                                onAction("shortage", task, material)
+                              }
                             >
                               反馈缺料
                             </Button>
@@ -768,7 +859,7 @@ function AssemblyTaskCard({ task, onAction }) {
                           variant="ghost"
                           size="sm"
                           className="h-7 w-7 p-0 text-slate-400"
-                          onClick={() => onAction('quality', task, material)}
+                          onClick={() => onAction("quality", task, material)}
                         >
                           <FileWarning className="w-4 h-4" />
                         </Button>
@@ -792,17 +883,19 @@ function AssemblyTaskCard({ task, onAction }) {
                 <Wrench className="w-4 h-4 text-blue-400" />
                 <span className="text-slate-300">作业步骤</span>
               </span>
-              <ChevronRight className={cn(
-                'w-4 h-4 text-slate-400 transition-transform',
-                expanded && 'rotate-90'
-              )} />
+              <ChevronRight
+                className={cn(
+                  "w-4 h-4 text-slate-400 transition-transform",
+                  expanded && "rotate-90",
+                )}
+              />
             </button>
 
             <AnimatePresence>
               {expanded && (
                 <motion.div
                   initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
+                  animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   className="overflow-hidden"
                 >
@@ -811,27 +904,35 @@ function AssemblyTaskCard({ task, onAction }) {
                       <button
                         key={step.id}
                         className={cn(
-                          'w-full flex items-center gap-3 p-2 rounded-lg text-left',
-                          'transition-all hover:bg-surface-2',
-                          step.completed ? 'opacity-60' : ''
+                          "w-full flex items-center gap-3 p-2 rounded-lg text-left",
+                          "transition-all hover:bg-surface-2",
+                          step.completed ? "opacity-60" : "",
                         )}
                       >
-                        <div className={cn(
-                          'w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0',
-                          step.completed
-                            ? 'bg-emerald-500 border-emerald-500'
-                            : 'border-slate-500'
-                        )}>
+                        <div
+                          className={cn(
+                            "w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0",
+                            step.completed
+                              ? "bg-emerald-500 border-emerald-500"
+                              : "border-slate-500",
+                          )}
+                        >
                           {step.completed ? (
                             <CheckCircle2 className="w-4 h-4 text-white" />
                           ) : (
-                            <span className="text-xs text-slate-400">{index + 1}</span>
+                            <span className="text-xs text-slate-400">
+                              {index + 1}
+                            </span>
                           )}
                         </div>
-                        <span className={cn(
-                          'text-sm',
-                          step.completed ? 'text-slate-500 line-through' : 'text-slate-200'
-                        )}>
+                        <span
+                          className={cn(
+                            "text-sm",
+                            step.completed
+                              ? "text-slate-500 line-through"
+                              : "text-slate-200",
+                          )}
+                        >
                           {step.title}
                         </span>
                       </button>
@@ -854,7 +955,7 @@ function AssemblyTaskCard({ task, onAction }) {
         {/* 所需工具 */}
         {task.tools?.length > 0 && (
           <p className="text-xs text-slate-500 mb-3">
-            所需工具：{task.tools.join('、')}
+            所需工具：{task.tools.join("、")}
           </p>
         )}
 
@@ -864,28 +965,28 @@ function AssemblyTaskCard({ task, onAction }) {
             variant="outline"
             size="sm"
             className="flex-1"
-            onClick={() => onAction('drawing', task)}
+            onClick={() => onAction("drawing", task)}
           >
             <FileImage className="w-4 h-4 mr-1" />
             查看图纸
           </Button>
 
-          {task.status === 'in_progress' && (
+          {task.status === "in_progress" && (
             <Button
               size="sm"
               className="flex-1 bg-emerald-500 hover:bg-emerald-600"
-              onClick={() => onAction('complete', task)}
+              onClick={() => onAction("complete", task)}
             >
               <CheckCircle2 className="w-4 h-4 mr-1" />
               确认完成
             </Button>
           )}
 
-          {task.status === 'pending' && !task.blockedBy && (
+          {task.status === "pending" && !task.blockedBy && (
             <Button
               size="sm"
               className="flex-1"
-              onClick={() => onAction('start', task)}
+              onClick={() => onAction("start", task)}
             >
               <PlayCircle className="w-4 h-4 mr-1" />
               开始任务
@@ -894,65 +995,91 @@ function AssemblyTaskCard({ task, onAction }) {
         </div>
       </div>
     </motion.div>
-  )
+  );
 }
 
 // ============ 主组件 ============
 export default function AssemblerTaskCenter() {
-  const [tasks, setTasks] = useState(mockAssemblyTasks)
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [shortageDialog, setShortageDialog] = useState({ open: false, task: null, material: null })
-  const [qualityDialog, setQualityDialog] = useState({ open: false, task: null, material: null })
-  const [drawingDialog, setDrawingDialog] = useState({ open: false, task: null })
-  const [completeDialog, setCompleteDialog] = useState({ open: false, task: null })
+  const [tasks, setTasks] = useState(mockAssemblyTasks);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [shortageDialog, setShortageDialog] = useState({
+    open: false,
+    task: null,
+    material: null,
+  });
+  const [qualityDialog, setQualityDialog] = useState({
+    open: false,
+    task: null,
+    material: null,
+  });
+  const [drawingDialog, setDrawingDialog] = useState({
+    open: false,
+    task: null,
+  });
+  const [completeDialog, setCompleteDialog] = useState({
+    open: false,
+    task: null,
+  });
 
   // 过滤任务
   const filteredTasks = tasks.filter((task) => {
-    if (statusFilter === 'all') return true
-    return task.status === statusFilter
-  })
+    if (statusFilter === "all") return true;
+    return task.status === statusFilter;
+  });
 
   // 统计
   const stats = {
     total: tasks.length,
-    in_progress: tasks.filter(t => t.status === 'in_progress').length,
-    pending: tasks.filter(t => t.status === 'pending').length,
-    blocked: tasks.filter(t => t.status === 'blocked').length,
-    completed: tasks.filter(t => t.status === 'completed').length,
-    shortage: tasks.filter(t => t.materials?.some(m => m.status === 'shortage')).length,
-  }
+    in_progress: tasks.filter((t) => t.status === "in_progress").length,
+    pending: tasks.filter((t) => t.status === "pending").length,
+    blocked: tasks.filter((t) => t.status === "blocked").length,
+    completed: tasks.filter((t) => t.status === "completed").length,
+    shortage: tasks.filter((t) =>
+      t.materials?.some((m) => m.status === "shortage"),
+    ).length,
+  };
 
   // 处理操作
   const handleAction = (action, task, material = null) => {
     switch (action) {
-      case 'shortage':
-        setShortageDialog({ open: true, task, material })
-        break
-      case 'quality':
-        setQualityDialog({ open: true, task, material })
-        break
-      case 'drawing':
-        setDrawingDialog({ open: true, task })
-        break
-      case 'complete':
-        setCompleteDialog({ open: true, task })
-        break
-      case 'start':
-        setTasks(prev => prev.map(t =>
-          t.id === task.id ? { ...t, status: 'in_progress' } : t
-        ))
-        break
+      case "shortage":
+        setShortageDialog({ open: true, task, material });
+        break;
+      case "quality":
+        setQualityDialog({ open: true, task, material });
+        break;
+      case "drawing":
+        setDrawingDialog({ open: true, task });
+        break;
+      case "complete":
+        setCompleteDialog({ open: true, task });
+        break;
+      case "start":
+        setTasks((prev) =>
+          prev.map((t) =>
+            t.id === task.id ? { ...t, status: "in_progress" } : t,
+          ),
+        );
+        break;
     }
-  }
+  };
 
   // 完成任务
   const handleComplete = (taskId, hours) => {
-    setTasks(prev => prev.map(t =>
-      t.id === taskId
-        ? { ...t, status: 'completed', actualHours: hours, progress: 100, completedDate: new Date().toISOString().split('T')[0] }
-        : t
-    ))
-  }
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === taskId
+          ? {
+              ...t,
+              status: "completed",
+              actualHours: hours,
+              progress: 100,
+              completedDate: new Date().toISOString().split("T")[0],
+            }
+          : t,
+      ),
+    );
+  };
 
   return (
     <motion.div
@@ -966,11 +1093,21 @@ export default function AssemblerTaskCenter() {
         description={`今日待完成 ${stats.in_progress} 项，共 ${stats.total} 项任务`}
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShortageDialog({ open: true, task: null, material: null })}>
+            <Button
+              variant="outline"
+              onClick={() =>
+                setShortageDialog({ open: true, task: null, material: null })
+              }
+            >
               <AlertTriangle className="w-4 h-4 mr-1" />
               反馈缺料
             </Button>
-            <Button variant="outline" onClick={() => setQualityDialog({ open: true, task: null, material: null })}>
+            <Button
+              variant="outline"
+              onClick={() =>
+                setQualityDialog({ open: true, task: null, material: null })
+              }
+            >
               <FileWarning className="w-4 h-4 mr-1" />
               质量反馈
             </Button>
@@ -979,22 +1116,57 @@ export default function AssemblerTaskCenter() {
       />
 
       {/* 统计卡片 */}
-      <motion.div variants={fadeIn} className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <motion.div
+        variants={fadeIn}
+        className="grid grid-cols-2 md:grid-cols-5 gap-4"
+      >
         {[
-          { key: 'in_progress', label: '进行中', icon: PlayCircle, color: 'text-blue-400', value: stats.in_progress },
-          { key: 'pending', label: '待开始', icon: Circle, color: 'text-slate-400', value: stats.pending },
-          { key: 'blocked', label: '已阻塞', icon: PauseCircle, color: 'text-red-400', value: stats.blocked },
-          { key: 'completed', label: '已完成', icon: CheckCircle2, color: 'text-emerald-400', value: stats.completed },
-          { key: 'shortage', label: '缺料任务', icon: AlertTriangle, color: 'text-amber-400', value: stats.shortage },
+          {
+            key: "in_progress",
+            label: "进行中",
+            icon: PlayCircle,
+            color: "text-blue-400",
+            value: stats.in_progress,
+          },
+          {
+            key: "pending",
+            label: "待开始",
+            icon: Circle,
+            color: "text-slate-400",
+            value: stats.pending,
+          },
+          {
+            key: "blocked",
+            label: "已阻塞",
+            icon: PauseCircle,
+            color: "text-red-400",
+            value: stats.blocked,
+          },
+          {
+            key: "completed",
+            label: "已完成",
+            icon: CheckCircle2,
+            color: "text-emerald-400",
+            value: stats.completed,
+          },
+          {
+            key: "shortage",
+            label: "缺料任务",
+            icon: AlertTriangle,
+            color: "text-amber-400",
+            value: stats.shortage,
+          },
         ].map((stat) => (
           <Card key={stat.key} className="bg-surface-1/50">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-400">{stat.label}</p>
-                  <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
+                  <p className="text-2xl font-bold text-white mt-1">
+                    {stat.value}
+                  </p>
                 </div>
-                <stat.icon className={cn('w-6 h-6', stat.color)} />
+                <stat.icon className={cn("w-6 h-6", stat.color)} />
               </div>
             </CardContent>
           </Card>
@@ -1004,15 +1176,15 @@ export default function AssemblerTaskCenter() {
       {/* 筛选按钮 */}
       <motion.div variants={fadeIn} className="flex gap-2 flex-wrap">
         {[
-          { value: 'all', label: '全部任务' },
-          { value: 'in_progress', label: '进行中' },
-          { value: 'pending', label: '待开始' },
-          { value: 'blocked', label: '已阻塞' },
-          { value: 'completed', label: '已完成' },
+          { value: "all", label: "全部任务" },
+          { value: "in_progress", label: "进行中" },
+          { value: "pending", label: "待开始" },
+          { value: "blocked", label: "已阻塞" },
+          { value: "completed", label: "已完成" },
         ].map((filter) => (
           <Button
             key={filter.value}
-            variant={statusFilter === filter.value ? 'default' : 'ghost'}
+            variant={statusFilter === filter.value ? "default" : "ghost"}
             size="sm"
             onClick={() => setStatusFilter(filter.value)}
           >
@@ -1022,13 +1194,12 @@ export default function AssemblerTaskCenter() {
       </motion.div>
 
       {/* 任务列表 */}
-      <motion.div variants={fadeIn} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <motion.div
+        variants={fadeIn}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-4"
+      >
         {filteredTasks.map((task) => (
-          <AssemblyTaskCard
-            key={task.id}
-            task={task}
-            onAction={handleAction}
-          />
+          <AssemblyTaskCard key={task.id} task={task} onAction={handleAction} />
         ))}
       </motion.div>
 
@@ -1038,7 +1209,9 @@ export default function AssemblerTaskCenter() {
           <Wrench className="w-16 h-16 mx-auto text-slate-600 mb-4" />
           <h3 className="text-lg font-medium text-slate-400">暂无任务</h3>
           <p className="text-sm text-slate-500 mt-1">
-            {statusFilter !== 'all' ? '没有符合条件的任务' : '当前没有分配给您的装配任务'}
+            {statusFilter !== "all"
+              ? "没有符合条件的任务"
+              : "当前没有分配给您的装配任务"}
           </p>
         </motion.div>
       )}
@@ -1046,14 +1219,18 @@ export default function AssemblerTaskCenter() {
       {/* 对话框 */}
       <MaterialShortageDialog
         open={shortageDialog.open}
-        onClose={() => setShortageDialog({ open: false, task: null, material: null })}
+        onClose={() =>
+          setShortageDialog({ open: false, task: null, material: null })
+        }
         task={shortageDialog.task}
         material={shortageDialog.material}
       />
 
       <QualityFeedbackDialog
         open={qualityDialog.open}
-        onClose={() => setQualityDialog({ open: false, task: null, material: null })}
+        onClose={() =>
+          setQualityDialog({ open: false, task: null, material: null })
+        }
         task={qualityDialog.task}
         material={qualityDialog.material}
       />
@@ -1071,6 +1248,5 @@ export default function AssemblerTaskCenter() {
         onComplete={handleComplete}
       />
     </motion.div>
-  )
+  );
 }
-

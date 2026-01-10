@@ -2,13 +2,13 @@
  * 项目复盘报告列表页面
  * 展示所有项目的复盘报告，支持筛选和搜索
  */
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { cn } from '../lib/utils'
-import { projectReviewApi, projectApi } from '../services/api'
-import { formatDate, formatCurrency } from '../lib/utils'
-import { PageHeader } from '../components/layout/PageHeader'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { cn } from "../lib/utils";
+import { projectReviewApi, projectApi } from "../services/api";
+import { formatDate, formatCurrency } from "../lib/utils";
+import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
@@ -16,7 +16,7 @@ import {
   Badge,
   Input,
   SkeletonCard,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +24,7 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Search,
   Plus,
@@ -38,7 +38,7 @@ import {
   CheckCircle2,
   Clock,
   Archive,
-} from 'lucide-react'
+} from "lucide-react";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -46,200 +46,204 @@ const staggerContainer = {
     opacity: 1,
     transition: { staggerChildren: 0.05, delayChildren: 0.1 },
   },
-}
+};
 
 const staggerChild = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
-}
+};
 
 const getStatusBadge = (status) => {
   const badges = {
-    DRAFT: { label: '草稿', variant: 'secondary', color: 'text-slate-400' },
-    PUBLISHED: { label: '已发布', variant: 'success', color: 'text-emerald-400' },
-    ARCHIVED: { label: '已归档', variant: 'info', color: 'text-blue-400' },
-  }
-  return badges[status] || badges.DRAFT
-}
+    DRAFT: { label: "草稿", variant: "secondary", color: "text-slate-400" },
+    PUBLISHED: {
+      label: "已发布",
+      variant: "success",
+      color: "text-emerald-400",
+    },
+    ARCHIVED: { label: "已归档", variant: "info", color: "text-blue-400" },
+  };
+  return badges[status] || badges.DRAFT;
+};
 
 const getReviewTypeLabel = (type) => {
   const types = {
-    POST_MORTEM: '结项复盘',
-    MID_TERM: '中期复盘',
-    QUARTERLY: '季度复盘',
-  }
-  return types[type] || type
-}
+    POST_MORTEM: "结项复盘",
+    MID_TERM: "中期复盘",
+    QUARTERLY: "季度复盘",
+  };
+  return types[type] || type;
+};
 
 export default function ProjectReviewList() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true)
-  const [reviews, setReviews] = useState([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
-  const [pageSize] = useState(20)
+  const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
 
   // 筛选条件
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [projectId, setProjectId] = useState(null)
-  const [status, setStatus] = useState(null)
-  const [reviewType, setReviewType] = useState(null)
-  const [startDate, setStartDate] = useState(null)
-  const [endDate, setEndDate] = useState(null)
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [projectId, setProjectId] = useState(null);
+  const [status, setStatus] = useState(null);
+  const [reviewType, setReviewType] = useState(null);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   // 项目列表（用于筛选）
-  const [projectList, setProjectList] = useState([])
+  const [projectList, setProjectList] = useState([]);
 
   // 对话框
-  const [deleteDialog, setDeleteDialog] = useState({ open: false, review: null })
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    review: null,
+  });
 
   useEffect(() => {
-    fetchReviews()
-    fetchProjectList()
-  }, [page, projectId, status, reviewType, startDate, endDate])
+    fetchReviews();
+    fetchProjectList();
+  }, [page, projectId, status, reviewType, startDate, endDate]);
 
   // Mock data for when API fails
   const mockProjectList = [
-    { id: 1, project_code: 'PJ250108001', project_name: 'BMS老化测试设备' },
-    { id: 2, project_code: 'PJ250105002', project_name: 'EOL功能测试设备' },
-    { id: 3, project_code: 'PJ250106003', project_name: 'ICT测试设备' },
-  ]
+    { id: 1, project_code: "PJ250108001", project_name: "BMS老化测试设备" },
+    { id: 2, project_code: "PJ250105002", project_name: "EOL功能测试设备" },
+    { id: 3, project_code: "PJ250106003", project_name: "ICT测试设备" },
+  ];
 
   const mockReviews = [
     {
       id: 1,
       project_id: 1,
-      project_code: 'PJ250108001',
-      project_name: 'BMS老化测试设备',
-      title: 'BMS老化测试设备项目结项复盘',
-      review_type: 'POST_MORTEM',
-      status: 'PUBLISHED',
-      review_date: '2026-01-05',
-      reviewer_name: '张经理',
-      summary: '项目整体顺利完成，提前2天交付。主要经验：供应商选择准确，技术方案验证充分。',
+      project_code: "PJ250108001",
+      project_name: "BMS老化测试设备",
+      title: "BMS老化测试设备项目结项复盘",
+      review_type: "POST_MORTEM",
+      status: "PUBLISHED",
+      review_date: "2026-01-05",
+      reviewer_name: "张经理",
+      summary:
+        "项目整体顺利完成，提前2天交付。主要经验：供应商选择准确，技术方案验证充分。",
       lessons_count: 5,
       best_practices_count: 3,
-      created_at: '2026-01-05',
+      created_at: "2026-01-05",
     },
     {
       id: 2,
       project_id: 2,
-      project_code: 'PJ250105002',
-      project_name: 'EOL功能测试设备',
-      title: 'EOL功能测试设备中期复盘',
-      review_type: 'MID_TERM',
-      status: 'DRAFT',
-      review_date: '2026-01-06',
-      reviewer_name: '李经理',
-      summary: '项目进行中，目前进度正常。需关注关键物料交期风险。',
+      project_code: "PJ250105002",
+      project_name: "EOL功能测试设备",
+      title: "EOL功能测试设备中期复盘",
+      review_type: "MID_TERM",
+      status: "DRAFT",
+      review_date: "2026-01-06",
+      reviewer_name: "李经理",
+      summary: "项目进行中，目前进度正常。需关注关键物料交期风险。",
       lessons_count: 2,
       best_practices_count: 1,
-      created_at: '2026-01-06',
+      created_at: "2026-01-06",
     },
     {
       id: 3,
       project_id: 3,
-      project_code: 'PJ250106003',
-      project_name: 'ICT测试设备',
-      title: 'ICT测试设备季度复盘',
-      review_type: 'QUARTERLY',
-      status: 'ARCHIVED',
-      review_date: '2025-12-30',
-      reviewer_name: '王经理',
-      summary: '季度工作回顾，识别出设计变更流程需优化。',
+      project_code: "PJ250106003",
+      project_name: "ICT测试设备",
+      title: "ICT测试设备季度复盘",
+      review_type: "QUARTERLY",
+      status: "ARCHIVED",
+      review_date: "2025-12-30",
+      reviewer_name: "王经理",
+      summary: "季度工作回顾，识别出设计变更流程需优化。",
       lessons_count: 4,
       best_practices_count: 2,
-      created_at: '2025-12-30',
+      created_at: "2025-12-30",
     },
-  ]
+  ];
 
   const fetchProjectList = async () => {
     try {
-      const res = await projectApi.list({ page: 1, page_size: 100 })
-      const data = res.data || res
-      setProjectList(data.items || data || [])
+      const res = await projectApi.list({ page: 1, page_size: 100 });
+      const data = res.data || res;
+      setProjectList(data.items || data || []);
     } catch (err) {
-      console.error('Failed to fetch projects:', err)
+      console.error("Failed to fetch projects:", err);
       // API 失败时使用 mock 数据
-      setProjectList(mockProjectList)
+      setProjectList(mockProjectList);
     }
-  }
+  };
 
   const fetchReviews = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const params = {
         page,
         page_size: pageSize,
-      }
-      if (projectId) params.project_id = projectId
-      if (status) params.status = status
-      if (startDate) params.start_date = startDate
-      if (endDate) params.end_date = endDate
+      };
+      if (projectId) params.project_id = projectId;
+      if (status) params.status = status;
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
 
-      const res = await projectReviewApi.list(params)
-      const data = res.data || res
-      setReviews(data.items || data || [])
-      setTotal(data.total || data.length || 0)
+      const res = await projectReviewApi.list(params);
+      const data = res.data || res;
+      setReviews(data.items || data || []);
+      setTotal(data.total || data.length || 0);
     } catch (err) {
-      console.error('Failed to fetch reviews:', err)
+      console.error("Failed to fetch reviews:", err);
       // API 调用失败时，使用 mock 数据让用户仍能看到界面
-      console.log('API 调用失败，使用 mock 数据展示界面', {
+      console.log("API 调用失败，使用 mock 数据展示界面", {
         status: err.response?.status,
-        message: err.message
-      })
-      setReviews(mockReviews)
-      setTotal(mockReviews.length)
+        message: err.message,
+      });
+      setReviews(mockReviews);
+      setTotal(mockReviews.length);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!deleteDialog.review) return
+    if (!deleteDialog.review) return;
     try {
-      await projectReviewApi.delete(deleteDialog.review.id)
-      setDeleteDialog({ open: false, review: null })
-      fetchReviews()
+      await projectReviewApi.delete(deleteDialog.review.id);
+      setDeleteDialog({ open: false, review: null });
+      fetchReviews();
     } catch (err) {
-      console.error('Failed to delete review:', err)
-      alert('删除失败: ' + (err.response?.data?.detail || err.message))
+      console.error("Failed to delete review:", err);
+      alert("删除失败: " + (err.response?.data?.detail || err.message));
     }
-  }
+  };
 
   const handlePublish = async (reviewId) => {
     try {
-      await projectReviewApi.publish(reviewId)
-      fetchReviews()
+      await projectReviewApi.publish(reviewId);
+      fetchReviews();
     } catch (err) {
-      console.error('Failed to publish review:', err)
-      alert('发布失败: ' + (err.response?.data?.detail || err.message))
+      console.error("Failed to publish review:", err);
+      alert("发布失败: " + (err.response?.data?.detail || err.message));
     }
-  }
+  };
 
   const handleArchive = async (reviewId) => {
     try {
-      await projectReviewApi.archive(reviewId)
-      fetchReviews()
+      await projectReviewApi.archive(reviewId);
+      fetchReviews();
     } catch (err) {
-      console.error('Failed to archive review:', err)
-      alert('归档失败: ' + (err.response?.data?.detail || err.message))
+      console.error("Failed to archive review:", err);
+      alert("归档失败: " + (err.response?.data?.detail || err.message));
     }
-  }
+  };
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={staggerContainer}
-    >
+    <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
       <PageHeader
         title="项目复盘报告"
         description="查看和管理所有项目的复盘报告"
         action={
           <Button
-            onClick={() => navigate('/projects/reviews/new')}
+            onClick={() => navigate("/projects/reviews/new")}
             className="gap-2"
           >
             <Plus className="h-4 w-4" />
@@ -260,8 +264,10 @@ export default function ProjectReviewList() {
               className="md:col-span-2"
             />
             <select
-              value={projectId || ''}
-              onChange={(e) => setProjectId(e.target.value ? parseInt(e.target.value) : null)}
+              value={projectId || ""}
+              onChange={(e) =>
+                setProjectId(e.target.value ? parseInt(e.target.value) : null)
+              }
               className="h-10 w-full rounded-md border border-border bg-surface-1 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="">全部项目</option>
@@ -272,7 +278,7 @@ export default function ProjectReviewList() {
               ))}
             </select>
             <select
-              value={status || ''}
+              value={status || ""}
               onChange={(e) => setStatus(e.target.value || null)}
               className="h-10 w-full rounded-md border border-border bg-surface-1 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-ring"
             >
@@ -282,7 +288,7 @@ export default function ProjectReviewList() {
               <option value="ARCHIVED">已归档</option>
             </select>
             <select
-              value={reviewType || ''}
+              value={reviewType || ""}
               onChange={(e) => setReviewType(e.target.value || null)}
               className="h-10 w-full rounded-md border border-border bg-surface-1 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-ring"
             >
@@ -296,13 +302,13 @@ export default function ProjectReviewList() {
             <Input
               type="date"
               placeholder="开始日期"
-              value={startDate || ''}
+              value={startDate || ""}
               onChange={(e) => setStartDate(e.target.value || null)}
             />
             <Input
               type="date"
               placeholder="结束日期"
-              value={endDate || ''}
+              value={endDate || ""}
               onChange={(e) => setEndDate(e.target.value || null)}
             />
           </div>
@@ -322,7 +328,7 @@ export default function ProjectReviewList() {
             <FileText className="h-12 w-12 text-slate-500 mx-auto mb-4" />
             <p className="text-slate-400">暂无复盘报告</p>
             <Button
-              onClick={() => navigate('/projects/reviews/new')}
+              onClick={() => navigate("/projects/reviews/new")}
               className="mt-4"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -350,7 +356,8 @@ export default function ProjectReviewList() {
                         </Badge>
                       </div>
                       <p className="text-sm text-slate-400 mb-4">
-                        复盘编号: {review.review_no} | 复盘日期: {formatDate(review.review_date)}
+                        复盘编号: {review.review_no} | 复盘日期:{" "}
+                        {formatDate(review.review_date)}
                       </p>
 
                       {/* 关键指标 */}
@@ -362,13 +369,13 @@ export default function ProjectReviewList() {
                               <p className="text-xs text-slate-400">进度偏差</p>
                               <p
                                 className={cn(
-                                  'text-sm font-medium',
+                                  "text-sm font-medium",
                                   review.schedule_variance >= 0
-                                    ? 'text-red-400'
-                                    : 'text-emerald-400'
+                                    ? "text-red-400"
+                                    : "text-emerald-400",
                                 )}
                               >
-                                {review.schedule_variance >= 0 ? '+' : ''}
+                                {review.schedule_variance >= 0 ? "+" : ""}
                                 {review.schedule_variance} 天
                               </p>
                             </div>
@@ -381,13 +388,13 @@ export default function ProjectReviewList() {
                               <p className="text-xs text-slate-400">成本偏差</p>
                               <p
                                 className={cn(
-                                  'text-sm font-medium',
+                                  "text-sm font-medium",
                                   review.cost_variance >= 0
-                                    ? 'text-red-400'
-                                    : 'text-emerald-400'
+                                    ? "text-red-400"
+                                    : "text-emerald-400",
                                 )}
                               >
-                                {review.cost_variance >= 0 ? '+' : ''}
+                                {review.cost_variance >= 0 ? "+" : ""}
                                 {formatCurrency(review.cost_variance)}
                               </p>
                             </div>
@@ -408,7 +415,9 @@ export default function ProjectReviewList() {
                           <div className="flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-slate-500" />
                             <div>
-                              <p className="text-xs text-slate-400">客户满意度</p>
+                              <p className="text-xs text-slate-400">
+                                客户满意度
+                              </p>
                               <p className="text-sm font-medium text-white">
                                 {review.customer_satisfaction}/5
                               </p>
@@ -422,17 +431,21 @@ export default function ProjectReviewList() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => navigate(`/projects/reviews/${review.id}`)}
+                          onClick={() =>
+                            navigate(`/projects/reviews/${review.id}`)
+                          }
                         >
                           <Eye className="h-4 w-4 mr-2" />
                           查看详情
                         </Button>
-                        {review.status === 'DRAFT' && (
+                        {review.status === "DRAFT" && (
                           <>
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => navigate(`/projects/reviews/${review.id}/edit`)}
+                              onClick={() =>
+                                navigate(`/projects/reviews/${review.id}/edit`)
+                              }
                             >
                               <Edit className="h-4 w-4 mr-2" />
                               编辑
@@ -448,14 +461,16 @@ export default function ProjectReviewList() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => setDeleteDialog({ open: true, review })}
+                              onClick={() =>
+                                setDeleteDialog({ open: true, review })
+                              }
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
                               删除
                             </Button>
                           </>
                         )}
-                        {review.status === 'PUBLISHED' && (
+                        {review.status === "PUBLISHED" && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -531,6 +546,5 @@ export default function ProjectReviewList() {
         </DialogContent>
       </Dialog>
     </motion.div>
-  )
+  );
 }
-

@@ -2,8 +2,8 @@
  * Customer List Page - CRM customer management for sales
  */
 
-import { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Building2,
   Search,
@@ -30,8 +30,8 @@ import {
   DollarSign,
   History,
   MessageSquare,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -52,91 +52,109 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from '../components/ui'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { CustomerCard } from '../components/sales'
+} from "../components/ui";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { CustomerCard } from "../components/sales";
 
 // Mock customer data
 // Mock data - 已移除，使用真实API
 const gradeOptions = [
-  { value: 'all', label: '全部等级' },
-  { value: 'A', label: 'A级客户' },
-  { value: 'B', label: 'B级客户' },
-  { value: 'C', label: 'C级客户' },
-  { value: 'D', label: 'D级客户' },
-]
+  { value: "all", label: "全部等级" },
+  { value: "A", label: "A级客户" },
+  { value: "B", label: "B级客户" },
+  { value: "C", label: "C级客户" },
+  { value: "D", label: "D级客户" },
+];
 
 const statusOptions = [
-  { value: 'all', label: '全部状态' },
-  { value: 'active', label: '活跃客户' },
-  { value: 'potential', label: '潜在客户' },
-  { value: 'dormant', label: '沉睡客户' },
-  { value: 'lost', label: '流失客户' },
-]
+  { value: "all", label: "全部状态" },
+  { value: "active", label: "活跃客户" },
+  { value: "potential", label: "潜在客户" },
+  { value: "dormant", label: "沉睡客户" },
+  { value: "lost", label: "流失客户" },
+];
 
 const industryOptions = [
-  { value: 'all', label: '全部行业' },
-  { value: '新能源电池', label: '新能源电池' },
-  { value: '消费电子', label: '消费电子' },
-  { value: '汽车零部件', label: '汽车零部件' },
-  { value: '储能系统', label: '储能系统' },
-  { value: '智能制造', label: '智能制造' },
-  { value: '电子制造', label: '电子制造' },
-]
+  { value: "all", label: "全部行业" },
+  { value: "新能源电池", label: "新能源电池" },
+  { value: "消费电子", label: "消费电子" },
+  { value: "汽车零部件", label: "汽车零部件" },
+  { value: "储能系统", label: "储能系统" },
+  { value: "智能制造", label: "智能制造" },
+  { value: "电子制造", label: "电子制造" },
+];
 
 const gradeColors = {
-  A: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  B: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  C: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  D: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
-}
+  A: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+  B: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  C: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+  D: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+};
 
 const statusConfig = {
-  active: { label: '活跃', color: 'bg-emerald-500', textColor: 'text-emerald-400' },
-  potential: { label: '潜在', color: 'bg-blue-500', textColor: 'text-blue-400' },
-  dormant: { label: '沉睡', color: 'bg-amber-500', textColor: 'text-amber-400' },
-  lost: { label: '流失', color: 'bg-red-500', textColor: 'text-red-400' },
-}
+  active: {
+    label: "活跃",
+    color: "bg-emerald-500",
+    textColor: "text-emerald-400",
+  },
+  potential: {
+    label: "潜在",
+    color: "bg-blue-500",
+    textColor: "text-blue-400",
+  },
+  dormant: {
+    label: "沉睡",
+    color: "bg-amber-500",
+    textColor: "text-amber-400",
+  },
+  lost: { label: "流失", color: "bg-red-500", textColor: "text-red-400" },
+};
 
 export default function CustomerList() {
-  const [viewMode, setViewMode] = useState('grid') // 'grid' or 'list'
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedGrade, setSelectedGrade] = useState('all')
-  const [selectedStatus, setSelectedStatus] = useState('all')
-  const [selectedIndustry, setSelectedIndustry] = useState('all')
-  const [selectedCustomer, setSelectedCustomer] = useState(null)
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'list'
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedGrade, setSelectedGrade] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedIndustry, setSelectedIndustry] = useState("all");
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   // Filter customers
   const filteredCustomers = useMemo(() => {
-    return mockCustomers.filter(customer => {
-      const matchesSearch = !searchTerm || 
+    return mockCustomers.filter((customer) => {
+      const matchesSearch =
+        !searchTerm ||
         customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         customer.shortName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.contactPerson?.toLowerCase().includes(searchTerm.toLowerCase())
-      
-      const matchesGrade = selectedGrade === 'all' || customer.grade === selectedGrade
-      const matchesStatus = selectedStatus === 'all' || customer.status === selectedStatus
-      const matchesIndustry = selectedIndustry === 'all' || customer.industry === selectedIndustry
+        customer.contactPerson
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase());
 
-      return matchesSearch && matchesGrade && matchesStatus && matchesIndustry
-    })
-  }, [searchTerm, selectedGrade, selectedStatus, selectedIndustry])
+      const matchesGrade =
+        selectedGrade === "all" || customer.grade === selectedGrade;
+      const matchesStatus =
+        selectedStatus === "all" || customer.status === selectedStatus;
+      const matchesIndustry =
+        selectedIndustry === "all" || customer.industry === selectedIndustry;
+
+      return matchesSearch && matchesGrade && matchesStatus && matchesIndustry;
+    });
+  }, [searchTerm, selectedGrade, selectedStatus, selectedIndustry]);
 
   // Stats
   const stats = useMemo(() => {
     return {
       total: mockCustomers.length,
-      active: mockCustomers.filter(c => c.status === 'active').length,
-      gradeA: mockCustomers.filter(c => c.grade === 'A').length,
-      warning: mockCustomers.filter(c => c.isWarning).length,
-    }
-  }, [])
+      active: mockCustomers.filter((c) => c.status === "active").length,
+      gradeA: mockCustomers.filter((c) => c.grade === "A").length,
+      warning: mockCustomers.filter((c) => c.isWarning).length,
+    };
+  }, []);
 
   const handleCustomerClick = (customer) => {
-    setSelectedCustomer(customer)
-  }
+    setSelectedCustomer(customer);
+  };
 
   return (
     <motion.div
@@ -159,7 +177,10 @@ export default function CustomerList() {
               <Upload className="w-4 h-4" />
               导入
             </Button>
-            <Button className="flex items-center gap-2" onClick={() => setShowCreateDialog(true)}>
+            <Button
+              className="flex items-center gap-2"
+              onClick={() => setShowCreateDialog(true)}
+            >
               <Plus className="w-4 h-4" />
               新建客户
             </Button>
@@ -168,7 +189,10 @@ export default function CustomerList() {
       />
 
       {/* Stats Row */}
-      <motion.div variants={fadeIn} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <motion.div
+        variants={fadeIn}
+        className="grid grid-cols-2 sm:grid-cols-4 gap-4"
+      >
         <Card className="bg-surface-100/50">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="p-2 bg-blue-500/20 rounded-lg">
@@ -216,7 +240,10 @@ export default function CustomerList() {
       </motion.div>
 
       {/* Filters */}
-      <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      <motion.div
+        variants={fadeIn}
+        className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
+      >
         <div className="flex flex-wrap gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -232,8 +259,10 @@ export default function CustomerList() {
             onChange={(e) => setSelectedGrade(e.target.value)}
             className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            {gradeOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            {gradeOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
             ))}
           </select>
           <select
@@ -241,8 +270,10 @@ export default function CustomerList() {
             onChange={(e) => setSelectedStatus(e.target.value)}
             className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            {statusOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            {statusOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
             ))}
           </select>
           <select
@@ -250,8 +281,10 @@ export default function CustomerList() {
             onChange={(e) => setSelectedIndustry(e.target.value)}
             className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            {industryOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            {industryOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
             ))}
           </select>
         </div>
@@ -262,18 +295,18 @@ export default function CustomerList() {
           </span>
           <div className="flex border border-white/10 rounded-lg overflow-hidden">
             <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              variant={viewMode === "grid" ? "default" : "ghost"}
               size="sm"
               className="rounded-none"
-              onClick={() => setViewMode('grid')}
+              onClick={() => setViewMode("grid")}
             >
               <LayoutGrid className="w-4 h-4" />
             </Button>
             <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              variant={viewMode === "list" ? "default" : "ghost"}
               size="sm"
               className="rounded-none"
-              onClick={() => setViewMode('list')}
+              onClick={() => setViewMode("list")}
             >
               <List className="w-4 h-4" />
             </Button>
@@ -283,7 +316,7 @@ export default function CustomerList() {
 
       {/* Customer Grid/List */}
       <motion.div variants={fadeIn}>
-        {viewMode === 'grid' ? (
+        {viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredCustomers.map((customer) => (
               <CustomerCard
@@ -299,19 +332,35 @@ export default function CustomerList() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/5">
-                    <th className="text-left p-4 text-sm font-medium text-slate-400">客户名称</th>
-                    <th className="text-left p-4 text-sm font-medium text-slate-400">等级</th>
-                    <th className="text-left p-4 text-sm font-medium text-slate-400">状态</th>
-                    <th className="text-left p-4 text-sm font-medium text-slate-400">行业</th>
-                    <th className="text-left p-4 text-sm font-medium text-slate-400">联系人</th>
-                    <th className="text-right p-4 text-sm font-medium text-slate-400">累计金额</th>
-                    <th className="text-right p-4 text-sm font-medium text-slate-400">待回款</th>
-                    <th className="text-center p-4 text-sm font-medium text-slate-400">操作</th>
+                    <th className="text-left p-4 text-sm font-medium text-slate-400">
+                      客户名称
+                    </th>
+                    <th className="text-left p-4 text-sm font-medium text-slate-400">
+                      等级
+                    </th>
+                    <th className="text-left p-4 text-sm font-medium text-slate-400">
+                      状态
+                    </th>
+                    <th className="text-left p-4 text-sm font-medium text-slate-400">
+                      行业
+                    </th>
+                    <th className="text-left p-4 text-sm font-medium text-slate-400">
+                      联系人
+                    </th>
+                    <th className="text-right p-4 text-sm font-medium text-slate-400">
+                      累计金额
+                    </th>
+                    <th className="text-right p-4 text-sm font-medium text-slate-400">
+                      待回款
+                    </th>
+                    <th className="text-center p-4 text-sm font-medium text-slate-400">
+                      操作
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredCustomers.map((customer) => {
-                    const statusConf = statusConfig[customer.status]
+                    const statusConf = statusConfig[customer.status];
                     return (
                       <tr
                         key={customer.id}
@@ -324,8 +373,12 @@ export default function CustomerList() {
                               <Building2 className="w-4 h-4 text-primary" />
                             </div>
                             <div>
-                              <div className="font-medium text-white">{customer.shortName}</div>
-                              <div className="text-xs text-slate-500">{customer.location}</div>
+                              <div className="font-medium text-white">
+                                {customer.shortName}
+                              </div>
+                              <div className="text-xs text-slate-500">
+                                {customer.location}
+                              </div>
                             </div>
                             {customer.isWarning && (
                               <AlertTriangle className="w-4 h-4 text-amber-500" />
@@ -333,20 +386,38 @@ export default function CustomerList() {
                           </div>
                         </td>
                         <td className="p-4">
-                          <Badge variant="outline" className={gradeColors[customer.grade]}>
+                          <Badge
+                            variant="outline"
+                            className={gradeColors[customer.grade]}
+                          >
                             {customer.grade}级
                           </Badge>
                         </td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
-                            <div className={cn('w-2 h-2 rounded-full', statusConf.color)} />
-                            <span className={cn('text-sm', statusConf.textColor)}>{statusConf.label}</span>
+                            <div
+                              className={cn(
+                                "w-2 h-2 rounded-full",
+                                statusConf.color,
+                              )}
+                            />
+                            <span
+                              className={cn("text-sm", statusConf.textColor)}
+                            >
+                              {statusConf.label}
+                            </span>
                           </div>
                         </td>
-                        <td className="p-4 text-sm text-slate-400">{customer.industry}</td>
+                        <td className="p-4 text-sm text-slate-400">
+                          {customer.industry}
+                        </td>
                         <td className="p-4">
-                          <div className="text-sm text-white">{customer.contactPerson}</div>
-                          <div className="text-xs text-slate-500">{customer.phone}</div>
+                          <div className="text-sm text-white">
+                            {customer.contactPerson}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {customer.phone}
+                          </div>
                         </td>
                         <td className="p-4 text-right">
                           <span className="text-sm font-medium text-white">
@@ -354,10 +425,14 @@ export default function CustomerList() {
                           </span>
                         </td>
                         <td className="p-4 text-right">
-                          <span className={cn(
-                            'text-sm font-medium',
-                            customer.pendingAmount > 0 ? 'text-amber-400' : 'text-slate-500'
-                          )}>
+                          <span
+                            className={cn(
+                              "text-sm font-medium",
+                              customer.pendingAmount > 0
+                                ? "text-amber-400"
+                                : "text-slate-500",
+                            )}
+                          >
                             ¥{(customer.pendingAmount / 10000).toFixed(0)}万
                           </span>
                         </td>
@@ -365,7 +440,11 @@ export default function CustomerList() {
                           <div className="flex justify-center">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                >
                                   <MoreHorizontal className="w-4 h-4" />
                                 </Button>
                               </DropdownMenuTrigger>
@@ -392,7 +471,7 @@ export default function CustomerList() {
                           </div>
                         </td>
                       </tr>
-                    )
+                    );
                   })}
                 </tbody>
               </table>
@@ -482,29 +561,30 @@ export default function CustomerList() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
-            <Button onClick={() => setShowCreateDialog(false)}>
-              创建客户
-            </Button>
+            <Button onClick={() => setShowCreateDialog(false)}>创建客户</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </motion.div>
-  )
+  );
 }
 
 // Customer Detail Side Panel
 function CustomerDetailPanel({ customer, onClose }) {
-  const statusConf = statusConfig[customer.status]
+  const statusConf = statusConfig[customer.status];
 
   return (
     <motion.div
-      initial={{ x: '100%' }}
+      initial={{ x: "100%" }}
       animate={{ x: 0 }}
-      exit={{ x: '100%' }}
-      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+      exit={{ x: "100%" }}
+      transition={{ type: "spring", damping: 25, stiffness: 200 }}
       className="fixed right-0 top-0 h-full w-full md:w-[450px] bg-surface-100/95 backdrop-blur-xl border-l border-white/5 shadow-2xl z-50 flex flex-col"
     >
       {/* Header */}
@@ -516,8 +596,13 @@ function CustomerDetailPanel({ customer, onClose }) {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-white">{customer.shortName}</h2>
-                <Badge variant="outline" className={gradeColors[customer.grade]}>
+                <h2 className="text-lg font-semibold text-white">
+                  {customer.shortName}
+                </h2>
+                <Badge
+                  variant="outline"
+                  className={gradeColors[customer.grade]}
+                >
                   {customer.grade}级
                 </Badge>
               </div>
@@ -547,7 +632,9 @@ function CustomerDetailPanel({ customer, onClose }) {
             <div className="text-xs text-slate-400">待回款</div>
           </div>
           <div className="text-center p-3 bg-surface-50 rounded-lg">
-            <div className="text-lg font-semibold text-white">{customer.projectCount}</div>
+            <div className="text-lg font-semibold text-white">
+              {customer.projectCount}
+            </div>
             <div className="text-xs text-slate-400">项目数</div>
           </div>
         </div>
@@ -567,7 +654,7 @@ function CustomerDetailPanel({ customer, onClose }) {
               <span className="text-white">{customer.industry}</span>
             </div>
             <div className="flex items-center gap-3 text-sm">
-              <div className={cn('w-2 h-2 rounded-full', statusConf.color)} />
+              <div className={cn("w-2 h-2 rounded-full", statusConf.color)} />
               <span className="text-slate-400">状态:</span>
               <span className={statusConf.textColor}>{statusConf.label}</span>
             </div>
@@ -607,7 +694,9 @@ function CustomerDetailPanel({ customer, onClose }) {
             <h3 className="text-sm font-medium text-slate-400">标签</h3>
             <div className="flex flex-wrap gap-2">
               {customer.tags.map((tag, index) => (
-                <Badge key={index} variant="secondary">{tag}</Badge>
+                <Badge key={index} variant="secondary">
+                  {tag}
+                </Badge>
               ))}
             </div>
           </div>
@@ -648,6 +737,5 @@ function CustomerDetailPanel({ customer, onClose }) {
         </Button>
       </div>
     </motion.div>
-  )
+  );
 }
-

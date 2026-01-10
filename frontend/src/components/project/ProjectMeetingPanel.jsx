@@ -1,30 +1,36 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from '../ui'
-import { MessageSquare, FileText, Calendar, Users, CheckCircle2 } from 'lucide-react'
-import { formatDate } from '../../lib/utils'
-import { projectWorkspaceApi } from '../../services/api'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from "../ui";
+import {
+  MessageSquare,
+  FileText,
+  Calendar,
+  Users,
+  CheckCircle2,
+} from "lucide-react";
+import { formatDate } from "../../lib/utils";
+import { projectWorkspaceApi } from "../../services/api";
 
 export default function ProjectMeetingPanel({ projectId }) {
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [meetingData, setMeetingData] = useState(null)
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [meetingData, setMeetingData] = useState(null);
 
   useEffect(() => {
-    fetchMeetingData()
-  }, [projectId])
+    fetchMeetingData();
+  }, [projectId]);
 
   const fetchMeetingData = async () => {
     try {
-      setLoading(true)
-      const response = await projectWorkspaceApi.getMeetings(projectId)
-      setMeetingData(response.data)
+      setLoading(true);
+      const response = await projectWorkspaceApi.getMeetings(projectId);
+      setMeetingData(response.data);
     } catch (error) {
-      console.error('Failed to load meeting data:', error)
+      console.error("Failed to load meeting data:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -33,7 +39,7 @@ export default function ProjectMeetingPanel({ projectId }) {
           <div className="text-center text-gray-500">加载中...</div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (!meetingData) {
@@ -43,10 +49,10 @@ export default function ProjectMeetingPanel({ projectId }) {
           无法加载会议数据
         </CardContent>
       </Card>
-    )
+    );
   }
 
-  const { meetings, statistics } = meetingData
+  const { meetings, statistics } = meetingData;
 
   return (
     <div className="space-y-6">
@@ -78,7 +84,9 @@ export default function ProjectMeetingPanel({ projectId }) {
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-gray-500">行动项</p>
-              <p className="text-2xl font-bold">{statistics.total_action_items}</p>
+              <p className="text-2xl font-bold">
+                {statistics.total_action_items}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -134,7 +142,9 @@ export default function ProjectMeetingPanel({ projectId }) {
                       )}
                       <Badge
                         variant={
-                          meeting.status === 'COMPLETED' ? 'default' : 'secondary'
+                          meeting.status === "COMPLETED"
+                            ? "default"
+                            : "secondary"
                         }
                       >
                         {meeting.status}
@@ -150,5 +160,5 @@ export default function ProjectMeetingPanel({ projectId }) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -1,192 +1,228 @@
-import { useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
-import { Upload, Download, FileSpreadsheet, CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-react'
-import { PageHeader } from '../components/layout'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
-import { Label } from '../components/ui/label'
-import { Checkbox } from '../components/ui/checkbox'
-import { dataImportExportApi } from '../services/api'
-import { fadeIn } from '../lib/animations'
+import { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
+import {
+  Upload,
+  Download,
+  FileSpreadsheet,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
+import { Label } from "../components/ui/label";
+import { Checkbox } from "../components/ui/checkbox";
+import { dataImportExportApi } from "../services/api";
+import { fadeIn } from "../lib/animations";
 
 export default function DataImportExport() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [success, setSuccess] = useState(null)
-  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+
   // 导入相关
-  const [templateTypes, setTemplateTypes] = useState([])
-  const [selectedTemplateType, setSelectedTemplateType] = useState('')
-  const [importFile, setImportFile] = useState(null)
-  const [previewData, setPreviewData] = useState(null)
-  const [updateExisting, setUpdateExisting] = useState(false)
-  
+  const [templateTypes, setTemplateTypes] = useState([]);
+  const [selectedTemplateType, setSelectedTemplateType] = useState("");
+  const [importFile, setImportFile] = useState(null);
+  const [previewData, setPreviewData] = useState(null);
+  const [updateExisting, setUpdateExisting] = useState(false);
+
   // 导出相关
-  const [exportType, setExportType] = useState('project_list')
-  const [exportFilters, setExportFilters] = useState({})
+  const [exportType, setExportType] = useState("project_list");
+  const [exportFilters, setExportFilters] = useState({});
 
   useEffect(() => {
-    loadTemplateTypes()
-  }, [])
+    loadTemplateTypes();
+  }, []);
 
   const loadTemplateTypes = async () => {
     try {
-      const response = await dataImportExportApi.getTemplateTypes()
-      const data = response.data?.data || response.data || response
-      setTemplateTypes(data.types || [])
+      const response = await dataImportExportApi.getTemplateTypes();
+      const data = response.data?.data || response.data || response;
+      setTemplateTypes(data.types || []);
     } catch (err) {
-      console.error('Failed to load template types:', err)
+      console.error("Failed to load template types:", err);
     }
-  }
+  };
 
   const handleDownloadTemplate = async (templateType) => {
     try {
-      setLoading(true)
-      setError(null)
-      const response = await dataImportExportApi.downloadTemplate(templateType)
-      
+      setLoading(true);
+      setError(null);
+      const response = await dataImportExportApi.downloadTemplate(templateType);
+
       // 创建下载链接
-      const url = window.URL.createObjectURL(new Blob([response.data]))
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', `导入模板_${templateType}_${new Date().toISOString().split('T')[0]}.xlsx`)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      window.URL.revokeObjectURL(url)
-      
-      setSuccess('模板下载成功')
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `导入模板_${templateType}_${new Date().toISOString().split("T")[0]}.xlsx`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      setSuccess("模板下载成功");
     } catch (err) {
-      console.error('Failed to download template:', err)
-      setError(err.response?.data?.detail || err.message || '下载模板失败')
+      console.error("Failed to download template:", err);
+      setError(err.response?.data?.detail || err.message || "下载模板失败");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handlePreviewImport = async () => {
     if (!importFile || !selectedTemplateType) {
-      setError('请选择模板类型和文件')
-      return
+      setError("请选择模板类型和文件");
+      return;
     }
 
     try {
-      setLoading(true)
-      setError(null)
-      setSuccess(null)
-      
-      const response = await dataImportExportApi.previewImport(importFile, selectedTemplateType)
-      const data = response.data?.data || response.data || response
-      setPreviewData(data)
-      
+      setLoading(true);
+      setError(null);
+      setSuccess(null);
+
+      const response = await dataImportExportApi.previewImport(
+        importFile,
+        selectedTemplateType,
+      );
+      const data = response.data?.data || response.data || response;
+      setPreviewData(data);
+
       if (data.errors && data.errors.length > 0) {
-        setError(`发现 ${data.errors.length} 个错误，请检查数据`)
+        setError(`发现 ${data.errors.length} 个错误，请检查数据`);
       } else {
-        setSuccess(`预览成功：共 ${data.total_rows} 行，有效 ${data.valid_rows} 行`)
+        setSuccess(
+          `预览成功：共 ${data.total_rows} 行，有效 ${data.valid_rows} 行`,
+        );
       }
     } catch (err) {
-      console.error('Failed to preview import:', err)
-      setError(err.response?.data?.detail || err.message || '预览失败')
-      setPreviewData(null)
+      console.error("Failed to preview import:", err);
+      setError(err.response?.data?.detail || err.message || "预览失败");
+      setPreviewData(null);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleUploadImport = async () => {
     if (!importFile || !selectedTemplateType) {
-      setError('请选择模板类型和文件')
-      return
+      setError("请选择模板类型和文件");
+      return;
     }
 
-    if (!window.confirm('确定要导入数据吗？')) {
-      return
+    if (!window.confirm("确定要导入数据吗？")) {
+      return;
     }
 
     try {
-      setLoading(true)
-      setError(null)
-      setSuccess(null)
-      
-      const response = await dataImportExportApi.uploadImport(importFile, selectedTemplateType, updateExisting)
-      const data = response.data?.data || response.data || response
-      
-      setSuccess(data.message || '导入成功')
-      setImportFile(null)
-      setPreviewData(null)
+      setLoading(true);
+      setError(null);
+      setSuccess(null);
+
+      const response = await dataImportExportApi.uploadImport(
+        importFile,
+        selectedTemplateType,
+        updateExisting,
+      );
+      const data = response.data?.data || response.data || response;
+
+      setSuccess(data.message || "导入成功");
+      setImportFile(null);
+      setPreviewData(null);
     } catch (err) {
-      console.error('Failed to upload import:', err)
-      setError(err.response?.data?.detail || err.message || '导入失败')
+      console.error("Failed to upload import:", err);
+      setError(err.response?.data?.detail || err.message || "导入失败");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleExport = async () => {
     try {
-      setLoading(true)
-      setError(null)
-      setSuccess(null)
-      
-      let response
-      const exportData = { filters: exportFilters }
-      
+      setLoading(true);
+      setError(null);
+      setSuccess(null);
+
+      let response;
+      const exportData = { filters: exportFilters };
+
       switch (exportType) {
-        case 'project_list':
-          response = await dataImportExportApi.exportProjectList(exportData)
-          break
-        case 'project_detail':
+        case "project_list":
+          response = await dataImportExportApi.exportProjectList(exportData);
+          break;
+        case "project_detail":
           if (!exportFilters.project_id) {
-            setError('请选择项目')
-            return
+            setError("请选择项目");
+            return;
           }
-          response = await dataImportExportApi.exportProjectDetail(exportData)
-          break
-        case 'task_list':
-          response = await dataImportExportApi.exportTaskList(exportData)
-          break
-        case 'timesheet':
+          response = await dataImportExportApi.exportProjectDetail(exportData);
+          break;
+        case "task_list":
+          response = await dataImportExportApi.exportTaskList(exportData);
+          break;
+        case "timesheet":
           if (!exportFilters.start_date || !exportFilters.end_date) {
-            setError('请选择日期范围')
-            return
+            setError("请选择日期范围");
+            return;
           }
-          response = await dataImportExportApi.exportTimesheet(exportData)
-          break
-        case 'workload':
+          response = await dataImportExportApi.exportTimesheet(exportData);
+          break;
+        case "workload":
           if (!exportFilters.start_date || !exportFilters.end_date) {
-            setError('请选择日期范围')
-            return
+            setError("请选择日期范围");
+            return;
           }
-          response = await dataImportExportApi.exportWorkload(exportData)
-          break
+          response = await dataImportExportApi.exportWorkload(exportData);
+          break;
         default:
-          setError('请选择导出类型')
-          return
+          setError("请选择导出类型");
+          return;
       }
-      
+
       // 创建下载链接
-      const url = window.URL.createObjectURL(new Blob([response.data]))
-      const link = document.createElement('a')
-      link.href = url
-      const filename = `${exportType}_${new Date().toISOString().split('T')[0]}.xlsx`
-      link.setAttribute('download', filename)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      window.URL.revokeObjectURL(url)
-      
-      setSuccess('导出成功')
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      const filename = `${exportType}_${new Date().toISOString().split("T")[0]}.xlsx`;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      setSuccess("导出成功");
     } catch (err) {
-      console.error('Failed to export:', err)
-      setError(err.response?.data?.detail || err.message || '导出失败')
+      console.error("Failed to export:", err);
+      setError(err.response?.data?.detail || err.message || "导出失败");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <motion.div
@@ -227,7 +263,10 @@ export default function DataImportExport() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>模板类型</Label>
-                  <Select value={selectedTemplateType} onValueChange={setSelectedTemplateType}>
+                  <Select
+                    value={selectedTemplateType}
+                    onValueChange={setSelectedTemplateType}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="选择模板类型" />
                     </SelectTrigger>
@@ -240,7 +279,7 @@ export default function DataImportExport() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label>选择文件</Label>
                   <Input
@@ -302,7 +341,9 @@ export default function DataImportExport() {
                   <div className="grid grid-cols-4 gap-4">
                     <div>
                       <div className="text-sm text-gray-600">总行数</div>
-                      <div className="text-2xl font-bold">{previewData.total_rows || 0}</div>
+                      <div className="text-2xl font-bold">
+                        {previewData.total_rows || 0}
+                      </div>
                     </div>
                     <div>
                       <div className="text-sm text-gray-600">有效行数</div>
@@ -326,11 +367,17 @@ export default function DataImportExport() {
 
                   {previewData.errors && previewData.errors.length > 0 && (
                     <div>
-                      <div className="text-sm font-semibold mb-2">错误列表：</div>
+                      <div className="text-sm font-semibold mb-2">
+                        错误列表：
+                      </div>
                       <div className="max-h-60 overflow-y-auto space-y-1">
                         {previewData.errors.slice(0, 20).map((error, idx) => (
-                          <div key={idx} className="text-sm text-red-600 p-2 bg-red-50 rounded">
-                            第 {error.row} 行，字段 {error.field}：{error.message}
+                          <div
+                            key={idx}
+                            className="text-sm text-red-600 p-2 bg-red-50 rounded"
+                          >
+                            第 {error.row} 行，字段 {error.field}：
+                            {error.message}
                           </div>
                         ))}
                         {previewData.errors.length > 20 && (
@@ -342,35 +389,40 @@ export default function DataImportExport() {
                     </div>
                   )}
 
-                  {previewData.preview_data && previewData.preview_data.length > 0 && (
-                    <div>
-                      <div className="text-sm font-semibold mb-2">预览数据（前10行）：</div>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b">
-                              {Object.keys(previewData.preview_data[0] || {}).map((key) => (
-                                <th key={key} className="text-left p-2">
-                                  {key}
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {previewData.preview_data.map((row, idx) => (
-                              <tr key={idx} className="border-b">
-                                {Object.values(row).map((value, cellIdx) => (
-                                  <td key={cellIdx} className="p-2">
-                                    {String(value || '')}
-                                  </td>
+                  {previewData.preview_data &&
+                    previewData.preview_data.length > 0 && (
+                      <div>
+                        <div className="text-sm font-semibold mb-2">
+                          预览数据（前10行）：
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b">
+                                {Object.keys(
+                                  previewData.preview_data[0] || {},
+                                ).map((key) => (
+                                  <th key={key} className="text-left p-2">
+                                    {key}
+                                  </th>
                                 ))}
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody>
+                              {previewData.preview_data.map((row, idx) => (
+                                <tr key={idx} className="border-b">
+                                  {Object.values(row).map((value, cellIdx) => (
+                                    <td key={cellIdx} className="p-2">
+                                      {String(value || "")}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               </CardContent>
             </Card>
@@ -402,29 +454,35 @@ export default function DataImportExport() {
 
               {/* 导出筛选条件 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {exportType === 'project_detail' && (
+                {exportType === "project_detail" && (
                   <div>
                     <Label>项目ID</Label>
                     <Input
                       type="number"
                       placeholder="项目ID"
-                      value={exportFilters.project_id || ''}
+                      value={exportFilters.project_id || ""}
                       onChange={(e) =>
-                        setExportFilters({ ...exportFilters, project_id: parseInt(e.target.value) })
+                        setExportFilters({
+                          ...exportFilters,
+                          project_id: parseInt(e.target.value),
+                        })
                       }
                     />
                   </div>
                 )}
-                
-                {(exportType === 'timesheet' || exportType === 'workload') && (
+
+                {(exportType === "timesheet" || exportType === "workload") && (
                   <>
                     <div>
                       <Label>开始日期</Label>
                       <Input
                         type="date"
-                        value={exportFilters.start_date || ''}
+                        value={exportFilters.start_date || ""}
                         onChange={(e) =>
-                          setExportFilters({ ...exportFilters, start_date: e.target.value })
+                          setExportFilters({
+                            ...exportFilters,
+                            start_date: e.target.value,
+                          })
                         }
                       />
                     </div>
@@ -432,9 +490,12 @@ export default function DataImportExport() {
                       <Label>结束日期</Label>
                       <Input
                         type="date"
-                        value={exportFilters.end_date || ''}
+                        value={exportFilters.end_date || ""}
                         onChange={(e) =>
-                          setExportFilters({ ...exportFilters, end_date: e.target.value })
+                          setExportFilters({
+                            ...exportFilters,
+                            end_date: e.target.value,
+                          })
                         }
                       />
                     </div>
@@ -451,5 +512,5 @@ export default function DataImportExport() {
         </TabsContent>
       </Tabs>
     </motion.div>
-  )
+  );
 }

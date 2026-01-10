@@ -1,7 +1,7 @@
 /**
  * Service Knowledge Base
  * 知识库/FAQ管理 - 客服工程师高级功能
- * 
+ *
  * 功能：
  * 1. 知识库文章创建、编辑、查看
  * 2. FAQ问题管理
@@ -11,236 +11,281 @@
  * 6. 常用问题快速访问
  */
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus, Search, Filter, Eye, Edit, Trash2, BookOpen, HelpCircle,
-  FileText, Tag, Star, TrendingUp, Download, RefreshCw, XCircle,
-  ChevronRight, Save, Copy, Share2, ThumbsUp, ThumbsDown,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+  Plus,
+  Search,
+  Filter,
+  Eye,
+  Edit,
+  Trash2,
+  BookOpen,
+  HelpCircle,
+  FileText,
+  Tag,
+  Star,
+  TrendingUp,
+  Download,
+  RefreshCw,
+  XCircle,
+  ChevronRight,
+  Save,
+  Copy,
+  Share2,
+  ThumbsUp,
+  ThumbsDown,
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
-  Card, CardContent, CardHeader, CardTitle,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogBody
-} from '../components/ui/dialog'
-import { Textarea } from '../components/ui/textarea'
-import { LoadingCard, ErrorMessage, EmptyState } from '../components/common'
-import { toast } from '../components/ui/toast'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { serviceApi } from '../services/api'
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+  DialogBody,
+} from "../components/ui/dialog";
+import { Textarea } from "../components/ui/textarea";
+import { LoadingCard, ErrorMessage, EmptyState } from "../components/common";
+import { toast } from "../components/ui/toast";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { serviceApi } from "../services/api";
 
 // Mock data
 // Mock data - 已移除，使用真实API
 const categoryConfig = {
-  '故障处理': { label: '故障处理', color: 'text-red-400', bg: 'bg-red-500/20' },
-  '操作指南': { label: '操作指南', color: 'text-blue-400', bg: 'bg-blue-500/20' },
-  '技术文档': { label: '技术文档', color: 'text-purple-400', bg: 'bg-purple-500/20' },
-  'FAQ': { label: 'FAQ', color: 'text-green-400', bg: 'bg-green-500/20' },
-  '其他': { label: '其他', color: 'text-slate-400', bg: 'bg-slate-500/20' },
-}
+  故障处理: { label: "故障处理", color: "text-red-400", bg: "bg-red-500/20" },
+  操作指南: { label: "操作指南", color: "text-blue-400", bg: "bg-blue-500/20" },
+  技术文档: {
+    label: "技术文档",
+    color: "text-purple-400",
+    bg: "bg-purple-500/20",
+  },
+  FAQ: { label: "FAQ", color: "text-green-400", bg: "bg-green-500/20" },
+  其他: { label: "其他", color: "text-slate-400", bg: "bg-slate-500/20" },
+};
 
 const statusConfig = {
-  '草稿': { label: '草稿', color: 'bg-slate-500', textColor: 'text-slate-400' },
-  '已发布': { label: '已发布', color: 'bg-emerald-500', textColor: 'text-emerald-400' },
-  '已归档': { label: '已归档', color: 'bg-slate-600', textColor: 'text-slate-400' },
-}
+  草稿: { label: "草稿", color: "bg-slate-500", textColor: "text-slate-400" },
+  已发布: {
+    label: "已发布",
+    color: "bg-emerald-500",
+    textColor: "text-emerald-400",
+  },
+  已归档: {
+    label: "已归档",
+    color: "bg-slate-600",
+    textColor: "text-slate-400",
+  },
+};
 
 export default function ServiceKnowledgeBase() {
-  const [articles, setArticles] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState('ALL')
-  const [faqFilter, setFaqFilter] = useState('ALL')
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [showDetailDialog, setShowDetailDialog] = useState(false)
-  const [selectedArticle, setSelectedArticle] = useState(null)
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("ALL");
+  const [faqFilter, setFaqFilter] = useState("ALL");
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState(null);
   const [stats, setStats] = useState({
     total: 0,
     published: 0,
     faq: 0,
     featured: 0,
     totalViews: 0,
-  })
+  });
 
   useEffect(() => {
-    loadArticles()
-    loadStatistics()
-  }, [])
+    loadArticles();
+    loadStatistics();
+  }, []);
 
   // Map backend status to frontend status
   const mapBackendStatus = (backendStatus) => {
     const statusMap = {
-      'DRAFT': '草稿',
-      'PUBLISHED': '已发布',
-      'ARCHIVED': '已归档',
-    }
-    return statusMap[backendStatus] || backendStatus
-  }
+      DRAFT: "草稿",
+      PUBLISHED: "已发布",
+      ARCHIVED: "已归档",
+    };
+    return statusMap[backendStatus] || backendStatus;
+  };
 
   const loadArticles = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
-      
+      setLoading(true);
+      setError(null);
+
       const params = {
         page: 1,
         page_size: 100,
+      };
+
+      if (categoryFilter !== "ALL") {
+        params.category = categoryFilter;
       }
-      
-      if (categoryFilter !== 'ALL') {
-        params.category = categoryFilter
+
+      if (faqFilter === "FAQ_ONLY") {
+        params.is_faq = true;
+      } else if (faqFilter === "NON_FAQ") {
+        params.is_faq = false;
       }
-      
-      if (faqFilter === 'FAQ_ONLY') {
-        params.is_faq = true
-      } else if (faqFilter === 'NON_FAQ') {
-        params.is_faq = false
-      }
-      
+
       if (searchQuery) {
-        params.keyword = searchQuery
+        params.keyword = searchQuery;
       }
-      
-      const response = await serviceApi.knowledgeBase.list(params)
-      const articlesData = response.data?.items || response.data || []
-      
+
+      const response = await serviceApi.knowledgeBase.list(params);
+      const articlesData = response.data?.items || response.data || [];
+
       // Transform backend data to frontend format
-      const transformedArticles = articlesData.map(article => ({
+      const transformedArticles = articlesData.map((article) => ({
         id: article.id,
-        article_no: article.article_no || '',
-        title: article.title || '',
-        content: article.content || '',
-        category: article.category || '',
+        article_no: article.article_no || "",
+        title: article.title || "",
+        content: article.content || "",
+        category: article.category || "",
         tags: article.tags || [],
         status: mapBackendStatus(article.status),
         is_faq: article.is_faq || false,
         is_featured: article.is_featured || false,
         view_count: article.view_count || 0,
-        author: article.author_name || '',
-        created_at: article.created_at || '',
-        updated_at: article.updated_at || '',
-      }))
-      
-      setArticles(transformedArticles)
+        author: article.author_name || "",
+        created_at: article.created_at || "",
+        updated_at: article.updated_at || "",
+      }));
+
+      setArticles(transformedArticles);
     } catch (err) {
-      console.error('Failed to load articles:', err)
-      setError(err.response?.data?.detail || err.message || '加载知识库文章失败')
-      setArticles([]) // 不再使用mock数据，显示空列表
+      console.error("Failed to load articles:", err);
+      setError(
+        err.response?.data?.detail || err.message || "加载知识库文章失败",
+      );
+      setArticles([]); // 不再使用mock数据，显示空列表
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [categoryFilter, faqFilter, searchQuery])
+  }, [categoryFilter, faqFilter, searchQuery]);
 
   const loadStatistics = useCallback(async () => {
     try {
-      const response = await serviceApi.knowledgeBase.statistics()
-      const statsData = response.data || {}
-      
+      const response = await serviceApi.knowledgeBase.statistics();
+      const statsData = response.data || {};
+
       setStats({
         total: statsData.total || 0,
         published: statsData.published || 0,
         faq: statsData.faq || 0,
         featured: statsData.featured || 0,
         totalViews: statsData.total_views || 0,
-      })
+      });
     } catch (err) {
-      console.error('Failed to load statistics:', err)
+      console.error("Failed to load statistics:", err);
       // Calculate from local articles as fallback
       setStats({
         total: articles.length,
-        published: articles.filter(a => a.status === '已发布').length,
-        faq: articles.filter(a => a.is_faq).length,
-        featured: articles.filter(a => a.is_featured).length,
+        published: articles.filter((a) => a.status === "已发布").length,
+        faq: articles.filter((a) => a.is_faq).length,
+        featured: articles.filter((a) => a.is_featured).length,
         totalViews: articles.reduce((sum, a) => sum + a.view_count, 0),
-      })
+      });
     }
-  }, [articles])
+  }, [articles]);
 
   const filteredArticles = useMemo(() => {
-    let result = articles
+    let result = articles;
 
     // Search filter
     if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      result = result.filter(article =>
-        article.title.toLowerCase().includes(query) ||
-        article.content.toLowerCase().includes(query) ||
-        article.tags.some(tag => tag.toLowerCase().includes(query)) ||
-        article.article_no.toLowerCase().includes(query)
-      )
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (article) =>
+          article.title.toLowerCase().includes(query) ||
+          article.content.toLowerCase().includes(query) ||
+          article.tags.some((tag) => tag.toLowerCase().includes(query)) ||
+          article.article_no.toLowerCase().includes(query),
+      );
     }
 
     // Category filter
-    if (categoryFilter !== 'ALL') {
-      result = result.filter(article => article.category === categoryFilter)
+    if (categoryFilter !== "ALL") {
+      result = result.filter((article) => article.category === categoryFilter);
     }
 
     // FAQ filter
-    if (faqFilter === 'FAQ_ONLY') {
-      result = result.filter(article => article.is_faq)
-    } else if (faqFilter === 'NON_FAQ') {
-      result = result.filter(article => !article.is_faq)
+    if (faqFilter === "FAQ_ONLY") {
+      result = result.filter((article) => article.is_faq);
+    } else if (faqFilter === "NON_FAQ") {
+      result = result.filter((article) => !article.is_faq);
     }
 
     return result.sort((a, b) => {
       // Featured first, then by view count
-      if (a.is_featured && !b.is_featured) return -1
-      if (!a.is_featured && b.is_featured) return 1
-      return b.view_count - a.view_count
-    })
-  }, [articles, searchQuery, categoryFilter, faqFilter])
+      if (a.is_featured && !b.is_featured) return -1;
+      if (!a.is_featured && b.is_featured) return 1;
+      return b.view_count - a.view_count;
+    });
+  }, [articles, searchQuery, categoryFilter, faqFilter]);
 
   const handleViewDetail = (article) => {
-    setSelectedArticle(article)
-    setShowDetailDialog(true)
-  }
+    setSelectedArticle(article);
+    setShowDetailDialog(true);
+  };
 
   const handleCreateArticle = async (articleData) => {
     try {
-      await serviceApi.knowledgeBase.create(articleData)
-      toast.success('知识库文章创建成功')
-      setShowCreateDialog(false)
-      await loadArticles()
-      await loadStatistics()
+      await serviceApi.knowledgeBase.create(articleData);
+      toast.success("知识库文章创建成功");
+      setShowCreateDialog(false);
+      await loadArticles();
+      await loadStatistics();
     } catch (error) {
-      console.error('Failed to create article:', error)
-      toast.error('创建失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
+      console.error("Failed to create article:", error);
+      toast.error(
+        "创建失败: " +
+          (error.response?.data?.detail || error.message || "请稍后重试"),
+      );
     }
-  }
+  };
 
   const handleUpdateArticle = async (articleId, articleData) => {
     try {
-      await serviceApi.knowledgeBase.update(articleId, articleData)
-      toast.success('文章更新成功')
-      setShowDetailDialog(false)
-      await loadArticles()
-      await loadStatistics()
+      await serviceApi.knowledgeBase.update(articleId, articleData);
+      toast.success("文章更新成功");
+      setShowDetailDialog(false);
+      await loadArticles();
+      await loadStatistics();
     } catch (error) {
-      console.error('Failed to update article:', error)
-      toast.error('更新失败，请稍后重试')
+      console.error("Failed to update article:", error);
+      toast.error("更新失败，请稍后重试");
     }
-  }
+  };
 
   const handleDeleteArticle = async (articleId) => {
-    if (!confirm('确定要删除这篇文章吗？')) return
+    if (!confirm("确定要删除这篇文章吗？")) return;
     try {
       // TODO: 调用API
       // await knowledgeBaseApi.delete(articleId)
-      toast.success('文章删除成功')
-      await loadArticles()
-      await loadStatistics()
+      toast.success("文章删除成功");
+      await loadArticles();
+      await loadStatistics();
     } catch (error) {
-      console.error('Failed to delete article:', error)
-      toast.error('删除失败，请稍后重试')
+      console.error("Failed to delete article:", error);
+      toast.error("删除失败，请稍后重试");
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -253,10 +298,16 @@ export default function ServiceKnowledgeBase() {
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={() => { loadArticles(); loadStatistics(); toast.success('数据已刷新'); }}
+              onClick={() => {
+                loadArticles();
+                loadStatistics();
+                toast.success("数据已刷新");
+              }}
               disabled={loading}
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+              />
               刷新
             </Button>
             <Button
@@ -283,7 +334,9 @@ export default function ServiceKnowledgeBase() {
             <Card className="bg-slate-800/30 border-slate-700">
               <CardContent className="p-4">
                 <div className="text-sm text-slate-400 mb-1">总文章数</div>
-                <div className="text-2xl font-bold text-white">{stats.total}</div>
+                <div className="text-2xl font-bold text-white">
+                  {stats.total}
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -291,7 +344,9 @@ export default function ServiceKnowledgeBase() {
             <Card className="bg-emerald-500/10 border-emerald-500/20">
               <CardContent className="p-4">
                 <div className="text-sm text-slate-400 mb-1">已发布</div>
-                <div className="text-2xl font-bold text-emerald-400">{stats.published}</div>
+                <div className="text-2xl font-bold text-emerald-400">
+                  {stats.published}
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -299,7 +354,9 @@ export default function ServiceKnowledgeBase() {
             <Card className="bg-blue-500/10 border-blue-500/20">
               <CardContent className="p-4">
                 <div className="text-sm text-slate-400 mb-1">FAQ</div>
-                <div className="text-2xl font-bold text-blue-400">{stats.faq}</div>
+                <div className="text-2xl font-bold text-blue-400">
+                  {stats.faq}
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -307,7 +364,9 @@ export default function ServiceKnowledgeBase() {
             <Card className="bg-yellow-500/10 border-yellow-500/20">
               <CardContent className="p-4">
                 <div className="text-sm text-slate-400 mb-1">精选</div>
-                <div className="text-2xl font-bold text-yellow-400">{stats.featured}</div>
+                <div className="text-2xl font-bold text-yellow-400">
+                  {stats.featured}
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -315,7 +374,9 @@ export default function ServiceKnowledgeBase() {
             <Card className="bg-purple-500/10 border-purple-500/20">
               <CardContent className="p-4">
                 <div className="text-sm text-slate-400 mb-1">总浏览量</div>
-                <div className="text-2xl font-bold text-purple-400">{stats.totalViews}</div>
+                <div className="text-2xl font-bold text-purple-400">
+                  {stats.totalViews}
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -359,14 +420,16 @@ export default function ServiceKnowledgeBase() {
                     <option value="FAQ_ONLY">仅FAQ</option>
                     <option value="NON_FAQ">非FAQ</option>
                   </select>
-                  {(searchQuery || categoryFilter !== 'ALL' || faqFilter !== 'ALL') && (
+                  {(searchQuery ||
+                    categoryFilter !== "ALL" ||
+                    faqFilter !== "ALL") && (
                     <Button
                       variant="secondary"
                       size="sm"
                       onClick={() => {
-                        setSearchQuery('')
-                        setCategoryFilter('ALL')
-                        setFaqFilter('ALL')
+                        setSearchQuery("");
+                        setCategoryFilter("ALL");
+                        setFaqFilter("ALL");
                       }}
                       className="gap-2"
                     >
@@ -381,7 +444,12 @@ export default function ServiceKnowledgeBase() {
         </motion.div>
 
         {/* Article List */}
-        <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-3">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="space-y-3"
+        >
           {loading ? (
             <LoadingCard rows={5} />
           ) : error && articles.length === 0 ? (
@@ -391,22 +459,26 @@ export default function ServiceKnowledgeBase() {
               icon={BookOpen}
               title="暂无知识库文章"
               description={
-                searchQuery || categoryFilter !== 'ALL' || faqFilter !== 'ALL'
+                searchQuery || categoryFilter !== "ALL" || faqFilter !== "ALL"
                   ? "当前筛选条件下没有匹配的文章，请尝试调整筛选条件"
                   : "当前没有知识库文章数据"
               }
             />
           ) : (
             filteredArticles.map((article) => {
-              const category = categoryConfig[article.category] || categoryConfig['其他']
-              const status = statusConfig[article.status] || statusConfig['草稿']
+              const category =
+                categoryConfig[article.category] || categoryConfig["其他"];
+              const status =
+                statusConfig[article.status] || statusConfig["草稿"];
 
               return (
                 <motion.div key={article.id} variants={fadeIn}>
-                  <Card className={cn(
-                    'hover:bg-slate-800/50 transition-colors',
-                    article.is_featured && 'ring-2 ring-yellow-500/30'
-                  )}>
+                  <Card
+                    className={cn(
+                      "hover:bg-slate-800/50 transition-colors",
+                      article.is_featured && "ring-2 ring-yellow-500/30",
+                    )}
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 space-y-3">
@@ -415,35 +487,54 @@ export default function ServiceKnowledgeBase() {
                             {article.is_featured && (
                               <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                             )}
-                            <span className="font-mono text-sm text-slate-300">{article.article_no}</span>
-                            <Badge className={cn(category.bg, category.color, 'text-xs')}>
+                            <span className="font-mono text-sm text-slate-300">
+                              {article.article_no}
+                            </span>
+                            <Badge
+                              className={cn(
+                                category.bg,
+                                category.color,
+                                "text-xs",
+                              )}
+                            >
                               {category.label}
                             </Badge>
                             {article.is_faq && (
-                              <Badge variant="outline" className="text-xs text-blue-400 border-blue-500/30">
+                              <Badge
+                                variant="outline"
+                                className="text-xs text-blue-400 border-blue-500/30"
+                              >
                                 <HelpCircle className="w-3 h-3 mr-1" />
                                 FAQ
                               </Badge>
                             )}
-                            <Badge className={cn(status.color, 'text-xs')}>
+                            <Badge className={cn(status.color, "text-xs")}>
                               {status.label}
                             </Badge>
                           </div>
 
                           {/* Content */}
                           <div>
-                            <h3 className="text-white font-medium mb-1 cursor-pointer hover:text-primary transition-colors"
-                                onClick={() => handleViewDetail(article)}>
+                            <h3
+                              className="text-white font-medium mb-1 cursor-pointer hover:text-primary transition-colors"
+                              onClick={() => handleViewDetail(article)}
+                            >
                               {article.title}
                             </h3>
-                            <p className="text-sm text-slate-300 line-clamp-2">{article.content}</p>
+                            <p className="text-sm text-slate-300 line-clamp-2">
+                              {article.content}
+                            </p>
                           </div>
 
                           {/* Tags and Footer */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 flex-wrap">
                               {article.tags.map((tag, index) => (
-                                <Badge key={index} variant="secondary" className="text-xs">
+                                <Badge
+                                  key={index}
+                                  variant="secondary"
+                                  className="text-xs"
+                                >
                                   <Tag className="w-3 h-3 mr-1" />
                                   {tag}
                                 </Badge>
@@ -483,7 +574,7 @@ export default function ServiceKnowledgeBase() {
                     </CardContent>
                   </Card>
                 </motion.div>
-              )
+              );
             })
           )}
         </motion.div>
@@ -505,8 +596,8 @@ export default function ServiceKnowledgeBase() {
           <ArticleDetailDialog
             article={selectedArticle}
             onClose={() => {
-              setShowDetailDialog(false)
-              setSelectedArticle(null)
+              setShowDetailDialog(false);
+              setSelectedArticle(null);
             }}
             onUpdate={handleUpdateArticle}
             onDelete={handleDeleteArticle}
@@ -514,66 +605,76 @@ export default function ServiceKnowledgeBase() {
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }
 
 // Create Article Dialog Component
 function CreateArticleDialog({ onClose, onSubmit }) {
   const [formData, setFormData] = useState({
-    title: '',
-    category: '故障处理',
-    content: '',
+    title: "",
+    category: "故障处理",
+    content: "",
     tags: [],
     is_faq: false,
     is_featured: false,
-    status: '草稿',
-  })
+    status: "草稿",
+  });
 
-  const [tagInput, setTagInput] = useState('')
+  const [tagInput, setTagInput] = useState("");
 
   const handleSubmit = () => {
     if (!formData.title || !formData.content) {
-      toast.error('请填写文章标题和内容')
-      return
+      toast.error("请填写文章标题和内容");
+      return;
     }
-    onSubmit(formData)
-  }
+    onSubmit(formData);
+  };
 
   const handleAddTag = () => {
     if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
-      setFormData({ ...formData, tags: [...formData.tags, tagInput.trim()] })
-      setTagInput('')
+      setFormData({ ...formData, tags: [...formData.tags, tagInput.trim()] });
+      setTagInput("");
     }
-  }
+  };
 
   const handleRemoveTag = (tag) => {
-    setFormData({ ...formData, tags: formData.tags.filter(t => t !== tag) })
-  }
+    setFormData({ ...formData, tags: formData.tags.filter((t) => t !== tag) });
+  };
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl bg-slate-900 border-slate-700 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>创建知识库文章</DialogTitle>
-          <DialogDescription>填写文章信息，系统将自动生成文章编号</DialogDescription>
+          <DialogDescription>
+            填写文章信息，系统将自动生成文章编号
+          </DialogDescription>
         </DialogHeader>
         <DialogBody>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">文章标题 *</label>
+                <label className="text-sm text-slate-400 mb-1 block">
+                  文章标题 *
+                </label>
                 <Input
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                   placeholder="输入文章标题"
                   className="bg-slate-800/50 border-slate-700"
                 />
               </div>
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">分类 *</label>
+                <label className="text-sm text-slate-400 mb-1 block">
+                  分类 *
+                </label>
                 <select
                   value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, category: e.target.value })
+                  }
                   className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white"
                 >
                   <option value="故障处理">故障处理</option>
@@ -587,16 +688,22 @@ function CreateArticleDialog({ onClose, onSubmit }) {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-sm text-slate-400 block">文章内容 *</label>
+                <label className="text-sm text-slate-400 block">
+                  文章内容 *
+                </label>
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <span>支持 Markdown 格式</span>
-                  <Badge variant="outline" className="text-xs">Markdown</Badge>
+                  <Badge variant="outline" className="text-xs">
+                    Markdown
+                  </Badge>
                 </div>
               </div>
               <div className="relative">
                 <Textarea
                   value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, content: e.target.value })
+                  }
                   placeholder="输入文章详细内容...&#10;&#10;支持 Markdown 格式：&#10;- 使用 **粗体** 和 *斜体*&#10;- 使用 # 标题&#10;- 使用 - 或 * 创建列表&#10;- 使用 ```代码块```"
                   rows={12}
                   className="bg-slate-800/50 border-slate-700 font-mono text-sm"
@@ -613,17 +720,17 @@ function CreateArticleDialog({ onClose, onSubmit }) {
                       预览 Markdown 渲染效果
                     </summary>
                     <div className="mt-2 p-3 bg-slate-900/50 border border-slate-700 rounded-lg prose prose-invert prose-sm max-w-none">
-                      <div 
+                      <div
                         className="text-slate-200 whitespace-pre-wrap"
-                        dangerouslySetInnerHTML={{ 
+                        dangerouslySetInnerHTML={{
                           __html: formData.content
-                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                            .replace(/^- (.*$)/gim, '<li>$1</li>')
-                            .replace(/\n/g, '<br/>')
+                            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                            .replace(/\*(.*?)\*/g, "<em>$1</em>")
+                            .replace(/^### (.*$)/gim, "<h3>$1</h3>")
+                            .replace(/^## (.*$)/gim, "<h2>$1</h2>")
+                            .replace(/^# (.*$)/gim, "<h1>$1</h1>")
+                            .replace(/^- (.*$)/gim, "<li>$1</li>")
+                            .replace(/\n/g, "<br/>"),
                         }}
                       />
                     </div>
@@ -638,7 +745,7 @@ function CreateArticleDialog({ onClose, onSubmit }) {
                 <Input
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
+                  onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
                   placeholder="输入标签后按回车"
                   className="bg-slate-800/50 border-slate-700"
                 />
@@ -666,7 +773,9 @@ function CreateArticleDialog({ onClose, onSubmit }) {
                 <input
                   type="checkbox"
                   checked={formData.is_faq}
-                  onChange={(e) => setFormData({ ...formData, is_faq: e.target.checked })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, is_faq: e.target.checked })
+                  }
                   className="w-4 h-4"
                 />
                 <label className="text-sm text-slate-400">标记为FAQ</label>
@@ -675,16 +784,22 @@ function CreateArticleDialog({ onClose, onSubmit }) {
                 <input
                   type="checkbox"
                   checked={formData.is_featured}
-                  onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, is_featured: e.target.checked })
+                  }
                   className="w-4 h-4"
                 />
                 <label className="text-sm text-slate-400">设为精选</label>
               </div>
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">状态</label>
+                <label className="text-sm text-slate-400 mb-1 block">
+                  状态
+                </label>
                 <select
                   value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, status: e.target.value })
+                  }
                   className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white"
                 >
                   <option value="草稿">草稿</option>
@@ -695,7 +810,9 @@ function CreateArticleDialog({ onClose, onSubmit }) {
           </div>
         </DialogBody>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>取消</Button>
+          <Button variant="outline" onClick={onClose}>
+            取消
+          </Button>
           <Button onClick={handleSubmit}>
             <Save className="w-4 h-4 mr-2" />
             创建文章
@@ -703,25 +820,25 @@ function CreateArticleDialog({ onClose, onSubmit }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // Article Detail Dialog Component
 function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [formData, setFormData] = useState(article)
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState(article);
 
   useEffect(() => {
-    setFormData(article)
-  }, [article])
+    setFormData(article);
+  }, [article]);
 
   const handleSave = () => {
-    onUpdate(article.id, formData)
-    setIsEditing(false)
-  }
+    onUpdate(article.id, formData);
+    setIsEditing(false);
+  };
 
-  const category = categoryConfig[article.category] || categoryConfig['其他']
-  const status = statusConfig[article.status] || statusConfig['草稿']
+  const category = categoryConfig[article.category] || categoryConfig["其他"];
+  const status = statusConfig[article.status] || statusConfig["草稿"];
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -732,11 +849,14 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
               <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
             )}
             <span>{article.title}</span>
-            <Badge className={cn(category.bg, category.color, 'text-xs')}>
+            <Badge className={cn(category.bg, category.color, "text-xs")}>
               {category.label}
             </Badge>
             {article.is_faq && (
-              <Badge variant="outline" className="text-xs text-blue-400 border-blue-500/30">
+              <Badge
+                variant="outline"
+                className="text-xs text-blue-400 border-blue-500/30"
+              >
                 FAQ
               </Badge>
             )}
@@ -747,21 +867,31 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
           {isEditing ? (
             <div className="space-y-4">
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">文章标题</label>
+                <label className="text-sm text-slate-400 mb-1 block">
+                  文章标题
+                </label>
                 <Input
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                   className="bg-slate-800/50 border-slate-700"
                 />
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-sm text-slate-400 block">文章内容</label>
-                  <Badge variant="outline" className="text-xs">Markdown</Badge>
+                  <label className="text-sm text-slate-400 block">
+                    文章内容
+                  </label>
+                  <Badge variant="outline" className="text-xs">
+                    Markdown
+                  </Badge>
                 </div>
                 <Textarea
                   value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, content: e.target.value })
+                  }
                   rows={15}
                   className="bg-slate-800/50 border-slate-700 font-mono text-sm"
                   placeholder="支持 Markdown 格式..."
@@ -792,7 +922,11 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
                   <p className="text-sm text-slate-400 mb-2">标签</p>
                   <div className="flex flex-wrap gap-2">
                     {article.tags.map((tag, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="text-xs"
+                      >
                         <Tag className="w-3 h-3 mr-1" />
                         {tag}
                       </Badge>
@@ -808,7 +942,9 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
                 </div>
                 <div>
                   <p className="text-sm text-slate-400 mb-1">状态</p>
-                  <Badge className={cn(status.color, 'text-xs')}>{status.label}</Badge>
+                  <Badge className={cn(status.color, "text-xs")}>
+                    {status.label}
+                  </Badge>
                 </div>
                 <div>
                   <p className="text-sm text-slate-400 mb-1">创建时间</p>
@@ -843,7 +979,9 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
         <DialogFooter>
           {isEditing ? (
             <>
-              <Button variant="outline" onClick={() => setIsEditing(false)}>取消</Button>
+              <Button variant="outline" onClick={() => setIsEditing(false)}>
+                取消
+              </Button>
               <Button onClick={handleSave}>
                 <Save className="w-4 h-4 mr-2" />
                 保存
@@ -859,12 +997,13 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
                 <Edit className="w-4 h-4 mr-2" />
                 编辑
               </Button>
-              <Button variant="outline" onClick={onClose}>关闭</Button>
+              <Button variant="outline" onClick={onClose}>
+                关闭
+              </Button>
             </>
           )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

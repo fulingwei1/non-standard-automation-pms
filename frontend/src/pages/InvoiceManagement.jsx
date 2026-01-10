@@ -3,8 +3,8 @@
  * Handles invoice creation, tracking, and reconciliation
  */
 
-import { useState, useEffect, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Receipt,
   Search,
@@ -23,8 +23,8 @@ import {
   ChevronRight,
   TrendingUp,
   BarChart3,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -46,74 +46,89 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../components/ui'
-import { cn, formatCurrency, formatDate } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { invoiceApi, contractApi } from '../services/api'
-import { CreditCard } from 'lucide-react'
+} from "../components/ui";
+import { cn, formatCurrency, formatDate } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { invoiceApi, contractApi } from "../services/api";
+import { CreditCard } from "lucide-react";
 
 // Invoice status mapping
 const statusMap = {
-  DRAFT: 'draft',
-  APPLIED: 'applied',
-  APPROVED: 'approved',
-  ISSUED: 'issued',
-  VOID: 'void',
-}
+  DRAFT: "draft",
+  APPLIED: "applied",
+  APPROVED: "approved",
+  ISSUED: "issued",
+  VOID: "void",
+};
 
 const paymentStatusMap = {
-  PENDING: 'pending',
-  PARTIAL: 'partial',
-  PAID: 'paid',
-  OVERDUE: 'overdue',
-}
+  PENDING: "pending",
+  PARTIAL: "partial",
+  PAID: "paid",
+  OVERDUE: "overdue",
+};
 
 // Mock invoice data (fallback)
 // Mock data - 已移除，使用真实API
 const statusConfig = {
-  draft: { label: '草稿', color: 'bg-slate-500/20 text-slate-400', icon: FileText },
-  applied: { label: '申请中', color: 'bg-blue-500/20 text-blue-400', icon: Clock },
+  draft: {
+    label: "草稿",
+    color: "bg-slate-500/20 text-slate-400",
+    icon: FileText,
+  },
+  applied: {
+    label: "申请中",
+    color: "bg-blue-500/20 text-blue-400",
+    icon: Clock,
+  },
   approved: {
-    label: '已批准',
-    color: 'bg-purple-500/20 text-purple-400',
+    label: "已批准",
+    color: "bg-purple-500/20 text-purple-400",
     icon: Check,
   },
   issued: {
-    label: '已开票',
-    color: 'bg-emerald-500/20 text-emerald-400',
+    label: "已开票",
+    color: "bg-emerald-500/20 text-emerald-400",
     icon: Check,
   },
-  void: { label: '作废', color: 'bg-red-500/20 text-red-400', icon: X },
-}
+  void: { label: "作废", color: "bg-red-500/20 text-red-400", icon: X },
+};
 
 const paymentStatusConfig = {
   pending: {
-    label: '未收款',
-    color: 'bg-slate-500/20 text-slate-400',
+    label: "未收款",
+    color: "bg-slate-500/20 text-slate-400",
     icon: Clock,
   },
   partial: {
-    label: '部分收款',
-    color: 'bg-amber-500/20 text-amber-400',
+    label: "部分收款",
+    color: "bg-amber-500/20 text-amber-400",
     icon: TrendingUp,
   },
   paid: {
-    label: '已收款',
-    color: 'bg-emerald-500/20 text-emerald-400',
+    label: "已收款",
+    color: "bg-emerald-500/20 text-emerald-400",
     icon: Check,
   },
   overdue: {
-    label: '已逾期',
-    color: 'bg-red-500/20 text-red-400',
+    label: "已逾期",
+    color: "bg-red-500/20 text-red-400",
     icon: AlertTriangle,
   },
-}
+};
 
-const InvoiceRow = ({ invoice, onView, onEdit, onDelete, onIssue, onReceivePayment }) => {
-  const invoiceConfig = statusConfig[invoice.status]
-  const paymentConfig = paymentStatusConfig[invoice.paymentStatus]
-  const InvoiceIcon = invoiceConfig.icon
-  const PaymentIcon = paymentConfig.icon
+const InvoiceRow = ({
+  invoice,
+  onView,
+  onEdit,
+  onDelete,
+  onIssue,
+  onReceivePayment,
+}) => {
+  const invoiceConfig = statusConfig[invoice.status];
+  const paymentConfig = paymentStatusConfig[invoice.paymentStatus];
+  const InvoiceIcon = invoiceConfig.icon;
+  const PaymentIcon = paymentConfig.icon;
 
   return (
     <motion.div
@@ -128,7 +143,9 @@ const InvoiceRow = ({ invoice, onView, onEdit, onDelete, onIssue, onReceivePayme
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <span className="font-semibold text-slate-100">{invoice.id}</span>
-            <span className="text-sm text-slate-400">{invoice.projectName}</span>
+            <span className="text-sm text-slate-400">
+              {invoice.projectName}
+            </span>
           </div>
           <div className="mt-1 flex items-center gap-3 text-sm">
             <span className="text-slate-500">{invoice.customerName}</span>
@@ -153,11 +170,11 @@ const InvoiceRow = ({ invoice, onView, onEdit, onDelete, onIssue, onReceivePayme
 
         {/* Status Badges */}
         <div className="ml-4 flex flex-col gap-2">
-          <Badge className={cn('text-xs', invoiceConfig.color)}>
+          <Badge className={cn("text-xs", invoiceConfig.color)}>
             <InvoiceIcon className="mr-1 h-3 w-3" />
             {invoiceConfig.label}
           </Badge>
-          <Badge className={cn('text-xs', paymentConfig.color)}>
+          <Badge className={cn("text-xs", paymentConfig.color)}>
             <PaymentIcon className="mr-1 h-3 w-3" />
             {paymentConfig.label}
           </Badge>
@@ -173,7 +190,7 @@ const InvoiceRow = ({ invoice, onView, onEdit, onDelete, onIssue, onReceivePayme
           >
             <FileText className="h-4 w-4 text-blue-400" />
           </Button>
-          {invoice.status === 'draft' && (
+          {invoice.status === "draft" && (
             <>
               <Button
                 size="sm"
@@ -195,7 +212,7 @@ const InvoiceRow = ({ invoice, onView, onEdit, onDelete, onIssue, onReceivePayme
               </Button>
             </>
           )}
-          {invoice.status === 'approved' && onIssue && (
+          {invoice.status === "approved" && onIssue && (
             <Button
               size="sm"
               variant="ghost"
@@ -205,275 +222,287 @@ const InvoiceRow = ({ invoice, onView, onEdit, onDelete, onIssue, onReceivePayme
               <Send className="h-4 w-4 text-purple-400" />
             </Button>
           )}
-          {invoice.status === 'issued' && invoice.paymentStatus !== 'paid' && onReceivePayment && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 w-8 p-0"
-              onClick={() => onReceivePayment(invoice)}
-              title="记录收款"
-            >
-              <DollarSign className="h-4 w-4 text-emerald-400" />
-            </Button>
-          )}
+          {invoice.status === "issued" &&
+            invoice.paymentStatus !== "paid" &&
+            onReceivePayment && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0"
+                onClick={() => onReceivePayment(invoice)}
+                title="记录收款"
+              >
+                <DollarSign className="h-4 w-4 text-emerald-400" />
+              </Button>
+            )}
           <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
             <Download className="h-4 w-4 text-slate-400" />
           </Button>
         </div>
       </div>
     </motion.div>
-  )
-}
+  );
+};
 
 export default function InvoiceManagement() {
-  const [invoices, setInvoices] = useState([])
-  const [contracts, setContracts] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [searchText, setSearchText] = useState('')
-  const [filterStatus, setFilterStatus] = useState('all')
-  const [filterPayment, setFilterPayment] = useState('all')
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [showEditDialog, setShowEditDialog] = useState(false)
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [showIssueDialog, setShowIssueDialog] = useState(false)
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false)
-  const [selectedInvoice, setSelectedInvoice] = useState(null)
-  const [page, setPage] = useState(1)
-  const [total, setTotal] = useState(0)
-  const pageSize = 20
+  const [invoices, setInvoices] = useState([]);
+  const [contracts, setContracts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [searchText, setSearchText] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterPayment, setFilterPayment] = useState("all");
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showIssueDialog, setShowIssueDialog] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const pageSize = 20;
 
   const [formData, setFormData] = useState({
-    contract_id: '',
-    invoice_type: 'SPECIAL',
-    amount: '',
-    tax_rate: '13',
-    issue_date: '',
-    due_date: '',
-    remark: '',
-  })
+    contract_id: "",
+    invoice_type: "SPECIAL",
+    amount: "",
+    tax_rate: "13",
+    issue_date: "",
+    due_date: "",
+    remark: "",
+  });
 
   const [issueData, setIssueData] = useState({
-    invoice_no: '',
-    issue_date: new Date().toISOString().split('T')[0],
-    remark: '',
-  })
+    invoice_no: "",
+    issue_date: new Date().toISOString().split("T")[0],
+    remark: "",
+  });
 
   const [paymentData, setPaymentData] = useState({
-    paid_amount: '',
-    paid_date: new Date().toISOString().split('T')[0],
-    remark: '',
-  })
+    paid_amount: "",
+    paid_date: new Date().toISOString().split("T")[0],
+    remark: "",
+  });
 
   const loadInvoices = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const params = {
         page,
         page_size: pageSize,
         keyword: searchText || undefined,
-        status: filterStatus !== 'all' ? Object.keys(statusMap).find(k => statusMap[k] === filterStatus) : undefined,
-        payment_status: filterPayment !== 'all' ? Object.keys(paymentStatusMap).find(k => paymentStatusMap[k] === filterPayment) : undefined,
-      }
-      const response = await invoiceApi.list(params)
+        status:
+          filterStatus !== "all"
+            ? Object.keys(statusMap).find((k) => statusMap[k] === filterStatus)
+            : undefined,
+        payment_status:
+          filterPayment !== "all"
+            ? Object.keys(paymentStatusMap).find(
+                (k) => paymentStatusMap[k] === filterPayment,
+              )
+            : undefined,
+      };
+      const response = await invoiceApi.list(params);
       if (response.data && response.data.items) {
         // Transform API data to match UI format
-        const transformed = response.data.items.map(inv => ({
+        const transformed = response.data.items.map((inv) => ({
           id: inv.invoice_code || inv.id,
           contractId: inv.contract_code,
-          projectName: inv.project_name || '',
-          customerName: inv.customer_name || '',
+          projectName: inv.project_name || "",
+          customerName: inv.customer_name || "",
           amount: parseFloat(inv.amount || 0),
           taxRate: parseFloat(inv.tax_rate || 0),
           taxAmount: parseFloat(inv.tax_amount || 0),
           totalAmount: parseFloat(inv.total_amount || 0),
-          invoiceType: inv.invoice_type === 'SPECIAL' ? '专票' : '普票',
-          status: statusMap[inv.status] || 'draft',
+          invoiceType: inv.invoice_type === "SPECIAL" ? "专票" : "普票",
+          status: statusMap[inv.status] || "draft",
           issueDate: inv.issue_date || null,
           dueDate: inv.due_date || null,
-          paymentStatus: paymentStatusMap[inv.payment_status] || 'pending',
+          paymentStatus: paymentStatusMap[inv.payment_status] || "pending",
           paidAmount: parseFloat(inv.paid_amount || 0),
           paidDate: inv.paid_date || null,
-          notes: inv.remark || '',
+          notes: inv.remark || "",
           raw: inv, // Keep original data
-        }))
-        setInvoices(transformed)
-        setTotal(response.data.total || 0)
+        }));
+        setInvoices(transformed);
+        setTotal(response.data.total || 0);
       }
     } catch (error) {
-      console.error('加载发票列表失败:', error)
-      setError(error.response?.data?.detail || error.message || '加载发票列表失败')
-      setInvoices([]) // 不再使用mock数据，显示空列表
+      console.error("加载发票列表失败:", error);
+      setError(
+        error.response?.data?.detail || error.message || "加载发票列表失败",
+      );
+      setInvoices([]); // 不再使用mock数据，显示空列表
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const loadContracts = async () => {
     try {
-      const response = await contractApi.list({ page: 1, page_size: 100 })
+      const response = await contractApi.list({ page: 1, page_size: 100 });
       if (response.data && response.data.items) {
-        setContracts(response.data.items)
+        setContracts(response.data.items);
       }
     } catch (error) {
-      console.error('加载合同列表失败:', error)
+      console.error("加载合同列表失败:", error);
     }
-  }
+  };
 
   useEffect(() => {
-    loadInvoices()
-  }, [page, searchText, filterStatus, filterPayment])
+    loadInvoices();
+  }, [page, searchText, filterStatus, filterPayment]);
 
   useEffect(() => {
-    loadContracts()
-  }, [])
+    loadContracts();
+  }, []);
 
   const handleCreate = async () => {
     try {
-      await invoiceApi.create(formData)
-      setShowCreateDialog(false)
-      resetForm()
-      loadInvoices()
+      await invoiceApi.create(formData);
+      setShowCreateDialog(false);
+      resetForm();
+      loadInvoices();
     } catch (error) {
-      console.error('创建发票失败:', error)
-      alert('创建发票失败: ' + (error.response?.data?.detail || error.message))
+      console.error("创建发票失败:", error);
+      alert("创建发票失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const handleIssue = async () => {
-    if (!selectedInvoice) return
+    if (!selectedInvoice) return;
     try {
-      await invoiceApi.issue(selectedInvoice.raw.id, issueData)
-      setShowIssueDialog(false)
-      setSelectedInvoice(null)
-      loadInvoices()
+      await invoiceApi.issue(selectedInvoice.raw.id, issueData);
+      setShowIssueDialog(false);
+      setSelectedInvoice(null);
+      loadInvoices();
     } catch (error) {
-      console.error('开票失败:', error)
-      alert('开票失败: ' + (error.response?.data?.detail || error.message))
+      console.error("开票失败:", error);
+      alert("开票失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const handleReceivePayment = async () => {
-    if (!selectedInvoice) return
+    if (!selectedInvoice) return;
     try {
-      await invoiceApi.receivePayment(selectedInvoice.raw.id, paymentData)
-      setShowPaymentDialog(false)
-      setSelectedInvoice(null)
+      await invoiceApi.receivePayment(selectedInvoice.raw.id, paymentData);
+      setShowPaymentDialog(false);
+      setSelectedInvoice(null);
       setPaymentData({
-        paid_amount: '',
-        paid_date: new Date().toISOString().split('T')[0],
-        remark: '',
-      })
-      loadInvoices()
+        paid_amount: "",
+        paid_date: new Date().toISOString().split("T")[0],
+        remark: "",
+      });
+      loadInvoices();
     } catch (error) {
-      console.error('记录收款失败:', error)
-      alert('记录收款失败: ' + (error.response?.data?.detail || error.message))
+      console.error("记录收款失败:", error);
+      alert("记录收款失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const handleEdit = async (invoice) => {
     try {
-      const response = await invoiceApi.get(invoice.raw.id)
+      const response = await invoiceApi.get(invoice.raw.id);
       if (response.data) {
-        const inv = response.data
-        setSelectedInvoice(invoice)
+        const inv = response.data;
+        setSelectedInvoice(invoice);
         setFormData({
-          contract_id: inv.contract_id || '',
-          invoice_type: inv.invoice_type || 'SPECIAL',
-          amount: inv.amount || '',
-          tax_rate: inv.tax_rate ? String(inv.tax_rate) : '13',
-          issue_date: inv.issue_date || '',
-          due_date: inv.due_date || '',
-          remark: inv.remark || '',
-        })
-        setShowEditDialog(true)
+          contract_id: inv.contract_id || "",
+          invoice_type: inv.invoice_type || "SPECIAL",
+          amount: inv.amount || "",
+          tax_rate: inv.tax_rate ? String(inv.tax_rate) : "13",
+          issue_date: inv.issue_date || "",
+          due_date: inv.due_date || "",
+          remark: inv.remark || "",
+        });
+        setShowEditDialog(true);
       }
     } catch (error) {
-      console.error('加载发票详情失败:', error)
-      alert('加载发票详情失败')
+      console.error("加载发票详情失败:", error);
+      alert("加载发票详情失败");
     }
-  }
+  };
 
   const handleUpdate = async () => {
-    if (!selectedInvoice) return
+    if (!selectedInvoice) return;
     try {
-      await invoiceApi.update(selectedInvoice.raw.id, formData)
-      setShowEditDialog(false)
-      setSelectedInvoice(null)
-      resetForm()
-      loadInvoices()
+      await invoiceApi.update(selectedInvoice.raw.id, formData);
+      setShowEditDialog(false);
+      setSelectedInvoice(null);
+      resetForm();
+      loadInvoices();
     } catch (error) {
-      console.error('更新发票失败:', error)
-      alert('更新发票失败: ' + (error.response?.data?.detail || error.message))
+      console.error("更新发票失败:", error);
+      alert("更新发票失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!selectedInvoice) return
+    if (!selectedInvoice) return;
     try {
       // 只有草稿状态的发票可以删除
-      if (selectedInvoice.status !== 'draft') {
-        alert('只能删除草稿状态的发票')
-        return
+      if (selectedInvoice.status !== "draft") {
+        alert("只能删除草稿状态的发票");
+        return;
       }
       // 注意：后端API可能没有delete方法，需要检查
       // 如果有delete方法，使用：await invoiceApi.delete(selectedInvoice.raw.id)
       // 否则可能需要使用update方法将状态改为VOID
-      await invoiceApi.update(selectedInvoice.raw.id, { status: 'VOID' })
-      setShowDeleteDialog(false)
-      setSelectedInvoice(null)
-      loadInvoices()
-      alert('发票已删除')
+      await invoiceApi.update(selectedInvoice.raw.id, { status: "VOID" });
+      setShowDeleteDialog(false);
+      setSelectedInvoice(null);
+      loadInvoices();
+      alert("发票已删除");
     } catch (error) {
-      console.error('删除发票失败:', error)
-      alert('删除发票失败: ' + (error.response?.data?.detail || error.message))
+      console.error("删除发票失败:", error);
+      alert("删除发票失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const resetForm = () => {
     setFormData({
-      contract_id: '',
-      invoice_type: 'SPECIAL',
-      amount: '',
-      tax_rate: '13',
-      issue_date: '',
-      due_date: '',
-      remark: '',
-    })
-  }
+      contract_id: "",
+      invoice_type: "SPECIAL",
+      amount: "",
+      tax_rate: "13",
+      issue_date: "",
+      due_date: "",
+      remark: "",
+    });
+  };
 
   const filteredInvoices = useMemo(() => {
     return invoices.filter((invoice) => {
       const matchSearch =
         invoice.id.toLowerCase().includes(searchText.toLowerCase()) ||
         invoice.projectName.toLowerCase().includes(searchText.toLowerCase()) ||
-        invoice.customerName.toLowerCase().includes(searchText.toLowerCase())
+        invoice.customerName.toLowerCase().includes(searchText.toLowerCase());
 
       const matchStatus =
-        filterStatus === 'all' || invoice.status === filterStatus
+        filterStatus === "all" || invoice.status === filterStatus;
       const matchPayment =
-        filterPayment === 'all' || invoice.paymentStatus === filterPayment
+        filterPayment === "all" || invoice.paymentStatus === filterPayment;
 
-      return matchSearch && matchStatus && matchPayment
-    })
-  }, [invoices, searchText, filterStatus, filterPayment])
+      return matchSearch && matchStatus && matchPayment;
+    });
+  }, [invoices, searchText, filterStatus, filterPayment]);
 
   const stats = {
     totalInvoices: invoices.length,
     totalAmount: invoices.reduce((sum, inv) => sum + inv.totalAmount, 0),
     paidAmount: invoices.reduce(
-      (sum, inv) => sum + (inv.paymentStatus === 'paid' ? inv.totalAmount : 0),
-      0
+      (sum, inv) => sum + (inv.paymentStatus === "paid" ? inv.totalAmount : 0),
+      0,
     ),
     pendingAmount: invoices.reduce(
       (sum, inv) =>
         sum +
-        (inv.paymentStatus === 'pending' || inv.paymentStatus === 'overdue'
+        (inv.paymentStatus === "pending" || inv.paymentStatus === "overdue"
           ? inv.totalAmount
           : 0),
-      0
+      0,
     ),
-  }
+  };
 
   return (
     <div className="space-y-6 pb-8">
@@ -526,10 +555,7 @@ export default function InvoiceManagement() {
                 {formatCurrency(stats.paidAmount)}
               </p>
               <p className="text-xs text-slate-500">
-                {(
-                  (stats.paidAmount / stats.totalAmount) *
-                  100
-                ).toFixed(1)}%
+                {((stats.paidAmount / stats.totalAmount) * 100).toFixed(1)}%
               </p>
             </div>
           </CardContent>
@@ -565,16 +591,16 @@ export default function InvoiceManagement() {
             {/* Filter Buttons */}
             <div className="flex flex-wrap gap-2">
               <Button
-                variant={filterStatus === 'all' ? 'default' : 'ghost'}
+                variant={filterStatus === "all" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => setFilterStatus('all')}
+                onClick={() => setFilterStatus("all")}
               >
                 全部状态
               </Button>
               {Object.entries(statusConfig).map(([key, config]) => (
                 <Button
                   key={key}
-                  variant={filterStatus === key ? 'default' : 'ghost'}
+                  variant={filterStatus === key ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setFilterStatus(key)}
                   className={cn(filterStatus === key && config.color)}
@@ -584,16 +610,16 @@ export default function InvoiceManagement() {
               ))}
               <div className="w-full border-t border-slate-700/30" />
               <Button
-                variant={filterPayment === 'all' ? 'default' : 'ghost'}
+                variant={filterPayment === "all" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => setFilterPayment('all')}
+                onClick={() => setFilterPayment("all")}
               >
                 全部收款状态
               </Button>
               {Object.entries(paymentStatusConfig).map(([key, config]) => (
                 <Button
                   key={key}
-                  variant={filterPayment === key ? 'default' : 'ghost'}
+                  variant={filterPayment === key ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setFilterPayment(key)}
                   className={cn(filterPayment === key && config.color)}
@@ -628,26 +654,28 @@ export default function InvoiceManagement() {
                     key={invoice.id}
                     invoice={invoice}
                     onView={(inv) => {
-                      setSelectedInvoice(inv)
+                      setSelectedInvoice(inv);
                       // Show detail dialog or navigate
                     }}
                     onEdit={handleEdit}
                     onDelete={(inv) => {
-                      setSelectedInvoice(inv)
-                      setShowDeleteDialog(true)
+                      setSelectedInvoice(inv);
+                      setShowDeleteDialog(true);
                     }}
                     onIssue={(inv) => {
-                      setSelectedInvoice(inv)
-                      setShowIssueDialog(true)
+                      setSelectedInvoice(inv);
+                      setShowIssueDialog(true);
                     }}
                     onReceivePayment={(inv) => {
-                      setSelectedInvoice(inv)
+                      setSelectedInvoice(inv);
                       setPaymentData({
-                        paid_amount: (inv.totalAmount - inv.paidAmount).toFixed(2),
-                        paid_date: new Date().toISOString().split('T')[0],
-                        remark: '',
-                      })
-                      setShowPaymentDialog(true)
+                        paid_amount: (inv.totalAmount - inv.paidAmount).toFixed(
+                          2,
+                        ),
+                        paid_date: new Date().toISOString().split("T")[0],
+                        remark: "",
+                      });
+                      setShowPaymentDialog(true);
                     }}
                   />
                 ))
@@ -674,19 +702,11 @@ export default function InvoiceManagement() {
                 已选择 0 / {filteredInvoices.length} 份发票
               </p>
               <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-2"
-                >
+                <Button variant="ghost" size="sm" className="gap-2">
                   <Send className="h-4 w-4" />
                   批量发送
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-2"
-                >
+                <Button variant="ghost" size="sm" className="gap-2">
                   <Download className="h-4 w-4" />
                   批量下载
                 </Button>
@@ -717,7 +737,9 @@ export default function InvoiceManagement() {
                 <Label>合同 *</Label>
                 <select
                   value={formData.contract_id}
-                  onChange={(e) => setFormData({ ...formData, contract_id: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, contract_id: e.target.value })
+                  }
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
                 >
                   <option value="">请选择合同</option>
@@ -732,7 +754,9 @@ export default function InvoiceManagement() {
                 <Label>发票类型 *</Label>
                 <select
                   value={formData.invoice_type}
-                  onChange={(e) => setFormData({ ...formData, invoice_type: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, invoice_type: e.target.value })
+                  }
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
                 >
                   <option value="SPECIAL">专票</option>
@@ -744,7 +768,9 @@ export default function InvoiceManagement() {
                 <Input
                   type="number"
                   value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, amount: e.target.value })
+                  }
                   placeholder="请输入金额"
                 />
               </div>
@@ -753,7 +779,9 @@ export default function InvoiceManagement() {
                 <Input
                   type="number"
                   value={formData.tax_rate}
-                  onChange={(e) => setFormData({ ...formData, tax_rate: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, tax_rate: e.target.value })
+                  }
                   placeholder="13"
                 />
               </div>
@@ -762,7 +790,9 @@ export default function InvoiceManagement() {
                 <Input
                   type="date"
                   value={formData.issue_date}
-                  onChange={(e) => setFormData({ ...formData, issue_date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, issue_date: e.target.value })
+                  }
                 />
               </div>
               <div>
@@ -770,7 +800,9 @@ export default function InvoiceManagement() {
                 <Input
                   type="date"
                   value={formData.due_date}
-                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, due_date: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -778,14 +810,19 @@ export default function InvoiceManagement() {
               <Label>备注</Label>
               <Textarea
                 value={formData.remark}
-                onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, remark: e.target.value })
+                }
                 placeholder="请输入备注"
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleCreate}>创建</Button>
@@ -805,7 +842,9 @@ export default function InvoiceManagement() {
               <Label>发票号码 *</Label>
               <Input
                 value={issueData.invoice_no}
-                onChange={(e) => setIssueData({ ...issueData, invoice_no: e.target.value })}
+                onChange={(e) =>
+                  setIssueData({ ...issueData, invoice_no: e.target.value })
+                }
                 placeholder="请输入发票号码"
               />
             </div>
@@ -814,14 +853,18 @@ export default function InvoiceManagement() {
               <Input
                 type="date"
                 value={issueData.issue_date}
-                onChange={(e) => setIssueData({ ...issueData, issue_date: e.target.value })}
+                onChange={(e) =>
+                  setIssueData({ ...issueData, issue_date: e.target.value })
+                }
               />
             </div>
             <div>
               <Label>备注</Label>
               <Textarea
                 value={issueData.remark}
-                onChange={(e) => setIssueData({ ...issueData, remark: e.target.value })}
+                onChange={(e) =>
+                  setIssueData({ ...issueData, remark: e.target.value })
+                }
                 placeholder="请输入备注"
                 rows={3}
               />
@@ -844,7 +887,11 @@ export default function InvoiceManagement() {
             <DialogDescription>
               发票: {selectedInvoice?.id}
               <br />
-              待收金额: {formatCurrency((selectedInvoice?.totalAmount || 0) - (selectedInvoice?.paidAmount || 0))}
+              待收金额:{" "}
+              {formatCurrency(
+                (selectedInvoice?.totalAmount || 0) -
+                  (selectedInvoice?.paidAmount || 0),
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -853,7 +900,12 @@ export default function InvoiceManagement() {
               <Input
                 type="number"
                 value={paymentData.paid_amount}
-                onChange={(e) => setPaymentData({ ...paymentData, paid_amount: e.target.value })}
+                onChange={(e) =>
+                  setPaymentData({
+                    ...paymentData,
+                    paid_amount: e.target.value,
+                  })
+                }
                 placeholder="请输入收款金额"
               />
             </div>
@@ -862,21 +914,28 @@ export default function InvoiceManagement() {
               <Input
                 type="date"
                 value={paymentData.paid_date}
-                onChange={(e) => setPaymentData({ ...paymentData, paid_date: e.target.value })}
+                onChange={(e) =>
+                  setPaymentData({ ...paymentData, paid_date: e.target.value })
+                }
               />
             </div>
             <div>
               <Label>备注</Label>
               <Textarea
                 value={paymentData.remark}
-                onChange={(e) => setPaymentData({ ...paymentData, remark: e.target.value })}
+                onChange={(e) =>
+                  setPaymentData({ ...paymentData, remark: e.target.value })
+                }
                 placeholder="请输入备注"
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowPaymentDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleReceivePayment}>确认收款</Button>
@@ -897,7 +956,9 @@ export default function InvoiceManagement() {
                 <Label>合同 *</Label>
                 <select
                   value={formData.contract_id}
-                  onChange={(e) => setFormData({ ...formData, contract_id: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, contract_id: e.target.value })
+                  }
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
                 >
                   <option value="">请选择合同</option>
@@ -912,7 +973,9 @@ export default function InvoiceManagement() {
                 <Label>发票类型 *</Label>
                 <select
                   value={formData.invoice_type}
-                  onChange={(e) => setFormData({ ...formData, invoice_type: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, invoice_type: e.target.value })
+                  }
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
                 >
                   <option value="SPECIAL">专票</option>
@@ -924,7 +987,9 @@ export default function InvoiceManagement() {
                 <Input
                   type="number"
                   value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, amount: e.target.value })
+                  }
                   placeholder="请输入金额"
                 />
               </div>
@@ -933,7 +998,9 @@ export default function InvoiceManagement() {
                 <Input
                   type="number"
                   value={formData.tax_rate}
-                  onChange={(e) => setFormData({ ...formData, tax_rate: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, tax_rate: e.target.value })
+                  }
                   placeholder="13"
                 />
               </div>
@@ -942,7 +1009,9 @@ export default function InvoiceManagement() {
                 <Input
                   type="date"
                   value={formData.issue_date}
-                  onChange={(e) => setFormData({ ...formData, issue_date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, issue_date: e.target.value })
+                  }
                 />
               </div>
               <div>
@@ -950,7 +1019,9 @@ export default function InvoiceManagement() {
                 <Input
                   type="date"
                   value={formData.due_date}
-                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, due_date: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -958,7 +1029,9 @@ export default function InvoiceManagement() {
               <Label>备注</Label>
               <Textarea
                 value={formData.remark}
-                onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, remark: e.target.value })
+                }
                 placeholder="请输入备注"
                 rows={3}
               />
@@ -985,7 +1058,10 @@ export default function InvoiceManagement() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+            >
               取消
             </Button>
             <Button
@@ -1002,7 +1078,11 @@ export default function InvoiceManagement() {
       {/* 分页 */}
       {total > pageSize && (
         <div className="flex justify-center gap-2">
-          <Button variant="outline" disabled={page === 1} onClick={() => setPage(page - 1)}>
+          <Button
+            variant="outline"
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+          >
             上一页
           </Button>
           <span className="flex items-center px-4 text-slate-400">
@@ -1018,5 +1098,5 @@ export default function InvoiceManagement() {
         </div>
       )}
     </div>
-  )
+  );
 }

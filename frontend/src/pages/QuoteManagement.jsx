@@ -3,8 +3,8 @@
  * Features: Quote list, creation, version management, approval
  */
 
-import { useState, useEffect, useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
 import {
   Search,
   Filter,
@@ -25,8 +25,8 @@ import {
   Percent,
   X,
   Layers,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -51,147 +51,171 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../components/ui'
-import { cn, formatDate } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { quoteApi, opportunityApi, customerApi, salesTemplateApi } from '../services/api'
+} from "../components/ui";
+import { cn, formatDate } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import {
+  quoteApi,
+  opportunityApi,
+  customerApi,
+  salesTemplateApi,
+} from "../services/api";
 
 // 报价状态配置
 const statusConfig = {
-  DRAFT: { label: '草稿', color: 'bg-slate-500', textColor: 'text-slate-400' },
-  IN_REVIEW: { label: '审批中', color: 'bg-amber-500', textColor: 'text-amber-400' },
-  APPROVED: { label: '已批准', color: 'bg-blue-500', textColor: 'text-blue-400' },
-  SENT: { label: '已发送', color: 'bg-purple-500', textColor: 'text-purple-400' },
-  EXPIRED: { label: '过期', color: 'bg-red-500', textColor: 'text-red-400' },
-  REJECTED: { label: '被拒', color: 'bg-red-600', textColor: 'text-red-500' },
-}
+  DRAFT: { label: "草稿", color: "bg-slate-500", textColor: "text-slate-400" },
+  IN_REVIEW: {
+    label: "审批中",
+    color: "bg-amber-500",
+    textColor: "text-amber-400",
+  },
+  APPROVED: {
+    label: "已批准",
+    color: "bg-blue-500",
+    textColor: "text-blue-400",
+  },
+  SENT: {
+    label: "已发送",
+    color: "bg-purple-500",
+    textColor: "text-purple-400",
+  },
+  EXPIRED: { label: "过期", color: "bg-red-500", textColor: "text-red-400" },
+  REJECTED: { label: "被拒", color: "bg-red-600", textColor: "text-red-500" },
+};
 
 export default function QuoteManagement() {
-  const [quotes, setQuotes] = useState([])
-  const [opportunities, setOpportunities] = useState([])
-  const [customers, setCustomers] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [selectedQuote, setSelectedQuote] = useState(null)
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [showEditDialog, setShowEditDialog] = useState(false)
-  const [showDetailDialog, setShowDetailDialog] = useState(false)
-  const [showVersionDialog, setShowVersionDialog] = useState(false)
-  const [showApproveDialog, setShowApproveDialog] = useState(false)
-  const [showVersionsDialog, setShowVersionsDialog] = useState(false)
-  const [showCompareDialog, setShowCompareDialog] = useState(false)
-  const [versions, setVersions] = useState([])
-  const [selectedVersions, setSelectedVersions] = useState([null, null])
-  const [page, setPage] = useState(1)
-  const [total, setTotal] = useState(0)
-  const pageSize = 20
+  const [quotes, setQuotes] = useState([]);
+  const [opportunities, setOpportunities] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedQuote, setSelectedQuote] = useState(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [showVersionDialog, setShowVersionDialog] = useState(false);
+  const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [showVersionsDialog, setShowVersionsDialog] = useState(false);
+  const [showCompareDialog, setShowCompareDialog] = useState(false);
+  const [versions, setVersions] = useState([]);
+  const [selectedVersions, setSelectedVersions] = useState([null, null]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const pageSize = 20;
 
   const [formData, setFormData] = useState({
-    opportunity_id: '',
-    customer_id: '',
-    status: 'DRAFT',
-    valid_until: '',
+    opportunity_id: "",
+    customer_id: "",
+    status: "DRAFT",
+    valid_until: "",
     version: {
-      version_no: 'V1',
-      total_price: '',
-      cost_total: '',
-      gross_margin: '',
-      lead_time_days: '',
-      delivery_date: '',
-      risk_terms: '',
+      version_no: "V1",
+      total_price: "",
+      cost_total: "",
+      gross_margin: "",
+      lead_time_days: "",
+      delivery_date: "",
+      risk_terms: "",
       items: [],
     },
-  })
+  });
 
   const [approveData, setApproveData] = useState({
     approved: true,
-    remark: '',
-  })
+    remark: "",
+  });
 
   const [newItem, setNewItem] = useState({
-    item_type: 'MODULE',
-    item_name: '',
-    qty: '',
-    unit_price: '',
-    cost: '',
-    lead_time_days: '',
-    remark: '',
-  })
-  const [quoteTemplates, setQuoteTemplates] = useState([])
-  const [selectedTemplateId, setSelectedTemplateId] = useState('')
-  const [selectedTemplateVersionId, setSelectedTemplateVersionId] = useState('')
-  const [templatePreview, setTemplatePreview] = useState(null)
-  const [templateLoading, setTemplateLoading] = useState(false)
+    item_type: "MODULE",
+    item_name: "",
+    qty: "",
+    unit_price: "",
+    cost: "",
+    lead_time_days: "",
+    remark: "",
+  });
+  const [quoteTemplates, setQuoteTemplates] = useState([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [selectedTemplateVersionId, setSelectedTemplateVersionId] =
+    useState("");
+  const [templatePreview, setTemplatePreview] = useState(null);
+  const [templateLoading, setTemplateLoading] = useState(false);
 
   const loadQuotes = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const params = {
         page,
         page_size: pageSize,
         keyword: searchTerm || undefined,
-        status: statusFilter !== 'all' ? statusFilter : undefined,
-      }
-      const response = await quoteApi.list(params)
+        status: statusFilter !== "all" ? statusFilter : undefined,
+      };
+      const response = await quoteApi.list(params);
       if (response.data && response.data.items) {
-        setQuotes(response.data.items)
-        setTotal(response.data.total || 0)
+        setQuotes(response.data.items);
+        setTotal(response.data.total || 0);
       }
     } catch (error) {
-      console.error('加载报价列表失败:', error)
+      console.error("加载报价列表失败:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const loadOpportunities = async () => {
     try {
-      const response = await opportunityApi.list({ page: 1, page_size: 100 })
+      const response = await opportunityApi.list({ page: 1, page_size: 100 });
       if (response.data && response.data.items) {
-        setOpportunities(response.data.items)
+        setOpportunities(response.data.items);
       }
     } catch (error) {
-      console.error('加载商机列表失败:', error)
+      console.error("加载商机列表失败:", error);
     }
-  }
+  };
 
   const loadCustomers = async () => {
     try {
-      const response = await customerApi.list({ page: 1, page_size: 100 })
+      const response = await customerApi.list({ page: 1, page_size: 100 });
       if (response.data && response.data.items) {
-        setCustomers(response.data.items)
+        setCustomers(response.data.items);
       }
     } catch (error) {
-      console.error('加载客户列表失败:', error)
+      console.error("加载客户列表失败:", error);
     }
-  }
+  };
 
   const loadQuoteTemplates = async () => {
     try {
-      const response = await salesTemplateApi.listQuoteTemplates({ page: 1, page_size: 100 })
+      const response = await salesTemplateApi.listQuoteTemplates({
+        page: 1,
+        page_size: 100,
+      });
       if (response.data && response.data.items) {
-        setQuoteTemplates(response.data.items)
+        setQuoteTemplates(response.data.items);
       } else if (response.items) {
-        setQuoteTemplates(response.items)
+        setQuoteTemplates(response.items);
       }
     } catch (error) {
-      console.error('加载报价模板失败:', error)
+      console.error("加载报价模板失败:", error);
     }
-  }
+  };
 
   const handleApplyTemplate = async (templateId, versionId) => {
-    if (!templateId) return
-    setTemplateLoading(true)
+    if (!templateId) return;
+    setTemplateLoading(true);
     try {
       const payload = {
         template_version_id: versionId || undefined,
         selections: {},
-      }
-      const response = await salesTemplateApi.applyQuoteTemplate(templateId, payload)
-      const preview = response.data || response
-      setTemplatePreview(preview)
-      setFormData(prev => ({
+      };
+      const response = await salesTemplateApi.applyQuoteTemplate(
+        templateId,
+        payload,
+      );
+      const preview = response.data || response;
+      setTemplatePreview(preview);
+      setFormData((prev) => ({
         ...prev,
         version: {
           ...prev.version,
@@ -199,236 +223,251 @@ export default function QuoteManagement() {
           risk_terms: preview?.version?.sections
             ? JSON.stringify(preview.version.sections, null, 2)
             : prev.version.risk_terms,
-          total_price: preview?.cpq_preview?.final_price ?? prev.version.total_price,
+          total_price:
+            preview?.cpq_preview?.final_price ?? prev.version.total_price,
         },
-      }))
+      }));
     } catch (error) {
-      console.error('应用报价模板失败:', error)
-      alert('应用模板失败: ' + (error.response?.data?.detail || error.message))
+      console.error("应用报价模板失败:", error);
+      alert("应用模板失败: " + (error.response?.data?.detail || error.message));
     } finally {
-      setTemplateLoading(false)
+      setTemplateLoading(false);
     }
-  }
+  };
 
   const handleTemplateSelection = (value) => {
-    setSelectedTemplateId(value)
-    const template = quoteTemplates.find(t => String(t.id) === value)
-    const defaultVersion = template?.versions?.[0]
-    const versionId = defaultVersion ? String(defaultVersion.id) : ''
-    setSelectedTemplateVersionId(versionId)
+    setSelectedTemplateId(value);
+    const template = quoteTemplates.find((t) => String(t.id) === value);
+    const defaultVersion = template?.versions?.[0];
+    const versionId = defaultVersion ? String(defaultVersion.id) : "";
+    setSelectedTemplateVersionId(versionId);
     if (template) {
-      handleApplyTemplate(template.id, defaultVersion?.id)
+      handleApplyTemplate(template.id, defaultVersion?.id);
     } else {
-      setTemplatePreview(null)
+      setTemplatePreview(null);
     }
-  }
+  };
 
   const handleTemplateVersionSelection = (value) => {
-    setSelectedTemplateVersionId(value)
-    const template = quoteTemplates.find(t => String(t.id) === selectedTemplateId)
-    const version = template?.versions?.find(v => String(v.id) === value)
+    setSelectedTemplateVersionId(value);
+    const template = quoteTemplates.find(
+      (t) => String(t.id) === selectedTemplateId,
+    );
+    const version = template?.versions?.find((v) => String(v.id) === value);
     if (template && version) {
-      handleApplyTemplate(template.id, version.id)
+      handleApplyTemplate(template.id, version.id);
     }
-  }
+  };
 
   const renderDiffSummary = (diff) => {
     if (!diff) {
-      return <div className="text-slate-500">无差异</div>
+      return <div className="text-slate-500">无差异</div>;
     }
     const sections = [
-      { key: 'sections', label: '结构' },
-      { key: 'pricing_rules', label: '定价' },
-    ]
+      { key: "sections", label: "结构" },
+      { key: "pricing_rules", label: "定价" },
+    ];
     const hasChanges = sections.some(({ key }) => {
-      const block = diff[key]
-      return block && ((block.added?.length || 0) + (block.removed?.length || 0) + (block.changed?.length || 0) > 0)
-    })
+      const block = diff[key];
+      return (
+        block &&
+        (block.added?.length || 0) +
+          (block.removed?.length || 0) +
+          (block.changed?.length || 0) >
+          0
+      );
+    });
     if (!hasChanges) {
-      return <div className="text-slate-500">与上一版本一致</div>
+      return <div className="text-slate-500">与上一版本一致</div>;
     }
     return (
       <div className="space-y-1">
         {sections.map(({ key, label }) => {
-          const block = diff[key]
-          if (!block) return null
-          const changes = (block.added || []).length + (block.removed || []).length + (block.changed || []).length
-          if (!changes) return null
+          const block = diff[key];
+          if (!block) return null;
+          const changes =
+            (block.added || []).length +
+            (block.removed || []).length +
+            (block.changed || []).length;
+          if (!changes) return null;
           return (
             <div key={key} className="bg-slate-800 rounded px-2 py-1">
               <div className="text-slate-300">{label}</div>
               <div className="text-slate-400">
-                +{block.added?.length || 0} / -{block.removed?.length || 0} / Δ{block.changed?.length || 0}
+                +{block.added?.length || 0} / -{block.removed?.length || 0} / Δ
+                {block.changed?.length || 0}
               </div>
             </div>
-          )
+          );
         })}
       </div>
-    )
-  }
+    );
+  };
 
   useEffect(() => {
-    loadQuotes()
-  }, [page, searchTerm, statusFilter])
+    loadQuotes();
+  }, [page, searchTerm, statusFilter]);
 
   useEffect(() => {
-    loadOpportunities()
-    loadCustomers()
-    loadQuoteTemplates()
-  }, [])
+    loadOpportunities();
+    loadCustomers();
+    loadQuoteTemplates();
+  }, []);
 
   useEffect(() => {
     if (!showCreateDialog) {
-      setTemplatePreview(null)
-      setSelectedTemplateId('')
-      setSelectedTemplateVersionId('')
+      setTemplatePreview(null);
+      setSelectedTemplateId("");
+      setSelectedTemplateVersionId("");
     }
-  }, [showCreateDialog])
+  }, [showCreateDialog]);
 
   const handleCreate = async () => {
     try {
-      await quoteApi.create(formData)
-      setShowCreateDialog(false)
-      resetForm()
-      loadQuotes()
+      await quoteApi.create(formData);
+      setShowCreateDialog(false);
+      resetForm();
+      loadQuotes();
     } catch (error) {
-      console.error('创建报价失败:', error)
-      alert('创建报价失败: ' + (error.response?.data?.detail || error.message))
+      console.error("创建报价失败:", error);
+      alert("创建报价失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const handleCreateVersion = async () => {
-    if (!selectedQuote) return
+    if (!selectedQuote) return;
     try {
-      await quoteApi.createVersion(selectedQuote.id, formData.version)
-      setShowVersionDialog(false)
-      setSelectedQuote(null)
-      loadQuotes()
+      await quoteApi.createVersion(selectedQuote.id, formData.version);
+      setShowVersionDialog(false);
+      setSelectedQuote(null);
+      loadQuotes();
     } catch (error) {
-      console.error('创建报价版本失败:', error)
-      alert('创建报价版本失败: ' + (error.response?.data?.detail || error.message))
+      console.error("创建报价版本失败:", error);
+      alert(
+        "创建报价版本失败: " + (error.response?.data?.detail || error.message),
+      );
     }
-  }
+  };
 
   const handleApprove = async () => {
-    if (!selectedQuote) return
+    if (!selectedQuote) return;
     try {
-      await quoteApi.approve(selectedQuote.id, approveData)
-      setShowApproveDialog(false)
-      setSelectedQuote(null)
-      loadQuotes()
+      await quoteApi.approve(selectedQuote.id, approveData);
+      setShowApproveDialog(false);
+      setSelectedQuote(null);
+      loadQuotes();
     } catch (error) {
-      console.error('审批报价失败:', error)
-      alert('审批报价失败: ' + (error.response?.data?.detail || error.message))
+      console.error("审批报价失败:", error);
+      alert("审批报价失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const handleViewVersions = async (quote) => {
-    setSelectedQuote(quote)
+    setSelectedQuote(quote);
     try {
-      const response = await quoteApi.getVersions(quote.id)
+      const response = await quoteApi.getVersions(quote.id);
       if (response.data) {
-        setVersions(response.data)
+        setVersions(response.data);
       }
-      setShowVersionsDialog(true)
+      setShowVersionsDialog(true);
     } catch (error) {
-      console.error('加载报价版本失败:', error)
+      console.error("加载报价版本失败:", error);
     }
-  }
+  };
 
   // 查看详情
   const handleViewDetail = async (quote) => {
     try {
-      const response = await quoteApi.get(quote.id)
+      const response = await quoteApi.get(quote.id);
       if (response.data) {
-        setSelectedQuote(response.data)
-        setShowDetailDialog(true)
+        setSelectedQuote(response.data);
+        setShowDetailDialog(true);
         // 加载版本信息
         try {
-          const versionsResponse = await quoteApi.getVersions(quote.id)
+          const versionsResponse = await quoteApi.getVersions(quote.id);
           if (versionsResponse.data) {
-            setVersions(versionsResponse.data)
+            setVersions(versionsResponse.data);
           }
         } catch (error) {
-          console.error('加载版本失败:', error)
+          console.error("加载版本失败:", error);
         }
       }
     } catch (error) {
-      console.error('加载报价详情失败:', error)
-      setSelectedQuote(quote)
-      setShowDetailDialog(true)
+      console.error("加载报价详情失败:", error);
+      setSelectedQuote(quote);
+      setShowDetailDialog(true);
     }
-  }
+  };
 
   // 编辑报价
   const handleEditClick = async (quote) => {
     try {
-      const response = await quoteApi.get(quote.id)
+      const response = await quoteApi.get(quote.id);
       if (response.data) {
-        const quoteData = response.data
-        setSelectedQuote(quoteData)
+        const quoteData = response.data;
+        setSelectedQuote(quoteData);
         setFormData({
-          opportunity_id: quoteData.opportunity_id || '',
-          customer_id: quoteData.customer_id || '',
-          status: quoteData.status || 'DRAFT',
-          valid_until: quoteData.valid_until || '',
+          opportunity_id: quoteData.opportunity_id || "",
+          customer_id: quoteData.customer_id || "",
+          status: quoteData.status || "DRAFT",
+          valid_until: quoteData.valid_until || "",
           version: quoteData.current_version
             ? {
-                version_no: quoteData.current_version.version_no || 'V1',
-                total_price: quoteData.current_version.total_price || '',
-                cost_total: quoteData.current_version.cost_total || '',
-                gross_margin: quoteData.current_version.gross_margin || '',
-                lead_time_days: quoteData.current_version.lead_time_days || '',
-                delivery_date: quoteData.current_version.delivery_date || '',
-                risk_terms: quoteData.current_version.risk_terms || '',
+                version_no: quoteData.current_version.version_no || "V1",
+                total_price: quoteData.current_version.total_price || "",
+                cost_total: quoteData.current_version.cost_total || "",
+                gross_margin: quoteData.current_version.gross_margin || "",
+                lead_time_days: quoteData.current_version.lead_time_days || "",
+                delivery_date: quoteData.current_version.delivery_date || "",
+                risk_terms: quoteData.current_version.risk_terms || "",
                 items: quoteData.current_version.items || [],
               }
             : {
-                version_no: 'V1',
-                total_price: '',
-                cost_total: '',
-                gross_margin: '',
-                lead_time_days: '',
-                delivery_date: '',
-                risk_terms: '',
+                version_no: "V1",
+                total_price: "",
+                cost_total: "",
+                gross_margin: "",
+                lead_time_days: "",
+                delivery_date: "",
+                risk_terms: "",
                 items: [],
               },
-        })
-        setShowEditDialog(true)
+        });
+        setShowEditDialog(true);
       }
     } catch (error) {
-      console.error('加载报价详情失败:', error)
-      alert('加载报价详情失败')
+      console.error("加载报价详情失败:", error);
+      alert("加载报价详情失败");
     }
-  }
+  };
 
   // 更新报价
   const handleUpdate = async () => {
-    if (!selectedQuote) return
+    if (!selectedQuote) return;
     try {
-      await quoteApi.update(selectedQuote.id, formData)
-      setShowEditDialog(false)
-      setSelectedQuote(null)
-      loadQuotes()
+      await quoteApi.update(selectedQuote.id, formData);
+      setShowEditDialog(false);
+      setSelectedQuote(null);
+      loadQuotes();
     } catch (error) {
-      console.error('更新报价失败:', error)
-      alert('更新报价失败: ' + (error.response?.data?.detail || error.message))
+      console.error("更新报价失败:", error);
+      alert("更新报价失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   // 版本对比
   const handleCompareVersions = () => {
     if (selectedVersions[0] && selectedVersions[1]) {
-      setShowCompareDialog(true)
+      setShowCompareDialog(true);
     } else {
-      alert('请选择两个版本进行对比')
+      alert("请选择两个版本进行对比");
     }
-  }
+  };
 
   const addItem = () => {
     if (!newItem.item_name || !newItem.qty || !newItem.unit_price) {
-      alert('请填写完整的明细信息')
-      return
+      alert("请填写完整的明细信息");
+      return;
     }
     setFormData({
       ...formData,
@@ -436,60 +475,60 @@ export default function QuoteManagement() {
         ...formData.version,
         items: [...formData.version.items, { ...newItem }],
       },
-    })
+    });
     setNewItem({
-      item_type: 'MODULE',
-      item_name: '',
-      qty: '',
-      unit_price: '',
-      cost: '',
-      lead_time_days: '',
-      remark: '',
-    })
-  }
+      item_type: "MODULE",
+      item_name: "",
+      qty: "",
+      unit_price: "",
+      cost: "",
+      lead_time_days: "",
+      remark: "",
+    });
+  };
 
   const removeItem = (index) => {
-    const newItems = formData.version.items.filter((_, i) => i !== index)
+    const newItems = formData.version.items.filter((_, i) => i !== index);
     setFormData({
       ...formData,
       version: {
         ...formData.version,
         items: newItems,
       },
-    })
-  }
+    });
+  };
 
   const resetForm = () => {
     setFormData({
-      opportunity_id: '',
-      customer_id: '',
-      status: 'DRAFT',
-      valid_until: '',
+      opportunity_id: "",
+      customer_id: "",
+      status: "DRAFT",
+      valid_until: "",
       version: {
-        version_no: 'V1',
-        total_price: '',
-        cost_total: '',
-        gross_margin: '',
-        lead_time_days: '',
-        delivery_date: '',
-        risk_terms: '',
+        version_no: "V1",
+        total_price: "",
+        cost_total: "",
+        gross_margin: "",
+        lead_time_days: "",
+        delivery_date: "",
+        risk_terms: "",
         items: [],
       },
-    })
-  }
+    });
+  };
 
   const stats = useMemo(() => {
     return {
       total: total,
-      draft: quotes.filter((q) => q.status === 'DRAFT').length,
-      inReview: quotes.filter((q) => q.status === 'IN_REVIEW').length,
-      approved: quotes.filter((q) => q.status === 'APPROVED').length,
+      draft: quotes.filter((q) => q.status === "DRAFT").length,
+      inReview: quotes.filter((q) => q.status === "IN_REVIEW").length,
+      approved: quotes.filter((q) => q.status === "APPROVED").length,
       totalAmount: quotes.reduce((sum, q) => {
-        const version = q.current_version
-        return sum + (parseFloat(version?.total_price) || 0)
+        const version = q.current_version;
+        return sum + (parseFloat(version?.total_price) || 0);
       }, 0),
-    }
-  }, [quotes, total])
+    };
+  }, [quotes, total]);
 
   return (
     <motion.div
@@ -538,7 +577,9 @@ export default function QuoteManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">审批中</p>
-                <p className="text-2xl font-bold text-white">{stats.inReview}</p>
+                <p className="text-2xl font-bold text-white">
+                  {stats.inReview}
+                </p>
               </div>
               <Clock className="h-8 w-8 text-amber-400" />
             </div>
@@ -576,13 +617,21 @@ export default function QuoteManagement() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
                   <Filter className="mr-2 h-4 w-4" />
-                  状态: {statusFilter === 'all' ? '全部' : statusConfig[statusFilter]?.label}
+                  状态:{" "}
+                  {statusFilter === "all"
+                    ? "全部"
+                    : statusConfig[statusFilter]?.label}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setStatusFilter('all')}>全部</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter("all")}>
+                  全部
+                </DropdownMenuItem>
                 {Object.entries(statusConfig).map(([key, config]) => (
-                  <DropdownMenuItem key={key} onClick={() => setStatusFilter(key)}>
+                  <DropdownMenuItem
+                    key={key}
+                    onClick={() => setStatusFilter(key)}
+                  >
                     {config.label}
                   </DropdownMenuItem>
                 ))}
@@ -609,8 +658,12 @@ export default function QuoteManagement() {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-lg">{quote.quote_code}</CardTitle>
-                      <p className="text-sm text-slate-400 mt-1">{quote.opportunity_code}</p>
+                      <CardTitle className="text-lg">
+                        {quote.quote_code}
+                      </CardTitle>
+                      <p className="text-sm text-slate-400 mt-1">
+                        {quote.opportunity_code}
+                      </p>
                     </div>
                     <Badge className={cn(statusConfig[quote.status]?.color)}>
                       {statusConfig[quote.status]?.label}
@@ -627,7 +680,10 @@ export default function QuoteManagement() {
                       <>
                         <div className="flex items-center gap-2 text-slate-300">
                           <DollarSign className="h-4 w-4 text-slate-400" />
-                          {parseFloat(quote.current_version.total_price || 0).toLocaleString()} 元
+                          {parseFloat(
+                            quote.current_version.total_price || 0,
+                          ).toLocaleString()}{" "}
+                          元
                         </div>
                         {quote.current_version.gross_margin && (
                           <div className="flex items-center gap-2 text-slate-300">
@@ -654,7 +710,7 @@ export default function QuoteManagement() {
                       <Eye className="mr-2 h-4 w-4" />
                       详情
                     </Button>
-                    {quote.status === 'DRAFT' && (
+                    {quote.status === "DRAFT" && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -674,13 +730,13 @@ export default function QuoteManagement() {
                       <History className="mr-2 h-4 w-4" />
                       版本
                     </Button>
-                    {quote.status === 'DRAFT' && (
+                    {quote.status === "DRAFT" && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          setSelectedQuote(quote)
-                          setShowVersionDialog(true)
+                          setSelectedQuote(quote);
+                          setShowVersionDialog(true);
                         }}
                         className="flex-1"
                       >
@@ -688,13 +744,13 @@ export default function QuoteManagement() {
                         新版本
                       </Button>
                     )}
-                    {quote.status === 'IN_REVIEW' && (
+                    {quote.status === "IN_REVIEW" && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          setSelectedQuote(quote)
-                          setShowApproveDialog(true)
+                          setSelectedQuote(quote);
+                          setShowApproveDialog(true);
                         }}
                         className="flex-1"
                       >
@@ -713,7 +769,11 @@ export default function QuoteManagement() {
       {/* 分页 */}
       {total > pageSize && (
         <div className="flex justify-center gap-2">
-          <Button variant="outline" disabled={page === 1} onClick={() => setPage(page - 1)}>
+          <Button
+            variant="outline"
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+          >
             上一页
           </Button>
           <span className="flex items-center px-4 text-slate-400">
@@ -748,7 +808,12 @@ export default function QuoteManagement() {
                   <Label>商机 *</Label>
                   <select
                     value={formData.opportunity_id}
-                    onChange={(e) => setFormData({ ...formData, opportunity_id: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        opportunity_id: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
                   >
                     <option value="">请选择商机</option>
@@ -763,7 +828,9 @@ export default function QuoteManagement() {
                   <Label>客户 *</Label>
                   <select
                     value={formData.customer_id}
-                    onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, customer_id: e.target.value })
+                    }
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
                   >
                     <option value="">请选择客户</option>
@@ -778,7 +845,9 @@ export default function QuoteManagement() {
                   <Label>状态</Label>
                   <select
                     value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, status: e.target.value })
+                    }
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
                   >
                     {Object.entries(statusConfig).map(([key, config]) => (
@@ -793,7 +862,9 @@ export default function QuoteManagement() {
                   <Input
                     type="date"
                     value={formData.valid_until}
-                    onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, valid_until: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -803,9 +874,15 @@ export default function QuoteManagement() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="font-semibold">模板驱动</Label>
-                    <p className="text-xs text-slate-400">选择模板以复制条款、同步 CPQ 预测并查看版本差异</p>
+                    <p className="text-xs text-slate-400">
+                      选择模板以复制条款、同步 CPQ 预测并查看版本差异
+                    </p>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => window.open('/sales/templates', '_blank')}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => window.open("/sales/templates", "_blank")}
+                  >
                     <Layers className="w-4 h-4 mr-1" />
                     模板中心
                   </Button>
@@ -831,16 +908,20 @@ export default function QuoteManagement() {
                       <Label>模板版本</Label>
                       <select
                         value={selectedTemplateVersionId}
-                        onChange={(e) => handleTemplateVersionSelection(e.target.value)}
+                        onChange={(e) =>
+                          handleTemplateVersionSelection(e.target.value)
+                        }
                         className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white"
                       >
-                        {(quoteTemplates.find(t => String(t.id) === selectedTemplateId)?.versions || []).map(
-                          (version) => (
-                            <option key={version.id} value={version.id}>
-                              {version.version_no} · {version.status}
-                            </option>
-                          )
-                        )}
+                        {(
+                          quoteTemplates.find(
+                            (t) => String(t.id) === selectedTemplateId,
+                          )?.versions || []
+                        ).map((version) => (
+                          <option key={version.id} value={version.id}>
+                            {version.version_no} · {version.status}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   )}
@@ -879,21 +960,24 @@ export default function QuoteManagement() {
                     <div>
                       <div className="text-slate-400 mb-1">审批 / 发布记录</div>
                       <div className="space-y-1">
-                        {(templatePreview.approval_history || []).slice(0, 4).map((record) => (
-                          <div
-                            key={record.version_id}
-                            className="flex items-center justify-between bg-slate-800 rounded px-2 py-1"
-                          >
-                            <span>{record.version_no}</span>
-                            <span className="text-slate-400">
-                              {record.status}{' '}
-                              {record.published_at ? formatDate(record.published_at) : ''}
-                            </span>
-                          </div>
-                        ))}
-                        {(templatePreview.approval_history || []).length === 0 && (
-                          <div className="text-slate-500">暂无记录</div>
-                        )}
+                        {(templatePreview.approval_history || [])
+                          .slice(0, 4)
+                          .map((record) => (
+                            <div
+                              key={record.version_id}
+                              className="flex items-center justify-between bg-slate-800 rounded px-2 py-1"
+                            >
+                              <span>{record.version_no}</span>
+                              <span className="text-slate-400">
+                                {record.status}{" "}
+                                {record.published_at
+                                  ? formatDate(record.published_at)
+                                  : ""}
+                              </span>
+                            </div>
+                          ))}
+                        {(templatePreview.approval_history || []).length ===
+                          0 && <div className="text-slate-500">暂无记录</div>}
                       </div>
                     </div>
                   </div>
@@ -907,7 +991,10 @@ export default function QuoteManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        version: { ...formData.version, version_no: e.target.value },
+                        version: {
+                          ...formData.version,
+                          version_no: e.target.value,
+                        },
                       })
                     }
                     placeholder="V1"
@@ -921,7 +1008,10 @@ export default function QuoteManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        version: { ...formData.version, total_price: e.target.value },
+                        version: {
+                          ...formData.version,
+                          total_price: e.target.value,
+                        },
                       })
                     }
                     placeholder="请输入总价"
@@ -935,7 +1025,10 @@ export default function QuoteManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        version: { ...formData.version, cost_total: e.target.value },
+                        version: {
+                          ...formData.version,
+                          cost_total: e.target.value,
+                        },
                       })
                     }
                     placeholder="请输入成本总计"
@@ -949,7 +1042,10 @@ export default function QuoteManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        version: { ...formData.version, gross_margin: e.target.value },
+                        version: {
+                          ...formData.version,
+                          gross_margin: e.target.value,
+                        },
                       })
                     }
                     placeholder="请输入毛利率"
@@ -963,7 +1059,10 @@ export default function QuoteManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        version: { ...formData.version, lead_time_days: e.target.value },
+                        version: {
+                          ...formData.version,
+                          lead_time_days: e.target.value,
+                        },
                       })
                     }
                     placeholder="请输入交期"
@@ -977,7 +1076,10 @@ export default function QuoteManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        version: { ...formData.version, delivery_date: e.target.value },
+                        version: {
+                          ...formData.version,
+                          delivery_date: e.target.value,
+                        },
                       })
                     }
                   />
@@ -990,7 +1092,10 @@ export default function QuoteManagement() {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      version: { ...formData.version, risk_terms: e.target.value },
+                      version: {
+                        ...formData.version,
+                        risk_terms: e.target.value,
+                      },
                     })
                   }
                   placeholder="请输入风险条款"
@@ -1005,7 +1110,9 @@ export default function QuoteManagement() {
                     <Label>明细类型</Label>
                     <select
                       value={newItem.item_type}
-                      onChange={(e) => setNewItem({ ...newItem, item_type: e.target.value })}
+                      onChange={(e) =>
+                        setNewItem({ ...newItem, item_type: e.target.value })
+                      }
                       className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
                     >
                       <option value="MODULE">模块</option>
@@ -1019,7 +1126,9 @@ export default function QuoteManagement() {
                     <Label>明细名称 *</Label>
                     <Input
                       value={newItem.item_name}
-                      onChange={(e) => setNewItem({ ...newItem, item_name: e.target.value })}
+                      onChange={(e) =>
+                        setNewItem({ ...newItem, item_name: e.target.value })
+                      }
                       placeholder="请输入明细名称"
                     />
                   </div>
@@ -1028,7 +1137,9 @@ export default function QuoteManagement() {
                     <Input
                       type="number"
                       value={newItem.qty}
-                      onChange={(e) => setNewItem({ ...newItem, qty: e.target.value })}
+                      onChange={(e) =>
+                        setNewItem({ ...newItem, qty: e.target.value })
+                      }
                       placeholder="1"
                     />
                   </div>
@@ -1037,7 +1148,9 @@ export default function QuoteManagement() {
                     <Input
                       type="number"
                       value={newItem.unit_price}
-                      onChange={(e) => setNewItem({ ...newItem, unit_price: e.target.value })}
+                      onChange={(e) =>
+                        setNewItem({ ...newItem, unit_price: e.target.value })
+                      }
                       placeholder="0"
                     />
                   </div>
@@ -1046,7 +1159,9 @@ export default function QuoteManagement() {
                     <Input
                       type="number"
                       value={newItem.cost}
-                      onChange={(e) => setNewItem({ ...newItem, cost: e.target.value })}
+                      onChange={(e) =>
+                        setNewItem({ ...newItem, cost: e.target.value })
+                      }
                       placeholder="0"
                     />
                   </div>
@@ -1064,10 +1179,15 @@ export default function QuoteManagement() {
                           key={index}
                           className="flex items-center gap-2 p-2 bg-slate-800 rounded"
                         >
-                          <span className="flex-1 text-sm">{item.item_name}</span>
-                          <span className="text-sm text-slate-400">数量: {item.qty}</span>
+                          <span className="flex-1 text-sm">
+                            {item.item_name}
+                          </span>
                           <span className="text-sm text-slate-400">
-                            单价: {parseFloat(item.unit_price || 0).toLocaleString()}
+                            数量: {item.qty}
+                          </span>
+                          <span className="text-sm text-slate-400">
+                            单价:{" "}
+                            {parseFloat(item.unit_price || 0).toLocaleString()}
                           </span>
                           <Button
                             variant="ghost"
@@ -1085,7 +1205,10 @@ export default function QuoteManagement() {
             </TabsContent>
           </Tabs>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleCreate}>创建</Button>
@@ -1104,9 +1227,12 @@ export default function QuoteManagement() {
             <div>
               <Label>审批结果 *</Label>
               <select
-                value={approveData.approved ? 'true' : 'false'}
+                value={approveData.approved ? "true" : "false"}
                 onChange={(e) =>
-                  setApproveData({ ...approveData, approved: e.target.value === 'true' })
+                  setApproveData({
+                    ...approveData,
+                    approved: e.target.value === "true",
+                  })
                 }
                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
               >
@@ -1118,14 +1244,19 @@ export default function QuoteManagement() {
               <Label>备注</Label>
               <Textarea
                 value={approveData.remark}
-                onChange={(e) => setApproveData({ ...approveData, remark: e.target.value })}
+                onChange={(e) =>
+                  setApproveData({ ...approveData, remark: e.target.value })
+                }
                 placeholder="请输入审批备注"
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowApproveDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowApproveDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleApprove}>提交</Button>
@@ -1148,7 +1279,9 @@ export default function QuoteManagement() {
                 <Card key={version.id}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{version.version_no}</CardTitle>
+                      <CardTitle className="text-lg">
+                        {version.version_no}
+                      </CardTitle>
                       {version.approved_at && (
                         <Badge className="bg-emerald-500">已审批</Badge>
                       )}
@@ -1159,22 +1292,30 @@ export default function QuoteManagement() {
                       <div>
                         <span className="text-slate-400">总价: </span>
                         <span className="text-white">
-                          {parseFloat(version.total_price || 0).toLocaleString()} 元
+                          {parseFloat(
+                            version.total_price || 0,
+                          ).toLocaleString()}{" "}
+                          元
                         </span>
                       </div>
                       <div>
                         <span className="text-slate-400">成本: </span>
                         <span className="text-white">
-                          {parseFloat(version.cost_total || 0).toLocaleString()} 元
+                          {parseFloat(version.cost_total || 0).toLocaleString()}{" "}
+                          元
                         </span>
                       </div>
                       <div>
                         <span className="text-slate-400">毛利率: </span>
-                        <span className="text-white">{version.gross_margin || 0}%</span>
+                        <span className="text-white">
+                          {version.gross_margin || 0}%
+                        </span>
                       </div>
                       <div>
                         <span className="text-slate-400">交期: </span>
-                        <span className="text-white">{version.lead_time_days || 0} 天</span>
+                        <span className="text-white">
+                          {version.lead_time_days || 0} 天
+                        </span>
                       </div>
                       {version.items && version.items.length > 0 && (
                         <div className="col-span-2">
@@ -1182,8 +1323,9 @@ export default function QuoteManagement() {
                           <div className="space-y-1">
                             {version.items.map((item, idx) => (
                               <div key={idx} className="text-sm text-slate-300">
-                                {item.item_name} × {item.qty} ={' '}
-                                {parseFloat(item.unit_price || 0) * parseFloat(item.qty || 0)}
+                                {item.item_name} × {item.qty} ={" "}
+                                {parseFloat(item.unit_price || 0) *
+                                  parseFloat(item.qty || 0)}
                               </div>
                             ))}
                           </div>
@@ -1196,7 +1338,10 @@ export default function QuoteManagement() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowVersionsDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowVersionsDialog(false)}
+            >
               关闭
             </Button>
           </DialogFooter>
@@ -1222,7 +1367,12 @@ export default function QuoteManagement() {
                   <Label>商机 *</Label>
                   <select
                     value={formData.opportunity_id}
-                    onChange={(e) => setFormData({ ...formData, opportunity_id: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        opportunity_id: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
                   >
                     <option value="">请选择商机</option>
@@ -1237,7 +1387,9 @@ export default function QuoteManagement() {
                   <Label>客户 *</Label>
                   <select
                     value={formData.customer_id}
-                    onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, customer_id: e.target.value })
+                    }
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
                   >
                     <option value="">请选择客户</option>
@@ -1252,7 +1404,9 @@ export default function QuoteManagement() {
                   <Label>状态</Label>
                   <select
                     value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, status: e.target.value })
+                    }
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
                   >
                     {Object.entries(statusConfig).map(([key, config]) => (
@@ -1267,7 +1421,9 @@ export default function QuoteManagement() {
                   <Input
                     type="date"
                     value={formData.valid_until}
-                    onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, valid_until: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -1281,7 +1437,10 @@ export default function QuoteManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        version: { ...formData.version, version_no: e.target.value },
+                        version: {
+                          ...formData.version,
+                          version_no: e.target.value,
+                        },
                       })
                     }
                     placeholder="V1"
@@ -1295,7 +1454,10 @@ export default function QuoteManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        version: { ...formData.version, total_price: e.target.value },
+                        version: {
+                          ...formData.version,
+                          total_price: e.target.value,
+                        },
                       })
                     }
                     placeholder="请输入总价"
@@ -1309,7 +1471,10 @@ export default function QuoteManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        version: { ...formData.version, cost_total: e.target.value },
+                        version: {
+                          ...formData.version,
+                          cost_total: e.target.value,
+                        },
                       })
                     }
                     placeholder="请输入成本总计"
@@ -1323,7 +1488,10 @@ export default function QuoteManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        version: { ...formData.version, gross_margin: e.target.value },
+                        version: {
+                          ...formData.version,
+                          gross_margin: e.target.value,
+                        },
                       })
                     }
                     placeholder="请输入毛利率"
@@ -1337,7 +1505,10 @@ export default function QuoteManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        version: { ...formData.version, lead_time_days: e.target.value },
+                        version: {
+                          ...formData.version,
+                          lead_time_days: e.target.value,
+                        },
                       })
                     }
                     placeholder="请输入交期"
@@ -1351,7 +1522,10 @@ export default function QuoteManagement() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        version: { ...formData.version, delivery_date: e.target.value },
+                        version: {
+                          ...formData.version,
+                          delivery_date: e.target.value,
+                        },
                       })
                     }
                   />
@@ -1364,7 +1538,10 @@ export default function QuoteManagement() {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      version: { ...formData.version, risk_terms: e.target.value },
+                      version: {
+                        ...formData.version,
+                        risk_terms: e.target.value,
+                      },
                     })
                   }
                   placeholder="请输入风险条款"
@@ -1379,7 +1556,9 @@ export default function QuoteManagement() {
                     <Label>明细类型</Label>
                     <select
                       value={newItem.item_type}
-                      onChange={(e) => setNewItem({ ...newItem, item_type: e.target.value })}
+                      onChange={(e) =>
+                        setNewItem({ ...newItem, item_type: e.target.value })
+                      }
                       className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
                     >
                       <option value="MODULE">模块</option>
@@ -1393,7 +1572,9 @@ export default function QuoteManagement() {
                     <Label>明细名称 *</Label>
                     <Input
                       value={newItem.item_name}
-                      onChange={(e) => setNewItem({ ...newItem, item_name: e.target.value })}
+                      onChange={(e) =>
+                        setNewItem({ ...newItem, item_name: e.target.value })
+                      }
                       placeholder="请输入明细名称"
                     />
                   </div>
@@ -1402,7 +1583,9 @@ export default function QuoteManagement() {
                     <Input
                       type="number"
                       value={newItem.qty}
-                      onChange={(e) => setNewItem({ ...newItem, qty: e.target.value })}
+                      onChange={(e) =>
+                        setNewItem({ ...newItem, qty: e.target.value })
+                      }
                       placeholder="1"
                     />
                   </div>
@@ -1411,7 +1594,9 @@ export default function QuoteManagement() {
                     <Input
                       type="number"
                       value={newItem.unit_price}
-                      onChange={(e) => setNewItem({ ...newItem, unit_price: e.target.value })}
+                      onChange={(e) =>
+                        setNewItem({ ...newItem, unit_price: e.target.value })
+                      }
                       placeholder="0"
                     />
                   </div>
@@ -1420,7 +1605,9 @@ export default function QuoteManagement() {
                     <Input
                       type="number"
                       value={newItem.cost}
-                      onChange={(e) => setNewItem({ ...newItem, cost: e.target.value })}
+                      onChange={(e) =>
+                        setNewItem({ ...newItem, cost: e.target.value })
+                      }
                       placeholder="0"
                     />
                   </div>
@@ -1438,12 +1625,21 @@ export default function QuoteManagement() {
                           key={index}
                           className="flex items-center gap-2 p-2 bg-slate-800 rounded"
                         >
-                          <span className="flex-1 text-sm">{item.item_name}</span>
-                          <span className="text-sm text-slate-400">数量: {item.qty}</span>
-                          <span className="text-sm text-slate-400">
-                            单价: {parseFloat(item.unit_price || 0).toLocaleString()}
+                          <span className="flex-1 text-sm">
+                            {item.item_name}
                           </span>
-                          <Button variant="ghost" size="sm" onClick={() => removeItem(index)}>
+                          <span className="text-sm text-slate-400">
+                            数量: {item.qty}
+                          </span>
+                          <span className="text-sm text-slate-400">
+                            单价:{" "}
+                            {parseFloat(item.unit_price || 0).toLocaleString()}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeItem(index)}
+                          >
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
@@ -1482,7 +1678,12 @@ export default function QuoteManagement() {
                   </div>
                   <div>
                     <Label className="text-slate-400">状态</Label>
-                    <Badge className={cn(statusConfig[selectedQuote.status]?.color, 'mt-1')}>
+                    <Badge
+                      className={cn(
+                        statusConfig[selectedQuote.status]?.color,
+                        "mt-1",
+                      )}
+                    >
                       {statusConfig[selectedQuote.status]?.label}
                     </Badge>
                   </div>
@@ -1492,7 +1693,9 @@ export default function QuoteManagement() {
                   </div>
                   <div>
                     <Label className="text-slate-400">商机</Label>
-                    <p className="text-white">{selectedQuote.opportunity_code}</p>
+                    <p className="text-white">
+                      {selectedQuote.opportunity_code}
+                    </p>
                   </div>
                   {selectedQuote.valid_until && (
                     <div>
@@ -1510,19 +1713,25 @@ export default function QuoteManagement() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-slate-400">版本号</Label>
-                      <p className="text-white">{selectedQuote.current_version.version_no}</p>
+                      <p className="text-white">
+                        {selectedQuote.current_version.version_no}
+                      </p>
                     </div>
                     <div>
                       <Label className="text-slate-400">总价</Label>
                       <p className="text-white">
-                        {parseFloat(selectedQuote.current_version.total_price || 0).toLocaleString()}{' '}
+                        {parseFloat(
+                          selectedQuote.current_version.total_price || 0,
+                        ).toLocaleString()}{" "}
                         元
                       </p>
                     </div>
                     <div>
                       <Label className="text-slate-400">成本总计</Label>
                       <p className="text-white">
-                        {parseFloat(selectedQuote.current_version.cost_total || 0).toLocaleString()}{' '}
+                        {parseFloat(
+                          selectedQuote.current_version.cost_total || 0,
+                        ).toLocaleString()}{" "}
                         元
                       </p>
                     </div>
@@ -1541,13 +1750,17 @@ export default function QuoteManagement() {
                     {selectedQuote.current_version.delivery_date && (
                       <div>
                         <Label className="text-slate-400">交付日期</Label>
-                        <p className="text-white">{selectedQuote.current_version.delivery_date}</p>
+                        <p className="text-white">
+                          {selectedQuote.current_version.delivery_date}
+                        </p>
                       </div>
                     )}
                     {selectedQuote.current_version.risk_terms && (
                       <div className="col-span-2">
                         <Label className="text-slate-400">风险条款</Label>
-                        <p className="text-white mt-1">{selectedQuote.current_version.risk_terms}</p>
+                        <p className="text-white mt-1">
+                          {selectedQuote.current_version.risk_terms}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -1556,34 +1769,44 @@ export default function QuoteManagement() {
                   {selectedQuote.current_version.items &&
                     selectedQuote.current_version.items.length > 0 && (
                       <div className="mt-4">
-                        <Label className="text-slate-400 mb-2 block">报价明细</Label>
+                        <Label className="text-slate-400 mb-2 block">
+                          报价明细
+                        </Label>
                         <div className="space-y-2">
-                          {selectedQuote.current_version.items.map((item, index) => (
-                            <Card key={index}>
-                              <CardContent className="p-3">
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <p className="text-white font-medium">{item.item_name}</p>
-                                    <p className="text-sm text-slate-400">
-                                      {item.item_type} × {item.qty}
-                                    </p>
+                          {selectedQuote.current_version.items.map(
+                            (item, index) => (
+                              <Card key={index}>
+                                <CardContent className="p-3">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <p className="text-white font-medium">
+                                        {item.item_name}
+                                      </p>
+                                      <p className="text-sm text-slate-400">
+                                        {item.item_type} × {item.qty}
+                                      </p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-white">
+                                        {parseFloat(
+                                          item.unit_price || 0,
+                                        ).toLocaleString()}{" "}
+                                        元/单位
+                                      </p>
+                                      <p className="text-sm text-slate-400">
+                                        小计:{" "}
+                                        {(
+                                          parseFloat(item.unit_price || 0) *
+                                          parseFloat(item.qty || 0)
+                                        ).toLocaleString()}{" "}
+                                        元
+                                      </p>
+                                    </div>
                                   </div>
-                                  <div className="text-right">
-                                    <p className="text-white">
-                                      {parseFloat(item.unit_price || 0).toLocaleString()} 元/单位
-                                    </p>
-                                    <p className="text-sm text-slate-400">
-                                      小计:{' '}
-                                      {(
-                                        parseFloat(item.unit_price || 0) * parseFloat(item.qty || 0)
-                                      ).toLocaleString()}{' '}
-                                      元
-                                    </p>
-                                  </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
+                                </CardContent>
+                              </Card>
+                            ),
+                          )}
                         </div>
                       </div>
                     )}
@@ -1600,10 +1823,10 @@ export default function QuoteManagement() {
                       size="sm"
                       onClick={() => {
                         if (versions.length >= 2) {
-                          setSelectedVersions([versions[0], versions[1]])
-                          setShowCompareDialog(true)
+                          setSelectedVersions([versions[0], versions[1]]);
+                          setShowCompareDialog(true);
                         } else {
-                          alert('至少需要两个版本才能对比')
+                          alert("至少需要两个版本才能对比");
                         }
                       }}
                     >
@@ -1616,10 +1839,15 @@ export default function QuoteManagement() {
                         <CardContent className="p-3">
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="text-white font-medium">{version.version_no}</p>
+                              <p className="text-white font-medium">
+                                {version.version_no}
+                              </p>
                               <p className="text-sm text-slate-400">
-                                总价: {parseFloat(version.total_price || 0).toLocaleString()} 元 |{' '}
-                                毛利率: {version.gross_margin || 0}%
+                                总价:{" "}
+                                {parseFloat(
+                                  version.total_price || 0,
+                                ).toLocaleString()}{" "}
+                                元 | 毛利率: {version.gross_margin || 0}%
                               </p>
                             </div>
                             {version.approved_at && (
@@ -1635,7 +1863,10 @@ export default function QuoteManagement() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDetailDialog(false)}
+            >
               关闭
             </Button>
           </DialogFooter>
@@ -1653,55 +1884,79 @@ export default function QuoteManagement() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-slate-400 mb-2 block">版本 1: {selectedVersions[0].version_no}</Label>
+                  <Label className="text-slate-400 mb-2 block">
+                    版本 1: {selectedVersions[0].version_no}
+                  </Label>
                   <Card>
                     <CardContent className="p-4 space-y-2">
                       <div>
                         <span className="text-slate-400">总价: </span>
                         <span className="text-white">
-                          {parseFloat(selectedVersions[0].total_price || 0).toLocaleString()} 元
+                          {parseFloat(
+                            selectedVersions[0].total_price || 0,
+                          ).toLocaleString()}{" "}
+                          元
                         </span>
                       </div>
                       <div>
                         <span className="text-slate-400">成本: </span>
                         <span className="text-white">
-                          {parseFloat(selectedVersions[0].cost_total || 0).toLocaleString()} 元
+                          {parseFloat(
+                            selectedVersions[0].cost_total || 0,
+                          ).toLocaleString()}{" "}
+                          元
                         </span>
                       </div>
                       <div>
                         <span className="text-slate-400">毛利率: </span>
-                        <span className="text-white">{selectedVersions[0].gross_margin || 0}%</span>
+                        <span className="text-white">
+                          {selectedVersions[0].gross_margin || 0}%
+                        </span>
                       </div>
                       <div>
                         <span className="text-slate-400">交期: </span>
-                        <span className="text-white">{selectedVersions[0].lead_time_days || 0} 天</span>
+                        <span className="text-white">
+                          {selectedVersions[0].lead_time_days || 0} 天
+                        </span>
                       </div>
                     </CardContent>
                   </Card>
                 </div>
                 <div>
-                  <Label className="text-slate-400 mb-2 block">版本 2: {selectedVersions[1].version_no}</Label>
+                  <Label className="text-slate-400 mb-2 block">
+                    版本 2: {selectedVersions[1].version_no}
+                  </Label>
                   <Card>
                     <CardContent className="p-4 space-y-2">
                       <div>
                         <span className="text-slate-400">总价: </span>
                         <span className="text-white">
-                          {parseFloat(selectedVersions[1].total_price || 0).toLocaleString()} 元
+                          {parseFloat(
+                            selectedVersions[1].total_price || 0,
+                          ).toLocaleString()}{" "}
+                          元
                         </span>
                       </div>
                       <div>
                         <span className="text-slate-400">成本: </span>
                         <span className="text-white">
-                          {parseFloat(selectedVersions[1].cost_total || 0).toLocaleString()} 元
+                          {parseFloat(
+                            selectedVersions[1].cost_total || 0,
+                          ).toLocaleString()}{" "}
+                          元
                         </span>
                       </div>
                       <div>
                         <span className="text-slate-400">毛利率: </span>
-                        <span className="text-white">{selectedVersions[1].gross_margin || 0}%</span>
+                        <span className="text-white">
+                          {selectedVersions[1].gross_margin || 0}%
+                        </span>
                       </div>
                       <div>
                         <span className="text-slate-400">交期: </span>
-                        <span className="text-white">{selectedVersions[1].lead_time_days || 0} 天</span>
+                        <span className="text-white">
+                          {selectedVersions[1].lead_time_days || 0} 天
+                        </span>
                       </div>
                     </CardContent>
                   </Card>
@@ -1710,12 +1965,15 @@ export default function QuoteManagement() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCompareDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCompareDialog(false)}
+            >
               关闭
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </motion.div>
-  )
+  );
 }

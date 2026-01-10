@@ -3,8 +3,8 @@
  * Features: Vehicle list, usage tracking, maintenance records, fuel management
  */
 
-import { useState, useMemo, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useMemo, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   Search,
   Filter,
@@ -21,8 +21,8 @@ import {
   Edit,
   Eye,
   Calendar,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -35,54 +35,63 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../components/ui'
-import { cn, formatCurrency, formatDate } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { SimpleBarChart, MonthlyTrendChart, SimplePieChart, TrendComparisonCard } from '../components/administrative/StatisticsCharts'
-import { adminApi } from '../services/api'
+} from "../components/ui";
+import { cn, formatCurrency, formatDate } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import {
+  SimpleBarChart,
+  MonthlyTrendChart,
+  SimplePieChart,
+  TrendComparisonCard,
+} from "../components/administrative/StatisticsCharts";
+import { adminApi } from "../services/api";
 
 export default function VehicleManagement() {
-  const [searchText, setSearchText] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [loading, setLoading] = useState(false)
-  const [vehicles, setVehicles] = useState([])
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [loading, setLoading] = useState(false);
+  const [vehicles, setVehicles] = useState([]);
 
   // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
-        const res = await adminApi.vehicles.list()
+        const res = await adminApi.vehicles.list();
         if (res.data?.items) {
-          setVehicles(res.data.items)
+          setVehicles(res.data.items);
         } else if (Array.isArray(res.data)) {
-          setVehicles(res.data)
+          setVehicles(res.data);
         }
       } catch (err) {
-        console.log('Vehicle API unavailable, using mock data')
+        console.log("Vehicle API unavailable, using mock data");
       }
-      setLoading(false)
-    }
-    fetchData()
-  }, [])
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
 
   const filteredVehicles = useMemo(() => {
-    return vehicles.filter(vehicle => {
-      const matchSearch = vehicle.plateNumber.includes(searchText) ||
+    return vehicles.filter((vehicle) => {
+      const matchSearch =
+        vehicle.plateNumber.includes(searchText) ||
         vehicle.brand.includes(searchText) ||
-        (vehicle.driver && vehicle.driver.includes(searchText))
-      const matchStatus = statusFilter === 'all' || vehicle.status === statusFilter
-      return matchSearch && matchStatus
-    })
-  }, [vehicles, searchText, statusFilter])
+        (vehicle.driver && vehicle.driver.includes(searchText));
+      const matchStatus =
+        statusFilter === "all" || vehicle.status === statusFilter;
+      return matchSearch && matchStatus;
+    });
+  }, [vehicles, searchText, statusFilter]);
 
   const stats = useMemo(() => {
-    const total = vehicles.length
-    const inUse = vehicles.filter(v => v.status === 'in_use').length
-    const available = vehicles.filter(v => v.status === 'available').length
-    const maintenance = vehicles.filter(v => v.status === 'maintenance').length
-    return { total, inUse, available, maintenance }
-  }, [vehicles])
+    const total = vehicles.length;
+    const inUse = vehicles.filter((v) => v.status === "in_use").length;
+    const available = vehicles.filter((v) => v.status === "available").length;
+    const maintenance = vehicles.filter(
+      (v) => v.status === "maintenance",
+    ).length;
+    return { total, inUse, available, maintenance };
+  }, [vehicles]);
 
   return (
     <motion.div
@@ -109,7 +118,9 @@ export default function VehicleManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">车辆总数</p>
-                <p className="text-2xl font-bold text-white mt-1">{stats.total}</p>
+                <p className="text-2xl font-bold text-white mt-1">
+                  {stats.total}
+                </p>
               </div>
               <Car className="h-8 w-8 text-blue-400" />
             </div>
@@ -120,7 +131,9 @@ export default function VehicleManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">使用中</p>
-                <p className="text-2xl font-bold text-blue-400 mt-1">{stats.inUse}</p>
+                <p className="text-2xl font-bold text-blue-400 mt-1">
+                  {stats.inUse}
+                </p>
               </div>
               <MapPin className="h-8 w-8 text-blue-400" />
             </div>
@@ -131,7 +144,9 @@ export default function VehicleManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">可用</p>
-                <p className="text-2xl font-bold text-emerald-400 mt-1">{stats.available}</p>
+                <p className="text-2xl font-bold text-emerald-400 mt-1">
+                  {stats.available}
+                </p>
               </div>
               <CheckCircle2 className="h-8 w-8 text-emerald-400" />
             </div>
@@ -142,7 +157,9 @@ export default function VehicleManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">保养中</p>
-                <p className="text-2xl font-bold text-amber-400 mt-1">{stats.maintenance}</p>
+                <p className="text-2xl font-bold text-amber-400 mt-1">
+                  {stats.maintenance}
+                </p>
               </div>
               <Wrench className="h-8 w-8 text-amber-400" />
             </div>
@@ -169,9 +186,13 @@ export default function VehicleManagement() {
               <CardContent>
                 <SimplePieChart
                   data={[
-                    { label: '使用中', value: stats.inUse, color: '#3b82f6' },
-                    { label: '可用', value: stats.available, color: '#10b981' },
-                    { label: '保养中', value: stats.maintenance, color: '#f59e0b' },
+                    { label: "使用中", value: stats.inUse, color: "#3b82f6" },
+                    { label: "可用", value: stats.available, color: "#10b981" },
+                    {
+                      label: "保养中",
+                      value: stats.maintenance,
+                      color: "#f59e0b",
+                    },
                   ]}
                   size={180}
                 />
@@ -184,10 +205,13 @@ export default function VehicleManagement() {
               <CardContent>
                 <MonthlyTrendChart
                   data={[
-                    { month: '2024-10', amount: 75 },
-                    { month: '2024-11', amount: 68 },
-                    { month: '2024-12', amount: 72 },
-                    { month: '2025-01', amount: (stats.inUse / stats.total) * 100 },
+                    { month: "2024-10", amount: 75 },
+                    { month: "2024-11", amount: 68 },
+                    { month: "2024-12", amount: 72 },
+                    {
+                      month: "2025-01",
+                      amount: (stats.inUse / stats.total) * 100,
+                    },
                   ]}
                   valueKey="amount"
                   labelKey="month"
@@ -249,42 +273,59 @@ export default function VehicleManagement() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-white">{vehicle.plateNumber}</h3>
+                        <h3 className="text-lg font-semibold text-white">
+                          {vehicle.plateNumber}
+                        </h3>
                         <Badge
                           variant="outline"
                           className={cn(
-                            vehicle.status === 'in_use' && 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-                            vehicle.status === 'available' && 'bg-green-500/20 text-green-400 border-green-500/30',
-                            vehicle.status === 'maintenance' && 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                            vehicle.status === "in_use" &&
+                              "bg-blue-500/20 text-blue-400 border-blue-500/30",
+                            vehicle.status === "available" &&
+                              "bg-green-500/20 text-green-400 border-green-500/30",
+                            vehicle.status === "maintenance" &&
+                              "bg-amber-500/20 text-amber-400 border-amber-500/30",
                           )}
                         >
-                          {vehicle.status === 'in_use' ? '使用中' : 
-                           vehicle.status === 'available' ? '可用' : '保养中'}
+                          {vehicle.status === "in_use"
+                            ? "使用中"
+                            : vehicle.status === "available"
+                              ? "可用"
+                              : "保养中"}
                         </Badge>
                       </div>
                       <div className="grid grid-cols-4 gap-4 text-sm mb-3">
                         <div>
                           <p className="text-slate-400">品牌型号</p>
-                          <p className="text-white font-medium">{vehicle.brand} {vehicle.model}</p>
+                          <p className="text-white font-medium">
+                            {vehicle.brand} {vehicle.model}
+                          </p>
                         </div>
                         <div>
                           <p className="text-slate-400">里程数</p>
-                          <p className="text-white font-medium">{vehicle.mileage.toLocaleString()} km</p>
+                          <p className="text-white font-medium">
+                            {vehicle.mileage.toLocaleString()} km
+                          </p>
                         </div>
                         <div>
                           <p className="text-slate-400">购置日期</p>
-                          <p className="text-white font-medium">{vehicle.purchaseDate}</p>
+                          <p className="text-white font-medium">
+                            {vehicle.purchaseDate}
+                          </p>
                         </div>
                         {vehicle.driver && (
                           <div>
                             <p className="text-slate-400">驾驶员</p>
-                            <p className="text-white font-medium">{vehicle.driver}</p>
+                            <p className="text-white font-medium">
+                              {vehicle.driver}
+                            </p>
                           </div>
                         )}
                       </div>
                       {vehicle.purpose && (
                         <div className="text-sm text-slate-400 mb-2">
-                          用途: {vehicle.purpose} · 目的地: {vehicle.destination}
+                          用途: {vehicle.purpose} · 目的地:{" "}
+                          {vehicle.destination}
                         </div>
                       )}
                       {vehicle.startTime && (
@@ -294,12 +335,14 @@ export default function VehicleManagement() {
                       )}
                       {vehicle.nextMaintenance && (
                         <div className="text-xs text-amber-400 mt-2">
-                          下次保养: {vehicle.nextMaintenance} (里程: {vehicle.nextMaintenanceMileage.toLocaleString()} km)
+                          下次保养: {vehicle.nextMaintenance} (里程:{" "}
+                          {vehicle.nextMaintenanceMileage.toLocaleString()} km)
                         </div>
                       )}
                       {vehicle.maintenanceReason && (
                         <div className="text-xs text-amber-400 mt-2">
-                          {vehicle.maintenanceReason} · 预计归还: {vehicle.returnDate}
+                          {vehicle.maintenanceReason} · 预计归还:{" "}
+                          {vehicle.returnDate}
                         </div>
                       )}
                     </div>
@@ -326,7 +369,7 @@ export default function VehicleManagement() {
             <CardContent>
               <div className="space-y-4">
                 {vehicles
-                  .filter(v => v.status === 'in_use')
+                  .filter((v) => v.status === "in_use")
                   .map((vehicle) => (
                     <div
                       key={vehicle.id}
@@ -335,27 +378,40 @@ export default function VehicleManagement() {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <span className="font-medium text-white">{vehicle.plateNumber}</span>
-                            <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                            <span className="font-medium text-white">
+                              {vehicle.plateNumber}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className="bg-blue-500/20 text-blue-400 border-blue-500/30"
+                            >
                               使用中
                             </Badge>
                           </div>
                           <div className="grid grid-cols-4 gap-4 text-sm">
                             <div>
                               <p className="text-slate-400">驾驶员</p>
-                              <p className="text-white font-medium">{vehicle.driver}</p>
+                              <p className="text-white font-medium">
+                                {vehicle.driver}
+                              </p>
                             </div>
                             <div>
                               <p className="text-slate-400">使用目的</p>
-                              <p className="text-white font-medium">{vehicle.purpose}</p>
+                              <p className="text-white font-medium">
+                                {vehicle.purpose}
+                              </p>
                             </div>
                             <div>
                               <p className="text-slate-400">目的地</p>
-                              <p className="text-white font-medium">{vehicle.destination}</p>
+                              <p className="text-white font-medium">
+                                {vehicle.destination}
+                              </p>
                             </div>
                             <div>
                               <p className="text-slate-400">使用时间</p>
-                              <p className="text-white font-medium">{vehicle.startTime} - {vehicle.endTime}</p>
+                              <p className="text-white font-medium">
+                                {vehicle.startTime} - {vehicle.endTime}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -375,7 +431,7 @@ export default function VehicleManagement() {
             <CardContent>
               <div className="space-y-4">
                 {vehicles
-                  .filter(v => v.status === 'maintenance')
+                  .filter((v) => v.status === "maintenance")
                   .map((vehicle) => (
                     <div
                       key={vehicle.id}
@@ -384,23 +440,34 @@ export default function VehicleManagement() {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <span className="font-medium text-white">{vehicle.plateNumber}</span>
-                            <Badge variant="outline" className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+                            <span className="font-medium text-white">
+                              {vehicle.plateNumber}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className="bg-amber-500/20 text-amber-400 border-amber-500/30"
+                            >
                               保养中
                             </Badge>
                           </div>
                           <div className="grid grid-cols-3 gap-4 text-sm">
                             <div>
                               <p className="text-slate-400">保养原因</p>
-                              <p className="text-white font-medium">{vehicle.maintenanceReason}</p>
+                              <p className="text-white font-medium">
+                                {vehicle.maintenanceReason}
+                              </p>
                             </div>
                             <div>
                               <p className="text-slate-400">预计归还</p>
-                              <p className="text-white font-medium">{vehicle.returnDate}</p>
+                              <p className="text-white font-medium">
+                                {vehicle.returnDate}
+                              </p>
                             </div>
                             <div>
                               <p className="text-slate-400">当前里程</p>
-                              <p className="text-white font-medium">{vehicle.mileage?.toLocaleString()} km</p>
+                              <p className="text-white font-medium">
+                                {vehicle.mileage?.toLocaleString()} km
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -408,7 +475,7 @@ export default function VehicleManagement() {
                     </div>
                   ))}
                 {vehicles
-                  .filter(v => v.nextMaintenance)
+                  .filter((v) => v.nextMaintenance)
                   .map((vehicle) => (
                     <div
                       key={vehicle.id}
@@ -417,13 +484,20 @@ export default function VehicleManagement() {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <span className="font-medium text-white">{vehicle.plateNumber}</span>
-                            <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/30">
+                            <span className="font-medium text-white">
+                              {vehicle.plateNumber}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className="bg-green-500/20 text-green-400 border-green-500/30"
+                            >
                               待保养
                             </Badge>
                           </div>
                           <div className="text-sm text-slate-400">
-                            下次保养: {vehicle.nextMaintenance} (里程: {vehicle.nextMaintenanceMileage?.toLocaleString()} km)
+                            下次保养: {vehicle.nextMaintenance} (里程:{" "}
+                            {vehicle.nextMaintenanceMileage?.toLocaleString()}{" "}
+                            km)
                           </div>
                         </div>
                       </div>
@@ -448,9 +522,33 @@ export default function VehicleManagement() {
             <CardContent>
               <div className="space-y-4">
                 {[
-                  { id: 1, plateNumber: '粤B12345', date: '2025-01-05', amount: 500, price: 7.8, total: 3900, mileage: 85000 },
-                  { id: 2, plateNumber: '粤B67890', date: '2025-01-04', amount: 450, price: 7.8, total: 3510, mileage: 65000 },
-                  { id: 3, plateNumber: '粤B11111', date: '2025-01-03', amount: 400, price: 7.8, total: 3120, mileage: 124500 },
+                  {
+                    id: 1,
+                    plateNumber: "粤B12345",
+                    date: "2025-01-05",
+                    amount: 500,
+                    price: 7.8,
+                    total: 3900,
+                    mileage: 85000,
+                  },
+                  {
+                    id: 2,
+                    plateNumber: "粤B67890",
+                    date: "2025-01-04",
+                    amount: 450,
+                    price: 7.8,
+                    total: 3510,
+                    mileage: 65000,
+                  },
+                  {
+                    id: 3,
+                    plateNumber: "粤B11111",
+                    date: "2025-01-03",
+                    amount: 400,
+                    price: 7.8,
+                    total: 3120,
+                    mileage: 124500,
+                  },
                 ].map((record) => (
                   <div
                     key={record.id}
@@ -459,25 +557,37 @@ export default function VehicleManagement() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <span className="font-medium text-white">{record.plateNumber}</span>
-                          <span className="text-sm text-slate-400">{record.date}</span>
+                          <span className="font-medium text-white">
+                            {record.plateNumber}
+                          </span>
+                          <span className="text-sm text-slate-400">
+                            {record.date}
+                          </span>
                         </div>
                         <div className="grid grid-cols-4 gap-4 text-sm">
                           <div>
                             <p className="text-slate-400">加油量</p>
-                            <p className="text-white font-medium">{record.amount} 升</p>
+                            <p className="text-white font-medium">
+                              {record.amount} 升
+                            </p>
                           </div>
                           <div>
                             <p className="text-slate-400">单价</p>
-                            <p className="text-white font-medium">¥{record.price}/升</p>
+                            <p className="text-white font-medium">
+                              ¥{record.price}/升
+                            </p>
                           </div>
                           <div>
                             <p className="text-slate-400">金额</p>
-                            <p className="text-white font-medium">{formatCurrency(record.total)}</p>
+                            <p className="text-white font-medium">
+                              {formatCurrency(record.total)}
+                            </p>
                           </div>
                           <div>
                             <p className="text-slate-400">里程数</p>
-                            <p className="text-white font-medium">{record.mileage.toLocaleString()} km</p>
+                            <p className="text-white font-medium">
+                              {record.mileage.toLocaleString()} km
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -490,6 +600,5 @@ export default function VehicleManagement() {
         </TabsContent>
       </Tabs>
     </motion.div>
-  )
+  );
 }
-

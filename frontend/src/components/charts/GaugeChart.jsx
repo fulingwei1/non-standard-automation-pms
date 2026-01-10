@@ -3,8 +3,8 @@
  * 用于KPI展示、目标完成度
  */
 
-import { Gauge } from '@ant-design/plots'
-import { useMemo } from 'react'
+import { Gauge } from "@ant-design/plots";
+import { useMemo } from "react";
 
 /**
  * GaugeChart - 仪表盘
@@ -22,50 +22,50 @@ export default function GaugeChart({
   max = 100,
   height = 200,
   title,
-  unit = '%',
+  unit = "%",
   thresholds,
   style,
   ...rest
 }) {
   const percent = useMemo(() => {
-    return (value - min) / (max - min)
-  }, [value, min, max])
+    return (value - min) / (max - min);
+  }, [value, min, max]);
 
   const config = useMemo(() => {
     const defaultThresholds = [
-      { value: 0.3, color: '#ef4444' },  // 红色
-      { value: 0.7, color: '#eab308' },  // 黄色
-      { value: 1, color: '#22c55e' },    // 绿色
-    ]
+      { value: 0.3, color: "#ef4444" }, // 红色
+      { value: 0.7, color: "#eab308" }, // 黄色
+      { value: 1, color: "#22c55e" }, // 绿色
+    ];
 
-    const rangeColors = thresholds || defaultThresholds
+    const rangeColors = thresholds || defaultThresholds;
 
     return {
       percent,
       height,
       range: {
-        ticks: rangeColors.map(t => t.value),
-        color: rangeColors.map(t => t.color),
+        ticks: rangeColors.map((t) => t.value),
+        color: rangeColors.map((t) => t.color),
       },
       indicator: {
         pointer: {
           style: {
-            stroke: '#64748b',
+            stroke: "#64748b",
           },
         },
         pin: {
           style: {
-            stroke: '#64748b',
+            stroke: "#64748b",
           },
         },
       },
       axis: {
         label: {
           formatter(v) {
-            return Math.round(Number(v) * (max - min) + min)
+            return Math.round(Number(v) * (max - min) + min);
           },
           style: {
-            fill: '#64748b',
+            fill: "#64748b",
             fontSize: 10,
           },
         },
@@ -75,34 +75,34 @@ export default function GaugeChart({
       },
       statistic: {
         title: {
-          content: title || '',
+          content: title || "",
           style: {
-            fontSize: '14px',
-            color: '#94a3b8',
+            fontSize: "14px",
+            color: "#94a3b8",
           },
         },
         content: {
           formatter: () => `${value}${unit}`,
           style: {
-            fontSize: '24px',
-            fontWeight: 'bold',
-            color: '#e2e8f0',
+            fontSize: "24px",
+            fontWeight: "bold",
+            color: "#e2e8f0",
           },
         },
       },
       animation: {
         appear: {
-          animation: 'fade-in',
+          animation: "fade-in",
           duration: 800,
         },
       },
       ...rest,
-    }
-  }, [percent, height, max, min, value, unit, title, thresholds, rest])
+    };
+  }, [percent, height, max, min, value, unit, title, thresholds, rest]);
 
   return (
     <div style={style}>
       <Gauge {...config} />
     </div>
-  )
+  );
 }

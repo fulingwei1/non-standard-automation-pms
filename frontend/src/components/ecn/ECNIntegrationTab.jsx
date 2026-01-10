@@ -2,10 +2,16 @@
  * ECNIntegrationTab Component
  * ECN 模块集成 Tab 组件
  */
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card'
-import { Button } from '../ui/button'
-import { GitBranch, TrendingUp, DollarSign, Layers } from 'lucide-react'
-import { ecnApi } from '../../services/api'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "../ui/card";
+import { Button } from "../ui/button";
+import { GitBranch, TrendingUp, DollarSign, Layers } from "lucide-react";
+import { ecnApi } from "../../services/api";
 
 export default function ECNIntegrationTab({
   ecnId,
@@ -17,89 +23,94 @@ export default function ECNIntegrationTab({
   // 同步到BOM
   const handleSyncBom = async () => {
     try {
-      const result = await ecnApi.syncToBOM(ecnId)
-      const message = result.data?.message || result.message || '已同步到BOM'
-      alert(message)
-      await refetch()
+      const result = await ecnApi.syncToBOM(ecnId);
+      const message = result.data?.message || result.message || "已同步到BOM";
+      alert(message);
+      await refetch();
     } catch (error) {
-      alert('同步失败: ' + (error.response?.data?.detail || error.message))
+      alert("同步失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   // 同步到项目
   const handleSyncProject = async () => {
     try {
-      const result = await ecnApi.syncToProject(ecnId)
-      const message = result.data?.message || result.message || '已同步到项目'
-      alert(message)
-      await refetch()
+      const result = await ecnApi.syncToProject(ecnId);
+      const message = result.data?.message || result.message || "已同步到项目";
+      alert(message);
+      await refetch();
     } catch (error) {
-      alert('同步失败: ' + (error.response?.data?.detail || error.message))
+      alert("同步失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   // 同步到采购
   const handleSyncPurchase = async () => {
     try {
-      const result = await ecnApi.syncToPurchase(ecnId)
-      const message = result.data?.message || result.message || '已同步到采购'
-      alert(message)
-      await refetch()
+      const result = await ecnApi.syncToPurchase(ecnId);
+      const message = result.data?.message || result.message || "已同步到采购";
+      alert(message);
+      await refetch();
     } catch (error) {
-      alert('同步失败: ' + (error.response?.data?.detail || error.message))
+      alert("同步失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   // 批量同步
   const handleBatchSync = async () => {
-    if (!confirm('确认要同步到所有相关模块吗？')) return
+    if (!confirm("确认要同步到所有相关模块吗？")) return;
 
     try {
-      const results = []
+      const results = [];
 
       // 同步到BOM
       if (affectedMaterials.length > 0) {
         try {
-          await ecnApi.syncToBOM(ecnId)
-          results.push('BOM同步成功')
+          await ecnApi.syncToBOM(ecnId);
+          results.push("BOM同步成功");
         } catch (e) {
-          results.push('BOM同步失败: ' + (e.response?.data?.detail || e.message))
+          results.push(
+            "BOM同步失败: " + (e.response?.data?.detail || e.message),
+          );
         }
       }
 
       // 同步到项目
       if (ecn?.project_id) {
         try {
-          await ecnApi.syncToProject(ecnId)
-          results.push('项目同步成功')
+          await ecnApi.syncToProject(ecnId);
+          results.push("项目同步成功");
         } catch (e) {
-          results.push('项目同步失败: ' + (e.response?.data?.detail || e.message))
+          results.push(
+            "项目同步失败: " + (e.response?.data?.detail || e.message),
+          );
         }
       }
 
       // 同步到采购
       const purchaseOrders = affectedOrders.filter(
-        (o) => o.order_type === 'PURCHASE'
-      )
+        (o) => o.order_type === "PURCHASE",
+      );
       if (purchaseOrders.length > 0) {
         try {
-          await ecnApi.syncToPurchase(ecnId)
-          results.push('采购同步成功')
+          await ecnApi.syncToPurchase(ecnId);
+          results.push("采购同步成功");
         } catch (e) {
-          results.push('采购同步失败: ' + (e.response?.data?.detail || e.message))
+          results.push(
+            "采购同步失败: " + (e.response?.data?.detail || e.message),
+          );
         }
       }
 
-      alert(results.join('\n'))
-      await refetch()
+      alert(results.join("\n"));
+      await refetch();
     } catch (error) {
-      alert('批量同步失败: ' + (error.response?.data?.detail || error.message))
+      alert("批量同步失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   // 判断是否可以同步
-  const canSync =
-    ecn?.status === 'APPROVED' || ecn?.status === 'EXECUTING'
+  const canSync = ecn?.status === "APPROVED" || ecn?.status === "EXECUTING";
 
   return (
     <div className="space-y-4">
@@ -150,7 +161,9 @@ export default function ECNIntegrationTab({
                   </div>
                   <div>
                     <div className="font-semibold">同步到项目</div>
-                    <div className="text-sm text-slate-500">更新项目成本和工期</div>
+                    <div className="text-sm text-slate-500">
+                      更新项目成本和工期
+                    </div>
                   </div>
                 </div>
                 <Button
@@ -184,7 +197,9 @@ export default function ECNIntegrationTab({
                   </div>
                   <div>
                     <div className="font-semibold">同步到采购</div>
-                    <div className="text-sm text-slate-500">调整受影响的采购订单</div>
+                    <div className="text-sm text-slate-500">
+                      调整受影响的采购订单
+                    </div>
                   </div>
                 </div>
                 <Button
@@ -195,12 +210,14 @@ export default function ECNIntegrationTab({
                   执行同步
                 </Button>
               </div>
-              {affectedOrders.filter((o) => o.order_type === 'PURCHASE').length >
-                0 && (
+              {affectedOrders.filter((o) => o.order_type === "PURCHASE")
+                .length > 0 && (
                 <div className="text-sm text-slate-500">
-                  将处理{' '}
-                  {affectedOrders.filter((o) => o.order_type === 'PURCHASE')
-                    .length}{' '}
+                  将处理{" "}
+                  {
+                    affectedOrders.filter((o) => o.order_type === "PURCHASE")
+                      .length
+                  }{" "}
                   个采购订单
                 </div>
               )}
@@ -227,5 +244,5 @@ export default function ECNIntegrationTab({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

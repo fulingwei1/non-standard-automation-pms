@@ -1,13 +1,9 @@
-import { memo, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { cn } from '../../lib/utils'
-import { HEALTH_CONFIG } from '../../lib/constants'
-import ProjectCard from './ProjectCard'
-import {
-  ChevronDown,
-  ChevronUp,
-  MoreHorizontal,
-} from 'lucide-react'
+import { memo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "../../lib/utils";
+import { HEALTH_CONFIG } from "../../lib/constants";
+import ProjectCard from "./ProjectCard";
+import { ChevronDown, ChevronUp, MoreHorizontal } from "lucide-react";
 
 /**
  * 看板列组件
@@ -22,54 +18,58 @@ const BoardColumn = memo(function BoardColumn({
   collapsed = false,
   onToggleCollapse,
 }) {
-  const [isCollapsed, setIsCollapsed] = useState(collapsed)
-  
+  const [isCollapsed, setIsCollapsed] = useState(collapsed);
+
   // 按健康度统计
   const healthStats = {
-    H1: projects.filter(p => p.health === 'H1').length,
-    H2: projects.filter(p => p.health === 'H2').length,
-    H3: projects.filter(p => p.health === 'H3').length,
-    H4: projects.filter(p => p.health === 'H4').length,
-  }
+    H1: projects.filter((p) => p.health === "H1").length,
+    H2: projects.filter((p) => p.health === "H2").length,
+    H3: projects.filter((p) => p.health === "H3").length,
+    H4: projects.filter((p) => p.health === "H4").length,
+  };
 
   const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed)
-    onToggleCollapse?.(stage.key, !isCollapsed)
-  }
+    setIsCollapsed(!isCollapsed);
+    onToggleCollapse?.(stage.key, !isCollapsed);
+  };
 
   return (
     <div
       className={cn(
-        'flex flex-col min-w-[280px] max-w-[320px] h-full',
-        'bg-surface-0/50 rounded-xl border border-white/5',
-        'transition-all duration-300',
-        isRelevant && 'ring-1 ring-primary/20 bg-primary/5'
+        "flex flex-col min-w-[280px] max-w-[320px] h-full",
+        "bg-surface-0/50 rounded-xl border border-white/5",
+        "transition-all duration-300",
+        isRelevant && "ring-1 ring-primary/20 bg-primary/5",
       )}
     >
       {/* 列头部 */}
-      <div 
+      <div
         className={cn(
-          'flex items-center justify-between p-3 border-b border-white/5',
-          'cursor-pointer hover:bg-white/5 transition-colors rounded-t-xl'
+          "flex items-center justify-between p-3 border-b border-white/5",
+          "cursor-pointer hover:bg-white/5 transition-colors rounded-t-xl",
         )}
         onClick={toggleCollapse}
       >
         <div className="flex items-center gap-2">
           {/* 阶段编号 */}
-          <span className={cn(
-            'w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold',
-            isRelevant ? 'bg-primary/20 text-primary' : 'bg-white/10 text-white'
-          )}>
+          <span
+            className={cn(
+              "w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold",
+              isRelevant
+                ? "bg-primary/20 text-primary"
+                : "bg-white/10 text-white",
+            )}
+          >
             {stage.key}
           </span>
-          
+
           {/* 阶段名称 */}
           <div>
             <h3 className="font-medium text-white text-sm">{stage.name}</h3>
             <p className="text-xs text-slate-500">{projects.length} 个项目</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {/* 健康度统计点 */}
           <div className="flex items-center gap-1">
@@ -88,11 +88,13 @@ const BoardColumn = memo(function BoardColumn({
             {healthStats.H1 > 0 && (
               <span className="flex items-center gap-0.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span className="text-xs text-emerald-400">{healthStats.H1}</span>
+                <span className="text-xs text-emerald-400">
+                  {healthStats.H1}
+                </span>
               </span>
             )}
           </div>
-          
+
           {/* 展开/收起按钮 */}
           {isCollapsed ? (
             <ChevronDown className="w-4 h-4 text-slate-400" />
@@ -107,7 +109,7 @@ const BoardColumn = memo(function BoardColumn({
         {!isCollapsed && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
+            animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="flex-1 overflow-hidden"
@@ -139,27 +141,27 @@ const BoardColumn = memo(function BoardColumn({
           <div className="flex items-center justify-center gap-2 py-2 text-slate-500 text-sm">
             <span>{projects.length} 个项目</span>
             <div className="flex gap-1">
-              {Object.entries(healthStats).map(([key, count]) => (
-                count > 0 && (
-                  <span
-                    key={key}
-                    className={cn(
-                      'w-4 h-4 rounded text-xs flex items-center justify-center',
-                      HEALTH_CONFIG[key].bgClass,
-                      HEALTH_CONFIG[key].textClass
-                    )}
-                  >
-                    {count}
-                  </span>
-                )
-              ))}
+              {Object.entries(healthStats).map(
+                ([key, count]) =>
+                  count > 0 && (
+                    <span
+                      key={key}
+                      className={cn(
+                        "w-4 h-4 rounded text-xs flex items-center justify-center",
+                        HEALTH_CONFIG[key].bgClass,
+                        HEALTH_CONFIG[key].textClass,
+                      )}
+                    >
+                      {count}
+                    </span>
+                  ),
+              )}
             </div>
           </div>
         </div>
       )}
     </div>
-  )
-})
+  );
+});
 
-export default BoardColumn
-
+export default BoardColumn;

@@ -1,25 +1,50 @@
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
-import { Badge } from '../ui/badge';
-import { Progress } from '../ui/progress';
+import React from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
+import { Badge } from "../ui/badge";
+import { Progress } from "../ui/progress";
 import {
   TrendingUp,
   TrendingDown,
   AlertTriangle,
   CheckCircle,
   XCircle,
-  Info
-} from 'lucide-react';
+  Info,
+} from "lucide-react";
 
 /**
  * 中标概率等级配置
  */
 const PROBABILITY_LEVELS = {
-  VERY_HIGH: { label: '极高', color: 'bg-green-500', textColor: 'text-green-700', threshold: 80 },
-  HIGH: { label: '高', color: 'bg-blue-500', textColor: 'text-blue-700', threshold: 60 },
-  MEDIUM: { label: '中', color: 'bg-yellow-500', textColor: 'text-yellow-700', threshold: 40 },
-  LOW: { label: '低', color: 'bg-orange-500', textColor: 'text-orange-700', threshold: 20 },
-  VERY_LOW: { label: '极低', color: 'bg-red-500', textColor: 'text-red-700', threshold: 0 }
+  VERY_HIGH: {
+    label: "极高",
+    color: "bg-green-500",
+    textColor: "text-green-700",
+    threshold: 80,
+  },
+  HIGH: {
+    label: "高",
+    color: "bg-blue-500",
+    textColor: "text-blue-700",
+    threshold: 60,
+  },
+  MEDIUM: {
+    label: "中",
+    color: "bg-yellow-500",
+    textColor: "text-yellow-700",
+    threshold: 40,
+  },
+  LOW: {
+    label: "低",
+    color: "bg-orange-500",
+    textColor: "text-orange-700",
+    threshold: 20,
+  },
+  VERY_LOW: {
+    label: "极低",
+    color: "bg-red-500",
+    textColor: "text-red-700",
+    threshold: 0,
+  },
 };
 
 /**
@@ -27,24 +52,35 @@ const PROBABILITY_LEVELS = {
  */
 const DimensionScores = ({ scores }) => {
   const dimensions = [
-    { key: 'requirement_maturity', label: '需求成熟度' },
-    { key: 'technical_feasibility', label: '技术可行性' },
-    { key: 'business_feasibility', label: '商务可行性' },
-    { key: 'delivery_risk', label: '交付风险' },
-    { key: 'customer_relationship', label: '客户关系' }
+    { key: "requirement_maturity", label: "需求成熟度" },
+    { key: "technical_feasibility", label: "技术可行性" },
+    { key: "business_feasibility", label: "商务可行性" },
+    { key: "delivery_risk", label: "交付风险" },
+    { key: "customer_relationship", label: "客户关系" },
   ];
 
   return (
     <div className="space-y-2">
-      {dimensions.map(dim => {
+      {dimensions.map((dim) => {
         const score = scores?.[dim.key] || 0;
-        const color = score >= 70 ? 'bg-green-500' : score >= 50 ? 'bg-yellow-500' : 'bg-red-500';
+        const color =
+          score >= 70
+            ? "bg-green-500"
+            : score >= 50
+              ? "bg-yellow-500"
+              : "bg-red-500";
 
         return (
           <div key={dim.key} className="flex items-center gap-2">
-            <span className="text-xs text-slate-600 w-20 truncate">{dim.label}</span>
+            <span className="text-xs text-slate-600 w-20 truncate">
+              {dim.label}
+            </span>
             <div className="flex-1">
-              <Progress value={score} className="h-2" indicatorClassName={color} />
+              <Progress
+                value={score}
+                className="h-2"
+                indicatorClassName={color}
+              />
             </div>
             <span className="text-xs font-medium w-8 text-right">{score}</span>
           </div>
@@ -61,7 +97,7 @@ const WinRatePredictionCard = ({
   prediction,
   leadName,
   showRecommendations = true,
-  compact = false
+  compact = false,
 }) => {
   if (!prediction) {
     return (
@@ -81,31 +117,42 @@ const WinRatePredictionCard = ({
     factors,
     recommendations,
     similar_leads_count,
-    similar_leads_win_rate
+    similar_leads_win_rate,
   } = prediction;
 
-  const levelConfig = PROBABILITY_LEVELS[probability_level] || PROBABILITY_LEVELS.MEDIUM;
+  const levelConfig =
+    PROBABILITY_LEVELS[probability_level] || PROBABILITY_LEVELS.MEDIUM;
   const winRatePercent = Math.round(predicted_win_rate * 100);
 
   // 获取预测图标
   const getPredictionIcon = () => {
-    if (winRatePercent >= 60) return <TrendingUp className="h-5 w-5 text-green-600" />;
-    if (winRatePercent >= 40) return <AlertTriangle className="h-5 w-5 text-yellow-600" />;
+    if (winRatePercent >= 60)
+      return <TrendingUp className="h-5 w-5 text-green-600" />;
+    if (winRatePercent >= 40)
+      return <AlertTriangle className="h-5 w-5 text-yellow-600" />;
     return <TrendingDown className="h-5 w-5 text-red-600" />;
   };
 
   if (compact) {
     return (
       <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${levelConfig.color} bg-opacity-20`}>
-          <span className={`text-lg font-bold ${levelConfig.textColor}`}>{winRatePercent}%</span>
+        <div
+          className={`w-12 h-12 rounded-full flex items-center justify-center ${levelConfig.color} bg-opacity-20`}
+        >
+          <span className={`text-lg font-bold ${levelConfig.textColor}`}>
+            {winRatePercent}%
+          </span>
         </div>
         <div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">预测中标率</span>
-            <Badge variant="outline" className={levelConfig.textColor}>{levelConfig.label}</Badge>
+            <Badge variant="outline" className={levelConfig.textColor}>
+              {levelConfig.label}
+            </Badge>
           </div>
-          <p className="text-xs text-slate-500">置信度 {Math.round(confidence * 100)}%</p>
+          <p className="text-xs text-slate-500">
+            置信度 {Math.round(confidence * 100)}%
+          </p>
         </div>
       </div>
     );
@@ -119,23 +166,34 @@ const WinRatePredictionCard = ({
             {getPredictionIcon()}
             中标率预测
           </CardTitle>
-          {leadName && <span className="text-sm text-slate-500">{leadName}</span>}
+          {leadName && (
+            <span className="text-sm text-slate-500">{leadName}</span>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* 主要预测结果 */}
         <div className="flex items-center gap-4">
-          <div className={`w-20 h-20 rounded-full flex items-center justify-center ${levelConfig.color} bg-opacity-20`}>
-            <span className={`text-2xl font-bold ${levelConfig.textColor}`}>{winRatePercent}%</span>
+          <div
+            className={`w-20 h-20 rounded-full flex items-center justify-center ${levelConfig.color} bg-opacity-20`}
+          >
+            <span className={`text-2xl font-bold ${levelConfig.textColor}`}>
+              {winRatePercent}%
+            </span>
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <Badge className={levelConfig.color}>{levelConfig.label}概率</Badge>
-              <span className="text-sm text-slate-500">置信度 {Math.round(confidence * 100)}%</span>
+              <Badge className={levelConfig.color}>
+                {levelConfig.label}概率
+              </Badge>
+              <span className="text-sm text-slate-500">
+                置信度 {Math.round(confidence * 100)}%
+              </span>
             </div>
             {similar_leads_count > 0 && (
               <p className="text-xs text-slate-500">
-                参考 {similar_leads_count} 个相似线索，历史中标率 {Math.round(similar_leads_win_rate * 100)}%
+                参考 {similar_leads_count} 个相似线索，历史中标率{" "}
+                {Math.round(similar_leads_win_rate * 100)}%
               </p>
             )}
           </div>
@@ -144,7 +202,9 @@ const WinRatePredictionCard = ({
         {/* 五维评估分数 */}
         {factors?.dimension_scores && (
           <div>
-            <h4 className="text-sm font-medium mb-2 text-slate-700">五维评估</h4>
+            <h4 className="text-sm font-medium mb-2 text-slate-700">
+              五维评估
+            </h4>
             <DimensionScores scores={factors.dimension_scores} />
           </div>
         )}
@@ -153,11 +213,15 @@ const WinRatePredictionCard = ({
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="p-2 bg-slate-50 rounded">
             <span className="text-slate-500">销售历史中标率</span>
-            <p className="font-medium">{Math.round((factors?.salesperson_win_rate || 0) * 100)}%</p>
+            <p className="font-medium">
+              {Math.round((factors?.salesperson_win_rate || 0) * 100)}%
+            </p>
           </div>
           <div className="p-2 bg-slate-50 rounded">
             <span className="text-slate-500">客户合作次数</span>
-            <p className="font-medium">{factors?.customer_cooperation_count || 0} 次</p>
+            <p className="font-medium">
+              {factors?.customer_cooperation_count || 0} 次
+            </p>
           </div>
           <div className="p-2 bg-slate-50 rounded">
             <span className="text-slate-500">竞争对手数量</span>
@@ -165,7 +229,9 @@ const WinRatePredictionCard = ({
           </div>
           <div className="p-2 bg-slate-50 rounded">
             <span className="text-slate-500">基础评分</span>
-            <p className="font-medium">{Math.round((factors?.base_score || 0) * 100)}</p>
+            <p className="font-medium">
+              {Math.round((factors?.base_score || 0) * 100)}
+            </p>
           </div>
         </div>
 
@@ -178,7 +244,10 @@ const WinRatePredictionCard = ({
             </h4>
             <ul className="space-y-1">
               {recommendations.slice(0, 3).map((rec, index) => (
-                <li key={index} className="text-xs text-slate-600 flex items-start gap-1">
+                <li
+                  key={index}
+                  className="text-xs text-slate-600 flex items-start gap-1"
+                >
                   <span className="text-blue-500 mt-0.5">•</span>
                   <span>{rec}</span>
                 </li>
@@ -214,8 +283,11 @@ const WinRateTrend = ({ data }) => {
               value={item.win_rate * 100}
               className="h-4"
               indicatorClassName={
-                item.win_rate >= 0.4 ? 'bg-green-500' :
-                item.win_rate >= 0.2 ? 'bg-yellow-500' : 'bg-red-500'
+                item.win_rate >= 0.4
+                  ? "bg-green-500"
+                  : item.win_rate >= 0.2
+                    ? "bg-yellow-500"
+                    : "bg-red-500"
               }
             />
           </div>

@@ -2,7 +2,7 @@
  * HREmployeesTab Component
  * 员工管理 Tab 组件
  */
-import { motion } from 'framer-motion'
+import { motion } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -14,10 +14,10 @@ import {
   LoadingCard,
   ErrorMessage,
   EmptyState,
-} from '../../ui'
-import { Users, UserPlus, FileText, Eye, Edit } from 'lucide-react'
-import { cn } from '../../../lib/utils'
-import { employeeApi } from '../../../services/api'
+} from "../../ui";
+import { Users, UserPlus, FileText, Eye, Edit } from "lucide-react";
+import { cn } from "../../../lib/utils";
+import { employeeApi } from "../../../services/api";
 
 export default function HREmployeesTab({
   employees,
@@ -115,21 +115,21 @@ export default function HREmployeesTab({
             title="暂无员工数据"
             message={
               searchKeyword ||
-              filterDepartment !== 'all' ||
-              filterStatus !== 'all'
-                ? '没有找到符合条件的员工，请尝试调整筛选条件'
-                : '当前没有员工数据，点击上方按钮添加新员工'
+              filterDepartment !== "all" ||
+              filterStatus !== "all"
+                ? "没有找到符合条件的员工，请尝试调整筛选条件"
+                : "当前没有员工数据，点击上方按钮添加新员工"
             }
             action={() => {
-              setSearchKeyword('')
-              setFilterDepartment('all')
-              setFilterStatus('all')
+              setSearchKeyword("");
+              setFilterDepartment("all");
+              setFilterStatus("all");
             }}
             actionLabel={
               searchKeyword ||
-              filterDepartment !== 'all' ||
-              filterStatus !== 'all'
-                ? '清除筛选'
+              filterDepartment !== "all" ||
+              filterStatus !== "all"
+                ? "清除筛选"
                 : undefined
             }
           />
@@ -171,30 +171,30 @@ export default function HREmployeesTab({
                     className="hover:bg-slate-800/40"
                   >
                     <td className="px-6 py-4 text-sm font-semibold text-white">
-                      {employee.employee_code || '-'}
+                      {employee.employee_code || "-"}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-300">
                       {employee.name}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-300">
-                      {employee.department || '-'}
+                      {employee.department || "-"}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-300">
-                      {employee.role || '-'}
+                      {employee.role || "-"}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-300">
-                      {employee.phone || '-'}
+                      {employee.phone || "-"}
                     </td>
                     <td className="px-6 py-4">
                       <Badge
                         className={cn(
-                          'text-xs',
+                          "text-xs",
                           employee.is_active
-                            ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                            : 'bg-slate-500/20 text-slate-400 border-slate-500/30'
+                            ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                            : "bg-slate-500/20 text-slate-400 border-slate-500/30",
                         )}
                       >
-                        {employee.is_active ? '在职' : '离职'}
+                        {employee.is_active ? "在职" : "离职"}
                       </Badge>
                     </td>
                     <td className="px-6 py-4">
@@ -206,14 +206,16 @@ export default function HREmployeesTab({
                           className="hover:bg-blue-500/20 hover:text-blue-400"
                           onClick={async () => {
                             try {
-                              const response = await employeeApi.get(employee.id)
-                              setSelectedEmployee(response.data)
-                              setShowEmployeeDialog(true)
+                              const response = await employeeApi.get(
+                                employee.id,
+                              );
+                              setSelectedEmployee(response.data);
+                              setShowEmployeeDialog(true);
                             } catch (error) {
-                              console.error('加载员工详情失败:', error)
+                              console.error("加载员工详情失败:", error);
                               // 如果API失败，使用列表中的数据
-                              setSelectedEmployee(employee)
-                              setShowEmployeeDialog(true)
+                              setSelectedEmployee(employee);
+                              setShowEmployeeDialog(true);
                             }
                           }}
                         >
@@ -240,5 +242,5 @@ export default function HREmployeesTab({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -2,8 +2,8 @@
  * Shortage Management Board Page - 缺料管理看板页面
  * Features: 缺料预警、齐套率、到货跟踪汇总
  */
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
   Package,
@@ -15,17 +15,17 @@ import {
   RefreshCw,
   Eye,
   ArrowRight,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Badge } from '../components/ui/badge'
-import { Progress } from '../components/ui/progress'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { Progress } from "../components/ui/progress";
 import {
   Table,
   TableBody,
@@ -33,26 +33,26 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../components/ui/table'
-import { cn, formatDate } from '../lib/utils'
-import { shortageApi, shortageAlertApi } from '../services/api'
+} from "../components/ui/table";
+import { cn, formatDate } from "../lib/utils";
+import { shortageApi, shortageAlertApi } from "../services/api";
 export default function ShortageManagementBoard() {
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [boardData, setBoardData] = useState(null)
-  const [alerts, setAlerts] = useState([])
-  const [arrivals, setArrivals] = useState([])
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [boardData, setBoardData] = useState(null);
+  const [alerts, setAlerts] = useState([]);
+  const [arrivals, setArrivals] = useState([]);
   useEffect(() => {
-    fetchBoardData()
-    fetchAlerts()
-    fetchArrivals()
-  }, [])
+    fetchBoardData();
+    fetchAlerts();
+    fetchArrivals();
+  }, []);
   const fetchBoardData = async () => {
     try {
       // Try to get dashboard data from API, if not available, calculate from alerts and arrivals
       try {
-        const res = await shortageApi.statistics.dashboard()
-        setBoardData(res.data || res)
+        const res = await shortageApi.statistics.dashboard();
+        setBoardData(res.data || res);
       } catch (apiError) {
         // If dashboard API is not available, calculate from existing data
         // This will be populated after fetchAlerts and fetchArrivals complete
@@ -64,10 +64,10 @@ export default function ShortageManagementBoard() {
           total_arrivals: 0,
           delayed_arrivals: 0,
           pending_arrivals: 0,
-        })
+        });
       }
     } catch (error) {
-      console.error('Failed to fetch board data:', error)
+      console.error("Failed to fetch board data:", error);
       setBoardData({
         total_alerts: 0,
         critical_alerts: 0,
@@ -76,50 +76,67 @@ export default function ShortageManagementBoard() {
         total_arrivals: 0,
         delayed_arrivals: 0,
         pending_arrivals: 0,
-      })
+      });
     }
-  }
-  
+  };
+
   // Update board data after alerts and arrivals are loaded
   useEffect(() => {
     if (alerts.length > 0 || arrivals.length > 0) {
-      setBoardData(prev => ({
+      setBoardData((prev) => ({
         total_alerts: alerts.length,
-        critical_alerts: alerts.filter(a => a.alert_level === 'LEVEL1' || a.alert_level === 'CRITICAL').length,
-        major_alerts: alerts.filter(a => a.alert_level === 'LEVEL2' || a.alert_level === 'MAJOR').length,
-        minor_alerts: alerts.filter(a => a.alert_level === 'LEVEL3' || a.alert_level === 'LEVEL4' || a.alert_level === 'MINOR').length,
+        critical_alerts: alerts.filter(
+          (a) => a.alert_level === "LEVEL1" || a.alert_level === "CRITICAL",
+        ).length,
+        major_alerts: alerts.filter(
+          (a) => a.alert_level === "LEVEL2" || a.alert_level === "MAJOR",
+        ).length,
+        minor_alerts: alerts.filter(
+          (a) =>
+            a.alert_level === "LEVEL3" ||
+            a.alert_level === "LEVEL4" ||
+            a.alert_level === "MINOR",
+        ).length,
         total_arrivals: arrivals.length,
-        delayed_arrivals: arrivals.filter(a => a.is_delayed || (a.expected_date && a.actual_date && new Date(a.actual_date) > new Date(a.expected_date))).length,
-        pending_arrivals: arrivals.filter(a => !a.actual_date || a.status === 'PENDING').length,
-      }))
+        delayed_arrivals: arrivals.filter(
+          (a) =>
+            a.is_delayed ||
+            (a.expected_date &&
+              a.actual_date &&
+              new Date(a.actual_date) > new Date(a.expected_date)),
+        ).length,
+        pending_arrivals: arrivals.filter(
+          (a) => !a.actual_date || a.status === "PENDING",
+        ).length,
+      }));
     }
-  }, [alerts, arrivals])
+  }, [alerts, arrivals]);
   const fetchAlerts = async () => {
     try {
-      const res = await shortageAlertApi.list({ page_size: 10 })
-      const alertList = res.data?.items || res.data || []
-      setAlerts(alertList)
+      const res = await shortageAlertApi.list({ page_size: 10 });
+      const alertList = res.data?.items || res.data || [];
+      setAlerts(alertList);
     } catch (error) {
-      console.error('Failed to fetch alerts:', error)
+      console.error("Failed to fetch alerts:", error);
     }
-  }
+  };
   const fetchArrivals = async () => {
     try {
-      const res = await shortageApi.arrivals.list({ page_size: 10 })
-      const arrivalList = res.data?.items || res.data || []
-      setArrivals(arrivalList)
+      const res = await shortageApi.arrivals.list({ page_size: 10 });
+      const arrivalList = res.data?.items || res.data || [];
+      setArrivals(arrivalList);
     } catch (error) {
-      console.error('Failed to fetch arrivals:', error)
+      console.error("Failed to fetch arrivals:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
   if (loading) {
     return (
       <div className="space-y-6 p-6">
         <div className="text-center py-8 text-slate-400">加载中...</div>
       </div>
-    )
+    );
   }
   return (
     <div className="space-y-6 p-6">
@@ -128,11 +145,14 @@ export default function ShortageManagementBoard() {
           title="缺料管理看板"
           description="缺料预警、齐套率、到货跟踪汇总"
         />
-        <Button variant="outline" onClick={() => {
-          fetchBoardData()
-          fetchAlerts()
-          fetchArrivals()
-        }}>
+        <Button
+          variant="outline"
+          onClick={() => {
+            fetchBoardData();
+            fetchAlerts();
+            fetchArrivals();
+          }}
+        >
           <RefreshCw className="w-4 h-4 mr-2" />
           刷新
         </Button>
@@ -144,7 +164,9 @@ export default function ShortageManagementBoard() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm text-slate-500 mb-1">缺料预警总数</div>
-                <div className="text-2xl font-bold">{boardData?.total_alerts || alerts.length}</div>
+                <div className="text-2xl font-bold">
+                  {boardData?.total_alerts || alerts.length}
+                </div>
               </div>
               <AlertTriangle className="w-8 h-8 text-red-500" />
             </div>
@@ -156,7 +178,8 @@ export default function ShortageManagementBoard() {
               <div>
                 <div className="text-sm text-slate-500 mb-1">严重预警</div>
                 <div className="text-2xl font-bold text-red-600">
-                  {boardData?.critical_alerts || alerts.filter(a => a.alert_level === 'CRITICAL').length}
+                  {boardData?.critical_alerts ||
+                    alerts.filter((a) => a.alert_level === "CRITICAL").length}
                 </div>
               </div>
               <XCircle className="w-8 h-8 text-red-500" />
@@ -168,7 +191,9 @@ export default function ShortageManagementBoard() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm text-slate-500 mb-1">到货跟踪</div>
-                <div className="text-2xl font-bold">{boardData?.total_arrivals || arrivals.length}</div>
+                <div className="text-2xl font-bold">
+                  {boardData?.total_arrivals || arrivals.length}
+                </div>
               </div>
               <Package className="w-8 h-8 text-blue-500" />
             </div>
@@ -180,7 +205,8 @@ export default function ShortageManagementBoard() {
               <div>
                 <div className="text-sm text-slate-500 mb-1">延迟到货</div>
                 <div className="text-2xl font-bold text-amber-600">
-                  {boardData?.delayed_arrivals || arrivals.filter(a => a.is_delayed).length}
+                  {boardData?.delayed_arrivals ||
+                    arrivals.filter((a) => a.is_delayed).length}
                 </div>
               </div>
               <Clock className="w-8 h-8 text-amber-500" />
@@ -197,7 +223,7 @@ export default function ShortageManagementBoard() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/shortage-alerts')}
+                onClick={() => navigate("/shortage-alerts")}
               >
                 查看全部
                 <ArrowRight className="w-4 h-4 ml-1" />
@@ -206,7 +232,9 @@ export default function ShortageManagementBoard() {
           </CardHeader>
           <CardContent>
             {alerts.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">暂无缺料预警</div>
+              <div className="text-center py-8 text-slate-400">
+                暂无缺料预警
+              </div>
             ) : (
               <div className="space-y-3">
                 {alerts.slice(0, 5).map((alert) => (
@@ -217,22 +245,28 @@ export default function ShortageManagementBoard() {
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <div className="font-medium text-sm">{alert.material_name}</div>
+                        <div className="font-medium text-sm">
+                          {alert.material_name}
+                        </div>
                         <div className="text-xs text-slate-500 mt-1 font-mono">
                           {alert.material_code}
                         </div>
                       </div>
                       <Badge
                         className={cn(
-                          alert.alert_level === 'CRITICAL' && 'bg-red-500',
-                          alert.alert_level === 'MAJOR' && 'bg-orange-500',
-                          alert.alert_level === 'MINOR' && 'bg-amber-500',
-                          'bg-slate-500'
+                          alert.alert_level === "CRITICAL" && "bg-red-500",
+                          alert.alert_level === "MAJOR" && "bg-orange-500",
+                          alert.alert_level === "MINOR" && "bg-amber-500",
+                          "bg-slate-500",
                         )}
                       >
-                        {alert.alert_level === 'CRITICAL' ? '严重' :
-                         alert.alert_level === 'MAJOR' ? '重要' :
-                         alert.alert_level === 'MINOR' ? '一般' : alert.alert_level}
+                        {alert.alert_level === "CRITICAL"
+                          ? "严重"
+                          : alert.alert_level === "MAJOR"
+                            ? "重要"
+                            : alert.alert_level === "MINOR"
+                              ? "一般"
+                              : alert.alert_level}
                       </Badge>
                     </div>
                     {alert.project_name && (
@@ -241,7 +275,10 @@ export default function ShortageManagementBoard() {
                       </div>
                     )}
                     <div className="text-xs text-slate-500 mt-1">
-                      缺料数量: <span className="font-medium text-red-600">{alert.shortage_qty}</span>
+                      缺料数量:{" "}
+                      <span className="font-medium text-red-600">
+                        {alert.shortage_qty}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -257,7 +294,7 @@ export default function ShortageManagementBoard() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/arrival-tracking')}
+                onClick={() => navigate("/arrival-tracking")}
               >
                 查看全部
                 <ArrowRight className="w-4 h-4 ml-1" />
@@ -266,7 +303,9 @@ export default function ShortageManagementBoard() {
           </CardHeader>
           <CardContent>
             {arrivals.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">暂无到货跟踪</div>
+              <div className="text-center py-8 text-slate-400">
+                暂无到货跟踪
+              </div>
             ) : (
               <div className="space-y-3">
                 {arrivals.slice(0, 5).map((arrival) => (
@@ -277,7 +316,9 @@ export default function ShortageManagementBoard() {
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <div className="font-medium text-sm">{arrival.material_name}</div>
+                        <div className="font-medium text-sm">
+                          {arrival.material_name}
+                        </div>
                         <div className="text-xs text-slate-500 mt-1 font-mono">
                           {arrival.arrival_no}
                         </div>
@@ -289,12 +330,24 @@ export default function ShortageManagementBoard() {
                     <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 mt-2">
                       <div>
                         <span>预期: </span>
-                        <span>{arrival.expected_date ? formatDate(arrival.expected_date) : '-'}</span>
+                        <span>
+                          {arrival.expected_date
+                            ? formatDate(arrival.expected_date)
+                            : "-"}
+                        </span>
                       </div>
                       <div>
                         <span>实际: </span>
-                        <span className={arrival.actual_date ? 'text-emerald-600' : 'text-slate-400'}>
-                          {arrival.actual_date ? formatDate(arrival.actual_date) : '未到货'}
+                        <span
+                          className={
+                            arrival.actual_date
+                              ? "text-emerald-600"
+                              : "text-slate-400"
+                          }
+                        >
+                          {arrival.actual_date
+                            ? formatDate(arrival.actual_date)
+                            : "未到货"}
                         </span>
                       </div>
                     </div>
@@ -320,7 +373,7 @@ export default function ShortageManagementBoard() {
             <Button
               variant="outline"
               className="h-auto py-4 flex-col"
-              onClick={() => navigate('/shortage-alerts')}
+              onClick={() => navigate("/shortage-alerts")}
             >
               <AlertTriangle className="w-6 h-6 mb-2" />
               <span>缺料预警</span>
@@ -328,7 +381,7 @@ export default function ShortageManagementBoard() {
             <Button
               variant="outline"
               className="h-auto py-4 flex-col"
-              onClick={() => navigate('/shortage-reports')}
+              onClick={() => navigate("/shortage-reports")}
             >
               <Package className="w-6 h-6 mb-2" />
               <span>缺料上报</span>
@@ -336,7 +389,7 @@ export default function ShortageManagementBoard() {
             <Button
               variant="outline"
               className="h-auto py-4 flex-col"
-              onClick={() => navigate('/arrival-tracking')}
+              onClick={() => navigate("/arrival-tracking")}
             >
               <Clock className="w-6 h-6 mb-2" />
               <span>到货跟踪</span>
@@ -344,7 +397,7 @@ export default function ShortageManagementBoard() {
             <Button
               variant="outline"
               className="h-auto py-4 flex-col"
-              onClick={() => navigate('/kit-rate')}
+              onClick={() => navigate("/kit-rate")}
             >
               <TrendingUp className="w-6 h-6 mb-2" />
               <span>齐套看板</span>
@@ -353,6 +406,5 @@ export default function ShortageManagementBoard() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
-

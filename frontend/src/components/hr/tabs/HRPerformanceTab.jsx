@@ -2,8 +2,8 @@
  * HRPerformanceTab Component
  * 绩效管理 Tab 组件
  */
-import { Card, CardContent } from '../../ui'
-import { Clock, CheckCircle2, Target, Award } from 'lucide-react'
+import { Card, CardContent } from "../../ui";
+import { Clock, CheckCircle2, Target, Award } from "lucide-react";
 
 export default function HRPerformanceTab({ mockHRStats }) {
   return (
@@ -72,5 +72,5 @@ export default function HRPerformanceTab({ mockHRStats }) {
         </Card>
       </div>
     </div>
-  )
+  );
 }

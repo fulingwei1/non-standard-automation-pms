@@ -3,9 +3,9 @@
  * Features: Project budget overview, budget usage tracking, budget alerts
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   CreditCard,
   TrendingUp,
@@ -20,8 +20,8 @@ import {
   Calendar,
   Target,
   BarChart3,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -43,41 +43,42 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../components/ui'
-import { cn, formatCurrency, formatDate } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { projectApi, costApi } from '../services/api'
+} from "../components/ui";
+import { cn, formatCurrency, formatDate } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { projectApi, costApi } from "../services/api";
 
 // Mock data - 已移除，使用真实API
 
 export default function BudgetManagement() {
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [budgets, setBudgets] = useState([])
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [filterStatus, setFilterStatus] = useState('all')
-  const [filterUsageRate, setFilterUsageRate] = useState('all')
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [budgets, setBudgets] = useState([]);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterUsageRate, setFilterUsageRate] = useState("all");
 
   const loadBudgets = useCallback(async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       // Load projects with budget information
-      const res = await projectApi.list({ page: 1, page_size: 100 })
-      const projects = res.data?.items || res.data || []
+      const res = await projectApi.list({ page: 1, page_size: 100 });
+      const projects = res.data?.items || res.data || [];
 
       // Transform projects to budget format
       const budgetsData = await Promise.all(
         projects.map(async (project) => {
           try {
-            const costSummary = await costApi.getProjectSummary(project.id)
-            const summary = costSummary.data || {}
-            const usedAmount = summary.total_cost || 0
-            const budgetAmount = project.budget_amount || 0
-            const usageRate = budgetAmount > 0 ? (usedAmount / budgetAmount) * 100 : 0
+            const costSummary = await costApi.getProjectSummary(project.id);
+            const summary = costSummary.data || {};
+            const usedAmount = summary.total_cost || 0;
+            const budgetAmount = project.budget_amount || 0;
+            const usageRate =
+              budgetAmount > 0 ? (usedAmount / budgetAmount) * 100 : 0;
 
-            let status = 'NORMAL'
-            if (usageRate >= 90) status = 'CRITICAL'
-            else if (usageRate >= 80) status = 'WARNING'
+            let status = "NORMAL";
+            if (usageRate >= 90) status = "CRITICAL";
+            else if (usageRate >= 80) status = "WARNING";
 
             return {
               id: project.id,
@@ -90,57 +91,67 @@ export default function BudgetManagement() {
               status,
               start_date: project.planned_start_date,
               end_date: project.planned_end_date,
-            }
+            };
           } catch (err) {
-            console.error(`Failed to load budget for project ${project.id}:`, err)
-            return null
+            console.error(
+              `Failed to load budget for project ${project.id}:`,
+              err,
+            );
+            return null;
           }
-        })
-      )
+        }),
+      );
 
-      setBudgets(budgetsData.filter(Boolean))
+      setBudgets(budgetsData.filter(Boolean));
     } catch (error) {
-      console.error('Failed to load budgets:', error)
-      setBudgets([])
+      console.error("Failed to load budgets:", error);
+      setBudgets([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    loadBudgets()
-  }, [loadBudgets])
+    loadBudgets();
+  }, [loadBudgets]);
 
   const filteredBudgets = useMemo(() => {
-    return budgets.filter(budget => {
+    return budgets.filter((budget) => {
       if (searchKeyword) {
-        const keyword = searchKeyword.toLowerCase()
+        const keyword = searchKeyword.toLowerCase();
         return (
           budget.project_code?.toLowerCase().includes(keyword) ||
           budget.project_name?.toLowerCase().includes(keyword)
+        );
+      }
+      if (filterStatus !== "all") {
+        if (filterStatus === "critical" && budget.status !== "CRITICAL")
+          return false;
+        if (filterStatus === "warning" && budget.status !== "WARNING")
+          return false;
+        if (filterStatus === "normal" && budget.status !== "NORMAL")
+          return false;
+      }
+      if (filterUsageRate !== "all") {
+        if (filterUsageRate === "high" && budget.usage_rate < 80) return false;
+        if (
+          filterUsageRate === "medium" &&
+          (budget.usage_rate < 50 || budget.usage_rate >= 80)
         )
+          return false;
+        if (filterUsageRate === "low" && budget.usage_rate >= 50) return false;
       }
-      if (filterStatus !== 'all') {
-        if (filterStatus === 'critical' && budget.status !== 'CRITICAL') return false
-        if (filterStatus === 'warning' && budget.status !== 'WARNING') return false
-        if (filterStatus === 'normal' && budget.status !== 'NORMAL') return false
-      }
-      if (filterUsageRate !== 'all') {
-        if (filterUsageRate === 'high' && budget.usage_rate < 80) return false
-        if (filterUsageRate === 'medium' && (budget.usage_rate < 50 || budget.usage_rate >= 80)) return false
-        if (filterUsageRate === 'low' && budget.usage_rate >= 50) return false
-      }
-      return true
-    })
-  }, [budgets, searchKeyword, filterStatus, filterUsageRate])
+      return true;
+    });
+  }, [budgets, searchKeyword, filterStatus, filterUsageRate]);
 
   const stats = useMemo(() => {
-    const total = budgets.reduce((sum, b) => sum + b.budget_amount, 0)
-    const used = budgets.reduce((sum, b) => sum + b.used_amount, 0)
-    const remaining = budgets.reduce((sum, b) => sum + b.remaining_amount, 0)
-    const critical = budgets.filter(b => b.status === 'CRITICAL').length
-    const warning = budgets.filter(b => b.status === 'WARNING').length
-    
+    const total = budgets.reduce((sum, b) => sum + b.budget_amount, 0);
+    const used = budgets.reduce((sum, b) => sum + b.used_amount, 0);
+    const remaining = budgets.reduce((sum, b) => sum + b.remaining_amount, 0);
+    const critical = budgets.filter((b) => b.status === "CRITICAL").length;
+    const warning = budgets.filter((b) => b.status === "WARNING").length;
+
     return {
       total,
       used,
@@ -148,14 +159,14 @@ export default function BudgetManagement() {
       usageRate: total > 0 ? (used / total) * 100 : 0,
       critical,
       warning,
-    }
-  }, [budgets])
+    };
+  }, [budgets]);
 
   const statusConfig = {
-    CRITICAL: { label: '严重超支', color: 'bg-red-500 text-white' },
-    WARNING: { label: '预算预警', color: 'bg-amber-500 text-white' },
-    NORMAL: { label: '正常', color: 'bg-emerald-500 text-white' },
-  }
+    CRITICAL: { label: "严重超支", color: "bg-red-500 text-white" },
+    WARNING: { label: "预算预警", color: "bg-amber-500 text-white" },
+    NORMAL: { label: "正常", color: "bg-emerald-500 text-white" },
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -267,7 +278,10 @@ export default function BudgetManagement() {
                   <SelectItem value="normal">正常</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={filterUsageRate} onValueChange={setFilterUsageRate}>
+              <Select
+                value={filterUsageRate}
+                onValueChange={setFilterUsageRate}
+              >
                 <SelectTrigger className="bg-slate-900/50 border-slate-700">
                   <SelectValue placeholder="使用率" />
                 </SelectTrigger>
@@ -275,10 +289,10 @@ export default function BudgetManagement() {
                   <SelectItem value="all">全部</SelectItem>
                   <SelectItem value="high">高 (≥80%)</SelectItem>
                   <SelectItem value="medium">中 (50-80%)</SelectItem>
-                  <SelectItem value="low">低 ({'<50%'})</SelectItem>
+                  <SelectItem value="low">低 ({"<50%"})</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" onClick={() => navigate('/costs')}>
+              <Button variant="outline" onClick={() => navigate("/costs")}>
                 <Download className="w-4 h-4 mr-2" />
                 导出报表
               </Button>
@@ -298,7 +312,9 @@ export default function BudgetManagement() {
             {loading ? (
               <div className="text-center py-8 text-slate-400">加载中...</div>
             ) : filteredBudgets.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">暂无预算数据</div>
+              <div className="text-center py-8 text-slate-400">
+                暂无预算数据
+              </div>
             ) : (
               <Table>
                 <TableHeader>
@@ -311,7 +327,9 @@ export default function BudgetManagement() {
                     <TableHead className="text-slate-400">使用率</TableHead>
                     <TableHead className="text-slate-400">状态</TableHead>
                     <TableHead className="text-slate-400">项目周期</TableHead>
-                    <TableHead className="text-right text-slate-400">操作</TableHead>
+                    <TableHead className="text-right text-slate-400">
+                      操作
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -334,26 +352,37 @@ export default function BudgetManagement() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Progress value={budget.usage_rate} className="flex-1 h-2" />
-                          <span className={cn(
-                            'text-sm font-medium w-16 text-right',
-                            budget.usage_rate >= 90 ? 'text-red-400' :
-                            budget.usage_rate >= 80 ? 'text-amber-400' :
-                            'text-emerald-400'
-                          )}>
+                          <Progress
+                            value={budget.usage_rate}
+                            className="flex-1 h-2"
+                          />
+                          <span
+                            className={cn(
+                              "text-sm font-medium w-16 text-right",
+                              budget.usage_rate >= 90
+                                ? "text-red-400"
+                                : budget.usage_rate >= 80
+                                  ? "text-amber-400"
+                                  : "text-emerald-400",
+                            )}
+                          >
                             {budget.usage_rate.toFixed(1)}%
                           </span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={statusConfig[budget.status]?.color || 'bg-slate-500'}>
+                        <Badge
+                          className={
+                            statusConfig[budget.status]?.color || "bg-slate-500"
+                          }
+                        >
                           {statusConfig[budget.status]?.label || budget.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-slate-400 text-sm">
                         {budget.start_date && budget.end_date
                           ? `${formatDate(budget.start_date)} ~ ${formatDate(budget.end_date)}`
-                          : '-'}
+                          : "-"}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
@@ -373,6 +402,5 @@ export default function BudgetManagement() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
-

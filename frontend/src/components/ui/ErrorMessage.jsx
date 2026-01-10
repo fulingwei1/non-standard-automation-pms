@@ -1,30 +1,30 @@
-import { AlertCircle, RefreshCw, XCircle } from 'lucide-react'
-import { Card, CardContent } from './card'
-import { Button } from './button'
-import { Badge } from './badge'
-import { cn } from '../../lib/utils'
+import { AlertCircle, RefreshCw, XCircle } from "lucide-react";
+import { Card, CardContent } from "./card";
+import { Button } from "./button";
+import { Badge } from "./badge";
+import { cn } from "../../lib/utils";
 
 export function ErrorMessage({
-  title = '加载失败',
-  message = '数据加载失败，请稍后重试',
+  title = "加载失败",
+  message = "数据加载失败，请稍后重试",
   onRetry,
   className,
-  variant = 'default',
+  variant = "default",
 }) {
   const variantStyles = {
-    default: 'bg-red-500/10 border-red-500/20',
-    warning: 'bg-amber-500/10 border-amber-500/20',
-    info: 'bg-blue-500/10 border-blue-500/20',
-  }
+    default: "bg-red-500/10 border-red-500/20",
+    warning: "bg-amber-500/10 border-amber-500/20",
+    info: "bg-blue-500/10 border-blue-500/20",
+  };
 
   return (
-    <Card className={cn('border', variantStyles[variant], className)}>
+    <Card className={cn("border", variantStyles[variant], className)}>
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
           <div className="flex-shrink-0">
-            {variant === 'warning' ? (
+            {variant === "warning" ? (
               <AlertCircle className="w-6 h-6 text-amber-400" />
-            ) : variant === 'info' ? (
+            ) : variant === "info" ? (
               <AlertCircle className="w-6 h-6 text-blue-400" />
             ) : (
               <XCircle className="w-6 h-6 text-red-400" />
@@ -48,13 +48,13 @@ export function ErrorMessage({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export function EmptyState({
   icon: Icon,
-  title = '暂无数据',
-  message = '当前没有数据可显示',
+  title = "暂无数据",
+  message = "当前没有数据可显示",
   action,
   actionLabel,
   className,
@@ -76,9 +76,8 @@ export function EmptyState({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
-
 
 export function ApiIntegrationError({
   error,
@@ -87,22 +86,26 @@ export function ApiIntegrationError({
   className,
 }) {
   // 处理 FastAPI 的验证错误格式 (detail 可能是数组)
-  const rawDetail = error?.response?.data?.detail
-  let errorMessage = 'API 调用失败'
-  if (typeof rawDetail === 'string') {
-    errorMessage = rawDetail
+  const rawDetail = error?.response?.data?.detail;
+  let errorMessage = "API 调用失败";
+  if (typeof rawDetail === "string") {
+    errorMessage = rawDetail;
   } else if (Array.isArray(rawDetail)) {
     // FastAPI validation errors: [{type, loc, msg, input}, ...]
-    errorMessage = rawDetail.map(e => e.msg || e.message || JSON.stringify(e)).join('; ')
+    errorMessage = rawDetail
+      .map((e) => e.msg || e.message || JSON.stringify(e))
+      .join("; ");
   } else if (error?.message) {
-    errorMessage = error.message
+    errorMessage = error.message;
   }
-  
-  const statusCode = error?.response?.status
-  const statusText = error?.response?.statusText
+
+  const statusCode = error?.response?.status;
+  const statusText = error?.response?.statusText;
 
   return (
-    <Card className={cn('border-2 border-amber-500/30 bg-amber-500/5', className)}>
+    <Card
+      className={cn("border-2 border-amber-500/30 bg-amber-500/5", className)}
+    >
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
           <div className="flex-shrink-0">
@@ -119,25 +122,26 @@ export function ApiIntegrationError({
                 </Badge>
               )}
             </div>
-            
+
             <p className="text-slate-300 mb-2">{errorMessage}</p>
-            
+
             {apiEndpoint && (
               <p className="text-xs text-slate-500 mb-3">
-                API 端点: <code className="bg-slate-800 px-1 py-0.5 rounded">{apiEndpoint}</code>
+                API 端点:{" "}
+                <code className="bg-slate-800 px-1 py-0.5 rounded">
+                  {apiEndpoint}
+                </code>
               </p>
             )}
-            
+
             <div className="bg-slate-900/50 border border-slate-700 rounded p-3 mb-4">
-              <p className="text-xs text-amber-300 font-medium mb-1">
-                💡 说明
-              </p>
+              <p className="text-xs text-amber-300 font-medium mb-1">💡 说明</p>
               <p className="text-xs text-slate-400">
                 后端 API 端点可能未实现或不可用。此页面已移除 fallback 逻辑，
                 以确保能清楚识别 API 集成状态。
               </p>
             </div>
-            
+
             {onRetry && (
               <Button
                 variant="outline"
@@ -153,8 +157,5 @@ export function ApiIntegrationError({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
-
-
-

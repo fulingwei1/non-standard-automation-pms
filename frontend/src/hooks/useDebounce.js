@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 
 /**
  * Debounce hook for delaying value updates
@@ -7,19 +7,19 @@ import { useState, useEffect } from 'react'
  * @returns {*} - Debounced value
  */
 export function useDebounce(value, delay = 300) {
-  const [debouncedValue, setDebouncedValue] = useState(value)
+  const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedValue(value)
-    }, delay)
+      setDebouncedValue(value);
+    }, delay);
 
     return () => {
-      clearTimeout(handler)
-    }
-  }, [value, delay])
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
 
-  return debouncedValue
+  return debouncedValue;
 }
 
 /**
@@ -29,20 +29,17 @@ export function useDebounce(value, delay = 300) {
  * @returns {Function} - Debounced function
  */
 export function useDebouncedCallback(callback, delay = 300) {
-  const [debouncedCallback, setDebouncedCallback] = useState(() => callback)
+  const [debouncedCallback, setDebouncedCallback] = useState(() => callback);
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedCallback(() => callback)
-    }, delay)
+      setDebouncedCallback(() => callback);
+    }, delay);
 
     return () => {
-      clearTimeout(handler)
-    }
-  }, [callback, delay])
+      clearTimeout(handler);
+    };
+  }, [callback, delay]);
 
-  return debouncedCallback
+  return debouncedCallback;
 }
-
-
-

@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
 import {
   BarChart3,
   TrendingUp,
@@ -9,65 +9,69 @@ import {
   Download,
   Filter,
   FileText,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Badge } from '../components/ui/badge'
-import { Input } from '../components/ui/input'
-import { Label } from '../components/ui/label'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { alertApi } from '../services/api'
-import { LoadingCard, ErrorMessage, LoadingSpinner } from '../components/common'
+} from "../components/ui/select";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { alertApi } from "../services/api";
+import {
+  LoadingCard,
+  ErrorMessage,
+  LoadingSpinner,
+} from "../components/common";
 import {
   SimpleLineChart,
   SimpleBarChart,
   SimplePieChart,
-} from '../components/administrative/StatisticsCharts'
+} from "../components/administrative/StatisticsCharts";
 
 // 响应时效分析组件
 function ResponseMetricsSection({ dateRange, selectedProject }) {
-  const [metrics, setMetrics] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [metrics, setMetrics] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadMetrics()
-  }, [dateRange, selectedProject])
+    loadMetrics();
+  }, [dateRange, selectedProject]);
 
   const loadMetrics = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const params = {
         start_date: dateRange.start,
         end_date: dateRange.end,
-      }
+      };
       if (selectedProject) {
-        params.project_id = selectedProject
+        params.project_id = selectedProject;
       }
-      const res = await alertApi.responseMetrics(params)
-      const data = res.data || res
-      setMetrics(data)
+      const res = await alertApi.responseMetrics(params);
+      const data = res.data || res;
+      setMetrics(data);
     } catch (err) {
-      console.error('Failed to load response metrics:', err)
-      setMetrics(null)
+      console.error("Failed to load response metrics:", err);
+      setMetrics(null);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -78,20 +82,38 @@ function ResponseMetricsSection({ dateRange, selectedProject }) {
           </CardContent>
         </Card>
       </motion.div>
-    )
+    );
   }
 
   if (!metrics) {
-    return null
+    return null;
   }
 
   // 响应时效分布数据
-  const distributionData = metrics.response_distribution ? [
-    { label: '<1小时', value: metrics.response_distribution['<1小时'] || 0, color: 'hsl(120, 70%, 50%)' },
-    { label: '1-4小时', value: metrics.response_distribution['1-4小时'] || 0, color: 'hsl(60, 70%, 50%)' },
-    { label: '4-8小时', value: metrics.response_distribution['4-8小时'] || 0, color: 'hsl(30, 70%, 50%)' },
-    { label: '>8小时', value: metrics.response_distribution['>8小时'] || 0, color: 'hsl(0, 70%, 50%)' },
-  ] : []
+  const distributionData = metrics.response_distribution
+    ? [
+        {
+          label: "<1小时",
+          value: metrics.response_distribution["<1小时"] || 0,
+          color: "hsl(120, 70%, 50%)",
+        },
+        {
+          label: "1-4小时",
+          value: metrics.response_distribution["1-4小时"] || 0,
+          color: "hsl(60, 70%, 50%)",
+        },
+        {
+          label: "4-8小时",
+          value: metrics.response_distribution["4-8小时"] || 0,
+          color: "hsl(30, 70%, 50%)",
+        },
+        {
+          label: ">8小时",
+          value: metrics.response_distribution[">8小时"] || 0,
+          color: "hsl(0, 70%, 50%)",
+        },
+      ]
+    : [];
 
   return (
     <div className="space-y-6">
@@ -109,7 +131,7 @@ function ResponseMetricsSection({ dateRange, selectedProject }) {
                 <p className="text-2xl font-bold text-white">
                   {metrics.summary?.avg_response_time_hours
                     ? `${metrics.summary.avg_response_time_hours.toFixed(2)}小时`
-                    : '-'}
+                    : "-"}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">
                   {metrics.summary?.total_acknowledged || 0} 个已确认预警
@@ -120,7 +142,7 @@ function ResponseMetricsSection({ dateRange, selectedProject }) {
                 <p className="text-2xl font-bold text-white">
                   {metrics.summary?.avg_resolve_time_hours
                     ? `${metrics.summary.avg_resolve_time_hours.toFixed(2)}小时`
-                    : '-'}
+                    : "-"}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">
                   {metrics.summary?.total_resolved || 0} 个已解决预警
@@ -129,16 +151,17 @@ function ResponseMetricsSection({ dateRange, selectedProject }) {
               <div>
                 <p className="text-sm text-slate-500 mb-1">快速响应率</p>
                 <p className="text-2xl font-bold text-emerald-400">
-                  {metrics.response_distribution && metrics.summary?.total_acknowledged
-                    ? `${((metrics.response_distribution['<1小时'] / metrics.summary.total_acknowledged) * 100).toFixed(0)}%`
-                    : '-'}
+                  {metrics.response_distribution &&
+                  metrics.summary?.total_acknowledged
+                    ? `${((metrics.response_distribution["<1小时"] / metrics.summary.total_acknowledged) * 100).toFixed(0)}%`
+                    : "-"}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">1小时内响应</p>
               </div>
               <div>
                 <p className="text-sm text-slate-500 mb-1">超时响应</p>
                 <p className="text-2xl font-bold text-red-400">
-                  {metrics.response_distribution?.['>8小时'] || 0}
+                  {metrics.response_distribution?.[">8小时"] || 0}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">超过8小时</p>
               </div>
@@ -180,27 +203,35 @@ function ResponseMetricsSection({ dateRange, selectedProject }) {
                 {/* 最快的项目 */}
                 {metrics.rankings?.fastest_projects?.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-semibold text-emerald-400 mb-3">响应最快的项目 TOP5</h4>
+                    <h4 className="text-sm font-semibold text-emerald-400 mb-3">
+                      响应最快的项目 TOP5
+                    </h4>
                     <div className="space-y-2">
-                      {metrics.rankings.fastest_projects.map((project, index) => (
-                        <div
-                          key={project.project_id}
-                          className="flex items-center justify-between p-2 bg-slate-800/50 rounded"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-slate-500 w-6">{index + 1}</span>
-                            <span className="text-sm text-white">{project.project_name}</span>
+                      {metrics.rankings.fastest_projects.map(
+                        (project, index) => (
+                          <div
+                            key={project.project_id}
+                            className="flex items-center justify-between p-2 bg-slate-800/50 rounded"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-slate-500 w-6">
+                                {index + 1}
+                              </span>
+                              <span className="text-sm text-white">
+                                {project.project_name}
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-sm font-medium text-emerald-400">
+                                {project.avg_hours.toFixed(2)}h
+                              </span>
+                              <span className="text-xs text-slate-500 ml-2">
+                                ({project.count}个)
+                              </span>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <span className="text-sm font-medium text-emerald-400">
-                              {project.avg_hours.toFixed(2)}h
-                            </span>
-                            <span className="text-xs text-slate-500 ml-2">
-                              ({project.count}个)
-                            </span>
-                          </div>
-                        </div>
-                      ))}
+                        ),
+                      )}
                     </div>
                   </div>
                 )}
@@ -208,27 +239,35 @@ function ResponseMetricsSection({ dateRange, selectedProject }) {
                 {/* 最慢的项目 */}
                 {metrics.rankings?.slowest_projects?.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-semibold text-red-400 mb-3">响应最慢的项目 TOP5</h4>
+                    <h4 className="text-sm font-semibold text-red-400 mb-3">
+                      响应最慢的项目 TOP5
+                    </h4>
                     <div className="space-y-2">
-                      {metrics.rankings.slowest_projects.map((project, index) => (
-                        <div
-                          key={project.project_id}
-                          className="flex items-center justify-between p-2 bg-slate-800/50 rounded"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-slate-500 w-6">{index + 1}</span>
-                            <span className="text-sm text-white">{project.project_name}</span>
+                      {metrics.rankings.slowest_projects.map(
+                        (project, index) => (
+                          <div
+                            key={project.project_id}
+                            className="flex items-center justify-between p-2 bg-slate-800/50 rounded"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-slate-500 w-6">
+                                {index + 1}
+                              </span>
+                              <span className="text-sm text-white">
+                                {project.project_name}
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-sm font-medium text-red-400">
+                                {project.avg_hours.toFixed(2)}h
+                              </span>
+                              <span className="text-xs text-slate-500 ml-2">
+                                ({project.count}个)
+                              </span>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <span className="text-sm font-medium text-red-400">
-                              {project.avg_hours.toFixed(2)}h
-                            </span>
-                            <span className="text-xs text-slate-500 ml-2">
-                              ({project.count}个)
-                            </span>
-                          </div>
-                        </div>
-                      ))}
+                        ),
+                      )}
                     </div>
                   </div>
                 )}
@@ -261,11 +300,14 @@ function ResponseMetricsSection({ dateRange, selectedProject }) {
                         <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-blue-500 transition-all"
-                            style={{ width: `${Math.min((data.avg_hours / 24) * 100, 100)}%` }}
+                            style={{
+                              width: `${Math.min((data.avg_hours / 24) * 100, 100)}%`,
+                            }}
                           />
                         </div>
                         <div className="text-xs text-slate-500">
-                          最小: {data.min_hours.toFixed(2)}h | 最大: {data.max_hours.toFixed(2)}h | 数量: {data.count}
+                          最小: {data.min_hours.toFixed(2)}h | 最大:{" "}
+                          {data.max_hours.toFixed(2)}h | 数量: {data.count}
                         </div>
                       </div>
                     ))}
@@ -298,11 +340,14 @@ function ResponseMetricsSection({ dateRange, selectedProject }) {
                           <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-amber-500 transition-all"
-                              style={{ width: `${Math.min((data.avg_hours / 24) * 100, 100)}%` }}
+                              style={{
+                                width: `${Math.min((data.avg_hours / 24) * 100, 100)}%`,
+                              }}
                             />
                           </div>
                           <div className="text-xs text-slate-500">
-                            最小: {data.min_hours.toFixed(2)}h | 最大: {data.max_hours.toFixed(2)}h | 数量: {data.count}
+                            最小: {data.min_hours.toFixed(2)}h | 最大:{" "}
+                            {data.max_hours.toFixed(2)}h | 数量: {data.count}
                           </div>
                         </div>
                       ))}
@@ -314,149 +359,150 @@ function ResponseMetricsSection({ dateRange, selectedProject }) {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 export default function AlertStatistics() {
-  const [stats, setStats] = useState(null)
-  const [trends, setTrends] = useState(null)
-  const [topProjects, setTopProjects] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [period, setPeriod] = useState('DAILY')
+  const [stats, setStats] = useState(null);
+  const [trends, setTrends] = useState(null);
+  const [topProjects, setTopProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [period, setPeriod] = useState("DAILY");
   const [dateRange, setDateRange] = useState({
-    start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    end: new Date().toISOString().split('T')[0],
-  })
-  const [selectedProject, setSelectedProject] = useState(null)
+    start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0],
+    end: new Date().toISOString().split("T")[0],
+  });
+  const [selectedProject, setSelectedProject] = useState(null);
 
   useEffect(() => {
-    loadStatistics()
-    loadTrends()
-  }, [period, dateRange, selectedProject])
+    loadStatistics();
+    loadTrends();
+  }, [period, dateRange, selectedProject]);
 
   const loadStatistics = async () => {
     try {
-      setError(null)
+      setError(null);
       const params = {
         start_date: dateRange.start,
         end_date: dateRange.end,
-      }
+      };
       if (selectedProject) {
-        params.project_id = selectedProject
+        params.project_id = selectedProject;
       }
-      const res = await alertApi.statistics(params)
-      const data = res.data || res
-      setStats(data)
+      const res = await alertApi.statistics(params);
+      const data = res.data || res;
+      setStats(data);
     } catch (err) {
-      console.error('Failed to load statistics:', err)
-      const errorMessage = err.response?.data?.detail || err.message || '加载统计数据失败'
-      setError(errorMessage)
+      console.error("Failed to load statistics:", err);
+      const errorMessage =
+        err.response?.data?.detail || err.message || "加载统计数据失败";
+      setError(errorMessage);
     }
-  }
+  };
 
   const loadTrends = async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
       const params = {
         period,
         start_date: dateRange.start,
         end_date: dateRange.end,
-      }
+      };
       if (selectedProject) {
-        params.project_id = selectedProject
+        params.project_id = selectedProject;
       }
-      const res = await alertApi.trends(params)
-      const data = res.data || res
-      setTrends(data)
+      const res = await alertApi.trends(params);
+      const data = res.data || res;
+      setTrends(data);
     } catch (err) {
-      console.error('Failed to load trends:', err)
-      const errorMessage = err.response?.data?.detail || err.message || '加载趋势数据失败'
-      setError(errorMessage)
+      console.error("Failed to load trends:", err);
+      const errorMessage =
+        err.response?.data?.detail || err.message || "加载趋势数据失败";
+      setError(errorMessage);
       // 如果是演示账号，设置空数据而不是显示错误    } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleQuickRange = (days) => {
-    const end = new Date()
-    const start = new Date()
-    start.setDate(start.getDate() - days)
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - days);
     setDateRange({
-      start: start.toISOString().split('T')[0],
-      end: end.toISOString().split('T')[0],
-    })
-  }
+      start: start.toISOString().split("T")[0],
+      end: end.toISOString().split("T")[0],
+    });
+  };
 
   // 准备图表数据
   const trendLineData = useMemo(() => {
-    if (!trends?.trends) return []
-    return trends.trends.map(item => ({
+    if (!trends?.trends) return [];
+    return trends.trends.map((item) => ({
       label: item.date,
       value: item.total,
-    }))
-  }, [trends])
+    }));
+  }, [trends]);
 
   const levelPieData = useMemo(() => {
-    if (!trends?.summary?.by_level) return []
+    if (!trends?.summary?.by_level) return [];
     const colors = {
-      URGENT: 'hsl(0, 70%, 50%)',
-      CRITICAL: 'hsl(30, 70%, 50%)',
-      WARNING: 'hsl(45, 70%, 50%)',
-      INFO: 'hsl(200, 70%, 50%)',
-    }
+      URGENT: "hsl(0, 70%, 50%)",
+      CRITICAL: "hsl(30, 70%, 50%)",
+      WARNING: "hsl(45, 70%, 50%)",
+      INFO: "hsl(200, 70%, 50%)",
+    };
     const labels = {
-      URGENT: '紧急',
-      CRITICAL: '严重',
-      WARNING: '注意',
-      INFO: '提示',
-    }
+      URGENT: "紧急",
+      CRITICAL: "严重",
+      WARNING: "注意",
+      INFO: "提示",
+    };
     return Object.entries(trends.summary.by_level).map(([level, count]) => ({
       label: labels[level] || level,
       value: count,
-      color: colors[level] || 'hsl(0, 0%, 50%)',
-    }))
-  }, [trends])
+      color: colors[level] || "hsl(0, 0%, 50%)",
+    }));
+  }, [trends]);
 
   const typeBarData = useMemo(() => {
-    if (!trends?.summary?.by_type) return []
+    if (!trends?.summary?.by_type) return [];
     return Object.entries(trends.summary.by_type)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([type, count]) => ({
         label: type,
         value: count,
-      }))
-  }, [trends])
+      }));
+  }, [trends]);
 
   const statusAreaData = useMemo(() => {
-    if (!trends?.trends) return []
-    const statuses = ['PENDING', 'ACKNOWLEDGED', 'RESOLVED', 'CLOSED']
+    if (!trends?.trends) return [];
+    const statuses = ["PENDING", "ACKNOWLEDGED", "RESOLVED", "CLOSED"];
     const labels = {
-      PENDING: '待处理',
-      ACKNOWLEDGED: '已确认',
-      RESOLVED: '已解决',
-      CLOSED: '已关闭',
-    }
-    return trends.trends.map(item => ({
+      PENDING: "待处理",
+      ACKNOWLEDGED: "已确认",
+      RESOLVED: "已解决",
+      CLOSED: "已关闭",
+    };
+    return trends.trends.map((item) => ({
       date: item.date,
       ...Object.fromEntries(
-        statuses.map(status => [
-          status,
-          item.by_status?.[status] || 0,
-        ])
+        statuses.map((status) => [status, item.by_status?.[status] || 0]),
       ),
-    }))
-  }, [trends])
+    }));
+  }, [trends]);
 
-  const handleExportChart = (chartId, format = 'png') => {
+  const handleExportChart = (chartId, format = "png") => {
     // 简单的图表导出功能（实际实现需要使用 html2canvas 或类似库）
-    const element = document.getElementById(chartId)
-    if (!element) return
+    const element = document.getElementById(chartId);
+    if (!element) return;
     // TODO: 实现图表导出功能
-    alert('图表导出功能开发中...')
-  }
+    alert("图表导出功能开发中...");
+  };
 
   const handleExportExcel = async () => {
     try {
@@ -464,27 +510,30 @@ export default function AlertStatistics() {
         project_id: selectedProject || undefined,
         start_date: dateRange.start || undefined,
         end_date: dateRange.end || undefined,
-        group_by: 'none', // 可选: 'none', 'level', 'type'
-      }
-      
-      const response = await alertApi.exportExcel(params)
+        group_by: "none", // 可选: 'none', 'level', 'type'
+      };
+
+      const response = await alertApi.exportExcel(params);
       const blob = new Blob([response.data], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      })
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', `预警报表_${new Date().toISOString().split('T')[0]}.xlsx`)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      window.URL.revokeObjectURL(url)
-      toast.success('Excel导出成功')
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `预警报表_${new Date().toISOString().split("T")[0]}.xlsx`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Excel导出成功");
     } catch (error) {
-      console.error('Failed to export Excel:', error)
-      toast.error(error.response?.data?.detail || '导出失败，请稍后重试')
+      console.error("Failed to export Excel:", error);
+      toast.error(error.response?.data?.detail || "导出失败，请稍后重试");
     }
-  }
+  };
 
   const handleExportPdf = async () => {
     try {
@@ -492,26 +541,29 @@ export default function AlertStatistics() {
         project_id: selectedProject || undefined,
         start_date: dateRange.start || undefined,
         end_date: dateRange.end || undefined,
-      }
-      
-      const response = await alertApi.exportPdf(params)
+      };
+
+      const response = await alertApi.exportPdf(params);
       const blob = new Blob([response.data], {
-        type: 'application/pdf'
-      })
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', `预警报表_${new Date().toISOString().split('T')[0]}.pdf`)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      window.URL.revokeObjectURL(url)
-      toast.success('PDF导出成功')
+        type: "application/pdf",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `预警报表_${new Date().toISOString().split("T")[0]}.pdf`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("PDF导出成功");
     } catch (error) {
-      console.error('Failed to export PDF:', error)
-      toast.error(error.response?.data?.detail || '导出失败，请稍后重试')
+      console.error("Failed to export PDF:", error);
+      toast.error(error.response?.data?.detail || "导出失败，请稍后重试");
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -521,7 +573,7 @@ export default function AlertStatistics() {
           <LoadingSpinner text="加载统计数据..." />
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -536,7 +588,7 @@ export default function AlertStatistics() {
           />
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -591,14 +643,18 @@ export default function AlertStatistics() {
                 <Input
                   type="date"
                   value={dateRange.start}
-                  onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                  onChange={(e) =>
+                    setDateRange((prev) => ({ ...prev, start: e.target.value }))
+                  }
                   className="w-40 bg-surface-2"
                 />
                 <span className="text-slate-400">至</span>
                 <Input
                   type="date"
                   value={dateRange.end}
-                  onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                  onChange={(e) =>
+                    setDateRange((prev) => ({ ...prev, end: e.target.value }))
+                  }
                   className="w-40 bg-surface-2"
                 />
               </div>
@@ -702,7 +758,10 @@ export default function AlertStatistics() {
         </motion.div>
 
         {/* Response Metrics */}
-        <ResponseMetricsSection dateRange={dateRange} selectedProject={selectedProject} />
+        <ResponseMetricsSection
+          dateRange={dateRange}
+          selectedProject={selectedProject}
+        />
 
         {/* 趋势分析图表 */}
         {trends && (
@@ -714,12 +773,20 @@ export default function AlertStatistics() {
                   <div className="flex items-center justify-between">
                     <div>
                       <CardTitle>预警数量趋势</CardTitle>
-                      <CardDescription>按{period === 'DAILY' ? '日' : period === 'WEEKLY' ? '周' : '月'}统计预警数量变化</CardDescription>
+                      <CardDescription>
+                        按
+                        {period === "DAILY"
+                          ? "日"
+                          : period === "WEEKLY"
+                            ? "周"
+                            : "月"}
+                        统计预警数量变化
+                      </CardDescription>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleExportChart('trend-line-chart')}
+                      onClick={() => handleExportChart("trend-line-chart")}
                     >
                       <Download className="w-4 h-4" />
                     </Button>
@@ -755,7 +822,7 @@ export default function AlertStatistics() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleExportChart('level-pie-chart')}
+                      onClick={() => handleExportChart("level-pie-chart")}
                     >
                       <Download className="w-4 h-4" />
                     </Button>
@@ -782,12 +849,14 @@ export default function AlertStatistics() {
                   <div className="flex items-center justify-between">
                     <div>
                       <CardTitle>预警类型分布</CardTitle>
-                      <CardDescription>各类型预警数量统计（TOP10）</CardDescription>
+                      <CardDescription>
+                        各类型预警数量统计（TOP10）
+                      </CardDescription>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleExportChart('type-bar-chart')}
+                      onClick={() => handleExportChart("type-bar-chart")}
                     >
                       <Download className="w-4 h-4" />
                     </Button>
@@ -823,7 +892,7 @@ export default function AlertStatistics() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleExportChart('status-area-chart')}
+                      onClick={() => handleExportChart("status-area-chart")}
                     >
                       <Download className="w-4 h-4" />
                     </Button>
@@ -852,9 +921,13 @@ export default function AlertStatistics() {
                           </div>
                         </div>
                         <SimpleLineChart
-                          data={statusAreaData.map(item => ({
+                          data={statusAreaData.map((item) => ({
                             label: item.date,
-                            value: item.PENDING + item.ACKNOWLEDGED + item.RESOLVED + item.CLOSED,
+                            value:
+                              item.PENDING +
+                              item.ACKNOWLEDGED +
+                              item.RESOLVED +
+                              item.CLOSED,
                           }))}
                           height={200}
                           color="text-blue-400"
@@ -873,7 +946,10 @@ export default function AlertStatistics() {
         )}
 
         {/* 处理效率分析 */}
-        <EfficiencyMetricsSection dateRange={dateRange} selectedProject={selectedProject} />
+        <EfficiencyMetricsSection
+          dateRange={dateRange}
+          selectedProject={selectedProject}
+        />
 
         {/* Top Projects */}
         {topProjects.length > 0 && (
@@ -894,18 +970,23 @@ export default function AlertStatistics() {
                           {index + 1}
                         </span>
                         <div>
-                          <p className="text-white font-medium">{project.project_name}</p>
+                          <p className="text-white font-medium">
+                            {project.project_name}
+                          </p>
                           <p className="text-xs text-slate-500">
                             {project.alert_count}个预警
                           </p>
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        {project.by_type && Object.entries(project.by_type).map(([type, count]) => (
-                          <Badge key={type} variant="outline">
-                            {type}: {count}
-                          </Badge>
-                        ))}
+                        {project.by_type &&
+                          Object.entries(project.by_type).map(
+                            ([type, count]) => (
+                              <Badge key={type} variant="outline">
+                                {type}: {count}
+                              </Badge>
+                            ),
+                          )}
                       </div>
                     </div>
                   ))}
@@ -916,38 +997,38 @@ export default function AlertStatistics() {
         )}
       </div>
     </div>
-  )
+  );
 }
 
 // 处理效率分析组件
 function EfficiencyMetricsSection({ dateRange, selectedProject }) {
-  const [metrics, setMetrics] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [metrics, setMetrics] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadMetrics()
-  }, [dateRange, selectedProject])
+    loadMetrics();
+  }, [dateRange, selectedProject]);
 
   const loadMetrics = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const params = {
         start_date: dateRange.start,
         end_date: dateRange.end,
-      }
+      };
       if (selectedProject) {
-        params.project_id = selectedProject
+        params.project_id = selectedProject;
       }
-      const res = await alertApi.efficiencyMetrics(params)
-      const data = res.data || res
-      setMetrics(data)
+      const res = await alertApi.efficiencyMetrics(params);
+      const data = res.data || res;
+      setMetrics(data);
     } catch (err) {
-      console.error('Failed to load efficiency metrics:', err)
-      setMetrics(null)
+      console.error("Failed to load efficiency metrics:", err);
+      setMetrics(null);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -958,40 +1039,40 @@ function EfficiencyMetricsSection({ dateRange, selectedProject }) {
           </CardContent>
         </Card>
       </motion.div>
-    )
+    );
   }
 
   if (!metrics || !metrics.summary) {
-    return null
+    return null;
   }
 
   // 效率指标数据
   const efficiencyData = [
     {
-      label: '处理率',
+      label: "处理率",
       value: metrics.summary.processing_rate || 0,
-      color: 'hsl(200, 70%, 50%)',
-      description: '已处理预警 / 总预警数',
+      color: "hsl(200, 70%, 50%)",
+      description: "已处理预警 / 总预警数",
     },
     {
-      label: '及时处理率',
+      label: "及时处理率",
       value: metrics.summary.timely_processing_rate || 0,
-      color: 'hsl(120, 70%, 50%)',
-      description: '在响应时限内处理的比例',
+      color: "hsl(120, 70%, 50%)",
+      description: "在响应时限内处理的比例",
     },
     {
-      label: '升级率',
+      label: "升级率",
       value: metrics.summary.escalation_rate || 0,
-      color: 'hsl(30, 70%, 50%)',
-      description: '升级预警 / 总预警数',
+      color: "hsl(30, 70%, 50%)",
+      description: "升级预警 / 总预警数",
     },
     {
-      label: '重复预警率',
+      label: "重复预警率",
       value: metrics.summary.duplicate_rate || 0,
-      color: 'hsl(0, 70%, 50%)',
-      description: '重复预警 / 总预警数',
+      color: "hsl(0, 70%, 50%)",
+      description: "重复预警 / 总预警数",
     },
-  ]
+  ];
 
   return (
     <div className="space-y-6">
@@ -1035,7 +1116,9 @@ function EfficiencyMetricsSection({ dateRange, selectedProject }) {
             <motion.div variants={fadeIn} initial="hidden" animate="visible">
               <Card className="bg-surface-1/50">
                 <CardHeader>
-                  <CardTitle className="text-emerald-400">效率最高的项目 TOP5</CardTitle>
+                  <CardTitle className="text-emerald-400">
+                    效率最高的项目 TOP5
+                  </CardTitle>
                   <CardDescription>处理效率得分最高的项目</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -1050,10 +1133,17 @@ function EfficiencyMetricsSection({ dateRange, selectedProject }) {
                             {index + 1}
                           </span>
                           <div>
-                            <p className="text-white font-medium">{project.project_name}</p>
+                            <p className="text-white font-medium">
+                              {project.project_name}
+                            </p>
                             <p className="text-xs text-slate-500">
-                              处理率: {(project.processing_rate * 100).toFixed(1)}% | 
-                              及时率: {(project.timely_processing_rate * 100).toFixed(1)}%
+                              处理率:{" "}
+                              {(project.processing_rate * 100).toFixed(1)}% |
+                              及时率:{" "}
+                              {(project.timely_processing_rate * 100).toFixed(
+                                1,
+                              )}
+                              %
                             </p>
                           </div>
                         </div>
@@ -1076,7 +1166,9 @@ function EfficiencyMetricsSection({ dateRange, selectedProject }) {
             <motion.div variants={fadeIn} initial="hidden" animate="visible">
               <Card className="bg-surface-1/50">
                 <CardHeader>
-                  <CardTitle className="text-red-400">效率最低的项目 TOP5</CardTitle>
+                  <CardTitle className="text-red-400">
+                    效率最低的项目 TOP5
+                  </CardTitle>
                   <CardDescription>需要关注和改进的项目</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -1091,10 +1183,17 @@ function EfficiencyMetricsSection({ dateRange, selectedProject }) {
                             {index + 1}
                           </span>
                           <div>
-                            <p className="text-white font-medium">{project.project_name}</p>
+                            <p className="text-white font-medium">
+                              {project.project_name}
+                            </p>
                             <p className="text-xs text-slate-500">
-                              处理率: {(project.processing_rate * 100).toFixed(1)}% | 
-                              及时率: {(project.timely_processing_rate * 100).toFixed(1)}%
+                              处理率:{" "}
+                              {(project.processing_rate * 100).toFixed(1)}% |
+                              及时率:{" "}
+                              {(project.timely_processing_rate * 100).toFixed(
+                                1,
+                              )}
+                              %
                             </p>
                           </div>
                         </div>
@@ -1129,11 +1228,20 @@ function EfficiencyMetricsSection({ dateRange, selectedProject }) {
                   .map(([type, data]) => (
                     <div key={type} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-300 font-medium">{type}</span>
+                        <span className="text-slate-300 font-medium">
+                          {type}
+                        </span>
                         <div className="flex gap-4 text-xs text-slate-400">
-                          <span>处理率: {(data.processing_rate * 100).toFixed(1)}%</span>
-                          <span>及时率: {(data.timely_processing_rate * 100).toFixed(1)}%</span>
-                          <span>升级率: {(data.escalation_rate * 100).toFixed(1)}%</span>
+                          <span>
+                            处理率: {(data.processing_rate * 100).toFixed(1)}%
+                          </span>
+                          <span>
+                            及时率:{" "}
+                            {(data.timely_processing_rate * 100).toFixed(1)}%
+                          </span>
+                          <span>
+                            升级率: {(data.escalation_rate * 100).toFixed(1)}%
+                          </span>
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-2">
@@ -1141,7 +1249,9 @@ function EfficiencyMetricsSection({ dateRange, selectedProject }) {
                           <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-blue-500 transition-all"
-                              style={{ width: `${data.processing_rate * 100}%` }}
+                              style={{
+                                width: `${data.processing_rate * 100}%`,
+                              }}
                             />
                           </div>
                           <p className="text-xs text-slate-500 mt-1">处理率</p>
@@ -1150,7 +1260,9 @@ function EfficiencyMetricsSection({ dateRange, selectedProject }) {
                           <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-emerald-500 transition-all"
-                              style={{ width: `${data.timely_processing_rate * 100}%` }}
+                              style={{
+                                width: `${data.timely_processing_rate * 100}%`,
+                              }}
                             />
                           </div>
                           <p className="text-xs text-slate-500 mt-1">及时率</p>
@@ -1159,7 +1271,9 @@ function EfficiencyMetricsSection({ dateRange, selectedProject }) {
                           <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-orange-500 transition-all"
-                              style={{ width: `${data.escalation_rate * 100}%` }}
+                              style={{
+                                width: `${data.escalation_rate * 100}%`,
+                              }}
                             />
                           </div>
                           <p className="text-xs text-slate-500 mt-1">升级率</p>
@@ -1176,5 +1290,5 @@ function EfficiencyMetricsSection({ dateRange, selectedProject }) {
         </motion.div>
       )}
     </div>
-  )
+  );
 }

@@ -2,9 +2,9 @@
  * Performance Management - 绩效管理主页面
  * Features: 绩效概览、周期管理、待办事项、绩效统计
  */
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   Award,
   TrendingUp,
@@ -23,122 +23,127 @@ import {
   Edit,
   ArrowRight,
   Loader2,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Badge } from '../components/ui/badge'
-import { Progress } from '../components/ui/progress'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { Progress } from "../components/ui/progress";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
-import { cn, formatDate } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { performanceApi, pmoApi } from '../services/api'
+} from "../components/ui/select";
+import { cn, formatDate } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { performanceApi, pmoApi } from "../services/api";
 
 // Fallback mock data (used when API fails)
 const getLevelColor = (level) => {
   const colors = {
-    EXCELLENT: 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30',
-    GOOD: 'text-blue-400 bg-blue-500/20 border-blue-500/30',
-    QUALIFIED: 'text-amber-400 bg-amber-500/20 border-amber-500/30',
-    NEEDS_IMPROVEMENT: 'text-red-400 bg-red-500/20 border-red-500/30',
-  }
-  return colors[level] || colors.QUALIFIED
-}
+    EXCELLENT: "text-emerald-400 bg-emerald-500/20 border-emerald-500/30",
+    GOOD: "text-blue-400 bg-blue-500/20 border-blue-500/30",
+    QUALIFIED: "text-amber-400 bg-amber-500/20 border-amber-500/30",
+    NEEDS_IMPROVEMENT: "text-red-400 bg-red-500/20 border-red-500/30",
+  };
+  return colors[level] || colors.QUALIFIED;
+};
 
 const getLevelText = (level) => {
   const texts = {
-    EXCELLENT: '优秀',
-    GOOD: '良好',
-    QUALIFIED: '合格',
-    NEEDS_IMPROVEMENT: '待改进',
-  }
-  return texts[level] || level
-}
+    EXCELLENT: "优秀",
+    GOOD: "良好",
+    QUALIFIED: "合格",
+    NEEDS_IMPROVEMENT: "待改进",
+  };
+  return texts[level] || level;
+};
 
 export default function PerformanceManagement() {
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [selectedPeriod, setSelectedPeriod] = useState('current')
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [selectedPeriod, setSelectedPeriod] = useState("current");
 
   // API data states with fallback to mock data
-  const [currentPeriod, setCurrentPeriod] = useState({})
-  const [stats, setStats] = useState({})
-  const [pendingTasks, setPendingTasks] = useState([])
-  const [recentResults, setRecentResults] = useState([])
-  const [departmentPerformance, setDepartmentPerformance] = useState([])
+  const [currentPeriod, setCurrentPeriod] = useState({});
+  const [stats, setStats] = useState({});
+  const [pendingTasks, setPendingTasks] = useState([]);
+  const [recentResults, setRecentResults] = useState([]);
+  const [departmentPerformance, setDepartmentPerformance] = useState([]);
 
   // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
         // Fetch dashboard data (contains overview stats)
-        const dashboardRes = await pmoApi.dashboard()
+        const dashboardRes = await pmoApi.dashboard();
         if (dashboardRes.data) {
           // Extract performance stats if available
-          const dashboard = dashboardRes.data
+          const dashboard = dashboardRes.data;
           if (dashboard.performance_stats) {
-            setStats(prev => ({ ...prev, ...dashboard.performance_stats }))
+            setStats((prev) => ({ ...prev, ...dashboard.performance_stats }));
           }
           if (dashboard.current_period) {
-            setCurrentPeriod(prev => ({ ...prev, ...dashboard.current_period }))
+            setCurrentPeriod((prev) => ({
+              ...prev,
+              ...dashboard.current_period,
+            }));
           }
         }
       } catch (err) {
-        console.log('Dashboard API unavailable, using mock data')
+        console.log("Dashboard API unavailable, using mock data");
       }
 
       try {
         // Fetch evaluation tasks for current user
-        const tasksRes = await performanceApi.getEvaluationTasks({ status: 'PENDING' })
+        const tasksRes = await performanceApi.getEvaluationTasks({
+          status: "PENDING",
+        });
         if (tasksRes.data?.items?.length > 0) {
-          const tasks = tasksRes.data.items.map(task => ({
+          const tasks = tasksRes.data.items.map((task) => ({
             id: task.id,
-            type: task.type || 'evaluation',
-            title: task.title || '评价下属绩效',
+            type: task.type || "evaluation",
+            title: task.title || "评价下属绩效",
             count: task.count || 1,
             deadline: task.deadline,
-            priority: task.priority || 'medium',
-          }))
-          setPendingTasks(tasks)
+            priority: task.priority || "medium",
+          }));
+          setPendingTasks(tasks);
         }
       } catch (err) {
-        console.log('Evaluation tasks API unavailable, using mock data')
+        console.log("Evaluation tasks API unavailable, using mock data");
       }
 
       try {
         // Fetch my performance for recent results
-        const myPerfRes = await performanceApi.getMyPerformance()
+        const myPerfRes = await performanceApi.getMyPerformance();
         if (myPerfRes.data) {
-          const perfData = myPerfRes.data
+          const perfData = myPerfRes.data;
           if (perfData.recent_results?.length > 0) {
-            setRecentResults(perfData.recent_results)
+            setRecentResults(perfData.recent_results);
           }
           if (perfData.department_ranking?.length > 0) {
-            setDepartmentPerformance(perfData.department_ranking)
+            setDepartmentPerformance(perfData.department_ranking);
           }
         }
       } catch (err) {
-        console.log('My performance API unavailable, using mock data')
+        console.log("My performance API unavailable, using mock data");
       }
 
-      setLoading(false)
-    }
+      setLoading(false);
+    };
 
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
   const StatCard = ({ title, value, subtitle, icon: Icon, color, trend }) => (
     <motion.div
@@ -148,10 +153,8 @@ export default function PerformanceManagement() {
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm text-slate-400 mb-2">{title}</p>
-          <p className={cn('text-3xl font-bold mb-1', color)}>{value}</p>
-          {subtitle && (
-            <p className="text-xs text-slate-500">{subtitle}</p>
-          )}
+          <p className={cn("text-3xl font-bold mb-1", color)}>{value}</p>
+          {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
           {trend !== undefined && (
             <div className="flex items-center gap-1 mt-2">
               {trend > 0 ? (
@@ -171,12 +174,12 @@ export default function PerformanceManagement() {
             </div>
           )}
         </div>
-        <div className={cn('rounded-lg p-3 bg-opacity-20', `bg-${color}`)}>
-          <Icon className={cn('h-6 w-6', color)} />
+        <div className={cn("rounded-lg p-3 bg-opacity-20", `bg-${color}`)}>
+          <Icon className={cn("h-6 w-6", color)} />
         </div>
       </div>
     </motion.div>
-  )
+  );
 
   return (
     <motion.div
@@ -194,7 +197,7 @@ export default function PerformanceManagement() {
             <Button
               variant="outline"
               className="flex items-center gap-2"
-              onClick={() => navigate('/performance/indicators')}
+              onClick={() => navigate("/performance/indicators")}
             >
               <Target className="w-4 h-4" />
               指标配置
@@ -202,14 +205,14 @@ export default function PerformanceManagement() {
             <Button
               variant="outline"
               className="flex items-center gap-2"
-              onClick={() => navigate('/performance/ranking')}
+              onClick={() => navigate("/performance/ranking")}
             >
               <Award className="w-4 h-4" />
               绩效排行
             </Button>
             <Button
               className="flex items-center gap-2"
-              onClick={() => navigate('/performance/results')}
+              onClick={() => navigate("/performance/results")}
             >
               <BarChart3 className="w-4 h-4" />
               绩效结果
@@ -236,7 +239,8 @@ export default function PerformanceManagement() {
                         {currentPeriod.period_name}
                       </h3>
                       <p className="text-sm text-slate-400">
-                        {formatDate(currentPeriod.start_date)} 至 {formatDate(currentPeriod.end_date)}
+                        {formatDate(currentPeriod.start_date)} 至{" "}
+                        {formatDate(currentPeriod.end_date)}
                       </p>
                     </div>
                   </div>
@@ -335,22 +339,28 @@ export default function PerformanceManagement() {
                       <div
                         key={task.id}
                         className="flex items-center justify-between p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"
-                        onClick={() => navigate('/performance/results')}
+                        onClick={() => navigate("/performance/results")}
                       >
                         <div className="flex items-center gap-3">
-                          <div className={cn(
-                            'w-10 h-10 rounded-lg flex items-center justify-center',
-                            task.priority === 'high' && 'bg-red-500/20',
-                            task.priority === 'medium' && 'bg-amber-500/20'
-                          )}>
-                            <AlertCircle className={cn(
-                              'h-5 w-5',
-                              task.priority === 'high' && 'text-red-400',
-                              task.priority === 'medium' && 'text-amber-400'
-                            )} />
+                          <div
+                            className={cn(
+                              "w-10 h-10 rounded-lg flex items-center justify-center",
+                              task.priority === "high" && "bg-red-500/20",
+                              task.priority === "medium" && "bg-amber-500/20",
+                            )}
+                          >
+                            <AlertCircle
+                              className={cn(
+                                "h-5 w-5",
+                                task.priority === "high" && "text-red-400",
+                                task.priority === "medium" && "text-amber-400",
+                              )}
+                            />
                           </div>
                           <div>
-                            <p className="font-medium text-white">{task.title}</p>
+                            <p className="font-medium text-white">
+                              {task.title}
+                            </p>
                             <p className="text-xs text-slate-400">
                               截止: {formatDate(task.deadline)}
                             </p>
@@ -380,7 +390,7 @@ export default function PerformanceManagement() {
                     variant="ghost"
                     size="sm"
                     className="text-xs text-primary"
-                    onClick={() => navigate('/performance/results')}
+                    onClick={() => navigate("/performance/results")}
                   >
                     查看全部 <ArrowRight className="w-3 h-3 ml-1" />
                   </Button>
@@ -427,10 +437,10 @@ export default function PerformanceManagement() {
                           >
                             {getLevelText(result.level)}
                           </Badge>
-                          {result.trend === 'up' && (
+                          {result.trend === "up" && (
                             <TrendingUp className="w-4 h-4 text-emerald-400" />
                           )}
-                          {result.trend === 'down' && (
+                          {result.trend === "down" && (
                             <TrendingDown className="w-4 h-4 text-red-400" />
                           )}
                         </div>
@@ -470,13 +480,15 @@ export default function PerformanceManagement() {
                         className="flex items-center justify-between p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
                       >
                         <div className="flex items-center gap-3">
-                          <div className={cn(
-                            'w-8 h-8 rounded-lg flex items-center justify-center font-bold',
-                            index === 0 && 'bg-amber-500/20 text-amber-400',
-                            index === 1 && 'bg-slate-500/20 text-slate-300',
-                            index === 2 && 'bg-orange-500/20 text-orange-400',
-                            index > 2 && 'bg-slate-700/40 text-slate-400'
-                          )}>
+                          <div
+                            className={cn(
+                              "w-8 h-8 rounded-lg flex items-center justify-center font-bold",
+                              index === 0 && "bg-amber-500/20 text-amber-400",
+                              index === 1 && "bg-slate-500/20 text-slate-300",
+                              index === 2 && "bg-orange-500/20 text-orange-400",
+                              index > 2 && "bg-slate-700/40 text-slate-400",
+                            )}
+                          >
                             {dept.rank}
                           </div>
                           <div>
@@ -575,7 +587,10 @@ export default function PerformanceManagement() {
                         </span>
                       </div>
                       <Progress
-                        value={(stats.needs_improvement / stats.total_employees) * 100}
+                        value={
+                          (stats.needs_improvement / stats.total_employees) *
+                          100
+                        }
                         className="h-2 bg-slate-700/50"
                       />
                     </div>
@@ -587,5 +602,5 @@ export default function PerformanceManagement() {
         </div>
       </div>
     </motion.div>
-  )
+  );
 }

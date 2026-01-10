@@ -3,8 +3,12 @@
  * 用于在组件内部进行细粒度权限检查
  */
 
-import { useMemo } from 'react'
-import { hasPermission, hasAnyPermission, hasAllPermissions } from '../../lib/permissionUtils'
+import { useMemo } from "react";
+import {
+  hasPermission,
+  hasAnyPermission,
+  hasAllPermissions,
+} from "../../lib/permissionUtils";
 
 /**
  * 权限守卫组件
@@ -14,29 +18,29 @@ import { hasPermission, hasAnyPermission, hasAllPermissions } from '../../lib/pe
  * @param {boolean} props.requireAll - 如果permission是数组，是否要求所有权限（默认：false，任意一个即可）
  * @param {React.ReactNode} props.fallback - 无权限时显示的内容（可选）
  */
-export function PermissionGuard({ 
-  children, 
-  permission, 
+export function PermissionGuard({
+  children,
+  permission,
   requireAll = false,
-  fallback = null 
+  fallback = null,
 }) {
   const hasAccess = useMemo(() => {
-    if (!permission) return true
-    
+    if (!permission) return true;
+
     if (Array.isArray(permission)) {
-      return requireAll 
+      return requireAll
         ? hasAllPermissions(permission)
-        : hasAnyPermission(permission)
+        : hasAnyPermission(permission);
     }
-    
-    return hasPermission(permission)
-  }, [permission, requireAll])
-  
+
+    return hasPermission(permission);
+  }, [permission, requireAll]);
+
   if (!hasAccess) {
-    return fallback
+    return fallback;
   }
-  
-  return children
+
+  return children;
 }
 
 /**
@@ -47,14 +51,14 @@ export function PermissionGuard({
  */
 export function useHasPermission(permission, requireAll = false) {
   return useMemo(() => {
-    if (!permission) return true
-    
+    if (!permission) return true;
+
     if (Array.isArray(permission)) {
-      return requireAll 
+      return requireAll
         ? hasAllPermissions(permission)
-        : hasAnyPermission(permission)
+        : hasAnyPermission(permission);
     }
-    
-    return hasPermission(permission)
-  }, [permission, requireAll])
+
+    return hasPermission(permission);
+  }, [permission, requireAll]);
 }

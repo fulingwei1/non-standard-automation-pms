@@ -1,187 +1,219 @@
-import { useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, Search, DollarSign, Users, Briefcase, Building2, History } from 'lucide-react'
-import { PageHeader } from '../components/layout'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog'
-import { Label } from '../components/ui/label'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
-import { hourlyRateApi } from '../services/api'
-import { formatDate } from '../lib/utils'
-import { fadeIn } from '../lib/animations'
+import { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Search,
+  DollarSign,
+  Users,
+  Briefcase,
+  Building2,
+  History,
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../components/ui/dialog";
+import { Label } from "../components/ui/label";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
+import { hourlyRateApi } from "../services/api";
+import { formatDate } from "../lib/utils";
+import { fadeIn } from "../lib/animations";
 
 export default function HourlyRateManagement() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [configs, setConfigs] = useState([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
-  const [pageSize] = useState(20)
-  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [configs, setConfigs] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+
   // 筛选条件
-  const [configType, setConfigType] = useState('')
-  const [userId, setUserId] = useState('')
-  const [roleId, setRoleId] = useState('')
-  const [deptId, setDeptId] = useState('')
-  
+  const [configType, setConfigType] = useState("");
+  const [userId, setUserId] = useState("");
+  const [roleId, setRoleId] = useState("");
+  const [deptId, setDeptId] = useState("");
+
   // 对话框
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [editingConfig, setEditingConfig] = useState(null)
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingConfig, setEditingConfig] = useState(null);
   const [formData, setFormData] = useState({
-    config_type: 'DEFAULT',
+    config_type: "DEFAULT",
     user_id: null,
     role_id: null,
     dept_id: null,
-    hourly_rate: '',
-    effective_date: '',
-    expiry_date: '',
+    hourly_rate: "",
+    effective_date: "",
+    expiry_date: "",
     is_active: true,
-  })
+  });
 
   const loadConfigs = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
-      
+      setLoading(true);
+      setError(null);
+
       const params = {
         page,
         page_size: pageSize,
-      }
-      
-      if (configType) params.config_type = configType
-      if (userId) params.user_id = parseInt(userId)
-      if (roleId) params.role_id = parseInt(roleId)
-      if (deptId) params.dept_id = parseInt(deptId)
-      
-      const response = await hourlyRateApi.list(params)
-      const data = response.data?.data || response.data || response
-      
-      if (data && typeof data === 'object' && 'items' in data) {
-        setConfigs(data.items || [])
-        setTotal(data.total || 0)
+      };
+
+      if (configType) params.config_type = configType;
+      if (userId) params.user_id = parseInt(userId);
+      if (roleId) params.role_id = parseInt(roleId);
+      if (deptId) params.dept_id = parseInt(deptId);
+
+      const response = await hourlyRateApi.list(params);
+      const data = response.data?.data || response.data || response;
+
+      if (data && typeof data === "object" && "items" in data) {
+        setConfigs(data.items || []);
+        setTotal(data.total || 0);
       } else if (Array.isArray(data)) {
-        setConfigs(data)
-        setTotal(data.length)
+        setConfigs(data);
+        setTotal(data.length);
       } else {
-        setConfigs([])
-        setTotal(0)
+        setConfigs([]);
+        setTotal(0);
       }
     } catch (err) {
-      console.error('Failed to load configs:', err)
-      setError(err.response?.data?.detail || err.message || '加载配置失败')
-      setConfigs([])
-      setTotal(0)
+      console.error("Failed to load configs:", err);
+      setError(err.response?.data?.detail || err.message || "加载配置失败");
+      setConfigs([]);
+      setTotal(0);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [page, pageSize, configType, userId, roleId, deptId])
+  }, [page, pageSize, configType, userId, roleId, deptId]);
 
   useEffect(() => {
-    loadConfigs()
-  }, [loadConfigs])
+    loadConfigs();
+  }, [loadConfigs]);
 
   const handleCreate = () => {
-    setEditingConfig(null)
+    setEditingConfig(null);
     setFormData({
-      config_type: 'DEFAULT',
+      config_type: "DEFAULT",
       user_id: null,
       role_id: null,
       dept_id: null,
-      hourly_rate: '',
-      effective_date: '',
-      expiry_date: '',
+      hourly_rate: "",
+      effective_date: "",
+      expiry_date: "",
       is_active: true,
-    })
-    setDialogOpen(true)
-  }
+    });
+    setDialogOpen(true);
+  };
 
   const handleEdit = (config) => {
-    setEditingConfig(config)
+    setEditingConfig(config);
     setFormData({
       config_type: config.config_type,
       user_id: config.user_id,
       role_id: config.role_id,
       dept_id: config.dept_id,
       hourly_rate: config.hourly_rate,
-      effective_date: config.effective_date || '',
-      expiry_date: config.expiry_date || '',
+      effective_date: config.effective_date || "",
+      expiry_date: config.expiry_date || "",
       is_active: config.is_active,
-    })
-    setDialogOpen(true)
-  }
+    });
+    setDialogOpen(true);
+  };
 
   const handleSave = async () => {
     try {
-      setLoading(true)
-      setError(null)
-      
+      setLoading(true);
+      setError(null);
+
       const submitData = {
         ...formData,
         hourly_rate: parseFloat(formData.hourly_rate),
         user_id: formData.user_id ? parseInt(formData.user_id) : null,
         role_id: formData.role_id ? parseInt(formData.role_id) : null,
         dept_id: formData.dept_id ? parseInt(formData.dept_id) : null,
-      }
-      
+      };
+
       if (editingConfig) {
-        await hourlyRateApi.update(editingConfig.id, submitData)
+        await hourlyRateApi.update(editingConfig.id, submitData);
       } else {
-        await hourlyRateApi.create(submitData)
+        await hourlyRateApi.create(submitData);
       }
-      
-      setDialogOpen(false)
-      loadConfigs()
+
+      setDialogOpen(false);
+      loadConfigs();
     } catch (err) {
-      console.error('Failed to save config:', err)
-      setError(err.response?.data?.detail || err.message || '保存失败')
+      console.error("Failed to save config:", err);
+      setError(err.response?.data?.detail || err.message || "保存失败");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('确定要删除这个配置吗？')) {
-      return
+    if (!window.confirm("确定要删除这个配置吗？")) {
+      return;
     }
 
     try {
-      setLoading(true)
-      await hourlyRateApi.delete(id)
-      loadConfigs()
+      setLoading(true);
+      await hourlyRateApi.delete(id);
+      loadConfigs();
     } catch (err) {
-      console.error('Failed to delete config:', err)
-      setError(err.response?.data?.detail || err.message || '删除失败')
+      console.error("Failed to delete config:", err);
+      setError(err.response?.data?.detail || err.message || "删除失败");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getConfigTypeLabel = (type) => {
     const labels = {
-      'DEFAULT': '默认',
-      'USER': '用户',
-      'ROLE': '角色',
-      'DEPT': '部门',
-    }
-    return labels[type] || type
-  }
+      DEFAULT: "默认",
+      USER: "用户",
+      ROLE: "角色",
+      DEPT: "部门",
+    };
+    return labels[type] || type;
+  };
 
   const getConfigTypeIcon = (type) => {
     switch (type) {
-      case 'USER':
-        return <Users className="h-4 w-4" />
-      case 'ROLE':
-        return <Briefcase className="h-4 w-4" />
-      case 'DEPT':
-        return <Building2 className="h-4 w-4" />
+      case "USER":
+        return <Users className="h-4 w-4" />;
+      case "ROLE":
+        return <Briefcase className="h-4 w-4" />;
+      case "DEPT":
+        return <Building2 className="h-4 w-4" />;
       default:
-        return <DollarSign className="h-4 w-4" />
+        return <DollarSign className="h-4 w-4" />;
     }
-  }
+  };
 
   return (
     <motion.div
@@ -214,7 +246,7 @@ export default function HourlyRateManagement() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <Label>用户ID</Label>
               <Input
@@ -224,7 +256,7 @@ export default function HourlyRateManagement() {
                 onChange={(e) => setUserId(e.target.value)}
               />
             </div>
-            
+
             <div>
               <Label>角色ID</Label>
               <Input
@@ -234,7 +266,7 @@ export default function HourlyRateManagement() {
                 onChange={(e) => setRoleId(e.target.value)}
               />
             </div>
-            
+
             <div>
               <Label>部门ID</Label>
               <Input
@@ -290,29 +322,48 @@ export default function HourlyRateManagement() {
                       <tr key={config.id} className="border-b hover:bg-gray-50">
                         <td className="p-2">{config.id}</td>
                         <td className="p-2">
-                          <Badge variant="outline" className="flex items-center gap-1 w-fit">
+                          <Badge
+                            variant="outline"
+                            className="flex items-center gap-1 w-fit"
+                          >
                             {getConfigTypeIcon(config.config_type)}
                             {getConfigTypeLabel(config.config_type)}
                           </Badge>
                         </td>
                         <td className="p-2">
-                          {config.user_name && <div>用户: {config.user_name}</div>}
-                          {config.role_name && <div>角色: {config.role_name}</div>}
-                          {config.dept_name && <div>部门: {config.dept_name}</div>}
-                          {!config.user_name && !config.role_name && !config.dept_name && (
-                            <span className="text-gray-400">默认配置</span>
+                          {config.user_name && (
+                            <div>用户: {config.user_name}</div>
                           )}
+                          {config.role_name && (
+                            <div>角色: {config.role_name}</div>
+                          )}
+                          {config.dept_name && (
+                            <div>部门: {config.dept_name}</div>
+                          )}
+                          {!config.user_name &&
+                            !config.role_name &&
+                            !config.dept_name && (
+                              <span className="text-gray-400">默认配置</span>
+                            )}
                         </td>
-                        <td className="p-2 font-semibold">¥{config.hourly_rate}</td>
-                        <td className="p-2 text-sm">
-                          {config.effective_date ? formatDate(config.effective_date) : '-'}
+                        <td className="p-2 font-semibold">
+                          ¥{config.hourly_rate}
                         </td>
                         <td className="p-2 text-sm">
-                          {config.expiry_date ? formatDate(config.expiry_date) : '-'}
+                          {config.effective_date
+                            ? formatDate(config.effective_date)
+                            : "-"}
+                        </td>
+                        <td className="p-2 text-sm">
+                          {config.expiry_date
+                            ? formatDate(config.expiry_date)
+                            : "-"}
                         </td>
                         <td className="p-2">
-                          <Badge variant={config.is_active ? 'default' : 'secondary'}>
-                            {config.is_active ? '启用' : '禁用'}
+                          <Badge
+                            variant={config.is_active ? "default" : "secondary"}
+                          >
+                            {config.is_active ? "启用" : "禁用"}
                           </Badge>
                         </td>
                         <td className="p-2">
@@ -338,7 +389,7 @@ export default function HourlyRateManagement() {
                   </tbody>
                 </table>
               </div>
-              
+
               {/* 分页 */}
               <div className="flex items-center justify-between mt-4">
                 <div className="text-sm text-gray-600">共 {total} 条记录</div>
@@ -373,14 +424,16 @@ export default function HourlyRateManagement() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingConfig ? '编辑配置' : '新建配置'}</DialogTitle>
+            <DialogTitle>{editingConfig ? "编辑配置" : "新建配置"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
               <Label>配置类型 *</Label>
               <Select
                 value={formData.config_type}
-                onValueChange={(value) => setFormData({ ...formData, config_type: value })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, config_type: value })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -394,35 +447,41 @@ export default function HourlyRateManagement() {
               </Select>
             </div>
 
-            {formData.config_type === 'USER' && (
+            {formData.config_type === "USER" && (
               <div>
                 <Label>用户ID *</Label>
                 <Input
                   type="number"
-                  value={formData.user_id || ''}
-                  onChange={(e) => setFormData({ ...formData, user_id: e.target.value })}
+                  value={formData.user_id || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, user_id: e.target.value })
+                  }
                 />
               </div>
             )}
 
-            {formData.config_type === 'ROLE' && (
+            {formData.config_type === "ROLE" && (
               <div>
                 <Label>角色ID *</Label>
                 <Input
                   type="number"
-                  value={formData.role_id || ''}
-                  onChange={(e) => setFormData({ ...formData, role_id: e.target.value })}
+                  value={formData.role_id || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, role_id: e.target.value })
+                  }
                 />
               </div>
             )}
 
-            {formData.config_type === 'DEPT' && (
+            {formData.config_type === "DEPT" && (
               <div>
                 <Label>部门ID *</Label>
                 <Input
                   type="number"
-                  value={formData.dept_id || ''}
-                  onChange={(e) => setFormData({ ...formData, dept_id: e.target.value })}
+                  value={formData.dept_id || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, dept_id: e.target.value })
+                  }
                 />
               </div>
             )}
@@ -433,7 +492,9 @@ export default function HourlyRateManagement() {
                 type="number"
                 step="0.01"
                 value={formData.hourly_rate}
-                onChange={(e) => setFormData({ ...formData, hourly_rate: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, hourly_rate: e.target.value })
+                }
               />
             </div>
 
@@ -443,7 +504,9 @@ export default function HourlyRateManagement() {
                 <Input
                   type="date"
                   value={formData.effective_date}
-                  onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, effective_date: e.target.value })
+                  }
                 />
               </div>
               <div>
@@ -451,7 +514,9 @@ export default function HourlyRateManagement() {
                 <Input
                   type="date"
                   value={formData.expiry_date}
-                  onChange={(e) => setFormData({ ...formData, expiry_date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, expiry_date: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -467,5 +532,5 @@ export default function HourlyRateManagement() {
         </DialogContent>
       </Dialog>
     </motion.div>
-  )
+  );
 }

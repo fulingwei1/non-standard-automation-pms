@@ -2,9 +2,9 @@
  * 售前技术任务中心
  * 管理技术支持请求、方案设计、投标任务等
  */
-import React, { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import React, { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   ListTodo,
   Search,
@@ -36,62 +36,107 @@ import {
   User,
   X,
   DollarSign,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
-import { Button } from '../components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
-import { Progress } from '../components/ui/progress'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
+import { Progress } from "../components/ui/progress";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { presaleApi, opportunityApi } from '../services/api'
+} from "../components/ui/dropdown-menu";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { presaleApi, opportunityApi } from "../services/api";
 
 // 任务类型配置
 const taskTypes = [
-  { id: 'all', name: '全部', icon: ListTodo, color: 'text-slate-400' },
-  { id: 'survey', name: '需求调研', icon: ClipboardList, color: 'text-emerald-400' },
-  { id: 'exchange', name: '技术交流', icon: MessageSquare, color: 'text-blue-400' },
-  { id: 'solution', name: '方案设计', icon: FileText, color: 'text-violet-400' },
-  { id: 'review', name: '方案评审', icon: Eye, color: 'text-pink-400' },
-  { id: 'costing', name: '成本核算', icon: DollarSign, color: 'text-emerald-400' },
-  { id: 'bidding', name: '投标支持', icon: Target, color: 'text-amber-400' },
-]
+  { id: "all", name: "全部", icon: ListTodo, color: "text-slate-400" },
+  {
+    id: "survey",
+    name: "需求调研",
+    icon: ClipboardList,
+    color: "text-emerald-400",
+  },
+  {
+    id: "exchange",
+    name: "技术交流",
+    icon: MessageSquare,
+    color: "text-blue-400",
+  },
+  {
+    id: "solution",
+    name: "方案设计",
+    icon: FileText,
+    color: "text-violet-400",
+  },
+  { id: "review", name: "方案评审", icon: Eye, color: "text-pink-400" },
+  {
+    id: "costing",
+    name: "成本核算",
+    icon: DollarSign,
+    color: "text-emerald-400",
+  },
+  { id: "bidding", name: "投标支持", icon: Target, color: "text-amber-400" },
+];
 
 // 任务状态配置
 const taskStatuses = [
-  { id: 'pending', name: '待处理', color: 'bg-slate-500', textColor: 'text-slate-400' },
-  { id: 'in_progress', name: '进行中', color: 'bg-blue-500', textColor: 'text-blue-400' },
-  { id: 'reviewing', name: '待评审', color: 'bg-amber-500', textColor: 'text-amber-400' },
-  { id: 'completed', name: '已完成', color: 'bg-emerald-500', textColor: 'text-emerald-400' },
-]
+  {
+    id: "pending",
+    name: "待处理",
+    color: "bg-slate-500",
+    textColor: "text-slate-400",
+  },
+  {
+    id: "in_progress",
+    name: "进行中",
+    color: "bg-blue-500",
+    textColor: "text-blue-400",
+  },
+  {
+    id: "reviewing",
+    name: "待评审",
+    color: "bg-amber-500",
+    textColor: "text-amber-400",
+  },
+  {
+    id: "completed",
+    name: "已完成",
+    color: "bg-emerald-500",
+    textColor: "text-emerald-400",
+  },
+];
 
 // Mock 任务数据
 // Mock data - 已移除，使用真实API
 // 获取优先级样式
 const getPriorityStyle = (priority) => {
   switch (priority) {
-    case 'high':
-      return { bg: 'bg-red-500/10', text: 'text-red-400', label: '紧急' }
-    case 'medium':
-      return { bg: 'bg-amber-500/10', text: 'text-amber-400', label: '中等' }
-    case 'low':
-      return { bg: 'bg-slate-500/10', text: 'text-slate-400', label: '普通' }
+    case "high":
+      return { bg: "bg-red-500/10", text: "text-red-400", label: "紧急" };
+    case "medium":
+      return { bg: "bg-amber-500/10", text: "text-amber-400", label: "中等" };
+    case "low":
+      return { bg: "bg-slate-500/10", text: "text-slate-400", label: "普通" };
     default:
-      return { bg: 'bg-slate-500/10', text: 'text-slate-400', label: '普通' }
+      return { bg: "bg-slate-500/10", text: "text-slate-400", label: "普通" };
   }
-}
+};
 
 // 任务卡片组件
 function TaskCard({ task, onClick }) {
-  const priorityStyle = getPriorityStyle(task.priority)
-  const statusConfig = taskStatuses.find((s) => s.id === task.status)
+  const priorityStyle = getPriorityStyle(task.priority);
+  const statusConfig = taskStatuses.find((s) => s.id === task.status);
 
   return (
     <motion.div
@@ -102,11 +147,17 @@ function TaskCard({ task, onClick }) {
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-            <Badge className={cn('text-xs', task.typeColor)}>{task.typeName}</Badge>
-            <Badge className={cn('text-xs', priorityStyle.bg, priorityStyle.text)}>
+            <Badge className={cn("text-xs", task.typeColor)}>
+              {task.typeName}
+            </Badge>
+            <Badge
+              className={cn("text-xs", priorityStyle.bg, priorityStyle.text)}
+            >
               {priorityStyle.label}
             </Badge>
-            <Badge className={cn('text-xs', statusConfig?.color)}>{statusConfig?.name}</Badge>
+            <Badge className={cn("text-xs", statusConfig?.color)}>
+              {statusConfig?.name}
+            </Badge>
           </div>
           <h4 className="text-sm font-medium text-white group-hover:text-primary transition-colors line-clamp-2">
             {task.title}
@@ -140,7 +191,9 @@ function TaskCard({ task, onClick }) {
         </DropdownMenu>
       </div>
 
-      <p className="text-xs text-slate-500 line-clamp-2 mb-3">{task.description}</p>
+      <p className="text-xs text-slate-500 line-clamp-2 mb-3">
+        {task.description}
+      </p>
 
       <div className="flex items-center gap-3 text-xs text-slate-500 mb-3">
         <span className="flex items-center gap-1">
@@ -153,7 +206,7 @@ function TaskCard({ task, onClick }) {
         </span>
       </div>
 
-      {task.status !== 'completed' && task.status !== 'pending' && (
+      {task.status !== "completed" && task.status !== "pending" && (
         <div className="space-y-1 mb-3">
           <div className="flex items-center justify-between text-xs">
             <span className="text-slate-400">进度</span>
@@ -179,88 +232,97 @@ function TaskCard({ task, onClick }) {
         )}
       </div>
     </motion.div>
-  )
+  );
 }
 
 // 任务详情面板
 function TaskDetailPanel({ task, onClose, onUpdate }) {
-  const [progress, setProgress] = useState(task?.progress || 0)
-  const [progressNote, setProgressNote] = useState('')
-  const [actualHours, setActualHours] = useState(task?.actualHours || 0)
-  const [isUpdating, setIsUpdating] = useState(false)
-  const [isCompleting, setIsCompleting] = useState(false)
-  const [isAccepting, setIsAccepting] = useState(false)
+  const [progress, setProgress] = useState(task?.progress || 0);
+  const [progressNote, setProgressNote] = useState("");
+  const [actualHours, setActualHours] = useState(task?.actualHours || 0);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [isAccepting, setIsAccepting] = useState(false);
 
-  if (!task) return null
+  if (!task) return null;
 
-  const priorityStyle = getPriorityStyle(task.priority)
-  const statusConfig = taskStatuses.find((s) => s.id === task.status)
+  const priorityStyle = getPriorityStyle(task.priority);
+  const statusConfig = taskStatuses.find((s) => s.id === task.status);
 
   // 接单
   const handleAccept = async () => {
     try {
-      setIsAccepting(true)
-      await presaleApi.tickets.accept(task.ticketId, {})
-      alert('接单成功！')
-      onUpdate?.()
-      onClose()
+      setIsAccepting(true);
+      await presaleApi.tickets.accept(task.ticketId, {});
+      alert("接单成功！");
+      onUpdate?.();
+      onClose();
     } catch (err) {
-      console.error('Failed to accept ticket:', err)
-      alert('接单失败：' + (err.response?.data?.detail || err.message || '未知错误'))
+      console.error("Failed to accept ticket:", err);
+      alert(
+        "接单失败：" +
+          (err.response?.data?.detail || err.message || "未知错误"),
+      );
     } finally {
-      setIsAccepting(false)
+      setIsAccepting(false);
     }
-  }
+  };
 
   // 更新进度
   const handleUpdateProgress = async () => {
     try {
-      setIsUpdating(true)
+      setIsUpdating(true);
       await presaleApi.tickets.updateProgress(task.ticketId, {
         progress_percent: progress,
         progress_note: progressNote,
-      })
-      alert('进度已更新！')
-      onUpdate?.()
-      setProgressNote('')
+      });
+      alert("进度已更新！");
+      onUpdate?.();
+      setProgressNote("");
     } catch (err) {
-      console.error('Failed to update progress:', err)
-      alert('更新失败：' + (err.response?.data?.detail || err.message || '未知错误'))
+      console.error("Failed to update progress:", err);
+      alert(
+        "更新失败：" +
+          (err.response?.data?.detail || err.message || "未知错误"),
+      );
     } finally {
-      setIsUpdating(false)
+      setIsUpdating(false);
     }
-  }
+  };
 
   // 完成工单
   const handleComplete = async () => {
     if (!actualHours || actualHours <= 0) {
-      alert('请输入实际工时')
-      return
+      alert("请输入实际工时");
+      return;
     }
-    
+
     try {
-      setIsCompleting(true)
+      setIsCompleting(true);
       await presaleApi.tickets.complete(task.ticketId, {
         actual_hours: actualHours,
-      })
-      alert('工单已完成！')
-      onUpdate?.()
-      onClose()
+      });
+      alert("工单已完成！");
+      onUpdate?.();
+      onClose();
     } catch (err) {
-      console.error('Failed to complete ticket:', err)
-      alert('完成失败：' + (err.response?.data?.detail || err.message || '未知错误'))
+      console.error("Failed to complete ticket:", err);
+      alert(
+        "完成失败：" +
+          (err.response?.data?.detail || err.message || "未知错误"),
+      );
     } finally {
-      setIsCompleting(false)
+      setIsCompleting(false);
     }
-  }
+  };
 
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ x: '100%' }}
+        initial={{ x: "100%" }}
         animate={{ x: 0 }}
-        exit={{ x: '100%' }}
-        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", damping: 25, stiffness: 200 }}
         className="fixed right-0 top-0 h-full w-full md:w-[450px] bg-surface-100/95 backdrop-blur-xl border-l border-white/5 shadow-2xl z-50 flex flex-col"
       >
         {/* Header */}
@@ -276,11 +338,17 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
           {/* Title and badges */}
           <div>
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <Badge className={cn('text-xs', task.typeColor)}>{task.typeName}</Badge>
-              <Badge className={cn('text-xs', priorityStyle.bg, priorityStyle.text)}>
+              <Badge className={cn("text-xs", task.typeColor)}>
+                {task.typeName}
+              </Badge>
+              <Badge
+                className={cn("text-xs", priorityStyle.bg, priorityStyle.text)}
+              >
                 {priorityStyle.label}
               </Badge>
-              <Badge className={cn('text-xs', statusConfig?.color)}>{statusConfig?.name}</Badge>
+              <Badge className={cn("text-xs", statusConfig?.color)}>
+                {statusConfig?.name}
+              </Badge>
             </div>
             <h3 className="text-xl font-semibold text-white">{task.title}</h3>
           </div>
@@ -288,7 +356,9 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
           {/* Description */}
           <div className="space-y-2">
             <h4 className="text-sm font-medium text-slate-400">任务描述</h4>
-            <p className="text-sm text-white bg-surface-50 p-3 rounded-lg">{task.description}</p>
+            <p className="text-sm text-white bg-surface-50 p-3 rounded-lg">
+              {task.description}
+            </p>
           </div>
 
           {/* Basic Info */}
@@ -359,7 +429,10 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
                 </span>
               </div>
               {task.estimatedHours > 0 && (
-                <Progress value={(actualHours / task.estimatedHours) * 100} className="h-2" />
+                <Progress
+                  value={(actualHours / task.estimatedHours) * 100}
+                  className="h-2"
+                />
               )}
             </div>
           </div>
@@ -375,7 +448,7 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
                 >
                   <FileText className="w-4 h-4 text-slate-500" />
                   <span className="text-sm text-white">{item}</span>
-                  {task.status === 'completed' && (
+                  {task.status === "completed" && (
                     <CheckCircle className="w-4 h-4 text-emerald-500 ml-auto" />
                   )}
                 </div>
@@ -387,13 +460,15 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
           {task.amount && (
             <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 p-4 rounded-lg border border-emerald-500/20">
               <p className="text-xs text-slate-400 mb-1">关联金额</p>
-              <p className="text-2xl font-bold text-emerald-400">¥{task.amount}万</p>
+              <p className="text-2xl font-bold text-emerald-400">
+                ¥{task.amount}万
+              </p>
             </div>
           )}
         </div>
 
         {/* 操作区域 */}
-        {task.status === 'pending' && (
+        {task.status === "pending" && (
           <div className="p-4 border-t border-white/5">
             <Button
               onClick={handleAccept}
@@ -401,12 +476,12 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
               className="w-full"
             >
               <CheckCircle className="w-4 h-4 mr-2" />
-              {isAccepting ? '接单中...' : '接单处理'}
+              {isAccepting ? "接单中..." : "接单处理"}
             </Button>
           </div>
         )}
 
-        {(task.status === 'in_progress' || task.status === 'reviewing') && (
+        {(task.status === "in_progress" || task.status === "reviewing") && (
           <div className="p-4 border-t border-white/5 space-y-3">
             <div className="space-y-2">
               <label className="text-sm text-slate-400">更新进度</label>
@@ -436,7 +511,7 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
                 className="w-full"
               >
                 <Clock className="w-4 h-4 mr-2" />
-                {isUpdating ? '更新中...' : '更新进度'}
+                {isUpdating ? "更新中..." : "更新进度"}
               </Button>
             </div>
             <div className="space-y-2">
@@ -445,7 +520,9 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
                 type="number"
                 min="0"
                 value={actualHours}
-                onChange={(e) => setActualHours(parseFloat(e.target.value) || 0)}
+                onChange={(e) =>
+                  setActualHours(parseFloat(e.target.value) || 0)
+                }
                 className="w-full"
               />
               <Button
@@ -454,7 +531,7 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
                 className="w-full"
               >
                 <CheckCircle className="w-4 h-4 mr-2" />
-                {isCompleting ? '完成中...' : '完成工单'}
+                {isCompleting ? "完成中..." : "完成工单"}
               </Button>
             </div>
           </div>
@@ -469,87 +546,87 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
         </div>
       </motion.div>
     </AnimatePresence>
-  )
+  );
 }
 
 export default function PresalesTasks() {
-  const [viewMode, setViewMode] = useState('list') // 'list', 'kanban'
-  const [selectedType, setSelectedType] = useState('all')
-  const [selectedStatus, setSelectedStatus] = useState('all')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedTask, setSelectedTask] = useState(null)
-  const [tasks, setTasks] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [viewMode, setViewMode] = useState("list"); // 'list', 'kanban'
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Map backend ticket type to frontend type
   const mapTicketType = (backendType) => {
     const typeMap = {
-      'SOLUTION_DESIGN': 'solution',
-      'COST_ESTIMATE': 'costing',
-      'COST_SUPPORT': 'costing',
-      'TECHNICAL_EXCHANGE': 'exchange',
-      'REQUIREMENT_RESEARCH': 'survey',
-      'TENDER_SUPPORT': 'bidding',
-      'SOLUTION_REVIEW': 'review',
-      'FEASIBILITY_ASSESSMENT': 'survey',
-    }
-    return typeMap[backendType] || 'solution'
-  }
+      SOLUTION_DESIGN: "solution",
+      COST_ESTIMATE: "costing",
+      COST_SUPPORT: "costing",
+      TECHNICAL_EXCHANGE: "exchange",
+      REQUIREMENT_RESEARCH: "survey",
+      TENDER_SUPPORT: "bidding",
+      SOLUTION_REVIEW: "review",
+      FEASIBILITY_ASSESSMENT: "survey",
+    };
+    return typeMap[backendType] || "solution";
+  };
 
   // Map backend status to frontend status
   const mapTicketStatus = (backendStatus) => {
     const statusMap = {
-      'PENDING': 'pending',
-      'ACCEPTED': 'in_progress',
-      'IN_PROGRESS': 'in_progress',
-      'REVIEWING': 'reviewing',
-      'COMPLETED': 'completed',
-    }
-    return statusMap[backendStatus] || 'pending'
-  }
+      PENDING: "pending",
+      ACCEPTED: "in_progress",
+      IN_PROGRESS: "in_progress",
+      REVIEWING: "reviewing",
+      COMPLETED: "completed",
+    };
+    return statusMap[backendStatus] || "pending";
+  };
 
   // Get type name and color
   const getTypeInfo = (type) => {
-    const typeInfo = taskTypes.find(t => t.id === type) || taskTypes[0]
+    const typeInfo = taskTypes.find((t) => t.id === type) || taskTypes[0];
     return {
       name: typeInfo.name,
-      color: typeInfo.color.replace('text-', 'bg-'),
-    }
-  }
+      color: typeInfo.color.replace("text-", "bg-"),
+    };
+  };
 
   // Load tasks from API
   const loadTasks = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       const params = {
         page: 1,
         page_size: 100,
-      }
+      };
 
-      if (selectedStatus !== 'all') {
+      if (selectedStatus !== "all") {
         const statusMap = {
-          'pending': 'PENDING',
-          'in_progress': 'IN_PROGRESS,ACCEPTED',
-          'reviewing': 'REVIEWING',
-          'completed': 'COMPLETED',
-        }
-        params.status = statusMap[selectedStatus] || selectedStatus
+          pending: "PENDING",
+          in_progress: "IN_PROGRESS,ACCEPTED",
+          reviewing: "REVIEWING",
+          completed: "COMPLETED",
+        };
+        params.status = statusMap[selectedStatus] || selectedStatus;
       }
 
       if (searchTerm) {
-        params.keyword = searchTerm
+        params.keyword = searchTerm;
       }
 
-      const response = await presaleApi.tickets.list(params)
-      const ticketsData = response.data?.items || response.data || []
+      const response = await presaleApi.tickets.list(params);
+      const ticketsData = response.data?.items || response.data || [];
 
       // Transform tickets to tasks
-      const transformedTasks = ticketsData.map(ticket => {
-        const type = mapTicketType(ticket.ticket_type)
-        const typeInfo = getTypeInfo(type)
+      const transformedTasks = ticketsData.map((ticket) => {
+        const type = mapTicketType(ticket.ticket_type);
+        const typeInfo = getTypeInfo(type);
         return {
           id: ticket.id,
           title: ticket.title,
@@ -557,53 +634,56 @@ export default function PresalesTasks() {
           typeName: typeInfo.name,
           typeColor: typeInfo.color,
           status: mapTicketStatus(ticket.status),
-          priority: ticket.urgency?.toLowerCase() || 'medium',
-          customer: ticket.customer_name || '',
-          source: ticket.applicant_name ? `销售：${ticket.applicant_name}` : '内部流程',
-          deadline: ticket.deadline || ticket.expected_date || '',
-          createdAt: ticket.apply_time || ticket.created_at || '',
+          priority: ticket.urgency?.toLowerCase() || "medium",
+          customer: ticket.customer_name || "",
+          source: ticket.applicant_name
+            ? `销售：${ticket.applicant_name}`
+            : "内部流程",
+          deadline: ticket.deadline || ticket.expected_date || "",
+          createdAt: ticket.apply_time || ticket.created_at || "",
           progress: ticket.progress || 0,
-          description: ticket.description || ticket.requirement || '',
-          opportunity: ticket.opportunity_name || '',
+          description: ticket.description || ticket.requirement || "",
+          opportunity: ticket.opportunity_name || "",
           amount: ticket.estimated_value ? ticket.estimated_value / 10000 : 0,
           estimatedHours: ticket.estimated_hours || 0,
           actualHours: ticket.actual_hours || 0,
-          assignee: ticket.assignee_name || ticket.owner_name || '未分配',
+          assignee: ticket.assignee_name || ticket.owner_name || "未分配",
           deliverables: ticket.deliverables || [],
-        }
-      })
+        };
+      });
 
-      setTasks(transformedTasks)
+      setTasks(transformedTasks);
     } catch (err) {
-      console.error('Failed to load tasks:', err)
-      setError(err.response?.data?.detail || err.message || '加载任务失败')
-      setTasks([])
+      console.error("Failed to load tasks:", err);
+      setError(err.response?.data?.detail || err.message || "加载任务失败");
+      setTasks([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [selectedStatus, searchTerm])
+  }, [selectedStatus, searchTerm]);
 
   // Load tasks when filters change
   useEffect(() => {
-    loadTasks()
-  }, [loadTasks])
+    loadTasks();
+  }, [loadTasks]);
 
   // 筛选任务
   const filteredTasks = tasks.filter((task) => {
-    const matchesType = selectedType === 'all' || task.type === selectedType
-    const matchesStatus = selectedStatus === 'all' || task.status === selectedStatus
+    const matchesType = selectedType === "all" || task.type === selectedType;
+    const matchesStatus =
+      selectedStatus === "all" || task.status === selectedStatus;
     const matchesSearch =
       task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       task.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.description.toLowerCase().includes(searchTerm.toLowerCase())
-    return matchesType && matchesStatus && matchesSearch
-  })
+      task.description.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesType && matchesStatus && matchesSearch;
+  });
 
   // 按状态分组任务（看板视图用）
   const tasksByStatus = taskStatuses.map((status) => ({
     ...status,
     tasks: filteredTasks.filter((task) => task.status === status.id),
-  }))
+  }));
 
   return (
     <motion.div
@@ -637,12 +717,17 @@ export default function PresalesTasks() {
             {taskTypes.map((type) => (
               <Button
                 key={type.id}
-                variant={selectedType === type.id ? 'default' : 'outline'}
+                variant={selectedType === type.id ? "default" : "outline"}
                 size="sm"
                 onClick={() => setSelectedType(type.id)}
                 className="flex items-center gap-1.5"
               >
-                <type.icon className={cn('w-3.5 h-3.5', selectedType === type.id ? '' : type.color)} />
+                <type.icon
+                  className={cn(
+                    "w-3.5 h-3.5",
+                    selectedType === type.id ? "" : type.color,
+                  )}
+                />
                 {type.name}
               </Button>
             ))}
@@ -674,16 +759,16 @@ export default function PresalesTasks() {
             </select>
             <div className="flex bg-surface-50 rounded-lg p-1">
               <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                variant={viewMode === "list" ? "default" : "ghost"}
                 size="icon"
-                onClick={() => setViewMode('list')}
+                onClick={() => setViewMode("list")}
               >
                 <List className="w-4 h-4" />
               </Button>
               <Button
-                variant={viewMode === 'kanban' ? 'default' : 'ghost'}
+                variant={viewMode === "kanban" ? "default" : "ghost"}
                 size="icon"
-                onClick={() => setViewMode('kanban')}
+                onClick={() => setViewMode("kanban")}
               >
                 <Kanban className="w-4 h-4" />
               </Button>
@@ -693,8 +778,11 @@ export default function PresalesTasks() {
       </motion.div>
 
       {/* 任务列表/看板 */}
-      {viewMode === 'list' ? (
-        <motion.div variants={fadeIn} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      {viewMode === "list" ? (
+        <motion.div
+          variants={fadeIn}
+          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+        >
           {filteredTasks.length > 0 ? (
             filteredTasks.map((task) => (
               <TaskCard key={task.id} task={task} onClick={setSelectedTask} />
@@ -713,15 +801,14 @@ export default function PresalesTasks() {
           className="flex overflow-x-auto custom-scrollbar pb-4 -mx-6 px-6 gap-4"
         >
           {tasksByStatus.map((column) => (
-            <div
-              key={column.id}
-              className="flex-shrink-0 w-80"
-            >
+            <div key={column.id} className="flex-shrink-0 w-80">
               <Card className="bg-surface-50/70 backdrop-blur-sm border border-white/5 shadow-md">
                 <CardHeader className="py-3 px-4 border-b border-white/5">
                   <CardTitle className="text-base font-semibold text-white flex items-center justify-between">
                     <span className="flex items-center gap-2">
-                      <span className={cn('w-2 h-2 rounded-full', column.color)} />
+                      <span
+                        className={cn("w-2 h-2 rounded-full", column.color)}
+                      />
                       {column.name}
                     </span>
                     <Badge variant="secondary" className="bg-white/10">
@@ -732,7 +819,11 @@ export default function PresalesTasks() {
                 <CardContent className="p-3 space-y-3 min-h-[400px] max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
                   {column.tasks.length > 0 ? (
                     column.tasks.map((task) => (
-                      <TaskCard key={task.id} task={task} onClick={setSelectedTask} />
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        onClick={setSelectedTask}
+                      />
                     ))
                   ) : (
                     <div className="text-center py-8 text-slate-400">
@@ -756,6 +847,5 @@ export default function PresalesTasks() {
         />
       )}
     </motion.div>
-  )
+  );
 }
-

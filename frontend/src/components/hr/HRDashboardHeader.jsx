@@ -2,8 +2,8 @@
  * HRDashboardHeader Component
  * HR Dashboard 页面头部组件
  */
-import { motion } from 'framer-motion'
-import { PageHeader } from '../layout'
+import { motion } from "framer-motion";
+import { PageHeader } from "../layout";
 import {
   Button,
   DropdownMenu,
@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../ui'
+} from "../ui";
 import {
   UserPlus,
   Award,
@@ -21,10 +21,10 @@ import {
   Printer,
   Share2,
   Settings,
-} from 'lucide-react'
-import { cn } from '../../lib/utils'
-import { toast } from '../ui/toast'
-import { fadeIn } from '../../lib/animations'
+} from "lucide-react";
+import { cn } from "../../lib/utils";
+import { toast } from "../ui/toast";
+import { fadeIn } from "../../lib/animations";
 
 export default function HRDashboardHeader({
   mockHRStats,
@@ -33,19 +33,19 @@ export default function HRDashboardHeader({
   onExportReport,
 }) {
   const handlePrint = () => {
-    window.print()
-  }
+    window.print();
+  };
 
   const handleShare = async () => {
     try {
-      const url = window.location.href
-      await navigator.clipboard.writeText(url)
-      toast.success('链接已复制到剪贴板')
+      const url = window.location.href;
+      await navigator.clipboard.writeText(url);
+      toast.success("链接已复制到剪贴板");
     } catch (error) {
-      console.error('分享失败:', error)
-      toast.error('分享失败: ' + error.message)
+      console.error("分享失败:", error);
+      toast.error("分享失败: " + error.message);
     }
-  }
+  };
 
   return (
     <PageHeader
@@ -58,7 +58,7 @@ export default function HRDashboardHeader({
             size="sm"
             className="flex items-center gap-2"
             onClick={() => {
-              setSelectedTab('recruitment')
+              setSelectedTab("recruitment");
               // TODO: 打开新建招聘对话框
             }}
           >
@@ -70,7 +70,7 @@ export default function HRDashboardHeader({
             size="sm"
             className="flex items-center gap-2"
             onClick={() => {
-              setSelectedTab('performance')
+              setSelectedTab("performance");
               // TODO: 跳转到绩效管理页面
             }}
           >
@@ -84,7 +84,9 @@ export default function HRDashboardHeader({
             disabled={refreshing}
             onClick={onRefresh}
           >
-            <RefreshCw className={cn('w-4 h-4', refreshing && 'animate-spin')} />
+            <RefreshCw
+              className={cn("w-4 h-4", refreshing && "animate-spin")}
+            />
             刷新
           </Button>
           <DropdownMenu>
@@ -124,5 +126,5 @@ export default function HRDashboardHeader({
         </motion.div>
       }
     />
-  )
+  );
 }

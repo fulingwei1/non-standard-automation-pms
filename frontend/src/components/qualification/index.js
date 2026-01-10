@@ -1,7 +1,2 @@
-export { CompetencyRadarChart } from './CompetencyRadarChart'
-export { QualificationTrendChart } from './QualificationTrendChart'
-
-
-
-
-
+export { CompetencyRadarChart } from "./CompetencyRadarChart";
+export { QualificationTrendChart } from "./QualificationTrendChart";

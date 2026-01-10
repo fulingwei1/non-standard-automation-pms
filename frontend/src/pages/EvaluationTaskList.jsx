@@ -1,185 +1,184 @@
-import React, { useState, useMemo } from 'react'
-import { motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
-import {
-  ClipboardList,
-  AlertCircle
-} from 'lucide-react'
-import { useEvaluationTasks } from '../hooks/useEvaluationTasks'
-import { TaskStatistics } from '../components/evaluation/TaskStatistics'
-import { TaskFilters } from '../components/evaluation/TaskFilters'
-import { TaskItem } from '../components/evaluation/TaskItem'
+import React, { useState, useMemo } from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { ClipboardList, AlertCircle } from "lucide-react";
+import { useEvaluationTasks } from "../hooks/useEvaluationTasks";
+import { TaskStatistics } from "../components/evaluation/TaskStatistics";
+import { TaskFilters } from "../components/evaluation/TaskFilters";
+import { TaskItem } from "../components/evaluation/TaskItem";
 
 const EvaluationTaskList = () => {
-  const navigate = useNavigate()
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [typeFilter, setTypeFilter] = useState('all')
-  const [periodFilter, setPeriodFilter] = useState('2025-01')
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [periodFilter, setPeriodFilter] = useState("2025-01");
 
   // 获取当前用户信息
   const currentUser = useMemo(() => {
-    const userStr = localStorage.getItem('user')
+    const userStr = localStorage.getItem("user");
     if (userStr) {
       try {
-        return JSON.parse(userStr)
+        return JSON.parse(userStr);
       } catch (e) {
-        console.error('解析用户信息失败:', e)
+        console.error("解析用户信息失败:", e);
       }
     }
     return {
       id: 1,
-      name: '李经理',
-      role: 'dept_manager',
-      department: '技术开发部',
-      projects: ['项目A', '项目B']
-    }
-  }, [])
+      name: "李经理",
+      role: "dept_manager",
+      department: "技术开发部",
+      projects: ["项目A", "项目B"],
+    };
+  }, []);
 
   // Mock 待评价任务列表（作为fallback）
   const mockEvaluationTasks = [
     {
       id: 1,
       employeeId: 101,
-      employeeName: '张三',
-      department: '技术开发部',
-      position: '高级工程师',
-      period: '2025-01',
-      submitDate: '2025-01-28',
-      evaluationType: 'dept', // dept: 部门经理评价, project: 项目经理评价
+      employeeName: "张三",
+      department: "技术开发部",
+      position: "高级工程师",
+      period: "2025-01",
+      submitDate: "2025-01-28",
+      evaluationType: "dept", // dept: 部门经理评价, project: 项目经理评价
       projectName: null,
       weight: 50,
-      status: 'PENDING', // PENDING, COMPLETED
-      deadline: '2025-02-05',
+      status: "PENDING", // PENDING, COMPLETED
+      deadline: "2025-02-05",
       daysLeft: 3,
       workSummary: {
-        workContent: '本月主要负责项目A的核心功能开发，完成了用户认证模块和权限管理系统...',
-        selfEvaluation: '工作完成度较高，技术难点均已攻克...',
-        highlights: '成功优化了系统性能，响应时间提升40%',
-        problems: '在跨模块协作时遇到一些沟通问题',
-        nextMonthPlan: '计划完成支付模块的开发和测试'
+        workContent:
+          "本月主要负责项目A的核心功能开发，完成了用户认证模块和权限管理系统...",
+        selfEvaluation: "工作完成度较高，技术难点均已攻克...",
+        highlights: "成功优化了系统性能，响应时间提升40%",
+        problems: "在跨模块协作时遇到一些沟通问题",
+        nextMonthPlan: "计划完成支付模块的开发和测试",
       },
       score: null,
-      comment: null
+      comment: null,
     },
     {
       id: 2,
       employeeId: 102,
-      employeeName: '王五',
-      department: '技术开发部',
-      position: '工程师',
-      period: '2025-01',
-      submitDate: '2025-01-29',
-      evaluationType: 'dept',
+      employeeName: "王五",
+      department: "技术开发部",
+      position: "工程师",
+      period: "2025-01",
+      submitDate: "2025-01-29",
+      evaluationType: "dept",
       projectName: null,
       weight: 50,
-      status: 'PENDING',
-      deadline: '2025-02-05',
+      status: "PENDING",
+      deadline: "2025-02-05",
       daysLeft: 3,
       workSummary: {
-        workContent: '参与项目B的前端开发工作...',
-        selfEvaluation: '按时完成分配的任务...',
-        highlights: '改进了UI交互体验',
-        problems: '对新技术栈还需要更多学习',
-        nextMonthPlan: '提升React开发能力'
+        workContent: "参与项目B的前端开发工作...",
+        selfEvaluation: "按时完成分配的任务...",
+        highlights: "改进了UI交互体验",
+        problems: "对新技术栈还需要更多学习",
+        nextMonthPlan: "提升React开发能力",
       },
       score: null,
-      comment: null
+      comment: null,
     },
     {
       id: 3,
       employeeId: 101,
-      employeeName: '张三',
-      department: '技术开发部',
-      position: '高级工程师',
-      period: '2025-01',
-      submitDate: '2025-01-28',
-      evaluationType: 'project',
-      projectName: '项目A',
+      employeeName: "张三",
+      department: "技术开发部",
+      position: "高级工程师",
+      period: "2025-01",
+      submitDate: "2025-01-28",
+      evaluationType: "project",
+      projectName: "项目A",
       weight: 60,
-      status: 'COMPLETED',
-      deadline: '2025-02-05',
+      status: "COMPLETED",
+      deadline: "2025-02-05",
       daysLeft: 3,
       workSummary: {
-        workContent: '在项目A中完成了核心功能开发...',
-        selfEvaluation: '项目贡献度高...',
-        highlights: '技术攻关能力强',
-        problems: '',
-        nextMonthPlan: '继续优化系统性能'
+        workContent: "在项目A中完成了核心功能开发...",
+        selfEvaluation: "项目贡献度高...",
+        highlights: "技术攻关能力强",
+        problems: "",
+        nextMonthPlan: "继续优化系统性能",
       },
       score: 92,
-      comment: '在项目中表现优异，技术能力强，按时交付高质量代码'
+      comment: "在项目中表现优异，技术能力强，按时交付高质量代码",
     },
     {
       id: 4,
       employeeId: 103,
-      employeeName: '赵六',
-      department: '技术开发部',
-      position: '初级工程师',
-      period: '2025-01',
-      submitDate: '2025-01-30',
-      evaluationType: 'project',
-      projectName: '项目B',
+      employeeName: "赵六",
+      department: "技术开发部",
+      position: "初级工程师",
+      period: "2025-01",
+      submitDate: "2025-01-30",
+      evaluationType: "project",
+      projectName: "项目B",
       weight: 100,
-      status: 'PENDING',
-      deadline: '2025-02-05',
+      status: "PENDING",
+      deadline: "2025-02-05",
       daysLeft: 3,
       workSummary: {
-        workContent: '负责项目B的测试工作...',
-        selfEvaluation: '测试覆盖率达到85%...',
-        highlights: '发现并修复了多个关键bug',
-        problems: '自动化测试经验不足',
-        nextMonthPlan: '学习自动化测试框架'
+        workContent: "负责项目B的测试工作...",
+        selfEvaluation: "测试覆盖率达到85%...",
+        highlights: "发现并修复了多个关键bug",
+        problems: "自动化测试经验不足",
+        nextMonthPlan: "学习自动化测试框架",
       },
       score: null,
-      comment: null
+      comment: null,
     },
     {
       id: 5,
       employeeId: 104,
-      employeeName: '李四',
-      department: '技术开发部',
-      position: '高级工程师',
-      period: '2024-12',
-      submitDate: '2024-12-28',
-      evaluationType: 'dept',
+      employeeName: "李四",
+      department: "技术开发部",
+      position: "高级工程师",
+      period: "2024-12",
+      submitDate: "2024-12-28",
+      evaluationType: "dept",
       projectName: null,
       weight: 50,
-      status: 'COMPLETED',
-      deadline: '2025-01-05',
+      status: "COMPLETED",
+      deadline: "2025-01-05",
       daysLeft: -28,
       workSummary: {
-        workContent: '上月工作内容...',
-        selfEvaluation: '上月自评...',
-        highlights: '',
-        problems: '',
-        nextMonthPlan: ''
+        workContent: "上月工作内容...",
+        selfEvaluation: "上月自评...",
+        highlights: "",
+        problems: "",
+        nextMonthPlan: "",
       },
       score: 88,
-      comment: '工作态度良好，技术能力有待提升'
-    }
-  ]
+      comment: "工作态度良好，技术能力有待提升",
+    },
+  ];
 
   // 使用自定义Hook管理任务数据
-  const {
-    filteredTasks,
-    statistics,
-    availablePeriods,
-    isLoading,
-    error
-  } = useEvaluationTasks(periodFilter, statusFilter, searchTerm, typeFilter, mockEvaluationTasks)
+  const { filteredTasks, statistics, availablePeriods, isLoading, error } =
+    useEvaluationTasks(
+      periodFilter,
+      statusFilter,
+      searchTerm,
+      typeFilter,
+      mockEvaluationTasks,
+    );
 
   // 处理评价
   const handleEvaluate = (task) => {
-    navigate(`/evaluation/${task.id}`, { state: { task } })
-  }
+    navigate(`/evaluation/${task.id}`, { state: { task } });
+  };
 
   // 动画配置
   const fadeIn = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.4 }
-  }
+    transition: { duration: 0.4 },
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
@@ -193,9 +192,12 @@ const EvaluationTaskList = () => {
         <motion.div {...fadeIn}>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">绩效评价任务</h1>
+              <h1 className="text-3xl font-bold text-white mb-2">
+                绩效评价任务
+              </h1>
               <p className="text-slate-400">
-                {currentUser.role === 'dept_manager' ? '部门成员' : '项目成员'}绩效评价和打分
+                {currentUser.role === "dept_manager" ? "部门成员" : "项目成员"}
+                绩效评价和打分
               </p>
             </div>
             <ClipboardList className="h-12 w-12 text-blue-400" />
@@ -266,7 +268,7 @@ const EvaluationTaskList = () => {
         </motion.div>
       </motion.div>
     </div>
-  )
-}
+  );
+};
 
-export default EvaluationTaskList
+export default EvaluationTaskList;

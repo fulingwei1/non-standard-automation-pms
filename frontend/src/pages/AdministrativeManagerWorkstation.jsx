@@ -1,13 +1,13 @@
 /**
  * Administrative Manager Workstation - Main dashboard for administrative manager
- * Features: Office supplies management, Meeting management, Vehicle management, 
+ * Features: Office supplies management, Meeting management, Vehicle management,
  * Fixed assets management, Employee attendance, Administrative approvals
  * Core Functions: Administrative affairs, Asset management, Employee services, Approval workflow
  */
 
-import { useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   TrendingUp,
   TrendingDown,
@@ -46,8 +46,8 @@ import {
   Building,
   Truck,
   Receipt,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -62,51 +62,62 @@ import {
   DialogTitle,
   DialogDescription,
   DialogBody,
-} from '../components/ui'
-import { cn, formatDate } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { SimplePieChart, MonthlyTrendChart, CategoryBreakdownCard } from '../components/administrative/StatisticsCharts'
-import { 
-  employeeApi, 
-  departmentApi, 
+} from "../components/ui";
+import { cn, formatDate } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import {
+  SimplePieChart,
+  MonthlyTrendChart,
+  CategoryBreakdownCard,
+} from "../components/administrative/StatisticsCharts";
+import {
+  employeeApi,
+  departmentApi,
   pmoApi,
   ecnApi,
   purchaseApi,
-  quoteApi 
-} from '../services/api'
-import { toast } from '../components/ui/toast'
+  quoteApi,
+} from "../services/api";
+import { toast } from "../components/ui/toast";
 
 const formatCurrency = (value) => {
   if (value >= 100000000) {
-    return `¥${(value / 100000000).toFixed(2)}亿`
+    return `¥${(value / 100000000).toFixed(2)}亿`;
   }
   if (value >= 10000) {
-    return `¥${(value / 10000).toFixed(1)}万`
+    return `¥${(value / 10000).toFixed(1)}万`;
   }
-  return new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency: 'CNY',
+  return new Intl.NumberFormat("zh-CN", {
+    style: "currency",
+    currency: "CNY",
     minimumFractionDigits: 0,
-  }).format(value)
-}
+  }).format(value);
+};
 
-const StatCard = ({ title, value, subtitle, trend, icon: IconComponent, color, bg, onClick }) => {
+const StatCard = ({
+  title,
+  value,
+  subtitle,
+  trend,
+  icon: IconComponent,
+  color,
+  bg,
+  onClick,
+}) => {
   return (
     <motion.div
       variants={fadeIn}
       onClick={onClick}
       className={cn(
         "relative overflow-hidden rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-5 backdrop-blur transition-all hover:border-slate-600/80 hover:shadow-lg",
-        onClick && "cursor-pointer"
+        onClick && "cursor-pointer",
       )}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm text-slate-400 mb-2">{title}</p>
-          <p className={cn('text-2xl font-bold mb-1', color)}>{value}</p>
-          {subtitle && (
-            <p className="text-xs text-slate-500">{subtitle}</p>
-          )}
+          <p className={cn("text-2xl font-bold mb-1", color)}>{value}</p>
+          {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
           {trend !== undefined && (
             <div className="flex items-center gap-1 mt-2">
               {trend > 0 ? (
@@ -126,17 +137,17 @@ const StatCard = ({ title, value, subtitle, trend, icon: IconComponent, color, b
             </div>
           )}
         </div>
-        <div className={cn('rounded-lg p-3 bg-opacity-20', bg)}>
-          <IconComponent className={cn('h-6 w-6', color)} />
+        <div className={cn("rounded-lg p-3 bg-opacity-20", bg)}>
+          <IconComponent className={cn("h-6 w-6", color)} />
         </div>
       </div>
       <div className="absolute right-0 bottom-0 h-20 w-20 rounded-full bg-gradient-to-br from-purple-500/10 to-transparent blur-2xl opacity-30" />
     </motion.div>
-  )
-}
+  );
+};
 
 export default function AdministrativeManagerWorkstation() {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalEmployees: 0,
     attendanceRate: 0,
@@ -151,162 +162,181 @@ export default function AdministrativeManagerWorkstation() {
     meetingsToday: 0,
     totalVehicles: 0,
     vehiclesInUse: 0,
-  })
-  const [pendingApprovals, setPendingApprovals] = useState([])
-  const [meetings, setMeetings] = useState([])
-  const [officeSupplies, setOfficeSupplies] = useState([])
-  const [vehicles, setVehicles] = useState([])
-  const [attendanceStats, setAttendanceStats] = useState([])
-  const [selectedMeeting, setSelectedMeeting] = useState(null)
-  const [showMeetingDetail, setShowMeetingDetail] = useState(false)
-  const [selectedApproval, setSelectedApproval] = useState(null)
-  const [showApprovalDetail, setShowApprovalDetail] = useState(false)
+  });
+  const [pendingApprovals, setPendingApprovals] = useState([]);
+  const [meetings, setMeetings] = useState([]);
+  const [officeSupplies, setOfficeSupplies] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [attendanceStats, setAttendanceStats] = useState([]);
+  const [selectedMeeting, setSelectedMeeting] = useState(null);
+  const [showMeetingDetail, setShowMeetingDetail] = useState(false);
+  const [selectedApproval, setSelectedApproval] = useState(null);
+  const [showApprovalDetail, setShowApprovalDetail] = useState(false);
 
   // Load data from APIs
   const loadData = useCallback(async () => {
     try {
-      setLoading(true)
-      
+      setLoading(true);
+
       // Load employee statistics
       try {
-        const empRes = await employeeApi.getStatistics({})
-        const empStats = empRes.data || empRes
+        const empRes = await employeeApi.getStatistics({});
+        const empStats = empRes.data || empRes;
         if (empStats) {
-          setStats(prev => ({
+          setStats((prev) => ({
             ...prev,
             totalEmployees: empStats.total || prev.totalEmployees,
-          }))
+          }));
         }
       } catch (err) {
-        console.error('Failed to load employee statistics:', err)
+        console.error("Failed to load employee statistics:", err);
       }
 
       // Load department statistics
       try {
-        const deptRes = await departmentApi.getStatistics({})
-        const deptStats = deptRes.data || deptRes
+        const deptRes = await departmentApi.getStatistics({});
+        const deptStats = deptRes.data || deptRes;
         // Could use this for department-level stats
       } catch (err) {
-        console.error('Failed to load department statistics:', err)
+        console.error("Failed to load department statistics:", err);
       }
 
       // Load meetings
       try {
-        const today = new Date().toISOString().split('T')[0]
-        const meetingsRes = await pmoApi.meetings.list({ 
+        const today = new Date().toISOString().split("T")[0];
+        const meetingsRes = await pmoApi.meetings.list({
           date_from: today,
-          page_size: 50 
-        })
-        const meetingsData = meetingsRes.data || meetingsRes
-        const meetingsList = meetingsData.items || meetingsData || []
-        
+          page_size: 50,
+        });
+        const meetingsData = meetingsRes.data || meetingsRes;
+        const meetingsList = meetingsData.items || meetingsData || [];
+
         // Transform meetings data
-        const transformedMeetings = meetingsList.map(meeting => ({
+        const transformedMeetings = meetingsList.map((meeting) => ({
           id: meeting.id,
-          title: meeting.meeting_title || meeting.title || '',
-          organizer: meeting.organizer_name || '未知',
-          department: meeting.department || '未知部门',
-          room: meeting.meeting_room || '未指定',
-          date: meeting.meeting_date ? meeting.meeting_date.split('T')[0] : '',
-          time: meeting.start_time && meeting.end_time 
-            ? `${meeting.start_time}-${meeting.end_time}`
-            : '',
+          title: meeting.meeting_title || meeting.title || "",
+          organizer: meeting.organizer_name || "未知",
+          department: meeting.department || "未知部门",
+          room: meeting.meeting_room || "未指定",
+          date: meeting.meeting_date ? meeting.meeting_date.split("T")[0] : "",
+          time:
+            meeting.start_time && meeting.end_time
+              ? `${meeting.start_time}-${meeting.end_time}`
+              : "",
           attendees: meeting.attendees?.length || 0,
-          status: meeting.status === 'SCHEDULED' ? 'scheduled' : 
-                  meeting.status === 'ONGOING' ? 'ongoing' : 
-                  meeting.status === 'COMPLETED' ? 'completed' : 'scheduled',
-        }))
-        
-        setMeetings(transformedMeetings)
-        
+          status:
+            meeting.status === "SCHEDULED"
+              ? "scheduled"
+              : meeting.status === "ONGOING"
+                ? "ongoing"
+                : meeting.status === "COMPLETED"
+                  ? "completed"
+                  : "scheduled",
+        }));
+
+        setMeetings(transformedMeetings);
+
         // Update stats
-        const todayMeetings = transformedMeetings.filter(m => m.date === today)
-        const thisWeekMeetings = transformedMeetings.filter(m => {
-          const meetingDate = new Date(m.date)
-          const weekStart = new Date()
-          weekStart.setDate(weekStart.getDate() - weekStart.getDay())
-          return meetingDate >= weekStart
-        })
-        
-        setStats(prev => ({
+        const todayMeetings = transformedMeetings.filter(
+          (m) => m.date === today,
+        );
+        const thisWeekMeetings = transformedMeetings.filter((m) => {
+          const meetingDate = new Date(m.date);
+          const weekStart = new Date();
+          weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+          return meetingDate >= weekStart;
+        });
+
+        setStats((prev) => ({
           ...prev,
           meetingsToday: todayMeetings.length,
           meetingsThisWeek: thisWeekMeetings.length,
-        }))
+        }));
       } catch (err) {
-        console.error('Failed to load meetings:', err)
+        console.error("Failed to load meetings:", err);
       }
 
       // Load pending approvals from various modules
       try {
-        const allApprovals = []
-        
+        const allApprovals = [];
+
         // ECN approvals
         try {
-          const ecnRes = await ecnApi.list({ status: 'SUBMITTED', page_size: 20 })
-          const ecnData = ecnRes.data || ecnRes
-          const ecns = ecnData.items || ecnData || []
-          ecns.forEach(ecn => {
+          const ecnRes = await ecnApi.list({
+            status: "SUBMITTED",
+            page_size: 20,
+          });
+          const ecnData = ecnRes.data || ecnRes;
+          const ecns = ecnData.items || ecnData || [];
+          ecns.forEach((ecn) => {
             allApprovals.push({
               id: `ecn-${ecn.id}`,
-              type: 'ecn',
-              title: `设计变更申请 - ${ecn.ecn_no || 'ECN'}`,
-              applicant: ecn.created_by_name || '未知',
-              department: ecn.department || '未知部门',
+              type: "ecn",
+              title: `设计变更申请 - ${ecn.ecn_no || "ECN"}`,
+              applicant: ecn.created_by_name || "未知",
+              department: ecn.department || "未知部门",
               amount: 0,
-              submitTime: formatDate(ecn.created_at) || '',
-              priority: ecn.priority === 'URGENT' ? 'urgent' : 
-                       ecn.priority === 'HIGH' ? 'high' : 'medium',
-              status: 'pending',
-            })
-          })
+              submitTime: formatDate(ecn.created_at) || "",
+              priority:
+                ecn.priority === "URGENT"
+                  ? "urgent"
+                  : ecn.priority === "HIGH"
+                    ? "high"
+                    : "medium",
+              status: "pending",
+            });
+          });
         } catch (err) {
-          console.error('Failed to load ECN approvals:', err)
+          console.error("Failed to load ECN approvals:", err);
         }
 
         // Purchase request approvals
         try {
-          const prRes = await purchaseApi.requests.list({ status: 'SUBMITTED', page_size: 20 })
-          const prData = prRes.data || prRes
-          const prs = prData.items || prData || []
-          prs.forEach(pr => {
+          const prRes = await purchaseApi.requests.list({
+            status: "SUBMITTED",
+            page_size: 20,
+          });
+          const prData = prRes.data || prRes;
+          const prs = prData.items || prData || [];
+          prs.forEach((pr) => {
             allApprovals.push({
               id: `pr-${pr.id}`,
-              type: 'office_supplies',
+              type: "office_supplies",
               title: `采购申请 - ${pr.request_no || pr.id}`,
-              applicant: pr.created_by_name || '未知',
-              department: pr.department || '未知部门',
+              applicant: pr.created_by_name || "未知",
+              department: pr.department || "未知部门",
               amount: parseFloat(pr.total_amount || 0),
-              submitTime: formatDate(pr.created_at) || '',
-              priority: pr.urgent ? 'high' : 'medium',
-              status: 'pending',
-            })
-          })
+              submitTime: formatDate(pr.created_at) || "",
+              priority: pr.urgent ? "high" : "medium",
+              status: "pending",
+            });
+          });
         } catch (err) {
-          console.error('Failed to load purchase request approvals:', err)
+          console.error("Failed to load purchase request approvals:", err);
         }
 
-        setPendingApprovals(allApprovals.slice(0, 5))
-        setStats(prev => ({
+        setPendingApprovals(allApprovals.slice(0, 5));
+        setStats((prev) => ({
           ...prev,
           pendingApprovals: allApprovals.length,
-          urgentApprovals: allApprovals.filter(a => a.priority === 'urgent' || a.priority === 'high').length,
-        }))
+          urgentApprovals: allApprovals.filter(
+            (a) => a.priority === "urgent" || a.priority === "high",
+          ).length,
+        }));
       } catch (err) {
-        console.error('Failed to load approvals:', err)
+        console.error("Failed to load approvals:", err);
       }
-
     } catch (err) {
-        console.error('Failed to load dashboard data:', err)
-        setError(err)
+      console.error("Failed to load dashboard data:", err);
+      setError(err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    loadData();
+  }, [loadData]);
 
   return (
     <motion.div
@@ -325,9 +355,9 @@ export default function AdministrativeManagerWorkstation() {
               <BarChart3 className="w-4 h-4" />
               行政报表
             </Button>
-            <Button 
+            <Button
               className="flex items-center gap-2"
-              onClick={() => window.location.href = '/approval-center'}
+              onClick={() => (window.location.href = "/approval-center")}
             >
               <ClipboardCheck className="w-4 h-4" />
               审批中心
@@ -350,7 +380,7 @@ export default function AdministrativeManagerWorkstation() {
           icon={ClipboardCheck}
           color="text-red-400"
           bg="bg-red-500/10"
-          onClick={() => window.location.href = '/approval-center'}
+          onClick={() => (window.location.href = "/approval-center")}
         />
         <StatCard
           title="低库存物品"
@@ -432,30 +462,48 @@ export default function AdministrativeManagerWorkstation() {
                       使用率: {stats.budgetUtilization}%
                     </span>
                     <span className="text-slate-400">
-                      剩余: {formatCurrency(stats.monthlyAdminBudget - stats.monthlyAdminSpent)}
+                      剩余:{" "}
+                      {formatCurrency(
+                        stats.monthlyAdminBudget - stats.monthlyAdminSpent,
+                      )}
                     </span>
                   </div>
                   <div className="pt-4 border-t border-slate-700/50">
                     <CategoryBreakdownCard
                       title="费用分类"
                       data={[
-                        { label: '办公用品', value: stats.officeSuppliesMonthlyCost, color: '#3b82f6' },
-                        { label: '车辆费用', value: stats.monthlyFuelCost, color: '#06b6d4' },
-                        { label: '其他费用', value: stats.monthlyAdminSpent - stats.officeSuppliesMonthlyCost - stats.monthlyFuelCost, color: '#64748b' },
+                        {
+                          label: "办公用品",
+                          value: stats.officeSuppliesMonthlyCost,
+                          color: "#3b82f6",
+                        },
+                        {
+                          label: "车辆费用",
+                          value: stats.monthlyFuelCost,
+                          color: "#06b6d4",
+                        },
+                        {
+                          label: "其他费用",
+                          value:
+                            stats.monthlyAdminSpent -
+                            stats.officeSuppliesMonthlyCost -
+                            stats.monthlyFuelCost,
+                          color: "#64748b",
+                        },
                       ]}
                       total={stats.monthlyAdminSpent}
                       formatValue={formatCurrency}
                     />
                   </div>
-                  
+
                   <div className="pt-4 border-t border-slate-700/50">
                     <p className="text-sm text-slate-400 mb-3">月度费用趋势</p>
                     <MonthlyTrendChart
                       data={[
-                        { month: '2024-10', amount: 420000 },
-                        { month: '2024-11', amount: 395000 },
-                        { month: '2024-12', amount: 410000 },
-                        { month: '2025-01', amount: stats.monthlyAdminSpent },
+                        { month: "2024-10", amount: 420000 },
+                        { month: "2024-11", amount: 395000 },
+                        { month: "2024-12", amount: 410000 },
+                        { month: "2025-01", amount: stats.monthlyAdminSpent },
                       ]}
                       valueKey="amount"
                       labelKey="month"
@@ -476,7 +524,11 @@ export default function AdministrativeManagerWorkstation() {
                     <Package className="h-5 w-5 text-blue-400" />
                     办公用品库存预警
                   </CardTitle>
-                  <Button variant="ghost" size="sm" className="text-xs text-primary">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-primary"
+                  >
                     查看全部 <ChevronRight className="w-3 h-3 ml-1" />
                   </Button>
                 </div>
@@ -491,16 +543,19 @@ export default function AdministrativeManagerWorkstation() {
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-white">{item.name}</span>
+                            <span className="font-medium text-white">
+                              {item.name}
+                            </span>
                             <Badge
                               variant="outline"
                               className={cn(
-                                'text-xs',
-                                item.status === 'low' && 'bg-red-500/20 text-red-400 border-red-500/30',
-                                item.status === 'normal' && 'bg-slate-700/40'
+                                "text-xs",
+                                item.status === "low" &&
+                                  "bg-red-500/20 text-red-400 border-red-500/30",
+                                item.status === "normal" && "bg-slate-700/40",
                               )}
                             >
-                              {item.status === 'low' ? '库存不足' : '正常'}
+                              {item.status === "low" ? "库存不足" : "正常"}
                             </Badge>
                           </div>
                           <div className="text-xs text-slate-400">
@@ -520,14 +575,18 @@ export default function AdministrativeManagerWorkstation() {
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-slate-400">库存率</span>
                           <span className="text-slate-300">
-                            {((item.currentStock / item.minStock) * 100).toFixed(0)}%
+                            {(
+                              (item.currentStock / item.minStock) *
+                              100
+                            ).toFixed(0)}
+                            %
                           </span>
                         </div>
                         <Progress
                           value={(item.currentStock / item.minStock) * 100}
                           className={cn(
                             "h-1.5 bg-slate-700/50",
-                            item.status === 'low' && "bg-red-500/20"
+                            item.status === "low" && "bg-red-500/20",
                           )}
                         />
                       </div>
@@ -547,7 +606,11 @@ export default function AdministrativeManagerWorkstation() {
                     <Calendar className="h-5 w-5 text-purple-400" />
                     今日会议安排
                   </CardTitle>
-                  <Button variant="ghost" size="sm" className="text-xs text-primary">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-primary"
+                  >
                     查看全部 <ChevronRight className="w-3 h-3 ml-1" />
                   </Button>
                 </div>
@@ -559,23 +622,29 @@ export default function AdministrativeManagerWorkstation() {
                       key={meeting.id}
                       className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"
                       onClick={() => {
-                        setSelectedMeeting(meeting)
-                        setShowMeetingDetail(true)
+                        setSelectedMeeting(meeting);
+                        setShowMeetingDetail(true);
                       }}
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-white">{meeting.title}</span>
+                            <span className="font-medium text-white">
+                              {meeting.title}
+                            </span>
                             <Badge
                               variant="outline"
                               className={cn(
-                                'text-xs',
-                                meeting.status === 'ongoing' && 'bg-green-500/20 text-green-400 border-green-500/30',
-                                meeting.status === 'scheduled' && 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                                "text-xs",
+                                meeting.status === "ongoing" &&
+                                  "bg-green-500/20 text-green-400 border-green-500/30",
+                                meeting.status === "scheduled" &&
+                                  "bg-blue-500/20 text-blue-400 border-blue-500/30",
                               )}
                             >
-                              {meeting.status === 'ongoing' ? '进行中' : '已安排'}
+                              {meeting.status === "ongoing"
+                                ? "进行中"
+                                : "已安排"}
                             </Badge>
                           </div>
                           <div className="text-xs text-slate-400 mt-1">
@@ -616,7 +685,10 @@ export default function AdministrativeManagerWorkstation() {
                     <ClipboardCheck className="h-5 w-5 text-amber-400" />
                     待审批事项
                   </CardTitle>
-                  <Badge variant="outline" className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+                  <Badge
+                    variant="outline"
+                    className="bg-amber-500/20 text-amber-400 border-amber-500/30"
+                  >
                     {pendingApprovals.length}
                   </Badge>
                 </div>
@@ -627,8 +699,8 @@ export default function AdministrativeManagerWorkstation() {
                     key={item.id}
                     className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"
                     onClick={() => {
-                      setSelectedApproval(item)
-                      setShowApprovalDetail(true)
+                      setSelectedApproval(item);
+                      setShowApprovalDetail(true);
                     }}
                   >
                     <div className="flex items-start justify-between mb-2">
@@ -637,39 +709,61 @@ export default function AdministrativeManagerWorkstation() {
                           <Badge
                             variant="outline"
                             className={cn(
-                              'text-xs',
-                              item.type === 'office_supplies' && 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-                              item.type === 'vehicle' && 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-                              item.type === 'asset' && 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-                              item.type === 'meeting' && 'bg-green-500/20 text-green-400 border-green-500/30',
-                              item.type === 'leave' && 'bg-pink-500/20 text-pink-400 border-pink-500/30'
+                              "text-xs",
+                              item.type === "office_supplies" &&
+                                "bg-blue-500/20 text-blue-400 border-blue-500/30",
+                              item.type === "vehicle" &&
+                                "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+                              item.type === "asset" &&
+                                "bg-purple-500/20 text-purple-400 border-purple-500/30",
+                              item.type === "meeting" &&
+                                "bg-green-500/20 text-green-400 border-green-500/30",
+                              item.type === "leave" &&
+                                "bg-pink-500/20 text-pink-400 border-pink-500/30",
                             )}
                           >
-                            {item.type === 'office_supplies' ? '办公用品' : 
-                             item.type === 'vehicle' ? '车辆' :
-                             item.type === 'asset' ? '资产' :
-                             item.type === 'meeting' ? '会议' : '请假'}
+                            {item.type === "office_supplies"
+                              ? "办公用品"
+                              : item.type === "vehicle"
+                                ? "车辆"
+                                : item.type === "asset"
+                                  ? "资产"
+                                  : item.type === "meeting"
+                                    ? "会议"
+                                    : "请假"}
                           </Badge>
-                          {item.priority === 'high' && (
+                          {item.priority === "high" && (
                             <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
                               紧急
                             </Badge>
                           )}
                         </div>
-                        <p className="font-medium text-white text-sm">{item.title}</p>
+                        <p className="font-medium text-white text-sm">
+                          {item.title}
+                        </p>
                         <p className="text-xs text-slate-400 mt-1">
                           {item.department} · {item.applicant}
                         </p>
-                        {(item.items || item.purpose || item.item || item.room || item.type) && (
+                        {(item.items ||
+                          item.purpose ||
+                          item.item ||
+                          item.room ||
+                          item.type) && (
                           <p className="text-xs text-slate-500 mt-1">
-                            {item.items?.join('、') || item.purpose || item.item || `${item.room} ${item.date} ${item.time}` || `${item.type} ${item.days}天`}
+                            {item.items?.join("、") ||
+                              item.purpose ||
+                              item.item ||
+                              `${item.room} ${item.date} ${item.time}` ||
+                              `${item.type} ${item.days}天`}
                           </p>
                         )}
                       </div>
                     </div>
                     {item.amount && (
                       <div className="flex items-center justify-between text-xs mt-2">
-                        <span className="text-slate-400">{item.submitTime.split(' ')[1]}</span>
+                        <span className="text-slate-400">
+                          {item.submitTime.split(" ")[1]}
+                        </span>
                         <span className="font-medium text-amber-400">
                           {formatCurrency(item.amount)}
                         </span>
@@ -677,10 +771,12 @@ export default function AdministrativeManagerWorkstation() {
                     )}
                   </div>
                 ))}
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full mt-3"
-                  onClick={() => window.location.href = '/administrative-approvals'}
+                  onClick={() =>
+                    (window.location.href = "/administrative-approvals")
+                  }
                 >
                   查看全部审批
                 </Button>
@@ -697,7 +793,11 @@ export default function AdministrativeManagerWorkstation() {
                     <Car className="h-5 w-5 text-cyan-400" />
                     车辆使用状态
                   </CardTitle>
-                  <Button variant="ghost" size="sm" className="text-xs text-primary">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-primary"
+                  >
                     详情 <ChevronRight className="w-3 h-3 ml-1" />
                   </Button>
                 </div>
@@ -711,18 +811,26 @@ export default function AdministrativeManagerWorkstation() {
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-white">{vehicle.plateNumber}</span>
+                          <span className="font-medium text-white">
+                            {vehicle.plateNumber}
+                          </span>
                           <Badge
                             variant="outline"
                             className={cn(
-                              'text-xs',
-                              vehicle.status === 'in_use' && 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-                              vehicle.status === 'available' && 'bg-green-500/20 text-green-400 border-green-500/30',
-                              vehicle.status === 'maintenance' && 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                              "text-xs",
+                              vehicle.status === "in_use" &&
+                                "bg-blue-500/20 text-blue-400 border-blue-500/30",
+                              vehicle.status === "available" &&
+                                "bg-green-500/20 text-green-400 border-green-500/30",
+                              vehicle.status === "maintenance" &&
+                                "bg-amber-500/20 text-amber-400 border-amber-500/30",
                             )}
                           >
-                            {vehicle.status === 'in_use' ? '使用中' : 
-                             vehicle.status === 'available' ? '可用' : '保养中'}
+                            {vehicle.status === "in_use"
+                              ? "使用中"
+                              : vehicle.status === "available"
+                                ? "可用"
+                                : "保养中"}
                           </Badge>
                         </div>
                         <div className="text-xs text-slate-400">
@@ -740,7 +848,8 @@ export default function AdministrativeManagerWorkstation() {
                         )}
                         {vehicle.maintenanceReason && (
                           <div className="text-xs text-slate-500 mt-1">
-                            {vehicle.maintenanceReason} · 预计归还: {vehicle.returnDate}
+                            {vehicle.maintenanceReason} · 预计归还:{" "}
+                            {vehicle.returnDate}
                           </div>
                         )}
                         {vehicle.nextMaintenance && (
@@ -765,7 +874,11 @@ export default function AdministrativeManagerWorkstation() {
                     <UserCheck className="h-5 w-5 text-emerald-400" />
                     部门出勤统计
                   </CardTitle>
-                  <Button variant="ghost" size="sm" className="text-xs text-primary">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-primary"
+                  >
                     详情 <ChevronRight className="w-3 h-3 ml-1" />
                   </Button>
                 </div>
@@ -779,13 +892,23 @@ export default function AdministrativeManagerWorkstation() {
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-white text-sm">{stat.department}</span>
+                          <span className="font-medium text-white text-sm">
+                            {stat.department}
+                          </span>
                         </div>
                         <div className="flex items-center gap-4 mt-2 text-xs text-slate-400">
                           <span>总人数: {stat.total}</span>
                           <span>出勤: {stat.present}</span>
-                          {stat.leave > 0 && <span className="text-amber-400">请假: {stat.leave}</span>}
-                          {stat.late > 0 && <span className="text-red-400">迟到: {stat.late}</span>}
+                          {stat.leave > 0 && (
+                            <span className="text-amber-400">
+                              请假: {stat.leave}
+                            </span>
+                          )}
+                          {stat.late > 0 && (
+                            <span className="text-red-400">
+                              迟到: {stat.late}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="text-right">
@@ -823,32 +946,46 @@ export default function AdministrativeManagerWorkstation() {
                   <Badge
                     variant="outline"
                     className={cn(
-                      selectedApproval.type === 'office_supplies' && 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-                      selectedApproval.type === 'vehicle' && 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-                      selectedApproval.type === 'asset' && 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-                      selectedApproval.type === 'meeting' && 'bg-green-500/20 text-green-400 border-green-500/30',
-                      selectedApproval.type === 'leave' && 'bg-pink-500/20 text-pink-400 border-pink-500/30'
+                      selectedApproval.type === "office_supplies" &&
+                        "bg-blue-500/20 text-blue-400 border-blue-500/30",
+                      selectedApproval.type === "vehicle" &&
+                        "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+                      selectedApproval.type === "asset" &&
+                        "bg-purple-500/20 text-purple-400 border-purple-500/30",
+                      selectedApproval.type === "meeting" &&
+                        "bg-green-500/20 text-green-400 border-green-500/30",
+                      selectedApproval.type === "leave" &&
+                        "bg-pink-500/20 text-pink-400 border-pink-500/30",
                     )}
                   >
-                    {selectedApproval.type === 'office_supplies' ? '办公用品' : 
-                     selectedApproval.type === 'vehicle' ? '车辆' :
-                     selectedApproval.type === 'asset' ? '资产' :
-                     selectedApproval.type === 'meeting' ? '会议' : '请假'}
+                    {selectedApproval.type === "office_supplies"
+                      ? "办公用品"
+                      : selectedApproval.type === "vehicle"
+                        ? "车辆"
+                        : selectedApproval.type === "asset"
+                          ? "资产"
+                          : selectedApproval.type === "meeting"
+                            ? "会议"
+                            : "请假"}
                   </Badge>
-                  {selectedApproval.priority === 'high' && (
+                  {selectedApproval.priority === "high" && (
                     <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
                       紧急
                     </Badge>
                   )}
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-2">{selectedApproval.title}</h3>
+                  <h3 className="text-lg font-semibold text-white mb-2">
+                    {selectedApproval.title}
+                  </h3>
                   {selectedApproval.items && (
                     <div className="mb-2">
                       <p className="text-sm text-slate-400 mb-1">物品清单:</p>
                       <div className="flex flex-wrap gap-2">
                         {selectedApproval.items.map((item, idx) => (
-                          <Badge key={idx} variant="outline">{item}</Badge>
+                          <Badge key={idx} variant="outline">
+                            {item}
+                          </Badge>
                         ))}
                       </div>
                     </div>
@@ -856,7 +993,9 @@ export default function AdministrativeManagerWorkstation() {
                   {selectedApproval.amount && (
                     <div className="mb-2">
                       <p className="text-sm text-slate-400">申请金额:</p>
-                      <p className="text-lg font-bold text-amber-400">{formatCurrency(selectedApproval.amount)}</p>
+                      <p className="text-lg font-bold text-amber-400">
+                        {formatCurrency(selectedApproval.amount)}
+                      </p>
                     </div>
                   )}
                   {selectedApproval.purpose && (
@@ -868,7 +1007,10 @@ export default function AdministrativeManagerWorkstation() {
                   {selectedApproval.room && (
                     <div className="mb-2">
                       <p className="text-sm text-slate-400">会议室:</p>
-                      <p className="text-white">{selectedApproval.room} · {selectedApproval.date} {selectedApproval.time}</p>
+                      <p className="text-white">
+                        {selectedApproval.room} · {selectedApproval.date}{" "}
+                        {selectedApproval.time}
+                      </p>
                     </div>
                   )}
                   {selectedApproval.days && (
@@ -878,12 +1020,16 @@ export default function AdministrativeManagerWorkstation() {
                     </div>
                   )}
                   <div className="mt-4 pt-4 border-t border-slate-700/50">
-                    <p className="text-xs text-slate-500">提交时间: {selectedApproval.submitTime}</p>
+                    <p className="text-xs text-slate-500">
+                      提交时间: {selectedApproval.submitTime}
+                    </p>
                   </div>
                 </div>
                 <div className="flex gap-2 pt-4">
                   <Button className="flex-1">批准</Button>
-                  <Button variant="outline" className="flex-1">拒绝</Button>
+                  <Button variant="outline" className="flex-1">
+                    拒绝
+                  </Button>
                 </div>
               </div>
             )}
@@ -907,15 +1053,19 @@ export default function AdministrativeManagerWorkstation() {
                   <Badge
                     variant="outline"
                     className={cn(
-                      selectedMeeting.status === 'ongoing' && 'bg-green-500/20 text-green-400 border-green-500/30',
-                      selectedMeeting.status === 'scheduled' && 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                      selectedMeeting.status === "ongoing" &&
+                        "bg-green-500/20 text-green-400 border-green-500/30",
+                      selectedMeeting.status === "scheduled" &&
+                        "bg-blue-500/20 text-blue-400 border-blue-500/30",
                     )}
                   >
-                    {selectedMeeting.status === 'ongoing' ? '进行中' : '已安排'}
+                    {selectedMeeting.status === "ongoing" ? "进行中" : "已安排"}
                   </Badge>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-4">{selectedMeeting.title}</h3>
+                  <h3 className="text-lg font-semibold text-white mb-4">
+                    {selectedMeeting.title}
+                  </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-slate-400 mb-1">会议室</p>
@@ -931,12 +1081,16 @@ export default function AdministrativeManagerWorkstation() {
                     </div>
                     <div>
                       <p className="text-sm text-slate-400 mb-1">参会人数</p>
-                      <p className="text-white">{selectedMeeting.attendees} 人</p>
+                      <p className="text-white">
+                        {selectedMeeting.attendees} 人
+                      </p>
                     </div>
                   </div>
                 </div>
                 <div className="pt-4 border-t border-slate-700/50">
-                  <Button variant="outline" className="w-full">查看完整信息</Button>
+                  <Button variant="outline" className="w-full">
+                    查看完整信息
+                  </Button>
                 </div>
               </div>
             )}
@@ -944,6 +1098,5 @@ export default function AdministrativeManagerWorkstation() {
         </DialogContent>
       </Dialog>
     </motion.div>
-  )
+  );
 }
-

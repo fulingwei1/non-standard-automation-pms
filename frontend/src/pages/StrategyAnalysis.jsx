@@ -1,9 +1,14 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Target, TrendingUp, BarChart3, PieChart } from 'lucide-react'
-import { PageHeader } from '../components/layout'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { fadeIn } from '../lib/animations'
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Target, TrendingUp, BarChart3, PieChart } from "lucide-react";
+import { PageHeader } from "../components/layout";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { fadeIn } from "../lib/animations";
 
 export default function StrategyAnalysis() {
   return (
@@ -20,8 +25,5 @@ export default function StrategyAnalysis() {
         </motion.div>
       </div>
     </div>
-  )
+  );
 }
-
-
-

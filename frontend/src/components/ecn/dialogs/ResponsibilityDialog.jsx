@@ -10,19 +10,19 @@ import {
   DialogBody,
   DialogFooter,
   DialogDescription,
-} from '../../ui/dialog'
-import { Button } from '../../ui/button'
-import { Input } from '../../ui/input'
-import { Textarea } from '../../ui/textarea'
-import { Card } from '../../ui/card'
+} from "../../ui/dialog";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Textarea } from "../../ui/textarea";
+import { Card } from "../../ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../ui/select'
-import { Plus, X } from 'lucide-react'
+} from "../../ui/select";
+import { Plus, X } from "lucide-react";
 
 export default function ResponsibilityDialog({
   open,
@@ -33,9 +33,9 @@ export default function ResponsibilityDialog({
 }) {
   const totalRatio = form.reduce(
     (sum, r) => sum + parseFloat(r.responsibility_ratio || 0),
-    0
-  )
-  const isValid = Math.abs(totalRatio - 100) < 0.01
+    0,
+  );
+  const isValid = Math.abs(totalRatio - 100) < 0.01;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -57,8 +57,8 @@ export default function ResponsibilityDialog({
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        const newForm = form.filter((_, i) => i !== index)
-                        setForm(newForm)
+                        const newForm = form.filter((_, i) => i !== index);
+                        setForm(newForm);
                       }}
                     >
                       <X className="w-4 h-4" />
@@ -73,9 +73,9 @@ export default function ResponsibilityDialog({
                     <Input
                       value={resp.dept}
                       onChange={(e) => {
-                        const newForm = [...form]
-                        newForm[index].dept = e.target.value
-                        setForm(newForm)
+                        const newForm = [...form];
+                        newForm[index].dept = e.target.value;
+                        setForm(newForm);
                       }}
                       placeholder="如：机械部、电气部等"
                     />
@@ -91,10 +91,10 @@ export default function ResponsibilityDialog({
                       step="0.01"
                       value={resp.responsibility_ratio}
                       onChange={(e) => {
-                        const newForm = [...form]
+                        const newForm = [...form];
                         newForm[index].responsibility_ratio =
-                          parseFloat(e.target.value) || 0
-                        setForm(newForm)
+                          parseFloat(e.target.value) || 0;
+                        setForm(newForm);
                       }}
                       placeholder="0-100"
                     />
@@ -107,9 +107,9 @@ export default function ResponsibilityDialog({
                   <Select
                     value={resp.responsibility_type}
                     onValueChange={(value) => {
-                      const newForm = [...form]
-                      newForm[index].responsibility_type = value
-                      setForm(newForm)
+                      const newForm = [...form];
+                      newForm[index].responsibility_type = value;
+                      setForm(newForm);
                     }}
                   >
                     <SelectTrigger>
@@ -129,9 +129,9 @@ export default function ResponsibilityDialog({
                   <Textarea
                     value={resp.impact_description}
                     onChange={(e) => {
-                      const newForm = [...form]
-                      newForm[index].impact_description = e.target.value
-                      setForm(newForm)
+                      const newForm = [...form];
+                      newForm[index].impact_description = e.target.value;
+                      setForm(newForm);
                     }}
                     placeholder="描述该部门受到的影响"
                     rows={2}
@@ -144,9 +144,9 @@ export default function ResponsibilityDialog({
                   <Textarea
                     value={resp.responsibility_scope}
                     onChange={(e) => {
-                      const newForm = [...form]
-                      newForm[index].responsibility_scope = e.target.value
-                      setForm(newForm)
+                      const newForm = [...form];
+                      newForm[index].responsibility_scope = e.target.value;
+                      setForm(newForm);
                     }}
                     placeholder="描述该部门的责任范围"
                     rows={2}
@@ -162,13 +162,13 @@ export default function ResponsibilityDialog({
               setForm([
                 ...form,
                 {
-                  dept: '',
+                  dept: "",
                   responsibility_ratio: 0,
-                  responsibility_type: 'PRIMARY',
-                  impact_description: '',
-                  responsibility_scope: '',
+                  responsibility_type: "PRIMARY",
+                  impact_description: "",
+                  responsibility_scope: "",
                 },
-              ])
+              ]);
             }}
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -179,7 +179,7 @@ export default function ResponsibilityDialog({
               <span className="text-sm font-medium">责任比例总和</span>
               <span
                 className={`text-lg font-bold ${
-                  isValid ? 'text-green-600' : 'text-red-600'
+                  isValid ? "text-green-600" : "text-red-600"
                 }`}
               >
                 {totalRatio.toFixed(2)}%
@@ -197,5 +197,5 @@ export default function ResponsibilityDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

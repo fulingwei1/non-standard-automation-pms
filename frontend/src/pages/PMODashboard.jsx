@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { cn } from '../lib/utils'
-import { pmoApi } from '../services/api'
-import { formatCurrency } from '../lib/utils'
-import { PageHeader } from '../components/layout/PageHeader'
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { cn } from "../lib/utils";
+import { pmoApi } from "../services/api";
+import { formatCurrency } from "../lib/utils";
+import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import {
   Badge,
   SkeletonCard,
   ApiIntegrationError,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Briefcase,
   TrendingUp,
@@ -26,8 +26,8 @@ import {
   Users,
   Target,
   Activity,
-} from 'lucide-react'
-import { CrossDepartmentProgress } from '../components/pmo/CrossDepartmentProgress'
+} from "lucide-react";
+import { CrossDepartmentProgress } from "../components/pmo/CrossDepartmentProgress";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -35,59 +35,59 @@ const staggerContainer = {
     opacity: 1,
     transition: { staggerChildren: 0.05, delayChildren: 0.1 },
   },
-}
+};
 
 const staggerChild = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
-}
+};
 
 const getRiskLevelColor = (level) => {
   const colors = {
-    CRITICAL: 'bg-red-500/20 text-red-400 border-red-500/30',
-    HIGH: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-    MEDIUM: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    LOW: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  }
-  return colors[level] || colors.LOW
-}
+    CRITICAL: "bg-red-500/20 text-red-400 border-red-500/30",
+    HIGH: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+    MEDIUM: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+    LOW: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  };
+  return colors[level] || colors.LOW;
+};
 
 const getRiskLevelName = (level) => {
   const names = {
-    CRITICAL: '严重',
-    HIGH: '高',
-    MEDIUM: '中',
-    LOW: '低',
-  }
-  return names[level] || '未知'
-}
+    CRITICAL: "严重",
+    HIGH: "高",
+    MEDIUM: "中",
+    LOW: "低",
+  };
+  return names[level] || "未知";
+};
 
 // Mock data removed - using real API only
 
 export default function PMODashboard() {
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [dashboardData, setDashboardData] = useState(null)
-  const [selectedProjectId, setSelectedProjectId] = useState(null)
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
 
   const fetchData = async () => {
     try {
-      setLoading(true)
-      setError(null)
-      const res = await pmoApi.dashboard()
-      setDashboardData(res.data)
+      setLoading(true);
+      setError(null);
+      const res = await pmoApi.dashboard();
+      setDashboardData(res.data);
     } catch (err) {
-      console.error('Failed to fetch PMO dashboard data:', err)
-      setError(err)
-      setDashboardData(null)
+      console.error("Failed to fetch PMO dashboard data:", err);
+      setError(err);
+      setDashboardData(null);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
   if (loading) {
     return (
@@ -107,7 +107,7 @@ export default function PMODashboard() {
             ))}
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -120,7 +120,7 @@ export default function PMODashboard() {
           onRetry={fetchData}
         />
       </div>
-    )
+    );
   }
 
   if (!dashboardData) {
@@ -133,86 +133,84 @@ export default function PMODashboard() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
-  const { summary, projects_by_status, projects_by_stage, recent_risks } = dashboardData
+  const { summary, projects_by_status, projects_by_stage, recent_risks } =
+    dashboardData;
 
   const statCards = [
     {
       icon: Briefcase,
-      label: '项目总数',
+      label: "项目总数",
       value: summary?.total_projects || 0,
       change: `${summary?.active_projects || 0} 进行中`,
-      trend: 'up',
-      color: 'text-blue-400',
+      trend: "up",
+      color: "text-blue-400",
     },
     {
       icon: Activity,
-      label: '活跃项目',
+      label: "活跃项目",
       value: summary?.active_projects || 0,
       change: `${summary?.completed_projects || 0} 已完成`,
-      trend: 'up',
-      color: 'text-emerald-400',
+      trend: "up",
+      color: "text-emerald-400",
     },
     {
       icon: AlertTriangle,
-      label: '延期项目',
+      label: "延期项目",
       value: summary?.delayed_projects || 0,
-      change: summary?.delayed_projects > 0 ? '需关注' : '正常',
-      trend: summary?.delayed_projects > 0 ? 'down' : 'up',
-      color: 'text-red-400',
+      change: summary?.delayed_projects > 0 ? "需关注" : "正常",
+      trend: summary?.delayed_projects > 0 ? "down" : "up",
+      color: "text-red-400",
     },
     {
       icon: DollarSign,
-      label: '总预算',
+      label: "总预算",
       value: formatCurrency(summary?.total_budget || 0),
       change: `成本: ${formatCurrency(summary?.total_cost || 0)}`,
-      trend: 'up',
-      color: 'text-violet-400',
+      trend: "up",
+      color: "text-violet-400",
     },
     {
       icon: Target,
-      label: '风险总数',
+      label: "风险总数",
       value: summary?.total_risks || 0,
       change: `${summary?.critical_risks || 0} 严重`,
-      trend: summary?.critical_risks > 0 ? 'down' : 'up',
-      color: 'text-orange-400',
+      trend: summary?.critical_risks > 0 ? "down" : "up",
+      color: "text-orange-400",
     },
     {
       icon: AlertTriangle,
-      label: '高风险',
+      label: "高风险",
       value: summary?.high_risks || 0,
       change: `${summary?.critical_risks || 0} 严重`,
-      trend: summary?.high_risks > 0 ? 'down' : 'up',
-      color: 'text-red-400',
+      trend: summary?.high_risks > 0 ? "down" : "up",
+      color: "text-red-400",
     },
     {
       icon: Users,
-      label: '已完成',
+      label: "已完成",
       value: summary?.completed_projects || 0,
-      change: '项目',
-      trend: 'up',
-      color: 'text-green-400',
+      change: "项目",
+      trend: "up",
+      color: "text-green-400",
     },
     {
       icon: BarChart3,
-      label: '成本执行率',
-      value: summary?.total_budget > 0
-        ? `${((summary?.total_cost / summary?.total_budget) * 100).toFixed(1)}%`
-        : '0%',
-      change: '预算执行',
-      trend: 'up',
-      color: 'text-indigo-400',
+      label: "成本执行率",
+      value:
+        summary?.total_budget > 0
+          ? `${((summary?.total_cost / summary?.total_budget) * 100).toFixed(1)}%`
+          : "0%",
+      change: "预算执行",
+      trend: "up",
+      color: "text-indigo-400",
     },
-  ]
+  ];
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={staggerContainer}
-    >
+    <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
       <motion.div variants={staggerChild}>
         <PageHeader
           title="PMO 驾驶舱"
@@ -237,39 +235,53 @@ export default function PMODashboard() {
           <Card hover={false}>
             <CardContent className="p-0">
               <div className="flex items-center justify-between p-5 border-b border-white/5">
-                <h3 className="text-lg font-semibold text-white">项目状态分布</h3>
+                <h3 className="text-lg font-semibold text-white">
+                  项目状态分布
+                </h3>
               </div>
 
               <div className="p-5 space-y-4">
                 {/* By Status */}
                 <div>
-                  <h4 className="text-sm font-medium text-slate-400 mb-3">按状态</h4>
+                  <h4 className="text-sm font-medium text-slate-400 mb-3">
+                    按状态
+                  </h4>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {Object.entries(projects_by_status || {}).map(([status, count]) => (
-                      <div
-                        key={status}
-                        className="p-3 rounded-xl bg-white/[0.02] border border-white/5"
-                      >
-                        <div className="text-2xl font-bold text-white mb-1">{count}</div>
-                        <div className="text-xs text-slate-400">{status}</div>
-                      </div>
-                    ))}
+                    {Object.entries(projects_by_status || {}).map(
+                      ([status, count]) => (
+                        <div
+                          key={status}
+                          className="p-3 rounded-xl bg-white/[0.02] border border-white/5"
+                        >
+                          <div className="text-2xl font-bold text-white mb-1">
+                            {count}
+                          </div>
+                          <div className="text-xs text-slate-400">{status}</div>
+                        </div>
+                      ),
+                    )}
                   </div>
                 </div>
 
                 {/* By Stage */}
                 <div>
-                  <h4 className="text-sm font-medium text-slate-400 mb-3">按阶段</h4>
+                  <h4 className="text-sm font-medium text-slate-400 mb-3">
+                    按阶段
+                  </h4>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {Object.entries(projects_by_stage || {}).map(([stage, count]) => (
-                      <div
-                        key={stage}
-                        className="p-3 rounded-xl bg-white/[0.02] border border-white/5"
-                      >
-                        <div className="text-2xl font-bold text-white mb-1">{count}</div>
-                        <div className="text-xs text-slate-400">{stage}</div>
-                      </div>
-                    ))}
+                    {Object.entries(projects_by_stage || {}).map(
+                      ([stage, count]) => (
+                        <div
+                          key={stage}
+                          className="p-3 rounded-xl bg-white/[0.02] border border-white/5"
+                        >
+                          <div className="text-2xl font-bold text-white mb-1">
+                            {count}
+                          </div>
+                          <div className="text-xs text-slate-400">{stage}</div>
+                        </div>
+                      ),
+                    )}
                   </div>
                 </div>
               </div>
@@ -299,8 +311,8 @@ export default function PMODashboard() {
                       <div className="flex items-start gap-4">
                         <div
                           className={cn(
-                            'px-2 py-1 rounded text-xs font-medium border',
-                            getRiskLevelColor(risk.risk_level)
+                            "px-2 py-1 rounded text-xs font-medium border",
+                            getRiskLevelColor(risk.risk_level),
                           )}
                         >
                           {getRiskLevelName(risk.risk_level)}
@@ -346,10 +358,10 @@ export default function PMODashboard() {
                 <Link
                   to="/pmo/initiations"
                   className={cn(
-                    'flex items-center gap-3 p-3 rounded-xl',
-                    'bg-white/[0.03] border border-white/5',
-                    'text-white hover:bg-white/[0.06] hover:border-white/10',
-                    'transition-all duration-200'
+                    "flex items-center gap-3 p-3 rounded-xl",
+                    "bg-white/[0.03] border border-white/5",
+                    "text-white hover:bg-white/[0.06] hover:border-white/10",
+                    "transition-all duration-200",
                   )}
                 >
                   <div className="p-2 rounded-lg bg-primary/20">
@@ -361,10 +373,10 @@ export default function PMODashboard() {
                 <Link
                   to="/pmo/risks"
                   className={cn(
-                    'flex items-center gap-3 p-3 rounded-xl',
-                    'bg-white/[0.03] border border-white/5',
-                    'text-white hover:bg-white/[0.06] hover:border-white/10',
-                    'transition-all duration-200'
+                    "flex items-center gap-3 p-3 rounded-xl",
+                    "bg-white/[0.03] border border-white/5",
+                    "text-white hover:bg-white/[0.06] hover:border-white/10",
+                    "transition-all duration-200",
                   )}
                 >
                   <div className="p-2 rounded-lg bg-red-500/20">
@@ -376,10 +388,10 @@ export default function PMODashboard() {
                 <Link
                   to="/pmo/phases"
                   className={cn(
-                    'flex items-center gap-3 p-3 rounded-xl',
-                    'bg-white/[0.03] border border-white/5',
-                    'text-white hover:bg-white/[0.06] hover:border-white/10',
-                    'transition-all duration-200'
+                    "flex items-center gap-3 p-3 rounded-xl",
+                    "bg-white/[0.03] border border-white/5",
+                    "text-white hover:bg-white/[0.06] hover:border-white/10",
+                    "transition-all duration-200",
                   )}
                 >
                   <div className="p-2 rounded-lg bg-emerald-500/20">
@@ -391,10 +403,10 @@ export default function PMODashboard() {
                 <Link
                   to="/pmo/resource-overview"
                   className={cn(
-                    'flex items-center gap-3 p-3 rounded-xl',
-                    'bg-white/[0.03] border border-white/5',
-                    'text-white hover:bg-white/[0.06] hover:border-white/10',
-                    'transition-all duration-200'
+                    "flex items-center gap-3 p-3 rounded-xl",
+                    "bg-white/[0.03] border border-white/5",
+                    "text-white hover:bg-white/[0.06] hover:border-white/10",
+                    "transition-all duration-200",
                   )}
                 >
                   <div className="p-2 rounded-lg bg-violet-500/20">
@@ -406,10 +418,10 @@ export default function PMODashboard() {
                 <Link
                   to="/pmo/risk-wall"
                   className={cn(
-                    'flex items-center gap-3 p-3 rounded-xl',
-                    'bg-white/[0.03] border border-white/5',
-                    'text-white hover:bg-white/[0.06] hover:border-white/10',
-                    'transition-all duration-200'
+                    "flex items-center gap-3 p-3 rounded-xl",
+                    "bg-white/[0.03] border border-white/5",
+                    "text-white hover:bg-white/[0.06] hover:border-white/10",
+                    "transition-all duration-200",
                   )}
                 >
                   <div className="p-2 rounded-lg bg-red-500/20">
@@ -421,10 +433,10 @@ export default function PMODashboard() {
                 <Link
                   to="/pmo/weekly-report"
                   className={cn(
-                    'flex items-center gap-3 p-3 rounded-xl',
-                    'bg-white/[0.03] border border-white/5',
-                    'text-white hover:bg-white/[0.06] hover:border-white/10',
-                    'transition-all duration-200'
+                    "flex items-center gap-3 p-3 rounded-xl",
+                    "bg-white/[0.03] border border-white/5",
+                    "text-white hover:bg-white/[0.06] hover:border-white/10",
+                    "transition-all duration-200",
                   )}
                 >
                   <div className="p-2 rounded-lg bg-indigo-500/20">
@@ -498,16 +510,26 @@ export default function PMODashboard() {
         <Card hover={false}>
           <CardContent className="p-6">
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-white mb-2">跨部门进度视图</h2>
-              <p className="text-sm text-slate-400">选择项目查看各部门实时进度</p>
+              <h2 className="text-xl font-bold text-white mb-2">
+                跨部门进度视图
+              </h2>
+              <p className="text-sm text-slate-400">
+                选择项目查看各部门实时进度
+              </p>
             </div>
 
             {/* 项目选择器 */}
             <div className="mb-6">
-              <label className="block text-sm text-slate-400 mb-2">选择项目:</label>
+              <label className="block text-sm text-slate-400 mb-2">
+                选择项目:
+              </label>
               <select
-                value={selectedProjectId || ''}
-                onChange={(e) => setSelectedProjectId(e.target.value ? parseInt(e.target.value) : null)}
+                value={selectedProjectId || ""}
+                onChange={(e) =>
+                  setSelectedProjectId(
+                    e.target.value ? parseInt(e.target.value) : null,
+                  )
+                }
                 className="w-full md:w-96 px-4 py-2 rounded-lg bg-surface-2 border border-border text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               >
                 <option value="">-- 请选择项目 --</option>
@@ -530,6 +552,5 @@ export default function PMODashboard() {
         </Card>
       </motion.div>
     </motion.div>
-  )
+  );
 }
-

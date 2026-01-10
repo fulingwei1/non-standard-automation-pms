@@ -1,6 +1,6 @@
-import { AlertCircle } from 'lucide-react'
-import { fadeIn } from '../../utils/weightConfigUtils'
-import { motion } from 'framer-motion'
+import { AlertCircle } from "lucide-react";
+import { fadeIn } from "../../utils/weightConfigUtils";
+import { motion } from "framer-motion";
 
 /**
  * 注意事项卡片组件
@@ -22,5 +22,5 @@ export const NoticeCard = () => {
         </div>
       </div>
     </motion.div>
-  )
-}
+  );
+};

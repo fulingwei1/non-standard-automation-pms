@@ -2,7 +2,7 @@
  * Acceptance Template Management Page - 验收模板管理页面
  * Features: 验收模板列表、创建、编辑、检查项管理
  */
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from "react";
 import {
   FileText,
   Plus,
@@ -11,25 +11,25 @@ import {
   Edit,
   CheckSquare,
   Trash2,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
+} from "../components/ui/select";
 import {
   Table,
   TableBody,
@@ -37,7 +37,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../components/ui/table'
+} from "../components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -45,162 +45,164 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui/dialog'
-import { formatDate } from '../lib/utils'
-import { acceptanceApi } from '../services/api'
+} from "../components/ui/dialog";
+import { formatDate } from "../lib/utils";
+import { acceptanceApi } from "../services/api";
 
 const typeConfigs = {
-  FAT: { label: '出厂验收', color: 'bg-blue-500' },
-  SAT: { label: '现场验收', color: 'bg-purple-500' },
-  FINAL: { label: '终验收', color: 'bg-emerald-500' },
-}
+  FAT: { label: "出厂验收", color: "bg-blue-500" },
+  SAT: { label: "现场验收", color: "bg-purple-500" },
+  FINAL: { label: "终验收", color: "bg-emerald-500" },
+};
 
 export default function AcceptanceTemplateManagement() {
-  const [loading, setLoading] = useState(true)
-  const [templates, setTemplates] = useState([])
+  const [loading, setLoading] = useState(true);
+  const [templates, setTemplates] = useState([]);
   // Filters
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [filterType, setFilterType] = useState('')
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [filterType, setFilterType] = useState("");
   // Dialogs
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [showEditDialog, setShowEditDialog] = useState(false)
-  const [showDetailDialog, setShowDetailDialog] = useState(false)
-  const [showItemsDialog, setShowItemsDialog] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState(null)
-  const [templateItems, setTemplateItems] = useState([])
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [showItemsDialog, setShowItemsDialog] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [templateItems, setTemplateItems] = useState([]);
   // Form state
   const [templateForm, setTemplateForm] = useState({
-    template_name: '',
-    template_type: 'FAT',
-    category: '',
-    description: '',
-    version: '1.0',
-  })
+    template_name: "",
+    template_type: "FAT",
+    category: "",
+    description: "",
+    version: "1.0",
+  });
   const [newItem, setNewItem] = useState({
-    item_code: '',
-    item_name: '',
-    category_name: '',
-    acceptance_criteria: '',
-    standard_value: '',
-    unit: '',
+    item_code: "",
+    item_name: "",
+    category_name: "",
+    acceptance_criteria: "",
+    standard_value: "",
+    unit: "",
     is_required: true,
     is_key_item: false,
-  })
+  });
 
   useEffect(() => {
-    fetchTemplates()
-  }, [filterType, searchKeyword])
+    fetchTemplates();
+  }, [filterType, searchKeyword]);
 
   const fetchTemplates = async () => {
     try {
-      setLoading(true)
-      const params = { page: 1, page_size: 100 }
-      if (filterType) params.template_type = filterType
-      if (searchKeyword) params.search = searchKeyword
-      const res = await acceptanceApi.templates.list(params)
-      const templateList = res.data?.items || res.data || []
-      setTemplates(templateList)
+      setLoading(true);
+      const params = { page: 1, page_size: 100 };
+      if (filterType) params.template_type = filterType;
+      if (searchKeyword) params.search = searchKeyword;
+      const res = await acceptanceApi.templates.list(params);
+      const templateList = res.data?.items || res.data || [];
+      setTemplates(templateList);
     } catch (error) {
-      console.error('Failed to fetch templates:', error)
+      console.error("Failed to fetch templates:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchTemplateItems = async (templateId) => {
     try {
-      const res = await acceptanceApi.templates.getItems(templateId)
-      const items = res.data || res || []
-      setTemplateItems(items)
+      const res = await acceptanceApi.templates.getItems(templateId);
+      const items = res.data || res || [];
+      setTemplateItems(items);
     } catch (error) {
-      console.error('Failed to fetch template items:', error)
+      console.error("Failed to fetch template items:", error);
     }
-  }
+  };
 
   const handleCreate = async () => {
     if (!templateForm.template_name) {
-      alert('请填写模板名称')
-      return
+      alert("请填写模板名称");
+      return;
     }
     try {
-      await acceptanceApi.templates.create(templateForm)
-      setShowCreateDialog(false)
-      resetForm()
-      fetchTemplates()
+      await acceptanceApi.templates.create(templateForm);
+      setShowCreateDialog(false);
+      resetForm();
+      fetchTemplates();
     } catch (error) {
-      console.error('Failed to create template:', error)
-      alert('创建模板失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to create template:", error);
+      alert("创建模板失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const handleViewDetail = async (templateId) => {
     try {
-      const res = await acceptanceApi.templates.get(templateId)
-      setSelectedTemplate(res.data || res)
-      await fetchTemplateItems(templateId)
-      setShowDetailDialog(true)
+      const res = await acceptanceApi.templates.get(templateId);
+      setSelectedTemplate(res.data || res);
+      await fetchTemplateItems(templateId);
+      setShowDetailDialog(true);
     } catch (error) {
-      console.error('Failed to fetch template detail:', error)
+      console.error("Failed to fetch template detail:", error);
     }
-  }
+  };
 
   const handleViewItems = async (templateId) => {
-    await fetchTemplateItems(templateId)
-    const res = await acceptanceApi.templates.get(templateId)
-    setSelectedTemplate(res.data || res)
-    setShowItemsDialog(true)
-  }
+    await fetchTemplateItems(templateId);
+    const res = await acceptanceApi.templates.get(templateId);
+    setSelectedTemplate(res.data || res);
+    setShowItemsDialog(true);
+  };
 
   const handleAddItem = async () => {
     if (!selectedTemplate || !newItem.item_name) {
-      alert('请填写检查项名称')
-      return
+      alert("请填写检查项名称");
+      return;
     }
     try {
       await acceptanceApi.templates.addItems(selectedTemplate.id, {
         category_id: null,
         items: [newItem],
-      })
+      });
       setNewItem({
-        item_code: '',
-        item_name: '',
-        category_name: '',
-        acceptance_criteria: '',
-        standard_value: '',
-        unit: '',
+        item_code: "",
+        item_name: "",
+        category_name: "",
+        acceptance_criteria: "",
+        standard_value: "",
+        unit: "",
         is_required: true,
         is_key_item: false,
-      })
-      await fetchTemplateItems(selectedTemplate.id)
+      });
+      await fetchTemplateItems(selectedTemplate.id);
     } catch (error) {
-      console.error('Failed to add item:', error)
-      alert('添加检查项失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to add item:", error);
+      alert(
+        "添加检查项失败: " + (error.response?.data?.detail || error.message),
+      );
     }
-  }
+  };
 
   const resetForm = () => {
     setTemplateForm({
-      template_name: '',
-      template_type: 'FAT',
-      category: '',
-      description: '',
-      version: '1.0',
-    })
-    setSelectedTemplate(null)
-  }
+      template_name: "",
+      template_type: "FAT",
+      category: "",
+      description: "",
+      version: "1.0",
+    });
+    setSelectedTemplate(null);
+  };
 
   const filteredTemplates = useMemo(() => {
-    return templates.filter(template => {
+    return templates.filter((template) => {
       if (searchKeyword) {
-        const keyword = searchKeyword.toLowerCase()
+        const keyword = searchKeyword.toLowerCase();
         return (
           template.template_name?.toLowerCase().includes(keyword) ||
           template.category?.toLowerCase().includes(keyword)
-        )
+        );
       }
-      return true
-    })
-  }, [templates, searchKeyword])
+      return true;
+    });
+  }, [templates, searchKeyword]);
 
   return (
     <div className="space-y-6 p-6">
@@ -277,15 +279,23 @@ export default function AcceptanceTemplateManagement() {
                       {template.template_name}
                     </TableCell>
                     <TableCell>
-                      <Badge className={typeConfigs[template.template_type]?.color || 'bg-slate-500'}>
-                        {typeConfigs[template.template_type]?.label || template.template_type}
+                      <Badge
+                        className={
+                          typeConfigs[template.template_type]?.color ||
+                          "bg-slate-500"
+                        }
+                      >
+                        {typeConfigs[template.template_type]?.label ||
+                          template.template_type}
                       </Badge>
                     </TableCell>
-                    <TableCell>{template.category || '-'}</TableCell>
-                    <TableCell>{template.version || '1.0'}</TableCell>
+                    <TableCell>{template.category || "-"}</TableCell>
+                    <TableCell>{template.version || "1.0"}</TableCell>
                     <TableCell>{template.item_count || 0}</TableCell>
                     <TableCell className="text-slate-500 text-sm">
-                      {template.created_at ? formatDate(template.created_at) : '-'}
+                      {template.created_at
+                        ? formatDate(template.created_at)
+                        : "-"}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -321,19 +331,30 @@ export default function AcceptanceTemplateManagement() {
           <DialogBody>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">模板名称 *</label>
+                <label className="text-sm font-medium mb-2 block">
+                  模板名称 *
+                </label>
                 <Input
                   value={templateForm.template_name}
-                  onChange={(e) => setTemplateForm({ ...templateForm, template_name: e.target.value })}
+                  onChange={(e) =>
+                    setTemplateForm({
+                      ...templateForm,
+                      template_name: e.target.value,
+                    })
+                  }
                   placeholder="请输入模板名称"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">模板类型</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    模板类型
+                  </label>
                   <Select
                     value={templateForm.template_type}
-                    onValueChange={(val) => setTemplateForm({ ...templateForm, template_type: val })}
+                    onValueChange={(val) =>
+                      setTemplateForm({ ...templateForm, template_type: val })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -351,7 +372,12 @@ export default function AcceptanceTemplateManagement() {
                   <label className="text-sm font-medium mb-2 block">版本</label>
                   <Input
                     value={templateForm.version}
-                    onChange={(e) => setTemplateForm({ ...templateForm, version: e.target.value })}
+                    onChange={(e) =>
+                      setTemplateForm({
+                        ...templateForm,
+                        version: e.target.value,
+                      })
+                    }
                     placeholder="1.0"
                   />
                 </div>
@@ -360,7 +386,12 @@ export default function AcceptanceTemplateManagement() {
                 <label className="text-sm font-medium mb-2 block">分类</label>
                 <Input
                   value={templateForm.category}
-                  onChange={(e) => setTemplateForm({ ...templateForm, category: e.target.value })}
+                  onChange={(e) =>
+                    setTemplateForm({
+                      ...templateForm,
+                      category: e.target.value,
+                    })
+                  }
                   placeholder="模板分类"
                 />
               </div>
@@ -369,14 +400,22 @@ export default function AcceptanceTemplateManagement() {
                 <textarea
                   className="w-full min-h-[80px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={templateForm.description}
-                  onChange={(e) => setTemplateForm({ ...templateForm, description: e.target.value })}
+                  onChange={(e) =>
+                    setTemplateForm({
+                      ...templateForm,
+                      description: e.target.value,
+                    })
+                  }
                   placeholder="模板描述..."
                 />
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleCreate}>创建</Button>
@@ -401,17 +440,21 @@ export default function AcceptanceTemplateManagement() {
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">模板类型</div>
-                    <Badge className={typeConfigs[selectedTemplate.template_type]?.color}>
+                    <Badge
+                      className={
+                        typeConfigs[selectedTemplate.template_type]?.color
+                      }
+                    >
                       {typeConfigs[selectedTemplate.template_type]?.label}
                     </Badge>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">分类</div>
-                    <div>{selectedTemplate.category || '-'}</div>
+                    <div>{selectedTemplate.category || "-"}</div>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">版本</div>
-                    <div>{selectedTemplate.version || '1.0'}</div>
+                    <div>{selectedTemplate.version || "1.0"}</div>
                   </div>
                 </div>
                 {selectedTemplate.description && (
@@ -424,15 +467,24 @@ export default function AcceptanceTemplateManagement() {
                   <div className="text-sm text-slate-500 mb-2">检查项列表</div>
                   <div className="space-y-2">
                     {templateItems.length === 0 ? (
-                      <div className="text-center py-4 text-slate-400">暂无检查项</div>
+                      <div className="text-center py-4 text-slate-400">
+                        暂无检查项
+                      </div>
                     ) : (
                       templateItems.map((item) => (
                         <div key={item.id} className="border rounded-lg p-3">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <div className="font-medium">{item.item_name}</div>
+                              <div className="font-medium">
+                                {item.item_name}
+                              </div>
                               <div className="text-xs text-slate-500 mt-1">
-                                {item.item_code} {item.is_key_item && <Badge variant="destructive" className="ml-1">关键项</Badge>}
+                                {item.item_code}{" "}
+                                {item.is_key_item && (
+                                  <Badge variant="destructive" className="ml-1">
+                                    关键项
+                                  </Badge>
+                                )}
                               </div>
                               {item.acceptance_criteria && (
                                 <div className="text-xs text-slate-600 mt-1">
@@ -453,14 +505,19 @@ export default function AcceptanceTemplateManagement() {
             )}
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDetailDialog(false)}
+            >
               关闭
             </Button>
             {selectedTemplate && (
-              <Button onClick={() => {
-                setShowDetailDialog(false)
-                handleViewItems(selectedTemplate.id)
-              }}>
+              <Button
+                onClick={() => {
+                  setShowDetailDialog(false);
+                  handleViewItems(selectedTemplate.id);
+                }}
+              >
                 <CheckSquare className="w-4 h-4 mr-2" />
                 管理检查项
               </Button>
@@ -482,53 +539,83 @@ export default function AcceptanceTemplateManagement() {
                 <h3 className="text-sm font-medium mb-2">添加检查项</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">检查项编码</label>
+                    <label className="text-sm font-medium mb-2 block">
+                      检查项编码
+                    </label>
                     <Input
                       value={newItem.item_code}
-                      onChange={(e) => setNewItem({ ...newItem, item_code: e.target.value })}
+                      onChange={(e) =>
+                        setNewItem({ ...newItem, item_code: e.target.value })
+                      }
                       placeholder="检查项编码"
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-2 block">检查项名称 *</label>
+                    <label className="text-sm font-medium mb-2 block">
+                      检查项名称 *
+                    </label>
                     <Input
                       value={newItem.item_name}
-                      onChange={(e) => setNewItem({ ...newItem, item_name: e.target.value })}
+                      onChange={(e) =>
+                        setNewItem({ ...newItem, item_name: e.target.value })
+                      }
                       placeholder="检查项名称"
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">分类</label>
+                    <label className="text-sm font-medium mb-2 block">
+                      分类
+                    </label>
                     <Input
                       value={newItem.category_name}
-                      onChange={(e) => setNewItem({ ...newItem, category_name: e.target.value })}
+                      onChange={(e) =>
+                        setNewItem({
+                          ...newItem,
+                          category_name: e.target.value,
+                        })
+                      }
                       placeholder="分类名称"
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-2 block">单位</label>
+                    <label className="text-sm font-medium mb-2 block">
+                      单位
+                    </label>
                     <Input
                       value={newItem.unit}
-                      onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
+                      onChange={(e) =>
+                        setNewItem({ ...newItem, unit: e.target.value })
+                      }
                       placeholder="单位"
                     />
                   </div>
                 </div>
                 <div className="mt-4">
-                  <label className="text-sm font-medium mb-2 block">验收标准</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    验收标准
+                  </label>
                   <Input
                     value={newItem.acceptance_criteria}
-                    onChange={(e) => setNewItem({ ...newItem, acceptance_criteria: e.target.value })}
+                    onChange={(e) =>
+                      setNewItem({
+                        ...newItem,
+                        acceptance_criteria: e.target.value,
+                      })
+                    }
                     placeholder="验收标准"
                   />
                 </div>
                 <div className="mt-4">
-                  <label className="text-sm font-medium mb-2 block">标准值</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    标准值
+                  </label>
                   <Input
                     value={newItem.standard_value}
-                    onChange={(e) => setNewItem({ ...newItem, standard_value: e.target.value })}
+                    onChange={(e) =>
+                      setNewItem({ ...newItem, standard_value: e.target.value })
+                    }
                     placeholder="标准值"
                   />
                 </div>
@@ -537,7 +624,12 @@ export default function AcceptanceTemplateManagement() {
                     <input
                       type="checkbox"
                       checked={newItem.is_required}
-                      onChange={(e) => setNewItem({ ...newItem, is_required: e.target.checked })}
+                      onChange={(e) =>
+                        setNewItem({
+                          ...newItem,
+                          is_required: e.target.checked,
+                        })
+                      }
                     />
                     <span className="text-sm">必检项</span>
                   </label>
@@ -545,7 +637,12 @@ export default function AcceptanceTemplateManagement() {
                     <input
                       type="checkbox"
                       checked={newItem.is_key_item}
-                      onChange={(e) => setNewItem({ ...newItem, is_key_item: e.target.checked })}
+                      onChange={(e) =>
+                        setNewItem({
+                          ...newItem,
+                          is_key_item: e.target.checked,
+                        })
+                      }
                     />
                     <span className="text-sm">关键项</span>
                   </label>
@@ -559,7 +656,9 @@ export default function AcceptanceTemplateManagement() {
                 <h3 className="text-sm font-medium mb-2">检查项列表</h3>
                 <div className="space-y-2">
                   {templateItems.length === 0 ? (
-                    <div className="text-center py-4 text-slate-400">暂无检查项</div>
+                    <div className="text-center py-4 text-slate-400">
+                      暂无检查项
+                    </div>
                   ) : (
                     templateItems.map((item) => (
                       <div key={item.id} className="border rounded-lg p-3">
@@ -567,7 +666,8 @@ export default function AcceptanceTemplateManagement() {
                           <div className="flex-1">
                             <div className="font-medium">{item.item_name}</div>
                             <div className="text-xs text-slate-500 mt-1">
-                              {item.item_code} {item.category_name && `· ${item.category_name}`}
+                              {item.item_code}{" "}
+                              {item.category_name && `· ${item.category_name}`}
                             </div>
                             {item.acceptance_criteria && (
                               <div className="text-xs text-slate-600 mt-1">
@@ -599,9 +699,5 @@ export default function AcceptanceTemplateManagement() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-
-
-
-

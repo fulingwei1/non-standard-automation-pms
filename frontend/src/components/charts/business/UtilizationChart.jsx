@@ -3,8 +3,8 @@
  * 展示人员工时利用率、部门负荷分布
  */
 
-import { Bar, Radar, Heatmap } from '@ant-design/plots'
-import { useMemo } from 'react'
+import { Bar, Radar, Heatmap } from "@ant-design/plots";
+import { useMemo } from "react";
 
 /**
  * UtilizationChart - 人员利用率图表
@@ -16,57 +16,61 @@ import { useMemo } from 'react'
  */
 export default function UtilizationChart({
   data = [],
-  chartType = 'bar',
+  chartType = "bar",
   height = 300,
   onPersonClick,
   title,
   style,
 }) {
   // 水平条形图（人员排名）
-  if (chartType === 'bar') {
+  if (chartType === "bar") {
     const sortedData = useMemo(() => {
       return [...data]
-        .sort((a, b) => (b.rate || b.utilization || 0) - (a.rate || a.utilization || 0))
-        .slice(0, 15)
-    }, [data])
+        .sort(
+          (a, b) =>
+            (b.rate || b.utilization || 0) - (a.rate || a.utilization || 0),
+        )
+        .slice(0, 15);
+    }, [data]);
 
     const barConfig = {
       data: sortedData,
-      xField: 'rate' in (sortedData[0] || {}) ? 'rate' : 'utilization',
-      yField: 'name' in (sortedData[0] || {}) ? 'name' : 'user',
+      xField: "rate" in (sortedData[0] || {}) ? "rate" : "utilization",
+      yField: "name" in (sortedData[0] || {}) ? "name" : "user",
       height,
       color: ({ rate, utilization }) => {
-        const r = rate || utilization || 0
-        if (r >= 100) return '#ef4444'  // 过载
-        if (r >= 80) return '#22c55e'   // 饱和
-        if (r >= 60) return '#3b82f6'   // 正常
-        return '#64748b'                 // 空闲
+        const r = rate || utilization || 0;
+        if (r >= 100) return "#ef4444"; // 过载
+        if (r >= 80) return "#22c55e"; // 饱和
+        if (r >= 60) return "#3b82f6"; // 正常
+        return "#64748b"; // 空闲
       },
       barWidthRatio: 0.6,
       label: {
-        position: 'right',
-        formatter: (datum) => `${(datum.rate || datum.utilization || 0).toFixed(0)}%`,
+        position: "right",
+        formatter: (datum) =>
+          `${(datum.rate || datum.utilization || 0).toFixed(0)}%`,
         style: {
-          fill: '#e2e8f0',
+          fill: "#e2e8f0",
           fontSize: 11,
         },
       },
       annotations: [
         {
-          type: 'line',
-          start: [80, 'min'],
-          end: [80, 'max'],
+          type: "line",
+          start: [80, "min"],
+          end: [80, "max"],
           style: {
-            stroke: '#22c55e',
+            stroke: "#22c55e",
             lineDash: [4, 4],
           },
         },
         {
-          type: 'line',
-          start: [100, 'min'],
-          end: [100, 'max'],
+          type: "line",
+          start: [100, "min"],
+          end: [100, "max"],
           style: {
-            stroke: '#ef4444',
+            stroke: "#ef4444",
             lineDash: [4, 4],
           },
         },
@@ -77,14 +81,14 @@ export default function UtilizationChart({
         label: {
           formatter: (v) => `${v}%`,
           style: {
-            fill: '#94a3b8',
+            fill: "#94a3b8",
             fontSize: 11,
           },
         },
         grid: {
           line: {
             style: {
-              stroke: '#334155',
+              stroke: "#334155",
               lineDash: [4, 4],
             },
           },
@@ -93,7 +97,7 @@ export default function UtilizationChart({
       yAxis: {
         label: {
           style: {
-            fill: '#94a3b8',
+            fill: "#94a3b8",
             fontSize: 11,
           },
         },
@@ -104,31 +108,33 @@ export default function UtilizationChart({
           value: `${(datum.rate || datum.utilization || 0).toFixed(1)}%`,
         }),
       },
-    }
+    };
 
     const handleReady = (plot) => {
       if (onPersonClick) {
-        plot.on('element:click', (evt) => {
-          onPersonClick(evt.data?.data)
-        })
+        plot.on("element:click", (evt) => {
+          onPersonClick(evt.data?.data);
+        });
       }
-    }
+    };
 
     return (
       <div style={style}>
-        {title && <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>}
+        {title && (
+          <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>
+        )}
         <Bar {...barConfig} onReady={handleReady} />
       </div>
-    )
+    );
   }
 
   // 雷达图（部门对比）
-  if (chartType === 'radar') {
+  if (chartType === "radar") {
     const radarConfig = {
       data,
-      xField: 'department' in (data[0] || {}) ? 'department' : 'item',
-      yField: 'rate' in (data[0] || {}) ? 'rate' : 'value',
-      seriesField: 'period' in (data[0] || {}) ? 'period' : undefined,
+      xField: "department" in (data[0] || {}) ? "department" : "item",
+      yField: "rate" in (data[0] || {}) ? "rate" : "value",
+      seriesField: "period" in (data[0] || {}) ? "period" : undefined,
       height,
       area: {
         style: {
@@ -141,7 +147,7 @@ export default function UtilizationChart({
       xAxis: {
         label: {
           style: {
-            fill: '#94a3b8',
+            fill: "#94a3b8",
             fontSize: 11,
           },
         },
@@ -150,7 +156,7 @@ export default function UtilizationChart({
         grid: {
           line: {
             style: {
-              stroke: '#334155',
+              stroke: "#334155",
             },
           },
         },
@@ -159,24 +165,24 @@ export default function UtilizationChart({
         label: {
           formatter: (v) => `${v}%`,
           style: {
-            fill: '#64748b',
+            fill: "#64748b",
             fontSize: 10,
           },
         },
         grid: {
           line: {
             style: {
-              stroke: '#334155',
+              stroke: "#334155",
             },
           },
-          alternateColor: 'rgba(51, 65, 85, 0.2)',
+          alternateColor: "rgba(51, 65, 85, 0.2)",
         },
       },
       legend: {
-        position: 'top-right',
+        position: "top-right",
         itemName: {
           style: {
-            fill: '#94a3b8',
+            fill: "#94a3b8",
           },
         },
       },
@@ -186,43 +192,53 @@ export default function UtilizationChart({
           value: `${(datum.rate || datum.value || 0).toFixed(1)}%`,
         }),
       },
-    }
+    };
 
     return (
       <div style={style}>
-        {title && <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>}
+        {title && (
+          <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>
+        )}
         <Radar {...radarConfig} />
       </div>
-    )
+    );
   }
 
   // 热力图（时间×人员）
-  if (chartType === 'heatmap') {
+  if (chartType === "heatmap") {
     const heatmapConfig = {
       data,
-      xField: 'week' in (data[0] || {}) ? 'week' : 'date',
-      yField: 'name' in (data[0] || {}) ? 'name' : 'user',
-      colorField: 'hours' in (data[0] || {}) ? 'hours' : 'value',
+      xField: "week" in (data[0] || {}) ? "week" : "date",
+      yField: "name" in (data[0] || {}) ? "name" : "user",
+      colorField: "hours" in (data[0] || {}) ? "hours" : "value",
       height,
-      color: ['#1e40af', '#3b82f6', '#60a5fa', '#93c5fd', '#22c55e', '#eab308', '#ef4444'],
+      color: [
+        "#1e40af",
+        "#3b82f6",
+        "#60a5fa",
+        "#93c5fd",
+        "#22c55e",
+        "#eab308",
+        "#ef4444",
+      ],
       meta: {
         hours: {
-          alias: '工时',
+          alias: "工时",
         },
         value: {
-          alias: '工时',
+          alias: "工时",
         },
       },
       label: {
         style: {
-          fill: '#e2e8f0',
+          fill: "#e2e8f0",
           fontSize: 10,
         },
       },
       xAxis: {
         label: {
           style: {
-            fill: '#94a3b8',
+            fill: "#94a3b8",
             fontSize: 11,
           },
         },
@@ -230,7 +246,7 @@ export default function UtilizationChart({
       yAxis: {
         label: {
           style: {
-            fill: '#94a3b8',
+            fill: "#94a3b8",
             fontSize: 11,
           },
         },
@@ -241,14 +257,16 @@ export default function UtilizationChart({
           value: `${datum.hours || datum.value || 0} 小时`,
         }),
       },
-    }
+    };
 
     return (
       <div style={style}>
-        {title && <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>}
+        {title && (
+          <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>
+        )}
         <Heatmap {...heatmapConfig} />
       </div>
-    )
+    );
   }
 
   return (
@@ -258,5 +276,5 @@ export default function UtilizationChart({
     >
       暂无数据
     </div>
-  )
+  );
 }

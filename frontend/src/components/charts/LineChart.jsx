@@ -3,26 +3,26 @@
  * 用于趋势分析、时间序列数据展示
  */
 
-import { Line } from '@ant-design/plots'
-import { useMemo } from 'react'
+import { Line } from "@ant-design/plots";
+import { useMemo } from "react";
 
 const defaultConfig = {
-  padding: 'auto',
-  xField: 'date',
-  yField: 'value',
+  padding: "auto",
+  xField: "date",
+  yField: "value",
   smooth: true,
   animation: {
     appear: {
-      animation: 'path-in',
+      animation: "path-in",
       duration: 1000,
     },
   },
   theme: {
     styleSheet: {
-      backgroundColor: 'transparent',
+      backgroundColor: "transparent",
     },
   },
-}
+};
 
 /**
  * LineChart - 折线图
@@ -40,8 +40,8 @@ const defaultConfig = {
  */
 export default function LineChart({
   data = [],
-  xField = 'date',
-  yField = 'value',
+  xField = "date",
+  yField = "value",
   seriesField,
   height = 300,
   showPoint = true,
@@ -60,47 +60,53 @@ export default function LineChart({
       xField,
       yField,
       height,
-      point: showPoint ? {
-        size: 4,
-        shape: 'circle',
-        style: {
-          fill: 'white',
-          stroke: '#5B8FF9',
-          lineWidth: 2,
-        },
-      } : false,
-      area: showArea ? {
-        style: {
-          fillOpacity: 0.15,
-        },
-      } : false,
+      point: showPoint
+        ? {
+            size: 4,
+            shape: "circle",
+            style: {
+              fill: "white",
+              stroke: "#5B8FF9",
+              lineWidth: 2,
+            },
+          }
+        : false,
+      area: showArea
+        ? {
+            style: {
+              fillOpacity: 0.15,
+            },
+          }
+        : false,
       tooltip: {
         showMarkers: true,
         shared: true,
         showCrosshairs: true,
         crosshairs: {
-          type: 'xy',
+          type: "xy",
         },
-        formatter: formatter ? (datum) => ({
-          name: datum[seriesField] || yField,
-          value: formatter(datum[yField]),
-        }) : undefined,
+        formatter: formatter
+          ? (datum) => ({
+              name: datum[seriesField] || yField,
+              value: formatter(datum[yField]),
+            })
+          : undefined,
       },
       xAxis: {
         label: {
           style: {
-            fill: '#94a3b8',
+            fill: "#94a3b8",
             fontSize: 12,
           },
         },
         line: {
           style: {
-            stroke: '#334155',
+            stroke: "#334155",
           },
         },
         tickLine: {
           style: {
-            stroke: '#334155',
+            stroke: "#334155",
           },
         },
       },
@@ -108,48 +114,61 @@ export default function LineChart({
         label: {
           formatter: formatter,
           style: {
-            fill: '#94a3b8',
+            fill: "#94a3b8",
             fontSize: 12,
           },
         },
         grid: {
           line: {
             style: {
-              stroke: '#334155',
+              stroke: "#334155",
               lineDash: [4, 4],
             },
           },
         },
       },
-      legend: seriesField ? {
-        position: 'top-right',
-        itemName: {
-          style: {
-            fill: '#94a3b8',
-          },
-        },
-      } : false,
+      legend: seriesField
+        ? {
+            position: "top-right",
+            itemName: {
+              style: {
+                fill: "#94a3b8",
+              },
+            },
+          }
+        : false,
       ...rest,
-    }
+    };
 
     if (seriesField) {
-      cfg.seriesField = seriesField
+      cfg.seriesField = seriesField;
     }
 
     if (colors) {
-      cfg.color = colors
+      cfg.color = colors;
     }
 
-    return cfg
-  }, [data, xField, yField, seriesField, height, showPoint, showArea, formatter, colors, rest])
+    return cfg;
+  }, [
+    data,
+    xField,
+    yField,
+    seriesField,
+    height,
+    showPoint,
+    showArea,
+    formatter,
+    colors,
+    rest,
+  ]);
 
   const handleReady = (plot) => {
     if (onPointClick) {
-      plot.on('point:click', (evt) => {
-        onPointClick(evt.data?.data)
-      })
+      plot.on("point:click", (evt) => {
+        onPointClick(evt.data?.data);
+      });
     }
-  }
+  };
 
   if (!data || data.length === 0) {
     return (
@@ -159,13 +178,15 @@ export default function LineChart({
       >
         暂无数据
       </div>
-    )
+    );
   }
 
   return (
     <div style={style}>
-      {title && <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>}
+      {title && (
+        <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>
+      )}
       <Line {...config} onReady={handleReady} />
     </div>
-  )
+  );
 }

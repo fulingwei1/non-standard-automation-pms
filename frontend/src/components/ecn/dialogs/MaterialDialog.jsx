@@ -10,17 +10,17 @@ import {
   DialogBody,
   DialogFooter,
   DialogDescription,
-} from '../../ui/dialog'
-import { Button } from '../../ui/button'
-import { Input } from '../../ui/input'
-import { Textarea } from '../../ui/textarea'
+} from "../../ui/dialog";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Textarea } from "../../ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../ui/select'
+} from "../../ui/select";
 
 export default function MaterialDialog({
   open,
@@ -35,13 +35,15 @@ export default function MaterialDialog({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {editingMaterial ? '编辑受影响物料' : '添加受影响物料'}
+            {editingMaterial ? "编辑受影响物料" : "添加受影响物料"}
           </DialogTitle>
         </DialogHeader>
         <DialogBody className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">物料编码 *</label>
+              <label className="text-sm font-medium mb-2 block">
+                物料编码 *
+              </label>
               <Input
                 value={form.material_code}
                 onChange={(e) =>
@@ -51,7 +53,9 @@ export default function MaterialDialog({
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">物料名称 *</label>
+              <label className="text-sm font-medium mb-2 block">
+                物料名称 *
+              </label>
               <Input
                 value={form.material_name}
                 onChange={(e) =>
@@ -158,5 +162,5 @@ export default function MaterialDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

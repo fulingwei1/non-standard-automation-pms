@@ -1,8 +1,8 @@
-import { Calendar, Clock, CheckCircle2 } from 'lucide-react'
-import { cn } from '../../lib/utils'
-import { getStatusBadge } from '../../utils/monthlySummaryUtils'
-import { fadeIn } from '../../utils/monthlySummaryUtils'
-import { motion } from 'framer-motion'
+import { Calendar, Clock, CheckCircle2 } from "lucide-react";
+import { cn } from "../../lib/utils";
+import { getStatusBadge } from "../../utils/monthlySummaryUtils";
+import { fadeIn } from "../../utils/monthlySummaryUtils";
+import { motion } from "framer-motion";
 
 /**
  * 当前周期信息卡片组件
@@ -34,9 +34,7 @@ export const PeriodInfoCard = ({ currentPeriod }) => {
               <p className="text-2xl font-bold text-amber-400">
                 {currentPeriod.daysLeft} 天
               </p>
-              <p className="text-sm text-slate-400 mt-1">
-                请及时提交工作总结
-              </p>
+              <p className="text-sm text-slate-400 mt-1">请及时提交工作总结</p>
             </div>
 
             <div>
@@ -45,10 +43,12 @@ export const PeriodInfoCard = ({ currentPeriod }) => {
                 <span className="text-sm">提交状态</span>
               </div>
               <div className="mt-2">
-                <span className={cn(
-                  'inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium',
-                  getStatusBadge(currentPeriod.status).color
-                )}>
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium",
+                    getStatusBadge(currentPeriod.status).color,
+                  )}
+                >
                   {getStatusBadge(currentPeriod.status).label}
                 </span>
               </div>
@@ -57,5 +57,5 @@ export const PeriodInfoCard = ({ currentPeriod }) => {
         </div>
       </div>
     </motion.div>
-  )
-}
+  );
+};

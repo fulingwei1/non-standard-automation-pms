@@ -2,7 +2,7 @@
  * HRRecruitmentTab Component
  * 招聘管理 Tab 组件
  */
-import { Card, CardContent, CardHeader, CardTitle, Button } from '../../ui'
+import { Card, CardContent, CardHeader, CardTitle, Button } from "../../ui";
 import {
   UserPlus,
   UserCheck,
@@ -10,10 +10,13 @@ import {
   FileText,
   BarChart3,
   ChevronRight,
-} from 'lucide-react'
-import { cn } from '../../../lib/utils'
+} from "lucide-react";
+import { cn } from "../../../lib/utils";
 
-export default function HRRecruitmentTab({ mockHRStats, mockRecruitmentTrends }) {
+export default function HRRecruitmentTab({
+  mockHRStats,
+  mockRecruitmentTrends,
+}) {
   return (
     <div className="space-y-6">
       {/* Statistics Cards */}
@@ -97,12 +100,11 @@ export default function HRRecruitmentTab({ mockHRStats, mockRecruitmentTrends })
           <div className="space-y-4">
             {mockRecruitmentTrends.map((item, index) => {
               const successRate =
-                item.positions > 0 ? (item.hired / item.positions) * 100 : 0
+                item.positions > 0 ? (item.hired / item.positions) * 100 : 0;
               const maxPositions = Math.max(
-                ...mockRecruitmentTrends.map((t) => t.positions)
-              )
-              const positionPercentage =
-                (item.positions / maxPositions) * 100
+                ...mockRecruitmentTrends.map((t) => t.positions),
+              );
+              const positionPercentage = (item.positions / maxPositions) * 100;
 
               return (
                 <div key={index} className="space-y-2">
@@ -127,12 +129,12 @@ export default function HRRecruitmentTab({ mockHRStats, mockRecruitmentTrends })
                         <span className="text-xs text-slate-400">成功率</span>
                         <span
                           className={cn(
-                            'text-sm font-semibold',
+                            "text-sm font-semibold",
                             successRate >= 80
-                              ? 'text-emerald-400'
+                              ? "text-emerald-400"
                               : successRate >= 60
-                              ? 'text-amber-400'
-                              : 'text-red-400'
+                                ? "text-amber-400"
+                                : "text-red-400",
                           )}
                         >
                           {successRate.toFixed(1)}%
@@ -165,13 +167,13 @@ export default function HRRecruitmentTab({ mockHRStats, mockRecruitmentTrends })
                     </div>
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
           <div className="mt-4 pt-4 border-t border-slate-700/50">
             <div className="flex items-center justify-between text-xs text-slate-400">
               <span>
-                最近6个月平均成功率:{' '}
+                最近6个月平均成功率:{" "}
                 {(
                   mockRecruitmentTrends.reduce(
                     (sum, item) =>
@@ -179,21 +181,21 @@ export default function HRRecruitmentTab({ mockHRStats, mockRecruitmentTrends })
                       (item.positions > 0
                         ? (item.hired / item.positions) * 100
                         : 0),
-                    0
+                    0,
                   ) / mockRecruitmentTrends.length
                 ).toFixed(1)}
                 %
               </span>
               <span>
-                总发布:{' '}
+                总发布:{" "}
                 {mockRecruitmentTrends.reduce(
                   (sum, item) => sum + item.positions,
-                  0
-                )}{' '}
-                | 总录用:{' '}
+                  0,
+                )}{" "}
+                | 总录用:{" "}
                 {mockRecruitmentTrends.reduce(
                   (sum, item) => sum + item.hired,
-                  0
+                  0,
                 )}
               </span>
             </div>
@@ -201,5 +203,5 @@ export default function HRRecruitmentTab({ mockHRStats, mockRecruitmentTrends })
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

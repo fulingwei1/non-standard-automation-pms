@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Search,
@@ -20,17 +20,17 @@ import {
   Headphones,
   ClipboardCheck,
   UserCog,
-} from 'lucide-react';
-import { PageHeader } from '../components/layout';
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Badge } from '../components/ui/badge';
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -38,11 +38,17 @@ import {
   DialogTitle,
   DialogFooter,
   DialogBody,
-} from '../components/ui/dialog';
-import { Label } from '../components/ui/label';
-import { Textarea } from '../components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Switch } from '../components/ui/switch';
+} from "../components/ui/dialog";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import { Switch } from "../components/ui/switch";
 import {
   Table,
   TableBody,
@@ -50,17 +56,29 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../components/ui/table';
-import { cn } from '../lib/utils';
-import { fadeIn, staggerContainer } from '../lib/animations';
-import { projectRoleApi } from '../services/api';
+} from "../components/ui/table";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { projectRoleApi } from "../services/api";
 
 // 角色分类常量
 const ROLE_CATEGORIES = {
-  MANAGEMENT: { label: '管理类', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
-  TECHNICAL: { label: '技术类', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
-  SUPPORT: { label: '支持类', color: 'bg-green-500/20 text-green-400 border-green-500/30' },
-  GENERAL: { label: '通用类', color: 'bg-slate-500/20 text-slate-400 border-slate-500/30' },
+  MANAGEMENT: {
+    label: "管理类",
+    color: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+  },
+  TECHNICAL: {
+    label: "技术类",
+    color: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  },
+  SUPPORT: {
+    label: "支持类",
+    color: "bg-green-500/20 text-green-400 border-green-500/30",
+  },
+  GENERAL: {
+    label: "通用类",
+    color: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+  },
 };
 
 // 角色编码对应的图标
@@ -84,15 +102,15 @@ export default function ProjectRoleTypeManagement() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedRoleType, setSelectedRoleType] = useState(null);
-  const [searchKeyword, setSearchKeyword] = useState('');
-  const [filterCategory, setFilterCategory] = useState('all');
-  const [filterActive, setFilterActive] = useState('all');
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterActive, setFilterActive] = useState("all");
 
   const [formData, setFormData] = useState({
-    role_code: '',
-    role_name: '',
-    role_category: 'GENERAL',
-    description: '',
+    role_code: "",
+    role_name: "",
+    role_category: "GENERAL",
+    description: "",
     can_have_team: false,
     is_required: false,
     sort_order: 0,
@@ -107,28 +125,108 @@ export default function ProjectRoleTypeManagement() {
       if (searchKeyword) {
         params.keyword = searchKeyword;
       }
-      if (filterCategory !== 'all') {
+      if (filterCategory !== "all") {
         params.category = filterCategory;
       }
-      if (filterActive !== 'all') {
-        params.is_active = filterActive === 'active';
+      if (filterActive !== "all") {
+        params.is_active = filterActive === "active";
       }
 
       const response = await projectRoleApi.types.list(params);
       const data = response.data;
       setRoleTypes(data.items || data || []);
     } catch (error) {
-      console.error('加载角色类型列表失败:', error);
+      console.error("加载角色类型列表失败:", error);
       // Mock data for demo
       setRoleTypes([
-        { id: 1, role_code: 'PM', role_name: '项目经理', role_category: 'MANAGEMENT', description: '负责项目整体规划、进度管控、资源协调和客户沟通', can_have_team: true, is_required: true, sort_order: 1, is_active: true },
-        { id: 2, role_code: 'TECH_LEAD', role_name: '技术负责人', role_category: 'TECHNICAL', description: '负责项目整体技术方案设计和技术决策', can_have_team: true, is_required: false, sort_order: 2, is_active: true },
-        { id: 3, role_code: 'ME_LEAD', role_name: '机械负责人', role_category: 'TECHNICAL', description: '负责机械设计、装配工艺和机械部件选型', can_have_team: true, is_required: false, sort_order: 3, is_active: true },
-        { id: 4, role_code: 'EE_LEAD', role_name: '电气负责人', role_category: 'TECHNICAL', description: '负责电气设计、PLC编程和电气元器件选型', can_have_team: true, is_required: false, sort_order: 4, is_active: true },
-        { id: 5, role_code: 'SW_LEAD', role_name: '软件负责人', role_category: 'TECHNICAL', description: '负责上位机软件、视觉算法和系统集成', can_have_team: false, is_required: false, sort_order: 5, is_active: true },
-        { id: 6, role_code: 'PROC_LEAD', role_name: '采购负责人', role_category: 'SUPPORT', description: '负责物料采购、供应商管理和交期跟踪', can_have_team: false, is_required: false, sort_order: 6, is_active: true },
-        { id: 7, role_code: 'CS_LEAD', role_name: '客服负责人', role_category: 'SUPPORT', description: '负责客户沟通、售后服务和问题协调', can_have_team: true, is_required: false, sort_order: 7, is_active: true },
-        { id: 8, role_code: 'QA_LEAD', role_name: '质量负责人', role_category: 'SUPPORT', description: '负责质量检验、过程监控和验收标准', can_have_team: false, is_required: false, sort_order: 8, is_active: true },
+        {
+          id: 1,
+          role_code: "PM",
+          role_name: "项目经理",
+          role_category: "MANAGEMENT",
+          description: "负责项目整体规划、进度管控、资源协调和客户沟通",
+          can_have_team: true,
+          is_required: true,
+          sort_order: 1,
+          is_active: true,
+        },
+        {
+          id: 2,
+          role_code: "TECH_LEAD",
+          role_name: "技术负责人",
+          role_category: "TECHNICAL",
+          description: "负责项目整体技术方案设计和技术决策",
+          can_have_team: true,
+          is_required: false,
+          sort_order: 2,
+          is_active: true,
+        },
+        {
+          id: 3,
+          role_code: "ME_LEAD",
+          role_name: "机械负责人",
+          role_category: "TECHNICAL",
+          description: "负责机械设计、装配工艺和机械部件选型",
+          can_have_team: true,
+          is_required: false,
+          sort_order: 3,
+          is_active: true,
+        },
+        {
+          id: 4,
+          role_code: "EE_LEAD",
+          role_name: "电气负责人",
+          role_category: "TECHNICAL",
+          description: "负责电气设计、PLC编程和电气元器件选型",
+          can_have_team: true,
+          is_required: false,
+          sort_order: 4,
+          is_active: true,
+        },
+        {
+          id: 5,
+          role_code: "SW_LEAD",
+          role_name: "软件负责人",
+          role_category: "TECHNICAL",
+          description: "负责上位机软件、视觉算法和系统集成",
+          can_have_team: false,
+          is_required: false,
+          sort_order: 5,
+          is_active: true,
+        },
+        {
+          id: 6,
+          role_code: "PROC_LEAD",
+          role_name: "采购负责人",
+          role_category: "SUPPORT",
+          description: "负责物料采购、供应商管理和交期跟踪",
+          can_have_team: false,
+          is_required: false,
+          sort_order: 6,
+          is_active: true,
+        },
+        {
+          id: 7,
+          role_code: "CS_LEAD",
+          role_name: "客服负责人",
+          role_category: "SUPPORT",
+          description: "负责客户沟通、售后服务和问题协调",
+          can_have_team: true,
+          is_required: false,
+          sort_order: 7,
+          is_active: true,
+        },
+        {
+          id: 8,
+          role_code: "QA_LEAD",
+          role_name: "质量负责人",
+          role_category: "SUPPORT",
+          description: "负责质量检验、过程监控和验收标准",
+          can_have_team: false,
+          is_required: false,
+          sort_order: 8,
+          is_active: true,
+        },
       ]);
     } finally {
       setLoading(false);
@@ -141,10 +239,10 @@ export default function ProjectRoleTypeManagement() {
 
   const resetForm = () => {
     setFormData({
-      role_code: '',
-      role_name: '',
-      role_category: 'GENERAL',
-      description: '',
+      role_code: "",
+      role_name: "",
+      role_category: "GENERAL",
+      description: "",
       can_have_team: false,
       is_required: false,
       sort_order: 0,
@@ -154,7 +252,7 @@ export default function ProjectRoleTypeManagement() {
 
   const handleCreateClick = () => {
     resetForm();
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       sort_order: roleTypes.length + 1,
     }));
@@ -167,7 +265,7 @@ export default function ProjectRoleTypeManagement() {
       role_code: roleType.role_code,
       role_name: roleType.role_name,
       role_category: roleType.role_category,
-      description: roleType.description || '',
+      description: roleType.description || "",
       can_have_team: roleType.can_have_team,
       is_required: roleType.is_required,
       sort_order: roleType.sort_order,
@@ -182,7 +280,7 @@ export default function ProjectRoleTypeManagement() {
   };
 
   const handleFormChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleCreate = async () => {
@@ -192,8 +290,8 @@ export default function ProjectRoleTypeManagement() {
       resetForm();
       loadRoleTypes();
     } catch (error) {
-      console.error('创建角色类型失败:', error);
-      alert('创建失败: ' + (error.response?.data?.detail || error.message));
+      console.error("创建角色类型失败:", error);
+      alert("创建失败: " + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -205,8 +303,8 @@ export default function ProjectRoleTypeManagement() {
       resetForm();
       loadRoleTypes();
     } catch (error) {
-      console.error('更新角色类型失败:', error);
-      alert('更新失败: ' + (error.response?.data?.detail || error.message));
+      console.error("更新角色类型失败:", error);
+      alert("更新失败: " + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -217,8 +315,8 @@ export default function ProjectRoleTypeManagement() {
       setSelectedRoleType(null);
       loadRoleTypes();
     } catch (error) {
-      console.error('删除角色类型失败:', error);
-      alert('删除失败: ' + (error.response?.data?.detail || error.message));
+      console.error("删除角色类型失败:", error);
+      alert("删除失败: " + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -229,12 +327,12 @@ export default function ProjectRoleTypeManagement() {
       });
       loadRoleTypes();
     } catch (error) {
-      console.error('切换状态失败:', error);
+      console.error("切换状态失败:", error);
       // Update locally for demo
-      setRoleTypes(prev =>
-        prev.map(rt =>
-          rt.id === roleType.id ? { ...rt, is_active: !rt.is_active } : rt
-        )
+      setRoleTypes((prev) =>
+        prev.map((rt) =>
+          rt.id === roleType.id ? { ...rt, is_active: !rt.is_active } : rt,
+        ),
       );
     }
   };
@@ -244,26 +342,32 @@ export default function ProjectRoleTypeManagement() {
     return <IconComponent className="h-5 w-5" />;
   };
 
-  const filteredRoleTypes = roleTypes.filter(rt => {
-    if (searchKeyword && !rt.role_name.includes(searchKeyword) && !rt.role_code.includes(searchKeyword.toUpperCase())) {
-      return false;
-    }
-    if (filterCategory !== 'all' && rt.role_category !== filterCategory) {
-      return false;
-    }
-    if (filterActive !== 'all') {
-      const isActive = filterActive === 'active';
-      if (rt.is_active !== isActive) return false;
-    }
-    return true;
-  }).sort((a, b) => a.sort_order - b.sort_order);
+  const filteredRoleTypes = roleTypes
+    .filter((rt) => {
+      if (
+        searchKeyword &&
+        !rt.role_name.includes(searchKeyword) &&
+        !rt.role_code.includes(searchKeyword.toUpperCase())
+      ) {
+        return false;
+      }
+      if (filterCategory !== "all" && rt.role_category !== filterCategory) {
+        return false;
+      }
+      if (filterActive !== "all") {
+        const isActive = filterActive === "active";
+        if (rt.is_active !== isActive) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => a.sort_order - b.sort_order);
 
   // 统计数据
   const stats = {
     total: roleTypes.length,
-    active: roleTypes.filter(rt => rt.is_active).length,
-    required: roleTypes.filter(rt => rt.is_required).length,
-    withTeam: roleTypes.filter(rt => rt.can_have_team).length,
+    active: roleTypes.filter((rt) => rt.is_active).length,
+    required: roleTypes.filter((rt) => rt.is_required).length,
+    withTeam: roleTypes.filter((rt) => rt.can_have_team).length,
   };
 
   return (
@@ -289,10 +393,30 @@ export default function ProjectRoleTypeManagement() {
           className="grid grid-cols-1 md:grid-cols-4 gap-4"
         >
           {[
-            { label: '角色总数', value: stats.total, icon: Shield, color: 'text-violet-400' },
-            { label: '已启用', value: stats.active, icon: CheckCircle, color: 'text-emerald-400' },
-            { label: '必需角色', value: stats.required, icon: ClipboardList, color: 'text-amber-400' },
-            { label: '可带团队', value: stats.withTeam, icon: Users, color: 'text-blue-400' },
+            {
+              label: "角色总数",
+              value: stats.total,
+              icon: Shield,
+              color: "text-violet-400",
+            },
+            {
+              label: "已启用",
+              value: stats.active,
+              icon: CheckCircle,
+              color: "text-emerald-400",
+            },
+            {
+              label: "必需角色",
+              value: stats.required,
+              icon: ClipboardList,
+              color: "text-amber-400",
+            },
+            {
+              label: "可带团队",
+              value: stats.withTeam,
+              icon: Users,
+              color: "text-blue-400",
+            },
           ].map((stat, index) => (
             <motion.div key={stat.label} variants={fadeIn}>
               <Card className="bg-surface-100 border-white/5 hover:border-white/10 transition-colors">
@@ -300,9 +424,13 @@ export default function ProjectRoleTypeManagement() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-slate-400">{stat.label}</p>
-                      <p className={cn("text-2xl font-bold mt-1", stat.color)}>{stat.value}</p>
+                      <p className={cn("text-2xl font-bold mt-1", stat.color)}>
+                        {stat.value}
+                      </p>
                     </div>
-                    <div className={cn("p-3 rounded-xl bg-white/5", stat.color)}>
+                    <div
+                      className={cn("p-3 rounded-xl bg-white/5", stat.color)}
+                    >
                       <stat.icon className="h-5 w-5" />
                     </div>
                   </div>
@@ -367,15 +495,25 @@ export default function ProjectRoleTypeManagement() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-white/5 hover:bg-transparent">
-                    <TableHead className="text-slate-400 w-[60px]">排序</TableHead>
+                    <TableHead className="text-slate-400 w-[60px]">
+                      排序
+                    </TableHead>
                     <TableHead className="text-slate-400">角色编码</TableHead>
                     <TableHead className="text-slate-400">角色名称</TableHead>
                     <TableHead className="text-slate-400">分类</TableHead>
                     <TableHead className="text-slate-400">描述</TableHead>
-                    <TableHead className="text-slate-400 text-center">可带团队</TableHead>
-                    <TableHead className="text-slate-400 text-center">必需</TableHead>
-                    <TableHead className="text-slate-400 text-center">状态</TableHead>
-                    <TableHead className="text-slate-400 text-right">操作</TableHead>
+                    <TableHead className="text-slate-400 text-center">
+                      可带团队
+                    </TableHead>
+                    <TableHead className="text-slate-400 text-center">
+                      必需
+                    </TableHead>
+                    <TableHead className="text-slate-400 text-center">
+                      状态
+                    </TableHead>
+                    <TableHead className="text-slate-400 text-right">
+                      操作
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -391,7 +529,10 @@ export default function ProjectRoleTypeManagement() {
                       </TableRow>
                     ) : filteredRoleTypes.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center py-10 text-slate-400">
+                        <TableCell
+                          colSpan={9}
+                          className="text-center py-10 text-slate-400"
+                        >
                           暂无数据
                         </TableCell>
                       </TableRow>
@@ -422,22 +563,26 @@ export default function ProjectRoleTypeManagement() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <span className="text-white font-medium">{roleType.role_name}</span>
+                            <span className="text-white font-medium">
+                              {roleType.role_name}
+                            </span>
                           </TableCell>
                           <TableCell>
                             <Badge
                               variant="outline"
                               className={cn(
                                 "border",
-                                ROLE_CATEGORIES[roleType.role_category]?.color || ROLE_CATEGORIES.GENERAL.color
+                                ROLE_CATEGORIES[roleType.role_category]
+                                  ?.color || ROLE_CATEGORIES.GENERAL.color,
                               )}
                             >
-                              {ROLE_CATEGORIES[roleType.role_category]?.label || '通用类'}
+                              {ROLE_CATEGORIES[roleType.role_category]?.label ||
+                                "通用类"}
                             </Badge>
                           </TableCell>
                           <TableCell>
                             <span className="text-slate-400 text-sm line-clamp-1 max-w-[200px]">
-                              {roleType.description || '-'}
+                              {roleType.description || "-"}
                             </span>
                           </TableCell>
                           <TableCell className="text-center">
@@ -461,7 +606,9 @@ export default function ProjectRoleTypeManagement() {
                           <TableCell className="text-center">
                             <Switch
                               checked={roleType.is_active}
-                              onCheckedChange={() => handleToggleActive(roleType)}
+                              onCheckedChange={() =>
+                                handleToggleActive(roleType)
+                              }
                               className="data-[state=checked]:bg-emerald-500"
                             />
                           </TableCell>
@@ -511,7 +658,9 @@ export default function ProjectRoleTypeManagement() {
                 <Input
                   placeholder="如 PM、TECH_LEAD"
                   value={formData.role_code}
-                  onChange={(e) => handleFormChange('role_code', e.target.value.toUpperCase())}
+                  onChange={(e) =>
+                    handleFormChange("role_code", e.target.value.toUpperCase())
+                  }
                   className="bg-white/5 border-white/10"
                 />
               </div>
@@ -520,7 +669,9 @@ export default function ProjectRoleTypeManagement() {
                 <Input
                   placeholder="如 项目经理"
                   value={formData.role_name}
-                  onChange={(e) => handleFormChange('role_name', e.target.value)}
+                  onChange={(e) =>
+                    handleFormChange("role_name", e.target.value)
+                  }
                   className="bg-white/5 border-white/10"
                 />
               </div>
@@ -530,7 +681,7 @@ export default function ProjectRoleTypeManagement() {
                 <Label>角色分类</Label>
                 <Select
                   value={formData.role_category}
-                  onValueChange={(v) => handleFormChange('role_category', v)}
+                  onValueChange={(v) => handleFormChange("role_category", v)}
                 >
                   <SelectTrigger className="bg-white/5 border-white/10">
                     <SelectValue />
@@ -548,7 +699,12 @@ export default function ProjectRoleTypeManagement() {
                 <Input
                   type="number"
                   value={formData.sort_order}
-                  onChange={(e) => handleFormChange('sort_order', parseInt(e.target.value) || 0)}
+                  onChange={(e) =>
+                    handleFormChange(
+                      "sort_order",
+                      parseInt(e.target.value) || 0,
+                    )
+                  }
                   className="bg-white/5 border-white/10"
                 />
               </div>
@@ -558,7 +714,9 @@ export default function ProjectRoleTypeManagement() {
               <Textarea
                 placeholder="描述该角色的职责..."
                 value={formData.description}
-                onChange={(e) => handleFormChange('description', e.target.value)}
+                onChange={(e) =>
+                  handleFormChange("description", e.target.value)
+                }
                 className="bg-white/5 border-white/10 min-h-[80px]"
               />
             </div>
@@ -567,35 +725,42 @@ export default function ProjectRoleTypeManagement() {
                 <Switch
                   id="can_have_team"
                   checked={formData.can_have_team}
-                  onCheckedChange={(v) => handleFormChange('can_have_team', v)}
+                  onCheckedChange={(v) => handleFormChange("can_have_team", v)}
                 />
-                <Label htmlFor="can_have_team" className="cursor-pointer">可带团队</Label>
+                <Label htmlFor="can_have_team" className="cursor-pointer">
+                  可带团队
+                </Label>
               </div>
               <div className="flex items-center gap-2">
                 <Switch
                   id="is_required"
                   checked={formData.is_required}
-                  onCheckedChange={(v) => handleFormChange('is_required', v)}
+                  onCheckedChange={(v) => handleFormChange("is_required", v)}
                 />
-                <Label htmlFor="is_required" className="cursor-pointer">必需角色</Label>
+                <Label htmlFor="is_required" className="cursor-pointer">
+                  必需角色
+                </Label>
               </div>
               <div className="flex items-center gap-2">
                 <Switch
                   id="is_active"
                   checked={formData.is_active}
-                  onCheckedChange={(v) => handleFormChange('is_active', v)}
+                  onCheckedChange={(v) => handleFormChange("is_active", v)}
                 />
-                <Label htmlFor="is_active" className="cursor-pointer">启用</Label>
+                <Label htmlFor="is_active" className="cursor-pointer">
+                  启用
+                </Label>
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="secondary"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
-            <Button onClick={handleCreate}>
-              创建
-            </Button>
+            <Button onClick={handleCreate}>创建</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -616,7 +781,9 @@ export default function ProjectRoleTypeManagement() {
                 <Input
                   placeholder="如 PM、TECH_LEAD"
                   value={formData.role_code}
-                  onChange={(e) => handleFormChange('role_code', e.target.value.toUpperCase())}
+                  onChange={(e) =>
+                    handleFormChange("role_code", e.target.value.toUpperCase())
+                  }
                   className="bg-white/5 border-white/10"
                   disabled
                 />
@@ -626,7 +793,9 @@ export default function ProjectRoleTypeManagement() {
                 <Input
                   placeholder="如 项目经理"
                   value={formData.role_name}
-                  onChange={(e) => handleFormChange('role_name', e.target.value)}
+                  onChange={(e) =>
+                    handleFormChange("role_name", e.target.value)
+                  }
                   className="bg-white/5 border-white/10"
                 />
               </div>
@@ -636,7 +805,7 @@ export default function ProjectRoleTypeManagement() {
                 <Label>角色分类</Label>
                 <Select
                   value={formData.role_category}
-                  onValueChange={(v) => handleFormChange('role_category', v)}
+                  onValueChange={(v) => handleFormChange("role_category", v)}
                 >
                   <SelectTrigger className="bg-white/5 border-white/10">
                     <SelectValue />
@@ -654,7 +823,12 @@ export default function ProjectRoleTypeManagement() {
                 <Input
                   type="number"
                   value={formData.sort_order}
-                  onChange={(e) => handleFormChange('sort_order', parseInt(e.target.value) || 0)}
+                  onChange={(e) =>
+                    handleFormChange(
+                      "sort_order",
+                      parseInt(e.target.value) || 0,
+                    )
+                  }
                   className="bg-white/5 border-white/10"
                 />
               </div>
@@ -664,7 +838,9 @@ export default function ProjectRoleTypeManagement() {
               <Textarea
                 placeholder="描述该角色的职责..."
                 value={formData.description}
-                onChange={(e) => handleFormChange('description', e.target.value)}
+                onChange={(e) =>
+                  handleFormChange("description", e.target.value)
+                }
                 className="bg-white/5 border-white/10 min-h-[80px]"
               />
             </div>
@@ -673,35 +849,42 @@ export default function ProjectRoleTypeManagement() {
                 <Switch
                   id="edit_can_have_team"
                   checked={formData.can_have_team}
-                  onCheckedChange={(v) => handleFormChange('can_have_team', v)}
+                  onCheckedChange={(v) => handleFormChange("can_have_team", v)}
                 />
-                <Label htmlFor="edit_can_have_team" className="cursor-pointer">可带团队</Label>
+                <Label htmlFor="edit_can_have_team" className="cursor-pointer">
+                  可带团队
+                </Label>
               </div>
               <div className="flex items-center gap-2">
                 <Switch
                   id="edit_is_required"
                   checked={formData.is_required}
-                  onCheckedChange={(v) => handleFormChange('is_required', v)}
+                  onCheckedChange={(v) => handleFormChange("is_required", v)}
                 />
-                <Label htmlFor="edit_is_required" className="cursor-pointer">必需角色</Label>
+                <Label htmlFor="edit_is_required" className="cursor-pointer">
+                  必需角色
+                </Label>
               </div>
               <div className="flex items-center gap-2">
                 <Switch
                   id="edit_is_active"
                   checked={formData.is_active}
-                  onCheckedChange={(v) => handleFormChange('is_active', v)}
+                  onCheckedChange={(v) => handleFormChange("is_active", v)}
                 />
-                <Label htmlFor="edit_is_active" className="cursor-pointer">启用</Label>
+                <Label htmlFor="edit_is_active" className="cursor-pointer">
+                  启用
+                </Label>
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setShowEditDialog(false)}>
+            <Button
+              variant="secondary"
+              onClick={() => setShowEditDialog(false)}
+            >
               取消
             </Button>
-            <Button onClick={handleUpdate}>
-              保存
-            </Button>
+            <Button onClick={handleUpdate}>保存</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -717,14 +900,21 @@ export default function ProjectRoleTypeManagement() {
           </DialogHeader>
           <DialogBody>
             <p className="text-slate-300">
-              确定要删除角色类型 <span className="text-white font-medium">{selectedRoleType?.role_name}</span> 吗？
+              确定要删除角色类型{" "}
+              <span className="text-white font-medium">
+                {selectedRoleType?.role_name}
+              </span>{" "}
+              吗？
             </p>
             <p className="text-sm text-slate-500 mt-2">
               此操作不可撤销，已分配此角色的项目成员将受到影响。
             </p>
           </DialogBody>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setShowDeleteDialog(false)}>
+            <Button
+              variant="secondary"
+              onClick={() => setShowDeleteDialog(false)}
+            >
               取消
             </Button>
             <Button variant="destructive" onClick={handleDelete}>

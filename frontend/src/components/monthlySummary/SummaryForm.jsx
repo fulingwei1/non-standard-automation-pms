@@ -1,6 +1,15 @@
-import { Target, Edit3, Lightbulb, AlertCircle, TrendingUp, Sparkles, Save, Send } from 'lucide-react'
-import { fadeIn } from '../../utils/monthlySummaryUtils'
-import { motion } from 'framer-motion'
+import {
+  Target,
+  Edit3,
+  Lightbulb,
+  AlertCircle,
+  TrendingUp,
+  Sparkles,
+  Save,
+  Send,
+} from "lucide-react";
+import { fadeIn } from "../../utils/monthlySummaryUtils";
+import { motion } from "framer-motion";
 
 /**
  * 月度总结表单组件
@@ -14,7 +23,7 @@ export const SummaryForm = ({
   error,
   onInputChange,
   onSaveDraft,
-  onSubmit
+  onSubmit,
 }) => {
   return (
     <motion.div {...fadeIn} transition={{ delay: 0.2 }}>
@@ -40,7 +49,9 @@ export const SummaryForm = ({
             <div className="flex items-start gap-3">
               <Sparkles className="h-5 w-5 text-purple-400 mt-0.5" />
               <div className="flex-1">
-                <p className="text-white font-medium mb-1">AI 智能总结助手（即将上线）</p>
+                <p className="text-white font-medium mb-1">
+                  AI 智能总结助手（即将上线）
+                </p>
                 <p className="text-sm text-slate-400 mb-3">
                   系统将自动提取您参与的项目任务、工作记录，生成工作总结草稿，减少手动填写工作量
                 </p>
@@ -65,7 +76,7 @@ export const SummaryForm = ({
               </label>
               <textarea
                 value={formData.workContent}
-                onChange={(e) => onInputChange('workContent', e.target.value)}
+                onChange={(e) => onInputChange("workContent", e.target.value)}
                 placeholder="请详细描述本月完成的主要工作内容，包括参与的项目、完成的任务、产出的成果等..."
                 className="w-full h-32 px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none"
               />
@@ -83,7 +94,9 @@ export const SummaryForm = ({
               </label>
               <textarea
                 value={formData.selfEvaluation}
-                onChange={(e) => onInputChange('selfEvaluation', e.target.value)}
+                onChange={(e) =>
+                  onInputChange("selfEvaluation", e.target.value)
+                }
                 placeholder="请客观评价本月工作表现，包括工作质量、工作效率、协作能力等方面..."
                 className="w-full h-32 px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 resize-none"
               />
@@ -100,7 +113,7 @@ export const SummaryForm = ({
               </label>
               <textarea
                 value={formData.highlights}
-                onChange={(e) => onInputChange('highlights', e.target.value)}
+                onChange={(e) => onInputChange("highlights", e.target.value)}
                 placeholder="请列举本月工作中的亮点和突出成果，如创新方案、重要突破、优秀表现等..."
                 className="w-full h-32 px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 resize-none"
               />
@@ -117,7 +130,7 @@ export const SummaryForm = ({
               </label>
               <textarea
                 value={formData.problems}
-                onChange={(e) => onInputChange('problems', e.target.value)}
+                onChange={(e) => onInputChange("problems", e.target.value)}
                 placeholder="请描述本月工作中遇到的问题、挑战以及解决方案..."
                 className="w-full h-32 px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 resize-none"
               />
@@ -134,7 +147,7 @@ export const SummaryForm = ({
               </label>
               <textarea
                 value={formData.nextMonthPlan}
-                onChange={(e) => onInputChange('nextMonthPlan', e.target.value)}
+                onChange={(e) => onInputChange("nextMonthPlan", e.target.value)}
                 placeholder="请描述下月的工作计划和目标，包括重点任务、预期成果等..."
                 className="w-full h-32 px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 resize-none"
               />
@@ -159,7 +172,7 @@ export const SummaryForm = ({
               className="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2"
             >
               <Save className="h-4 w-4" />
-              {isSaving ? '保存中...' : '保存草稿'}
+              {isSaving ? "保存中..." : "保存草稿"}
             </button>
 
             <button
@@ -168,11 +181,11 @@ export const SummaryForm = ({
               className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-blue-500/50 disabled:to-purple-500/50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-all flex items-center gap-2"
             >
               <Send className="h-4 w-4" />
-              {isSubmitting ? '提交中...' : '提交总结'}
+              {isSubmitting ? "提交中..." : "提交总结"}
             </button>
           </div>
         </div>
       </div>
     </motion.div>
-  )
-}
+  );
+};

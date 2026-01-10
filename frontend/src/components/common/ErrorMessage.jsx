@@ -1,19 +1,20 @@
-import { AlertCircle, RefreshCw, XCircle, Inbox } from 'lucide-react'
-import { Button } from '../ui/button'
-import { Card, CardContent } from '../ui/card'
-import { cn } from '../../lib/utils'
+import { AlertCircle, RefreshCw, XCircle, Inbox } from "lucide-react";
+import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
+import { cn } from "../../lib/utils";
 
-export function ErrorMessage({ 
-  error, 
-  onRetry, 
-  title = '加载失败',
+export function ErrorMessage({
+  error,
+  onRetry,
+  title = "加载失败",
   className,
-  showDetails = false 
+  showDetails = false,
 }) {
-  const errorMessage = error?.message || error?.response?.data?.detail || '未知错误'
-  
+  const errorMessage =
+    error?.message || error?.response?.data?.detail || "未知错误";
+
   return (
-    <Card className={cn('border-red-500/20 bg-red-500/5', className)}>
+    <Card className={cn("border-red-500/20 bg-red-500/5", className)}>
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
           <AlertCircle className="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" />
@@ -45,17 +46,17 @@ export function ErrorMessage({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
-export function EmptyState({ 
+export function EmptyState({
   icon: Icon = Inbox,
-  title = '暂无数据',
+  title = "暂无数据",
   description,
   action,
-  className 
+  className,
 }) {
-  const IconComponent = Icon
+  const IconComponent = Icon;
   return (
     <Card className={className}>
       <CardContent className="p-12 text-center">
@@ -65,6 +66,5 @@ export function EmptyState({
         {action && <div className="mt-4">{action}</div>}
       </CardContent>
     </Card>
-  )
+  );
 }
-

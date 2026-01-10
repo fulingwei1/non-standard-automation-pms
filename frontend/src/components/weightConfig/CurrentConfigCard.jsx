@@ -1,8 +1,8 @@
-import { Info, RotateCcw, Save, Users, Briefcase } from 'lucide-react'
-import { fadeIn } from '../../utils/weightConfigUtils'
-import { motion } from 'framer-motion'
-import { WeightInputCard } from './WeightInputCard'
-import { WeightValidation } from './WeightValidation'
+import { Info, RotateCcw, Save, Users, Briefcase } from "lucide-react";
+import { fadeIn } from "../../utils/weightConfigUtils";
+import { motion } from "framer-motion";
+import { WeightInputCard } from "./WeightInputCard";
+import { WeightValidation } from "./WeightValidation";
 
 /**
  * 当前配置卡片组件
@@ -15,7 +15,7 @@ export const CurrentConfigCard = ({
   isSaving,
   onWeightChange,
   onReset,
-  onSave
+  onSave,
 }) => {
   return (
     <motion.div {...fadeIn} transition={{ delay: 0.1 }}>
@@ -73,10 +73,10 @@ export const CurrentConfigCard = ({
             className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-all flex items-center gap-2"
           >
             <Save className="h-4 w-4" />
-            {isSaving ? '保存中...' : '保存配置'}
+            {isSaving ? "保存中..." : "保存配置"}
           </button>
         </div>
       </div>
     </motion.div>
-  )
-}
+  );
+};

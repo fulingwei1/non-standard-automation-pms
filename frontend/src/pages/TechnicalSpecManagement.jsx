@@ -1,145 +1,169 @@
-import { useState, useEffect } from 'react'
-import { FileText, Plus, Search, Edit3, Trash2, Upload, AlertCircle } from 'lucide-react'
-import { PageHeader } from '../components/layout'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
+import { useState, useEffect } from "react";
+import {
+  FileText,
+  Plus,
+  Search,
+  Edit3,
+  Trash2,
+  Upload,
+  AlertCircle,
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '../components/ui/dialog'
-import { Label } from '../components/ui/label'
-import { Textarea } from '../components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
-import api from '../services/api'
+} from "../components/ui/dialog";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import api from "../services/api";
 
 export default function TechnicalSpecManagement() {
-  const [requirements, setRequirements] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [projectId, setProjectId] = useState(null)
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [editingRequirement, setEditingRequirement] = useState(null)
-  
+  const [requirements, setRequirements] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [projectId, setProjectId] = useState(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingRequirement, setEditingRequirement] = useState(null);
+
   const [formData, setFormData] = useState({
-    project_id: '',
-    document_id: '',
-    material_code: '',
-    material_name: '',
-    specification: '',
-    brand: '',
-    model: '',
-    requirement_level: 'REQUIRED',
-    remark: '',
-  })
+    project_id: "",
+    document_id: "",
+    material_code: "",
+    material_name: "",
+    specification: "",
+    brand: "",
+    model: "",
+    requirement_level: "REQUIRED",
+    remark: "",
+  });
 
   useEffect(() => {
-    loadRequirements()
-  }, [projectId, searchKeyword])
+    loadRequirements();
+  }, [projectId, searchKeyword]);
 
   const loadRequirements = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const params = { page: 1, page_size: 100 }
-      if (projectId) params.project_id = projectId
-      if (searchKeyword) params.keyword = searchKeyword
-      
-      const response = await api.get('/technical-spec/requirements', { params })
-      setRequirements(response.data.items || [])
+      const params = { page: 1, page_size: 100 };
+      if (projectId) params.project_id = projectId;
+      if (searchKeyword) params.keyword = searchKeyword;
+
+      const response = await api.get("/technical-spec/requirements", {
+        params,
+      });
+      setRequirements(response.data.items || []);
     } catch (error) {
-      console.error('加载规格要求失败:', error)
+      console.error("加载规格要求失败:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleCreate = async () => {
     try {
-      await api.post('/technical-spec/requirements', formData)
-      setShowCreateDialog(false)
-      resetForm()
-      loadRequirements()
+      await api.post("/technical-spec/requirements", formData);
+      setShowCreateDialog(false);
+      resetForm();
+      loadRequirements();
     } catch (error) {
-      console.error('创建规格要求失败:', error)
-      alert('创建失败: ' + (error.response?.data?.detail || error.message))
+      console.error("创建规格要求失败:", error);
+      alert("创建失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const handleUpdate = async () => {
     try {
-      await api.put(`/technical-spec/requirements/${editingRequirement.id}`, formData)
-      setEditingRequirement(null)
-      resetForm()
-      loadRequirements()
+      await api.put(
+        `/technical-spec/requirements/${editingRequirement.id}`,
+        formData,
+      );
+      setEditingRequirement(null);
+      resetForm();
+      loadRequirements();
     } catch (error) {
-      console.error('更新规格要求失败:', error)
-      alert('更新失败: ' + (error.response?.data?.detail || error.message))
+      console.error("更新规格要求失败:", error);
+      alert("更新失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const handleDelete = async (id) => {
-    if (!confirm('确定要删除这个规格要求吗？')) return
-    
+    if (!confirm("确定要删除这个规格要求吗？")) return;
+
     try {
-      await api.delete(`/technical-spec/requirements/${id}`)
-      loadRequirements()
+      await api.delete(`/technical-spec/requirements/${id}`);
+      loadRequirements();
     } catch (error) {
-      console.error('删除规格要求失败:', error)
-      alert('删除失败: ' + (error.response?.data?.detail || error.message))
+      console.error("删除规格要求失败:", error);
+      alert("删除失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const resetForm = () => {
     setFormData({
-      project_id: '',
-      document_id: '',
-      material_code: '',
-      material_name: '',
-      specification: '',
-      brand: '',
-      model: '',
-      requirement_level: 'REQUIRED',
-      remark: '',
-    })
-  }
+      project_id: "",
+      document_id: "",
+      material_code: "",
+      material_name: "",
+      specification: "",
+      brand: "",
+      model: "",
+      requirement_level: "REQUIRED",
+      remark: "",
+    });
+  };
 
   const openEditDialog = (requirement) => {
-    setEditingRequirement(requirement)
+    setEditingRequirement(requirement);
     setFormData({
       project_id: requirement.project_id,
-      document_id: requirement.document_id || '',
-      material_code: requirement.material_code || '',
+      document_id: requirement.document_id || "",
+      material_code: requirement.material_code || "",
       material_name: requirement.material_name,
       specification: requirement.specification,
-      brand: requirement.brand || '',
-      model: requirement.model || '',
+      brand: requirement.brand || "",
+      model: requirement.model || "",
       requirement_level: requirement.requirement_level,
-      remark: requirement.remark || '',
-    })
-    setShowCreateDialog(true)
-  }
+      remark: requirement.remark || "",
+    });
+    setShowCreateDialog(true);
+  };
 
   const getRequirementLevelBadge = (level) => {
     const colors = {
-      REQUIRED: 'bg-red-100 text-red-800',
-      OPTIONAL: 'bg-yellow-100 text-yellow-800',
-      STRICT: 'bg-purple-100 text-purple-800',
-    }
+      REQUIRED: "bg-red-100 text-red-800",
+      OPTIONAL: "bg-yellow-100 text-yellow-800",
+      STRICT: "bg-purple-100 text-purple-800",
+    };
     const labels = {
-      REQUIRED: '必需',
-      OPTIONAL: '可选',
-      STRICT: '严格',
-    }
+      REQUIRED: "必需",
+      OPTIONAL: "可选",
+      STRICT: "严格",
+    };
     return (
-      <Badge className={colors[level] || 'bg-gray-100 text-gray-800'}>
+      <Badge className={colors[level] || "bg-gray-100 text-gray-800"}>
         {labels[level] || level}
       </Badge>
-    )
-  }
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -162,7 +186,13 @@ export default function TechnicalSpecManagement() {
                   className="pl-10 w-64"
                 />
               </div>
-              <Button onClick={() => { resetForm(); setEditingRequirement(null); setShowCreateDialog(true); }}>
+              <Button
+                onClick={() => {
+                  resetForm();
+                  setEditingRequirement(null);
+                  setShowCreateDialog(true);
+                }}
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 新增规格要求
               </Button>
@@ -186,23 +216,33 @@ export default function TechnicalSpecManagement() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-semibold text-lg">{req.material_name}</h3>
+                        <h3 className="font-semibold text-lg">
+                          {req.material_name}
+                        </h3>
                         {getRequirementLevelBadge(req.requirement_level)}
                         {req.material_code && (
                           <Badge variant="outline">{req.material_code}</Badge>
                         )}
                       </div>
                       <p className="text-sm text-gray-600 mb-2">
-                        <span className="font-medium">规格要求:</span> {req.specification}
+                        <span className="font-medium">规格要求:</span>{" "}
+                        {req.specification}
                       </p>
                       {req.brand && (
                         <p className="text-sm text-gray-500">
                           <span className="font-medium">品牌:</span> {req.brand}
-                          {req.model && <span className="ml-4"><span className="font-medium">型号:</span> {req.model}</span>}
+                          {req.model && (
+                            <span className="ml-4">
+                              <span className="font-medium">型号:</span>{" "}
+                              {req.model}
+                            </span>
+                          )}
                         </p>
                       )}
                       {req.remark && (
-                        <p className="text-sm text-gray-500 mt-2">{req.remark}</p>
+                        <p className="text-sm text-gray-500 mt-2">
+                          {req.remark}
+                        </p>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
@@ -234,7 +274,7 @@ export default function TechnicalSpecManagement() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingRequirement ? '编辑规格要求' : '新增规格要求'}
+              {editingRequirement ? "编辑规格要求" : "新增规格要求"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
@@ -243,7 +283,9 @@ export default function TechnicalSpecManagement() {
               <Input
                 type="number"
                 value={formData.project_id}
-                onChange={(e) => setFormData({ ...formData, project_id: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, project_id: e.target.value })
+                }
                 placeholder="请输入项目ID"
               />
             </div>
@@ -251,7 +293,9 @@ export default function TechnicalSpecManagement() {
               <Label>物料名称 *</Label>
               <Input
                 value={formData.material_name}
-                onChange={(e) => setFormData({ ...formData, material_name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, material_name: e.target.value })
+                }
                 placeholder="请输入物料名称"
               />
             </div>
@@ -259,7 +303,9 @@ export default function TechnicalSpecManagement() {
               <Label>规格型号 *</Label>
               <Textarea
                 value={formData.specification}
-                onChange={(e) => setFormData({ ...formData, specification: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, specification: e.target.value })
+                }
                 placeholder="请输入规格型号要求"
                 rows={3}
               />
@@ -269,7 +315,9 @@ export default function TechnicalSpecManagement() {
                 <Label>物料编码</Label>
                 <Input
                   value={formData.material_code}
-                  onChange={(e) => setFormData({ ...formData, material_code: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, material_code: e.target.value })
+                  }
                   placeholder="可选"
                 />
               </div>
@@ -277,7 +325,9 @@ export default function TechnicalSpecManagement() {
                 <Label>要求级别</Label>
                 <Select
                   value={formData.requirement_level}
-                  onValueChange={(value) => setFormData({ ...formData, requirement_level: value })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, requirement_level: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -295,7 +345,9 @@ export default function TechnicalSpecManagement() {
                 <Label>品牌</Label>
                 <Input
                   value={formData.brand}
-                  onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, brand: e.target.value })
+                  }
                   placeholder="可选"
                 />
               </div>
@@ -303,7 +355,9 @@ export default function TechnicalSpecManagement() {
                 <Label>型号</Label>
                 <Input
                   value={formData.model}
-                  onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, model: e.target.value })
+                  }
                   placeholder="可选"
                 />
               </div>
@@ -312,26 +366,27 @@ export default function TechnicalSpecManagement() {
               <Label>备注</Label>
               <Textarea
                 value={formData.remark}
-                onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, remark: e.target.value })
+                }
                 placeholder="可选"
                 rows={2}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={editingRequirement ? handleUpdate : handleCreate}>
-              {editingRequirement ? '更新' : '创建'}
+              {editingRequirement ? "更新" : "创建"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-
-
-
-

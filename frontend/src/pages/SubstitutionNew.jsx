@@ -3,9 +3,9 @@
  * 创建物料替代申请，需要技术审批和生产审批
  */
 
-import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   ArrowLeft,
   RefreshCw,
@@ -14,8 +14,8 @@ import {
   Search,
   AlertTriangle,
   CheckCircle2,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -31,126 +31,141 @@ import {
   SelectTrigger,
   SelectValue,
   Textarea,
-} from '../components/ui'
-import { fadeIn } from '../lib/animations'
-import { shortageApi, projectApi, materialApi } from '../services/api'
+} from "../components/ui";
+import { fadeIn } from "../lib/animations";
+import { shortageApi, projectApi, materialApi } from "../services/api";
 
 export default function SubstitutionNew() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [loading, setLoading] = useState(false)
-  const [projects, setProjects] = useState([])
-  const [materials, setMaterials] = useState([])
-  const [searchKeyword, setSearchKeyword] = useState('')
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [materials, setMaterials] = useState([]);
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [formData, setFormData] = useState({
-    shortage_report_id: location.state?.shortage_report_id || '',
-    project_id: location.state?.project_id || '',
-    bom_item_id: location.state?.bom_item_id || '',
-    original_material_id: '',
-    substitute_material_id: '',
-    original_qty: '',
-    substitute_qty: '',
-    substitution_reason: '',
-    technical_impact: '',
-    cost_impact: '0',
-    remark: '',
-  })
-  const [errors, setErrors] = useState({})
+    shortage_report_id: location.state?.shortage_report_id || "",
+    project_id: location.state?.project_id || "",
+    bom_item_id: location.state?.bom_item_id || "",
+    original_material_id: "",
+    substitute_material_id: "",
+    original_qty: "",
+    substitute_qty: "",
+    substitution_reason: "",
+    technical_impact: "",
+    cost_impact: "0",
+    remark: "",
+  });
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    loadProjects()
-    loadMaterials()
-  }, [])
+    loadProjects();
+    loadMaterials();
+  }, []);
 
   const loadProjects = async () => {
     try {
-      const res = await projectApi.list({ page: 1, page_size: 100 })
-      setProjects(res.data.items || [])
+      const res = await projectApi.list({ page: 1, page_size: 100 });
+      setProjects(res.data.items || []);
     } catch (error) {
-      console.error('加载项目列表失败', error)
+      console.error("加载项目列表失败", error);
     }
-  }
+  };
 
   const loadMaterials = async () => {
     try {
-      const res = await materialApi.list({ page: 1, page_size: 200, is_active: true })
-      setMaterials(res.data.items || res.data || [])
+      const res = await materialApi.list({
+        page: 1,
+        page_size: 200,
+        is_active: true,
+      });
+      setMaterials(res.data.items || res.data || []);
     } catch (error) {
-      console.error('加载物料列表失败', error)
+      console.error("加载物料列表失败", error);
     }
-  }
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     // 验证
-    const newErrors = {}
-    if (!formData.project_id) newErrors.project_id = '请选择项目'
-    if (!formData.original_material_id) newErrors.original_material_id = '请选择原物料'
-    if (!formData.substitute_material_id) newErrors.substitute_material_id = '请选择替代物料'
+    const newErrors = {};
+    if (!formData.project_id) newErrors.project_id = "请选择项目";
+    if (!formData.original_material_id)
+      newErrors.original_material_id = "请选择原物料";
+    if (!formData.substitute_material_id)
+      newErrors.substitute_material_id = "请选择替代物料";
     if (formData.original_material_id === formData.substitute_material_id) {
-      newErrors.substitute_material_id = '替代物料不能与原物料相同'
+      newErrors.substitute_material_id = "替代物料不能与原物料相同";
     }
     if (!formData.original_qty || parseFloat(formData.original_qty) <= 0) {
-      newErrors.original_qty = '请输入有效的原物料数量'
+      newErrors.original_qty = "请输入有效的原物料数量";
     }
     if (!formData.substitute_qty || parseFloat(formData.substitute_qty) <= 0) {
-      newErrors.substitute_qty = '请输入有效的替代物料数量'
+      newErrors.substitute_qty = "请输入有效的替代物料数量";
     }
     if (!formData.substitution_reason.trim()) {
-      newErrors.substitution_reason = '请输入替代原因'
+      newErrors.substitution_reason = "请输入替代原因";
     }
 
     if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      return
+      setErrors(newErrors);
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
       const submitData = {
         ...formData,
-        shortage_report_id: formData.shortage_report_id ? parseInt(formData.shortage_report_id) : null,
+        shortage_report_id: formData.shortage_report_id
+          ? parseInt(formData.shortage_report_id)
+          : null,
         project_id: parseInt(formData.project_id),
-        bom_item_id: formData.bom_item_id ? parseInt(formData.bom_item_id) : null,
+        bom_item_id: formData.bom_item_id
+          ? parseInt(formData.bom_item_id)
+          : null,
         original_material_id: parseInt(formData.original_material_id),
         substitute_material_id: parseInt(formData.substitute_material_id),
         original_qty: parseFloat(formData.original_qty),
         substitute_qty: parseFloat(formData.substitute_qty),
         cost_impact: parseFloat(formData.cost_impact) || 0,
-      }
-      
-      const res = await shortageApi.substitutions.create(submitData)
-      alert('物料替代申请创建成功！')
-      navigate(`/shortage/substitutions/${res.data.id}`)
+      };
+
+      const res = await shortageApi.substitutions.create(submitData);
+      alert("物料替代申请创建成功！");
+      navigate(`/shortage/substitutions/${res.data.id}`);
     } catch (error) {
-      console.error('创建物料替代申请失败', error)
-      alert('创建失败：' + (error.response?.data?.detail || error.message))
+      console.error("创建物料替代申请失败", error);
+      alert("创建失败：" + (error.response?.data?.detail || error.message));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }))
+      setErrors((prev) => ({ ...prev, [field]: null }));
     }
-  }
+  };
 
-  const filteredMaterials = materials.filter(m => 
-    !searchKeyword || 
-    m.material_code?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-    m.material_name?.toLowerCase().includes(searchKeyword.toLowerCase())
-  )
+  const filteredMaterials = materials.filter(
+    (m) =>
+      !searchKeyword ||
+      m.material_code?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+      m.material_name?.toLowerCase().includes(searchKeyword.toLowerCase()),
+  );
 
-  const originalMaterial = materials.find(m => m.id === parseInt(formData.original_material_id))
-  const substituteMaterial = materials.find(m => m.id === parseInt(formData.substitute_material_id))
+  const originalMaterial = materials.find(
+    (m) => m.id === parseInt(formData.original_material_id),
+  );
+  const substituteMaterial = materials.find(
+    (m) => m.id === parseInt(formData.substitute_material_id),
+  );
 
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/shortage')}>
+        <Button variant="ghost" size="sm" onClick={() => navigate("/shortage")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           返回
         </Button>
@@ -180,9 +195,12 @@ export default function SubstitutionNew() {
                 </Label>
                 <Select
                   value={formData.project_id}
-                  onValueChange={(value) => handleChange('project_id', value)}
+                  onValueChange={(value) => handleChange("project_id", value)}
                 >
-                  <SelectTrigger id="project_id" className={errors.project_id ? 'border-red-400' : ''}>
+                  <SelectTrigger
+                    id="project_id"
+                    className={errors.project_id ? "border-red-400" : ""}
+                  >
                     <SelectValue placeholder="请选择项目" />
                   </SelectTrigger>
                   <SelectContent>
@@ -194,7 +212,9 @@ export default function SubstitutionNew() {
                   </SelectContent>
                 </Select>
                 {errors.project_id && (
-                  <div className="text-sm text-red-400 mt-1">{errors.project_id}</div>
+                  <div className="text-sm text-red-400 mt-1">
+                    {errors.project_id}
+                  </div>
                 )}
               </div>
 
@@ -205,7 +225,9 @@ export default function SubstitutionNew() {
                   type="number"
                   placeholder="缺料上报ID"
                   value={formData.shortage_report_id}
-                  onChange={(e) => handleChange('shortage_report_id', e.target.value)}
+                  onChange={(e) =>
+                    handleChange("shortage_report_id", e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -231,27 +253,39 @@ export default function SubstitutionNew() {
                   </Label>
                   <Select
                     value={formData.original_material_id}
-                    onValueChange={(value) => handleChange('original_material_id', value)}
+                    onValueChange={(value) =>
+                      handleChange("original_material_id", value)
+                    }
                   >
-                    <SelectTrigger id="original_material_id" className={errors.original_material_id ? 'border-red-400' : ''}>
+                    <SelectTrigger
+                      id="original_material_id"
+                      className={
+                        errors.original_material_id ? "border-red-400" : ""
+                      }
+                    >
                       <SelectValue placeholder="请选择原物料" />
                     </SelectTrigger>
                     <SelectContent>
                       {filteredMaterials.map((material) => (
-                        <SelectItem key={material.id} value={String(material.id)}>
+                        <SelectItem
+                          key={material.id}
+                          value={String(material.id)}
+                        >
                           {material.material_code} - {material.material_name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   {errors.original_material_id && (
-                    <div className="text-sm text-red-400 mt-1">{errors.original_material_id}</div>
+                    <div className="text-sm text-red-400 mt-1">
+                      {errors.original_material_id}
+                    </div>
                   )}
                 </div>
                 {originalMaterial && (
                   <div className="text-sm text-muted-foreground">
-                    规格：{originalMaterial.specification || '-'} | 
-                    单位：{originalMaterial.unit || '-'}
+                    规格：{originalMaterial.specification || "-"} | 单位：
+                    {originalMaterial.unit || "-"}
                   </div>
                 )}
                 <div>
@@ -265,11 +299,15 @@ export default function SubstitutionNew() {
                     min="0"
                     placeholder="0.00"
                     value={formData.original_qty}
-                    onChange={(e) => handleChange('original_qty', e.target.value)}
-                    className={errors.original_qty ? 'border-red-400' : ''}
+                    onChange={(e) =>
+                      handleChange("original_qty", e.target.value)
+                    }
+                    className={errors.original_qty ? "border-red-400" : ""}
                   />
                   {errors.original_qty && (
-                    <div className="text-sm text-red-400 mt-1">{errors.original_qty}</div>
+                    <div className="text-sm text-red-400 mt-1">
+                      {errors.original_qty}
+                    </div>
                   )}
                 </div>
               </div>
@@ -288,29 +326,44 @@ export default function SubstitutionNew() {
                   </Label>
                   <Select
                     value={formData.substitute_material_id}
-                    onValueChange={(value) => handleChange('substitute_material_id', value)}
+                    onValueChange={(value) =>
+                      handleChange("substitute_material_id", value)
+                    }
                   >
-                    <SelectTrigger id="substitute_material_id" className={errors.substitute_material_id ? 'border-red-400' : ''}>
+                    <SelectTrigger
+                      id="substitute_material_id"
+                      className={
+                        errors.substitute_material_id ? "border-red-400" : ""
+                      }
+                    >
                       <SelectValue placeholder="请选择替代物料" />
                     </SelectTrigger>
                     <SelectContent>
                       {filteredMaterials
-                        .filter(m => m.id !== parseInt(formData.original_material_id))
+                        .filter(
+                          (m) =>
+                            m.id !== parseInt(formData.original_material_id),
+                        )
                         .map((material) => (
-                          <SelectItem key={material.id} value={String(material.id)}>
+                          <SelectItem
+                            key={material.id}
+                            value={String(material.id)}
+                          >
                             {material.material_code} - {material.material_name}
                           </SelectItem>
                         ))}
                     </SelectContent>
                   </Select>
                   {errors.substitute_material_id && (
-                    <div className="text-sm text-red-400 mt-1">{errors.substitute_material_id}</div>
+                    <div className="text-sm text-red-400 mt-1">
+                      {errors.substitute_material_id}
+                    </div>
                   )}
                 </div>
                 {substituteMaterial && (
                   <div className="text-sm text-muted-foreground">
-                    规格：{substituteMaterial.specification || '-'} | 
-                    单位：{substituteMaterial.unit || '-'}
+                    规格：{substituteMaterial.specification || "-"} | 单位：
+                    {substituteMaterial.unit || "-"}
                   </div>
                 )}
                 <div>
@@ -324,11 +377,15 @@ export default function SubstitutionNew() {
                     min="0"
                     placeholder="0.00"
                     value={formData.substitute_qty}
-                    onChange={(e) => handleChange('substitute_qty', e.target.value)}
-                    className={errors.substitute_qty ? 'border-red-400' : ''}
+                    onChange={(e) =>
+                      handleChange("substitute_qty", e.target.value)
+                    }
+                    className={errors.substitute_qty ? "border-red-400" : ""}
                   />
                   {errors.substitute_qty && (
-                    <div className="text-sm text-red-400 mt-1">{errors.substitute_qty}</div>
+                    <div className="text-sm text-red-400 mt-1">
+                      {errors.substitute_qty}
+                    </div>
                   )}
                 </div>
               </div>
@@ -350,12 +407,16 @@ export default function SubstitutionNew() {
                 id="substitution_reason"
                 placeholder="请详细说明为什么需要替代此物料..."
                 value={formData.substitution_reason}
-                onChange={(e) => handleChange('substitution_reason', e.target.value)}
+                onChange={(e) =>
+                  handleChange("substitution_reason", e.target.value)
+                }
                 rows={4}
-                className={errors.substitution_reason ? 'border-red-400' : ''}
+                className={errors.substitution_reason ? "border-red-400" : ""}
               />
               {errors.substitution_reason && (
-                <div className="text-sm text-red-400 mt-1">{errors.substitution_reason}</div>
+                <div className="text-sm text-red-400 mt-1">
+                  {errors.substitution_reason}
+                </div>
               )}
             </div>
 
@@ -365,7 +426,9 @@ export default function SubstitutionNew() {
                 id="technical_impact"
                 placeholder="分析替代物料对产品性能、质量、工艺等方面的影响..."
                 value={formData.technical_impact}
-                onChange={(e) => handleChange('technical_impact', e.target.value)}
+                onChange={(e) =>
+                  handleChange("technical_impact", e.target.value)
+                }
                 rows={4}
               />
             </div>
@@ -378,7 +441,7 @@ export default function SubstitutionNew() {
                 step="0.01"
                 placeholder="0.00"
                 value={formData.cost_impact}
-                onChange={(e) => handleChange('cost_impact', e.target.value)}
+                onChange={(e) => handleChange("cost_impact", e.target.value)}
               />
               <div className="text-xs text-muted-foreground mt-1">
                 正数表示成本增加，负数表示成本减少
@@ -395,7 +458,7 @@ export default function SubstitutionNew() {
             <Textarea
               placeholder="其他需要说明的信息..."
               value={formData.remark}
-              onChange={(e) => handleChange('remark', e.target.value)}
+              onChange={(e) => handleChange("remark", e.target.value)}
               rows={3}
             />
           </CardContent>
@@ -405,7 +468,7 @@ export default function SubstitutionNew() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate('/shortage')}
+            onClick={() => navigate("/shortage")}
             disabled={loading}
           >
             <X className="h-4 w-4 mr-2" />
@@ -413,13 +476,10 @@ export default function SubstitutionNew() {
           </Button>
           <Button type="submit" disabled={loading}>
             <Save className="h-4 w-4 mr-2" />
-            {loading ? '提交中...' : '提交申请'}
+            {loading ? "提交中..." : "提交申请"}
           </Button>
         </div>
       </motion.form>
     </div>
-  )
+  );
 }
-
-
-

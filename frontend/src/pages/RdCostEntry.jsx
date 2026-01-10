@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { cn } from '../lib/utils'
-import { rdProjectApi } from '../services/api'
-import { formatDate, formatCurrency } from '../lib/utils'
-import { PageHeader } from '../components/layout/PageHeader'
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { cn } from "../lib/utils";
+import { rdProjectApi } from "../services/api";
+import { formatDate, formatCurrency } from "../lib/utils";
+import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
@@ -22,7 +22,7 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui'
+} from "../components/ui";
 import {
   ArrowLeft,
   Plus,
@@ -33,81 +33,84 @@ import {
   FileText,
   AlertCircle,
   CheckCircle2,
-} from 'lucide-react'
+} from "lucide-react";
 
 const costTypeMap = {
-  LABOR: { label: '人工费用', color: 'primary' },
-  MATERIAL: { label: '材料费用', color: 'blue' },
-  EQUIPMENT: { label: '设备费用', color: 'purple' },
-  DEPRECIATION: { label: '折旧费用', color: 'indigo' },
-  AMORTIZATION: { label: '摊销费用', color: 'pink' },
-  OTHER: { label: '其他费用', color: 'gray' },
-}
+  LABOR: { label: "人工费用", color: "primary" },
+  MATERIAL: { label: "材料费用", color: "blue" },
+  EQUIPMENT: { label: "设备费用", color: "purple" },
+  DEPRECIATION: { label: "折旧费用", color: "indigo" },
+  AMORTIZATION: { label: "摊销费用", color: "pink" },
+  OTHER: { label: "其他费用", color: "gray" },
+};
 
 export default function RdCostEntry() {
-  const { id } = useParams()
-  const navigate = useNavigate()
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true)
-  const [project, setProject] = useState(null)
-  const [costTypes, setCostTypes] = useState([])
-  const [costs, setCosts] = useState([])
-  const [formOpen, setFormOpen] = useState(false)
+  const [loading, setLoading] = useState(true);
+  const [project, setProject] = useState(null);
+  const [costTypes, setCostTypes] = useState([]);
+  const [costs, setCosts] = useState([]);
+  const [formOpen, setFormOpen] = useState(false);
   const [formData, setFormData] = useState({
-    cost_type_id: '',
-    cost_date: new Date().toISOString().split('T')[0],
-    cost_amount: '',
-    deductible_amount: '',
-    cost_description: '',
-    remark: '',
-  })
-  const [formLoading, setFormLoading] = useState(false)
+    cost_type_id: "",
+    cost_date: new Date().toISOString().split("T")[0],
+    cost_amount: "",
+    deductible_amount: "",
+    cost_description: "",
+    remark: "",
+  });
+  const [formLoading, setFormLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
-      fetchProject()
-      fetchCostTypes()
-      fetchCosts()
+      fetchProject();
+      fetchCostTypes();
+      fetchCosts();
     }
-  }, [id])
+  }, [id]);
 
   const fetchProject = async () => {
     try {
-      const response = await rdProjectApi.get(id)
-      const projectData = response.data?.data || response.data || response
-      setProject(projectData)
+      const response = await rdProjectApi.get(id);
+      const projectData = response.data?.data || response.data || response;
+      setProject(projectData);
     } catch (err) {
-      console.error('Failed to fetch project:', err)
+      console.error("Failed to fetch project:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchCostTypes = async () => {
     try {
-      const response = await rdProjectApi.getCostTypes()
-      const data = response.data?.data || response.data || response
-      setCostTypes(Array.isArray(data) ? data : [])
+      const response = await rdProjectApi.getCostTypes();
+      const data = response.data?.data || response.data || response;
+      setCostTypes(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error('Failed to fetch cost types:', err)
-      setCostTypes([])
+      console.error("Failed to fetch cost types:", err);
+      setCostTypes([]);
     }
-  }
+  };
 
   const fetchCosts = async () => {
     try {
-      const response = await rdProjectApi.getCosts({ rd_project_id: id, page_size: 100 })
-      const data = response.data || response
-      setCosts(data.items || data || [])
+      const response = await rdProjectApi.getCosts({
+        rd_project_id: id,
+        page_size: 100,
+      });
+      const data = response.data || response;
+      setCosts(data.items || data || []);
     } catch (err) {
-      console.error('Failed to fetch costs:', err)
-      setCosts([])
+      console.error("Failed to fetch costs:", err);
+      setCosts([]);
     }
-  }
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setFormLoading(true)
+    e.preventDefault();
+    setFormLoading(true);
     try {
       const submitData = {
         rd_project_id: parseInt(id),
@@ -117,60 +120,60 @@ export default function RdCostEntry() {
         deductible_amount: formData.deductible_amount
           ? parseFloat(formData.deductible_amount)
           : null,
-        cost_description: formData.cost_description || '',
-        remark: formData.remark || '',
-      }
+        cost_description: formData.cost_description || "",
+        remark: formData.remark || "",
+      };
 
-      await rdProjectApi.createCost(submitData)
-      setFormOpen(false)
+      await rdProjectApi.createCost(submitData);
+      setFormOpen(false);
       setFormData({
-        cost_type_id: '',
-        cost_date: new Date().toISOString().split('T')[0],
-        cost_amount: '',
-        deductible_amount: '',
-        cost_description: '',
-        remark: '',
-      })
-      fetchCosts()
-      fetchProject() // Refresh project to update total_cost
+        cost_type_id: "",
+        cost_date: new Date().toISOString().split("T")[0],
+        cost_amount: "",
+        deductible_amount: "",
+        cost_description: "",
+        remark: "",
+      });
+      fetchCosts();
+      fetchProject(); // Refresh project to update total_cost
     } catch (err) {
-      alert('录入费用失败: ' + (err.response?.data?.detail || err.message))
+      alert("录入费用失败: " + (err.response?.data?.detail || err.message));
     } finally {
-      setFormLoading(false)
+      setFormLoading(false);
     }
-  }
+  };
 
   const handleCalculateLabor = async () => {
     if (!formData.cost_date) {
-      alert('请先选择费用日期')
-      return
+      alert("请先选择费用日期");
+      return;
     }
 
     try {
-      setFormLoading(true)
+      setFormLoading(true);
       const response = await rdProjectApi.calculateLaborCost({
         rd_project_id: parseInt(id),
         cost_date: formData.cost_date,
-      })
-      const data = response.data?.data || response.data || response
+      });
+      const data = response.data?.data || response.data || response;
       if (data.total_cost && data.total_cost > 0) {
         setFormData({
           ...formData,
           cost_amount: data.total_cost.toString(),
           cost_description: `人工费用自动计算（${data.total_hours || 0}小时）`,
-        })
+        });
       } else {
-        alert('该日期无工时数据，无法自动计算人工费用')
+        alert("该日期无工时数据，无法自动计算人工费用");
       }
     } catch (err) {
-      alert('计算人工费用失败: ' + (err.response?.data?.detail || err.message))
+      alert("计算人工费用失败: " + (err.response?.data?.detail || err.message));
     } finally {
-      setFormLoading(false)
+      setFormLoading(false);
     }
-  }
+  };
 
   if (loading) {
-    return <div className="text-center py-12">加载中...</div>
+    return <div className="text-center py-12">加载中...</div>;
   }
 
   if (!project) {
@@ -178,15 +181,21 @@ export default function RdCostEntry() {
       <div className="text-center py-12">
         <AlertCircle className="h-12 w-12 text-slate-500 mx-auto mb-4" />
         <p className="text-slate-400">研发项目不存在</p>
-        <Button variant="outline" className="mt-4" onClick={() => navigate('/rd-projects')}>
+        <Button
+          variant="outline"
+          className="mt-4"
+          onClick={() => navigate("/rd-projects")}
+        >
           返回列表
         </Button>
       </div>
-    )
+    );
   }
 
-  const selectedCostType = costTypes.find((t) => t.id === parseInt(formData.cost_type_id))
-  const isLaborType = selectedCostType?.cost_type_code === 'LABOR'
+  const selectedCostType = costTypes.find(
+    (t) => t.id === parseInt(formData.cost_type_id),
+  );
+  const isLaborType = selectedCostType?.cost_type_code === "LABOR";
 
   return (
     <motion.div initial="hidden" animate="visible">
@@ -202,7 +211,9 @@ export default function RdCostEntry() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-white">研发费用录入</h1>
-            <p className="text-sm text-slate-400 mt-1">{project.project_name}</p>
+            <p className="text-sm text-slate-400 mt-1">
+              {project.project_name}
+            </p>
           </div>
         </div>
         <Button onClick={() => setFormOpen(true)}>
@@ -235,7 +246,7 @@ export default function RdCostEntry() {
               <p className="text-sm text-slate-400 mb-1">剩余预算</p>
               <p className="text-xl font-semibold text-primary">
                 {formatCurrency(
-                  (project.budget_amount || 0) - (project.total_cost || 0)
+                  (project.budget_amount || 0) - (project.total_cost || 0),
                 )}
               </p>
             </div>
@@ -250,7 +261,9 @@ export default function RdCostEntry() {
           {costs.length > 0 ? (
             <div className="space-y-3">
               {costs.map((cost) => {
-                const costType = costTypes.find((t) => t.id === cost.cost_type_id)
+                const costType = costTypes.find(
+                  (t) => t.id === cost.cost_type_id,
+                );
                 return (
                   <div
                     key={cost.id}
@@ -262,7 +275,7 @@ export default function RdCostEntry() {
                           {cost.cost_no || `费用-${cost.id}`}
                         </p>
                         <Badge variant="outline" className="text-xs">
-                          {costType?.cost_type_name || '未知类型'}
+                          {costType?.cost_type_name || "未知类型"}
                         </Badge>
                         {cost.cost_date && (
                           <Badge variant="secondary" className="text-xs">
@@ -271,10 +284,12 @@ export default function RdCostEntry() {
                         )}
                       </div>
                       <p className="text-sm text-slate-400">
-                        {cost.cost_description || '无描述'}
+                        {cost.cost_description || "无描述"}
                       </p>
                       {cost.remark && (
-                        <p className="text-xs text-slate-500 mt-1">{cost.remark}</p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {cost.remark}
+                        </p>
                       )}
                     </div>
                     <div className="text-right">
@@ -288,7 +303,7 @@ export default function RdCostEntry() {
                       )}
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
           ) : (
@@ -322,7 +337,7 @@ export default function RdCostEntry() {
                     费用类型 <span className="text-red-500">*</span>
                   </label>
                   <Select
-                    value={formData.cost_type_id?.toString() || ''}
+                    value={formData.cost_type_id?.toString() || ""}
                     onValueChange={(value) =>
                       setFormData({ ...formData, cost_type_id: value })
                     }
@@ -366,7 +381,10 @@ export default function RdCostEntry() {
                       step="0.01"
                       value={formData.cost_amount}
                       onChange={(e) =>
-                        setFormData({ ...formData, cost_amount: e.target.value })
+                        setFormData({
+                          ...formData,
+                          cost_amount: e.target.value,
+                        })
                       }
                       placeholder="0.00"
                       required
@@ -399,7 +417,10 @@ export default function RdCostEntry() {
                     step="0.01"
                     value={formData.deductible_amount}
                     onChange={(e) =>
-                      setFormData({ ...formData, deductible_amount: e.target.value })
+                      setFormData({
+                        ...formData,
+                        deductible_amount: e.target.value,
+                      })
                     }
                     placeholder="0.00"
                   />
@@ -418,7 +439,10 @@ export default function RdCostEntry() {
                   rows={3}
                   value={formData.cost_description}
                   onChange={(e) =>
-                    setFormData({ ...formData, cost_description: e.target.value })
+                    setFormData({
+                      ...formData,
+                      cost_description: e.target.value,
+                    })
                   }
                   placeholder="请输入费用描述"
                 />
@@ -456,6 +480,5 @@ export default function RdCostEntry() {
         </DialogContent>
       </Dialog>
     </motion.div>
-  )
+  );
 }
-

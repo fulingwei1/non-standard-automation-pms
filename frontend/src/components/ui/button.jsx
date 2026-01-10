@@ -1,81 +1,89 @@
-import * as React from 'react'
-import { Slot } from '@radix-ui/react-slot'
-import { cva } from 'class-variance-authority'
-import { cn } from '../../lib/utils'
+import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
+import { cva } from "class-variance-authority";
+import { cn } from "../../lib/utils";
 
 const buttonVariants = cva(
   // Base styles
   [
-    'inline-flex items-center justify-center gap-2',
-    'text-sm font-medium whitespace-nowrap',
-    'rounded-xl transition-all duration-200',
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
-    'disabled:pointer-events-none disabled:opacity-50',
+    "inline-flex items-center justify-center gap-2",
+    "text-sm font-medium whitespace-nowrap",
+    "rounded-xl transition-all duration-200",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+    "disabled:pointer-events-none disabled:opacity-50",
   ],
   {
     variants: {
       variant: {
         default: [
-          'bg-gradient-to-r from-violet-600 to-indigo-600',
-          'text-white',
-          'shadow-lg shadow-violet-500/25',
-          'hover:shadow-violet-500/40 hover:scale-[1.02]',
-          'active:scale-[0.98]',
+          "bg-gradient-to-r from-violet-600 to-indigo-600",
+          "text-white",
+          "shadow-lg shadow-violet-500/25",
+          "hover:shadow-violet-500/40 hover:scale-[1.02]",
+          "active:scale-[0.98]",
         ],
         secondary: [
-          'bg-white/[0.05]',
-          'text-white',
-          'border border-white/10',
-          'hover:bg-white/[0.08] hover:border-white/20',
+          "bg-white/[0.05]",
+          "text-white",
+          "border border-white/10",
+          "hover:bg-white/[0.08] hover:border-white/20",
         ],
         outline: [
-          'border border-white/20',
-          'text-white',
-          'bg-transparent',
-          'hover:bg-white/[0.05] hover:border-primary/50',
+          "border border-white/20",
+          "text-white",
+          "bg-transparent",
+          "hover:bg-white/[0.05] hover:border-primary/50",
         ],
-        ghost: [
-          'text-slate-400',
-          'hover:text-white hover:bg-white/[0.05]',
-        ],
+        ghost: ["text-slate-400", "hover:text-white hover:bg-white/[0.05]"],
         destructive: [
-          'bg-red-500/10',
-          'text-red-400',
-          'border border-red-500/20',
-          'hover:bg-red-500/20',
+          "bg-red-500/10",
+          "text-red-400",
+          "border border-red-500/20",
+          "hover:bg-red-500/20",
         ],
         success: [
-          'bg-emerald-500/10',
-          'text-emerald-400',
-          'border border-emerald-500/20',
-          'hover:bg-emerald-500/20',
+          "bg-emerald-500/10",
+          "text-emerald-400",
+          "border border-emerald-500/20",
+          "hover:bg-emerald-500/20",
         ],
         link: [
-          'text-primary underline-offset-4',
-          'hover:underline',
-          'p-0 h-auto',
+          "text-primary underline-offset-4",
+          "hover:underline",
+          "p-0 h-auto",
         ],
       },
       size: {
-        default: 'h-10 px-4 py-2',
-        sm: 'h-8 px-3 text-xs',
-        lg: 'h-12 px-6 text-base',
-        xl: 'h-14 px-8 text-lg',
-        icon: 'h-10 w-10',
-        'icon-sm': 'h-8 w-8',
-        'icon-lg': 'h-12 w-12',
+        default: "h-10 px-4 py-2",
+        sm: "h-8 px-3 text-xs",
+        lg: "h-12 px-6 text-base",
+        xl: "h-14 px-8 text-lg",
+        icon: "h-10 w-10",
+        "icon-sm": "h-8 w-8",
+        "icon-lg": "h-12 w-12",
       },
     },
     defaultVariants: {
-      variant: 'default',
-      size: 'default',
+      variant: "default",
+      size: "default",
     },
-  }
-)
+  },
+);
 
 const Button = React.forwardRef(
-  ({ className, variant, size, asChild = false, loading = false, children, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'button'
+  (
+    {
+      className,
+      variant,
+      size,
+      asChild = false,
+      loading = false,
+      children,
+      ...props
+    },
+    ref,
+  ) => {
+    const Comp = asChild ? Slot : "button";
 
     return (
       <Comp
@@ -112,11 +120,10 @@ const Button = React.forwardRef(
           children
         )}
       </Comp>
-    )
-  }
-)
-Button.displayName = 'Button'
+    );
+  },
+);
+Button.displayName = "Button";
 
 // eslint-disable-next-line react-refresh/only-export-components
-export { Button, buttonVariants }
-
+export { Button, buttonVariants };

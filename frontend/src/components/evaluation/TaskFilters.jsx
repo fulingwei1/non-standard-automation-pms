@@ -1,5 +1,5 @@
-import React from 'react'
-import { Search } from 'lucide-react'
+import React from "react";
+import { Search } from "lucide-react";
 
 /**
  * 任务筛选器组件
@@ -13,7 +13,7 @@ export const TaskFilters = ({
   setStatusFilter,
   typeFilter,
   setTypeFilter,
-  availablePeriods = []
+  availablePeriods = [],
 }) => {
   return (
     <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
@@ -36,9 +36,9 @@ export const TaskFilters = ({
           onChange={(e) => setPeriodFilter(e.target.value)}
           className="px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
         >
-          {availablePeriods.map(period => (
+          {availablePeriods.map((period) => (
             <option key={period} value={period}>
-              {period.split('-')[0]}年{period.split('-')[1]}月
+              {period.split("-")[0]}年{period.split("-")[1]}月
             </option>
           ))}
         </select>
@@ -66,5 +66,5 @@ export const TaskFilters = ({
         </select>
       </div>
     </div>
-  )
-}
+  );
+};

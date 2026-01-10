@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react'
-import { getErrorMessage, handleApiError } from '../utils/errorHandler'
-import { toast } from '../components/ui/toast'
+import { useState, useCallback } from "react";
+import { getErrorMessage, handleApiError } from "../utils/errorHandler";
+import { toast } from "../components/ui/toast";
 
 /**
  * Custom hook for API calls with automatic error handling and loading states
@@ -22,63 +22,73 @@ export function useApi(apiCall, options = {}) {
     onSuccess,
     onError,
     onAuthError,
-  } = options
+  } = options;
 
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [data, setData] = useState(null);
 
   const execute = useCallback(
     async (...args) => {
       try {
-        setLoading(true)
-        setError(null)
-        const result = await apiCall(...args)
-        setData(result)
-        
+        setLoading(true);
+        setError(null);
+        const result = await apiCall(...args);
+        setData(result);
+
         if (showSuccessToast && successMessage) {
-          toast.success(successMessage)
+          toast.success(successMessage);
         }
-        
+
         if (onSuccess) {
-          onSuccess(result)
+          onSuccess(result);
         }
-        
-        return result
+
+        return result;
       } catch (err) {
-        setError(err)
-        
+        setError(err);
+
         // Handle error
         handleApiError(err, {
-          onAuthError: onAuthError || (() => {
-            // Default auth error handling is done by interceptor
-          }),
+          onAuthError:
+            onAuthError ||
+            (() => {
+              // Default auth error handling is done by interceptor
+            }),
           onOtherError: (error) => {
             if (showErrorToast) {
-              toast.error(getErrorMessage(error))
+              toast.error(getErrorMessage(error));
             }
             if (onError) {
-              onError(error)
+              onError(error);
             } else {
-              console.error('API call failed:', error)
+              console.error("API call failed:", error);
             }
           },
-        })
-        
-        throw err
+        });
+
+        throw err;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [apiCall, showErrorToast, showSuccessToast, successMessage, onSuccess, onError, onAuthError]
-  )
+    [
+      apiCall,
+      showErrorToast,
+      showSuccessToast,
+      successMessage,
+      onSuccess,
+      onError,
+      onAuthError,
+    ],
+  );
 
   const reset = useCallback(() => {
-    setError(null)
-    setData(null)
-  }, [])
+    setError(null);
+    setData(null);
+  }, []);
 
-  return { execute, loading, error, data, reset }
+  return { execute, loading, error, data, reset };
 }
 
 /**
@@ -89,8 +99,5 @@ export function useApiWithToast(apiCall, successMessage, options = {}) {
     ...options,
     showSuccessToast: true,
     successMessage,
-  })
+  });
 }
-
-
-

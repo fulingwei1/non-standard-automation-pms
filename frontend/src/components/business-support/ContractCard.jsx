@@ -3,7 +3,7 @@
  * Used in BusinessSupportWorkstation and contract listings
  */
 
-import { motion } from 'framer-motion'
+import { motion } from "framer-motion";
 import {
   Briefcase,
   ChevronRight,
@@ -14,19 +14,27 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
-} from 'lucide-react'
-import { Card, CardContent, Badge, Button, Progress } from '../ui'
-import { cn, formatCurrency } from '../../lib/utils'
-import { fadeIn } from '../../lib/animations'
+} from "lucide-react";
+import { Card, CardContent, Badge, Button, Progress } from "../ui";
+import { cn, formatCurrency } from "../../lib/utils";
+import { fadeIn } from "../../lib/animations";
 
 const PaymentStageItem = ({ stage, index }) => {
   const statusConfig = {
-    paid: { color: 'text-emerald-400', bg: 'bg-emerald-500/20', label: '已到账' },
-    pending: { color: 'text-slate-400', bg: 'bg-slate-700/40', label: '待回款' },
-    overdue: { color: 'text-red-400', bg: 'bg-red-500/20', label: '已逾期' },
-  }
+    paid: {
+      color: "text-emerald-400",
+      bg: "bg-emerald-500/20",
+      label: "已到账",
+    },
+    pending: {
+      color: "text-slate-400",
+      bg: "bg-slate-700/40",
+      label: "待回款",
+    },
+    overdue: { color: "text-red-400", bg: "bg-red-500/20", label: "已逾期" },
+  };
 
-  const config = statusConfig[stage.status] || statusConfig.pending
+  const config = statusConfig[stage.status] || statusConfig.pending;
 
   return (
     <motion.div
@@ -41,32 +49,32 @@ const PaymentStageItem = ({ stage, index }) => {
           {formatCurrency(stage.amount)}
         </span>
       </div>
-      <Badge className={cn('text-xs', config.bg, config.color)}>
+      <Badge className={cn("text-xs", config.bg, config.color)}>
         {config.label}
       </Badge>
     </motion.div>
-  )
-}
+  );
+};
 
 const ContractHealthIndicator = ({ health }) => {
   const healthConfig = {
-    good: { color: 'text-emerald-400', icon: CheckCircle2, label: '正常' },
-    warning: { color: 'text-amber-400', icon: AlertTriangle, label: '有风险' },
-    danger: { color: 'text-red-400', icon: AlertTriangle, label: '阻塞' },
-  }
+    good: { color: "text-emerald-400", icon: CheckCircle2, label: "正常" },
+    warning: { color: "text-amber-400", icon: AlertTriangle, label: "有风险" },
+    danger: { color: "text-red-400", icon: AlertTriangle, label: "阻塞" },
+  };
 
-  const config = healthConfig[health]
-  const Icon = config.icon
+  const config = healthConfig[health];
+  const Icon = config.icon;
 
   return (
     <div className="flex items-center gap-1.5">
-      <Icon className={cn('h-4 w-4', config.color)} />
-      <span className={cn('text-xs font-medium', config.color)}>
+      <Icon className={cn("h-4 w-4", config.color)} />
+      <span className={cn("text-xs font-medium", config.color)}>
         {config.label}
       </span>
     </div>
-  )
-}
+  );
+};
 
 export function ContractCard({
   contract,
@@ -75,8 +83,10 @@ export function ContractCard({
   onDownload,
   showActions = true,
 }) {
-  const paidStages = contract.paymentStages.filter(s => s.status === 'paid').length
-  const totalStages = contract.paymentStages.length
+  const paidStages = contract.paymentStages.filter(
+    (s) => s.status === "paid",
+  ).length;
+  const totalStages = contract.paymentStages.length;
 
   return (
     <motion.div
@@ -94,7 +104,9 @@ export function ContractCard({
             <h3 className="line-clamp-1 font-semibold text-slate-100">
               {contract.projectName}
             </h3>
-            <p className="mt-0.5 text-sm text-slate-400">{contract.customerName}</p>
+            <p className="mt-0.5 text-sm text-slate-400">
+              {contract.customerName}
+            </p>
             <p className="mt-1 text-xs text-slate-500">{contract.id}</p>
           </div>
         </div>
@@ -120,7 +132,8 @@ export function ContractCard({
         <div className="flex items-center justify-between">
           <span className="text-sm text-slate-400">回款进度</span>
           <span className="text-sm font-medium text-slate-300">
-            {formatCurrency(contract.paidAmount)} / {formatCurrency(contract.contractAmount)}
+            {formatCurrency(contract.paidAmount)} /{" "}
+            {formatCurrency(contract.contractAmount)}
           </span>
         </div>
         <Progress
@@ -140,31 +153,31 @@ export function ContractCard({
       <div className="flex flex-wrap gap-2 border-t border-slate-700/30 pt-4">
         <Badge
           className={cn(
-            'text-xs',
-            contract.invoiceStatus === 'complete'
-              ? 'bg-emerald-500/20 text-emerald-400'
-              : 'bg-slate-700/40 text-slate-400'
+            "text-xs",
+            contract.invoiceStatus === "complete"
+              ? "bg-emerald-500/20 text-emerald-400"
+              : "bg-slate-700/40 text-slate-400",
           )}
         >
           发票: {contract.invoiceCount}张
         </Badge>
         <Badge
           className={cn(
-            'text-xs',
-            contract.acceptanceStatus === 'completed'
-              ? 'bg-emerald-500/20 text-emerald-400'
-              : contract.acceptanceStatus === 'in_progress'
-                ? 'bg-blue-500/20 text-blue-400'
-                : 'bg-slate-700/40 text-slate-400'
+            "text-xs",
+            contract.acceptanceStatus === "completed"
+              ? "bg-emerald-500/20 text-emerald-400"
+              : contract.acceptanceStatus === "in_progress"
+                ? "bg-blue-500/20 text-blue-400"
+                : "bg-slate-700/40 text-slate-400",
           )}
         >
-          {contract.acceptanceStatus === 'completed' && '✓ '}
-          验收:{' '}
-          {contract.acceptanceStatus === 'completed'
-            ? '已完成'
-            : contract.acceptanceStatus === 'in_progress'
-              ? '进行中'
-              : '待验收'}
+          {contract.acceptanceStatus === "completed" && "✓ "}
+          验收:{" "}
+          {contract.acceptanceStatus === "completed"
+            ? "已完成"
+            : contract.acceptanceStatus === "in_progress"
+              ? "进行中"
+              : "待验收"}
         </Badge>
       </div>
 
@@ -201,7 +214,7 @@ export function ContractCard({
         </div>
       )}
     </motion.div>
-  )
+  );
 }
 
-export default ContractCard
+export default ContractCard;

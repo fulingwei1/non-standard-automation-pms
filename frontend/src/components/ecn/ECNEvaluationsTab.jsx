@@ -2,21 +2,33 @@
  * ECNEvaluationsTab Component
  * ECN 评估管理 Tab 组件
  */
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card'
-import { Button } from '../ui/button'
-import { Badge } from '../ui/badge'
-import { Plus } from 'lucide-react'
-import { formatDate } from '../../lib/utils'
-import { useECNEvaluations } from './hooks/useECNEvaluations'
-import EvaluationDialog from './dialogs/EvaluationDialog'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "../ui/card";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Plus } from "lucide-react";
+import { formatDate } from "../../lib/utils";
+import { useECNEvaluations } from "./hooks/useECNEvaluations";
+import EvaluationDialog from "./dialogs/EvaluationDialog";
 
 const evalResultConfigs = {
-  APPROVED: { label: '通过', color: 'bg-green-500' },
-  CONDITIONAL: { label: '有条件通过', color: 'bg-yellow-500' },
-  REJECTED: { label: '不通过', color: 'bg-red-500' },
-}
+  APPROVED: { label: "通过", color: "bg-green-500" },
+  CONDITIONAL: { label: "有条件通过", color: "bg-yellow-500" },
+  REJECTED: { label: "不通过", color: "bg-red-500" },
+};
 
-export default function ECNEvaluationsTab({ ecnId, ecn, evaluations, evaluationSummary, refetch }) {
+export default function ECNEvaluationsTab({
+  ecnId,
+  ecn,
+  evaluations,
+  evaluationSummary,
+  refetch,
+}) {
   const {
     showEvaluationDialog,
     setShowEvaluationDialog,
@@ -24,33 +36,33 @@ export default function ECNEvaluationsTab({ ecnId, ecn, evaluations, evaluationS
     setEvaluationForm,
     handleCreateEvaluation,
     handleSubmitEvaluation,
-  } = useECNEvaluations(ecnId, refetch)
+  } = useECNEvaluations(ecnId, refetch);
 
   // 处理创建评估
   const handleCreateClick = async () => {
-    const result = await handleCreateEvaluation()
+    const result = await handleCreateEvaluation();
     if (result.success) {
-      alert(result.message)
+      alert(result.message);
     } else {
-      alert(result.message)
+      alert(result.message);
     }
-  }
+  };
 
   // 处理提交评估
   const handleSubmitClick = async (evaluationId) => {
-    if (!confirm('确认提交此评估？提交后将无法修改。')) return
+    if (!confirm("确认提交此评估？提交后将无法修改。")) return;
 
-    const result = await handleSubmitEvaluation(evaluationId)
+    const result = await handleSubmitEvaluation(evaluationId);
     if (result.success) {
-      alert(result.message)
+      alert(result.message);
     } else {
-      alert(result.message)
+      alert(result.message);
     }
-  }
+  };
 
   // 判断是否可以创建评估
   const canCreateEvaluation =
-    ecn?.status === 'SUBMITTED' || ecn?.status === 'EVALUATING'
+    ecn?.status === "SUBMITTED" || ecn?.status === "EVALUATING";
 
   return (
     <div className="space-y-4">
@@ -77,7 +89,7 @@ export default function ECNEvaluationsTab({ ecnId, ecn, evaluations, evaluationS
               <div>
                 <div className="text-sm text-slate-500 mb-1">评估完成度</div>
                 <div className="text-xl font-semibold">
-                  {evaluationSummary.submitted_count || 0} /{' '}
+                  {evaluationSummary.submitted_count || 0} /{" "}
                   {evaluationSummary.total_evaluations || 0}
                 </div>
                 <div className="mt-2">
@@ -103,7 +115,7 @@ export default function ECNEvaluationsTab({ ecnId, ecn, evaluations, evaluationS
                   <span className="text-green-600">
                     {evaluationSummary.approved_count || 0}
                   </span>
-                  {' / '}
+                  {" / "}
                   <span className="text-red-600">
                     {evaluationSummary.rejected_count || 0}
                   </span>
@@ -154,7 +166,7 @@ export default function ECNEvaluationsTab({ ecnId, ecn, evaluations, evaluationS
                     <Badge
                       className={
                         evalResultConfigs[evaluation.eval_result]?.color ||
-                        'bg-slate-500'
+                        "bg-slate-500"
                       }
                     >
                       {evalResultConfigs[evaluation.eval_result]?.label ||
@@ -162,12 +174,12 @@ export default function ECNEvaluationsTab({ ecnId, ecn, evaluations, evaluationS
                     </Badge>
                     <Badge
                       className={
-                        evaluation.status === 'SUBMITTED'
-                          ? 'bg-green-500'
-                          : 'bg-amber-500'
+                        evaluation.status === "SUBMITTED"
+                          ? "bg-green-500"
+                          : "bg-amber-500"
                       }
                     >
-                      {evaluation.status === 'SUBMITTED' ? '已提交' : '草稿'}
+                      {evaluation.status === "SUBMITTED" ? "已提交" : "草稿"}
                     </Badge>
                   </div>
                 </div>
@@ -179,7 +191,7 @@ export default function ECNEvaluationsTab({ ecnId, ecn, evaluations, evaluationS
                     <div className="font-semibold text-red-600">
                       {evaluation.cost_estimate > 0
                         ? `¥${evaluation.cost_estimate}`
-                        : '-'}
+                        : "-"}
                     </div>
                   </div>
                   <div className="p-2 bg-slate-50 rounded">
@@ -187,13 +199,13 @@ export default function ECNEvaluationsTab({ ecnId, ecn, evaluations, evaluationS
                     <div className="font-semibold text-orange-600">
                       {evaluation.schedule_estimate > 0
                         ? `${evaluation.schedule_estimate} 天`
-                        : '-'}
+                        : "-"}
                     </div>
                   </div>
                 </div>
                 <div className="text-sm">
-                  <span className="text-slate-500">评估人:</span>{' '}
-                  {evaluation.evaluator_name || '待分配'}
+                  <span className="text-slate-500">评估人:</span>{" "}
+                  {evaluation.evaluator_name || "待分配"}
                 </div>
                 {evaluation.impact_analysis && (
                   <div>
@@ -227,7 +239,7 @@ export default function ECNEvaluationsTab({ ecnId, ecn, evaluations, evaluationS
                     </div>
                   </div>
                 )}
-                {evaluation.status === 'DRAFT' && (
+                {evaluation.status === "DRAFT" && (
                   <Button
                     size="sm"
                     className="w-full"
@@ -251,5 +263,5 @@ export default function ECNEvaluationsTab({ ecnId, ecn, evaluations, evaluationS
         onSubmit={handleCreateClick}
       />
     </div>
-  )
+  );
 }

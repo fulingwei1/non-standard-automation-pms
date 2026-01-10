@@ -3,8 +3,8 @@
  * 用于转化率分析、销售漏斗
  */
 
-import { Funnel } from '@ant-design/plots'
-import { useMemo } from 'react'
+import { Funnel } from "@ant-design/plots";
+import { useMemo } from "react";
 
 /**
  * FunnelChart - 漏斗图
@@ -20,8 +20,8 @@ import { useMemo } from 'react'
  */
 export default function FunnelChart({
   data = [],
-  xField = 'stage',
-  yField = 'value',
+  xField = "stage",
+  yField = "value",
   height = 300,
   isTransposed = false,
   dynamicHeight = true,
@@ -41,21 +41,21 @@ export default function FunnelChart({
       dynamicHeight,
       label: {
         style: {
-          fill: '#e2e8f0',
+          fill: "#e2e8f0",
           fontSize: 12,
         },
         formatter: (datum) => {
-          const value = formatter ? formatter(datum[yField]) : datum[yField]
-          return `${datum[xField]}: ${value}`
+          const value = formatter ? formatter(datum[yField]) : datum[yField];
+          return `${datum[xField]}: ${value}`;
         },
       },
       conversionTag: {
         style: {
-          fill: '#94a3b8',
+          fill: "#94a3b8",
           fontSize: 11,
         },
         formatter: (datum) => {
-          return `转化率: ${(datum.$$percentage$$ * 100).toFixed(1)}%`
+          return `转化率: ${(datum.$$percentage$$ * 100).toFixed(1)}%`;
         },
       },
       tooltip: {
@@ -67,13 +67,23 @@ export default function FunnelChart({
       legend: false,
       animation: {
         appear: {
-          animation: 'fade-in',
+          animation: "fade-in",
           duration: 800,
         },
       },
       ...rest,
-    }
-  }, [data, xField, yField, height, isTransposed, dynamicHeight, formatter, colors, rest])
+    };
+  }, [
+    data,
+    xField,
+    yField,
+    height,
+    isTransposed,
+    dynamicHeight,
+    formatter,
+    colors,
+    rest,
+  ]);
 
   if (!data || data.length === 0) {
     return (
@@ -83,13 +93,15 @@ export default function FunnelChart({
       >
         暂无数据
       </div>
-    )
+    );
   }
 
   return (
     <div style={style}>
-      {title && <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>}
+      {title && (
+        <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>
+      )}
       <Funnel {...config} />
     </div>
-  )
+  );
 }

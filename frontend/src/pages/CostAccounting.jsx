@@ -3,9 +3,9 @@
  * Features: Cost recording, Cost query, Cost statistics, Cost analysis
  */
 
-import { useState, useMemo, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Calculator,
   Search,
@@ -31,8 +31,8 @@ import {
   Package,
   Users,
   Wrench,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -52,95 +52,116 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '../components/ui'
-import { cn, formatCurrency } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
+} from "../components/ui";
+import { cn, formatCurrency } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
 
 // Mock cost data
 // Mock data - 已移除，使用真实API
 // Cost type configuration
 const costTypeConfig = {
-  MATERIAL: { label: '材料成本', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: Package },
-  LABOR: { label: '人工成本', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30', icon: Users },
-  OUTSOURCING: { label: '外协费用', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30', icon: Wrench },
-  EXPENSE: { label: '费用', color: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30', icon: FileText },
-}
+  MATERIAL: {
+    label: "材料成本",
+    color: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+    icon: Package,
+  },
+  LABOR: {
+    label: "人工成本",
+    color: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+    icon: Users,
+  },
+  OUTSOURCING: {
+    label: "外协费用",
+    color: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+    icon: Wrench,
+  },
+  EXPENSE: {
+    label: "费用",
+    color: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+    icon: FileText,
+  },
+};
 
 // Cost category configuration
 const costCategoryConfig = {
-  STANDARD_PARTS: '标准件',
-  ELECTRICAL: '电气件',
-  MECHANICAL: '机械件',
-  DESIGN: '设计',
-  ASSEMBLY: '装配',
-  DEBUGGING: '调试',
-  MACHINING: '机加工',
-  TRAVEL: '差旅费',
-  OTHER: '其他',
-}
+  STANDARD_PARTS: "标准件",
+  ELECTRICAL: "电气件",
+  MECHANICAL: "机械件",
+  DESIGN: "设计",
+  ASSEMBLY: "装配",
+  DEBUGGING: "调试",
+  MACHINING: "机加工",
+  TRAVEL: "差旅费",
+  OTHER: "其他",
+};
 
 export default function CostAccounting() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedProject, setSelectedProject] = useState('all')
-  const [selectedCostType, setSelectedCostType] = useState('all')
-  const [selectedDateRange, setSelectedDateRange] = useState('month')
-  const [showAddDialog, setShowAddDialog] = useState(false)
-  const [selectedCost, setSelectedCost] = useState(null)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProject, setSelectedProject] = useState("all");
+  const [selectedCostType, setSelectedCostType] = useState("all");
+  const [selectedDateRange, setSelectedDateRange] = useState("month");
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [selectedCost, setSelectedCost] = useState(null);
 
   // 从 URL 查询参数读取筛选条件
   useEffect(() => {
-    const projectId = searchParams.get('project_id')
-    const costType = searchParams.get('cost_type')
-    
+    const projectId = searchParams.get("project_id");
+    const costType = searchParams.get("cost_type");
+
     if (projectId) {
-      setSelectedProject(projectId)
+      setSelectedProject(projectId);
     }
-    
+
     if (costType) {
-      setSelectedCostType(costType)
+      setSelectedCostType(costType);
     }
-  }, [searchParams])
+  }, [searchParams]);
 
   // Filter costs
   const filteredCosts = useMemo(() => {
-    return mockCosts.filter(cost => {
-      const matchesSearch = !searchTerm ||
+    return mockCosts.filter((cost) => {
+      const matchesSearch =
+        !searchTerm ||
         cost.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         cost.sourceNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cost.description.toLowerCase().includes(searchTerm.toLowerCase())
-      
-      const matchesProject = selectedProject === 'all' || cost.projectId === selectedProject
-      const matchesType = selectedCostType === 'all' || cost.costType === selectedCostType
+        cost.description.toLowerCase().includes(searchTerm.toLowerCase());
 
-      return matchesSearch && matchesProject && matchesType
-    })
-  }, [searchTerm, selectedProject, selectedCostType])
+      const matchesProject =
+        selectedProject === "all" || cost.projectId === selectedProject;
+      const matchesType =
+        selectedCostType === "all" || cost.costType === selectedCostType;
+
+      return matchesSearch && matchesProject && matchesType;
+    });
+  }, [searchTerm, selectedProject, selectedCostType]);
 
   // Statistics
   const stats = useMemo(() => {
-    const total = filteredCosts.reduce((sum, c) => sum + c.amount, 0)
+    const total = filteredCosts.reduce((sum, c) => sum + c.amount, 0);
     const byType = filteredCosts.reduce((acc, c) => {
-      acc[c.costType] = (acc[c.costType] || 0) + c.amount
-      return acc
-    }, {})
-    
+      acc[c.costType] = (acc[c.costType] || 0) + c.amount;
+      return acc;
+    }, {});
+
     return {
       total,
       count: filteredCosts.length,
       byType,
       average: filteredCosts.length > 0 ? total / filteredCosts.length : 0,
-    }
-  }, [filteredCosts])
+    };
+  }, [filteredCosts]);
 
   // Projects list
   const projects = useMemo(() => {
-    const projectSet = new Set()
-    mockCosts.forEach(cost => {
-      projectSet.add(JSON.stringify({ id: cost.projectId, name: cost.projectName }))
-    })
-    return Array.from(projectSet).map(p => JSON.parse(p))
-  }, [])
+    const projectSet = new Set();
+    mockCosts.forEach((cost) => {
+      projectSet.add(
+        JSON.stringify({ id: cost.projectId, name: cost.projectName }),
+      );
+    });
+    return Array.from(projectSet).map((p) => JSON.parse(p));
+  }, []);
 
   return (
     <motion.div
@@ -160,7 +181,10 @@ export default function CostAccounting() {
               <Download className="w-4 h-4" />
               导出报表
             </Button>
-            <Button className="flex items-center gap-2" onClick={() => setShowAddDialog(true)}>
+            <Button
+              className="flex items-center gap-2"
+              onClick={() => setShowAddDialog(true)}
+            >
               <Plus className="w-4 h-4" />
               录入成本
             </Button>
@@ -183,7 +207,9 @@ export default function CostAccounting() {
                 <p className="text-2xl font-bold text-white">
                   {formatCurrency(stats.total)}
                 </p>
-                <p className="text-xs text-slate-500 mt-1">{stats.count}条记录</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {stats.count}条记录
+                </p>
               </div>
               <div className="p-2 bg-blue-500/20 rounded-lg">
                 <DollarSign className="w-5 h-5 text-blue-400" />
@@ -201,7 +227,13 @@ export default function CostAccounting() {
                   {formatCurrency(stats.byType.MATERIAL || 0)}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">
-                  {stats.total > 0 ? ((stats.byType.MATERIAL || 0) / stats.total * 100).toFixed(1) : 0}%
+                  {stats.total > 0
+                    ? (
+                        ((stats.byType.MATERIAL || 0) / stats.total) *
+                        100
+                      ).toFixed(1)
+                    : 0}
+                  %
                 </p>
               </div>
               <div className="p-2 bg-blue-500/20 rounded-lg">
@@ -220,7 +252,12 @@ export default function CostAccounting() {
                   {formatCurrency(stats.byType.LABOR || 0)}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">
-                  {stats.total > 0 ? ((stats.byType.LABOR || 0) / stats.total * 100).toFixed(1) : 0}%
+                  {stats.total > 0
+                    ? (((stats.byType.LABOR || 0) / stats.total) * 100).toFixed(
+                        1,
+                      )
+                    : 0}
+                  %
                 </p>
               </div>
               <div className="p-2 bg-purple-500/20 rounded-lg">
@@ -268,8 +305,10 @@ export default function CostAccounting() {
                 className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="all">全部项目</option>
-                {projects.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
                 ))}
               </select>
               <select
@@ -279,7 +318,9 @@ export default function CostAccounting() {
               >
                 <option value="all">全部类型</option>
                 {Object.entries(costTypeConfig).map(([key, val]) => (
-                  <option key={key} value={key}>{val.label}</option>
+                  <option key={key} value={key}>
+                    {val.label}
+                  </option>
                 ))}
               </select>
               <select
@@ -317,8 +358,8 @@ export default function CostAccounting() {
               <CardContent>
                 <div className="space-y-3">
                   {filteredCosts.map((cost) => {
-                    const typeConf = costTypeConfig[cost.costType]
-                    const TypeIcon = typeConf?.icon || FileText
+                    const typeConf = costTypeConfig[cost.costType];
+                    const TypeIcon = typeConf?.icon || FileText;
                     return (
                       <div
                         key={cost.id}
@@ -328,11 +369,16 @@ export default function CostAccounting() {
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <Badge variant="outline" className={cn('text-xs', typeConf?.color)}>
+                              <Badge
+                                variant="outline"
+                                className={cn("text-xs", typeConf?.color)}
+                              >
                                 <TypeIcon className="w-3 h-3 mr-1" />
                                 {cost.costTypeLabel}
                               </Badge>
-                              <span className="text-sm text-slate-400">{cost.costCategoryLabel}</span>
+                              <span className="text-sm text-slate-400">
+                                {cost.costCategoryLabel}
+                              </span>
                             </div>
                             <div className="font-medium text-white text-sm mb-1">
                               {cost.projectName}
@@ -341,7 +387,8 @@ export default function CostAccounting() {
                               {cost.description}
                             </div>
                             <div className="text-xs text-slate-500 mt-1">
-                              {cost.sourceNo} · {cost.createdBy} · {cost.costDate}
+                              {cost.sourceNo} · {cost.createdBy} ·{" "}
+                              {cost.costDate}
                             </div>
                           </div>
                           <div className="text-right">
@@ -350,13 +397,14 @@ export default function CostAccounting() {
                             </div>
                             {cost.taxAmount > 0 && (
                               <div className="text-xs text-slate-400">
-                                含税: {formatCurrency(cost.amount + cost.taxAmount)}
+                                含税:{" "}
+                                {formatCurrency(cost.amount + cost.taxAmount)}
                               </div>
                             )}
                           </div>
                         </div>
                       </div>
-                    )
+                    );
                   })}
                   {filteredCosts.length === 0 && (
                     <div className="text-center py-12 text-slate-500">
@@ -382,9 +430,10 @@ export default function CostAccounting() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {Object.entries(costTypeConfig).map(([key, config]) => {
-                  const amount = stats.byType[key] || 0
-                  const percentage = stats.total > 0 ? (amount / stats.total * 100) : 0
-                  const Icon = config.icon
+                  const amount = stats.byType[key] || 0;
+                  const percentage =
+                    stats.total > 0 ? (amount / stats.total) * 100 : 0;
+                  const Icon = config.icon;
                   return (
                     <div key={key} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
@@ -401,9 +450,12 @@ export default function CostAccounting() {
                           </span>
                         </div>
                       </div>
-                      <Progress value={percentage} className="h-2 bg-slate-700/50" />
+                      <Progress
+                        value={percentage}
+                        className="h-2 bg-slate-700/50"
+                      />
                     </div>
-                  )
+                  );
                 })}
               </CardContent>
             </Card>
@@ -420,13 +472,21 @@ export default function CostAccounting() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {projects.slice(0, 5).map((project) => {
-                  const projectCosts = filteredCosts.filter(c => c.projectId === project.id)
-                  const projectTotal = projectCosts.reduce((sum, c) => sum + c.amount, 0)
-                  const percentage = stats.total > 0 ? (projectTotal / stats.total * 100) : 0
+                  const projectCosts = filteredCosts.filter(
+                    (c) => c.projectId === project.id,
+                  );
+                  const projectTotal = projectCosts.reduce(
+                    (sum, c) => sum + c.amount,
+                    0,
+                  );
+                  const percentage =
+                    stats.total > 0 ? (projectTotal / stats.total) * 100 : 0;
                   return (
                     <div key={project.id} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-400 truncate flex-1">{project.name}</span>
+                        <span className="text-slate-400 truncate flex-1">
+                          {project.name}
+                        </span>
                         <div className="flex items-center gap-2">
                           <span className="text-white font-medium">
                             {formatCurrency(projectTotal)}
@@ -436,9 +496,12 @@ export default function CostAccounting() {
                           </span>
                         </div>
                       </div>
-                      <Progress value={percentage} className="h-2 bg-slate-700/50" />
+                      <Progress
+                        value={percentage}
+                        className="h-2 bg-slate-700/50"
+                      />
                     </div>
-                  )
+                  );
                 })}
               </CardContent>
             </Card>
@@ -451,9 +514,7 @@ export default function CostAccounting() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>录入成本</DialogTitle>
-            <DialogDescription>
-              录入项目成本记录
-            </DialogDescription>
+            <DialogDescription>录入项目成本记录</DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -461,8 +522,10 @@ export default function CostAccounting() {
                 <label className="text-sm text-slate-400">项目 *</label>
                 <select className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white">
                   <option value="">请选择项目</option>
-                  {projects.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -471,7 +534,9 @@ export default function CostAccounting() {
                 <select className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white">
                   <option value="">请选择类型</option>
                   {Object.entries(costTypeConfig).map(([key, val]) => (
-                    <option key={key} value={key}>{val.label}</option>
+                    <option key={key} value={key}>
+                      {val.label}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -498,9 +563,7 @@ export default function CostAccounting() {
             <Button variant="outline" onClick={() => setShowAddDialog(false)}>
               取消
             </Button>
-            <Button onClick={() => setShowAddDialog(false)}>
-              保存
-            </Button>
+            <Button onClick={() => setShowAddDialog(false)}>保存</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -516,11 +579,15 @@ export default function CostAccounting() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm text-slate-400">项目</label>
-                  <p className="text-white font-medium">{selectedCost.projectName}</p>
+                  <p className="text-white font-medium">
+                    {selectedCost.projectName}
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm text-slate-400">成本类型</label>
-                  <p className="text-white font-medium">{selectedCost.costTypeLabel}</p>
+                  <p className="text-white font-medium">
+                    {selectedCost.costTypeLabel}
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm text-slate-400">金额</label>
@@ -556,6 +623,5 @@ export default function CostAccounting() {
         </DialogContent>
       </Dialog>
     </motion.div>
-  )
+  );
 }
-

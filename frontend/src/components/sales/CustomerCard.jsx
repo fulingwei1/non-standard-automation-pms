@@ -2,9 +2,9 @@
  * Customer Card Component - Displays customer information in a card format
  */
 
-import { motion } from 'framer-motion'
-import { cn } from '../../lib/utils'
-import { fadeIn } from '../../lib/animations'
+import { motion } from "framer-motion";
+import { cn } from "../../lib/utils";
+import { fadeIn } from "../../lib/animations";
 import {
   Building2,
   MapPin,
@@ -16,30 +16,30 @@ import {
   AlertTriangle,
   ChevronRight,
   MoreHorizontal,
-} from 'lucide-react'
-import { Badge } from '../ui/badge'
-import { Button } from '../ui/button'
+} from "lucide-react";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 
 const gradeColors = {
-  A: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  B: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  C: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  D: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
-}
+  A: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+  B: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  C: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+  D: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+};
 
 const statusConfig = {
-  active: { label: '活跃', color: 'bg-emerald-500' },
-  potential: { label: '潜在', color: 'bg-blue-500' },
-  dormant: { label: '沉睡', color: 'bg-amber-500' },
-  lost: { label: '流失', color: 'bg-red-500' },
-}
+  active: { label: "活跃", color: "bg-emerald-500" },
+  potential: { label: "潜在", color: "bg-blue-500" },
+  dormant: { label: "沉睡", color: "bg-amber-500" },
+  lost: { label: "流失", color: "bg-red-500" },
+};
 
 export default function CustomerCard({ customer, onClick, compact = false }) {
   const {
     name,
     shortName,
-    grade = 'B',
-    status = 'active',
+    grade = "B",
+    status = "active",
     industry,
     location,
     contactPerson,
@@ -51,10 +51,10 @@ export default function CustomerCard({ customer, onClick, compact = false }) {
     opportunityCount = 0,
     tags = [],
     isWarning = false,
-  } = customer
+  } = customer;
 
-  const gradeClass = gradeColors[grade] || gradeColors.B
-  const statusConf = statusConfig[status] || statusConfig.active
+  const gradeClass = gradeColors[grade] || gradeColors.B;
+  const statusConf = statusConfig[status] || statusConfig.active;
 
   if (compact) {
     return (
@@ -64,11 +64,13 @@ export default function CustomerCard({ customer, onClick, compact = false }) {
         className="flex items-center justify-between p-3 bg-surface-50 rounded-lg hover:bg-surface-100 cursor-pointer transition-colors group"
       >
         <div className="flex items-center gap-3">
-          <div className={cn('w-2 h-2 rounded-full', statusConf.color)} />
+          <div className={cn("w-2 h-2 rounded-full", statusConf.color)} />
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-medium text-white">{shortName || name}</span>
-              <Badge variant="outline" className={cn('text-xs', gradeClass)}>
+              <span className="font-medium text-white">
+                {shortName || name}
+              </span>
+              <Badge variant="outline" className={cn("text-xs", gradeClass)}>
                 {grade}级
               </Badge>
             </div>
@@ -84,7 +86,7 @@ export default function CustomerCard({ customer, onClick, compact = false }) {
           <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
         </div>
       </motion.div>
-    )
+    );
   }
 
   return (
@@ -92,9 +94,9 @@ export default function CustomerCard({ customer, onClick, compact = false }) {
       variants={fadeIn}
       onClick={() => onClick?.(customer)}
       className={cn(
-        'bg-surface-100/50 backdrop-blur-sm rounded-xl border border-white/5 p-4',
-        'hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 cursor-pointer transition-all',
-        isWarning && 'border-amber-500/30'
+        "bg-surface-100/50 backdrop-blur-sm rounded-xl border border-white/5 p-4",
+        "hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 cursor-pointer transition-all",
+        isWarning && "border-amber-500/30",
       )}
     >
       {/* Header */}
@@ -106,7 +108,7 @@ export default function CustomerCard({ customer, onClick, compact = false }) {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-semibold text-white">{shortName || name}</h3>
-              <Badge variant="outline" className={cn('text-xs', gradeClass)}>
+              <Badge variant="outline" className={cn("text-xs", gradeClass)}>
                 {grade}级
               </Badge>
               {isWarning && (
@@ -125,13 +127,13 @@ export default function CustomerCard({ customer, onClick, compact = false }) {
       <div className="space-y-2 mb-3">
         <div className="flex items-center gap-2 text-xs text-slate-400">
           <MapPin className="w-3 h-3" />
-          <span>{location || '未设置'}</span>
+          <span>{location || "未设置"}</span>
           <span className="text-slate-600">|</span>
-          <span>{industry || '未分类'}</span>
+          <span>{industry || "未分类"}</span>
         </div>
         <div className="flex items-center gap-2 text-xs text-slate-400">
           <Phone className="w-3 h-3" />
-          <span>{contactPerson || '未设置联系人'}</span>
+          <span>{contactPerson || "未设置联系人"}</span>
           {phone && <span className="text-slate-500">· {phone}</span>}
         </div>
       </div>
@@ -162,10 +164,12 @@ export default function CustomerCard({ customer, onClick, compact = false }) {
         </div>
         <div className="text-center">
           <div className="text-xs text-slate-400">待回款</div>
-          <div className={cn(
-            'text-sm font-semibold',
-            pendingAmount > 0 ? 'text-amber-400' : 'text-slate-500'
-          )}>
+          <div
+            className={cn(
+              "text-sm font-semibold",
+              pendingAmount > 0 ? "text-amber-400" : "text-slate-500",
+            )}
+          >
             ¥{(pendingAmount / 10000).toFixed(0)}万
           </div>
         </div>
@@ -179,11 +183,13 @@ export default function CustomerCard({ customer, onClick, compact = false }) {
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
         <div className="flex items-center gap-1 text-xs text-slate-400">
           <Calendar className="w-3 h-3" />
-          <span>上次联系: {lastContact || '无记录'}</span>
+          <span>上次联系: {lastContact || "无记录"}</span>
         </div>
-        <div className={cn('w-2 h-2 rounded-full', statusConf.color)} title={statusConf.label} />
+        <div
+          className={cn("w-2 h-2 rounded-full", statusConf.color)}
+          title={statusConf.label}
+        />
       </div>
     </motion.div>
-  )
+  );
 }
-

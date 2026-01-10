@@ -3,8 +3,8 @@
  * 用于多维度数据对比、能力评估
  */
 
-import { Radar } from '@ant-design/plots'
-import { useMemo } from 'react'
+import { Radar } from "@ant-design/plots";
+import { useMemo } from "react";
 
 /**
  * RadarChart - 雷达图
@@ -20,8 +20,8 @@ import { useMemo } from 'react'
  */
 export default function RadarChart({
   data = [],
-  xField = 'item',
-  yField = 'value',
+  xField = "item",
+  yField = "value",
   seriesField,
   height = 300,
   showArea = true,
@@ -37,18 +37,22 @@ export default function RadarChart({
       xField,
       yField,
       height,
-      area: showArea ? {
-        style: {
-          fillOpacity: 0.25,
-        },
-      } : false,
-      point: showPoint ? {
-        size: 3,
-      } : false,
+      area: showArea
+        ? {
+            style: {
+              fillOpacity: 0.25,
+            },
+          }
+        : false,
+      point: showPoint
+        ? {
+            size: 3,
+          }
+        : false,
       xAxis: {
         label: {
           style: {
-            fill: '#94a3b8',
+            fill: "#94a3b8",
             fontSize: 12,
           },
         },
@@ -57,7 +61,7 @@ export default function RadarChart({
         grid: {
           line: {
             style: {
-              stroke: '#334155',
+              stroke: "#334155",
             },
           },
         },
@@ -65,49 +69,61 @@ export default function RadarChart({
       yAxis: {
         label: {
           style: {
-            fill: '#64748b',
+            fill: "#64748b",
             fontSize: 10,
           },
         },
         grid: {
           line: {
             style: {
-              stroke: '#334155',
+              stroke: "#334155",
             },
           },
-          alternateColor: 'rgba(51, 65, 85, 0.2)',
+          alternateColor: "rgba(51, 65, 85, 0.2)",
         },
       },
-      legend: seriesField ? {
-        position: 'top-right',
-        itemName: {
-          style: {
-            fill: '#94a3b8',
-          },
-        },
-      } : false,
+      legend: seriesField
+        ? {
+            position: "top-right",
+            itemName: {
+              style: {
+                fill: "#94a3b8",
+              },
+            },
+          }
+        : false,
       tooltip: {
         showMarkers: false,
       },
       animation: {
         appear: {
-          animation: 'fade-in',
+          animation: "fade-in",
           duration: 800,
         },
       },
       ...rest,
-    }
+    };
 
     if (seriesField) {
-      cfg.seriesField = seriesField
+      cfg.seriesField = seriesField;
     }
 
     if (colors) {
-      cfg.color = colors
+      cfg.color = colors;
     }
 
-    return cfg
-  }, [data, xField, yField, seriesField, height, showArea, showPoint, colors, rest])
+    return cfg;
+  }, [
+    data,
+    xField,
+    yField,
+    seriesField,
+    height,
+    showArea,
+    showPoint,
+    colors,
+    rest,
+  ]);
 
   if (!data || data.length === 0) {
     return (
@@ -117,13 +133,15 @@ export default function RadarChart({
       >
         暂无数据
       </div>
-    )
+    );
   }
 
   return (
     <div style={style}>
-      {title && <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>}
+      {title && (
+        <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>
+      )}
       <Radar {...config} />
     </div>
-  )
+  );
 }

@@ -2,9 +2,9 @@
  * Opportunity Card Component - Displays sales opportunity information
  */
 
-import { motion } from 'framer-motion'
-import { cn } from '../../lib/utils'
-import { fadeIn } from '../../lib/animations'
+import { motion } from "framer-motion";
+import { cn } from "../../lib/utils";
+import { fadeIn } from "../../lib/animations";
 import {
   Target,
   Building2,
@@ -18,32 +18,36 @@ import {
   CheckCircle2,
   XCircle,
   Flame,
-} from 'lucide-react'
-import { Badge } from '../ui/badge'
-import { Progress } from '../ui/progress'
+} from "lucide-react";
+import { Badge } from "../ui/badge";
+import { Progress } from "../ui/progress";
 
 const stageConfig = {
-  lead: { label: '潜在', color: 'bg-violet-500', progress: 10 },
-  contact: { label: '意向', color: 'bg-blue-500', progress: 30 },
-  quote: { label: '报价', color: 'bg-amber-500', progress: 50 },
-  negotiate: { label: '谈判', color: 'bg-pink-500', progress: 75 },
-  won: { label: '赢单', color: 'bg-emerald-500', progress: 100 },
-  lost: { label: '输单', color: 'bg-red-500', progress: 0 },
-}
+  lead: { label: "潜在", color: "bg-violet-500", progress: 10 },
+  contact: { label: "意向", color: "bg-blue-500", progress: 30 },
+  quote: { label: "报价", color: "bg-amber-500", progress: 50 },
+  negotiate: { label: "谈判", color: "bg-pink-500", progress: 75 },
+  won: { label: "赢单", color: "bg-emerald-500", progress: 100 },
+  lost: { label: "输单", color: "bg-red-500", progress: 0 },
+};
 
 const priorityConfig = {
-  high: { label: '高', color: 'text-red-400 bg-red-500/20' },
-  medium: { label: '中', color: 'text-amber-400 bg-amber-500/20' },
-  low: { label: '低', color: 'text-slate-400 bg-slate-500/20' },
-}
+  high: { label: "高", color: "text-red-400 bg-red-500/20" },
+  medium: { label: "中", color: "text-amber-400 bg-amber-500/20" },
+  low: { label: "低", color: "text-slate-400 bg-slate-500/20" },
+};
 
-export default function OpportunityCard({ opportunity, onClick, draggable = false }) {
+export default function OpportunityCard({
+  opportunity,
+  onClick,
+  draggable = false,
+}) {
   const {
     name,
     customerName,
     customerShort,
-    stage = 'lead',
-    priority = 'medium',
+    stage = "lead",
+    priority = "medium",
     expectedAmount = 0,
     expectedCloseDate,
     probability = 50,
@@ -52,16 +56,16 @@ export default function OpportunityCard({ opportunity, onClick, draggable = fals
     isHot = false,
     isOverdue = false,
     tags = [],
-  } = opportunity
+  } = opportunity;
 
-  const stageConf = stageConfig[stage] || stageConfig.lead
-  const priorityConf = priorityConfig[priority] || priorityConfig.medium
+  const stageConf = stageConfig[stage] || stageConfig.lead;
+  const priorityConf = priorityConfig[priority] || priorityConfig.medium;
 
   const getDaysColor = () => {
-    if (daysInStage > 14) return 'text-red-400'
-    if (daysInStage > 7) return 'text-amber-400'
-    return 'text-slate-400'
-  }
+    if (daysInStage > 14) return "text-red-400";
+    if (daysInStage > 7) return "text-amber-400";
+    return "text-slate-400";
+  };
 
   return (
     <motion.div
@@ -69,11 +73,11 @@ export default function OpportunityCard({ opportunity, onClick, draggable = fals
       onClick={() => onClick?.(opportunity)}
       draggable={draggable}
       className={cn(
-        'bg-surface-100/50 backdrop-blur-sm rounded-xl border border-white/5 p-4',
-        'hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 cursor-pointer transition-all',
-        isOverdue && 'border-red-500/30',
-        isHot && 'border-amber-500/30',
-        draggable && 'cursor-grab active:cursor-grabbing'
+        "bg-surface-100/50 backdrop-blur-sm rounded-xl border border-white/5 p-4",
+        "hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 cursor-pointer transition-all",
+        isOverdue && "border-red-500/30",
+        isHot && "border-amber-500/30",
+        draggable && "cursor-grab active:cursor-grabbing",
       )}
     >
       {/* Header */}
@@ -85,10 +89,12 @@ export default function OpportunityCard({ opportunity, onClick, draggable = fals
           </div>
           <div className="flex items-center gap-2">
             <Building2 className="w-3 h-3 text-slate-400" />
-            <span className="text-xs text-slate-400">{customerShort || customerName}</span>
+            <span className="text-xs text-slate-400">
+              {customerShort || customerName}
+            </span>
           </div>
         </div>
-        <Badge className={cn('text-xs', priorityConf.color)}>
+        <Badge className={cn("text-xs", priorityConf.color)}>
           {priorityConf.label}
         </Badge>
       </div>
@@ -97,7 +103,7 @@ export default function OpportunityCard({ opportunity, onClick, draggable = fals
       <div className="mb-3">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <div className={cn('w-2 h-2 rounded-full', stageConf.color)} />
+            <div className={cn("w-2 h-2 rounded-full", stageConf.color)} />
             <span className="text-xs text-slate-300">{stageConf.label}</span>
           </div>
           <span className="text-xs text-slate-400">成功率 {probability}%</span>
@@ -115,7 +121,7 @@ export default function OpportunityCard({ opportunity, onClick, draggable = fals
         </div>
         <div className="flex items-center gap-1 text-xs text-slate-400">
           <Calendar className="w-3 h-3" />
-          <span>预计: {expectedCloseDate || '未设置'}</span>
+          <span>预计: {expectedCloseDate || "未设置"}</span>
         </div>
       </div>
 
@@ -140,9 +146,11 @@ export default function OpportunityCard({ opportunity, onClick, draggable = fals
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 text-xs text-slate-400">
             <User className="w-3 h-3" />
-            <span>{owner || '未分配'}</span>
+            <span>{owner || "未分配"}</span>
           </div>
-          <div className={cn('flex items-center gap-1 text-xs', getDaysColor())}>
+          <div
+            className={cn("flex items-center gap-1 text-xs", getDaysColor())}
+          >
             <Clock className="w-3 h-3" />
             <span>{daysInStage}天</span>
           </div>
@@ -155,7 +163,7 @@ export default function OpportunityCard({ opportunity, onClick, draggable = fals
         )}
       </div>
     </motion.div>
-  )
+  );
 }
 
 // Compact version for list views
@@ -168,9 +176,9 @@ export function OpportunityListItem({ opportunity, onClick }) {
     expectedCloseDate,
     isHot,
     isOverdue,
-  } = opportunity
+  } = opportunity;
 
-  const stageConf = stageConfig[stage] || stageConfig.lead
+  const stageConf = stageConfig[stage] || stageConfig.lead;
 
   return (
     <motion.div
@@ -179,7 +187,7 @@ export function OpportunityListItem({ opportunity, onClick }) {
       className="flex items-center justify-between p-3 bg-surface-50 rounded-lg hover:bg-surface-100 cursor-pointer transition-colors group"
     >
       <div className="flex items-center gap-3">
-        <div className={cn('w-2 h-2 rounded-full', stageConf.color)} />
+        <div className={cn("w-2 h-2 rounded-full", stageConf.color)} />
         <div>
           <div className="flex items-center gap-2">
             {isHot && <Flame className="w-3 h-3 text-amber-500" />}
@@ -197,6 +205,5 @@ export function OpportunityListItem({ opportunity, onClick }) {
         <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
       </div>
     </motion.div>
-  )
+  );
 }
-

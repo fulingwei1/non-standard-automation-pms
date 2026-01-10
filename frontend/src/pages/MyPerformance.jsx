@@ -1,91 +1,95 @@
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
+import React, { useState } from "react";
+import { motion } from "framer-motion";
 import {
   Award,
   Calendar,
   MessageSquare,
   Download,
-  AlertCircle
-} from 'lucide-react'
-import { cn } from '../lib/utils'
-import { usePerformanceData } from '../hooks/usePerformanceData'
-import { OverviewTab } from '../components/performance/OverviewTab'
-import { HistoryTab } from '../components/performance/HistoryTab'
-import { DetailsTab } from '../components/performance/DetailsTab'
+  AlertCircle,
+} from "lucide-react";
+import { cn } from "../lib/utils";
+import { usePerformanceData } from "../hooks/usePerformanceData";
+import { OverviewTab } from "../components/performance/OverviewTab";
+import { HistoryTab } from "../components/performance/HistoryTab";
+import { DetailsTab } from "../components/performance/DetailsTab";
 
 const performanceOverview = {
   currentPeriod: {
     year: 2025,
     quarter: 1,
-    status: 'EVALUATING',
-    submitDate: '2025-01-28',
+    status: "EVALUATING",
+    submitDate: "2025-01-28",
     deptEvaluation: {
-      status: 'PENDING',
-      evaluator: '李经理',
-      score: null
+      status: "PENDING",
+      evaluator: "李经理",
+      score: null,
     },
     projectEvaluations: [
       {
         projectId: 1,
-        projectName: '项目A',
-        status: 'COMPLETED',
-        evaluator: '王经理',
+        projectName: "项目A",
+        status: "COMPLETED",
+        evaluator: "王经理",
         score: 92,
-        weight: 60
+        weight: 60,
       },
       {
         projectId: 2,
-        projectName: '项目B',
-        status: 'PENDING',
-        evaluator: '刘经理',
+        projectName: "项目B",
+        status: "PENDING",
+        evaluator: "刘经理",
         score: null,
-        weight: 40
-      }
-    ]
+        weight: 40,
+      },
+    ],
   },
   latestScore: {
-    period: '2024-Q4',
+    period: "2024-Q4",
     totalScore: 90,
-    level: 'A',
+    level: "A",
     rank: 5,
     totalEmployees: 48,
     deptScore: 88,
     projectScores: [
-      { projectName: '项目A', score: 92, weight: 60 },
-      { projectName: '项目C', score: 85, weight: 40 }
-    ]
+      { projectName: "项目A", score: 92, weight: 60 },
+      { projectName: "项目C", score: 85, weight: 40 },
+    ],
   },
   quarterlyTrend: [
-    { quarter: '2024-Q1', score: 85, level: 'B' },
-    { quarter: '2024-Q2', score: 88, level: 'B' },
-    { quarter: '2024-Q3', score: 87, level: 'B' },
-    { quarter: '2024-Q4', score: 90, level: 'A' }
-  ]
-}
+    { quarter: "2024-Q1", score: 85, level: "B" },
+    { quarter: "2024-Q2", score: 88, level: "B" },
+    { quarter: "2024-Q3", score: 87, level: "B" },
+    { quarter: "2024-Q4", score: 90, level: "A" },
+  ],
+};
 
 const fallbackData = {
   current_status: performanceOverview.currentPeriod,
   latest_result: performanceOverview.latestScore,
   quarterly_trend: performanceOverview.quarterlyTrend,
-  history: mockMonthlyHistory
-}
+  history: mockMonthlyHistory,
+};
 
 const MyPerformance = () => {
-  const [activeTab, setActiveTab] = useState('overview')
-  const { performanceData, isLoading, error } = usePerformanceData(fallbackData)
+  const [activeTab, setActiveTab] = useState("overview");
+  const { performanceData, isLoading, error } =
+    usePerformanceData(fallbackData);
 
   // 获取当前用户信息
-  const currentUser = JSON.parse(localStorage.getItem('user') || '{"name":"用户","department":"未知部门","position":"未知职位"}')
+  const currentUser = JSON.parse(
+    localStorage.getItem("user") ||
+      '{"name":"用户","department":"未知部门","position":"未知职位"}',
+  );
 
   // 使用加载的数据或fallback到mock
-  const currentData = performanceData || fallbackData
+  const currentData = performanceData || fallbackData;
 
   // 动画配置
   const fadeIn = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.4 }
-  }
+    transition: { duration: 0.4 },
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
@@ -119,8 +123,12 @@ const MyPerformance = () => {
                 </span>
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-bold text-white mb-1">{currentUser.name}</h2>
-                <p className="text-slate-400">{currentUser.department} · {currentUser.position}</p>
+                <h2 className="text-xl font-bold text-white mb-1">
+                  {currentUser.name}
+                </h2>
+                <p className="text-slate-400">
+                  {currentUser.department} · {currentUser.position}
+                </p>
               </div>
             </div>
           </div>
@@ -130,18 +138,18 @@ const MyPerformance = () => {
         <motion.div {...fadeIn} transition={{ delay: 0.2 }}>
           <div className="flex gap-2">
             {[
-              { key: 'overview', label: '绩效概览', icon: Award },
-              { key: 'history', label: '历史记录', icon: Calendar },
-              { key: 'details', label: '评价详情', icon: MessageSquare }
+              { key: "overview", label: "绩效概览", icon: Award },
+              { key: "history", label: "历史记录", icon: Calendar },
+              { key: "details", label: "评价详情", icon: MessageSquare },
             ].map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={cn(
-                  'px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2',
+                  "px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2",
                   activeTab === tab.key
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
+                    ? "bg-blue-500 text-white"
+                    : "bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50",
                 )}
               >
                 <tab.icon className="h-4 w-4" />
@@ -152,19 +160,23 @@ const MyPerformance = () => {
         </motion.div>
 
         {/* Tab 内容 */}
-        {activeTab === 'overview' && (
+        {activeTab === "overview" && (
           <OverviewTab
-            currentPeriod={currentData.current_status || currentData.currentPeriod}
+            currentPeriod={
+              currentData.current_status || currentData.currentPeriod
+            }
             latestScore={currentData.latest_result || currentData.latestScore}
-            quarterlyTrend={currentData.quarterly_trend || currentData.quarterlyTrend}
+            quarterlyTrend={
+              currentData.quarterly_trend || currentData.quarterlyTrend
+            }
           />
         )}
 
-        {activeTab === 'history' && (
+        {activeTab === "history" && (
           <HistoryTab history={currentData.history || mockMonthlyHistory} />
         )}
 
-        {activeTab === 'details' && (
+        {activeTab === "details" && (
           <DetailsTab history={currentData.history || mockMonthlyHistory} />
         )}
 
@@ -186,7 +198,7 @@ const MyPerformance = () => {
         </motion.div>
       </motion.div>
     </div>
-  )
-}
+  );
+};
 
-export default MyPerformance
+export default MyPerformance;

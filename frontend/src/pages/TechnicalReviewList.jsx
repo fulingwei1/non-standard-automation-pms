@@ -2,13 +2,13 @@
  * 技术评审列表页面
  * 展示所有技术评审，支持筛选和搜索
  */
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { cn } from '../lib/utils'
-import { technicalReviewApi, projectApi } from '../services/api'
-import { formatDate } from '../lib/utils'
-import { PageHeader } from '../components/layout/PageHeader'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { cn } from "../lib/utils";
+import { technicalReviewApi, projectApi } from "../services/api";
+import { formatDate } from "../lib/utils";
+import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
@@ -17,7 +17,7 @@ import {
   Input,
   Select,
   SkeletonCard,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +25,7 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Search,
   Plus,
@@ -39,7 +39,7 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-} from 'lucide-react'
+} from "lucide-react";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -47,143 +47,157 @@ const staggerContainer = {
     opacity: 1,
     transition: { staggerChildren: 0.05, delayChildren: 0.1 },
   },
-}
+};
 
 const staggerChild = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
-}
+};
 
 const getStatusBadge = (status) => {
   const badges = {
-    DRAFT: { label: '草稿', variant: 'secondary', color: 'text-slate-400' },
-    PENDING: { label: '待评审', variant: 'info', color: 'text-blue-400' },
-    IN_PROGRESS: { label: '评审中', variant: 'warning', color: 'text-amber-400' },
-    COMPLETED: { label: '已完成', variant: 'success', color: 'text-emerald-400' },
-    CANCELLED: { label: '已取消', variant: 'danger', color: 'text-red-400' },
-  }
-  return badges[status] || badges.DRAFT
-}
+    DRAFT: { label: "草稿", variant: "secondary", color: "text-slate-400" },
+    PENDING: { label: "待评审", variant: "info", color: "text-blue-400" },
+    IN_PROGRESS: {
+      label: "评审中",
+      variant: "warning",
+      color: "text-amber-400",
+    },
+    COMPLETED: {
+      label: "已完成",
+      variant: "success",
+      color: "text-emerald-400",
+    },
+    CANCELLED: { label: "已取消", variant: "danger", color: "text-red-400" },
+  };
+  return badges[status] || badges.DRAFT;
+};
 
 const getReviewTypeLabel = (type) => {
   const types = {
-    PDR: '方案设计评审',
-    DDR: '详细设计评审',
-    PRR: '生产准备评审',
-    FRR: '出厂评审',
-    ARR: '现场评审',
-  }
-  return types[type] || type
-}
+    PDR: "方案设计评审",
+    DDR: "详细设计评审",
+    PRR: "生产准备评审",
+    FRR: "出厂评审",
+    ARR: "现场评审",
+  };
+  return types[type] || type;
+};
 
 const getReviewTypeColor = (type) => {
   const colors = {
-    PDR: 'bg-blue-500/20 text-blue-400',
-    DDR: 'bg-purple-500/20 text-purple-400',
-    PRR: 'bg-amber-500/20 text-amber-400',
-    FRR: 'bg-green-500/20 text-green-400',
-    ARR: 'bg-orange-500/20 text-orange-400',
-  }
-  return colors[type] || 'bg-slate-500/20 text-slate-400'
-}
+    PDR: "bg-blue-500/20 text-blue-400",
+    DDR: "bg-purple-500/20 text-purple-400",
+    PRR: "bg-amber-500/20 text-amber-400",
+    FRR: "bg-green-500/20 text-green-400",
+    ARR: "bg-orange-500/20 text-orange-400",
+  };
+  return colors[type] || "bg-slate-500/20 text-slate-400";
+};
 
 const getConclusionBadge = (conclusion) => {
-  if (!conclusion) return null
+  if (!conclusion) return null;
   const badges = {
-    PASS: { label: '通过', color: 'bg-emerald-500/20 text-emerald-400' },
-    PASS_WITH_CONDITION: { label: '有条件通过', color: 'bg-amber-500/20 text-amber-400' },
-    REJECT: { label: '不通过', color: 'bg-red-500/20 text-red-400' },
-    ABORT: { label: '中止', color: 'bg-slate-500/20 text-slate-400' },
-  }
-  return badges[conclusion] || null
-}
+    PASS: { label: "通过", color: "bg-emerald-500/20 text-emerald-400" },
+    PASS_WITH_CONDITION: {
+      label: "有条件通过",
+      color: "bg-amber-500/20 text-amber-400",
+    },
+    REJECT: { label: "不通过", color: "bg-red-500/20 text-red-400" },
+    ABORT: { label: "中止", color: "bg-slate-500/20 text-slate-400" },
+  };
+  return badges[conclusion] || null;
+};
 
 export default function TechnicalReviewList() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true)
-  const [reviews, setReviews] = useState([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
-  const [pageSize] = useState(20)
+  const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
 
   // 筛选条件
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [projectId, setProjectId] = useState(null)
-  const [status, setStatus] = useState(null)
-  const [reviewType, setReviewType] = useState(null)
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [projectId, setProjectId] = useState(null);
+  const [status, setStatus] = useState(null);
+  const [reviewType, setReviewType] = useState(null);
 
   // 项目列表（用于筛选）
-  const [projectList, setProjectList] = useState([])
+  const [projectList, setProjectList] = useState([]);
 
   // 对话框
-  const [deleteDialog, setDeleteDialog] = useState({ open: false, review: null })
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    review: null,
+  });
 
   useEffect(() => {
-    fetchReviews()
-    fetchProjectList()
-  }, [page, projectId, status, reviewType])
+    fetchReviews();
+    fetchProjectList();
+  }, [page, projectId, status, reviewType]);
 
   const fetchProjectList = async () => {
     try {
-      const response = await projectApi.list({ page: 1, page_size: 100 })
-      const projects = response.data?.items || response.items || []
-      setProjectList(projects)
+      const response = await projectApi.list({ page: 1, page_size: 100 });
+      const projects = response.data?.items || response.items || [];
+      setProjectList(projects);
     } catch (error) {
-      console.error('Failed to fetch projects:', error)
+      console.error("Failed to fetch projects:", error);
     }
-  }
+  };
 
   const fetchReviews = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const params = {
         page,
         page_size: pageSize,
-      }
-      if (searchKeyword) params.keyword = searchKeyword
-      if (projectId) params.project_id = projectId
-      if (status) params.status = status
-      if (reviewType) params.review_type = reviewType
+      };
+      if (searchKeyword) params.keyword = searchKeyword;
+      if (projectId) params.project_id = projectId;
+      if (status) params.status = status;
+      if (reviewType) params.review_type = reviewType;
 
-      const response = await technicalReviewApi.list(params)
-      const data = response.data || response
-      setReviews(data.items || [])
-      setTotal(data.total || 0)
+      const response = await technicalReviewApi.list(params);
+      const data = response.data || response;
+      setReviews(data.items || []);
+      setTotal(data.total || 0);
     } catch (error) {
-      console.error('Failed to fetch reviews:', error)
+      console.error("Failed to fetch reviews:", error);
       // 使用模拟数据
-      setReviews([])
+      setReviews([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!deleteDialog.review) return
+    if (!deleteDialog.review) return;
     try {
-      await technicalReviewApi.delete(deleteDialog.review.id)
-      setDeleteDialog({ open: false, review: null })
-      fetchReviews()
+      await technicalReviewApi.delete(deleteDialog.review.id);
+      setDeleteDialog({ open: false, review: null });
+      fetchReviews();
     } catch (error) {
-      console.error('Failed to delete review:', error)
-      alert('删除失败：' + (error.response?.data?.detail || error.message))
+      console.error("Failed to delete review:", error);
+      alert("删除失败：" + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const handleSearch = () => {
-    setPage(1)
-    fetchReviews()
-  }
+    setPage(1);
+    fetchReviews();
+  };
 
   const handleReset = () => {
-    setSearchKeyword('')
-    setProjectId(null)
-    setStatus(null)
-    setReviewType(null)
-    setPage(1)
-    setTimeout(fetchReviews, 100)
-  }
+    setSearchKeyword("");
+    setProjectId(null);
+    setStatus(null);
+    setReviewType(null);
+    setPage(1);
+    setTimeout(fetchReviews, 100);
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -204,13 +218,13 @@ export default function TechnicalReviewList() {
                     placeholder="搜索评审编号、名称..."
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                     className="pl-10 bg-slate-800/50 border-slate-700 text-slate-100"
                   />
                 </div>
               </div>
               <Select
-                value={projectId || ''}
+                value={projectId || ""}
                 onValueChange={(value) => setProjectId(value || null)}
                 className="bg-slate-800/50 border-slate-700"
               >
@@ -222,7 +236,7 @@ export default function TechnicalReviewList() {
                 ))}
               </Select>
               <Select
-                value={reviewType || ''}
+                value={reviewType || ""}
                 onValueChange={(value) => setReviewType(value || null)}
                 className="bg-slate-800/50 border-slate-700"
               >
@@ -234,7 +248,7 @@ export default function TechnicalReviewList() {
                 <option value="ARR">现场评审</option>
               </Select>
               <Select
-                value={status || ''}
+                value={status || ""}
                 onValueChange={(value) => setStatus(value || null)}
                 className="bg-slate-800/50 border-slate-700"
               >
@@ -247,15 +261,22 @@ export default function TechnicalReviewList() {
               </Select>
             </div>
             <div className="flex gap-2 mt-4">
-              <Button onClick={handleSearch} className="bg-blue-600 hover:bg-blue-700">
+              <Button
+                onClick={handleSearch}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
                 <Search className="w-4 h-4 mr-2" />
                 搜索
               </Button>
-              <Button onClick={handleReset} variant="outline" className="border-slate-700">
+              <Button
+                onClick={handleReset}
+                variant="outline"
+                className="border-slate-700"
+              >
                 重置
               </Button>
               <Button
-                onClick={() => navigate('/technical-reviews/new')}
+                onClick={() => navigate("/technical-reviews/new")}
                 className="bg-emerald-600 hover:bg-emerald-700 ml-auto"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -278,7 +299,7 @@ export default function TechnicalReviewList() {
               <FileCheck className="w-16 h-16 mx-auto text-slate-600 mb-4" />
               <p className="text-slate-400">暂无技术评审记录</p>
               <Button
-                onClick={() => navigate('/technical-reviews/new')}
+                onClick={() => navigate("/technical-reviews/new")}
                 className="mt-4 bg-emerald-600 hover:bg-emerald-700"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -294,13 +315,13 @@ export default function TechnicalReviewList() {
             className="grid grid-cols-1 gap-4"
           >
             {reviews.map((review) => {
-              const statusBadge = getStatusBadge(review.status)
-              const conclusionBadge = getConclusionBadge(review.conclusion)
+              const statusBadge = getStatusBadge(review.status);
+              const conclusionBadge = getConclusionBadge(review.conclusion);
               const totalIssues =
                 (review.issue_count_a || 0) +
                 (review.issue_count_b || 0) +
                 (review.issue_count_c || 0) +
-                (review.issue_count_d || 0)
+                (review.issue_count_d || 0);
 
               return (
                 <motion.div key={review.id} variants={staggerChild}>
@@ -314,19 +335,27 @@ export default function TechnicalReviewList() {
                             </h3>
                             <Badge
                               className={cn(
-                                'px-2 py-0.5 text-xs',
-                                getReviewTypeColor(review.review_type)
+                                "px-2 py-0.5 text-xs",
+                                getReviewTypeColor(review.review_type),
                               )}
                             >
                               {getReviewTypeLabel(review.review_type)}
                             </Badge>
                             <Badge
-                              className={cn('px-2 py-0.5 text-xs', statusBadge.color)}
+                              className={cn(
+                                "px-2 py-0.5 text-xs",
+                                statusBadge.color,
+                              )}
                             >
                               {statusBadge.label}
                             </Badge>
                             {conclusionBadge && (
-                              <Badge className={cn('px-2 py-0.5 text-xs', conclusionBadge.color)}>
+                              <Badge
+                                className={cn(
+                                  "px-2 py-0.5 text-xs",
+                                  conclusionBadge.color,
+                                )}
+                              >
                                 {conclusionBadge.label}
                               </Badge>
                             )}
@@ -335,23 +364,32 @@ export default function TechnicalReviewList() {
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-slate-400 mb-4">
                             <div className="flex items-center gap-2">
                               <span className="text-slate-500">评审编号:</span>
-                              <span className="text-slate-300">{review.review_no}</span>
+                              <span className="text-slate-300">
+                                {review.review_no}
+                              </span>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-slate-500">项目:</span>
-                              <span className="text-slate-300">{review.project_no}</span>
+                              <span className="text-slate-300">
+                                {review.project_no}
+                              </span>
                             </div>
                             <div className="flex items-center gap-2">
                               <Calendar className="w-4 h-4" />
                               <span>
-                                {formatDate(review.scheduled_date, 'YYYY-MM-DD HH:mm')}
+                                {formatDate(
+                                  review.scheduled_date,
+                                  "YYYY-MM-DD HH:mm",
+                                )}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
                               <AlertCircle className="w-4 h-4" />
                               <span>
-                                问题: {totalIssues}个 (A:{review.issue_count_a || 0} B:
-                                {review.issue_count_b || 0} C:{review.issue_count_c || 0} D:
+                                问题: {totalIssues}个 (A:
+                                {review.issue_count_a || 0} B:
+                                {review.issue_count_b || 0} C:
+                                {review.issue_count_c || 0} D:
                                 {review.issue_count_d || 0})
                               </span>
                             </div>
@@ -368,17 +406,23 @@ export default function TechnicalReviewList() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => navigate(`/technical-reviews/${review.id}`)}
+                            onClick={() =>
+                              navigate(`/technical-reviews/${review.id}`)
+                            }
                             className="text-slate-400 hover:text-slate-100"
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          {review.status === 'DRAFT' && (
+                          {review.status === "DRAFT" && (
                             <>
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => navigate(`/technical-reviews/${review.id}/edit`)}
+                                onClick={() =>
+                                  navigate(
+                                    `/technical-reviews/${review.id}/edit`,
+                                  )
+                                }
                                 className="text-slate-400 hover:text-slate-100"
                               >
                                 <Edit className="w-4 h-4" />
@@ -386,7 +430,9 @@ export default function TechnicalReviewList() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setDeleteDialog({ open: true, review })}
+                                onClick={() =>
+                                  setDeleteDialog({ open: true, review })
+                                }
                                 className="text-slate-400 hover:text-red-400"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -398,7 +444,7 @@ export default function TechnicalReviewList() {
                     </CardContent>
                   </Card>
                 </motion.div>
-              )
+              );
             })}
           </motion.div>
         )}
@@ -422,7 +468,9 @@ export default function TechnicalReviewList() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((p) => Math.min(Math.ceil(total / pageSize), p + 1))}
+                onClick={() =>
+                  setPage((p) => Math.min(Math.ceil(total / pageSize), p + 1))
+                }
                 disabled={page >= Math.ceil(total / pageSize)}
                 className="border-slate-700"
               >
@@ -434,14 +482,18 @@ export default function TechnicalReviewList() {
       </div>
 
       {/* 删除确认对话框 */}
-      <Dialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ open, review: null })}>
+      <Dialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog({ open, review: null })}
+      >
         <DialogContent className="bg-slate-900 border-slate-800">
           <DialogHeader>
             <DialogTitle className="text-slate-100">确认删除</DialogTitle>
           </DialogHeader>
           <DialogBody>
             <p className="text-slate-400">
-              确定要删除评审 "{deleteDialog.review?.review_name}" 吗？此操作不可恢复。
+              确定要删除评审 "{deleteDialog.review?.review_name}"
+              吗？此操作不可恢复。
             </p>
           </DialogBody>
           <DialogFooter>
@@ -452,18 +504,15 @@ export default function TechnicalReviewList() {
             >
               取消
             </Button>
-            <Button onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+            <Button
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
               删除
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-
-
-
-
-
-

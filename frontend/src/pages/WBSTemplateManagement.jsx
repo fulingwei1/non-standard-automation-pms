@@ -2,8 +2,8 @@
  * WBS Template Management Page - WBS模板管理页面
  * Features: WBS模板CRUD、任务配置、从模板初始化项目WBS
  */
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FileText,
   Plus,
@@ -17,18 +17,18 @@ import {
   CheckCircle2,
   Circle,
   Settings,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
 import {
   Table,
   TableBody,
@@ -36,7 +36,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../components/ui/table'
+} from "../components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -44,130 +44,134 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui/dialog'
+} from "../components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
-import { cn, formatDate } from '../lib/utils'
-import { progressApi, projectApi } from '../services/api'
+} from "../components/ui/select";
+import { cn, formatDate } from "../lib/utils";
+import { progressApi, projectApi } from "../services/api";
 export default function WBSTemplateManagement() {
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [templates, setTemplates] = useState([])
-  const [selectedTemplate, setSelectedTemplate] = useState(null)
-  const [templateTasks, setTemplateTasks] = useState([])
-  const [projects, setProjects] = useState([])
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [templates, setTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [templateTasks, setTemplateTasks] = useState([]);
+  const [projects, setProjects] = useState([]);
   // Filters
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [filterType, setFilterType] = useState('')
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [filterType, setFilterType] = useState("");
   // Dialogs
-  const [showDetailDialog, setShowDetailDialog] = useState(false)
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [showInitDialog, setShowInitDialog] = useState(false)
-  const [expandedTasks, setExpandedTasks] = useState(new Set())
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showInitDialog, setShowInitDialog] = useState(false);
+  const [expandedTasks, setExpandedTasks] = useState(new Set());
   // Form states
   const [newTemplate, setNewTemplate] = useState({
-    template_name: '',
-    template_type: 'SINGLE_MACHINE', // SINGLE_MACHINE or LINE
-    description: '',
-  })
-  const [selectedProject, setSelectedProject] = useState('')
+    template_name: "",
+    template_type: "SINGLE_MACHINE", // SINGLE_MACHINE or LINE
+    description: "",
+  });
+  const [selectedProject, setSelectedProject] = useState("");
   useEffect(() => {
-    fetchTemplates()
-    fetchProjects()
-  }, [filterType, searchKeyword])
+    fetchTemplates();
+    fetchProjects();
+  }, [filterType, searchKeyword]);
   const fetchTemplates = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const params = {
         page: 1,
         page_size: 100,
-      }
-      if (filterType) params.project_type = filterType
-      if (searchKeyword) params.keyword = searchKeyword
-      const res = await progressApi.wbsTemplates.list(params)
-      setTemplates(res.data?.items || res.data || [])
+      };
+      if (filterType) params.project_type = filterType;
+      if (searchKeyword) params.keyword = searchKeyword;
+      const res = await progressApi.wbsTemplates.list(params);
+      setTemplates(res.data?.items || res.data || []);
     } catch (error) {
-      console.error('Failed to fetch templates:', error)
-      setTemplates([]) // 不再使用mock数据，显示空列表
+      console.error("Failed to fetch templates:", error);
+      setTemplates([]); // 不再使用mock数据，显示空列表
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
   const fetchProjects = async () => {
     try {
-      const res = await projectApi.list({ page_size: 1000 })
-      setProjects(res.data?.items || res.data || [])
+      const res = await projectApi.list({ page_size: 1000 });
+      setProjects(res.data?.items || res.data || []);
     } catch (error) {
-      console.error('Failed to fetch projects:', error)
+      console.error("Failed to fetch projects:", error);
     }
-  }
+  };
   const fetchTemplateTasks = async (templateId) => {
     try {
-      const res = await progressApi.wbsTemplates.getTasks(templateId)
-      setTemplateTasks(res.data || [])
+      const res = await progressApi.wbsTemplates.getTasks(templateId);
+      setTemplateTasks(res.data || []);
     } catch (error) {
-      console.error('Failed to fetch template tasks:', error)
-      setTemplateTasks([]) // 不再使用mock数据，显示空列表
+      console.error("Failed to fetch template tasks:", error);
+      setTemplateTasks([]); // 不再使用mock数据，显示空列表
     }
-  }
+  };
   const handleViewDetail = async (template) => {
-    setSelectedTemplate(template)
-    await fetchTemplateTasks(template.id)
-    setShowDetailDialog(true)
-  }
+    setSelectedTemplate(template);
+    await fetchTemplateTasks(template.id);
+    setShowDetailDialog(true);
+  };
   const handleCreateTemplate = async () => {
     if (!newTemplate.template_name) {
-      alert('请填写模板名称')
-      return
+      alert("请填写模板名称");
+      return;
     }
     try {
-      await progressApi.wbsTemplates.create(newTemplate)
-      setShowCreateDialog(false)
+      await progressApi.wbsTemplates.create(newTemplate);
+      setShowCreateDialog(false);
       setNewTemplate({
-        template_name: '',
-        template_type: 'SINGLE_MACHINE',
-        description: '',
-      })
-      fetchTemplates()
+        template_name: "",
+        template_type: "SINGLE_MACHINE",
+        description: "",
+      });
+      fetchTemplates();
     } catch (error) {
-      console.error('Failed to create template:', error)
-      alert('创建模板失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to create template:", error);
+      alert("创建模板失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
   const handleInitProjectWBS = async () => {
     if (!selectedProject || !selectedTemplate) {
-      alert('请选择项目和模板')
-      return
+      alert("请选择项目和模板");
+      return;
     }
     try {
-      await progressApi.projects.initWBS(selectedProject, { template_id: selectedTemplate.id })
-      setShowInitDialog(false)
-      setSelectedProject('')
-      alert('WBS初始化成功')
-      navigate(`/projects/${selectedProject}`)
+      await progressApi.projects.initWBS(selectedProject, {
+        template_id: selectedTemplate.id,
+      });
+      setShowInitDialog(false);
+      setSelectedProject("");
+      alert("WBS初始化成功");
+      navigate(`/projects/${selectedProject}`);
     } catch (error) {
-      console.error('Failed to init WBS:', error)
-      alert('初始化WBS失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to init WBS:", error);
+      alert(
+        "初始化WBS失败: " + (error.response?.data?.detail || error.message),
+      );
     }
-  }
+  };
   const toggleTaskExpand = (taskId) => {
-    const newExpanded = new Set(expandedTasks)
+    const newExpanded = new Set(expandedTasks);
     if (newExpanded.has(taskId)) {
-      newExpanded.delete(taskId)
+      newExpanded.delete(taskId);
     } else {
-      newExpanded.add(taskId)
+      newExpanded.add(taskId);
     }
-    setExpandedTasks(newExpanded)
-  }
+    setExpandedTasks(newExpanded);
+  };
   const typeConfigs = {
-    SINGLE_MACHINE: { label: '单机类', color: 'bg-blue-500' },
-    LINE: { label: '线体类', color: 'bg-purple-500' },
-  }
+    SINGLE_MACHINE: { label: "单机类", color: "bg-blue-500" },
+    LINE: { label: "线体类", color: "bg-purple-500" },
+  };
   return (
     <div className="space-y-6 p-6">
       <PageHeader
@@ -211,9 +215,7 @@ export default function WBSTemplateManagement() {
       <Card>
         <CardHeader>
           <CardTitle>模板列表</CardTitle>
-          <CardDescription>
-            共 {templates.length} 个模板
-          </CardDescription>
+          <CardDescription>共 {templates.length} 个模板</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -223,22 +225,35 @@ export default function WBSTemplateManagement() {
           ) : (
             <div className="space-y-3">
               {templates.map((template) => (
-                <Card key={template.id} className="hover:bg-slate-50 transition-colors">
+                <Card
+                  key={template.id}
+                  className="hover:bg-slate-50 transition-colors"
+                >
                   <CardContent className="pt-4">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-medium">{template.template_name}</h3>
-                          <Badge className={typeConfigs[template.template_type]?.color}>
+                          <h3 className="font-medium">
+                            {template.template_name}
+                          </h3>
+                          <Badge
+                            className={
+                              typeConfigs[template.template_type]?.color
+                            }
+                          >
                             {typeConfigs[template.template_type]?.label}
                           </Badge>
                         </div>
                         {template.description && (
-                          <p className="text-sm text-slate-500 mb-2">{template.description}</p>
+                          <p className="text-sm text-slate-500 mb-2">
+                            {template.description}
+                          </p>
                         )}
                         <div className="flex items-center gap-4 text-sm text-slate-500">
                           <span>任务数: {template.task_count || 0}</span>
-                          <span>创建时间: {formatDate(template.created_at)}</span>
+                          <span>
+                            创建时间: {formatDate(template.created_at)}
+                          </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -254,8 +269,8 @@ export default function WBSTemplateManagement() {
                           variant="ghost"
                           size="sm"
                           onClick={() => {
-                            setSelectedTemplate(template)
-                            setShowInitDialog(true)
+                            setSelectedTemplate(template);
+                            setShowInitDialog(true);
                           }}
                         >
                           <Copy className="w-4 h-4 mr-2" />
@@ -282,7 +297,11 @@ export default function WBSTemplateManagement() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-sm text-slate-500 mb-1">模板类型</div>
-                    <Badge className={typeConfigs[selectedTemplate.template_type]?.color}>
+                    <Badge
+                      className={
+                        typeConfigs[selectedTemplate.template_type]?.color
+                      }
+                    >
                       {typeConfigs[selectedTemplate.template_type]?.label}
                     </Badge>
                   </div>
@@ -300,7 +319,9 @@ export default function WBSTemplateManagement() {
                 <div>
                   <div className="text-sm font-medium mb-3">模板任务列表</div>
                   {templateTasks.length === 0 ? (
-                    <div className="text-center py-4 text-slate-400">暂无任务</div>
+                    <div className="text-center py-4 text-slate-400">
+                      暂无任务
+                    </div>
                   ) : (
                     <div className="space-y-2">
                       {templateTasks.map((task) => (
@@ -326,9 +347,13 @@ export default function WBSTemplateManagement() {
                                 <div className="w-8" />
                               )}
                               <div>
-                                <div className="font-medium">{task.task_name}</div>
+                                <div className="font-medium">
+                                  {task.task_name}
+                                </div>
                                 {task.description && (
-                                  <div className="text-sm text-slate-500">{task.description}</div>
+                                  <div className="text-sm text-slate-500">
+                                    {task.description}
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -347,9 +372,13 @@ export default function WBSTemplateManagement() {
                                   key={child.id}
                                   className="border-l-2 pl-3 py-2 text-sm"
                                 >
-                                  <div className="font-medium">{child.task_name}</div>
+                                  <div className="font-medium">
+                                    {child.task_name}
+                                  </div>
                                   {child.description && (
-                                    <div className="text-slate-500">{child.description}</div>
+                                    <div className="text-slate-500">
+                                      {child.description}
+                                    </div>
                                   )}
                                 </div>
                               ))}
@@ -364,7 +393,10 @@ export default function WBSTemplateManagement() {
             )}
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDetailDialog(false)}
+            >
               关闭
             </Button>
           </DialogFooter>
@@ -379,18 +411,29 @@ export default function WBSTemplateManagement() {
           <DialogBody>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">模板名称 *</label>
+                <label className="text-sm font-medium mb-2 block">
+                  模板名称 *
+                </label>
                 <Input
                   value={newTemplate.template_name}
-                  onChange={(e) => setNewTemplate({ ...newTemplate, template_name: e.target.value })}
+                  onChange={(e) =>
+                    setNewTemplate({
+                      ...newTemplate,
+                      template_name: e.target.value,
+                    })
+                  }
                   placeholder="请输入模板名称"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">模板类型 *</label>
+                <label className="text-sm font-medium mb-2 block">
+                  模板类型 *
+                </label>
                 <Select
                   value={newTemplate.template_type}
-                  onValueChange={(val) => setNewTemplate({ ...newTemplate, template_type: val })}
+                  onValueChange={(val) =>
+                    setNewTemplate({ ...newTemplate, template_type: val })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -408,14 +451,22 @@ export default function WBSTemplateManagement() {
                 <label className="text-sm font-medium mb-2 block">描述</label>
                 <Input
                   value={newTemplate.description}
-                  onChange={(e) => setNewTemplate({ ...newTemplate, description: e.target.value })}
+                  onChange={(e) =>
+                    setNewTemplate({
+                      ...newTemplate,
+                      description: e.target.value,
+                    })
+                  }
                   placeholder="模板描述"
                 />
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleCreateTemplate}>创建</Button>
@@ -431,8 +482,13 @@ export default function WBSTemplateManagement() {
           <DialogBody>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">选择项目 *</label>
-                <Select value={selectedProject} onValueChange={setSelectedProject}>
+                <label className="text-sm font-medium mb-2 block">
+                  选择项目 *
+                </label>
+                <Select
+                  value={selectedProject}
+                  onValueChange={setSelectedProject}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="选择项目" />
                   </SelectTrigger>
@@ -449,9 +505,12 @@ export default function WBSTemplateManagement() {
                 <div>
                   <div className="text-sm text-slate-500 mb-1">模板信息</div>
                   <div className="p-3 bg-slate-50 rounded-lg">
-                    <div className="font-medium">{selectedTemplate.template_name}</div>
+                    <div className="font-medium">
+                      {selectedTemplate.template_name}
+                    </div>
                     <div className="text-sm text-slate-500">
-                      {typeConfigs[selectedTemplate.template_type]?.label} · {selectedTemplate.task_count || 0} 个任务
+                      {typeConfigs[selectedTemplate.template_type]?.label} ·{" "}
+                      {selectedTemplate.task_count || 0} 个任务
                     </div>
                   </div>
                 </div>
@@ -469,5 +528,5 @@ export default function WBSTemplateManagement() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

@@ -3,15 +3,15 @@
  * 展示项目健康度分布：H1正常、H2有风险、H3阻塞、H4已完结
  */
 
-import { Pie, Column } from '@ant-design/plots'
-import { useMemo, useState } from 'react'
+import { Pie, Column } from "@ant-design/plots";
+import { useMemo, useState } from "react";
 
 const HEALTH_CONFIG = {
-  H1: { label: '正常', color: '#22c55e', description: '项目进展顺利' },
-  H2: { label: '有风险', color: '#eab308', description: '存在潜在风险需关注' },
-  H3: { label: '阻塞', color: '#ef4444', description: '项目遇到阻塞问题' },
-  H4: { label: '已完结', color: '#64748b', description: '项目已结束' },
-}
+  H1: { label: "正常", color: "#22c55e", description: "项目进展顺利" },
+  H2: { label: "有风险", color: "#eab308", description: "存在潜在风险需关注" },
+  H3: { label: "阻塞", color: "#ef4444", description: "项目遇到阻塞问题" },
+  H4: { label: "已完结", color: "#64748b", description: "项目已结束" },
+};
 
 /**
  * ProjectHealthChart - 项目健康度图表
@@ -23,36 +23,38 @@ const HEALTH_CONFIG = {
  */
 export default function ProjectHealthChart({
   data = {},
-  chartType = 'donut',
+  chartType = "donut",
   height = 280,
   onHealthClick,
-  title = '项目健康度分布',
+  title = "项目健康度分布",
   style,
 }) {
-  const [activeHealth, setActiveHealth] = useState(null)
+  const [activeHealth, setActiveHealth] = useState(null);
 
   const chartData = useMemo(() => {
-    return Object.entries(HEALTH_CONFIG).map(([key, config]) => ({
-      type: config.label,
-      value: data[key] || 0,
-      healthCode: key,
-      color: config.color,
-    })).filter(item => item.value > 0)
-  }, [data])
+    return Object.entries(HEALTH_CONFIG)
+      .map(([key, config]) => ({
+        type: config.label,
+        value: data[key] || 0,
+        healthCode: key,
+        color: config.color,
+      }))
+      .filter((item) => item.value > 0);
+  }, [data]);
 
   const total = useMemo(() => {
-    return chartData.reduce((sum, item) => sum + item.value, 0)
-  }, [chartData])
+    return chartData.reduce((sum, item) => sum + item.value, 0);
+  }, [chartData]);
 
   const handleReady = (plot) => {
-    plot.on('element:click', (evt) => {
-      const healthCode = evt.data?.data?.healthCode
+    plot.on("element:click", (evt) => {
+      const healthCode = evt.data?.data?.healthCode;
       if (healthCode && onHealthClick) {
-        onHealthClick(healthCode)
+        onHealthClick(healthCode);
       }
-      setActiveHealth(healthCode)
-    })
-  }
+      setActiveHealth(healthCode);
+    });
+  };
 
   if (chartData.length === 0) {
     return (
@@ -62,24 +64,25 @@ export default function ProjectHealthChart({
       >
         暂无项目数据
       </div>
-    )
+    );
   }
 
   // 饼图/环形图配置
-  if (chartType === 'pie' || chartType === 'donut') {
+  if (chartType === "pie" || chartType === "donut") {
     const pieConfig = {
       data: chartData,
-      angleField: 'value',
-      colorField: 'type',
+      angleField: "value",
+      colorField: "type",
       height,
       radius: 0.85,
-      innerRadius: chartType === 'donut' ? 0.6 : 0,
-      color: chartData.map(d => d.color),
+      innerRadius: chartType === "donut" ? 0.6 : 0,
+      color: chartData.map((d) => d.color),
       label: {
-        type: 'outer',
-        content: ({ percent, type }) => `${type} ${(percent * 100).toFixed(0)}%`,
+        type: "outer",
+        content: ({ percent, type }) =>
+          `${type} ${(percent * 100).toFixed(0)}%`,
         style: {
-          fill: '#94a3b8',
+          fill: "#94a3b8",
           fontSize: 12,
         },
       },
@@ -90,65 +93,67 @@ export default function ProjectHealthChart({
         }),
       },
       legend: {
-        position: 'right',
+        position: "right",
         itemName: {
           style: {
-            fill: '#94a3b8',
+            fill: "#94a3b8",
           },
         },
       },
-      statistic: chartType === 'donut' ? {
-        title: {
-          content: '总项目',
-          style: {
-            color: '#94a3b8',
-            fontSize: '14px',
-          },
-        },
-        content: {
-          content: `${total}`,
-          style: {
-            color: '#e2e8f0',
-            fontSize: '28px',
-            fontWeight: 'bold',
-          },
-        },
-      } : false,
-      interactions: [
-        { type: 'element-active' },
-        { type: 'pie-legend-active' },
-      ],
+      statistic:
+        chartType === "donut"
+          ? {
+              title: {
+                content: "总项目",
+                style: {
+                  color: "#94a3b8",
+                  fontSize: "14px",
+                },
+              },
+              content: {
+                content: `${total}`,
+                style: {
+                  color: "#e2e8f0",
+                  fontSize: "28px",
+                  fontWeight: "bold",
+                },
+              },
+            }
+          : false,
+      interactions: [{ type: "element-active" }, { type: "pie-legend-active" }],
       animation: {
         appear: {
-          animation: 'fade-in',
+          animation: "fade-in",
           duration: 800,
         },
       },
-    }
+    };
 
     return (
       <div style={style}>
-        {title && <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>}
+        {title && (
+          <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>
+        )}
         <Pie {...pieConfig} onReady={handleReady} />
       </div>
-    )
+    );
   }
 
   // 柱状图配置
   const barConfig = {
     data: chartData,
-    xField: 'type',
-    yField: 'value',
+    xField: "type",
+    yField: "value",
     height,
     color: ({ type }) => {
-      const item = chartData.find(d => d.type === type)
-      return item?.color || '#64748b'
+      const item = chartData.find((d) => d.type === type);
+      return item?.color || "#64748b";
     },
     columnWidthRatio: 0.5,
     label: {
-      position: 'top',
+      position: "top",
       style: {
-        fill: '#94a3b8',
+        fill: "#94a3b8",
         fontSize: 12,
       },
     },
@@ -161,27 +166,27 @@ export default function ProjectHealthChart({
     xAxis: {
       label: {
         style: {
-          fill: '#94a3b8',
+          fill: "#94a3b8",
           fontSize: 12,
         },
       },
       line: {
         style: {
-          stroke: '#334155',
+          stroke: "#334155",
         },
       },
     },
     yAxis: {
       label: {
         style: {
-          fill: '#94a3b8',
+          fill: "#94a3b8",
           fontSize: 12,
         },
       },
       grid: {
         line: {
           style: {
-            stroke: '#334155',
+            stroke: "#334155",
             lineDash: [4, 4],
           },
         },
@@ -189,16 +194,18 @@ export default function ProjectHealthChart({
     },
     animation: {
       appear: {
-        animation: 'scale-in-y',
+        animation: "scale-in-y",
         duration: 800,
       },
     },
-  }
+  };
 
   return (
     <div style={style}>
-      {title && <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>}
+      {title && (
+        <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>
+      )}
       <Column {...barConfig} onReady={handleReady} />
     </div>
-  )
+  );
 }

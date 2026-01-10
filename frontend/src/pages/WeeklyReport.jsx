@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { cn } from '../lib/utils'
-import { pmoApi } from '../services/api'
-import { formatDate } from '../lib/utils'
-import { PageHeader } from '../components/layout/PageHeader'
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { cn } from "../lib/utils";
+import { pmoApi } from "../services/api";
+import { formatDate } from "../lib/utils";
+import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import {
   Input,
   SkeletonCard,
   Button,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Calendar,
   TrendingUp,
@@ -25,7 +25,7 @@ import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
-} from 'lucide-react'
+} from "lucide-react";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -33,82 +33,82 @@ const staggerContainer = {
     opacity: 1,
     transition: { staggerChildren: 0.05, delayChildren: 0.1 },
   },
-}
+};
 
 const staggerChild = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
-}
+};
 
 const getHealthColor = (health) => {
   const colors = {
-    H1: 'text-emerald-400',
-    H2: 'text-amber-400',
-    H3: 'text-orange-400',
-    H4: 'text-red-400',
-  }
-  return colors[health] || colors.H1
-}
+    H1: "text-emerald-400",
+    H2: "text-amber-400",
+    H3: "text-orange-400",
+    H4: "text-red-400",
+  };
+  return colors[health] || colors.H1;
+};
 
 const getHealthBadge = (health) => {
   const badges = {
-    H1: { label: '健康', variant: 'success' },
-    H2: { label: '良好', variant: 'warning' },
-    H3: { label: '警告', variant: 'warning' },
-    H4: { label: '危险', variant: 'danger' },
-  }
-  return badges[health] || badges.H1
-}
+    H1: { label: "健康", variant: "success" },
+    H2: { label: "良好", variant: "warning" },
+    H3: { label: "警告", variant: "warning" },
+    H4: { label: "危险", variant: "danger" },
+  };
+  return badges[health] || badges.H1;
+};
 
 export default function WeeklyReport() {
-  const [loading, setLoading] = useState(true)
-  const [reportData, setReportData] = useState(null)
+  const [loading, setLoading] = useState(true);
+  const [reportData, setReportData] = useState(null);
   const [weekStart, setWeekStart] = useState(() => {
     // 计算当前周的周一
-    const today = new Date()
-    const day = today.getDay()
-    const diff = today.getDate() - day + (day === 0 ? -6 : 1) // 调整为周一
-    const monday = new Date(today.setDate(diff))
-    return monday.toISOString().split('T')[0]
-  })
+    const today = new Date();
+    const day = today.getDay();
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1); // 调整为周一
+    const monday = new Date(today.setDate(diff));
+    return monday.toISOString().split("T")[0];
+  });
 
   useEffect(() => {
-    fetchData()
-  }, [weekStart])
+    fetchData();
+  }, [weekStart]);
 
   const fetchData = async () => {
     try {
-      setLoading(true)
-      const params = weekStart ? { week_start: weekStart } : {}
-      const res = await pmoApi.weeklyReport(params)
-      const data = res.data || res
-      setReportData(data)
+      setLoading(true);
+      const params = weekStart ? { week_start: weekStart } : {};
+      const res = await pmoApi.weeklyReport(params);
+      const data = res.data || res;
+      setReportData(data);
     } catch (err) {
-      console.error('Failed to fetch weekly report:', err)
+      console.error("Failed to fetch weekly report:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handlePreviousWeek = () => {
-    const date = new Date(weekStart)
-    date.setDate(date.getDate() - 7)
-    setWeekStart(date.toISOString().split('T')[0])
-  }
+    const date = new Date(weekStart);
+    date.setDate(date.getDate() - 7);
+    setWeekStart(date.toISOString().split("T")[0]);
+  };
 
   const handleNextWeek = () => {
-    const date = new Date(weekStart)
-    date.setDate(date.getDate() + 7)
-    setWeekStart(date.toISOString().split('T')[0])
-  }
+    const date = new Date(weekStart);
+    date.setDate(date.getDate() + 7);
+    setWeekStart(date.toISOString().split("T")[0]);
+  };
 
   const handleCurrentWeek = () => {
-    const today = new Date()
-    const day = today.getDay()
-    const diff = today.getDate() - day + (day === 0 ? -6 : 1)
-    const monday = new Date(today.setDate(diff))
-    setWeekStart(monday.toISOString().split('T')[0])
-  }
+    const today = new Date();
+    const day = today.getDay();
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(today.setDate(diff));
+    setWeekStart(monday.toISOString().split("T")[0]);
+  };
 
   if (loading) {
     return (
@@ -122,7 +122,7 @@ export default function WeeklyReport() {
             ))}
         </div>
       </div>
-    )
+    );
   }
 
   if (!reportData) {
@@ -135,7 +135,7 @@ export default function WeeklyReport() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   const {
@@ -148,38 +148,22 @@ export default function WeeklyReport() {
     new_risks,
     resolved_risks,
     project_updates,
-  } = reportData
+  } = reportData;
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={staggerContainer}
-    >
+    <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
       <PageHeader
         title="项目状态周报"
         description="项目周度状态汇总与分析"
         action={
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePreviousWeek}
-            >
+            <Button variant="outline" size="sm" onClick={handlePreviousWeek}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCurrentWeek}
-            >
+            <Button variant="outline" size="sm" onClick={handleCurrentWeek}>
               本周
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleNextWeek}
-            >
+            <Button variant="outline" size="sm" onClick={handleNextWeek}>
               <ChevronRight className="h-4 w-4" />
             </Button>
             <Input
@@ -201,14 +185,14 @@ export default function WeeklyReport() {
                 报告周期
               </h3>
               <p className="text-sm text-slate-400">
-                {week_start ? formatDate(week_start) : ''} 至{' '}
-                {week_end ? formatDate(week_end) : ''}
+                {week_start ? formatDate(week_start) : ""} 至{" "}
+                {week_end ? formatDate(week_end) : ""}
               </p>
             </div>
             <div className="text-right">
               <p className="text-sm text-slate-400">报告日期</p>
               <p className="text-white font-medium">
-                {report_date ? formatDate(report_date) : ''}
+                {report_date ? formatDate(report_date) : ""}
               </p>
             </div>
           </div>
@@ -293,7 +277,7 @@ export default function WeeklyReport() {
             {project_updates && project_updates.length > 0 ? (
               <div className="divide-y divide-white/5">
                 {project_updates.map((project) => {
-                  const healthBadge = getHealthBadge(project.health || 'H1')
+                  const healthBadge = getHealthBadge(project.health || "H1");
                   return (
                     <Link
                       key={project.project_id}
@@ -317,9 +301,9 @@ export default function WeeklyReport() {
                             <div className="flex items-center gap-4 text-sm text-slate-400">
                               <span>{project.project_code}</span>
                               <span>•</span>
-                              <span>{project.stage || 'S1'}</span>
+                              <span>{project.stage || "S1"}</span>
                               <span>•</span>
-                              <span>{project.status || 'ST01'}</span>
+                              <span>{project.status || "ST01"}</span>
                             </div>
                           </div>
                         </div>
@@ -336,13 +320,13 @@ export default function WeeklyReport() {
                           <div className="text-xs text-slate-500">
                             {project.updated_at
                               ? formatDate(project.updated_at)
-                              : ''}
+                              : ""}
                           </div>
                           <ArrowRight className="h-5 w-5 text-slate-500" />
                         </div>
                       </div>
                     </Link>
-                  )
+                  );
                 })}
               </div>
             ) : (
@@ -354,8 +338,5 @@ export default function WeeklyReport() {
         </Card>
       </motion.div>
     </motion.div>
-  )
+  );
 }
-
-
-

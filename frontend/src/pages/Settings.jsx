@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   User,
   Bell,
@@ -19,37 +19,37 @@ import {
   Monitor,
   Check,
   BookOpen,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
-import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { authApi } from '../services/api'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { authApi } from "../services/api";
 
 const settingsSections = [
-  { id: 'profile', label: '个人资料', icon: User },
-  { id: 'notifications', label: '通知设置', icon: Bell },
-  { id: 'security', label: '安全设置', icon: Shield },
-  { id: 'appearance', label: '外观主题', icon: Palette },
-  { id: 'language', label: '语言区域', icon: Globe },
-  { id: 'knowledge', label: '知识管理', icon: BookOpen },
-]
+  { id: "profile", label: "个人资料", icon: User },
+  { id: "notifications", label: "通知设置", icon: Bell },
+  { id: "security", label: "安全设置", icon: Shield },
+  { id: "appearance", label: "外观主题", icon: Palette },
+  { id: "language", label: "语言区域", icon: Globe },
+  { id: "knowledge", label: "知识管理", icon: BookOpen },
+];
 
 // Mock user data
 // Mock data - 已移除，使用真实API
 function ProfileSection() {
-  const [user, setUser] = useState(mockUser)
-  const [isEditing, setIsEditing] = useState(false)
+  const [user, setUser] = useState(mockUser);
+  const [isEditing, setIsEditing] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -87,7 +87,7 @@ function ProfileSection() {
             <CardDescription>管理您的个人资料信息</CardDescription>
           </div>
           <Button
-            variant={isEditing ? 'default' : 'outline'}
+            variant={isEditing ? "default" : "outline"}
             onClick={() => setIsEditing(!isEditing)}
           >
             {isEditing ? (
@@ -96,7 +96,7 @@ function ProfileSection() {
                 保存
               </>
             ) : (
-              '编辑'
+              "编辑"
             )}
           </Button>
         </CardHeader>
@@ -150,7 +150,7 @@ function ProfileSection() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 function NotificationsSection() {
@@ -173,20 +173,28 @@ function NotificationsSection() {
       projectUpdate: true,
       systemNotice: true,
     },
-  })
+  });
 
   const notificationTypes = [
-    { key: 'taskAssigned', label: '任务分配', desc: '当有新任务分配给您时' },
-    { key: 'taskDue', label: '任务到期', desc: '当任务即将到期或已逾期时' },
-    { key: 'projectUpdate', label: '项目更新', desc: '当您参与的项目有重要更新时' },
-    { key: 'systemNotice', label: '系统通知', desc: '系统维护、功能更新等通知' },
-  ]
+    { key: "taskAssigned", label: "任务分配", desc: "当有新任务分配给您时" },
+    { key: "taskDue", label: "任务到期", desc: "当任务即将到期或已逾期时" },
+    {
+      key: "projectUpdate",
+      label: "项目更新",
+      desc: "当您参与的项目有重要更新时",
+    },
+    {
+      key: "systemNotice",
+      label: "系统通知",
+      desc: "系统维护、功能更新等通知",
+    },
+  ];
 
   const channels = [
-    { key: 'email', label: '邮件', icon: Mail },
-    { key: 'push', label: '站内', icon: Bell },
-    { key: 'wechat', label: '企微', icon: Smartphone },
-  ]
+    { key: "email", label: "邮件", icon: Mail },
+    { key: "push", label: "站内", icon: Bell },
+    { key: "wechat", label: "企微", icon: Smartphone },
+  ];
 
   const toggleSetting = (channel, type) => {
     setSettings({
@@ -195,8 +203,8 @@ function NotificationsSection() {
         ...settings[channel],
         [type]: !settings[channel][type],
       },
-    })
-  }
+    });
+  };
 
   return (
     <Card className="bg-surface-1/50">
@@ -241,18 +249,18 @@ function NotificationsSection() {
                       <button
                         onClick={() => toggleSetting(channel.key, type.key)}
                         className={cn(
-                          'w-10 h-6 rounded-full relative transition-colors',
+                          "w-10 h-6 rounded-full relative transition-colors",
                           settings[channel.key][type.key]
-                            ? 'bg-accent'
-                            : 'bg-surface-2'
+                            ? "bg-accent"
+                            : "bg-surface-2",
                         )}
                       >
                         <span
                           className={cn(
-                            'absolute top-1 w-4 h-4 rounded-full bg-white transition-transform',
+                            "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
                             settings[channel.key][type.key]
-                              ? 'translate-x-5'
-                              : 'translate-x-1'
+                              ? "translate-x-5"
+                              : "translate-x-1",
                           )}
                         />
                       </button>
@@ -265,86 +273,86 @@ function NotificationsSection() {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function SecuritySection() {
-  const navigate = useNavigate()
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [passwords, setPasswords] = useState({
-    current: '',
-    new: '',
-    confirm: '',
-  })
+    current: "",
+    new: "",
+    confirm: "",
+  });
 
   const handleChangePassword = async () => {
     // 重置状态
-    setError('')
-    setSuccess('')
+    setError("");
+    setSuccess("");
 
     // 表单验证
     if (!passwords.current) {
-      setError('请输入当前密码')
-      return
+      setError("请输入当前密码");
+      return;
     }
 
     if (!passwords.new) {
-      setError('请输入新密码')
-      return
+      setError("请输入新密码");
+      return;
     }
 
     if (passwords.new.length < 6) {
-      setError('新密码长度至少6位')
-      return
+      setError("新密码长度至少6位");
+      return;
     }
 
     if (passwords.new !== passwords.confirm) {
-      setError('两次输入的新密码不一致')
-      return
+      setError("两次输入的新密码不一致");
+      return;
     }
 
     if (passwords.current === passwords.new) {
-      setError('新密码不能与当前密码相同')
-      return
+      setError("新密码不能与当前密码相同");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       const response = await authApi.changePassword({
         old_password: passwords.current,
         new_password: passwords.new,
-      })
+      });
 
       if (response.code === 200) {
-        setSuccess(response.message || '密码修改成功，请重新登录')
+        setSuccess(response.message || "密码修改成功，请重新登录");
         // 清空表单
         setPasswords({
-          current: '',
-          new: '',
-          confirm: '',
-        })
+          current: "",
+          new: "",
+          confirm: "",
+        });
         // 3秒后跳转到登录页
         setTimeout(() => {
-          navigate('/login')
-        }, 3000)
+          navigate("/login");
+        }, 3000);
       } else {
-        setError(response.message || '密码修改失败')
+        setError(response.message || "密码修改失败");
       }
     } catch (err) {
       const errorMessage =
         err.response?.data?.detail ||
         err.response?.data?.message ||
         err.message ||
-        '密码修改失败，请稍后重试'
-      setError(errorMessage)
+        "密码修改失败，请稍后重试";
+      setError(errorMessage);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -369,10 +377,12 @@ function SecuritySection() {
             </div>
           )}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">当前密码</label>
+            <label className="text-sm font-medium text-slate-300">
+              当前密码
+            </label>
             <div className="relative">
               <Input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 value={passwords.current}
                 onChange={(e) =>
                   setPasswords({ ...passwords, current: e.target.value })
@@ -396,17 +406,21 @@ function SecuritySection() {
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-300">新密码</label>
             <Input
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               value={passwords.new}
-              onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
+              onChange={(e) =>
+                setPasswords({ ...passwords, new: e.target.value })
+              }
               placeholder="请输入新密码（至少6位）"
               disabled={loading}
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">确认新密码</label>
+            <label className="text-sm font-medium text-slate-300">
+              确认新密码
+            </label>
             <Input
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               value={passwords.confirm}
               onChange={(e) =>
                 setPasswords({ ...passwords, confirm: e.target.value })
@@ -414,14 +428,14 @@ function SecuritySection() {
               placeholder="请再次输入新密码"
               disabled={loading}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleChangePassword()
+                if (e.key === "Enter") {
+                  handleChangePassword();
                 }
               }}
             />
           </div>
           <Button onClick={handleChangePassword} disabled={loading}>
-            {loading ? '修改中...' : '更新密码'}
+            {loading ? "修改中..." : "更新密码"}
           </Button>
         </CardContent>
       </Card>
@@ -435,15 +449,15 @@ function SecuritySection() {
         <CardContent className="space-y-3">
           {[
             {
-              device: 'Chrome on Windows',
-              location: '深圳市',
-              time: '当前会话',
+              device: "Chrome on Windows",
+              location: "深圳市",
+              time: "当前会话",
               current: true,
             },
             {
-              device: '企业微信',
-              location: '深圳市',
-              time: '2天前',
+              device: "企业微信",
+              location: "深圳市",
+              time: "2天前",
               current: false,
             },
           ].map((session, index) => (
@@ -474,30 +488,30 @@ function SecuritySection() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 function AppearanceSection() {
-  const [theme, setTheme] = useState('dark')
-  const [accentColor, setAccentColor] = useState('#6366f1')
+  const [theme, setTheme] = useState("dark");
+  const [accentColor, setAccentColor] = useState("#6366f1");
 
   const themes = [
-    { id: 'light', label: '浅色', icon: Sun },
-    { id: 'dark', label: '深色', icon: Moon },
-    { id: 'system', label: '跟随系统', icon: Monitor },
-  ]
+    { id: "light", label: "浅色", icon: Sun },
+    { id: "dark", label: "深色", icon: Moon },
+    { id: "system", label: "跟随系统", icon: Monitor },
+  ];
 
   const accentColors = [
-    '#6366f1', // Indigo
-    '#8b5cf6', // Purple
-    '#ec4899', // Pink
-    '#f43f5e', // Rose
-    '#f97316', // Orange
-    '#eab308', // Yellow
-    '#22c55e', // Green
-    '#06b6d4', // Cyan
-    '#3b82f6', // Blue
-  ]
+    "#6366f1", // Indigo
+    "#8b5cf6", // Purple
+    "#ec4899", // Pink
+    "#f43f5e", // Rose
+    "#f97316", // Orange
+    "#eab308", // Yellow
+    "#22c55e", // Green
+    "#06b6d4", // Cyan
+    "#3b82f6", // Blue
+  ];
 
   return (
     <div className="space-y-6">
@@ -514,22 +528,22 @@ function AppearanceSection() {
                 key={t.id}
                 onClick={() => setTheme(t.id)}
                 className={cn(
-                  'p-4 rounded-xl border-2 transition-all',
+                  "p-4 rounded-xl border-2 transition-all",
                   theme === t.id
-                    ? 'border-accent bg-accent/10'
-                    : 'border-border bg-surface-2/50 hover:border-border/80'
+                    ? "border-accent bg-accent/10"
+                    : "border-border bg-surface-2/50 hover:border-border/80",
                 )}
               >
                 <t.icon
                   className={cn(
-                    'w-8 h-8 mx-auto mb-2',
-                    theme === t.id ? 'text-accent' : 'text-slate-400'
+                    "w-8 h-8 mx-auto mb-2",
+                    theme === t.id ? "text-accent" : "text-slate-400",
                   )}
                 />
                 <div
                   className={cn(
-                    'text-sm font-medium',
-                    theme === t.id ? 'text-accent' : 'text-slate-400'
+                    "text-sm font-medium",
+                    theme === t.id ? "text-accent" : "text-slate-400",
                   )}
                 >
                   {t.label}
@@ -558,10 +572,10 @@ function AppearanceSection() {
                 key={color}
                 onClick={() => setAccentColor(color)}
                 className={cn(
-                  'w-10 h-10 rounded-full border-2 transition-transform hover:scale-110',
+                  "w-10 h-10 rounded-full border-2 transition-transform hover:scale-110",
                   accentColor === color
-                    ? 'border-white scale-110'
-                    : 'border-transparent'
+                    ? "border-white scale-110"
+                    : "border-transparent",
                 )}
                 style={{ backgroundColor: color }}
               >
@@ -574,19 +588,19 @@ function AppearanceSection() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 function LanguageSection() {
-  const [language, setLanguage] = useState('zh-CN')
-  const [timezone, setTimezone] = useState('Asia/Shanghai')
-  const [dateFormat, setDateFormat] = useState('YYYY-MM-DD')
+  const [language, setLanguage] = useState("zh-CN");
+  const [timezone, setTimezone] = useState("Asia/Shanghai");
+  const [dateFormat, setDateFormat] = useState("YYYY-MM-DD");
 
   const languages = [
-    { id: 'zh-CN', label: '简体中文', flag: '🇨🇳' },
-    { id: 'zh-TW', label: '繁體中文', flag: '🇹🇼' },
-    { id: 'en-US', label: 'English', flag: '🇺🇸' },
-  ]
+    { id: "zh-CN", label: "简体中文", flag: "🇨🇳" },
+    { id: "zh-TW", label: "繁體中文", flag: "🇹🇼" },
+    { id: "en-US", label: "English", flag: "🇺🇸" },
+  ];
 
   return (
     <Card className="bg-surface-1/50">
@@ -604,17 +618,17 @@ function LanguageSection() {
                 key={lang.id}
                 onClick={() => setLanguage(lang.id)}
                 className={cn(
-                  'p-3 rounded-lg border transition-all flex items-center gap-2',
+                  "p-3 rounded-lg border transition-all flex items-center gap-2",
                   language === lang.id
-                    ? 'border-accent bg-accent/10'
-                    : 'border-border bg-surface-2/50 hover:border-border/80'
+                    ? "border-accent bg-accent/10"
+                    : "border-border bg-surface-2/50 hover:border-border/80",
                 )}
               >
                 <span className="text-xl">{lang.flag}</span>
                 <span
                   className={cn(
-                    'text-sm',
-                    language === lang.id ? 'text-accent' : 'text-slate-400'
+                    "text-sm",
+                    language === lang.id ? "text-accent" : "text-slate-400",
                   )}
                 >
                   {lang.label}
@@ -659,38 +673,38 @@ function LanguageSection() {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function KnowledgeSection() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const knowledgeActions = [
     {
-      title: '知识库',
-      description: '浏览历史方案、产品知识、工艺知识等',
-      path: '/knowledge-base',
+      title: "知识库",
+      description: "浏览历史方案、产品知识、工艺知识等",
+      path: "/knowledge-base",
       icon: BookOpen,
-      color: 'text-blue-400',
-      bgColor: 'bg-blue-500/10',
+      color: "text-blue-400",
+      bgColor: "bg-blue-500/10",
     },
     {
-      title: '我的收藏',
-      description: '查看我收藏的知识文章',
-      path: '/knowledge-base?category=starred',
+      title: "我的收藏",
+      description: "查看我收藏的知识文章",
+      path: "/knowledge-base?category=starred",
       icon: BookOpen,
-      color: 'text-amber-400',
-      bgColor: 'bg-amber-500/10',
+      color: "text-amber-400",
+      bgColor: "bg-amber-500/10",
     },
     {
-      title: '最近浏览',
-      description: '查看最近浏览的知识内容',
-      path: '/knowledge-base?category=recent',
+      title: "最近浏览",
+      description: "查看最近浏览的知识内容",
+      path: "/knowledge-base?category=recent",
       icon: BookOpen,
-      color: 'text-purple-400',
-      bgColor: 'bg-purple-500/10',
+      color: "text-purple-400",
+      bgColor: "bg-purple-500/10",
     },
-  ]
+  ];
 
   return (
     <div className="space-y-6">
@@ -705,118 +719,129 @@ function KnowledgeSection() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {knowledgeActions.map((action, index) => {
-              const Icon = action.icon
+              const Icon = action.icon;
               return (
                 <button
                   key={index}
                   onClick={() => navigate(action.path)}
                   className={cn(
-                    'p-4 rounded-lg border transition-all text-left hover:border-accent/50',
-                    'border-border bg-surface-2/50 hover:bg-surface-2'
+                    "p-4 rounded-lg border transition-all text-left hover:border-accent/50",
+                    "border-border bg-surface-2/50 hover:bg-surface-2",
                   )}
                 >
-                  <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center mb-3', action.bgColor)}>
-                    <Icon className={cn('w-5 h-5', action.color)} />
+                  <div
+                    className={cn(
+                      "w-10 h-10 rounded-lg flex items-center justify-center mb-3",
+                      action.bgColor,
+                    )}
+                  >
+                    <Icon className={cn("w-5 h-5", action.color)} />
                   </div>
-                  <h3 className="font-medium text-white mb-1">{action.title}</h3>
+                  <h3 className="font-medium text-white mb-1">
+                    {action.title}
+                  </h3>
                   <p className="text-xs text-slate-400">{action.description}</p>
                 </button>
-              )
+              );
             })}
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 export default function Settings() {
   // Get section from URL query parameter
-  const urlParams = new URLSearchParams(window.location.search)
-  const sectionFromUrl = urlParams.get('section')
-  const [activeSection, setActiveSection] = useState(sectionFromUrl || 'profile')
-  
+  const urlParams = new URLSearchParams(window.location.search);
+  const sectionFromUrl = urlParams.get("section");
+  const [activeSection, setActiveSection] = useState(
+    sectionFromUrl || "profile",
+  );
+
   // Update active section when URL changes
   useEffect(() => {
     const handleLocationChange = () => {
-      const urlParams = new URLSearchParams(window.location.search)
-      const sectionFromUrl = urlParams.get('section')
+      const urlParams = new URLSearchParams(window.location.search);
+      const sectionFromUrl = urlParams.get("section");
       if (sectionFromUrl && sectionFromUrl !== activeSection) {
-        setActiveSection(sectionFromUrl)
+        setActiveSection(sectionFromUrl);
       }
-    }
-    
+    };
+
     // Check on mount and when location changes
-    handleLocationChange()
-    
+    handleLocationChange();
+
     // Listen for popstate events (back/forward navigation)
-    window.addEventListener('popstate', handleLocationChange)
-    
+    window.addEventListener("popstate", handleLocationChange);
+
     return () => {
-      window.removeEventListener('popstate', handleLocationChange)
-    }
-  }, [activeSection])
+      window.removeEventListener("popstate", handleLocationChange);
+    };
+  }, [activeSection]);
 
   const renderSection = () => {
     switch (activeSection) {
-      case 'profile':
-        return <ProfileSection />
-      case 'notifications':
-        return <NotificationsSection />
-      case 'security':
-        return <SecuritySection />
-      case 'appearance':
-        return <AppearanceSection />
-      case 'language':
-        return <LanguageSection />
-      case 'knowledge':
-        return <KnowledgeSection />
+      case "profile":
+        return <ProfileSection />;
+      case "notifications":
+        return <NotificationsSection />;
+      case "security":
+        return <SecuritySection />;
+      case "appearance":
+        return <AppearanceSection />;
+      case "language":
+        return <LanguageSection />;
+      case "knowledge":
+        return <KnowledgeSection />;
       default:
-        return <ProfileSection />
+        return <ProfileSection />;
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <div className="container mx-auto px-4 py-6">
-    <motion.div
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-      className="space-y-6"
-    >
-      <PageHeader title="个人设置" description="管理您的账户设置和偏好" />
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="space-y-6"
+        >
+          <PageHeader title="个人设置" description="管理您的账户设置和偏好" />
 
-      <motion.div variants={fadeIn} className="flex flex-col lg:flex-row gap-6">
-        {/* Sidebar Navigation */}
-        <Card className="bg-surface-1/50 lg:w-64 shrink-0">
-          <CardContent className="p-2">
-            <nav className="space-y-1">
-              {settingsSections.map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() => setActiveSection(section.id)}
-                  className={cn(
-                    'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left',
-                    activeSection === section.id
-                      ? 'bg-accent/10 text-accent'
-                      : 'text-slate-400 hover:text-white hover:bg-surface-2'
-                  )}
-                >
-                  <section.icon className="w-5 h-5" />
-                  <span className="font-medium">{section.label}</span>
-                </button>
-              ))}
-            </nav>
-          </CardContent>
-        </Card>
+          <motion.div
+            variants={fadeIn}
+            className="flex flex-col lg:flex-row gap-6"
+          >
+            {/* Sidebar Navigation */}
+            <Card className="bg-surface-1/50 lg:w-64 shrink-0">
+              <CardContent className="p-2">
+                <nav className="space-y-1">
+                  {settingsSections.map((section) => (
+                    <button
+                      key={section.id}
+                      onClick={() => setActiveSection(section.id)}
+                      className={cn(
+                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left",
+                        activeSection === section.id
+                          ? "bg-accent/10 text-accent"
+                          : "text-slate-400 hover:text-white hover:bg-surface-2",
+                      )}
+                    >
+                      <section.icon className="w-5 h-5" />
+                      <span className="font-medium">{section.label}</span>
+                    </button>
+                  ))}
+                </nav>
+              </CardContent>
+            </Card>
 
-        {/* Content Area */}
-        <div className="flex-1 min-w-0">{renderSection()}</div>
-      </motion.div>
-    </motion.div>
+            {/* Content Area */}
+            <div className="flex-1 min-w-0">{renderSection()}</div>
+          </motion.div>
+        </motion.div>
       </div>
     </div>
-  )
+  );
 }
-

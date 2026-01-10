@@ -2,46 +2,39 @@
  * Competency Model Form - 能力模型表单
  * 用于创建和编辑岗位能力模型
  */
-import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { motion } from 'framer-motion'
-import {
-  ArrowLeft,
-  Save,
-  X,
-  Plus,
-  Trash2,
-  AlertCircle,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { motion } from "framer-motion";
+import { ArrowLeft, Save, X, Plus, Trash2, AlertCircle } from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Label } from '../components/ui/label'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
-import { qualificationApi } from '../services/api'
-import { toast } from '../components/ui/toast'
-import { fadeIn } from '../lib/animations'
+} from "../components/ui/select";
+import { qualificationApi } from "../services/api";
+import { toast } from "../components/ui/toast";
+import { fadeIn } from "../lib/animations";
 
 export default function CompetencyModelForm() {
-  const navigate = useNavigate()
-  const { id } = useParams()
-  const isEdit = !!id
-  const [loading, setLoading] = useState(false)
-  const [model, setModel] = useState(null)
-  const [levels, setLevels] = useState([])
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const isEdit = !!id;
+  const [loading, setLoading] = useState(false);
+  const [model, setModel] = useState(null);
+  const [levels, setLevels] = useState([]);
 
   const {
     register,
@@ -51,165 +44,191 @@ export default function CompetencyModelForm() {
     watch,
   } = useForm({
     defaultValues: {
-      position_type: '',
-      position_subtype: '',
-      level_id: '',
+      position_type: "",
+      position_subtype: "",
+      level_id: "",
       competency_dimensions: {},
-    }
-  })
-
+    },
+  });
 
   useEffect(() => {
-    loadLevels()
+    loadLevels();
     if (isEdit) {
-      loadModel()
+      loadModel();
     } else {
       // 初始化默认维度
-      initializeDefaultDimensions()
+      initializeDefaultDimensions();
     }
-  }, [id])
+  }, [id]);
 
   const loadLevels = async () => {
     try {
-      const response = await qualificationApi.getLevels({ page: 1, page_size: 100 })
+      const response = await qualificationApi.getLevels({
+        page: 1,
+        page_size: 100,
+      });
       if (response.data?.code === 200) {
-        setLevels(response.data.data?.items || [])
+        setLevels(response.data.data?.items || []);
       }
     } catch (error) {
-      console.error('加载等级列表失败:', error)
+      console.error("加载等级列表失败:", error);
     }
-  }
+  };
 
   const loadModel = async () => {
     try {
-      const response = await qualificationApi.getModelById(id)
+      const response = await qualificationApi.getModelById(id);
       if (response.data?.code === 200) {
-        const modelData = response.data.data
+        const modelData = response.data.data;
         if (modelData) {
-          setModel(modelData)
-          setValue('position_type', modelData.position_type)
-          setValue('position_subtype', modelData.position_subtype || '')
-          setValue('level_id', modelData.level_id)
-          setValue('competency_dimensions', modelData.competency_dimensions || {})
+          setModel(modelData);
+          setValue("position_type", modelData.position_type);
+          setValue("position_subtype", modelData.position_subtype || "");
+          setValue("level_id", modelData.level_id);
+          setValue(
+            "competency_dimensions",
+            modelData.competency_dimensions || {},
+          );
         }
       }
     } catch (error) {
-      console.error('加载能力模型失败:', error)
-      toast.error('加载能力模型失败')
+      console.error("加载能力模型失败:", error);
+      toast.error("加载能力模型失败");
     }
-  }
+  };
 
   const initializeDefaultDimensions = () => {
     const defaultDimensions = {
       technical_skills: {
-        name: '专业技能',
+        name: "专业技能",
         weight: 40,
-        items: []
+        items: [],
       },
       business_skills: {
-        name: '业务能力',
+        name: "业务能力",
         weight: 25,
-        items: []
+        items: [],
       },
       communication_skills: {
-        name: '沟通协作',
+        name: "沟通协作",
         weight: 20,
-        items: []
+        items: [],
       },
       learning_skills: {
-        name: '学习成长',
+        name: "学习成长",
         weight: 15,
-        items: []
-      }
-    }
-    setValue('competency_dimensions', defaultDimensions)
-  }
+        items: [],
+      },
+    };
+    setValue("competency_dimensions", defaultDimensions);
+  };
 
   const onSubmit = async (data) => {
     // 验证权重总和为100
-    const dimensions = data.competency_dimensions || {}
+    const dimensions = data.competency_dimensions || {};
     const totalWeight = Object.values(dimensions).reduce((sum, dim) => {
-      return sum + (dim.weight || 0)
-    }, 0)
+      return sum + (dim.weight || 0);
+    }, 0);
 
     if (Math.abs(totalWeight - 100) > 0.01) {
-      toast.error(`各维度权重总和必须为100%，当前为${totalWeight.toFixed(1)}%`)
-      return
+      toast.error(`各维度权重总和必须为100%，当前为${totalWeight.toFixed(1)}%`);
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
       if (isEdit) {
-        await qualificationApi.updateModel(id, data)
-        toast.success('能力模型更新成功')
+        await qualificationApi.updateModel(id, data);
+        toast.success("能力模型更新成功");
       } else {
-        await qualificationApi.createModel(data)
-        toast.success('能力模型创建成功')
+        await qualificationApi.createModel(data);
+        toast.success("能力模型创建成功");
       }
-      navigate('/qualifications')
+      navigate("/qualifications");
     } catch (error) {
-      console.error('保存失败:', error)
-      toast.error(error.response?.data?.detail || '保存失败')
+      console.error("保存失败:", error);
+      toast.error(error.response?.data?.detail || "保存失败");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const positionType = watch('position_type')
-  const competencyDimensions = watch('competency_dimensions') || {}
+  const positionType = watch("position_type");
+  const competencyDimensions = watch("competency_dimensions") || {};
 
   const addDimensionItem = (dimensionKey) => {
-    const dimensions = { ...competencyDimensions }
+    const dimensions = { ...competencyDimensions };
     if (!dimensions[dimensionKey]) {
       dimensions[dimensionKey] = {
-        name: '',
+        name: "",
         weight: 0,
-        items: []
-      }
+        items: [],
+      };
     }
     dimensions[dimensionKey].items.push({
-      name: '',
-      description: '',
-      score_range: [0, 100]
-    })
-    setValue('competency_dimensions', dimensions)
-  }
+      name: "",
+      description: "",
+      score_range: [0, 100],
+    });
+    setValue("competency_dimensions", dimensions);
+  };
 
   const removeDimensionItem = (dimensionKey, itemIndex) => {
-    const dimensions = { ...competencyDimensions }
+    const dimensions = { ...competencyDimensions };
     if (dimensions[dimensionKey]?.items) {
-      dimensions[dimensionKey].items.splice(itemIndex, 1)
-      setValue('competency_dimensions', dimensions)
+      dimensions[dimensionKey].items.splice(itemIndex, 1);
+      setValue("competency_dimensions", dimensions);
     }
-  }
+  };
 
   const updateDimensionItem = (dimensionKey, itemIndex, field, value) => {
-    const dimensions = { ...competencyDimensions }
+    const dimensions = { ...competencyDimensions };
     if (dimensions[dimensionKey]?.items?.[itemIndex]) {
-      dimensions[dimensionKey].items[itemIndex][field] = value
-      setValue('competency_dimensions', dimensions)
+      dimensions[dimensionKey].items[itemIndex][field] = value;
+      setValue("competency_dimensions", dimensions);
     }
-  }
+  };
 
   const dimensionTemplates = {
-    ENGINEER: ['technical_skills', 'business_skills', 'communication_skills', 'learning_skills', 'project_management_skills'],
-    SALES: ['business_skills', 'customer_service_skills', 'communication_skills', 'learning_skills'],
-    CUSTOMER_SERVICE: ['customer_service_skills', 'business_skills', 'communication_skills', 'learning_skills'],
-    WORKER: ['technical_skills', 'quality_skills', 'efficiency_skills', 'learning_skills'],
-  }
+    ENGINEER: [
+      "technical_skills",
+      "business_skills",
+      "communication_skills",
+      "learning_skills",
+      "project_management_skills",
+    ],
+    SALES: [
+      "business_skills",
+      "customer_service_skills",
+      "communication_skills",
+      "learning_skills",
+    ],
+    CUSTOMER_SERVICE: [
+      "customer_service_skills",
+      "business_skills",
+      "communication_skills",
+      "learning_skills",
+    ],
+    WORKER: [
+      "technical_skills",
+      "quality_skills",
+      "efficiency_skills",
+      "learning_skills",
+    ],
+  };
 
   const dimensionLabels = {
-    technical_skills: '专业技能',
-    business_skills: '业务能力',
-    communication_skills: '沟通协作',
-    learning_skills: '学习成长',
-    project_management_skills: '项目管理',
-    customer_service_skills: '客户服务',
-    quality_skills: '质量意识',
-    efficiency_skills: '效率能力',
-  }
+    technical_skills: "专业技能",
+    business_skills: "业务能力",
+    communication_skills: "沟通协作",
+    learning_skills: "学习成长",
+    project_management_skills: "项目管理",
+    customer_service_skills: "客户服务",
+    quality_skills: "质量意识",
+    efficiency_skills: "效率能力",
+  };
 
-  const availableDimensions = dimensionTemplates[positionType] || []
+  const availableDimensions = dimensionTemplates[positionType] || [];
 
   return (
     <motion.div
@@ -219,10 +238,10 @@ export default function CompetencyModelForm() {
       className="space-y-6"
     >
       <PageHeader
-        title={isEdit ? '编辑能力模型' : '新建能力模型'}
-        description={isEdit ? '修改能力模型信息' : '创建新的岗位能力模型'}
+        title={isEdit ? "编辑能力模型" : "新建能力模型"}
+        description={isEdit ? "修改能力模型信息" : "创建新的岗位能力模型"}
         icon={ArrowLeft}
-        onBack={() => navigate('/qualifications')}
+        onBack={() => navigate("/qualifications")}
       />
 
       <Card>
@@ -240,9 +259,9 @@ export default function CompetencyModelForm() {
                 <Select
                   value={positionType}
                   onValueChange={(value) => {
-                    setValue('position_type', value)
-                    setValue('position_subtype', '')
-                    initializeDefaultDimensions()
+                    setValue("position_type", value);
+                    setValue("position_subtype", "");
+                    initializeDefaultDimensions();
                   }}
                 >
                   <SelectTrigger id="position_type">
@@ -264,12 +283,14 @@ export default function CompetencyModelForm() {
               </div>
 
               {/* 岗位子类型（仅工程师） */}
-              {positionType === 'ENGINEER' && (
+              {positionType === "ENGINEER" && (
                 <div className="space-y-2">
                   <Label htmlFor="position_subtype">岗位子类型</Label>
                   <Select
-                    value={watch('position_subtype')}
-                    onValueChange={(value) => setValue('position_subtype', value)}
+                    value={watch("position_subtype")}
+                    onValueChange={(value) =>
+                      setValue("position_subtype", value)
+                    }
                   >
                     <SelectTrigger id="position_subtype">
                       <SelectValue placeholder="选择子类型（可选）" />
@@ -291,8 +312,10 @@ export default function CompetencyModelForm() {
                   等级 <span className="text-red-500">*</span>
                 </Label>
                 <Select
-                  value={watch('level_id')?.toString()}
-                  onValueChange={(value) => setValue('level_id', parseInt(value))}
+                  value={watch("level_id")?.toString()}
+                  onValueChange={(value) =>
+                    setValue("level_id", parseInt(value))
+                  }
                 >
                   <SelectTrigger id="level_id">
                     <SelectValue placeholder="选择等级" />
@@ -325,25 +348,33 @@ export default function CompetencyModelForm() {
                 </div>
 
                 {availableDimensions.map((dimKey) => {
-                  const dimension = competencyDimensions[dimKey] || { name: dimensionLabels[dimKey], weight: 0, items: [] }
-                  const totalWeight = Object.values(competencyDimensions).reduce((sum, dim) => sum + (dim.weight || 0), 0)
+                  const dimension = competencyDimensions[dimKey] || {
+                    name: dimensionLabels[dimKey],
+                    weight: 0,
+                    items: [],
+                  };
+                  const totalWeight = Object.values(
+                    competencyDimensions,
+                  ).reduce((sum, dim) => sum + (dim.weight || 0), 0);
 
                   return (
                     <Card key={dimKey} className="border-2">
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
-                          <CardTitle className="text-base">{dimensionLabels[dimKey]}</CardTitle>
+                          <CardTitle className="text-base">
+                            {dimensionLabels[dimKey]}
+                          </CardTitle>
                           <div className="flex items-center gap-2">
                             <Input
                               type="number"
                               value={dimension.weight || 0}
                               onChange={(e) => {
-                                const dimensions = { ...competencyDimensions }
+                                const dimensions = { ...competencyDimensions };
                                 dimensions[dimKey] = {
                                   ...dimension,
-                                  weight: parseFloat(e.target.value) || 0
-                                }
-                                setValue('competency_dimensions', dimensions)
+                                  weight: parseFloat(e.target.value) || 0,
+                                };
+                                setValue("competency_dimensions", dimensions);
                               }}
                               className="w-20"
                               min="0"
@@ -357,24 +388,43 @@ export default function CompetencyModelForm() {
                       <CardContent className="space-y-4">
                         {/* 能力项列表 */}
                         {dimension.items?.map((item, itemIndex) => (
-                          <div key={itemIndex} className="flex gap-2 p-3 border rounded-lg">
+                          <div
+                            key={itemIndex}
+                            className="flex gap-2 p-3 border rounded-lg"
+                          >
                             <div className="flex-1 grid grid-cols-2 gap-2">
                               <Input
                                 placeholder="能力项名称"
-                                value={item.name || ''}
-                                onChange={(e) => updateDimensionItem(dimKey, itemIndex, 'name', e.target.value)}
+                                value={item.name || ""}
+                                onChange={(e) =>
+                                  updateDimensionItem(
+                                    dimKey,
+                                    itemIndex,
+                                    "name",
+                                    e.target.value,
+                                  )
+                                }
                               />
                               <Input
                                 placeholder="能力项描述"
-                                value={item.description || ''}
-                                onChange={(e) => updateDimensionItem(dimKey, itemIndex, 'description', e.target.value)}
+                                value={item.description || ""}
+                                onChange={(e) =>
+                                  updateDimensionItem(
+                                    dimKey,
+                                    itemIndex,
+                                    "description",
+                                    e.target.value,
+                                  )
+                                }
                               />
                             </div>
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
-                              onClick={() => removeDimensionItem(dimKey, itemIndex)}
+                              onClick={() =>
+                                removeDimensionItem(dimKey, itemIndex)
+                              }
                             >
                               <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>
@@ -392,14 +442,16 @@ export default function CompetencyModelForm() {
                         </Button>
                       </CardContent>
                     </Card>
-                  )
+                  );
                 })}
 
                 {/* 权重总和提示 */}
                 <div className="p-4 bg-blue-50 rounded-lg">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">权重总和</span>
-                    <span className={`text-lg font-bold ${Math.abs(totalWeight - 100) < 0.01 ? 'text-green-600' : 'text-red-600'}`}>
+                    <span
+                      className={`text-lg font-bold ${Math.abs(totalWeight - 100) < 0.01 ? "text-green-600" : "text-red-600"}`}
+                    >
                       {totalWeight.toFixed(1)}%
                     </span>
                   </div>
@@ -417,7 +469,7 @@ export default function CompetencyModelForm() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate('/qualifications')}
+                onClick={() => navigate("/qualifications")}
                 disabled={loading}
               >
                 <X className="h-4 w-4 mr-2" />
@@ -425,13 +477,12 @@ export default function CompetencyModelForm() {
               </Button>
               <Button type="submit" disabled={loading || !positionType}>
                 <Save className="h-4 w-4 mr-2" />
-                {loading ? '保存中...' : '保存'}
+                {loading ? "保存中..." : "保存"}
               </Button>
             </div>
           </form>
         </CardContent>
       </Card>
     </motion.div>
-  )
+  );
 }
-

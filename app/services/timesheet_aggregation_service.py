@@ -45,129 +45,39 @@ class TimesheetAggregationService:
         Returns:
             汇总结果字典
         """
-        # 计算月份的开始和结束日期
-        start_date = date(year, month, 1)
-        if month == 12:
-            end_date = date(year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(year, month + 1, 1) - timedelta(days=1)
-        
-        # 查询已审批的工时记录
-        query = self.db.query(Timesheet).filter(
-            Timesheet.status == 'APPROVED',
-            Timesheet.work_date >= start_date,
-            Timesheet.work_date <= end_date
+        from app.services.timesheet_aggregation_helpers import (
+            calculate_month_range,
+            query_timesheets,
+            calculate_hours_summary,
+            build_project_breakdown,
+            build_daily_breakdown,
+            build_task_breakdown,
+            get_or_create_summary
         )
         
-        if user_id:
-            query = query.filter(Timesheet.user_id == user_id)
-        if department_id:
-            query = query.filter(Timesheet.department_id == department_id)
-        if project_id:
-            query = query.filter(Timesheet.project_id == project_id)
+        # 计算月份范围
+        start_date, end_date = calculate_month_range(year, month)
         
-        timesheets = query.all()
+        # 查询工时记录
+        timesheets = query_timesheets(
+            self.db, start_date, end_date, user_id, department_id, project_id
+        )
         
-        # 汇总统计
-        total_hours = sum(float(ts.hours or 0) for ts in timesheets)
-        normal_hours = sum(float(ts.hours or 0) for ts in timesheets if ts.overtime_type == 'NORMAL')
-        overtime_hours = sum(float(ts.hours or 0) for ts in timesheets if ts.overtime_type == 'OVERTIME')
-        weekend_hours = sum(float(ts.hours or 0) for ts in timesheets if ts.overtime_type == 'WEEKEND')
-        holiday_hours = sum(float(ts.hours or 0) for ts in timesheets if ts.overtime_type == 'HOLIDAY')
+        # 计算汇总
+        hours_summary = calculate_hours_summary(timesheets)
+        project_breakdown = build_project_breakdown(timesheets)
+        daily_breakdown = build_daily_breakdown(timesheets)
+        task_breakdown = build_task_breakdown(timesheets)
         
-        # 按项目分布
-        project_breakdown = {}
-        for ts in timesheets:
-            if ts.project_id:
-                project_key = f"{ts.project_code or ''}_{ts.project_id}"
-                if project_key not in project_breakdown:
-                    project_breakdown[project_key] = {
-                        'project_id': ts.project_id,
-                        'project_code': ts.project_code,
-                        'project_name': ts.project_name,
-                        'hours': 0
-                    }
-                project_breakdown[project_key]['hours'] += float(ts.hours or 0)
-        
-        # 按日期分布
-        daily_breakdown = {}
-        for ts in timesheets:
-            day_key = str(ts.work_date)
-            if day_key not in daily_breakdown:
-                daily_breakdown[day_key] = {
-                    'date': day_key,
-                    'hours': 0,
-                    'normal_hours': 0,
-                    'overtime_hours': 0
-                }
-            daily_breakdown[day_key]['hours'] += float(ts.hours or 0)
-            if ts.overtime_type == 'NORMAL':
-                daily_breakdown[day_key]['normal_hours'] += float(ts.hours or 0)
-            else:
-                daily_breakdown[day_key]['overtime_hours'] += float(ts.hours or 0)
-        
-        # 按任务分布
-        task_breakdown = {}
-        for ts in timesheets:
-            if ts.task_id:
-                task_key = f"task_{ts.task_id}"
-                if task_key not in task_breakdown:
-                    task_breakdown[task_key] = {
-                        'task_id': ts.task_id,
-                        'task_name': ts.task_name,
-                        'hours': 0
-                    }
-                task_breakdown[task_key]['hours'] += float(ts.hours or 0)
-        
-        # 创建或更新汇总记录
+        # 确定汇总类型
         summary_type = 'USER_MONTH' if user_id else ('PROJECT_MONTH' if project_id else ('DEPT_MONTH' if department_id else 'GLOBAL_MONTH'))
         
-        summary = self.db.query(TimesheetSummary).filter(
-            TimesheetSummary.summary_type == summary_type,
-            TimesheetSummary.year == year,
-            TimesheetSummary.month == month
+        # 获取或创建汇总记录
+        summary = get_or_create_summary(
+            self.db, summary_type, year, month, user_id, project_id, department_id,
+            hours_summary, project_breakdown, daily_breakdown, task_breakdown,
+            len(timesheets)
         )
-        
-        if user_id:
-            summary = summary.filter(TimesheetSummary.user_id == user_id)
-        if project_id:
-            summary = summary.filter(TimesheetSummary.project_id == project_id)
-        if department_id:
-            summary = summary.filter(TimesheetSummary.department_id == department_id)
-        
-        summary = summary.first()
-        
-        if not summary:
-            summary = TimesheetSummary(
-                summary_type=summary_type,
-                user_id=user_id,
-                project_id=project_id,
-                department_id=department_id,
-                year=year,
-                month=month,
-                total_hours=Decimal(str(total_hours)),
-                normal_hours=Decimal(str(normal_hours)),
-                overtime_hours=Decimal(str(overtime_hours)),
-                weekend_hours=Decimal(str(weekend_hours)),
-                holiday_hours=Decimal(str(holiday_hours)),
-                entries_count=len(timesheets),
-                projects_count=len(project_breakdown),
-                project_breakdown=project_breakdown,
-                daily_breakdown=daily_breakdown,
-                task_breakdown=task_breakdown
-            )
-            self.db.add(summary)
-        else:
-            summary.total_hours = Decimal(str(total_hours))
-            summary.normal_hours = Decimal(str(normal_hours))
-            summary.overtime_hours = Decimal(str(overtime_hours))
-            summary.weekend_hours = Decimal(str(weekend_hours))
-            summary.holiday_hours = Decimal(str(holiday_hours))
-            summary.entries_count = len(timesheets)
-            summary.projects_count = len(project_breakdown)
-            summary.project_breakdown = project_breakdown
-            summary.daily_breakdown = daily_breakdown
-            summary.task_breakdown = task_breakdown
         
         self.db.commit()
         self.db.refresh(summary)
@@ -175,11 +85,11 @@ class TimesheetAggregationService:
         return {
             'success': True,
             'summary_id': summary.id,
-            'total_hours': total_hours,
-            'normal_hours': normal_hours,
-            'overtime_hours': overtime_hours,
-            'weekend_hours': weekend_hours,
-            'holiday_hours': holiday_hours,
+            'total_hours': hours_summary["total_hours"],
+            'normal_hours': hours_summary["normal_hours"],
+            'overtime_hours': hours_summary["overtime_hours"],
+            'weekend_hours': hours_summary["weekend_hours"],
+            'holiday_hours': hours_summary["holiday_hours"],
             'entries_count': len(timesheets),
             'projects_count': len(project_breakdown),
             'project_breakdown': project_breakdown,

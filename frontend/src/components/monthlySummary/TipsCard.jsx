@@ -1,6 +1,6 @@
-import { AlertCircle } from 'lucide-react'
-import { fadeIn } from '../../utils/monthlySummaryUtils'
-import { motion } from 'framer-motion'
+import { AlertCircle } from "lucide-react";
+import { fadeIn } from "../../utils/monthlySummaryUtils";
+import { motion } from "framer-motion";
 
 /**
  * 提示信息卡片组件
@@ -22,5 +22,5 @@ export const TipsCard = () => {
         </div>
       </div>
     </motion.div>
-  )
-}
+  );
+};

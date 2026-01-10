@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { cn } from '../lib/utils'
-import { pmoApi } from '../services/api'
-import { PageHeader } from '../components/layout/PageHeader'
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { cn } from "../lib/utils";
+import { pmoApi } from "../services/api";
+import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
   StatCard,
   Progress,
   SkeletonCard,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Users,
   UserCheck,
@@ -18,7 +18,7 @@ import {
   Building2,
   TrendingUp,
   Activity,
-} from 'lucide-react'
+} from "lucide-react";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -26,33 +26,33 @@ const staggerContainer = {
     opacity: 1,
     transition: { staggerChildren: 0.05, delayChildren: 0.1 },
   },
-}
+};
 
 const staggerChild = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
-}
+};
 
 export default function ResourceOverview() {
-  const [loading, setLoading] = useState(true)
-  const [resourceData, setResourceData] = useState(null)
+  const [loading, setLoading] = useState(true);
+  const [resourceData, setResourceData] = useState(null);
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
     try {
-      setLoading(true)
-      const res = await pmoApi.resourceOverview()
-      const data = res.data || res
-      setResourceData(data)
+      setLoading(true);
+      const res = await pmoApi.resourceOverview();
+      const data = res.data || res;
+      setResourceData(data);
     } catch (err) {
-      console.error('Failed to fetch resource overview:', err)
+      console.error("Failed to fetch resource overview:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -66,7 +66,7 @@ export default function ResourceOverview() {
             ))}
         </div>
       </div>
-    )
+    );
   }
 
   if (!resourceData) {
@@ -79,7 +79,7 @@ export default function ResourceOverview() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   const {
@@ -88,58 +88,51 @@ export default function ResourceOverview() {
     available_resources,
     overloaded_resources,
     by_department,
-  } = resourceData
+  } = resourceData;
 
   const allocationRate =
     total_resources > 0
       ? ((allocated_resources / total_resources) * 100).toFixed(1)
-      : 0
+      : 0;
 
   const statCards = [
     {
       icon: Users,
-      label: '总资源数',
+      label: "总资源数",
       value: total_resources || 0,
-      change: '人员总数',
-      trend: 'up',
-      color: 'text-blue-400',
+      change: "人员总数",
+      trend: "up",
+      color: "text-blue-400",
     },
     {
       icon: UserCheck,
-      label: '已分配',
+      label: "已分配",
       value: allocated_resources || 0,
       change: `${allocationRate}% 分配率`,
-      trend: 'up',
-      color: 'text-emerald-400',
+      trend: "up",
+      color: "text-emerald-400",
     },
     {
       icon: UserX,
-      label: '可用资源',
+      label: "可用资源",
       value: available_resources || 0,
-      change: '可分配',
-      trend: 'up',
-      color: 'text-violet-400',
+      change: "可分配",
+      trend: "up",
+      color: "text-violet-400",
     },
     {
       icon: AlertTriangle,
-      label: '超负荷',
+      label: "超负荷",
       value: overloaded_resources || 0,
-      change: overloaded_resources > 0 ? '需关注' : '正常',
-      trend: overloaded_resources > 0 ? 'down' : 'up',
-      color: 'text-red-400',
+      change: overloaded_resources > 0 ? "需关注" : "正常",
+      trend: overloaded_resources > 0 ? "down" : "up",
+      color: "text-red-400",
     },
-  ]
+  ];
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={staggerContainer}
-    >
-      <PageHeader
-        title="资源总览"
-        description="项目资源分配与负荷分析"
-      />
+    <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
+      <PageHeader title="资源总览" description="项目资源分配与负荷分析" />
 
       {/* Stats Grid */}
       <motion.div
@@ -183,9 +176,12 @@ export default function ResourceOverview() {
                 {by_department.map((dept, index) => {
                   const deptAllocationRate =
                     dept.total_resources > 0
-                      ? ((dept.allocated_resources / dept.total_resources) * 100).toFixed(1)
-                      : 0
-                  const isOverloaded = parseFloat(deptAllocationRate) > 90
+                      ? (
+                          (dept.allocated_resources / dept.total_resources) *
+                          100
+                        ).toFixed(1)
+                      : 0;
+                  const isOverloaded = parseFloat(deptAllocationRate) > 90;
 
                   return (
                     <div
@@ -196,16 +192,16 @@ export default function ResourceOverview() {
                         <div className="flex items-center gap-3">
                           <div
                             className={cn(
-                              'p-2.5 rounded-xl',
+                              "p-2.5 rounded-xl",
                               isOverloaded
-                                ? 'bg-red-500/20 ring-1 ring-red-500/30'
-                                : 'bg-primary/20 ring-1 ring-primary/20'
+                                ? "bg-red-500/20 ring-1 ring-red-500/30"
+                                : "bg-primary/20 ring-1 ring-primary/20",
                             )}
                           >
                             <Building2
                               className={cn(
-                                'h-5 w-5',
-                                isOverloaded ? 'text-red-400' : 'text-primary'
+                                "h-5 w-5",
+                                isOverloaded ? "text-red-400" : "text-primary",
                               )}
                             />
                           </div>
@@ -235,7 +231,7 @@ export default function ResourceOverview() {
                         </div>
                         <Progress
                           value={parseFloat(deptAllocationRate)}
-                          color={isOverloaded ? 'danger' : 'primary'}
+                          color={isOverloaded ? "danger" : "primary"}
                         />
                       </div>
 
@@ -256,8 +252,10 @@ export default function ResourceOverview() {
                           <span className="text-slate-400">利用率</span>
                           <p
                             className={cn(
-                              'font-medium mt-1',
-                              isOverloaded ? 'text-red-400' : 'text-emerald-400'
+                              "font-medium mt-1",
+                              isOverloaded
+                                ? "text-red-400"
+                                : "text-emerald-400",
                             )}
                           >
                             {deptAllocationRate}%
@@ -265,7 +263,7 @@ export default function ResourceOverview() {
                         </div>
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             ) : (
@@ -277,8 +275,5 @@ export default function ResourceOverview() {
         </Card>
       </motion.div>
     </motion.div>
-  )
+  );
 }
-
-
-

@@ -1,6 +1,6 @@
-import { History, Users, Briefcase } from 'lucide-react'
-import { fadeIn } from '../../utils/weightConfigUtils'
-import { motion } from 'framer-motion'
+import { History, Users, Briefcase } from "lucide-react";
+import { fadeIn } from "../../utils/weightConfigUtils";
+import { motion } from "framer-motion";
 
 /**
  * 配置历史记录组件
@@ -28,7 +28,9 @@ export const ConfigHistory = ({ history }) => {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-4 mb-2">
-                    <span className="text-white font-medium">{record.date}</span>
+                    <span className="text-white font-medium">
+                      {record.date}
+                    </span>
                     <span className="text-slate-400">·</span>
                     <span className="text-slate-400">{record.operator}</span>
                   </div>
@@ -50,5 +52,5 @@ export const ConfigHistory = ({ history }) => {
         </div>
       </div>
     </motion.div>
-  )
-}
+  );
+};

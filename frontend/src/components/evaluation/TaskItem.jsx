@@ -1,25 +1,32 @@
-import React from 'react'
-import { motion } from 'framer-motion'
+import React from "react";
+import { motion } from "framer-motion";
 import {
   Calendar,
   Clock,
   CheckCircle2,
   Target,
   TrendingUp,
-  ArrowRight
-} from 'lucide-react'
-import { cn } from '../../lib/utils'
-import { getStatusBadge, getTypeBadge, getUrgencyColor } from '../../utils/evaluationTaskUtils'
+  ArrowRight,
+} from "lucide-react";
+import { cn } from "../../lib/utils";
+import {
+  getStatusBadge,
+  getTypeBadge,
+  getUrgencyColor,
+} from "../../utils/evaluationTaskUtils";
 
 /**
  * 评价任务项组件
  */
 export const TaskItem = ({ task, index, onEvaluate }) => {
-  const statusBadge = getStatusBadge(task.status)
-  const typeBadge = getTypeBadge(task.evaluationType || task.evaluator_type, task.projectName || task.project_name)
-  const urgencyColor = getUrgencyColor(task.daysLeft || task.days_left || 0)
-  const employeeName = task.employeeName || task.employee_name || '未知'
-  const daysLeft = task.daysLeft || task.days_left || 0
+  const statusBadge = getStatusBadge(task.status);
+  const typeBadge = getTypeBadge(
+    task.evaluationType || task.evaluator_type,
+    task.projectName || task.project_name,
+  );
+  const urgencyColor = getUrgencyColor(task.daysLeft || task.days_left || 0);
+  const employeeName = task.employeeName || task.employee_name || "未知";
+  const daysLeft = task.daysLeft || task.days_left || 0;
 
   return (
     <motion.div
@@ -43,18 +50,30 @@ export const TaskItem = ({ task, index, onEvaluate }) => {
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h3 className="text-xl font-bold text-white">{employeeName}</h3>
-                <span className={cn('px-3 py-1 rounded-full text-sm font-medium', statusBadge.color)}>
+                <span
+                  className={cn(
+                    "px-3 py-1 rounded-full text-sm font-medium",
+                    statusBadge.color,
+                  )}
+                >
                   {statusBadge.label}
                 </span>
-                <span className={cn('px-3 py-1 rounded-full text-sm font-medium', typeBadge.color)}>
+                <span
+                  className={cn(
+                    "px-3 py-1 rounded-full text-sm font-medium",
+                    typeBadge.color,
+                  )}
+                >
                   {typeBadge.label}
                 </span>
               </div>
 
               <div className="flex items-center gap-4 text-sm text-slate-400">
-                <span>{task.department || task.employee_department || '-'}</span>
+                <span>
+                  {task.department || task.employee_department || "-"}
+                </span>
                 <span>·</span>
-                <span>{task.position || task.employee_position || '-'}</span>
+                <span>{task.position || task.employee_position || "-"}</span>
                 <span>·</span>
                 <span>权重 {task.weight || task.project_weight || 50}%</span>
               </div>
@@ -62,10 +81,12 @@ export const TaskItem = ({ task, index, onEvaluate }) => {
           </div>
 
           {/* 评分结果 */}
-          {task.status === 'COMPLETED' && task.score !== null && (
+          {task.status === "COMPLETED" && task.score !== null && (
             <div className="text-right">
               <p className="text-sm text-slate-400 mb-1">评分</p>
-              <p className="text-3xl font-bold text-emerald-400">{task.score}</p>
+              <p className="text-3xl font-bold text-emerald-400">
+                {task.score}
+              </p>
             </div>
           )}
         </div>
@@ -78,7 +99,10 @@ export const TaskItem = ({ task, index, onEvaluate }) => {
               <span className="text-sm font-medium">工作总结</span>
             </div>
             <p className="text-slate-300 line-clamp-2 mb-2">
-              {(task.workSummary?.workContent || task.workSummary?.work_content || task.summary?.work_content || '暂无工作总结')}
+              {task.workSummary?.workContent ||
+                task.workSummary?.work_content ||
+                task.summary?.work_content ||
+                "暂无工作总结"}
             </p>
             {(task.workSummary?.highlights || task.summary?.highlights) && (
               <div className="flex items-start gap-2 mt-2 p-2 bg-amber-500/10 rounded border border-amber-500/20">
@@ -92,7 +116,7 @@ export const TaskItem = ({ task, index, onEvaluate }) => {
         )}
 
         {/* 评价内容（已完成）*/}
-        {task.status === 'COMPLETED' && task.comment && (
+        {task.status === "COMPLETED" && task.comment && (
           <div className="bg-emerald-500/10 rounded-lg p-4 mb-4 border border-emerald-500/20">
             <div className="flex items-center gap-2 text-emerald-400 mb-2">
               <CheckCircle2 className="h-4 w-4" />
@@ -107,22 +131,21 @@ export const TaskItem = ({ task, index, onEvaluate }) => {
           <div className="flex items-center gap-6 text-sm">
             <div className="flex items-center gap-2 text-slate-400">
               <Calendar className="h-4 w-4" />
-              <span>提交: {task.submitDate || task.submit_date || '-'}</span>
+              <span>提交: {task.submitDate || task.submit_date || "-"}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Clock className={cn('h-4 w-4', urgencyColor)} />
+              <Clock className={cn("h-4 w-4", urgencyColor)} />
               <span className={urgencyColor}>
                 {daysLeft < 0
                   ? `已过期 ${Math.abs(daysLeft)} 天`
                   : daysLeft === 0
-                  ? '今天截止'
-                  : `剩余 ${daysLeft} 天`
-                }
+                    ? "今天截止"
+                    : `剩余 ${daysLeft} 天`}
               </span>
             </div>
           </div>
 
-          {task.status === 'PENDING' && (
+          {task.status === "PENDING" && (
             <button
               onClick={() => onEvaluate(task)}
               className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg font-medium transition-all flex items-center gap-2"
@@ -132,7 +155,7 @@ export const TaskItem = ({ task, index, onEvaluate }) => {
             </button>
           )}
 
-          {task.status === 'COMPLETED' && (
+          {task.status === "COMPLETED" && (
             <button
               onClick={() => onEvaluate(task)}
               className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
@@ -144,5 +167,5 @@ export const TaskItem = ({ task, index, onEvaluate }) => {
         </div>
       </div>
     </motion.div>
-  )
-}
+  );
+};

@@ -2,8 +2,8 @@
  * Project Task List Page - 项目任务列表页面
  * Features: 任务管理、依赖关系、负责人分配
  */
-import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Plus,
@@ -18,25 +18,25 @@ import {
   GitBranch,
   Calendar,
   TrendingUp,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
-import { Progress } from '../components/ui/progress'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
+import { Progress } from "../components/ui/progress";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
+} from "../components/ui/select";
 import {
   Table,
   TableBody,
@@ -44,7 +44,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../components/ui/table'
+} from "../components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -52,129 +52,129 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui/dialog'
-import { cn, formatDate } from '../lib/utils'
-import { progressApi, projectApi } from '../services/api'
+} from "../components/ui/dialog";
+import { cn, formatDate } from "../lib/utils";
+import { progressApi, projectApi } from "../services/api";
 const statusConfigs = {
-  PENDING: { label: '待开始', color: 'bg-slate-500', icon: Circle },
-  IN_PROGRESS: { label: '进行中', color: 'bg-blue-500', icon: Clock },
-  BLOCKED: { label: '阻塞', color: 'bg-red-500', icon: AlertTriangle },
-  COMPLETED: { label: '已完成', color: 'bg-emerald-500', icon: CheckCircle2 },
-}
+  PENDING: { label: "待开始", color: "bg-slate-500", icon: Circle },
+  IN_PROGRESS: { label: "进行中", color: "bg-blue-500", icon: Clock },
+  BLOCKED: { label: "阻塞", color: "bg-red-500", icon: AlertTriangle },
+  COMPLETED: { label: "已完成", color: "bg-emerald-500", icon: CheckCircle2 },
+};
 export default function ProjectTaskList() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [project, setProject] = useState(null)
-  const [tasks, setTasks] = useState([])
-  const [summary, setSummary] = useState(null)
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [project, setProject] = useState(null);
+  const [tasks, setTasks] = useState([]);
+  const [summary, setSummary] = useState(null);
   // Filters
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [filterStatus, setFilterStatus] = useState('')
-  const [filterStage, setFilterStage] = useState('')
-  const [filterAssignee, setFilterAssignee] = useState('')
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterStage, setFilterStage] = useState("");
+  const [filterAssignee, setFilterAssignee] = useState("");
   // Dialogs
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [showTaskDetail, setShowTaskDetail] = useState(false)
-  const [selectedTask, setSelectedTask] = useState(null)
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showTaskDetail, setShowTaskDetail] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
   // Form state
   const [newTask, setNewTask] = useState({
-    task_name: '',
-    stage: '',
-    planned_start_date: '',
-    planned_end_date: '',
+    task_name: "",
+    stage: "",
+    planned_start_date: "",
+    planned_end_date: "",
     weight: 0,
-    description: '',
-  })
+    description: "",
+  });
   useEffect(() => {
     if (id) {
-      fetchProject()
-      fetchTasks()
-      fetchSummary()
+      fetchProject();
+      fetchTasks();
+      fetchSummary();
     }
-  }, [id, filterStatus, filterStage, filterAssignee])
+  }, [id, filterStatus, filterStage, filterAssignee]);
   const fetchProject = async () => {
     try {
-      const res = await projectApi.get(id)
-      setProject(res.data || res)
+      const res = await projectApi.get(id);
+      setProject(res.data || res);
     } catch (error) {
-      console.error('Failed to fetch project:', error)
+      console.error("Failed to fetch project:", error);
     }
-  }
+  };
   const fetchTasks = async () => {
     try {
-      setLoading(true)
-      const params = { project_id: id }
-      if (filterStatus) params.status = filterStatus
-      if (filterStage) params.stage = filterStage
-      if (filterAssignee) params.assignee_id = filterAssignee
-      if (searchKeyword) params.search = searchKeyword
-      const res = await progressApi.tasks.list(params)
-      const taskList = res.data?.items || res.data || []
-      setTasks(taskList)
+      setLoading(true);
+      const params = { project_id: id };
+      if (filterStatus) params.status = filterStatus;
+      if (filterStage) params.stage = filterStage;
+      if (filterAssignee) params.assignee_id = filterAssignee;
+      if (searchKeyword) params.search = searchKeyword;
+      const res = await progressApi.tasks.list(params);
+      const taskList = res.data?.items || res.data || [];
+      setTasks(taskList);
     } catch (error) {
-      console.error('Failed to fetch tasks:', error)
+      console.error("Failed to fetch tasks:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
   const fetchSummary = async () => {
     try {
-      const res = await progressApi.reports.getSummary(id)
-      setSummary(res.data || res)
+      const res = await progressApi.reports.getSummary(id);
+      setSummary(res.data || res);
     } catch (error) {
-      console.error('Failed to fetch summary:', error)
+      console.error("Failed to fetch summary:", error);
     }
-  }
+  };
   const handleCreateTask = async () => {
     if (!newTask.task_name) {
-      alert('请填写任务名称')
-      return
+      alert("请填写任务名称");
+      return;
     }
     try {
-      await progressApi.tasks.create(id, newTask)
-      setShowCreateDialog(false)
+      await progressApi.tasks.create(id, newTask);
+      setShowCreateDialog(false);
       setNewTask({
-        task_name: '',
-        stage: '',
-        planned_start_date: '',
-        planned_end_date: '',
+        task_name: "",
+        stage: "",
+        planned_start_date: "",
+        planned_end_date: "",
         weight: 0,
-        description: '',
-      })
-      fetchTasks()
-      fetchSummary()
+        description: "",
+      });
+      fetchTasks();
+      fetchSummary();
     } catch (error) {
-      console.error('Failed to create task:', error)
-      alert('创建任务失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to create task:", error);
+      alert("创建任务失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
   const handleViewTask = async (taskId) => {
     try {
-      const res = await progressApi.tasks.get(taskId)
-      setSelectedTask(res.data || res)
-      setShowTaskDetail(true)
+      const res = await progressApi.tasks.get(taskId);
+      setSelectedTask(res.data || res);
+      setShowTaskDetail(true);
     } catch (error) {
-      console.error('Failed to fetch task detail:', error)
+      console.error("Failed to fetch task detail:", error);
     }
-  }
+  };
   const filteredTasks = useMemo(() => {
-    return tasks.filter(task => {
+    return tasks.filter((task) => {
       if (searchKeyword) {
-        const keyword = searchKeyword.toLowerCase()
+        const keyword = searchKeyword.toLowerCase();
         return (
           task.task_name?.toLowerCase().includes(keyword) ||
           task.description?.toLowerCase().includes(keyword)
-        )
+        );
       }
-      return true
-    })
-  }, [tasks, searchKeyword])
+      return true;
+    });
+  }, [tasks, searchKeyword]);
   const getStatusIcon = (status) => {
-    const config = statusConfigs[status]
-    const Icon = config?.icon || Circle
-    return <Icon className="w-4 h-4" />
-  }
+    const config = statusConfigs[status];
+    const Icon = config?.icon || Circle;
+    return <Icon className="w-4 h-4" />;
+  };
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
@@ -188,7 +188,7 @@ export default function ProjectTaskList() {
             返回项目
           </Button>
           <PageHeader
-            title={`${project?.project_name || '项目'} - 任务列表`}
+            title={`${project?.project_name || "项目"} - 任务列表`}
             description="项目任务管理，支持任务创建、进度更新、依赖关系"
           />
         </div>
@@ -205,7 +205,9 @@ export default function ProjectTaskList() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm text-slate-500 mb-1">总任务数</div>
-                  <div className="text-2xl font-bold">{summary.total_tasks || 0}</div>
+                  <div className="text-2xl font-bold">
+                    {summary.total_tasks || 0}
+                  </div>
                 </div>
                 <Circle className="w-8 h-8 text-slate-400" />
               </div>
@@ -321,10 +323,11 @@ export default function ProjectTaskList() {
               </TableHeader>
               <TableBody>
                 {filteredTasks.map((task) => {
-                  const progress = task.progress || 0
-                  const isOverdue = task.planned_end_date && 
-                    new Date(task.planned_end_date) < new Date() && 
-                    task.status !== 'COMPLETED'
+                  const progress = task.progress || 0;
+                  const isOverdue =
+                    task.planned_end_date &&
+                    new Date(task.planned_end_date) < new Date() &&
+                    task.status !== "COMPLETED";
                   return (
                     <TableRow key={task.id}>
                       <TableCell>
@@ -341,10 +344,14 @@ export default function ProjectTaskList() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">{task.stage || '-'}</Badge>
+                        <Badge variant="outline">{task.stage || "-"}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={statusConfigs[task.status]?.color || 'bg-slate-500'}>
+                        <Badge
+                          className={
+                            statusConfigs[task.status]?.color || "bg-slate-500"
+                          }
+                        >
                           {statusConfigs[task.status]?.label || task.status}
                         </Badge>
                       </TableCell>
@@ -352,7 +359,9 @@ export default function ProjectTaskList() {
                         {task.assignee_name ? (
                           <div className="flex items-center gap-2">
                             <Users className="w-4 h-4 text-slate-400" />
-                            <span className="text-sm">{task.assignee_name}</span>
+                            <span className="text-sm">
+                              {task.assignee_name}
+                            </span>
                           </div>
                         ) : (
                           <span className="text-slate-400">未分配</span>
@@ -360,18 +369,22 @@ export default function ProjectTaskList() {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          {task.planned_start_date ? formatDate(task.planned_start_date) : '-'}
+                          {task.planned_start_date
+                            ? formatDate(task.planned_start_date)
+                            : "-"}
                           {task.planned_end_date && (
                             <>
                               <span className="mx-1">-</span>
-                              <span className={cn(isOverdue && 'text-red-500')}>
+                              <span className={cn(isOverdue && "text-red-500")}>
                                 {formatDate(task.planned_end_date)}
                               </span>
                             </>
                           )}
                         </div>
                         {isOverdue && (
-                          <Badge className="bg-red-500 text-xs mt-1">逾期</Badge>
+                          <Badge className="bg-red-500 text-xs mt-1">
+                            逾期
+                          </Badge>
                         )}
                       </TableCell>
                       <TableCell>
@@ -386,7 +399,7 @@ export default function ProjectTaskList() {
                         {task.weight ? (
                           <Badge variant="outline">{task.weight}%</Badge>
                         ) : (
-                          '-'
+                          "-"
                         )}
                       </TableCell>
                       <TableCell className="text-right">
@@ -401,7 +414,7 @@ export default function ProjectTaskList() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  )
+                  );
                 })}
               </TableBody>
             </Table>
@@ -417,10 +430,14 @@ export default function ProjectTaskList() {
           <DialogBody>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">任务名称 *</label>
+                <label className="text-sm font-medium mb-2 block">
+                  任务名称 *
+                </label>
                 <Input
                   value={newTask.task_name}
-                  onChange={(e) => setNewTask({ ...newTask, task_name: e.target.value })}
+                  onChange={(e) =>
+                    setNewTask({ ...newTask, task_name: e.target.value })
+                  }
                   placeholder="请输入任务名称"
                 />
               </div>
@@ -428,7 +445,9 @@ export default function ProjectTaskList() {
                 <label className="text-sm font-medium mb-2 block">阶段</label>
                 <Select
                   value={newTask.stage}
-                  onValueChange={(val) => setNewTask({ ...newTask, stage: val })}
+                  onValueChange={(val) =>
+                    setNewTask({ ...newTask, stage: val })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="选择阶段" />
@@ -445,30 +464,51 @@ export default function ProjectTaskList() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">计划开始日期</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    计划开始日期
+                  </label>
                   <Input
                     type="date"
                     value={newTask.planned_start_date}
-                    onChange={(e) => setNewTask({ ...newTask, planned_start_date: e.target.value })}
+                    onChange={(e) =>
+                      setNewTask({
+                        ...newTask,
+                        planned_start_date: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">计划结束日期</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    计划结束日期
+                  </label>
                   <Input
                     type="date"
                     value={newTask.planned_end_date}
-                    onChange={(e) => setNewTask({ ...newTask, planned_end_date: e.target.value })}
+                    onChange={(e) =>
+                      setNewTask({
+                        ...newTask,
+                        planned_end_date: e.target.value,
+                      })
+                    }
                   />
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">权重 (%)</label>
+                <label className="text-sm font-medium mb-2 block">
+                  权重 (%)
+                </label>
                 <Input
                   type="number"
                   min="0"
                   max="100"
                   value={newTask.weight}
-                  onChange={(e) => setNewTask({ ...newTask, weight: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) =>
+                    setNewTask({
+                      ...newTask,
+                      weight: parseFloat(e.target.value) || 0,
+                    })
+                  }
                   placeholder="0"
                 />
               </div>
@@ -476,14 +516,19 @@ export default function ProjectTaskList() {
                 <label className="text-sm font-medium mb-2 block">描述</label>
                 <Input
                   value={newTask.description}
-                  onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                  onChange={(e) =>
+                    setNewTask({ ...newTask, description: e.target.value })
+                  }
                   placeholder="任务描述"
                 />
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleCreateTask}>创建</Button>
@@ -506,31 +551,46 @@ export default function ProjectTaskList() {
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">状态</div>
-                    <Badge className={statusConfigs[selectedTask.status]?.color}>
+                    <Badge
+                      className={statusConfigs[selectedTask.status]?.color}
+                    >
                       {statusConfigs[selectedTask.status]?.label}
                     </Badge>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">阶段</div>
-                    <div>{selectedTask.stage || '-'}</div>
+                    <div>{selectedTask.stage || "-"}</div>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">负责人</div>
-                    <div>{selectedTask.assignee_name || '未分配'}</div>
+                    <div>{selectedTask.assignee_name || "未分配"}</div>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">计划开始</div>
-                    <div>{selectedTask.planned_start_date ? formatDate(selectedTask.planned_start_date) : '-'}</div>
+                    <div>
+                      {selectedTask.planned_start_date
+                        ? formatDate(selectedTask.planned_start_date)
+                        : "-"}
+                    </div>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">计划结束</div>
-                    <div>{selectedTask.planned_end_date ? formatDate(selectedTask.planned_end_date) : '-'}</div>
+                    <div>
+                      {selectedTask.planned_end_date
+                        ? formatDate(selectedTask.planned_end_date)
+                        : "-"}
+                    </div>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">进度</div>
                     <div className="space-y-1">
-                      <div className="text-lg font-bold">{selectedTask.progress || 0}%</div>
-                      <Progress value={selectedTask.progress || 0} className="h-2" />
+                      <div className="text-lg font-bold">
+                        {selectedTask.progress || 0}%
+                      </div>
+                      <Progress
+                        value={selectedTask.progress || 0}
+                        className="h-2"
+                      />
                     </div>
                   </div>
                   <div>
@@ -555,6 +615,5 @@ export default function ProjectTaskList() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-

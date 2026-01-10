@@ -1,9 +1,9 @@
 /**
  * ECNDetail - 重构后的主组件示例
- * 
+ *
  * 这个文件展示了重构后的主组件结构
  * 实际使用时，应该替换 pages/ECNDetail.jsx
- * 
+ *
  * 重构效果：
  * - 主组件从 2732 行减少到约 150 行
  * - 每个 Tab 拆分为独立组件
@@ -11,24 +11,29 @@
  * - 对话框组件独立
  */
 
-import { useParams, useNavigate } from 'react-router-dom'
-import { useECNDetail } from '../components/ecn/hooks/useECNDetail'
-import ECNDetailHeader from '../components/ecn/ECNDetailHeader'
-import ECNInfoTab from '../components/ecn/ECNInfoTab'
-import ECNEvaluationsTab from '../components/ecn/ECNEvaluationsTab'
-import ECNTasksTab from '../components/ecn/ECNTasksTab'
-import ECNApprovalsTab from '../components/ecn/ECNApprovalsTab'
-import ECNImpactAnalysisTab from '../components/ecn/ECNImpactAnalysisTab'
-import ECNKnowledgeTab from '../components/ecn/ECNKnowledgeTab'
-import ECNIntegrationTab from '../components/ecn/ECNIntegrationTab'
-import ECNLogsTab from '../components/ecn/ECNLogsTab'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
-import { Skeleton } from '../components/ui/skeleton'
-import { Button } from '../components/ui/button'
+import { useParams, useNavigate } from "react-router-dom";
+import { useECNDetail } from "../components/ecn/hooks/useECNDetail";
+import ECNDetailHeader from "../components/ecn/ECNDetailHeader";
+import ECNInfoTab from "../components/ecn/ECNInfoTab";
+import ECNEvaluationsTab from "../components/ecn/ECNEvaluationsTab";
+import ECNTasksTab from "../components/ecn/ECNTasksTab";
+import ECNApprovalsTab from "../components/ecn/ECNApprovalsTab";
+import ECNImpactAnalysisTab from "../components/ecn/ECNImpactAnalysisTab";
+import ECNKnowledgeTab from "../components/ecn/ECNKnowledgeTab";
+import ECNIntegrationTab from "../components/ecn/ECNIntegrationTab";
+import ECNLogsTab from "../components/ecn/ECNLogsTab";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
+import { Skeleton } from "../components/ui/skeleton";
+import { Button } from "../components/ui/button";
 
 export default function ECNDetail() {
-  const { id } = useParams()
-  const navigate = useNavigate()
+  const { id } = useParams();
+  const navigate = useNavigate();
 
   const {
     loading,
@@ -47,44 +52,44 @@ export default function ECNDetail() {
     handleStartExecution,
     handleVerify,
     handleClose,
-  } = useECNDetail(id)
+  } = useECNDetail(id);
 
   // 处理操作
   const handleSubmitClick = async () => {
-    const result = await handleSubmit()
+    const result = await handleSubmit();
     if (result.success) {
-      alert(result.message)
+      alert(result.message);
     } else {
-      alert(result.message)
+      alert(result.message);
     }
-  }
+  };
 
   const handleStartExecutionClick = async () => {
-    const result = await handleStartExecution()
+    const result = await handleStartExecution();
     if (result.success) {
-      alert(result.message)
+      alert(result.message);
     } else {
-      alert(result.message)
+      alert(result.message);
     }
-  }
+  };
 
   const handleVerifyClick = async (verifyForm) => {
-    const result = await handleVerify(verifyForm)
+    const result = await handleVerify(verifyForm);
     if (result.success) {
-      alert(result.message)
+      alert(result.message);
     } else {
-      alert(result.message)
+      alert(result.message);
     }
-  }
+  };
 
   const handleCloseClick = async (closeForm) => {
-    const result = await handleClose(closeForm)
+    const result = await handleClose(closeForm);
     if (result.success) {
-      alert(result.message)
+      alert(result.message);
     } else {
-      alert(result.message)
+      alert(result.message);
     }
-  }
+  };
 
   // 加载状态
   if (loading) {
@@ -93,7 +98,7 @@ export default function ECNDetail() {
         <Skeleton className="h-12 w-64" />
         <Skeleton className="h-96 w-full" />
       </div>
-    )
+    );
   }
 
   // 未找到数据
@@ -102,9 +107,9 @@ export default function ECNDetail() {
       <div className="text-center py-20">
         <h2 className="text-xl font-semibold mb-2">未找到ECN</h2>
         <p className="text-slate-400 mb-6">该ECN可能已被删除或不存在</p>
-        <Button onClick={() => navigate('/ecns')}>返回ECN列表</Button>
+        <Button onClick={() => navigate("/ecns")}>返回ECN列表</Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -113,7 +118,7 @@ export default function ECNDetail() {
       <ECNDetailHeader
         ecn={ecn}
         tasks={tasks}
-        onBack={() => navigate('/ecns')}
+        onBack={() => navigate("/ecns")}
         onRefresh={refetch}
         onSubmit={handleSubmitClick}
         onStartExecution={handleStartExecutionClick}
@@ -157,12 +162,7 @@ export default function ECNDetail() {
 
         {/* 执行任务 Tab - 已重构 */}
         <TabsContent value="tasks" className="space-y-4">
-          <ECNTasksTab
-            ecnId={id}
-            ecn={ecn}
-            tasks={tasks}
-            refetch={refetch}
-          />
+          <ECNTasksTab ecnId={id} ecn={ecn} tasks={tasks} refetch={refetch} />
         </TabsContent>
 
         {/* 影响分析 Tab - 已重构 */}
@@ -202,5 +202,5 @@ export default function ECNDetail() {
       {/* <VerifyDialog ... /> */}
       {/* <CloseDialog ... /> */}
     </div>
-  )
+  );
 }

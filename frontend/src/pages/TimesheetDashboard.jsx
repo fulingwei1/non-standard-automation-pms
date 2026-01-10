@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   Clock,
   TrendingUp,
@@ -13,129 +13,140 @@ import {
   BarChart3,
   PieChart,
   Activity,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Badge } from '../components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
-import { timesheetApi } from '../services/api'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
+import { timesheetApi } from "../services/api";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
 import {
   TimesheetTrendChart,
   DepartmentComparisonChart,
   ProjectDistributionChart,
-} from '../components/timesheet/TimesheetCharts'
+} from "../components/timesheet/TimesheetCharts";
 
 export default function TimesheetDashboard() {
-  const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState(null)
-  const [monthSummary, setMonthSummary] = useState(null)
-  const [departmentStats, setDepartmentStats] = useState([])
-  const [projectStats, setProjectStats] = useState([])
-  const [anomalies, setAnomalies] = useState([])
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1)
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(null);
+  const [monthSummary, setMonthSummary] = useState(null);
+  const [departmentStats, setDepartmentStats] = useState([]);
+  const [projectStats, setProjectStats] = useState([]);
+  const [anomalies, setAnomalies] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
-    loadDashboardData()
-  }, [selectedYear, selectedMonth])
+    loadDashboardData();
+  }, [selectedYear, selectedMonth]);
 
   const loadDashboardData = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       // 加载统计数据
       const [statsRes, summaryRes, anomaliesRes] = await Promise.all([
-        timesheetApi.getStatistics({ year: selectedYear, month: selectedMonth }),
-        timesheetApi.getMonthSummary({ year: selectedYear, month: selectedMonth }),
-        timesheetApi.detectAnomalies({
-          start_date: `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`,
-          end_date: `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${new Date(selectedYear, selectedMonth, 0).getDate()}`,
+        timesheetApi.getStatistics({
+          year: selectedYear,
+          month: selectedMonth,
         }),
-      ])
+        timesheetApi.getMonthSummary({
+          year: selectedYear,
+          month: selectedMonth,
+        }),
+        timesheetApi.detectAnomalies({
+          start_date: `${selectedYear}-${String(selectedMonth).padStart(2, "0")}-01`,
+          end_date: `${selectedYear}-${String(selectedMonth).padStart(2, "0")}-${new Date(selectedYear, selectedMonth, 0).getDate()}`,
+        }),
+      ]);
 
-      setStats(statsRes.data?.data || statsRes.data)
-      setMonthSummary(summaryRes.data?.data || summaryRes.data)
-      setAnomalies(anomaliesRes.data?.data || anomaliesRes.data || [])
+      setStats(statsRes.data?.data || statsRes.data);
+      setMonthSummary(summaryRes.data?.data || summaryRes.data);
+      setAnomalies(anomaliesRes.data?.data || anomaliesRes.data || []);
 
       // 加载部门统计
       if (summaryRes.data?.data?.departments) {
-        setDepartmentStats(summaryRes.data.data.departments)
+        setDepartmentStats(summaryRes.data.data.departments);
       }
 
       // 加载项目统计
       if (summaryRes.data?.data?.projects) {
-        setProjectStats(summaryRes.data.data.projects.slice(0, 10))
+        setProjectStats(summaryRes.data.data.projects.slice(0, 10));
       }
     } catch (error) {
-      console.error('加载仪表板数据失败:', error)
+      console.error("加载仪表板数据失败:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleExportReport = async (type) => {
     try {
       const params = {
         year: selectedYear,
         month: selectedMonth,
-        format: 'excel',
-      }
+        format: "excel",
+      };
 
-      let response
+      let response;
       switch (type) {
-        case 'hr':
-          response = await timesheetApi.getHrReport(params)
-          break
-        case 'finance':
-          response = await timesheetApi.getFinanceReport(params)
-          break
-        case 'rd':
-          response = await timesheetApi.getRdReport(params)
-          break
+        case "hr":
+          response = await timesheetApi.getHrReport(params);
+          break;
+        case "finance":
+          response = await timesheetApi.getFinanceReport(params);
+          break;
+        case "rd":
+          response = await timesheetApi.getRdReport(params);
+          break;
         default:
-          return
+          return;
       }
 
       // 下载文件
       const blob = new Blob([response.data], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      })
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${type}_report_${selectedYear}${String(selectedMonth).padStart(2, '0')}.xlsx`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${type}_report_${selectedYear}${String(selectedMonth).padStart(2, "0")}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('导出报表失败:', error)
-      alert('导出报表失败，请稍后重试')
+      console.error("导出报表失败:", error);
+      alert("导出报表失败，请稍后重试");
     }
-  }
+  };
 
   const handleSync = async () => {
     try {
       await timesheetApi.sync({
         year: selectedYear,
         month: selectedMonth,
-        sync_target: 'all',
-      })
-      alert('数据同步成功！')
-      loadDashboardData()
+        sync_target: "all",
+      });
+      alert("数据同步成功！");
+      loadDashboardData();
     } catch (error) {
-      console.error('数据同步失败:', error)
-      alert('数据同步失败，请稍后重试')
+      console.error("数据同步失败:", error);
+      alert("数据同步失败，请稍后重试");
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -145,7 +156,7 @@ export default function TimesheetDashboard() {
           <p className="text-slate-400">加载中...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -198,7 +209,7 @@ export default function TimesheetDashboard() {
               同步数据
             </Button>
             <Button
-              onClick={() => handleExportReport('hr')}
+              onClick={() => handleExportReport("hr")}
               variant="outline"
               className="bg-slate-700 hover:bg-slate-600 text-white border-slate-600"
             >
@@ -206,7 +217,7 @@ export default function TimesheetDashboard() {
               导出HR报表
             </Button>
             <Button
-              onClick={() => handleExportReport('finance')}
+              onClick={() => handleExportReport("finance")}
               variant="outline"
               className="bg-slate-700 hover:bg-slate-600 text-white border-slate-600"
             >
@@ -339,9 +350,9 @@ export default function TimesheetDashboard() {
                 <TimesheetTrendChart
                   data={Object.entries(monthSummary.daily_breakdown).map(
                     ([date, hours]) => ({
-                      label: date.split('-').slice(1).join('/'),
+                      label: date.split("-").slice(1).join("/"),
                       value: parseFloat(hours || 0),
-                    })
+                    }),
                   )}
                   title="每日工时趋势"
                 />
@@ -402,7 +413,9 @@ export default function TimesheetDashboard() {
                       className="flex items-center justify-between p-3 bg-slate-700/50 rounded"
                     >
                       <div>
-                        <span className="text-white">{project.project_name}</span>
+                        <span className="text-white">
+                          {project.project_name}
+                        </span>
                         <p className="text-xs text-slate-400">
                           {project.project_code}
                         </p>
@@ -462,5 +475,5 @@ export default function TimesheetDashboard() {
         </Tabs>
       </div>
     </div>
-  )
+  );
 }

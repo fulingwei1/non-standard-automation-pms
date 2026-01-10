@@ -2,8 +2,8 @@
  * 需求调研管理
  * 管理客户需求调研记录、现场勘察、问题跟踪
  */
-import React, { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ClipboardList,
   Search,
@@ -41,65 +41,70 @@ import {
   Zap,
   DollarSign,
   HelpCircle,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
-import { Button } from '../components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
-import { Progress } from '../components/ui/progress'
-import { Avatar, AvatarFallback } from '../components/ui/avatar'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
+import { Progress } from "../components/ui/progress";
+import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { presaleApi } from '../services/api'
+} from "../components/ui/dropdown-menu";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { presaleApi } from "../services/api";
 
 // 调研方式配置
 const surveyMethods = [
-  { id: 'onsite', name: '现场调研', icon: MapPin, color: 'text-emerald-400' },
-  { id: 'remote', name: '远程调研', icon: Video, color: 'text-blue-400' },
-  { id: 'phone', name: '电话调研', icon: Phone, color: 'text-amber-400' },
-]
+  { id: "onsite", name: "现场调研", icon: MapPin, color: "text-emerald-400" },
+  { id: "remote", name: "远程调研", icon: Video, color: "text-blue-400" },
+  { id: "phone", name: "电话调研", icon: Phone, color: "text-amber-400" },
+];
 
 // 调研状态配置
 const surveyStatuses = [
-  { id: 'all', name: '全部', color: 'bg-slate-500' },
-  { id: 'scheduled', name: '已排期', color: 'bg-blue-500' },
-  { id: 'in_progress', name: '进行中', color: 'bg-amber-500' },
-  { id: 'completed', name: '已完成', color: 'bg-emerald-500' },
-  { id: 'cancelled', name: '已取消', color: 'bg-red-500' },
-]
+  { id: "all", name: "全部", color: "bg-slate-500" },
+  { id: "scheduled", name: "已排期", color: "bg-blue-500" },
+  { id: "in_progress", name: "进行中", color: "bg-amber-500" },
+  { id: "completed", name: "已完成", color: "bg-emerald-500" },
+  { id: "cancelled", name: "已取消", color: "bg-red-500" },
+];
 
 // Mock 调研数据
 // Mock data - 已移除，使用真实API
 // 获取状态样式
 const getStatusStyle = (status) => {
-  const config = surveyStatuses.find((s) => s.id === status)
-  return config?.color || 'bg-slate-500'
-}
+  const config = surveyStatuses.find((s) => s.id === status);
+  return config?.color || "bg-slate-500";
+};
 
 // 获取状态名称
 const getStatusName = (status) => {
-  const config = surveyStatuses.find((s) => s.id === status)
-  return config?.name || status
-}
+  const config = surveyStatuses.find((s) => s.id === status);
+  return config?.name || status;
+};
 
 // 获取调研方式图标
 const getMethodIcon = (method) => {
-  const config = surveyMethods.find((m) => m.id === method)
-  return config || surveyMethods[0]
-}
+  const config = surveyMethods.find((m) => m.id === method);
+  return config || surveyMethods[0];
+};
 
 // 调研卡片组件
 function SurveyCard({ survey, onClick }) {
-  const methodConfig = getMethodIcon(survey.method)
-  const MethodIcon = methodConfig.icon
+  const methodConfig = getMethodIcon(survey.method);
+  const MethodIcon = methodConfig.icon;
 
   return (
     <motion.div
@@ -110,7 +115,7 @@ function SurveyCard({ survey, onClick }) {
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-            <Badge className={cn('text-xs', getStatusStyle(survey.status))}>
+            <Badge className={cn("text-xs", getStatusStyle(survey.status))}>
               {getStatusName(survey.status)}
             </Badge>
             <span className="text-xs text-slate-500">{survey.code}</span>
@@ -153,11 +158,13 @@ function SurveyCard({ survey, onClick }) {
         </DropdownMenu>
       </div>
 
-      <p className="text-xs text-slate-500 line-clamp-2 mb-3">{survey.summary}</p>
+      <p className="text-xs text-slate-500 line-clamp-2 mb-3">
+        {survey.summary}
+      </p>
 
       <div className="flex items-center gap-3 text-xs text-slate-500 mb-3">
         <span className="flex items-center gap-1">
-          <MethodIcon className={cn('w-3 h-3', methodConfig.color)} />
+          <MethodIcon className={cn("w-3 h-3", methodConfig.color)} />
           {survey.methodName}
         </span>
         <span className="flex items-center gap-1">
@@ -194,35 +201,37 @@ function SurveyCard({ survey, onClick }) {
         )}
       </div>
     </motion.div>
-  )
+  );
 }
 
 // 调研详情面板
 function SurveyDetailPanel({ survey, onClose }) {
-  if (!survey) return null
+  if (!survey) return null;
 
-  const methodConfig = getMethodIcon(survey.method)
-  const MethodIcon = methodConfig.icon
+  const methodConfig = getMethodIcon(survey.method);
+  const MethodIcon = methodConfig.icon;
 
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ x: '100%' }}
+        initial={{ x: "100%" }}
         animate={{ x: 0 }}
-        exit={{ x: '100%' }}
-        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", damping: 25, stiffness: 200 }}
         className="fixed right-0 top-0 h-full w-full md:w-[500px] bg-surface-100/95 backdrop-blur-xl border-l border-white/5 shadow-2xl z-50 flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/5">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Badge className={cn('text-xs', getStatusStyle(survey.status))}>
+              <Badge className={cn("text-xs", getStatusStyle(survey.status))}>
                 {getStatusName(survey.status)}
               </Badge>
               <span className="text-xs text-slate-500">{survey.code}</span>
             </div>
-            <h2 className="text-lg font-semibold text-white">{survey.customer}</h2>
+            <h2 className="text-lg font-semibold text-white">
+              {survey.customer}
+            </h2>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="w-5 h-5 text-slate-400" />
@@ -238,7 +247,7 @@ function SurveyDetailPanel({ survey, onClose }) {
               <div className="bg-surface-50 p-3 rounded-lg">
                 <p className="text-xs text-slate-500 mb-1">调研方式</p>
                 <p className="text-sm text-white flex items-center gap-1">
-                  <MethodIcon className={cn('w-4 h-4', methodConfig.color)} />
+                  <MethodIcon className={cn("w-4 h-4", methodConfig.color)} />
                   {survey.methodName}
                 </p>
               </div>
@@ -269,7 +278,9 @@ function SurveyDetailPanel({ survey, onClose }) {
           {/* 调研摘要 */}
           <div className="space-y-2">
             <h4 className="text-sm font-medium text-slate-400">调研摘要</h4>
-            <p className="text-sm text-white bg-surface-50 p-3 rounded-lg">{survey.summary}</p>
+            <p className="text-sm text-white bg-surface-50 p-3 rounded-lg">
+              {survey.summary}
+            </p>
           </div>
 
           {/* 产品信息 */}
@@ -282,19 +293,27 @@ function SurveyDetailPanel({ survey, onClose }) {
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-surface-50 p-3 rounded-lg">
                   <p className="text-xs text-slate-500 mb-1">产品名称</p>
-                  <p className="text-sm text-white">{survey.productInfo.name}</p>
+                  <p className="text-sm text-white">
+                    {survey.productInfo.name}
+                  </p>
                 </div>
                 <div className="bg-surface-50 p-3 rounded-lg">
                   <p className="text-xs text-slate-500 mb-1">型号规格</p>
-                  <p className="text-sm text-white">{survey.productInfo.model}</p>
+                  <p className="text-sm text-white">
+                    {survey.productInfo.model}
+                  </p>
                 </div>
                 <div className="bg-surface-50 p-3 rounded-lg">
                   <p className="text-xs text-slate-500 mb-1">外形尺寸</p>
-                  <p className="text-sm text-white">{survey.productInfo.size}</p>
+                  <p className="text-sm text-white">
+                    {survey.productInfo.size}
+                  </p>
                 </div>
                 <div className="bg-surface-50 p-3 rounded-lg">
                   <p className="text-xs text-slate-500 mb-1">材质</p>
-                  <p className="text-sm text-white">{survey.productInfo.material}</p>
+                  <p className="text-sm text-white">
+                    {survey.productInfo.material}
+                  </p>
                 </div>
               </div>
             </div>
@@ -327,15 +346,21 @@ function SurveyDetailPanel({ survey, onClose }) {
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-surface-50 p-3 rounded-lg text-center">
                   <p className="text-xs text-slate-500 mb-1">年产量</p>
-                  <p className="text-lg font-bold text-white">{(survey.capacityRequirements.annual / 10000).toFixed(0)}万</p>
+                  <p className="text-lg font-bold text-white">
+                    {(survey.capacityRequirements.annual / 10000).toFixed(0)}万
+                  </p>
                 </div>
                 <div className="bg-surface-50 p-3 rounded-lg text-center">
                   <p className="text-xs text-slate-500 mb-1">日产量</p>
-                  <p className="text-lg font-bold text-white">{survey.capacityRequirements.daily}</p>
+                  <p className="text-lg font-bold text-white">
+                    {survey.capacityRequirements.daily}
+                  </p>
                 </div>
                 <div className="bg-surface-50 p-3 rounded-lg text-center">
                   <p className="text-xs text-slate-500 mb-1">UPH</p>
-                  <p className="text-lg font-bold text-white">{survey.capacityRequirements.uph}</p>
+                  <p className="text-lg font-bold text-white">
+                    {survey.capacityRequirements.uph}
+                  </p>
                 </div>
               </div>
             </div>
@@ -354,25 +379,33 @@ function SurveyDetailPanel({ survey, onClose }) {
                     <Ruler className="w-3 h-3" />
                     可用面积
                   </p>
-                  <p className="text-sm text-white">{survey.siteConditions.area}</p>
+                  <p className="text-sm text-white">
+                    {survey.siteConditions.area}
+                  </p>
                 </div>
                 <div className="bg-surface-50 p-3 rounded-lg">
                   <p className="text-xs text-slate-500 mb-1 flex items-center gap-1">
                     <Zap className="w-3 h-3" />
                     电源
                   </p>
-                  <p className="text-sm text-white">{survey.siteConditions.power}</p>
+                  <p className="text-sm text-white">
+                    {survey.siteConditions.power}
+                  </p>
                 </div>
                 <div className="bg-surface-50 p-3 rounded-lg">
                   <p className="text-xs text-slate-500 mb-1">气源</p>
-                  <p className="text-sm text-white">{survey.siteConditions.airPressure}</p>
+                  <p className="text-sm text-white">
+                    {survey.siteConditions.airPressure}
+                  </p>
                 </div>
                 <div className="bg-surface-50 p-3 rounded-lg">
                   <p className="text-xs text-slate-500 mb-1 flex items-center gap-1">
                     <Thermometer className="w-3 h-3" />
                     环境
                   </p>
-                  <p className="text-sm text-white">{survey.siteConditions.environment}</p>
+                  <p className="text-sm text-white">
+                    {survey.siteConditions.environment}
+                  </p>
                 </div>
               </div>
             </div>
@@ -385,14 +418,18 @@ function SurveyDetailPanel({ survey, onClose }) {
                 <DollarSign className="w-3 h-3" />
                 预算范围
               </p>
-              <p className="text-lg font-bold text-emerald-400">{survey.budget}</p>
+              <p className="text-lg font-bold text-emerald-400">
+                {survey.budget}
+              </p>
             </div>
             <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 p-4 rounded-lg border border-blue-500/20">
               <p className="text-xs text-slate-400 mb-1 flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
                 交付时间
               </p>
-              <p className="text-lg font-bold text-blue-400">{survey.timeline}</p>
+              <p className="text-lg font-bold text-blue-400">
+                {survey.timeline}
+              </p>
             </div>
           </div>
 
@@ -419,7 +456,10 @@ function SurveyDetailPanel({ survey, onClose }) {
               </h4>
               <div className="space-y-2">
                 {survey.pendingQuestions.map((question, index) => (
-                  <div key={index} className="flex items-center gap-2 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20">
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20"
+                  >
                     <AlertTriangle className="w-4 h-4 text-amber-400" />
                     <span className="text-sm text-white">{question}</span>
                   </div>
@@ -437,15 +477,20 @@ function SurveyDetailPanel({ survey, onClose }) {
               </h4>
               <div className="space-y-2">
                 {survey.attachments.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between bg-surface-50 p-3 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between bg-surface-50 p-3 rounded-lg"
+                  >
                     <div className="flex items-center gap-2">
-                      {file.type === 'image' ? (
+                      {file.type === "image" ? (
                         <Image className="w-4 h-4 text-slate-400" />
                       ) : (
                         <FileText className="w-4 h-4 text-slate-400" />
                       )}
                       <span className="text-sm text-white">{file.name}</span>
-                      <span className="text-xs text-slate-500">{file.size}</span>
+                      <span className="text-xs text-slate-500">
+                        {file.size}
+                      </span>
                     </div>
                     <Button variant="ghost" size="sm">
                       <Eye className="w-4 h-4" />
@@ -470,136 +515,142 @@ function SurveyDetailPanel({ survey, onClose }) {
         </div>
       </motion.div>
     </AnimatePresence>
-  )
+  );
 }
 
 export default function RequirementSurvey() {
-  const [selectedStatus, setSelectedStatus] = useState('all')
-  const [selectedMethod, setSelectedMethod] = useState('all')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedSurvey, setSelectedSurvey] = useState(null)
-  const [surveys, setSurveys] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedMethod, setSelectedMethod] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedSurvey, setSelectedSurvey] = useState(null);
+  const [surveys, setSurveys] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Map backend ticket type to frontend method
   const mapTicketTypeToMethod = (ticketType) => {
     const typeMap = {
-      'REQUIREMENT_RESEARCH': 'onsite',
-      'TECHNICAL_EXCHANGE': 'remote',
-      'SITE_VISIT': 'onsite',
-    }
-    return typeMap[ticketType] || 'onsite'
-  }
+      REQUIREMENT_RESEARCH: "onsite",
+      TECHNICAL_EXCHANGE: "remote",
+      SITE_VISIT: "onsite",
+    };
+    return typeMap[ticketType] || "onsite";
+  };
 
   // Map backend status to frontend status
   const mapTicketStatus = (backendStatus) => {
     const statusMap = {
-      'PENDING': 'scheduled',
-      'ACCEPTED': 'scheduled',
-      'IN_PROGRESS': 'in_progress',
-      'COMPLETED': 'completed',
-      'CANCELLED': 'cancelled',
-    }
-    return statusMap[backendStatus] || 'scheduled'
-  }
+      PENDING: "scheduled",
+      ACCEPTED: "scheduled",
+      IN_PROGRESS: "in_progress",
+      COMPLETED: "completed",
+      CANCELLED: "cancelled",
+    };
+    return statusMap[backendStatus] || "scheduled";
+  };
 
   // Load surveys from API
   const loadSurveys = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       const params = {
         page: 1,
         page_size: 100,
-        ticket_type: 'REQUIREMENT_RESEARCH,TECHNICAL_EXCHANGE,SITE_VISIT',
-      }
+        ticket_type: "REQUIREMENT_RESEARCH,TECHNICAL_EXCHANGE,SITE_VISIT",
+      };
 
-      if (selectedStatus !== 'all') {
+      if (selectedStatus !== "all") {
         const statusMap = {
-          'scheduled': 'PENDING,ACCEPTED',
-          'in_progress': 'IN_PROGRESS',
-          'completed': 'COMPLETED',
-          'cancelled': 'CANCELLED',
-        }
-        params.status = statusMap[selectedStatus] || selectedStatus
+          scheduled: "PENDING,ACCEPTED",
+          in_progress: "IN_PROGRESS",
+          completed: "COMPLETED",
+          cancelled: "CANCELLED",
+        };
+        params.status = statusMap[selectedStatus] || selectedStatus;
       }
 
       if (searchTerm) {
-        params.keyword = searchTerm
+        params.keyword = searchTerm;
       }
 
-      const response = await presaleApi.tickets.list(params)
-      const ticketsData = response.data?.items || response.data || []
+      const response = await presaleApi.tickets.list(params);
+      const ticketsData = response.data?.items || response.data || [];
 
       // Transform tickets to surveys
-      const transformedSurveys = ticketsData.map(ticket => {
-        const method = mapTicketTypeToMethod(ticket.ticket_type)
-        const methodConfig = surveyMethods.find(m => m.id === method) || surveyMethods[0]
+      const transformedSurveys = ticketsData.map((ticket) => {
+        const method = mapTicketTypeToMethod(ticket.ticket_type);
+        const methodConfig =
+          surveyMethods.find((m) => m.id === method) || surveyMethods[0];
         return {
           id: ticket.id,
           code: ticket.ticket_no || `SUR-${ticket.id}`,
-          customer: ticket.customer_name || '',
+          customer: ticket.customer_name || "",
           customerId: ticket.customer_id,
-          contactPerson: ticket.applicant_name || '',
-          contactPhone: '',
+          contactPerson: ticket.applicant_name || "",
+          contactPhone: "",
           method,
           methodName: methodConfig.name,
           status: mapTicketStatus(ticket.status),
-          scheduledDate: ticket.expected_date || ticket.apply_time || '',
+          scheduledDate: ticket.expected_date || ticket.apply_time || "",
           completedDate: ticket.complete_time || null,
-          location: ticket.description || '',
-          engineer: ticket.assignee_name || ticket.owner_name || '',
-          salesPerson: ticket.applicant_name || '',
-          opportunity: ticket.opportunity_name || '',
+          location: ticket.description || "",
+          engineer: ticket.assignee_name || ticket.owner_name || "",
+          salesPerson: ticket.applicant_name || "",
+          opportunity: ticket.opportunity_name || "",
           opportunityId: ticket.opportunity_id,
-          summary: ticket.description || ticket.requirement || '',
+          summary: ticket.description || ticket.requirement || "",
           productInfo: null,
           testRequirements: [],
           capacityRequirements: null,
           siteConditions: null,
-          budget: '',
-          timeline: ticket.deadline || '',
+          budget: "",
+          timeline: ticket.deadline || "",
           competitors: [],
           pendingQuestions: [],
           attachments: [],
           comments: 0,
-        }
-      })
+        };
+      });
 
-      setSurveys(transformedSurveys)
+      setSurveys(transformedSurveys);
     } catch (err) {
-      console.error('Failed to load surveys:', err)
-      setError(err.response?.data?.detail || err.message || '加载调研记录失败')
-      setSurveys([])
+      console.error("Failed to load surveys:", err);
+      setError(err.response?.data?.detail || err.message || "加载调研记录失败");
+      setSurveys([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [selectedStatus, searchTerm])
+  }, [selectedStatus, searchTerm]);
 
   useEffect(() => {
-    loadSurveys()
-  }, [loadSurveys])
+    loadSurveys();
+  }, [loadSurveys]);
 
   // 筛选调研记录
   const filteredSurveys = surveys.filter((survey) => {
-    const matchesStatus = selectedStatus === 'all' || survey.status === selectedStatus
-    const matchesMethod = selectedMethod === 'all' || survey.method === selectedMethod
+    const matchesStatus =
+      selectedStatus === "all" || survey.status === selectedStatus;
+    const matchesMethod =
+      selectedMethod === "all" || survey.method === selectedMethod;
     const matchesSearch =
       survey.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
       survey.opportunity.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      survey.code.toLowerCase().includes(searchTerm.toLowerCase())
-    return matchesStatus && matchesMethod && matchesSearch
-  })
+      survey.code.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesStatus && matchesMethod && matchesSearch;
+  });
 
   // 统计数据
   const stats = {
     total: surveys.length,
-    scheduled: surveys.filter((s) => s.status === 'scheduled').length,
-    completed: surveys.filter((s) => s.status === 'completed').length,
-    pendingQuestions: surveys.reduce((acc, s) => acc + s.pendingQuestions.length, 0),
-  }
+    scheduled: surveys.filter((s) => s.status === "scheduled").length,
+    completed: surveys.filter((s) => s.status === "completed").length,
+    pendingQuestions: surveys.reduce(
+      (acc, s) => acc + s.pendingQuestions.length,
+      0,
+    ),
+  };
 
   return (
     <motion.div
@@ -623,7 +674,10 @@ export default function RequirementSurvey() {
       />
 
       {/* 统计卡片 */}
-      <motion.div variants={fadeIn} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <motion.div
+        variants={fadeIn}
+        className="grid grid-cols-2 sm:grid-cols-4 gap-4"
+      >
         <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -645,7 +699,9 @@ export default function RequirementSurvey() {
               </div>
               <div>
                 <p className="text-xs text-slate-500">已排期</p>
-                <p className="text-2xl font-bold text-blue-400">{stats.scheduled}</p>
+                <p className="text-2xl font-bold text-blue-400">
+                  {stats.scheduled}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -658,7 +714,9 @@ export default function RequirementSurvey() {
               </div>
               <div>
                 <p className="text-xs text-slate-500">已完成</p>
-                <p className="text-2xl font-bold text-emerald-400">{stats.completed}</p>
+                <p className="text-2xl font-bold text-emerald-400">
+                  {stats.completed}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -671,7 +729,9 @@ export default function RequirementSurvey() {
               </div>
               <div>
                 <p className="text-xs text-slate-500">待确认问题</p>
-                <p className="text-2xl font-bold text-amber-400">{stats.pendingQuestions}</p>
+                <p className="text-2xl font-bold text-amber-400">
+                  {stats.pendingQuestions}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -742,10 +802,17 @@ export default function RequirementSurvey() {
 
       {/* 调研列表 */}
       {!loading && !error && (
-        <motion.div variants={fadeIn} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <motion.div
+          variants={fadeIn}
+          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+        >
           {filteredSurveys.length > 0 ? (
             filteredSurveys.map((survey) => (
-              <SurveyCard key={survey.id} survey={survey} onClick={setSelectedSurvey} />
+              <SurveyCard
+                key={survey.id}
+                survey={survey}
+                onClick={setSelectedSurvey}
+              />
             ))
           ) : (
             <div className="col-span-full text-center py-16 text-slate-400">
@@ -759,9 +826,11 @@ export default function RequirementSurvey() {
 
       {/* 调研详情面板 */}
       {selectedSurvey && (
-        <SurveyDetailPanel survey={selectedSurvey} onClose={() => setSelectedSurvey(null)} />
+        <SurveyDetailPanel
+          survey={selectedSurvey}
+          onClose={() => setSelectedSurvey(null)}
+        />
       )}
     </motion.div>
-  )
+  );
 }
-

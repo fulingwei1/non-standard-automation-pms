@@ -2,8 +2,8 @@
  * HROverviewTab Component
  * HR 概览 Tab 组件
  */
-import { useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -12,7 +12,7 @@ import {
   Button,
   Badge,
   Progress,
-} from '../../ui'
+} from "../../ui";
 import {
   UserPlus,
   Award,
@@ -25,26 +25,26 @@ import {
   Heart,
   BarChart3,
   ChevronRight,
-} from 'lucide-react'
-import { cn } from '../../../lib/utils'
-import { fadeIn } from '../../../lib/animations'
-import { useHROverview } from '../hooks/useHROverview'
+} from "lucide-react";
+import { cn } from "../../../lib/utils";
+import { fadeIn } from "../../../lib/animations";
+import { useHROverview } from "../hooks/useHROverview";
 
 // 状态标签映射
 const getStatusLabel = (status) => {
   const labels = {
-    active: '在职',
-    pending: '待处理',
-    reviewing: '评审中',
-    processing: '处理中',
-    completed: '已完成',
-    recruiting: '招聘中',
-    screening: '筛选中',
-    interviewing: '面试中',
-    offer: '发Offer',
-  }
-  return labels[status] || status
-}
+    active: "在职",
+    pending: "待处理",
+    reviewing: "评审中",
+    processing: "处理中",
+    completed: "已完成",
+    recruiting: "招聘中",
+    screening: "筛选中",
+    interviewing: "面试中",
+    offer: "发Offer",
+  };
+  return labels[status] || status;
+};
 
 export default function HROverviewTab({
   mockHRStats,
@@ -54,12 +54,12 @@ export default function HROverviewTab({
   mockPerformanceDistribution,
   setSelectedTab,
 }) {
-  const { loadAll } = useHROverview()
+  const { loadAll } = useHROverview();
 
   // 组件加载时获取数据
   useEffect(() => {
-    loadAll()
-  }, [loadAll])
+    loadAll();
+  }, [loadAll]);
 
   return (
     <div className="space-y-6">
@@ -92,7 +92,7 @@ export default function HROverviewTab({
                     transition={{ delay: index * 0.1 }}
                     className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"
                     onClick={() => {
-                      setSelectedTab('recruitment')
+                      setSelectedTab("recruitment");
                     }}
                   >
                     <div className="flex items-start justify-between mb-2">
@@ -104,14 +104,14 @@ export default function HROverviewTab({
                           <Badge
                             variant="outline"
                             className={cn(
-                              'text-xs',
-                              recruitment.urgency === 'high' &&
-                                'bg-red-500/20 text-red-400 border-red-500/30',
-                              recruitment.urgency === 'medium' &&
-                                'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                              "text-xs",
+                              recruitment.urgency === "high" &&
+                                "bg-red-500/20 text-red-400 border-red-500/30",
+                              recruitment.urgency === "medium" &&
+                                "bg-amber-500/20 text-amber-400 border-amber-500/30",
                             )}
                           >
-                            {recruitment.urgency === 'high' ? '紧急' : '普通'}
+                            {recruitment.urgency === "high" ? "紧急" : "普通"}
                           </Badge>
                           <Badge
                             variant="outline"
@@ -133,7 +133,7 @@ export default function HROverviewTab({
                     </div>
                     <div className="flex items-center justify-between text-xs text-slate-400 mt-2">
                       <span>
-                        申请人: {recruitment.applicants} | 面试:{' '}
+                        申请人: {recruitment.applicants} | 面试:{" "}
                         {recruitment.interviews}
                       </span>
                       <span>期望入职: {recruitment.expectedStartDate}</span>
@@ -143,7 +143,7 @@ export default function HROverviewTab({
                 <Button
                   variant="outline"
                   className="w-full mt-3"
-                  onClick={() => setSelectedTab('recruitment')}
+                  onClick={() => setSelectedTab("recruitment")}
                 >
                   查看全部招聘
                 </Button>
@@ -176,7 +176,7 @@ export default function HROverviewTab({
                     animate={{ opacity: 1, y: 0 }}
                     className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"
                     onClick={() => {
-                      setSelectedTab('performance')
+                      setSelectedTab("performance");
                     }}
                   >
                     <div className="flex items-start justify-between mb-2">
@@ -191,7 +191,7 @@ export default function HROverviewTab({
                           >
                             {review.department}
                           </Badge>
-                          {review.priority === 'high' && (
+                          {review.priority === "high" && (
                             <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
                               紧急
                             </Badge>
@@ -204,11 +204,11 @@ export default function HROverviewTab({
                       <Badge
                         variant="outline"
                         className={cn(
-                          'text-xs',
-                          review.status === 'pending' &&
-                            'bg-amber-500/20 text-amber-400 border-amber-500/30',
-                          review.status === 'reviewing' &&
-                            'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                          "text-xs",
+                          review.status === "pending" &&
+                            "bg-amber-500/20 text-amber-400 border-amber-500/30",
+                          review.status === "reviewing" &&
+                            "bg-blue-500/20 text-blue-400 border-blue-500/30",
                         )}
                       >
                         {getStatusLabel(review.status)}
@@ -219,7 +219,7 @@ export default function HROverviewTab({
                 <Button
                   variant="outline"
                   className="w-full mt-3"
-                  onClick={() => setSelectedTab('performance')}
+                  onClick={() => setSelectedTab("performance")}
                 >
                   查看全部评审
                 </Button>
@@ -305,11 +305,11 @@ export default function HROverviewTab({
                       <div className="flex items-center gap-2">
                         <div
                           className={cn(
-                            'w-3 h-3 rounded-full',
-                            item.color === 'emerald' && 'bg-emerald-500',
-                            item.color === 'blue' && 'bg-blue-500',
-                            item.color === 'amber' && 'bg-amber-500',
-                            item.color === 'red' && 'bg-red-500'
+                            "w-3 h-3 rounded-full",
+                            item.color === "emerald" && "bg-emerald-500",
+                            item.color === "blue" && "bg-blue-500",
+                            item.color === "amber" && "bg-amber-500",
+                            item.color === "red" && "bg-red-500",
                           )}
                         />
                         <span className="text-sm text-slate-300">
@@ -352,7 +352,7 @@ export default function HROverviewTab({
                 variant="outline"
                 className="flex flex-col items-center gap-2 h-auto py-4 hover:bg-blue-500/10 hover:border-blue-500/30 transition-colors"
                 onClick={() => {
-                  setSelectedTab('recruitment')
+                  setSelectedTab("recruitment");
                 }}
               >
                 <UserPlus className="w-5 h-5 text-blue-400" />
@@ -362,7 +362,7 @@ export default function HROverviewTab({
                 variant="outline"
                 className="flex flex-col items-center gap-2 h-auto py-4 hover:bg-purple-500/10 hover:border-purple-500/30 transition-colors"
                 onClick={() => {
-                  setSelectedTab('performance')
+                  setSelectedTab("performance");
                 }}
               >
                 <Award className="w-5 h-5 text-purple-400" />
@@ -372,7 +372,7 @@ export default function HROverviewTab({
                 variant="outline"
                 className="flex flex-col items-center gap-2 h-auto py-4 hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-colors"
                 onClick={() => {
-                  setSelectedTab('employees')
+                  setSelectedTab("employees");
                 }}
               >
                 <UserCheck className="w-5 h-5 text-emerald-400" />
@@ -382,7 +382,7 @@ export default function HROverviewTab({
                 variant="outline"
                 className="flex flex-col items-center gap-2 h-auto py-4 hover:bg-cyan-500/10 hover:border-cyan-500/30 transition-colors"
                 onClick={() => {
-                  setSelectedTab('attendance')
+                  setSelectedTab("attendance");
                 }}
               >
                 <Calendar className="w-5 h-5 text-cyan-400" />
@@ -392,7 +392,7 @@ export default function HROverviewTab({
                 variant="outline"
                 className="flex flex-col items-center gap-2 h-auto py-4 hover:bg-pink-500/10 hover:border-pink-500/30 transition-colors"
                 onClick={() => {
-                  setSelectedTab('relations')
+                  setSelectedTab("relations");
                 }}
               >
                 <Heart className="w-5 h-5 text-pink-400" />
@@ -402,7 +402,7 @@ export default function HROverviewTab({
                 variant="outline"
                 className="flex flex-col items-center gap-2 h-auto py-4 hover:bg-amber-500/10 hover:border-amber-500/30 transition-colors"
                 onClick={() => {
-                  setSelectedTab('statistics')
+                  setSelectedTab("statistics");
                 }}
               >
                 <BarChart3 className="w-5 h-5 text-amber-400" />
@@ -489,5 +489,5 @@ export default function HROverviewTab({
         </Card>
       </motion.div>
     </div>
-  )
+  );
 }

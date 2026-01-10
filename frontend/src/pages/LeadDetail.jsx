@@ -2,8 +2,8 @@
  * Lead Detail Page - 线索详情页面
  * Features: 线索详情、跟进记录、转换商机
  */
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   User,
@@ -18,24 +18,24 @@ import {
   ArrowRight,
   CheckCircle2,
   AlertTriangle,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
+} from "../components/ui/select";
 import {
   Table,
   TableBody,
@@ -43,7 +43,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../components/ui/table'
+} from "../components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -51,134 +51,141 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui/dialog'
-import { cn, formatDate } from '../lib/utils'
-import { leadApi, customerApi } from '../services/api'
+} from "../components/ui/dialog";
+import { cn, formatDate } from "../lib/utils";
+import { leadApi, customerApi } from "../services/api";
 const statusConfigs = {
-  NEW: { label: '待跟进', color: 'bg-blue-500' },
-  QUALIFYING: { label: '资格评估中', color: 'bg-amber-500' },
-  INVALID: { label: '无效', color: 'bg-red-500' },
-  CONVERTED: { label: '已转商机', color: 'bg-emerald-500' },
-}
+  NEW: { label: "待跟进", color: "bg-blue-500" },
+  QUALIFYING: { label: "资格评估中", color: "bg-amber-500" },
+  INVALID: { label: "无效", color: "bg-red-500" },
+  CONVERTED: { label: "已转商机", color: "bg-emerald-500" },
+};
 const followUpTypeConfigs = {
-  CALL: { label: '电话', color: 'bg-blue-500' },
-  VISIT: { label: '拜访', color: 'bg-purple-500' },
-  EMAIL: { label: '邮件', color: 'bg-amber-500' },
-  MEETING: { label: '会议', color: 'bg-emerald-500' },
-  OTHER: { label: '其他', color: 'bg-slate-500' },
-}
+  CALL: { label: "电话", color: "bg-blue-500" },
+  VISIT: { label: "拜访", color: "bg-purple-500" },
+  EMAIL: { label: "邮件", color: "bg-amber-500" },
+  MEETING: { label: "会议", color: "bg-emerald-500" },
+  OTHER: { label: "其他", color: "bg-slate-500" },
+};
 export default function LeadDetail() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [lead, setLead] = useState(null)
-  const [followUps, setFollowUps] = useState([])
-  const [customers, setCustomers] = useState([])
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [lead, setLead] = useState(null);
+  const [followUps, setFollowUps] = useState([]);
+  const [customers, setCustomers] = useState([]);
   // Dialogs
-  const [showFollowUpDialog, setShowFollowUpDialog] = useState(false)
-  const [showConvertDialog, setShowConvertDialog] = useState(false)
+  const [showFollowUpDialog, setShowFollowUpDialog] = useState(false);
+  const [showConvertDialog, setShowConvertDialog] = useState(false);
   // Form states
   const [followUpData, setFollowUpData] = useState({
-    follow_up_type: 'CALL',
-    content: '',
-    next_action: '',
-    next_action_at: '',
-  })
+    follow_up_type: "CALL",
+    content: "",
+    next_action: "",
+    next_action_at: "",
+  });
   const [convertData, setConvertData] = useState({
     customer_id: null,
     skip_validation: false,
-  })
+  });
   useEffect(() => {
     if (id) {
-      fetchLeadDetail()
-      fetchFollowUps()
-      fetchCustomers()
+      fetchLeadDetail();
+      fetchFollowUps();
+      fetchCustomers();
     }
-  }, [id])
+  }, [id]);
   const fetchLeadDetail = async () => {
     try {
-      setLoading(true)
-      const res = await leadApi.get(id)
-      setLead(res.data || res)
+      setLoading(true);
+      const res = await leadApi.get(id);
+      setLead(res.data || res);
     } catch (error) {
-      console.error('Failed to fetch lead detail:', error)
+      console.error("Failed to fetch lead detail:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
   const fetchFollowUps = async () => {
     try {
-      const res = await leadApi.getFollowUps(id)
-      const followUpList = res.data || res || []
-      setFollowUps(followUpList)
+      const res = await leadApi.getFollowUps(id);
+      const followUpList = res.data || res || [];
+      setFollowUps(followUpList);
     } catch (error) {
-      console.error('Failed to fetch follow-ups:', error)
+      console.error("Failed to fetch follow-ups:", error);
     }
-  }
+  };
   const fetchCustomers = async () => {
     try {
-      const res = await customerApi.list({ page_size: 1000 })
-      setCustomers(res.data?.items || res.data || [])
+      const res = await customerApi.list({ page_size: 1000 });
+      setCustomers(res.data?.items || res.data || []);
     } catch (error) {
-      console.error('Failed to fetch customers:', error)
+      console.error("Failed to fetch customers:", error);
     }
-  }
+  };
   const handleCreateFollowUp = async () => {
     if (!followUpData.content) {
-      alert('请填写跟进内容')
-      return
+      alert("请填写跟进内容");
+      return;
     }
     try {
-      await leadApi.createFollowUp(id, followUpData)
-      setShowFollowUpDialog(false)
+      await leadApi.createFollowUp(id, followUpData);
+      setShowFollowUpDialog(false);
       setFollowUpData({
-        follow_up_type: 'CALL',
-        content: '',
-        next_action: '',
-        next_action_at: '',
-      })
-      fetchFollowUps()
-      fetchLeadDetail()
+        follow_up_type: "CALL",
+        content: "",
+        next_action: "",
+        next_action_at: "",
+      });
+      fetchFollowUps();
+      fetchLeadDetail();
     } catch (error) {
-      console.error('Failed to create follow-up:', error)
-      alert('创建跟进记录失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to create follow-up:", error);
+      alert(
+        "创建跟进记录失败: " + (error.response?.data?.detail || error.message),
+      );
     }
-  }
+  };
   const handleConvert = async () => {
     if (!convertData.customer_id) {
-      alert('请选择客户')
-      return
+      alert("请选择客户");
+      return;
     }
     try {
-      const res = await leadApi.convert(id, convertData.customer_id, null, convertData.skip_validation)
-      alert('转换成功')
-      navigate(`/opportunities/${res.data?.id || res.id}`)
+      const res = await leadApi.convert(
+        id,
+        convertData.customer_id,
+        null,
+        convertData.skip_validation,
+      );
+      alert("转换成功");
+      navigate(`/opportunities/${res.data?.id || res.id}`);
     } catch (error) {
-      console.error('Failed to convert lead:', error)
-      const errorMsg = error.response?.data?.detail || error.message
-      if (errorMsg.includes('G1阶段门验证失败')) {
-        if (confirm(errorMsg + '\n\n是否跳过验证继续转换？')) {
-          setConvertData({ ...convertData, skip_validation: true })
-          handleConvert()
+      console.error("Failed to convert lead:", error);
+      const errorMsg = error.response?.data?.detail || error.message;
+      if (errorMsg.includes("G1阶段门验证失败")) {
+        if (confirm(errorMsg + "\n\n是否跳过验证继续转换？")) {
+          setConvertData({ ...convertData, skip_validation: true });
+          handleConvert();
         }
       } else {
-        alert('转换失败: ' + errorMsg)
+        alert("转换失败: " + errorMsg);
       }
     }
-  }
+  };
   if (loading) {
     return (
       <div className="space-y-6 p-6">
         <div className="text-center py-8 text-slate-400">加载中...</div>
       </div>
-    )
+    );
   }
   if (!lead) {
     return (
       <div className="space-y-6 p-6">
         <div className="text-center py-8 text-slate-400">线索不存在</div>
       </div>
-    )
+    );
   }
   return (
     <div className="space-y-6 p-6">
@@ -187,7 +194,7 @@ export default function LeadDetail() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/sales/leads')}
+            onClick={() => navigate("/sales/leads")}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             返回列表
@@ -202,7 +209,7 @@ export default function LeadDetail() {
             <RefreshCw className="w-4 h-4 mr-2" />
             刷新
           </Button>
-          {lead.status !== 'CONVERTED' && (
+          {lead.status !== "CONVERTED" && (
             <>
               <Button
                 variant="outline"
@@ -232,38 +239,40 @@ export default function LeadDetail() {
             </div>
             <div>
               <div className="text-sm text-slate-500 mb-1">状态</div>
-              <Badge className={statusConfigs[lead.status]?.color || 'bg-slate-500'}>
+              <Badge
+                className={statusConfigs[lead.status]?.color || "bg-slate-500"}
+              >
                 {statusConfigs[lead.status]?.label || lead.status}
               </Badge>
             </div>
             <div>
               <div className="text-sm text-slate-500 mb-1">客户名称</div>
-              <div className="font-medium">{lead.customer_name || '-'}</div>
+              <div className="font-medium">{lead.customer_name || "-"}</div>
             </div>
             <div>
               <div className="text-sm text-slate-500 mb-1">负责人</div>
-              <div>{lead.owner_name || '-'}</div>
+              <div>{lead.owner_name || "-"}</div>
             </div>
             <div>
               <div className="text-sm text-slate-500 mb-1">来源</div>
-              <div>{lead.source || '-'}</div>
+              <div>{lead.source || "-"}</div>
             </div>
             <div>
               <div className="text-sm text-slate-500 mb-1">行业</div>
-              <div>{lead.industry || '-'}</div>
+              <div>{lead.industry || "-"}</div>
             </div>
             <div>
               <div className="text-sm text-slate-500 mb-1">联系人</div>
               <div className="flex items-center gap-1">
                 <User className="w-4 h-4 text-slate-400" />
-                {lead.contact_name || '-'}
+                {lead.contact_name || "-"}
               </div>
             </div>
             <div>
               <div className="text-sm text-slate-500 mb-1">联系电话</div>
               <div className="flex items-center gap-1">
                 <Phone className="w-4 h-4 text-slate-400" />
-                {lead.contact_phone || '-'}
+                {lead.contact_phone || "-"}
               </div>
             </div>
             {lead.contact_email && (
@@ -304,7 +313,9 @@ export default function LeadDetail() {
           {lead.demand_summary && (
             <div className="mt-4">
               <div className="text-sm text-slate-500 mb-2">需求摘要</div>
-              <div className="p-3 bg-slate-50 rounded-lg">{lead.demand_summary}</div>
+              <div className="p-3 bg-slate-50 rounded-lg">
+                {lead.demand_summary}
+              </div>
             </div>
           )}
         </CardContent>
@@ -323,17 +334,20 @@ export default function LeadDetail() {
           ) : (
             <div className="space-y-4">
               {followUps.map((followUp) => (
-                <div
-                  key={followUp.id}
-                  className="border rounded-lg p-4"
-                >
+                <div key={followUp.id} className="border rounded-lg p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <Badge className={followUpTypeConfigs[followUp.follow_up_type]?.color || 'bg-slate-500'}>
-                        {followUpTypeConfigs[followUp.follow_up_type]?.label || followUp.follow_up_type}
+                      <Badge
+                        className={
+                          followUpTypeConfigs[followUp.follow_up_type]?.color ||
+                          "bg-slate-500"
+                        }
+                      >
+                        {followUpTypeConfigs[followUp.follow_up_type]?.label ||
+                          followUp.follow_up_type}
                       </Badge>
                       <span className="text-sm text-slate-500">
-                        {followUp.creator_name || '未知'}
+                        {followUp.creator_name || "未知"}
                       </span>
                     </div>
                     <span className="text-sm text-slate-500">
@@ -346,7 +360,9 @@ export default function LeadDetail() {
                   {followUp.next_action && (
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-slate-500">下次行动:</span>
-                      <span className="font-medium">{followUp.next_action}</span>
+                      <span className="font-medium">
+                        {followUp.next_action}
+                      </span>
                       {followUp.next_action_at && (
                         <>
                           <span className="text-slate-500">|</span>
@@ -372,52 +388,82 @@ export default function LeadDetail() {
           <DialogBody>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">跟进类型 *</label>
+                <label className="text-sm font-medium mb-2 block">
+                  跟进类型 *
+                </label>
                 <Select
                   value={followUpData.follow_up_type}
-                  onValueChange={(val) => setFollowUpData({ ...followUpData, follow_up_type: val })}
+                  onValueChange={(val) =>
+                    setFollowUpData({ ...followUpData, follow_up_type: val })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(followUpTypeConfigs).map(([key, config]) => (
-                      <SelectItem key={key} value={key}>
-                        {config.label}
-                      </SelectItem>
-                    ))}
+                    {Object.entries(followUpTypeConfigs).map(
+                      ([key, config]) => (
+                        <SelectItem key={key} value={key}>
+                          {config.label}
+                        </SelectItem>
+                      ),
+                    )}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">跟进内容 *</label>
+                <label className="text-sm font-medium mb-2 block">
+                  跟进内容 *
+                </label>
                 <textarea
                   className="w-full min-h-[100px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={followUpData.content}
-                  onChange={(e) => setFollowUpData({ ...followUpData, content: e.target.value })}
+                  onChange={(e) =>
+                    setFollowUpData({
+                      ...followUpData,
+                      content: e.target.value,
+                    })
+                  }
                   placeholder="详细记录跟进内容..."
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">下次行动</label>
+                <label className="text-sm font-medium mb-2 block">
+                  下次行动
+                </label>
                 <Input
                   value={followUpData.next_action}
-                  onChange={(e) => setFollowUpData({ ...followUpData, next_action: e.target.value })}
+                  onChange={(e) =>
+                    setFollowUpData({
+                      ...followUpData,
+                      next_action: e.target.value,
+                    })
+                  }
                   placeholder="下次行动计划"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">下次行动时间</label>
+                <label className="text-sm font-medium mb-2 block">
+                  下次行动时间
+                </label>
                 <Input
                   type="datetime-local"
                   value={followUpData.next_action_at}
-                  onChange={(e) => setFollowUpData({ ...followUpData, next_action_at: e.target.value })}
+                  onChange={(e) =>
+                    setFollowUpData({
+                      ...followUpData,
+                      next_action_at: e.target.value,
+                    })
+                  }
                 />
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowFollowUpDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowFollowUpDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleCreateFollowUp}>保存</Button>
@@ -433,17 +479,27 @@ export default function LeadDetail() {
           <DialogBody>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">选择客户 *</label>
+                <label className="text-sm font-medium mb-2 block">
+                  选择客户 *
+                </label>
                 <Select
-                  value={convertData.customer_id?.toString() || ''}
-                  onValueChange={(val) => setConvertData({ ...convertData, customer_id: val ? parseInt(val) : null })}
+                  value={convertData.customer_id?.toString() || ""}
+                  onValueChange={(val) =>
+                    setConvertData({
+                      ...convertData,
+                      customer_id: val ? parseInt(val) : null,
+                    })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="选择客户" />
                   </SelectTrigger>
                   <SelectContent>
                     {customers.map((customer) => (
-                      <SelectItem key={customer.id} value={customer.id.toString()}>
+                      <SelectItem
+                        key={customer.id}
+                        value={customer.id.toString()}
+                      >
                         {customer.customer_name}
                       </SelectItem>
                     ))}
@@ -457,7 +513,9 @@ export default function LeadDetail() {
                     <div className="font-medium mb-1">G1阶段门验证要求：</div>
                     <ul className="list-disc list-inside space-y-1 text-xs">
                       <li>客户基本信息与联系人齐全</li>
-                      <li>需求模板必填项：行业/产品对象/节拍/接口/现场约束/验收依据</li>
+                      <li>
+                        需求模板必填项：行业/产品对象/节拍/接口/现场约束/验收依据
+                      </li>
                     </ul>
                   </div>
                 </div>
@@ -465,7 +523,10 @@ export default function LeadDetail() {
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowConvertDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowConvertDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleConvert}>转换</Button>
@@ -473,5 +534,5 @@ export default function LeadDetail() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

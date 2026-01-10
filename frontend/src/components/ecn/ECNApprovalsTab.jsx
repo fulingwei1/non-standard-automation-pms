@@ -2,50 +2,56 @@
  * ECNApprovalsTab Component
  * ECN 审批流程 Tab 组件（时间线视图）
  */
-import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card'
-import { Button } from '../ui/button'
-import { Badge } from '../ui/badge'
-import { CheckCircle2, XCircle } from 'lucide-react'
-import { formatDate } from '../../lib/utils'
-import { ecnApi } from '../../services/api'
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "../ui/card";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { CheckCircle2, XCircle } from "lucide-react";
+import { formatDate } from "../../lib/utils";
+import { ecnApi } from "../../services/api";
 
 export default function ECNApprovalsTab({ approvals, refetch }) {
-  const [processing, setProcessing] = useState(null)
+  const [processing, setProcessing] = useState(null);
 
   // 处理审批通过
   const handleApprove = async (approvalId) => {
-    const comment = prompt('请输入审批意见（可选）：') || ''
-    if (comment === null) return // 用户取消
+    const comment = prompt("请输入审批意见（可选）：") || "";
+    if (comment === null) return; // 用户取消
 
-    setProcessing(approvalId)
+    setProcessing(approvalId);
     try {
-      await ecnApi.approve(approvalId, comment)
-      await refetch()
-      alert('审批通过')
+      await ecnApi.approve(approvalId, comment);
+      await refetch();
+      alert("审批通过");
     } catch (error) {
-      alert('审批失败: ' + (error.response?.data?.detail || error.message))
+      alert("审批失败: " + (error.response?.data?.detail || error.message));
     } finally {
-      setProcessing(null)
+      setProcessing(null);
     }
-  }
+  };
 
   // 处理审批驳回
   const handleReject = async (approvalId) => {
-    const reason = prompt('请输入驳回原因：')
-    if (!reason) return // 用户取消或未输入
+    const reason = prompt("请输入驳回原因：");
+    if (!reason) return; // 用户取消或未输入
 
-    setProcessing(approvalId)
+    setProcessing(approvalId);
     try {
-      await ecnApi.reject(approvalId, reason)
-      await refetch()
-      alert('已驳回')
+      await ecnApi.reject(approvalId, reason);
+      await refetch();
+      alert("已驳回");
     } catch (error) {
-      alert('驳回失败: ' + (error.response?.data?.detail || error.message))
+      alert("驳回失败: " + (error.response?.data?.detail || error.message));
     } finally {
-      setProcessing(null)
+      setProcessing(null);
     }
-  }
+  };
 
   if (approvals.length === 0) {
     return (
@@ -54,7 +60,7 @@ export default function ECNApprovalsTab({ approvals, refetch }) {
           暂无审批记录
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -65,25 +71,28 @@ export default function ECNApprovalsTab({ approvals, refetch }) {
 
         <div className="space-y-6">
           {approvals.map((approval, index) => {
-            const isCompleted = approval.status === 'COMPLETED'
-            const isApproved = approval.approval_result === 'APPROVED'
-            const isRejected = approval.approval_result === 'REJECTED'
-            const isPending = approval.status === 'PENDING'
-            const isProcessing = processing === approval.id
+            const isCompleted = approval.status === "COMPLETED";
+            const isApproved = approval.approval_result === "APPROVED";
+            const isRejected = approval.approval_result === "REJECTED";
+            const isPending = approval.status === "PENDING";
+            const isProcessing = processing === approval.id;
 
             return (
-              <div key={approval.id} className="relative flex items-start gap-4">
+              <div
+                key={approval.id}
+                className="relative flex items-start gap-4"
+              >
                 {/* 时间线节点 */}
                 <div className="relative z-10">
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center ${
                       isApproved
-                        ? 'bg-green-500'
+                        ? "bg-green-500"
                         : isRejected
-                        ? 'bg-red-500'
-                        : isPending
-                        ? 'bg-blue-500'
-                        : 'bg-slate-300'
+                          ? "bg-red-500"
+                          : isPending
+                            ? "bg-blue-500"
+                            : "bg-slate-300"
                     } text-white font-bold shadow-lg`}
                   >
                     {isCompleted ? (
@@ -116,21 +125,21 @@ export default function ECNApprovalsTab({ approvals, refetch }) {
                         <Badge
                           className={
                             isApproved
-                              ? 'bg-green-500'
+                              ? "bg-green-500"
                               : isRejected
-                              ? 'bg-red-500'
-                              : isPending
-                              ? 'bg-blue-500'
-                              : 'bg-slate-500'
+                                ? "bg-red-500"
+                                : isPending
+                                  ? "bg-blue-500"
+                                  : "bg-slate-500"
                           }
                         >
                           {isApproved
-                            ? '已通过'
+                            ? "已通过"
                             : isRejected
-                            ? '已驳回'
-                            : isPending
-                            ? '待审批'
-                            : approval.status}
+                              ? "已驳回"
+                              : isPending
+                                ? "待审批"
+                                : approval.status}
                         </Badge>
                         {approval.is_overdue && (
                           <Badge className="bg-red-500">超期</Badge>
@@ -140,18 +149,18 @@ export default function ECNApprovalsTab({ approvals, refetch }) {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="text-sm">
-                      <span className="text-slate-500">审批人:</span>{' '}
-                      {approval.approver_name || '待分配'}
+                      <span className="text-slate-500">审批人:</span>{" "}
+                      {approval.approver_name || "待分配"}
                     </div>
                     {approval.approved_at && (
                       <div className="text-sm">
-                        <span className="text-slate-500">审批时间:</span>{' '}
+                        <span className="text-slate-500">审批时间:</span>{" "}
                         {formatDate(approval.approved_at)}
                       </div>
                     )}
                     {approval.due_date && (
                       <div className="text-sm">
-                        <span className="text-slate-500">审批期限:</span>{' '}
+                        <span className="text-slate-500">审批期限:</span>{" "}
                         {formatDate(approval.due_date)}
                       </div>
                     )}
@@ -180,17 +189,17 @@ export default function ECNApprovalsTab({ approvals, refetch }) {
                           onClick={() => handleApprove(approval.id)}
                           disabled={isProcessing}
                         >
-                          {isProcessing ? '处理中...' : '通过'}
+                          {isProcessing ? "处理中..." : "通过"}
                         </Button>
                       </div>
                     )}
                   </CardContent>
                 </Card>
               </div>
-            )
+            );
           })}
         </div>
       </div>
     </div>
-  )
+  );
 }

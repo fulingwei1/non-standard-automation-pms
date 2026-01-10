@@ -2,7 +2,7 @@
  * Worker Management Page - 工人管理页面
  * Features: 工人列表、创建、编辑、技能管理
  */
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from "react";
 import {
   Users,
   Plus,
@@ -12,25 +12,25 @@ import {
   UserCheck,
   Award,
   Clock,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
+} from "../components/ui/select";
 import {
   Table,
   TableBody,
@@ -38,7 +38,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../components/ui/table'
+} from "../components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -46,139 +46,139 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui/dialog'
-import { formatDate } from '../lib/utils'
-import { productionApi } from '../services/api'
+} from "../components/ui/dialog";
+import { formatDate } from "../lib/utils";
+import { productionApi } from "../services/api";
 
 export default function WorkerManagement() {
-  const [loading, setLoading] = useState(true)
-  const [workers, setWorkers] = useState([])
+  const [loading, setLoading] = useState(true);
+  const [workers, setWorkers] = useState([]);
   // Filters
-  const [searchKeyword, setSearchKeyword] = useState('')
+  const [searchKeyword, setSearchKeyword] = useState("");
   // Dialogs
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [showEditDialog, setShowEditDialog] = useState(false)
-  const [showDetailDialog, setShowDetailDialog] = useState(false)
-  const [selectedWorker, setSelectedWorker] = useState(null)
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [selectedWorker, setSelectedWorker] = useState(null);
   // Form state
   const [workerForm, setWorkerForm] = useState({
-    worker_code: '',
-    worker_name: '',
+    worker_code: "",
+    worker_name: "",
     workshop_id: null,
-    phone: '',
-    email: '',
-    hire_date: '',
-    skill_level: 'JUNIOR',
+    phone: "",
+    email: "",
+    hire_date: "",
+    skill_level: "JUNIOR",
     is_active: true,
-  })
+  });
 
   useEffect(() => {
-    fetchWorkers()
-  }, [searchKeyword])
+    fetchWorkers();
+  }, [searchKeyword]);
 
   const fetchWorkers = async () => {
     try {
-      setLoading(true)
-      const params = { page: 1, page_size: 100 }
-      if (searchKeyword) params.search = searchKeyword
-      const res = await productionApi.workers.list(params)
-      const workerList = res.data?.items || res.data || []
-      setWorkers(workerList)
+      setLoading(true);
+      const params = { page: 1, page_size: 100 };
+      if (searchKeyword) params.search = searchKeyword;
+      const res = await productionApi.workers.list(params);
+      const workerList = res.data?.items || res.data || [];
+      setWorkers(workerList);
     } catch (error) {
-      console.error('Failed to fetch workers:', error)
+      console.error("Failed to fetch workers:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleCreate = async () => {
     if (!workerForm.worker_code || !workerForm.worker_name) {
-      alert('请填写工人编码和姓名')
-      return
+      alert("请填写工人编码和姓名");
+      return;
     }
     try {
-      await productionApi.workers.create(workerForm)
-      setShowCreateDialog(false)
-      resetForm()
-      fetchWorkers()
+      await productionApi.workers.create(workerForm);
+      setShowCreateDialog(false);
+      resetForm();
+      fetchWorkers();
     } catch (error) {
-      console.error('Failed to create worker:', error)
-      alert('创建工人失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to create worker:", error);
+      alert("创建工人失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const handleEdit = async () => {
-    if (!selectedWorker) return
+    if (!selectedWorker) return;
     try {
-      await productionApi.workers.update(selectedWorker.id, workerForm)
-      setShowEditDialog(false)
-      resetForm()
-      fetchWorkers()
+      await productionApi.workers.update(selectedWorker.id, workerForm);
+      setShowEditDialog(false);
+      resetForm();
+      fetchWorkers();
     } catch (error) {
-      console.error('Failed to update worker:', error)
-      alert('更新工人失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to update worker:", error);
+      alert("更新工人失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   const handleViewDetail = async (workerId) => {
     try {
-      const res = await productionApi.workers.get(workerId)
-      setSelectedWorker(res.data || res)
-      setShowDetailDialog(true)
+      const res = await productionApi.workers.get(workerId);
+      setSelectedWorker(res.data || res);
+      setShowDetailDialog(true);
     } catch (error) {
-      console.error('Failed to fetch worker detail:', error)
+      console.error("Failed to fetch worker detail:", error);
     }
-  }
+  };
 
   const handleEditClick = (worker) => {
-    setSelectedWorker(worker)
+    setSelectedWorker(worker);
     setWorkerForm({
       worker_code: worker.worker_code,
       worker_name: worker.worker_name,
       workshop_id: worker.workshop_id,
-      phone: worker.phone || '',
-      email: worker.email || '',
-      hire_date: worker.hire_date || '',
-      skill_level: worker.skill_level || 'JUNIOR',
+      phone: worker.phone || "",
+      email: worker.email || "",
+      hire_date: worker.hire_date || "",
+      skill_level: worker.skill_level || "JUNIOR",
       is_active: worker.is_active !== false,
-    })
-    setShowEditDialog(true)
-  }
+    });
+    setShowEditDialog(true);
+  };
 
   const resetForm = () => {
     setWorkerForm({
-      worker_code: '',
-      worker_name: '',
+      worker_code: "",
+      worker_name: "",
       workshop_id: null,
-      phone: '',
-      email: '',
-      hire_date: '',
-      skill_level: 'JUNIOR',
+      phone: "",
+      email: "",
+      hire_date: "",
+      skill_level: "JUNIOR",
       is_active: true,
-    })
-    setSelectedWorker(null)
-  }
+    });
+    setSelectedWorker(null);
+  };
 
   const skillLevelConfigs = {
-    EXPERT: { label: '专家', color: 'bg-purple-500' },
-    SENIOR: { label: '高级', color: 'bg-blue-500' },
-    INTERMEDIATE: { label: '中级', color: 'bg-emerald-500' },
-    JUNIOR: { label: '初级', color: 'bg-amber-500' },
-  }
+    EXPERT: { label: "专家", color: "bg-purple-500" },
+    SENIOR: { label: "高级", color: "bg-blue-500" },
+    INTERMEDIATE: { label: "中级", color: "bg-emerald-500" },
+    JUNIOR: { label: "初级", color: "bg-amber-500" },
+  };
 
   const filteredWorkers = useMemo(() => {
-    return workers.filter(worker => {
+    return workers.filter((worker) => {
       if (searchKeyword) {
-        const keyword = searchKeyword.toLowerCase()
+        const keyword = searchKeyword.toLowerCase();
         return (
           worker.worker_code?.toLowerCase().includes(keyword) ||
           worker.worker_name?.toLowerCase().includes(keyword) ||
           worker.phone?.toLowerCase().includes(keyword)
-        )
+        );
       }
-      return true
-    })
-  }, [workers, searchKeyword])
+      return true;
+    });
+  }, [workers, searchKeyword]);
 
   return (
     <div className="space-y-6 p-6">
@@ -211,9 +211,7 @@ export default function WorkerManagement() {
       <Card>
         <CardHeader>
           <CardTitle>工人列表</CardTitle>
-          <CardDescription>
-            共 {filteredWorkers.length} 个工人
-          </CardDescription>
+          <CardDescription>共 {filteredWorkers.length} 个工人</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -243,15 +241,21 @@ export default function WorkerManagement() {
                     <TableCell className="font-medium">
                       {worker.worker_name}
                     </TableCell>
-                    <TableCell>{worker.workshop_name || '-'}</TableCell>
-                    <TableCell>{worker.phone || '-'}</TableCell>
+                    <TableCell>{worker.workshop_name || "-"}</TableCell>
+                    <TableCell>{worker.phone || "-"}</TableCell>
                     <TableCell>
-                      <Badge className={skillLevelConfigs[worker.skill_level]?.color || 'bg-slate-500'}>
-                        {skillLevelConfigs[worker.skill_level]?.label || worker.skill_level}
+                      <Badge
+                        className={
+                          skillLevelConfigs[worker.skill_level]?.color ||
+                          "bg-slate-500"
+                        }
+                      >
+                        {skillLevelConfigs[worker.skill_level]?.label ||
+                          worker.skill_level}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-slate-500 text-sm">
-                      {worker.hire_date ? formatDate(worker.hire_date) : '-'}
+                      {worker.hire_date ? formatDate(worker.hire_date) : "-"}
                     </TableCell>
                     <TableCell>
                       {worker.is_active !== false ? (
@@ -295,18 +299,32 @@ export default function WorkerManagement() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">工人编码 *</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    工人编码 *
+                  </label>
                   <Input
                     value={workerForm.worker_code}
-                    onChange={(e) => setWorkerForm({ ...workerForm, worker_code: e.target.value })}
+                    onChange={(e) =>
+                      setWorkerForm({
+                        ...workerForm,
+                        worker_code: e.target.value,
+                      })
+                    }
                     placeholder="请输入工人编码"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">姓名 *</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    姓名 *
+                  </label>
                   <Input
                     value={workerForm.worker_name}
-                    onChange={(e) => setWorkerForm({ ...workerForm, worker_name: e.target.value })}
+                    onChange={(e) =>
+                      setWorkerForm({
+                        ...workerForm,
+                        worker_name: e.target.value,
+                      })
+                    }
                     placeholder="请输入姓名"
                   />
                 </div>
@@ -316,7 +334,9 @@ export default function WorkerManagement() {
                   <label className="text-sm font-medium mb-2 block">电话</label>
                   <Input
                     value={workerForm.phone}
-                    onChange={(e) => setWorkerForm({ ...workerForm, phone: e.target.value })}
+                    onChange={(e) =>
+                      setWorkerForm({ ...workerForm, phone: e.target.value })
+                    }
                     placeholder="联系电话"
                   />
                 </div>
@@ -325,43 +345,61 @@ export default function WorkerManagement() {
                   <Input
                     type="email"
                     value={workerForm.email}
-                    onChange={(e) => setWorkerForm({ ...workerForm, email: e.target.value })}
+                    onChange={(e) =>
+                      setWorkerForm({ ...workerForm, email: e.target.value })
+                    }
                     placeholder="邮箱地址"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">技能等级</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    技能等级
+                  </label>
                   <Select
                     value={workerForm.skill_level}
-                    onValueChange={(val) => setWorkerForm({ ...workerForm, skill_level: val })}
+                    onValueChange={(val) =>
+                      setWorkerForm({ ...workerForm, skill_level: val })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(skillLevelConfigs).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>
-                          {config.label}
-                        </SelectItem>
-                      ))}
+                      {Object.entries(skillLevelConfigs).map(
+                        ([key, config]) => (
+                          <SelectItem key={key} value={key}>
+                            {config.label}
+                          </SelectItem>
+                        ),
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">入职日期</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    入职日期
+                  </label>
                   <Input
                     type="date"
                     value={workerForm.hire_date}
-                    onChange={(e) => setWorkerForm({ ...workerForm, hire_date: e.target.value })}
+                    onChange={(e) =>
+                      setWorkerForm({
+                        ...workerForm,
+                        hire_date: e.target.value,
+                      })
+                    }
                   />
                 </div>
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleCreate}>创建</Button>
@@ -378,18 +416,32 @@ export default function WorkerManagement() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">工人编码 *</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    工人编码 *
+                  </label>
                   <Input
                     value={workerForm.worker_code}
-                    onChange={(e) => setWorkerForm({ ...workerForm, worker_code: e.target.value })}
+                    onChange={(e) =>
+                      setWorkerForm({
+                        ...workerForm,
+                        worker_code: e.target.value,
+                      })
+                    }
                     placeholder="请输入工人编码"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">姓名 *</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    姓名 *
+                  </label>
                   <Input
                     value={workerForm.worker_name}
-                    onChange={(e) => setWorkerForm({ ...workerForm, worker_name: e.target.value })}
+                    onChange={(e) =>
+                      setWorkerForm({
+                        ...workerForm,
+                        worker_name: e.target.value,
+                      })
+                    }
                     placeholder="请输入姓名"
                   />
                 </div>
@@ -399,7 +451,9 @@ export default function WorkerManagement() {
                   <label className="text-sm font-medium mb-2 block">电话</label>
                   <Input
                     value={workerForm.phone}
-                    onChange={(e) => setWorkerForm({ ...workerForm, phone: e.target.value })}
+                    onChange={(e) =>
+                      setWorkerForm({ ...workerForm, phone: e.target.value })
+                    }
                     placeholder="联系电话"
                   />
                 </div>
@@ -408,36 +462,51 @@ export default function WorkerManagement() {
                   <Input
                     type="email"
                     value={workerForm.email}
-                    onChange={(e) => setWorkerForm({ ...workerForm, email: e.target.value })}
+                    onChange={(e) =>
+                      setWorkerForm({ ...workerForm, email: e.target.value })
+                    }
                     placeholder="邮箱地址"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">技能等级</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    技能等级
+                  </label>
                   <Select
                     value={workerForm.skill_level}
-                    onValueChange={(val) => setWorkerForm({ ...workerForm, skill_level: val })}
+                    onValueChange={(val) =>
+                      setWorkerForm({ ...workerForm, skill_level: val })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(skillLevelConfigs).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>
-                          {config.label}
-                        </SelectItem>
-                      ))}
+                      {Object.entries(skillLevelConfigs).map(
+                        ([key, config]) => (
+                          <SelectItem key={key} value={key}>
+                            {config.label}
+                          </SelectItem>
+                        ),
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">入职日期</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    入职日期
+                  </label>
                   <Input
                     type="date"
                     value={workerForm.hire_date}
-                    onChange={(e) => setWorkerForm({ ...workerForm, hire_date: e.target.value })}
+                    onChange={(e) =>
+                      setWorkerForm({
+                        ...workerForm,
+                        hire_date: e.target.value,
+                      })
+                    }
                   />
                 </div>
               </div>
@@ -446,7 +515,12 @@ export default function WorkerManagement() {
                   <input
                     type="checkbox"
                     checked={workerForm.is_active}
-                    onChange={(e) => setWorkerForm({ ...workerForm, is_active: e.target.checked })}
+                    onChange={(e) =>
+                      setWorkerForm({
+                        ...workerForm,
+                        is_active: e.target.checked,
+                      })
+                    }
                   />
                   <span className="text-sm">启用</span>
                 </label>
@@ -465,9 +539,7 @@ export default function WorkerManagement() {
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>
-              {selectedWorker?.worker_name} - 工人详情
-            </DialogTitle>
+            <DialogTitle>{selectedWorker?.worker_name} - 工人详情</DialogTitle>
           </DialogHeader>
           <DialogBody>
             {selectedWorker && (
@@ -475,7 +547,9 @@ export default function WorkerManagement() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-sm text-slate-500 mb-1">工人编码</div>
-                    <div className="font-mono">{selectedWorker.worker_code}</div>
+                    <div className="font-mono">
+                      {selectedWorker.worker_code}
+                    </div>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">姓名</div>
@@ -483,25 +557,33 @@ export default function WorkerManagement() {
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">车间</div>
-                    <div>{selectedWorker.workshop_name || '-'}</div>
+                    <div>{selectedWorker.workshop_name || "-"}</div>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">电话</div>
-                    <div>{selectedWorker.phone || '-'}</div>
+                    <div>{selectedWorker.phone || "-"}</div>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">邮箱</div>
-                    <div>{selectedWorker.email || '-'}</div>
+                    <div>{selectedWorker.email || "-"}</div>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">技能等级</div>
-                    <Badge className={skillLevelConfigs[selectedWorker.skill_level]?.color}>
+                    <Badge
+                      className={
+                        skillLevelConfigs[selectedWorker.skill_level]?.color
+                      }
+                    >
                       {skillLevelConfigs[selectedWorker.skill_level]?.label}
                     </Badge>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">入职日期</div>
-                    <div>{selectedWorker.hire_date ? formatDate(selectedWorker.hire_date) : '-'}</div>
+                    <div>
+                      {selectedWorker.hire_date
+                        ? formatDate(selectedWorker.hire_date)
+                        : "-"}
+                    </div>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">状态</div>
@@ -516,14 +598,19 @@ export default function WorkerManagement() {
             )}
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDetailDialog(false)}
+            >
               关闭
             </Button>
             {selectedWorker && (
-              <Button onClick={() => {
-                setShowDetailDialog(false)
-                handleEditClick(selectedWorker)
-              }}>
+              <Button
+                onClick={() => {
+                  setShowDetailDialog(false);
+                  handleEditClick(selectedWorker);
+                }}
+              >
                 <Edit className="w-4 h-4 mr-2" />
                 编辑
               </Button>
@@ -532,9 +619,5 @@ export default function WorkerManagement() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-
-
-
-

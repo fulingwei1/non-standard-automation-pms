@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   FileText,
   ArrowLeft,
@@ -18,17 +18,17 @@ import {
   MessageSquare,
   Loader2,
   ShoppingCart,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Badge } from '../components/ui/badge'
-import { Label } from '../components/ui/label'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { Label } from "../components/ui/label";
 import {
   Table,
   TableBody,
@@ -36,7 +36,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../components/ui/table'
+} from "../components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -44,132 +44,132 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui/dialog'
-import { Textarea } from '../components/ui/textarea'
-import { cn } from '../lib/utils'
-import { fadeIn } from '../lib/animations'
-import { purchaseApi } from '../services/api'
-import { toast } from '../components/ui/toast'
-import { LoadingCard } from '../components/common'
-import { ErrorMessage } from '../components/common'
-import { EmptyState } from '../components/common'
+} from "../components/ui/dialog";
+import { Textarea } from "../components/ui/textarea";
+import { cn } from "../lib/utils";
+import { fadeIn } from "../lib/animations";
+import { purchaseApi } from "../services/api";
+import { toast } from "../components/ui/toast";
+import { LoadingCard } from "../components/common";
+import { ErrorMessage } from "../components/common";
+import { EmptyState } from "../components/common";
 
 // 状态配置
 const STATUS_CONFIG = {
-  DRAFT: { label: '草稿', color: 'bg-gray-500', icon: FileText },
-  SUBMITTED: { label: '待审批', color: 'bg-blue-500', icon: Clock },
-  APPROVED: { label: '已审批', color: 'bg-emerald-500', icon: CheckCircle2 },
-  REJECTED: { label: '已驳回', color: 'bg-red-500', icon: XCircle },
-  CLOSED: { label: '已关闭', color: 'bg-slate-500', icon: Package },
-}
+  DRAFT: { label: "草稿", color: "bg-gray-500", icon: FileText },
+  SUBMITTED: { label: "待审批", color: "bg-blue-500", icon: Clock },
+  APPROVED: { label: "已审批", color: "bg-emerald-500", icon: CheckCircle2 },
+  REJECTED: { label: "已驳回", color: "bg-red-500", icon: XCircle },
+  CLOSED: { label: "已关闭", color: "bg-slate-500", icon: Package },
+};
 
 export default function PurchaseRequestDetail() {
-  const navigate = useNavigate()
-  const { id } = useParams()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [request, setRequest] = useState(null)
-  const [showApproveDialog, setShowApproveDialog] = useState(false)
-  const [approveData, setApproveData] = useState({ approved: true, note: '' })
-  const [generating, setGenerating] = useState(false)
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [request, setRequest] = useState(null);
+  const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [approveData, setApproveData] = useState({ approved: true, note: "" });
+  const [generating, setGenerating] = useState(false);
 
   // Check if demo account  // Load request data
   useEffect(() => {
     const loadRequest = async () => {
       try {
-        setLoading(true)
-        setError(null)
+        setLoading(true);
+        setError(null);
 
-        const res = await purchaseApi.requests.get(id)
-        const data = res.data?.data || res.data
-        setRequest(data)
+        const res = await purchaseApi.requests.get(id);
+        const data = res.data?.data || res.data;
+        setRequest(data);
       } catch (err) {
-        console.error('Failed to load request:', err)
-        setError(err.response?.data?.detail || '加载失败')
+        console.error("Failed to load request:", err);
+        setError(err.response?.data?.detail || "加载失败");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
     if (id) {
-      loadRequest()
+      loadRequest();
     }
-  }, [id])
+  }, [id]);
 
   const handleEdit = () => {
-    navigate(`/purchase-requests/${id}/edit`)
-  }
+    navigate(`/purchase-requests/${id}/edit`);
+  };
 
   const handleDelete = async () => {
     if (!confirm(`确定要删除采购申请 ${request?.request_no} 吗？`)) {
-      return
+      return;
     }
 
     try {
-      await purchaseApi.requests.delete(id)
-      toast.success('采购申请已删除')
-      navigate('/purchase-requests')
+      await purchaseApi.requests.delete(id);
+      toast.success("采购申请已删除");
+      navigate("/purchase-requests");
     } catch (err) {
-      console.error('Failed to delete request:', err)
-      toast.error(err.response?.data?.detail || '删除失败')
+      console.error("Failed to delete request:", err);
+      toast.error(err.response?.data?.detail || "删除失败");
     }
-  }
+  };
 
   const handleSubmit = async () => {
-    if (request.status !== 'DRAFT') {
-      toast.error('只有草稿状态的申请才能提交')
-      return
+    if (request.status !== "DRAFT") {
+      toast.error("只有草稿状态的申请才能提交");
+      return;
     }
 
     try {
-      await purchaseApi.requests.submit(id)
-      toast.success('采购申请已提交，等待审批')
+      await purchaseApi.requests.submit(id);
+      toast.success("采购申请已提交，等待审批");
       // Reload request
-      const res = await purchaseApi.requests.get(id)
-      setRequest(res.data?.data || res.data)
+      const res = await purchaseApi.requests.get(id);
+      setRequest(res.data?.data || res.data);
     } catch (err) {
-      console.error('Failed to submit request:', err)
-      toast.error(err.response?.data?.detail || '提交失败')
+      console.error("Failed to submit request:", err);
+      toast.error(err.response?.data?.detail || "提交失败");
     }
-  }
+  };
 
   const handleGenerateOrders = async () => {
-    if (!id) return
+    if (!id) return;
     try {
-      setGenerating(true)
-      await purchaseApi.requests.generateOrders(id)
-      toast.success('已生成采购订单')
-      const res = await purchaseApi.requests.get(id)
-      setRequest(res.data?.data || res.data)
+      setGenerating(true);
+      await purchaseApi.requests.generateOrders(id);
+      toast.success("已生成采购订单");
+      const res = await purchaseApi.requests.get(id);
+      setRequest(res.data?.data || res.data);
     } catch (err) {
-      console.error('Failed to generate orders:', err)
-      toast.error(err.response?.data?.detail || '生成采购订单失败')
+      console.error("Failed to generate orders:", err);
+      toast.error(err.response?.data?.detail || "生成采购订单失败");
     } finally {
-      setGenerating(false)
+      setGenerating(false);
     }
-  }
+  };
 
   const handleApprove = async (approved, note) => {
-    if (request.status !== 'SUBMITTED') {
-      toast.error('只有待审批状态的申请才能审批')
-      return
+    if (request.status !== "SUBMITTED") {
+      toast.error("只有待审批状态的申请才能审批");
+      return;
     }
 
     try {
       await purchaseApi.requests.approve(id, {
         approved,
         approval_note: note,
-      })
-      toast.success(approved ? '采购申请已审批通过' : '采购申请已驳回')
-      setShowApproveDialog(false)
+      });
+      toast.success(approved ? "采购申请已审批通过" : "采购申请已驳回");
+      setShowApproveDialog(false);
       // Reload request
-      const res = await purchaseApi.requests.get(id)
-      setRequest(res.data?.data || res.data)
+      const res = await purchaseApi.requests.get(id);
+      setRequest(res.data?.data || res.data);
     } catch (err) {
-      console.error('Failed to approve request:', err)
-      toast.error(err.response?.data?.detail || '审批失败')
+      console.error("Failed to approve request:", err);
+      toast.error(err.response?.data?.detail || "审批失败");
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -178,17 +178,20 @@ export default function PurchaseRequestDetail() {
           <LoadingCard />
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         <div className="container mx-auto px-4 py-6">
-          <ErrorMessage message={error} onRetry={() => window.location.reload()} />
+          <ErrorMessage
+            message={error}
+            onRetry={() => window.location.reload()}
+          />
         </div>
       </div>
-    )
+    );
   }
 
   if (!request) {
@@ -202,11 +205,11 @@ export default function PurchaseRequestDetail() {
           />
         </div>
       </div>
-    )
+    );
   }
 
-  const statusConfig = STATUS_CONFIG[request.status] || STATUS_CONFIG.DRAFT
-  const StatusIcon = statusConfig.icon
+  const statusConfig = STATUS_CONFIG[request.status] || STATUS_CONFIG.DRAFT;
+  const StatusIcon = statusConfig.icon;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -216,33 +219,46 @@ export default function PurchaseRequestDetail() {
           description={request.request_no}
           actions={
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => navigate('/purchase-requests')}>
+              <Button
+                variant="outline"
+                onClick={() => navigate("/purchase-requests")}
+              >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 返回
               </Button>
-              {request.status === 'DRAFT' && (
+              {request.status === "DRAFT" && (
                 <>
                   <Button variant="outline" onClick={handleEdit}>
                     <Edit className="w-4 h-4 mr-2" />
                     编辑
                   </Button>
-                  <Button variant="outline" onClick={handleDelete} className="text-red-400 border-red-500/30 hover:bg-red-500/10">
+                  <Button
+                    variant="outline"
+                    onClick={handleDelete}
+                    className="text-red-400 border-red-500/30 hover:bg-red-500/10"
+                  >
                     <Trash2 className="w-4 h-4 mr-2" />
                     删除
                   </Button>
-                  <Button onClick={handleSubmit} className="bg-blue-600 hover:bg-blue-700">
+                  <Button
+                    onClick={handleSubmit}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
                     <Send className="w-4 h-4 mr-2" />
                     提交审批
                   </Button>
                 </>
               )}
-              {request.status === 'SUBMITTED' && (
-                <Button onClick={() => setShowApproveDialog(true)} className="bg-emerald-600 hover:bg-emerald-700">
+              {request.status === "SUBMITTED" && (
+                <Button
+                  onClick={() => setShowApproveDialog(true)}
+                  className="bg-emerald-600 hover:bg-emerald-700"
+                >
                   <CheckCircle2 className="w-4 h-4 mr-2" />
                   审批
                 </Button>
               )}
-              {request.status === 'APPROVED' && !request.auto_po_created && (
+              {request.status === "APPROVED" && !request.auto_po_created && (
                 <Button
                   variant="outline"
                   onClick={handleGenerateOrders}
@@ -254,14 +270,17 @@ export default function PurchaseRequestDetail() {
                   ) : (
                     <ShoppingCart className="w-4 h-4 mr-2" />
                   )}
-                  {generating ? '生成中...' : '生成采购订单'}
+                  {generating ? "生成中..." : "生成采购订单"}
                 </Button>
               )}
             </div>
           }
         />
 
-        <motion.div variants={fadeIn} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <motion.div
+          variants={fadeIn}
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+        >
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Basic Info */}
@@ -286,67 +305,93 @@ export default function PurchaseRequestDetail() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-slate-400">申请单号</Label>
-                    <p className="text-slate-200 font-mono">{request.request_no}</p>
+                    <p className="text-slate-200 font-mono">
+                      {request.request_no}
+                    </p>
                   </div>
                   <div>
                     <Label className="text-slate-400">申请类型</Label>
                     <p className="text-slate-200">
-                      {request.request_type === 'URGENT' ? (
-                        <Badge className="bg-red-500/20 text-red-400 border-red-500/30">紧急</Badge>
+                      {request.request_type === "URGENT" ? (
+                        <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+                          紧急
+                        </Badge>
                       ) : (
-                        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">普通</Badge>
+                        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                          普通
+                        </Badge>
                       )}
                     </p>
                   </div>
                   <div>
                     <Label className="text-slate-400">所属项目</Label>
-                    <p className="text-slate-200">{request.project_name || '-'}</p>
+                    <p className="text-slate-200">
+                      {request.project_name || "-"}
+                    </p>
                   </div>
                   <div>
                     <Label className="text-slate-400">设备</Label>
-                    <p className="text-slate-200">{request.machine_name || '-'}</p>
+                    <p className="text-slate-200">
+                      {request.machine_name || "-"}
+                    </p>
                   </div>
                   <div>
                     <Label className="text-slate-400">供应商</Label>
-                    <p className="text-slate-200">{request.supplier_name || '未指定'}</p>
+                    <p className="text-slate-200">
+                      {request.supplier_name || "未指定"}
+                    </p>
                   </div>
                   <div>
                     <Label className="text-slate-400">需求日期</Label>
-                    <p className="text-slate-200">{request.required_date || '-'}</p>
+                    <p className="text-slate-200">
+                      {request.required_date || "-"}
+                    </p>
                   </div>
                   <div>
                     <Label className="text-slate-400">申请人</Label>
-                    <p className="text-slate-200">{request.requester_name || '-'}</p>
+                    <p className="text-slate-200">
+                      {request.requester_name || "-"}
+                    </p>
                   </div>
                   {request.submitted_at && (
                     <div>
                       <Label className="text-slate-400">提交时间</Label>
-                      <p className="text-slate-200">{new Date(request.submitted_at).toLocaleString('zh-CN')}</p>
+                      <p className="text-slate-200">
+                        {new Date(request.submitted_at).toLocaleString("zh-CN")}
+                      </p>
                     </div>
                   )}
                   {request.approved_at && (
                     <div>
                       <Label className="text-slate-400">审批时间</Label>
-                      <p className="text-slate-200">{new Date(request.approved_at).toLocaleString('zh-CN')}</p>
+                      <p className="text-slate-200">
+                        {new Date(request.approved_at).toLocaleString("zh-CN")}
+                      </p>
                     </div>
                   )}
                 </div>
                 {request.request_reason && (
                   <div>
                     <Label className="text-slate-400">申请原因</Label>
-                    <p className="text-slate-200 whitespace-pre-wrap">{request.request_reason}</p>
+                    <p className="text-slate-200 whitespace-pre-wrap">
+                      {request.request_reason}
+                    </p>
                   </div>
                 )}
                 {request.approval_note && (
                   <div>
                     <Label className="text-slate-400">审批意见</Label>
-                    <p className="text-slate-200 whitespace-pre-wrap">{request.approval_note}</p>
+                    <p className="text-slate-200 whitespace-pre-wrap">
+                      {request.approval_note}
+                    </p>
                   </div>
                 )}
                 {request.remark && (
                   <div>
                     <Label className="text-slate-400">备注</Label>
-                    <p className="text-slate-200 whitespace-pre-wrap">{request.remark}</p>
+                    <p className="text-slate-200 whitespace-pre-wrap">
+                      {request.remark}
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -370,32 +415,69 @@ export default function PurchaseRequestDetail() {
                       <TableHeader>
                         <TableRow className="border-slate-700">
                           <TableHead className="text-slate-400">序号</TableHead>
-                          <TableHead className="text-slate-400">物料编码</TableHead>
-                          <TableHead className="text-slate-400">物料名称</TableHead>
+                          <TableHead className="text-slate-400">
+                            物料编码
+                          </TableHead>
+                          <TableHead className="text-slate-400">
+                            物料名称
+                          </TableHead>
                           <TableHead className="text-slate-400">规格</TableHead>
                           <TableHead className="text-slate-400">单位</TableHead>
-                          <TableHead className="text-slate-400 text-right">数量</TableHead>
-                          <TableHead className="text-slate-400 text-right">单价</TableHead>
-                          <TableHead className="text-slate-400 text-right">金额</TableHead>
-                          <TableHead className="text-slate-400">需求日期</TableHead>
-                          <TableHead className="text-slate-400 text-right">已采购</TableHead>
+                          <TableHead className="text-slate-400 text-right">
+                            数量
+                          </TableHead>
+                          <TableHead className="text-slate-400 text-right">
+                            单价
+                          </TableHead>
+                          <TableHead className="text-slate-400 text-right">
+                            金额
+                          </TableHead>
+                          <TableHead className="text-slate-400">
+                            需求日期
+                          </TableHead>
+                          <TableHead className="text-slate-400 text-right">
+                            已采购
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {request.items.map((item, index) => (
-                          <TableRow key={item.id || index} className="border-slate-700">
-                            <TableCell className="text-slate-300">{index + 1}</TableCell>
-                            <TableCell className="text-slate-300 font-mono text-xs">{item.material_code}</TableCell>
-                            <TableCell className="text-slate-300">{item.material_name}</TableCell>
-                            <TableCell className="text-slate-400 text-sm">{item.specification || '-'}</TableCell>
-                            <TableCell className="text-slate-300">{item.unit}</TableCell>
-                            <TableCell className="text-slate-300 text-right">{item.quantity}</TableCell>
-                            <TableCell className="text-slate-300 text-right">¥{item.unit_price?.toFixed(2)}</TableCell>
-                            <TableCell className="text-slate-200 text-right font-medium">¥{item.amount?.toFixed(2)}</TableCell>
-                            <TableCell className="text-slate-400 text-sm">{item.required_date || '-'}</TableCell>
+                          <TableRow
+                            key={item.id || index}
+                            className="border-slate-700"
+                          >
+                            <TableCell className="text-slate-300">
+                              {index + 1}
+                            </TableCell>
+                            <TableCell className="text-slate-300 font-mono text-xs">
+                              {item.material_code}
+                            </TableCell>
+                            <TableCell className="text-slate-300">
+                              {item.material_name}
+                            </TableCell>
+                            <TableCell className="text-slate-400 text-sm">
+                              {item.specification || "-"}
+                            </TableCell>
+                            <TableCell className="text-slate-300">
+                              {item.unit}
+                            </TableCell>
+                            <TableCell className="text-slate-300 text-right">
+                              {item.quantity}
+                            </TableCell>
+                            <TableCell className="text-slate-300 text-right">
+                              ¥{item.unit_price?.toFixed(2)}
+                            </TableCell>
+                            <TableCell className="text-slate-200 text-right font-medium">
+                              ¥{item.amount?.toFixed(2)}
+                            </TableCell>
+                            <TableCell className="text-slate-400 text-sm">
+                              {item.required_date || "-"}
+                            </TableCell>
                             <TableCell className="text-slate-300 text-right">
                               {item.ordered_qty > 0 ? (
-                                <Badge className="bg-emerald-500/20 text-emerald-400">{item.ordered_qty}</Badge>
+                                <Badge className="bg-emerald-500/20 text-emerald-400">
+                                  {item.ordered_qty}
+                                </Badge>
                               ) : (
                                 <span className="text-slate-500">0</span>
                               )}
@@ -420,23 +502,27 @@ export default function PurchaseRequestDetail() {
               <CardContent className="space-y-4">
                 <div>
                   <Label className="text-slate-400">物料数量</Label>
-                  <p className="text-2xl font-bold text-slate-200">{request.items?.length || 0}</p>
+                  <p className="text-2xl font-bold text-slate-200">
+                    {request.items?.length || 0}
+                  </p>
                 </div>
                 <div>
                   <Label className="text-slate-400">总金额</Label>
-                  <p className="text-2xl font-bold text-emerald-400">¥{request.total_amount?.toFixed(2) || '0.00'}</p>
+                  <p className="text-2xl font-bold text-emerald-400">
+                    ¥{request.total_amount?.toFixed(2) || "0.00"}
+                  </p>
                 </div>
                 <div className="pt-4 border-t border-slate-700">
                   <Label className="text-slate-400">创建时间</Label>
                   <p className="text-slate-300 text-sm">
-                    {new Date(request.created_at).toLocaleString('zh-CN')}
+                    {new Date(request.created_at).toLocaleString("zh-CN")}
                   </p>
                 </div>
                 {request.updated_at && (
                   <div>
                     <Label className="text-slate-400">更新时间</Label>
                     <p className="text-slate-300 text-sm">
-                      {new Date(request.updated_at).toLocaleString('zh-CN')}
+                      {new Date(request.updated_at).toLocaleString("zh-CN")}
                     </p>
                   </div>
                 )}
@@ -451,26 +537,45 @@ export default function PurchaseRequestDetail() {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 text-sm">自动下单状态</span>
-                  <Badge className={request.auto_po_created ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-700/60 text-slate-200'}>
-                    {request.auto_po_created ? '已生成' : '待生成'}
+                  <Badge
+                    className={
+                      request.auto_po_created
+                        ? "bg-emerald-500/20 text-emerald-300"
+                        : "bg-slate-700/60 text-slate-200"
+                    }
+                  >
+                    {request.auto_po_created ? "已生成" : "待生成"}
                   </Badge>
                 </div>
-                {request.generated_orders && request.generated_orders.length > 0 ? (
+                {request.generated_orders &&
+                request.generated_orders.length > 0 ? (
                   <div className="space-y-3">
                     {request.generated_orders.map((order) => (
-                      <div key={order.id} className="p-3 rounded-lg border border-slate-700 bg-slate-900/40">
+                      <div
+                        key={order.id}
+                        className="p-3 rounded-lg border border-slate-700 bg-slate-900/40"
+                      >
                         <div className="flex items-center justify-between">
-                          <p className="text-slate-100 font-mono text-sm">{order.order_no}</p>
-                          <Badge className="bg-slate-700/60 text-slate-200 text-[10px]">{order.status}</Badge>
+                          <p className="text-slate-100 font-mono text-sm">
+                            {order.order_no}
+                          </p>
+                          <Badge className="bg-slate-700/60 text-slate-200 text-[10px]">
+                            {order.status}
+                          </Badge>
                         </div>
                         <p className="text-sm text-slate-400 mt-2">
-                          含税金额 ¥{parseFloat(order.amount_with_tax || order.total_amount || 0).toFixed(2)}
+                          含税金额 ¥
+                          {parseFloat(
+                            order.amount_with_tax || order.total_amount || 0,
+                          ).toFixed(2)}
                         </p>
                         <Button
                           size="sm"
                           variant="outline"
                           className="w-full mt-3"
-                          onClick={() => navigate(`/purchase-orders/${order.id}`)}
+                          onClick={() =>
+                            navigate(`/purchase-orders/${order.id}`)
+                          }
                         >
                           查看采购订单
                         </Button>
@@ -503,7 +608,9 @@ export default function PurchaseRequestDetail() {
                   <Label className="text-slate-400">审批意见</Label>
                   <Textarea
                     value={approveData.note}
-                    onChange={(e) => setApproveData({ ...approveData, note: e.target.value })}
+                    onChange={(e) =>
+                      setApproveData({ ...approveData, note: e.target.value })
+                    }
                     placeholder="请输入审批意见..."
                     className="bg-slate-800 border-slate-700 text-slate-200"
                     rows={4}
@@ -515,7 +622,7 @@ export default function PurchaseRequestDetail() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  handleApprove(false, approveData.note)
+                  handleApprove(false, approveData.note);
                 }}
                 className="border-red-500 text-red-400 hover:bg-red-500/10"
               >
@@ -523,7 +630,7 @@ export default function PurchaseRequestDetail() {
               </Button>
               <Button
                 onClick={() => {
-                  handleApprove(true, approveData.note)
+                  handleApprove(true, approveData.note);
                 }}
                 className="bg-emerald-600 hover:bg-emerald-700"
               >
@@ -534,11 +641,5 @@ export default function PurchaseRequestDetail() {
         </Dialog>
       </div>
     </div>
-  )
+  );
 }
-
-
-
-
-
-

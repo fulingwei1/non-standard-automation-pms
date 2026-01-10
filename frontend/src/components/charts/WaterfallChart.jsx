@@ -3,8 +3,8 @@
  * 用于财务分析、成本分解
  */
 
-import { Waterfall } from '@ant-design/plots'
-import { useMemo } from 'react'
+import { Waterfall } from "@ant-design/plots";
+import { useMemo } from "react";
 
 /**
  * WaterfallChart - 瀑布图
@@ -18,8 +18,8 @@ import { useMemo } from 'react'
  */
 export default function WaterfallChart({
   data = [],
-  xField = 'type',
-  yField = 'value',
+  xField = "type",
+  yField = "value",
   height = 300,
   formatter,
   colors,
@@ -29,11 +29,11 @@ export default function WaterfallChart({
 }) {
   const config = useMemo(() => {
     const defaultColors = {
-      rising: '#22c55e',
-      falling: '#ef4444',
-      total: '#3b82f6',
-    }
-    const colorConfig = { ...defaultColors, ...colors }
+      rising: "#22c55e",
+      falling: "#ef4444",
+      total: "#3b82f6",
+    };
+    const colorConfig = { ...defaultColors, ...colors };
 
     return {
       data,
@@ -43,15 +43,15 @@ export default function WaterfallChart({
       appendPadding: [20, 0, 0, 0],
       meta: {
         [xField]: {
-          alias: '类型',
+          alias: "类型",
         },
         [yField]: {
-          alias: '金额',
+          alias: "金额",
           formatter,
         },
       },
       total: {
-        label: '合计',
+        label: "合计",
         style: {
           fill: colorConfig.total,
         },
@@ -60,21 +60,22 @@ export default function WaterfallChart({
       fallingFill: colorConfig.falling,
       label: {
         style: {
-          fill: '#e2e8f0',
+          fill: "#e2e8f0",
           fontSize: 11,
         },
-        formatter: (datum) => formatter ? formatter(datum[yField]) : datum[yField],
+        formatter: (datum) =>
+          formatter ? formatter(datum[yField]) : datum[yField],
       },
       xAxis: {
         label: {
           style: {
-            fill: '#94a3b8',
+            fill: "#94a3b8",
             fontSize: 12,
           },
         },
         line: {
           style: {
-            stroke: '#334155',
+            stroke: "#334155",
           },
         },
       },
@@ -82,14 +83,14 @@ export default function WaterfallChart({
         label: {
           formatter,
           style: {
-            fill: '#94a3b8',
+            fill: "#94a3b8",
             fontSize: 12,
           },
         },
         grid: {
           line: {
             style: {
-              stroke: '#334155',
+              stroke: "#334155",
               lineDash: [4, 4],
             },
           },
@@ -103,13 +104,13 @@ export default function WaterfallChart({
       },
       animation: {
         appear: {
-          animation: 'scale-in-y',
+          animation: "scale-in-y",
           duration: 800,
         },
       },
       ...rest,
-    }
-  }, [data, xField, yField, height, formatter, colors, rest])
+    };
+  }, [data, xField, yField, height, formatter, colors, rest]);
 
   if (!data || data.length === 0) {
     return (
@@ -119,13 +120,15 @@ export default function WaterfallChart({
       >
         暂无数据
       </div>
-    )
+    );
   }
 
   return (
     <div style={style}>
-      {title && <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>}
+      {title && (
+        <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>
+      )}
       <Waterfall {...config} />
     </div>
-  )
+  );
 }

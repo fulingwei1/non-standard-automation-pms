@@ -3,8 +3,8 @@
  * Features: Quotation list, creation, approval, version history
  */
 
-import { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText,
   Search,
@@ -30,8 +30,8 @@ import {
   History,
   Percent,
   Target,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -46,59 +46,86 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '../components/ui'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
+} from "../components/ui";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
 
 // Status configuration
 const statusConfig = {
-  draft: { label: '草稿', color: 'bg-slate-500', textColor: 'text-slate-400' },
-  pending_approval: { label: '待审批', color: 'bg-amber-500', textColor: 'text-amber-400' },
-  approved: { label: '已审批', color: 'bg-blue-500', textColor: 'text-blue-400' },
-  sent: { label: '已发送', color: 'bg-purple-500', textColor: 'text-purple-400' },
-  accepted: { label: '已接受', color: 'bg-emerald-500', textColor: 'text-emerald-400' },
-  rejected: { label: '已拒绝', color: 'bg-red-500', textColor: 'text-red-400' },
-  expired: { label: '已过期', color: 'bg-slate-600', textColor: 'text-slate-500' },
-}
+  draft: { label: "草稿", color: "bg-slate-500", textColor: "text-slate-400" },
+  pending_approval: {
+    label: "待审批",
+    color: "bg-amber-500",
+    textColor: "text-amber-400",
+  },
+  approved: {
+    label: "已审批",
+    color: "bg-blue-500",
+    textColor: "text-blue-400",
+  },
+  sent: {
+    label: "已发送",
+    color: "bg-purple-500",
+    textColor: "text-purple-400",
+  },
+  accepted: {
+    label: "已接受",
+    color: "bg-emerald-500",
+    textColor: "text-emerald-400",
+  },
+  rejected: { label: "已拒绝", color: "bg-red-500", textColor: "text-red-400" },
+  expired: {
+    label: "已过期",
+    color: "bg-slate-600",
+    textColor: "text-slate-500",
+  },
+};
 
 // Mock quotation data
 // Mock data - 已移除，使用真实API
 export default function QuotationList() {
-  const [viewMode, setViewMode] = useState('list')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedStatus, setSelectedStatus] = useState('all')
-  const [selectedQuotation, setSelectedQuotation] = useState(null)
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [viewMode, setViewMode] = useState("list");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedQuotation, setSelectedQuotation] = useState(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   // Filter quotations
   const filteredQuotations = useMemo(() => {
-    return mockQuotations.filter(quote => {
-      const matchesSearch = !searchTerm || 
+    return mockQuotations.filter((quote) => {
+      const matchesSearch =
+        !searchTerm ||
         quote.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         quote.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        quote.customerShort.toLowerCase().includes(searchTerm.toLowerCase())
-      
-      const matchesStatus = selectedStatus === 'all' || quote.status === selectedStatus
+        quote.customerShort.toLowerCase().includes(searchTerm.toLowerCase());
 
-      return matchesSearch && matchesStatus
-    })
-  }, [searchTerm, selectedStatus])
+      const matchesStatus =
+        selectedStatus === "all" || quote.status === selectedStatus;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [searchTerm, selectedStatus]);
 
   // Stats
   const stats = useMemo(() => {
     return {
       total: mockQuotations.length,
-      pending: mockQuotations.filter(q => q.status === 'sent' || q.status === 'pending_approval').length,
-      accepted: mockQuotations.filter(q => q.status === 'accepted').length,
-      rejected: mockQuotations.filter(q => q.status === 'rejected').length,
+      pending: mockQuotations.filter(
+        (q) => q.status === "sent" || q.status === "pending_approval",
+      ).length,
+      accepted: mockQuotations.filter((q) => q.status === "accepted").length,
+      rejected: mockQuotations.filter((q) => q.status === "rejected").length,
       totalValue: mockQuotations.reduce((sum, q) => sum + q.finalAmount, 0),
-      avgDiscount: (mockQuotations.reduce((sum, q) => sum + q.discountPercent, 0) / mockQuotations.length).toFixed(1),
-    }
-  }, [])
+      avgDiscount: (
+        mockQuotations.reduce((sum, q) => sum + q.discountPercent, 0) /
+        mockQuotations.length
+      ).toFixed(1),
+    };
+  }, []);
 
   const handleQuotationClick = (quotation) => {
-    setSelectedQuotation(quotation)
-  }
+    setSelectedQuotation(quotation);
+  };
 
   return (
     <motion.div
@@ -117,7 +144,10 @@ export default function QuotationList() {
               <Download className="w-4 h-4" />
               导出
             </Button>
-            <Button className="flex items-center gap-2" onClick={() => setShowCreateDialog(true)}>
+            <Button
+              className="flex items-center gap-2"
+              onClick={() => setShowCreateDialog(true)}
+            >
               <Plus className="w-4 h-4" />
               新建报价
             </Button>
@@ -126,7 +156,10 @@ export default function QuotationList() {
       />
 
       {/* Stats Row */}
-      <motion.div variants={fadeIn} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <motion.div
+        variants={fadeIn}
+        className="grid grid-cols-2 sm:grid-cols-4 gap-4"
+      >
         <Card className="bg-surface-100/50">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="p-2 bg-blue-500/20 rounded-lg">
@@ -166,7 +199,9 @@ export default function QuotationList() {
               <Percent className="w-5 h-5 text-purple-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{stats.avgDiscount}%</p>
+              <p className="text-2xl font-bold text-white">
+                {stats.avgDiscount}%
+              </p>
               <p className="text-xs text-slate-400">平均折扣</p>
             </div>
           </CardContent>
@@ -174,7 +209,10 @@ export default function QuotationList() {
       </motion.div>
 
       {/* Filters */}
-      <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      <motion.div
+        variants={fadeIn}
+        className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
+      >
         <div className="flex flex-wrap gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -192,7 +230,9 @@ export default function QuotationList() {
           >
             <option value="all">全部状态</option>
             {Object.entries(statusConfig).map(([key, val]) => (
-              <option key={key} value={key}>{val.label}</option>
+              <option key={key} value={key}>
+                {val.label}
+              </option>
             ))}
           </select>
         </div>
@@ -203,18 +243,18 @@ export default function QuotationList() {
           </span>
           <div className="flex border border-white/10 rounded-lg overflow-hidden">
             <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              variant={viewMode === "list" ? "default" : "ghost"}
               size="sm"
               className="rounded-none"
-              onClick={() => setViewMode('list')}
+              onClick={() => setViewMode("list")}
             >
               <List className="w-4 h-4" />
             </Button>
             <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              variant={viewMode === "grid" ? "default" : "ghost"}
               size="sm"
               className="rounded-none"
-              onClick={() => setViewMode('grid')}
+              onClick={() => setViewMode("grid")}
             >
               <LayoutGrid className="w-4 h-4" />
             </Button>
@@ -224,26 +264,44 @@ export default function QuotationList() {
 
       {/* Content */}
       <motion.div variants={fadeIn}>
-        {viewMode === 'list' ? (
+        {viewMode === "list" ? (
           <Card>
             <CardContent className="p-0">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/5">
-                    <th className="text-left p-4 text-sm font-medium text-slate-400">报价单</th>
-                    <th className="text-left p-4 text-sm font-medium text-slate-400">客户</th>
-                    <th className="text-left p-4 text-sm font-medium text-slate-400">关联商机</th>
-                    <th className="text-right p-4 text-sm font-medium text-slate-400">报价金额</th>
-                    <th className="text-center p-4 text-sm font-medium text-slate-400">折扣</th>
-                    <th className="text-left p-4 text-sm font-medium text-slate-400">有效期</th>
-                    <th className="text-left p-4 text-sm font-medium text-slate-400">状态</th>
-                    <th className="text-center p-4 text-sm font-medium text-slate-400">操作</th>
+                    <th className="text-left p-4 text-sm font-medium text-slate-400">
+                      报价单
+                    </th>
+                    <th className="text-left p-4 text-sm font-medium text-slate-400">
+                      客户
+                    </th>
+                    <th className="text-left p-4 text-sm font-medium text-slate-400">
+                      关联商机
+                    </th>
+                    <th className="text-right p-4 text-sm font-medium text-slate-400">
+                      报价金额
+                    </th>
+                    <th className="text-center p-4 text-sm font-medium text-slate-400">
+                      折扣
+                    </th>
+                    <th className="text-left p-4 text-sm font-medium text-slate-400">
+                      有效期
+                    </th>
+                    <th className="text-left p-4 text-sm font-medium text-slate-400">
+                      状态
+                    </th>
+                    <th className="text-center p-4 text-sm font-medium text-slate-400">
+                      操作
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredQuotations.map((quote) => {
-                    const statusConf = statusConfig[quote.status]
-                    const isExpired = new Date(quote.validUntil) < new Date() && quote.status !== 'accepted'
+                    const statusConf = statusConfig[quote.status];
+                    const isExpired =
+                      new Date(quote.validUntil) < new Date() &&
+                      quote.status !== "accepted";
 
                     return (
                       <tr
@@ -254,13 +312,21 @@ export default function QuotationList() {
                         <td className="p-4">
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-white">{quote.name}</span>
-                              <Badge variant="secondary" className="text-xs">V{quote.version}</Badge>
+                              <span className="font-medium text-white">
+                                {quote.name}
+                              </span>
+                              <Badge variant="secondary" className="text-xs">
+                                V{quote.version}
+                              </Badge>
                             </div>
-                            <div className="text-xs text-slate-500">{quote.id}</div>
+                            <div className="text-xs text-slate-500">
+                              {quote.id}
+                            </div>
                           </div>
                         </td>
-                        <td className="p-4 text-sm text-slate-400">{quote.customerShort}</td>
+                        <td className="p-4 text-sm text-slate-400">
+                          {quote.customerShort}
+                        </td>
                         <td className="p-4">
                           <div className="flex items-center gap-1 text-sm text-blue-400">
                             <Target className="w-3 h-3" />
@@ -279,7 +345,10 @@ export default function QuotationList() {
                         </td>
                         <td className="p-4 text-center">
                           {quote.discountPercent > 0 ? (
-                            <Badge variant="secondary" className="text-xs bg-red-500/20 text-red-400">
+                            <Badge
+                              variant="secondary"
+                              className="text-xs bg-red-500/20 text-red-400"
+                            >
                               -{quote.discountPercent}%
                             </Badge>
                           ) : (
@@ -287,36 +356,61 @@ export default function QuotationList() {
                           )}
                         </td>
                         <td className="p-4">
-                          <span className={cn(
-                            'text-sm',
-                            isExpired ? 'text-red-400' : 'text-slate-400'
-                          )}>
+                          <span
+                            className={cn(
+                              "text-sm",
+                              isExpired ? "text-red-400" : "text-slate-400",
+                            )}
+                          >
                             {quote.validUntil}
                           </span>
                         </td>
                         <td className="p-4">
-                          <Badge className={cn('text-xs', statusConf.textColor, 'bg-transparent border-0')}>
-                            <div className={cn('w-2 h-2 rounded-full mr-1', statusConf.color)} />
+                          <Badge
+                            className={cn(
+                              "text-xs",
+                              statusConf.textColor,
+                              "bg-transparent border-0",
+                            )}
+                          >
+                            <div
+                              className={cn(
+                                "w-2 h-2 rounded-full mr-1",
+                                statusConf.color,
+                              )}
+                            />
                             {statusConf.label}
                           </Badge>
                         </td>
                         <td className="p-4">
                           <div className="flex justify-center gap-1">
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                            >
                               <Eye className="w-4 h-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                            >
                               <Copy className="w-4 h-4" />
                             </Button>
-                            {quote.status === 'approved' && (
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                            {quote.status === "approved" && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                              >
                                 <Send className="w-4 h-4 text-blue-400" />
                               </Button>
                             )}
                           </div>
                         </td>
                       </tr>
-                    )
+                    );
                   })}
                 </tbody>
               </table>
@@ -325,8 +419,10 @@ export default function QuotationList() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredQuotations.map((quote) => {
-              const statusConf = statusConfig[quote.status]
-              const isExpired = new Date(quote.validUntil) < new Date() && quote.status !== 'accepted'
+              const statusConf = statusConfig[quote.status];
+              const isExpired =
+                new Date(quote.validUntil) < new Date() &&
+                quote.status !== "accepted";
 
               return (
                 <Card
@@ -338,13 +434,28 @@ export default function QuotationList() {
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-medium text-white">{quote.name}</h3>
-                          <Badge variant="secondary" className="text-xs">V{quote.version}</Badge>
+                          <h3 className="font-medium text-white">
+                            {quote.name}
+                          </h3>
+                          <Badge variant="secondary" className="text-xs">
+                            V{quote.version}
+                          </Badge>
                         </div>
                         <div className="text-xs text-slate-500">{quote.id}</div>
                       </div>
-                      <Badge className={cn('text-xs', statusConf.textColor, 'bg-transparent border-0')}>
-                        <div className={cn('w-2 h-2 rounded-full mr-1', statusConf.color)} />
+                      <Badge
+                        className={cn(
+                          "text-xs",
+                          statusConf.textColor,
+                          "bg-transparent border-0",
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "w-2 h-2 rounded-full mr-1",
+                            statusConf.color,
+                          )}
+                        />
                         {statusConf.label}
                       </Badge>
                     </div>
@@ -366,21 +477,25 @@ export default function QuotationList() {
                           ¥{(quote.finalAmount / 10000).toFixed(0)}万
                         </div>
                         {quote.discountPercent > 0 && (
-                          <div className="text-xs text-red-400">-{quote.discountPercent}%折扣</div>
+                          <div className="text-xs text-red-400">
+                            -{quote.discountPercent}%折扣
+                          </div>
                         )}
                       </div>
                       <div className="text-right">
-                        <div className={cn(
-                          'text-xs',
-                          isExpired ? 'text-red-400' : 'text-slate-400'
-                        )}>
+                        <div
+                          className={cn(
+                            "text-xs",
+                            isExpired ? "text-red-400" : "text-slate-400",
+                          )}
+                        >
                           有效期: {quote.validUntil}
                         </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              )
+              );
             })}
           </div>
         )}
@@ -413,9 +528,7 @@ export default function QuotationList() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>新建报价</DialogTitle>
-            <DialogDescription>
-              创建新的销售报价单
-            </DialogDescription>
+            <DialogDescription>创建新的销售报价单</DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
             <div className="col-span-2 space-y-2">
@@ -444,30 +557,34 @@ export default function QuotationList() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
-            <Button onClick={() => setShowCreateDialog(false)}>
-              创建报价
-            </Button>
+            <Button onClick={() => setShowCreateDialog(false)}>创建报价</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </motion.div>
-  )
+  );
 }
 
 // Quotation Detail Panel
 function QuotationDetailPanel({ quotation, onClose }) {
-  const statusConf = statusConfig[quotation.status]
-  const profitMargin = ((quotation.finalAmount - quotation.costAmount) / quotation.finalAmount * 100).toFixed(1)
+  const statusConf = statusConfig[quotation.status];
+  const profitMargin = (
+    ((quotation.finalAmount - quotation.costAmount) / quotation.finalAmount) *
+    100
+  ).toFixed(1);
 
   return (
     <motion.div
-      initial={{ x: '100%' }}
+      initial={{ x: "100%" }}
       animate={{ x: 0 }}
-      exit={{ x: '100%' }}
-      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+      exit={{ x: "100%" }}
+      transition={{ type: "spring", damping: 25, stiffness: 200 }}
       className="fixed right-0 top-0 h-full w-full md:w-[500px] bg-surface-100/95 backdrop-blur-xl border-l border-white/5 shadow-2xl z-50 flex flex-col"
     >
       {/* Header */}
@@ -475,7 +592,9 @@ function QuotationDetailPanel({ quotation, onClose }) {
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h2 className="text-lg font-semibold text-white">{quotation.name}</h2>
+              <h2 className="text-lg font-semibold text-white">
+                {quotation.name}
+              </h2>
               <Badge variant="secondary">V{quotation.version}</Badge>
             </div>
             <p className="text-sm text-slate-400">{quotation.id}</p>
@@ -485,8 +604,16 @@ function QuotationDetailPanel({ quotation, onClose }) {
           </Button>
         </div>
         <div className="flex items-center gap-2 mt-3">
-          <Badge className={cn('text-xs', statusConf.textColor, 'bg-transparent border-0')}>
-            <div className={cn('w-2 h-2 rounded-full mr-1', statusConf.color)} />
+          <Badge
+            className={cn(
+              "text-xs",
+              statusConf.textColor,
+              "bg-transparent border-0",
+            )}
+          >
+            <div
+              className={cn("w-2 h-2 rounded-full mr-1", statusConf.color)}
+            />
             {statusConf.label}
           </Badge>
         </div>
@@ -515,10 +642,14 @@ function QuotationDetailPanel({ quotation, onClose }) {
                 </Badge>
               )}
               <div className="text-sm text-slate-400">利润率</div>
-              <div className={cn(
-                'text-lg font-semibold',
-                parseFloat(profitMargin) > 25 ? 'text-emerald-400' : 'text-amber-400'
-              )}>
+              <div
+                className={cn(
+                  "text-lg font-semibold",
+                  parseFloat(profitMargin) > 25
+                    ? "text-emerald-400"
+                    : "text-amber-400",
+                )}
+              >
                 {profitMargin}%
               </div>
             </div>
@@ -542,9 +673,13 @@ function QuotationDetailPanel({ quotation, onClose }) {
             <div className="flex items-center gap-3">
               <Calendar className="w-4 h-4 text-slate-500" />
               <span className="text-slate-400">有效期:</span>
-              <span className={cn(
-                new Date(quotation.validUntil) < new Date() ? 'text-red-400' : 'text-white'
-              )}>
+              <span
+                className={cn(
+                  new Date(quotation.validUntil) < new Date()
+                    ? "text-red-400"
+                    : "text-white",
+                )}
+              >
                 {quotation.validUntil}
               </span>
             </div>
@@ -573,7 +708,9 @@ function QuotationDetailPanel({ quotation, onClose }) {
                 {quotation.items.map((item, index) => (
                   <tr key={index} className="border-t border-white/5">
                     <td className="p-3 text-white">{item.name}</td>
-                    <td className="p-3 text-center text-slate-400">{item.qty}</td>
+                    <td className="p-3 text-center text-slate-400">
+                      {item.qty}
+                    </td>
                     <td className="p-3 text-right text-slate-400">
                       ¥{(item.unitPrice / 10000).toFixed(1)}万
                     </td>
@@ -585,7 +722,9 @@ function QuotationDetailPanel({ quotation, onClose }) {
               </tbody>
               <tfoot>
                 <tr className="border-t border-white/5 bg-surface-50">
-                  <td colSpan={3} className="p-3 text-right text-slate-400">合计:</td>
+                  <td colSpan={3} className="p-3 text-right text-slate-400">
+                    合计:
+                  </td>
                   <td className="p-3 text-right font-semibold text-amber-400">
                     ¥{(quotation.totalAmount / 10000).toFixed(1)}万
                   </td>
@@ -631,7 +770,7 @@ function QuotationDetailPanel({ quotation, onClose }) {
               <Download className="w-4 h-4 mr-2 text-emerald-400" />
               导出PDF
             </Button>
-            {quotation.status === 'approved' && (
+            {quotation.status === "approved" && (
               <Button variant="outline" size="sm" className="justify-start">
                 <Send className="w-4 h-4 mr-2 text-amber-400" />
                 发送客户
@@ -646,7 +785,7 @@ function QuotationDetailPanel({ quotation, onClose }) {
         <Button variant="outline" className="flex-1" onClick={onClose}>
           关闭
         </Button>
-        {quotation.status === 'draft' && (
+        {quotation.status === "draft" && (
           <Button className="flex-1">
             <Edit className="w-4 h-4 mr-2" />
             编辑
@@ -654,6 +793,5 @@ function QuotationDetailPanel({ quotation, onClose }) {
         )}
       </div>
     </motion.div>
-  )
+  );
 }
-

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   Plus,
   Search,
@@ -10,29 +10,35 @@ import {
   ChevronRight,
   ChevronDown,
   FolderTree,
-} from 'lucide-react';
-import { PageHeader } from '../components/layout';
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Badge } from '../components/ui/badge';
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '../components/ui/dialog';
-import { Label } from '../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { cn } from '../lib/utils';
-import { fadeIn, staggerContainer } from '../lib/animations';
-import { orgApi } from '../services/api';
+} from "../components/ui/dialog";
+import { Label } from "../components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { orgApi } from "../services/api";
 
 // 部门树节点组件
 function DepartmentTreeNode({ dept, level = 0, onEdit, onView, onSelect }) {
@@ -42,8 +48,8 @@ function DepartmentTreeNode({ dept, level = 0, onEdit, onView, onSelect }) {
     <div>
       <div
         className={cn(
-          'flex items-center gap-2 p-2 rounded hover:bg-muted/50 cursor-pointer',
-          level > 0 && 'ml-4'
+          "flex items-center gap-2 p-2 rounded hover:bg-muted/50 cursor-pointer",
+          level > 0 && "ml-4",
         )}
         style={{ paddingLeft: `${level * 20 + 8}px` }}
       >
@@ -72,18 +78,10 @@ function DepartmentTreeNode({ dept, level = 0, onEdit, onView, onSelect }) {
           </Badge>
         )}
         <div className="flex items-center space-x-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onView(dept.id)}
-          >
+          <Button variant="ghost" size="sm" onClick={() => onView(dept.id)}>
             <Eye className="h-4 w-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onEdit(dept.id)}
-          >
+          <Button variant="ghost" size="sm" onClick={() => onEdit(dept.id)}>
             <Edit3 className="h-4 w-4" />
           </Button>
         </div>
@@ -114,11 +112,11 @@ export default function DepartmentManagement() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
-  const [viewMode, setViewMode] = useState('tree'); // 'tree' or 'list'
+  const [viewMode, setViewMode] = useState("tree"); // 'tree' or 'list'
 
   const [newDepartment, setNewDepartment] = useState({
-    dept_code: '',
-    dept_name: '',
+    dept_code: "",
+    dept_name: "",
     parent_id: null,
     manager_id: null,
     sort_order: 0,
@@ -134,8 +132,10 @@ export default function DepartmentManagement() {
       const response = await orgApi.departments({ skip: 0, limit: 1000 });
       setDepartments(response.data || []);
     } catch (error) {
-      console.error('加载部门列表失败:', error);
-      alert('加载部门列表失败: ' + (error.response?.data?.detail || error.message));
+      console.error("加载部门列表失败:", error);
+      alert(
+        "加载部门列表失败: " + (error.response?.data?.detail || error.message),
+      );
     } finally {
       setLoading(false);
     }
@@ -148,15 +148,17 @@ export default function DepartmentManagement() {
       const response = await orgApi.departmentTree({ is_active: true });
       setDepartmentTree(response.data || []);
     } catch (error) {
-      console.error('加载部门树失败:', error);
-      alert('加载部门树失败: ' + (error.response?.data?.detail || error.message));
+      console.error("加载部门树失败:", error);
+      alert(
+        "加载部门树失败: " + (error.response?.data?.detail || error.message),
+      );
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (viewMode === 'tree') {
+    if (viewMode === "tree") {
       loadDepartmentTree();
     } else {
       loadDepartments();
@@ -177,25 +179,27 @@ export default function DepartmentManagement() {
     try {
       const data = {
         ...newDepartment,
-        parent_id: newDepartment.parent_id ? parseInt(newDepartment.parent_id) : null,
+        parent_id: newDepartment.parent_id
+          ? parseInt(newDepartment.parent_id)
+          : null,
       };
       await orgApi.createDepartment(data);
       setShowCreateDialog(false);
       setNewDepartment({
-        dept_code: '',
-        dept_name: '',
+        dept_code: "",
+        dept_name: "",
         parent_id: null,
         manager_id: null,
         sort_order: 0,
         is_active: true,
       });
-      if (viewMode === 'tree') {
+      if (viewMode === "tree") {
         loadDepartmentTree();
       } else {
         loadDepartments();
       }
     } catch (error) {
-      alert('创建部门失败: ' + (error.response?.data?.detail || error.message));
+      alert("创建部门失败: " + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -203,18 +207,20 @@ export default function DepartmentManagement() {
     try {
       const data = {
         ...editDepartment,
-        parent_id: editDepartment.parent_id ? parseInt(editDepartment.parent_id) : null,
+        parent_id: editDepartment.parent_id
+          ? parseInt(editDepartment.parent_id)
+          : null,
       };
       await orgApi.updateDepartment(editDepartment.id, data);
       setShowEditDialog(false);
       setEditDepartment(null);
-      if (viewMode === 'tree') {
+      if (viewMode === "tree") {
         loadDepartmentTree();
       } else {
         loadDepartments();
       }
     } catch (error) {
-      alert('更新部门失败: ' + (error.response?.data?.detail || error.message));
+      alert("更新部门失败: " + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -224,7 +230,9 @@ export default function DepartmentManagement() {
       setSelectedDepartment(response.data);
       setShowDetailDialog(true);
     } catch (error) {
-      alert('获取部门详情失败: ' + (error.response?.data?.detail || error.message));
+      alert(
+        "获取部门详情失败: " + (error.response?.data?.detail || error.message),
+      );
     }
   };
 
@@ -234,13 +242,15 @@ export default function DepartmentManagement() {
       setEditDepartment(response.data);
       setShowEditDialog(true);
     } catch (error) {
-      alert('获取部门信息失败: ' + (error.response?.data?.detail || error.message));
+      alert(
+        "获取部门信息失败: " + (error.response?.data?.detail || error.message),
+      );
     }
   };
 
   // 扁平化部门列表用于选择父部门
   const flattenDepartments = (depts, result = []) => {
-    depts.forEach(dept => {
+    depts.forEach((dept) => {
       result.push(dept);
       if (dept.children && dept.children.length > 0) {
         flattenDepartments(dept.children, result);
@@ -249,7 +259,8 @@ export default function DepartmentManagement() {
     return result;
   };
 
-  const flatDepartments = viewMode === 'tree' ? flattenDepartments(departmentTree) : departments;
+  const flatDepartments =
+    viewMode === "tree" ? flattenDepartments(departmentTree) : departments;
 
   return (
     <motion.div
@@ -264,14 +275,14 @@ export default function DepartmentManagement() {
         actions={
           <div className="flex items-center space-x-2">
             <Button
-              variant={viewMode === 'tree' ? 'default' : 'outline'}
-              onClick={() => setViewMode('tree')}
+              variant={viewMode === "tree" ? "default" : "outline"}
+              onClick={() => setViewMode("tree")}
             >
               <FolderTree className="mr-2 h-4 w-4" /> 树形视图
             </Button>
             <Button
-              variant={viewMode === 'list' ? 'default' : 'outline'}
-              onClick={() => setViewMode('list')}
+              variant={viewMode === "list" ? "default" : "outline"}
+              onClick={() => setViewMode("list")}
             >
               <Building2 className="mr-2 h-4 w-4" /> 列表视图
             </Button>
@@ -285,15 +296,19 @@ export default function DepartmentManagement() {
       <motion.div variants={fadeIn}>
         <Card>
           <CardHeader>
-            <CardTitle>{viewMode === 'tree' ? '部门树' : '部门列表'}</CardTitle>
+            <CardTitle>{viewMode === "tree" ? "部门树" : "部门列表"}</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="p-4 text-center text-muted-foreground">加载中...</div>
-            ) : viewMode === 'tree' ? (
+              <div className="p-4 text-center text-muted-foreground">
+                加载中...
+              </div>
+            ) : viewMode === "tree" ? (
               <div className="space-y-1">
                 {departmentTree.length === 0 ? (
-                  <p className="p-4 text-center text-muted-foreground">暂无部门数据</p>
+                  <p className="p-4 text-center text-muted-foreground">
+                    暂无部门数据
+                  </p>
                 ) : (
                   departmentTree.map((dept) => (
                     <DepartmentTreeNode
@@ -312,24 +327,46 @@ export default function DepartmentManagement() {
                 <table className="min-w-full divide-y divide-border">
                   <thead>
                     <tr className="bg-muted/50">
-                      <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">部门编码</th>
-                      <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">部门名称</th>
-                      <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">层级</th>
-                      <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">负责人</th>
-                      <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">状态</th>
-                      <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">操作</th>
+                      <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">
+                        部门编码
+                      </th>
+                      <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">
+                        部门名称
+                      </th>
+                      <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">
+                        层级
+                      </th>
+                      <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">
+                        负责人
+                      </th>
+                      <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">
+                        状态
+                      </th>
+                      <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">
+                        操作
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
                     {departments.map((dept) => (
                       <tr key={dept.id}>
-                        <td className="px-4 py-2 text-sm text-foreground font-mono">{dept.dept_code}</td>
-                        <td className="px-4 py-2 text-sm text-foreground">{dept.dept_name}</td>
-                        <td className="px-4 py-2 text-sm text-muted-foreground">L{dept.level || 1}</td>
-                        <td className="px-4 py-2 text-sm text-muted-foreground">{dept.manager?.name || '-'}</td>
+                        <td className="px-4 py-2 text-sm text-foreground font-mono">
+                          {dept.dept_code}
+                        </td>
+                        <td className="px-4 py-2 text-sm text-foreground">
+                          {dept.dept_name}
+                        </td>
+                        <td className="px-4 py-2 text-sm text-muted-foreground">
+                          L{dept.level || 1}
+                        </td>
+                        <td className="px-4 py-2 text-sm text-muted-foreground">
+                          {dept.manager?.name || "-"}
+                        </td>
                         <td className="px-4 py-2 text-sm">
-                          <Badge variant={dept.is_active ? 'default' : 'secondary'}>
-                            {dept.is_active ? '启用' : '禁用'}
+                          <Badge
+                            variant={dept.is_active ? "default" : "secondary"}
+                          >
+                            {dept.is_active ? "启用" : "禁用"}
                           </Badge>
                         </td>
                         <td className="px-4 py-2 text-sm">
@@ -368,7 +405,9 @@ export default function DepartmentManagement() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="create-dept-code" className="text-right">部门编码 *</Label>
+              <Label htmlFor="create-dept-code" className="text-right">
+                部门编码 *
+              </Label>
               <Input
                 id="create-dept-code"
                 name="dept_code"
@@ -379,7 +418,9 @@ export default function DepartmentManagement() {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="create-dept-name" className="text-right">部门名称 *</Label>
+              <Label htmlFor="create-dept-name" className="text-right">
+                部门名称 *
+              </Label>
               <Input
                 id="create-dept-name"
                 name="dept_name"
@@ -390,11 +431,18 @@ export default function DepartmentManagement() {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="create-parent-id" className="text-right">父部门</Label>
+              <Label htmlFor="create-parent-id" className="text-right">
+                父部门
+              </Label>
               <Select
-                value={newDepartment.parent_id ? String(newDepartment.parent_id) : ''}
+                value={
+                  newDepartment.parent_id ? String(newDepartment.parent_id) : ""
+                }
                 onValueChange={(value) =>
-                  setNewDepartment((prev) => ({ ...prev, parent_id: value || null }))
+                  setNewDepartment((prev) => ({
+                    ...prev,
+                    parent_id: value || null,
+                  }))
                 }
               >
                 <SelectTrigger className="col-span-3">
@@ -403,7 +451,9 @@ export default function DepartmentManagement() {
                 <SelectContent>
                   <SelectItem value="none">无（顶级部门）</SelectItem>
                   {flatDepartments
-                    .filter(d => !editDepartment || d.id !== editDepartment.id)
+                    .filter(
+                      (d) => !editDepartment || d.id !== editDepartment.id,
+                    )
                     .map((dept) => (
                       <SelectItem key={dept.id} value={String(dept.id)}>
                         {dept.dept_name} ({dept.dept_code})
@@ -413,7 +463,9 @@ export default function DepartmentManagement() {
               </Select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="create-sort-order" className="text-right">排序</Label>
+              <Label htmlFor="create-sort-order" className="text-right">
+                排序
+              </Label>
               <Input
                 id="create-sort-order"
                 name="sort_order"
@@ -425,7 +477,10 @@ export default function DepartmentManagement() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleCreateSubmit}>保存</Button>
@@ -442,21 +497,32 @@ export default function DepartmentManagement() {
           {editDepartment && (
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-dept-name" className="text-right">部门名称</Label>
+                <Label htmlFor="edit-dept-name" className="text-right">
+                  部门名称
+                </Label>
                 <Input
                   id="edit-dept-name"
                   name="dept_name"
-                  value={editDepartment.dept_name || ''}
+                  value={editDepartment.dept_name || ""}
                   onChange={handleEditChange}
                   className="col-span-3"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-parent-id" className="text-right">父部门</Label>
+                <Label htmlFor="edit-parent-id" className="text-right">
+                  父部门
+                </Label>
                 <Select
-                  value={editDepartment.parent_id ? String(editDepartment.parent_id) : ''}
+                  value={
+                    editDepartment.parent_id
+                      ? String(editDepartment.parent_id)
+                      : ""
+                  }
                   onValueChange={(value) =>
-                    setEditDepartment((prev) => ({ ...prev, parent_id: value || null }))
+                    setEditDepartment((prev) => ({
+                      ...prev,
+                      parent_id: value || null,
+                    }))
                   }
                 >
                   <SelectTrigger className="col-span-3">
@@ -465,7 +531,7 @@ export default function DepartmentManagement() {
                   <SelectContent>
                     <SelectItem value="none">无（顶级部门）</SelectItem>
                     {flatDepartments
-                      .filter(d => d.id !== editDepartment.id)
+                      .filter((d) => d.id !== editDepartment.id)
                       .map((dept) => (
                         <SelectItem key={dept.id} value={String(dept.id)}>
                           {dept.dept_name} ({dept.dept_code})
@@ -475,7 +541,9 @@ export default function DepartmentManagement() {
                 </Select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-sort-order" className="text-right">排序</Label>
+                <Label htmlFor="edit-sort-order" className="text-right">
+                  排序
+                </Label>
                 <Input
                   id="edit-sort-order"
                   name="sort_order"
@@ -486,11 +554,16 @@ export default function DepartmentManagement() {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-is-active" className="text-right">状态</Label>
+                <Label htmlFor="edit-is-active" className="text-right">
+                  状态
+                </Label>
                 <Select
-                  value={editDepartment.is_active ? 'active' : 'inactive'}
+                  value={editDepartment.is_active ? "active" : "inactive"}
                   onValueChange={(value) =>
-                    setEditDepartment((prev) => ({ ...prev, is_active: value === 'active' }))
+                    setEditDepartment((prev) => ({
+                      ...prev,
+                      is_active: value === "active",
+                    }))
                   }
                 >
                   <SelectTrigger className="col-span-3">
@@ -524,7 +597,9 @@ export default function DepartmentManagement() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-muted-foreground">部门编码</Label>
-                  <p className="font-medium font-mono">{selectedDepartment.dept_code}</p>
+                  <p className="font-medium font-mono">
+                    {selectedDepartment.dept_code}
+                  </p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">部门名称</Label>
@@ -532,17 +607,25 @@ export default function DepartmentManagement() {
                 </div>
                 <div>
                   <Label className="text-muted-foreground">层级</Label>
-                  <p className="font-medium">L{selectedDepartment.level || 1}</p>
+                  <p className="font-medium">
+                    L{selectedDepartment.level || 1}
+                  </p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">负责人</Label>
-                  <p className="font-medium">{selectedDepartment.manager?.name || '-'}</p>
+                  <p className="font-medium">
+                    {selectedDepartment.manager?.name || "-"}
+                  </p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">状态</Label>
                   <p className="font-medium">
-                    <Badge variant={selectedDepartment.is_active ? 'default' : 'secondary'}>
-                      {selectedDepartment.is_active ? '启用' : '禁用'}
+                    <Badge
+                      variant={
+                        selectedDepartment.is_active ? "default" : "secondary"
+                      }
+                    >
+                      {selectedDepartment.is_active ? "启用" : "禁用"}
                     </Badge>
                   </p>
                 </div>
@@ -557,6 +640,3 @@ export default function DepartmentManagement() {
     </motion.div>
   );
 }
-
-
-

@@ -1,6 +1,6 @@
-import React from 'react'
-import { Button, Input } from '../../ui'
-import { Building2 } from 'lucide-react'
+import React from "react";
+import { Button, Input } from "../../ui";
+import { Building2 } from "lucide-react";
 
 /**
  * 客户信息步骤组件
@@ -67,14 +67,14 @@ export const CustomerInfoStep = ({
                   size="sm"
                   variant="ghost"
                   onClick={() => {
-                    setSelectedCustomer(null)
+                    setSelectedCustomer(null);
                     setFormData((prev) => ({
                       ...prev,
-                      customer_id: '',
-                      customer_name: '',
-                      customer_contact: '',
-                      customer_phone: '',
-                    }))
+                      customer_id: "",
+                      customer_name: "",
+                      customer_contact: "",
+                      customer_phone: "",
+                    }));
                   }}
                 >
                   清除
@@ -122,5 +122,5 @@ export const CustomerInfoStep = ({
         />
       </div>
     </div>
-  )
-}
+  );
+};

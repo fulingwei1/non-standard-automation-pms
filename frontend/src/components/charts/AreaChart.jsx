@@ -3,8 +3,8 @@
  * 用于趋势展示、数据量变化
  */
 
-import { Area } from '@ant-design/plots'
-import { useMemo } from 'react'
+import { Area } from "@ant-design/plots";
+import { useMemo } from "react";
 
 /**
  * AreaChart - 面积图
@@ -21,8 +21,8 @@ import { useMemo } from 'react'
  */
 export default function AreaChart({
   data = [],
-  xField = 'date',
-  yField = 'value',
+  xField = "date",
+  yField = "value",
   seriesField,
   isStack = false,
   isPercent = false,
@@ -54,21 +54,23 @@ export default function AreaChart({
       tooltip: {
         showMarkers: true,
         shared: true,
-        formatter: formatter ? (datum) => ({
-          name: datum[seriesField] || yField,
-          value: formatter(datum[yField]),
-        }) : undefined,
+        formatter: formatter
+          ? (datum) => ({
+              name: datum[seriesField] || yField,
+              value: formatter(datum[yField]),
+            })
+          : undefined,
       },
       xAxis: {
         label: {
           style: {
-            fill: '#94a3b8',
+            fill: "#94a3b8",
             fontSize: 12,
           },
         },
         line: {
           style: {
-            stroke: '#334155',
+            stroke: "#334155",
           },
         },
       },
@@ -76,46 +78,60 @@ export default function AreaChart({
         label: {
           formatter: isPercent ? (v) => `${(v * 100).toFixed(0)}%` : formatter,
           style: {
-            fill: '#94a3b8',
+            fill: "#94a3b8",
             fontSize: 12,
           },
         },
         grid: {
           line: {
             style: {
-              stroke: '#334155',
+              stroke: "#334155",
               lineDash: [4, 4],
             },
           },
         },
       },
-      legend: seriesField ? {
-        position: 'top-right',
-        itemName: {
-          style: {
-            fill: '#94a3b8',
-          },
-        },
-      } : false,
+      legend: seriesField
+        ? {
+            position: "top-right",
+            itemName: {
+              style: {
+                fill: "#94a3b8",
+              },
+            },
+          }
+        : false,
       animation: {
         appear: {
-          animation: 'wave-in',
+          animation: "wave-in",
           duration: 1000,
         },
       },
       ...rest,
-    }
+    };
 
     if (seriesField) {
-      cfg.seriesField = seriesField
+      cfg.seriesField = seriesField;
     }
 
     if (colors) {
-      cfg.color = colors
+      cfg.color = colors;
     }
 
-    return cfg
-  }, [data, xField, yField, seriesField, isStack, isPercent, height, smooth, formatter, colors, rest])
+    return cfg;
+  }, [
+    data,
+    xField,
+    yField,
+    seriesField,
+    isStack,
+    isPercent,
+    height,
+    smooth,
+    formatter,
+    colors,
+    rest,
+  ]);
 
   if (!data || data.length === 0) {
     return (
@@ -125,13 +141,15 @@ export default function AreaChart({
       >
         暂无数据
       </div>
-    )
+    );
   }
 
   return (
     <div style={style}>
-      {title && <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>}
+      {title && (
+        <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>
+      )}
       <Area {...config} />
     </div>
-  )
+  );
 }

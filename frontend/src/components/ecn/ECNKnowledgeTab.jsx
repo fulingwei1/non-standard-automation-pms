@@ -2,12 +2,12 @@
  * ECNKnowledgeTab Component
  * ECN 知识库 Tab 组件
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
-import { Button } from '../ui/button'
-import { Badge } from '../ui/badge'
-import { FileText, Search, Lightbulb, Plus } from 'lucide-react'
-import { useECNKnowledge } from './hooks/useECNKnowledge'
-import SolutionTemplateDialog from './dialogs/SolutionTemplateDialog'
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { FileText, Search, Lightbulb, Plus } from "lucide-react";
+import { useECNKnowledge } from "./hooks/useECNKnowledge";
+import SolutionTemplateDialog from "./dialogs/SolutionTemplateDialog";
 
 export default function ECNKnowledgeTab({ ecnId, ecn, refetch }) {
   const {
@@ -24,61 +24,61 @@ export default function ECNKnowledgeTab({ ecnId, ecn, refetch }) {
     handleRecommendSolutions,
     handleApplySolutionTemplate,
     handleCreateSolutionTemplate,
-  } = useECNKnowledge(ecnId, ecn, refetch)
+  } = useECNKnowledge(ecnId, ecn, refetch);
 
   // 处理提取解决方案
   const handleExtractClick = async () => {
-    const result = await handleExtractSolution()
+    const result = await handleExtractSolution();
     if (result.success) {
-      alert(result.message)
+      alert(result.message);
     } else {
-      alert(result.message)
+      alert(result.message);
     }
-  }
+  };
 
   // 处理查找相似ECN
   const handleFindSimilarClick = async () => {
-    const result = await handleFindSimilarEcns()
+    const result = await handleFindSimilarEcns();
     if (result.success) {
-      alert(result.message)
+      alert(result.message);
     } else {
-      alert(result.message)
+      alert(result.message);
     }
-  }
+  };
 
   // 处理推荐解决方案
   const handleRecommendClick = async () => {
-    const result = await handleRecommendSolutions()
+    const result = await handleRecommendSolutions();
     if (result.success) {
-      alert(result.message)
+      alert(result.message);
     } else {
-      alert(result.message)
+      alert(result.message);
     }
-  }
+  };
 
   // 处理应用解决方案
   const handleApplyClick = async (templateId) => {
-    const result = await handleApplySolutionTemplate(templateId)
+    const result = await handleApplySolutionTemplate(templateId);
     if (result.success) {
-      alert(result.message)
+      alert(result.message);
     } else {
-      alert(result.message)
+      alert(result.message);
     }
-  }
+  };
 
   // 处理创建模板
   const handleCreateTemplateClick = async () => {
-    const result = await handleCreateSolutionTemplate()
+    const result = await handleCreateSolutionTemplate();
     if (result.success) {
-      alert(result.message)
+      alert(result.message);
     } else {
-      alert(result.message)
+      alert(result.message);
     }
-  }
+  };
 
   // 判断是否可以创建模板
   const canCreateTemplate =
-    (ecn?.status === 'COMPLETED' || ecn?.status === 'CLOSED') && ecn?.solution
+    (ecn?.status === "COMPLETED" || ecn?.status === "CLOSED") && ecn?.solution;
 
   return (
     <div className="space-y-4">
@@ -92,7 +92,7 @@ export default function ECNKnowledgeTab({ ecnId, ecn, refetch }) {
               disabled={loadingKnowledge}
             >
               <FileText className="w-4 h-4 mr-2" />
-              {loadingKnowledge ? '提取中...' : '提取解决方案'}
+              {loadingKnowledge ? "提取中..." : "提取解决方案"}
             </Button>
             <Button
               variant="outline"
@@ -100,7 +100,7 @@ export default function ECNKnowledgeTab({ ecnId, ecn, refetch }) {
               disabled={loadingKnowledge}
             >
               <Search className="w-4 h-4 mr-2" />
-              {loadingKnowledge ? '查找中...' : '查找相似ECN'}
+              {loadingKnowledge ? "查找中..." : "查找相似ECN"}
             </Button>
             <Button
               variant="outline"
@@ -108,7 +108,7 @@ export default function ECNKnowledgeTab({ ecnId, ecn, refetch }) {
               disabled={loadingKnowledge}
             >
               <Lightbulb className="w-4 h-4 mr-2" />
-              {loadingKnowledge ? '推荐中...' : '推荐解决方案'}
+              {loadingKnowledge ? "推荐中..." : "推荐解决方案"}
             </Button>
             {canCreateTemplate && (
               <Button
@@ -116,10 +116,10 @@ export default function ECNKnowledgeTab({ ecnId, ecn, refetch }) {
                 onClick={() => {
                   setSolutionTemplateForm({
                     template_name: `${ecn.ecn_title} - 解决方案模板`,
-                    template_category: ecn.ecn_type || '',
+                    template_category: ecn.ecn_type || "",
                     keywords: [],
-                  })
-                  setShowSolutionTemplateDialog(true)
+                  });
+                  setShowSolutionTemplateDialog(true);
                 }}
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -201,13 +201,12 @@ export default function ECNKnowledgeTab({ ecnId, ecn, refetch }) {
                     </div>
                     <div className="text-right">
                       <Badge className="bg-green-500">
-                        相似度:{' '}
-                        {(similar.similarity_score * 100).toFixed(0)}%
+                        相似度: {(similar.similarity_score * 100).toFixed(0)}%
                       </Badge>
                     </div>
                   </div>
                   <div className="text-sm text-slate-500 mb-2">
-                    {similar.match_reasons?.join('、')}
+                    {similar.match_reasons?.join("、")}
                   </div>
                   {similar.solution && (
                     <div className="p-2 bg-slate-50 rounded text-sm line-clamp-2">
@@ -256,7 +255,7 @@ export default function ECNKnowledgeTab({ ecnId, ecn, refetch }) {
                     </div>
                   </div>
                   <div className="text-sm text-slate-500 mb-2">
-                    {rec.match_reasons?.join('、')}
+                    {rec.match_reasons?.join("、")}
                   </div>
                   <div className="p-2 bg-slate-50 rounded text-sm line-clamp-2 mb-2">
                     {rec.solution_description}
@@ -296,14 +295,14 @@ export default function ECNKnowledgeTab({ ecnId, ecn, refetch }) {
             </div>
             {ecn.solution_source && (
               <div className="mt-2 text-sm text-slate-500">
-                来源:{' '}
-                {ecn.solution_source === 'MANUAL'
-                  ? '手动填写'
-                  : ecn.solution_source === 'AUTO_EXTRACT'
-                  ? '自动提取'
-                  : ecn.solution_source === 'KNOWLEDGE_BASE'
-                  ? '知识库'
-                  : ecn.solution_source}
+                来源:{" "}
+                {ecn.solution_source === "MANUAL"
+                  ? "手动填写"
+                  : ecn.solution_source === "AUTO_EXTRACT"
+                    ? "自动提取"
+                    : ecn.solution_source === "KNOWLEDGE_BASE"
+                      ? "知识库"
+                      : ecn.solution_source}
               </div>
             )}
           </CardContent>
@@ -320,5 +319,5 @@ export default function ECNKnowledgeTab({ ecnId, ecn, refetch }) {
         ecn={ecn}
       />
     </div>
-  )
+  );
 }

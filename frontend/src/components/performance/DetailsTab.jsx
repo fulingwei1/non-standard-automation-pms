@@ -1,14 +1,16 @@
-import React from 'react'
-import { motion } from 'framer-motion'
-import { MessageSquare } from 'lucide-react'
-import { getLevelInfo } from '../../utils/performanceUtils'
-import { cn } from '../../lib/utils'
+import React from "react";
+import { motion } from "framer-motion";
+import { MessageSquare } from "lucide-react";
+import { getLevelInfo } from "../../utils/performanceUtils";
+import { cn } from "../../lib/utils";
 
 /**
  * 评价详情Tab组件
  */
 export const DetailsTab = ({ history }) => {
-  const recordsWithComments = history.filter(record => record.comments && record.comments.length > 0)
+  const recordsWithComments = history.filter(
+    (record) => record.comments && record.comments.length > 0,
+  );
 
   if (recordsWithComments.length === 0) {
     return (
@@ -24,7 +26,7 @@ export const DetailsTab = ({ history }) => {
           <p className="text-slate-400">暂无评价详情</p>
         </div>
       </motion.div>
-    )
+    );
   }
 
   return (
@@ -45,20 +47,26 @@ export const DetailsTab = ({ history }) => {
         >
           <div className="flex items-center justify-between mb-4">
             <h4 className="text-lg font-bold text-white">
-              {record.period.split('-')[0]}年{record.period.split('-')[1]}月 评价
+              {record.period.split("-")[0]}年{record.period.split("-")[1]}月
+              评价
             </h4>
-            <span className={cn(
-              'px-3 py-1 rounded-full text-sm font-medium',
-              getLevelInfo(record.level).color,
-              getLevelInfo(record.level).bgColor
-            )}>
+            <span
+              className={cn(
+                "px-3 py-1 rounded-full text-sm font-medium",
+                getLevelInfo(record.level).color,
+                getLevelInfo(record.level).bgColor,
+              )}
+            >
               综合得分: {record.totalScore} ({record.level}级)
             </span>
           </div>
 
           <div className="space-y-4">
             {record.comments.map((comment, idx) => (
-              <div key={idx} className="p-4 bg-slate-900/50 rounded-lg border border-slate-700/50">
+              <div
+                key={idx}
+                className="p-4 bg-slate-900/50 rounded-lg border border-slate-700/50"
+              >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
@@ -67,17 +75,23 @@ export const DetailsTab = ({ history }) => {
                       </span>
                     </div>
                     <div>
-                      <p className="text-white font-medium">{comment.evaluator}</p>
+                      <p className="text-white font-medium">
+                        {comment.evaluator}
+                      </p>
                       <p className="text-sm text-slate-400">{comment.role}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-blue-400">{comment.score}</p>
+                    <p className="text-2xl font-bold text-blue-400">
+                      {comment.score}
+                    </p>
                     <p className="text-xs text-slate-400">评分</p>
                   </div>
                 </div>
                 <div className="pl-13">
-                  <p className="text-slate-300 leading-relaxed">{comment.comment}</p>
+                  <p className="text-slate-300 leading-relaxed">
+                    {comment.comment}
+                  </p>
                 </div>
               </div>
             ))}
@@ -85,5 +99,5 @@ export const DetailsTab = ({ history }) => {
         </motion.div>
       ))}
     </motion.div>
-  )
-}
+  );
+};

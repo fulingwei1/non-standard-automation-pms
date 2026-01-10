@@ -1,6 +1,6 @@
-import React from 'react'
-import { Input, FormSelect } from '../../ui'
-import { Info } from 'lucide-react'
+import React from "react";
+import { Input, FormSelect } from "../../ui";
+import { Info } from "lucide-react";
 
 /**
  * 财务信息步骤组件
@@ -15,7 +15,9 @@ export const FinanceInfoStep = ({
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-300">合同金额 (CNY)</label>
+          <label className="text-sm font-medium text-slate-300">
+            合同金额 (CNY)
+          </label>
           <Input
             type="number"
             value={formData.contract_amount}
@@ -32,7 +34,9 @@ export const FinanceInfoStep = ({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-300">预算金额 (CNY)</label>
+          <label className="text-sm font-medium text-slate-300">
+            预算金额 (CNY)
+          </label>
           <Input
             type="number"
             value={formData.budget_amount}
@@ -65,24 +69,24 @@ export const FinanceInfoStep = ({
         name="pm_id"
         value={formData.pm_id}
         onChange={(e) => {
-          const pmId = e.target.value
-          const pm = employees.find((e) => e.id === parseInt(pmId))
+          const pmId = e.target.value;
+          const pm = employees.find((e) => e.id === parseInt(pmId));
           setFormData({
             ...formData,
             pm_id: pmId,
-            pm_name: pm ? pm.name || pm.real_name : '',
-          })
+            pm_name: pm ? pm.name || pm.real_name : "",
+          });
         }}
       >
         <option value="">选择项目经理（可选）</option>
         {employees.map((emp) => {
-          const projectCount = pmStats[emp.id] || 0
+          const projectCount = pmStats[emp.id] || 0;
           return (
             <option key={emp.id} value={emp.id}>
               {emp.name || emp.real_name} ({emp.employee_code})
               {projectCount > 0 && ` - ${projectCount}个项目`}
             </option>
-          )
+          );
         })}
       </FormSelect>
 
@@ -102,5 +106,5 @@ export const FinanceInfoStep = ({
         </div>
       )}
     </div>
-  )
-}
+  );
+};

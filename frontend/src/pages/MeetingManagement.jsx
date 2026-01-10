@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { cn } from '../lib/utils'
-import { pmoApi, projectApi } from '../services/api'
-import { formatDate, formatTime } from '../lib/utils'
-import { PageHeader } from '../components/layout/PageHeader'
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { cn } from "../lib/utils";
+import { pmoApi, projectApi } from "../services/api";
+import { formatDate, formatTime } from "../lib/utils";
+import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
@@ -12,7 +12,7 @@ import {
   Badge,
   Input,
   SkeletonCard,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Plus,
   Search,
@@ -36,7 +36,7 @@ import {
   ArrowRight,
   Briefcase,
   AlertCircle,
-} from 'lucide-react'
+} from "lucide-react";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -44,161 +44,174 @@ const staggerContainer = {
     opacity: 1,
     transition: { staggerChildren: 0.05, delayChildren: 0.1 },
   },
-}
+};
 
 const staggerChild = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
-}
+};
 
 const getMeetingTypeLabel = (type) => {
   const labels = {
-    KICKOFF: '项目启动会',
-    WEEKLY: '周例会',
-    MILESTONE_REVIEW: '里程碑评审',
-    CHANGE_REVIEW: '变更评审',
-    RISK_REVIEW: '风险评审',
-    CLOSURE: '结项评审会',
-    OTHER: '其他',
-  }
-  return labels[type] || type
-}
+    KICKOFF: "项目启动会",
+    WEEKLY: "周例会",
+    MILESTONE_REVIEW: "里程碑评审",
+    CHANGE_REVIEW: "变更评审",
+    RISK_REVIEW: "风险评审",
+    CLOSURE: "结项评审会",
+    OTHER: "其他",
+  };
+  return labels[type] || type;
+};
 
 const getStatusBadge = (status) => {
   const badges = {
-    SCHEDULED: { label: '已安排', variant: 'info', color: 'text-blue-400' },
-    ONGOING: { label: '进行中', variant: 'warning', color: 'text-yellow-400' },
-    COMPLETED: { label: '已完成', variant: 'success', color: 'text-emerald-400' },
-    CANCELLED: { label: '已取消', variant: 'secondary', color: 'text-slate-400' },
-  }
-  return badges[status] || badges.SCHEDULED
-}
+    SCHEDULED: { label: "已安排", variant: "info", color: "text-blue-400" },
+    ONGOING: { label: "进行中", variant: "warning", color: "text-yellow-400" },
+    COMPLETED: {
+      label: "已完成",
+      variant: "success",
+      color: "text-emerald-400",
+    },
+    CANCELLED: {
+      label: "已取消",
+      variant: "secondary",
+      color: "text-slate-400",
+    },
+  };
+  return badges[status] || badges.SCHEDULED;
+};
 
 export default function MeetingManagement() {
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [meetings, setMeetings] = useState([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
-  const [pageSize] = useState(20)
-  const [keyword, setKeyword] = useState('')
-  const [typeFilter, setTypeFilter] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [projectFilter, setProjectFilter] = useState('')
-  const [projectList, setProjectList] = useState([])
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [meetings, setMeetings] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [keyword, setKeyword] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [projectFilter, setProjectFilter] = useState("");
+  const [projectList, setProjectList] = useState([]);
 
   // Dialogs
-  const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [updateDialog, setUpdateDialog] = useState({ open: false, meetingId: null })
-  const [minutesDialog, setMinutesDialog] = useState({ open: false, meetingId: null })
-  const [detailDialog, setDetailDialog] = useState({ open: false, meeting: null })
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [updateDialog, setUpdateDialog] = useState({
+    open: false,
+    meetingId: null,
+  });
+  const [minutesDialog, setMinutesDialog] = useState({
+    open: false,
+    meetingId: null,
+  });
+  const [detailDialog, setDetailDialog] = useState({
+    open: false,
+    meeting: null,
+  });
 
   useEffect(() => {
-    fetchData()
-    fetchProjectList()
-  }, [page, keyword, typeFilter, statusFilter, projectFilter])
+    fetchData();
+    fetchProjectList();
+  }, [page, keyword, typeFilter, statusFilter, projectFilter]);
 
   const fetchData = async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
       const params = {
         page,
         page_size: pageSize,
-      }
+      };
       if (keyword) {
-        params.keyword = keyword
+        params.keyword = keyword;
       }
       if (typeFilter) {
-        params.meeting_type = typeFilter
+        params.meeting_type = typeFilter;
       }
       if (statusFilter) {
-        params.status = statusFilter
+        params.status = statusFilter;
       }
       if (projectFilter) {
-        params.project_id = parseInt(projectFilter)
+        params.project_id = parseInt(projectFilter);
       }
-      const res = await pmoApi.meetings.list(params)
-      const data = res.data || res
+      const res = await pmoApi.meetings.list(params);
+      const data = res.data || res;
       // Handle PaginatedResponse format
-      if (data && typeof data === 'object' && 'items' in data) {
-        setMeetings(data.items || [])
-        setTotal(data.total || 0)
+      if (data && typeof data === "object" && "items" in data) {
+        setMeetings(data.items || []);
+        setTotal(data.total || 0);
       } else if (Array.isArray(data)) {
-        setMeetings(data)
-        setTotal(data.length)
+        setMeetings(data);
+        setTotal(data.length);
       } else {
-        setMeetings([])
-        setTotal(0)
+        setMeetings([]);
+        setTotal(0);
       }
     } catch (err) {
-      console.error('Failed to fetch meetings:', err)
-      setError(err.response?.data?.detail || err.message || '加载会议数据失败')
-      setMeetings([])
-      setTotal(0)
+      console.error("Failed to fetch meetings:", err);
+      setError(err.response?.data?.detail || err.message || "加载会议数据失败");
+      setMeetings([]);
+      setTotal(0);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchProjectList = async () => {
     try {
-      const res = await projectApi.list({ page: 1, page_size: 100 })
-      const data = res.data || res
+      const res = await projectApi.list({ page: 1, page_size: 100 });
+      const data = res.data || res;
       // Handle PaginatedResponse format
-      if (data && typeof data === 'object' && 'items' in data) {
-        setProjectList(data.items || [])
+      if (data && typeof data === "object" && "items" in data) {
+        setProjectList(data.items || []);
       } else if (Array.isArray(data)) {
-        setProjectList(data)
+        setProjectList(data);
       } else {
-        setProjectList([])
+        setProjectList([]);
       }
     } catch (err) {
-      console.error('Failed to fetch projects:', err)
-      setProjectList([])
+      console.error("Failed to fetch projects:", err);
+      setProjectList([]);
     }
-  }
+  };
 
   const handleCreate = async (formData) => {
     try {
-      await pmoApi.meetings.create(formData)
-      setCreateDialogOpen(false)
-      fetchData()
+      await pmoApi.meetings.create(formData);
+      setCreateDialogOpen(false);
+      fetchData();
     } catch (err) {
-      console.error('Failed to create meeting:', err)
-      alert('创建失败: ' + (err.response?.data?.detail || err.message))
+      console.error("Failed to create meeting:", err);
+      alert("创建失败: " + (err.response?.data?.detail || err.message));
     }
-  }
+  };
 
   const handleUpdate = async (meetingId, formData) => {
     try {
-      await pmoApi.meetings.update(meetingId, formData)
-      setUpdateDialog({ open: false, meetingId: null })
-      fetchData()
+      await pmoApi.meetings.update(meetingId, formData);
+      setUpdateDialog({ open: false, meetingId: null });
+      fetchData();
     } catch (err) {
-      console.error('Failed to update meeting:', err)
-      alert('更新失败: ' + (err.response?.data?.detail || err.message))
+      console.error("Failed to update meeting:", err);
+      alert("更新失败: " + (err.response?.data?.detail || err.message));
     }
-  }
+  };
 
   const handleMinutes = async (meetingId, formData) => {
     try {
-      await pmoApi.meetings.updateMinutes(meetingId, formData)
-      setMinutesDialog({ open: false, meetingId: null })
-      fetchData()
+      await pmoApi.meetings.updateMinutes(meetingId, formData);
+      setMinutesDialog({ open: false, meetingId: null });
+      fetchData();
     } catch (err) {
-      console.error('Failed to update minutes:', err)
-      alert('更新失败: ' + (err.response?.data?.detail || err.message))
+      console.error("Failed to update minutes:", err);
+      alert("更新失败: " + (err.response?.data?.detail || err.message));
     }
-  }
+  };
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={staggerContainer}
-    >
+    <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
       <PageHeader
         title="会议管理"
         description="项目会议安排与纪要管理"
@@ -296,8 +309,8 @@ export default function MeetingManagement() {
       ) : error ? null : meetings.length > 0 ? (
         <div className="grid grid-cols-1 gap-4">
           {meetings.map((meeting) => {
-            const statusBadge = getStatusBadge(meeting.status)
-            const isPast = new Date(meeting.meeting_date) < new Date()
+            const statusBadge = getStatusBadge(meeting.status);
+            const isPast = new Date(meeting.meeting_date) < new Date();
 
             return (
               <motion.div key={meeting.id} variants={staggerChild}>
@@ -348,7 +361,8 @@ export default function MeetingManagement() {
                             <span className="text-slate-400">时间</span>
                             <p className="text-white">
                               {formatTime(meeting.start_time)}
-                              {meeting.end_time && ` - ${formatTime(meeting.end_time)}`}
+                              {meeting.end_time &&
+                                ` - ${formatTime(meeting.end_time)}`}
                             </p>
                           </div>
                         </div>
@@ -367,7 +381,9 @@ export default function MeetingManagement() {
                           <Users className="h-4 w-4 text-slate-400" />
                           <div>
                             <span className="text-slate-400">组织者</span>
-                            <p className="text-white">{meeting.organizer_name}</p>
+                            <p className="text-white">
+                              {meeting.organizer_name}
+                            </p>
                           </div>
                         </div>
                       )}
@@ -384,47 +400,57 @@ export default function MeetingManagement() {
                     )}
 
                     {/* Action Items Count */}
-                    {meeting.action_items && meeting.action_items.length > 0 && (
-                      <div className="mb-4 flex items-center gap-2 text-sm text-slate-400">
-                        <FileText className="h-4 w-4" />
-                        <span>
-                          待办事项: {meeting.action_items.length} 项
-                        </span>
-                      </div>
-                    )}
+                    {meeting.action_items &&
+                      meeting.action_items.length > 0 && (
+                        <div className="mb-4 flex items-center gap-2 text-sm text-slate-400">
+                          <FileText className="h-4 w-4" />
+                          <span>
+                            待办事项: {meeting.action_items.length} 项
+                          </span>
+                        </div>
+                      )}
 
                     {/* Actions */}
                     <div className="flex items-center justify-between pt-4 border-t border-white/5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        {meeting.status === 'SCHEDULED' && (
+                        {meeting.status === "SCHEDULED" && (
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() =>
-                              setUpdateDialog({ open: true, meetingId: meeting.id })
+                              setUpdateDialog({
+                                open: true,
+                                meetingId: meeting.id,
+                              })
                             }
                           >
                             <Edit className="h-4 w-4 mr-2" />
                             编辑
                           </Button>
                         )}
-                        {meeting.status !== 'COMPLETED' && meeting.status !== 'CANCELLED' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              setMinutesDialog({ open: true, meetingId: meeting.id })
-                            }
-                          >
-                            <FileText className="h-4 w-4 mr-2" />
-                            记录纪要
-                          </Button>
-                        )}
+                        {meeting.status !== "COMPLETED" &&
+                          meeting.status !== "CANCELLED" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                setMinutesDialog({
+                                  open: true,
+                                  meetingId: meeting.id,
+                                })
+                              }
+                            >
+                              <FileText className="h-4 w-4 mr-2" />
+                              记录纪要
+                            </Button>
+                          )}
                         {meeting.project_id && (
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => navigate(`/projects/${meeting.project_id}`)}
+                            onClick={() =>
+                              navigate(`/projects/${meeting.project_id}`)
+                            }
                           >
                             <Briefcase className="h-4 w-4 mr-2" />
                             查看项目
@@ -443,7 +469,7 @@ export default function MeetingManagement() {
                   </CardContent>
                 </Card>
               </motion.div>
-            )
+            );
           })}
         </div>
       ) : !error ? (
@@ -511,50 +537,52 @@ export default function MeetingManagement() {
         meeting={detailDialog.meeting}
       />
     </motion.div>
-  )
+  );
 }
 
 // Create Meeting Dialog
 function CreateMeetingDialog({ open, onOpenChange, onSubmit, projectList }) {
   const [formData, setFormData] = useState({
-    project_id: '',
-    meeting_type: 'WEEKLY',
-    meeting_name: '',
-    meeting_date: '',
-    start_time: '',
-    end_time: '',
-    location: '',
-    organizer_id: '',
+    project_id: "",
+    meeting_type: "WEEKLY",
+    meeting_name: "",
+    meeting_date: "",
+    start_time: "",
+    end_time: "",
+    location: "",
+    organizer_id: "",
     attendees: [],
-    agenda: '',
-  })
+    agenda: "",
+  });
 
   const handleSubmit = () => {
     if (!formData.meeting_name.trim() || !formData.meeting_date) {
-      alert('请填写会议名称和日期')
-      return
+      alert("请填写会议名称和日期");
+      return;
     }
     const submitData = {
       ...formData,
       project_id: formData.project_id ? parseInt(formData.project_id) : null,
-      organizer_id: formData.organizer_id ? parseInt(formData.organizer_id) : null,
+      organizer_id: formData.organizer_id
+        ? parseInt(formData.organizer_id)
+        : null,
       start_time: formData.start_time || null,
       end_time: formData.end_time || null,
-    }
-    onSubmit(submitData)
+    };
+    onSubmit(submitData);
     setFormData({
-      project_id: '',
-      meeting_type: 'WEEKLY',
-      meeting_name: '',
-      meeting_date: '',
-      start_time: '',
-      end_time: '',
-      location: '',
-      organizer_id: '',
+      project_id: "",
+      meeting_type: "WEEKLY",
+      meeting_name: "",
+      meeting_date: "",
+      start_time: "",
+      end_time: "",
+      location: "",
+      organizer_id: "",
       attendees: [],
-      agenda: '',
-    })
-  }
+      agenda: "",
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -631,7 +659,7 @@ function CreateMeetingDialog({ open, onOpenChange, onSubmit, projectList }) {
                   }
                 />
               </div>
-      </div>
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -697,7 +725,7 @@ function CreateMeetingDialog({ open, onOpenChange, onSubmit, projectList }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // Update Meeting Dialog
@@ -708,59 +736,61 @@ function UpdateMeetingDialog({
   meetingId,
   projectList,
 }) {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    meeting_name: '',
-    meeting_date: '',
-    start_time: '',
-    end_time: '',
-    location: '',
-    organizer_id: '',
-    agenda: '',
-    status: 'SCHEDULED',
-  })
+    meeting_name: "",
+    meeting_date: "",
+    start_time: "",
+    end_time: "",
+    location: "",
+    organizer_id: "",
+    agenda: "",
+    status: "SCHEDULED",
+  });
 
   useEffect(() => {
     if (open && meetingId) {
-      fetchMeeting()
+      fetchMeeting();
     }
-  }, [open, meetingId])
+  }, [open, meetingId]);
 
   const fetchMeeting = async () => {
     try {
-      setLoading(true)
-      const res = await pmoApi.meetings.get(meetingId)
-      const data = res.data || res
+      setLoading(true);
+      const res = await pmoApi.meetings.get(meetingId);
+      const data = res.data || res;
       setFormData({
-        meeting_name: data.meeting_name || '',
-        meeting_date: data.meeting_date || '',
-        start_time: data.start_time || '',
-        end_time: data.end_time || '',
-        location: data.location || '',
-        organizer_id: data.organizer_id || '',
-        agenda: data.agenda || '',
-        status: data.status || 'SCHEDULED',
-      })
+        meeting_name: data.meeting_name || "",
+        meeting_date: data.meeting_date || "",
+        start_time: data.start_time || "",
+        end_time: data.end_time || "",
+        location: data.location || "",
+        organizer_id: data.organizer_id || "",
+        agenda: data.agenda || "",
+        status: data.status || "SCHEDULED",
+      });
     } catch (err) {
-      console.error('Failed to fetch meeting:', err)
+      console.error("Failed to fetch meeting:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleSubmit = () => {
     if (!formData.meeting_name.trim() || !formData.meeting_date) {
-      alert('请填写会议名称和日期')
-      return
+      alert("请填写会议名称和日期");
+      return;
     }
     const submitData = {
       ...formData,
-      organizer_id: formData.organizer_id ? parseInt(formData.organizer_id) : null,
+      organizer_id: formData.organizer_id
+        ? parseInt(formData.organizer_id)
+        : null,
       start_time: formData.start_time || null,
       end_time: formData.end_time || null,
-    }
-    onSubmit(submitData)
-  }
+    };
+    onSubmit(submitData);
+  };
 
   if (loading) {
     return (
@@ -769,7 +799,7 @@ function UpdateMeetingDialog({
           <div className="p-8 text-center text-slate-400">加载中...</div>
         </DialogContent>
       </Dialog>
-    )
+    );
   }
 
   return (
@@ -837,7 +867,7 @@ function UpdateMeetingDialog({
                     setFormData({ ...formData, start_time: e.target.value })
                   }
                 />
-                      </div>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-white mb-2">
                   结束时间
@@ -849,8 +879,8 @@ function UpdateMeetingDialog({
                     setFormData({ ...formData, end_time: e.target.value })
                   }
                 />
-                        </div>
-                        </div>
+              </div>
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-white mb-2">
@@ -863,7 +893,7 @@ function UpdateMeetingDialog({
                 }
                 placeholder="请输入会议地点"
               />
-                        </div>
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-white mb-2">
@@ -878,8 +908,8 @@ function UpdateMeetingDialog({
                 className="w-full px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                 rows={4}
               />
-                        </div>
-                      </div>
+            </div>
+          </div>
         </DialogBody>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -889,27 +919,27 @@ function UpdateMeetingDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // Meeting Minutes Dialog
 function MeetingMinutesDialog({ open, onOpenChange, onSubmit, meetingId }) {
   const [formData, setFormData] = useState({
-    minutes: '',
-    decisions: '',
+    minutes: "",
+    decisions: "",
     action_items: [],
-  })
+  });
 
   const [newActionItem, setNewActionItem] = useState({
-    description: '',
-    owner: '',
-    due_date: '',
-  })
+    description: "",
+    owner: "",
+    due_date: "",
+  });
 
   const handleAddActionItem = () => {
     if (!newActionItem.description.trim()) {
-      alert('请填写待办事项描述')
-      return
+      alert("请填写待办事项描述");
+      return;
     }
     setFormData({
       ...formData,
@@ -918,28 +948,28 @@ function MeetingMinutesDialog({ open, onOpenChange, onSubmit, meetingId }) {
         {
           ...newActionItem,
           id: Date.now(),
-          status: 'PENDING',
+          status: "PENDING",
         },
       ],
-    })
-    setNewActionItem({ description: '', owner: '', due_date: '' })
-  }
+    });
+    setNewActionItem({ description: "", owner: "", due_date: "" });
+  };
 
   const handleRemoveActionItem = (index) => {
     setFormData({
       ...formData,
       action_items: formData.action_items.filter((_, i) => i !== index),
-    })
-  }
+    });
+  };
 
   const handleSubmit = () => {
     if (!formData.minutes.trim()) {
-      alert('请填写会议纪要')
-      return
+      alert("请填写会议纪要");
+      return;
     }
-    onSubmit(formData)
-    setFormData({ minutes: '', decisions: '', action_items: [] })
-  }
+    onSubmit(formData);
+    setFormData({ minutes: "", decisions: "", action_items: [] });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1002,8 +1032,8 @@ function MeetingMinutesDialog({ open, onOpenChange, onSubmit, meetingId }) {
                       onClick={() => handleRemoveActionItem(index)}
                     >
                       <XCircle className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    </Button>
+                  </div>
                 ))}
 
                 <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 space-y-2">
@@ -1022,7 +1052,10 @@ function MeetingMinutesDialog({ open, onOpenChange, onSubmit, meetingId }) {
                     <Input
                       value={newActionItem.owner}
                       onChange={(e) =>
-                        setNewActionItem({ ...newActionItem, owner: e.target.value })
+                        setNewActionItem({
+                          ...newActionItem,
+                          owner: e.target.value,
+                        })
                       }
                       placeholder="负责人"
                     />
@@ -1030,7 +1063,10 @@ function MeetingMinutesDialog({ open, onOpenChange, onSubmit, meetingId }) {
                       type="date"
                       value={newActionItem.due_date}
                       onChange={(e) =>
-                        setNewActionItem({ ...newActionItem, due_date: e.target.value })
+                        setNewActionItem({
+                          ...newActionItem,
+                          due_date: e.target.value,
+                        })
                       }
                       placeholder="截止日期"
                     />
@@ -1057,14 +1093,14 @@ function MeetingMinutesDialog({ open, onOpenChange, onSubmit, meetingId }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // Meeting Detail Dialog
 function MeetingDetailDialog({ open, onOpenChange, meeting }) {
-  if (!meeting) return null
+  if (!meeting) return null;
 
-  const statusBadge = getStatusBadge(meeting.status)
+  const statusBadge = getStatusBadge(meeting.status);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1082,18 +1118,20 @@ function MeetingDetailDialog({ open, onOpenChange, meeting }) {
                   {getMeetingTypeLabel(meeting.meeting_type)}
                 </p>
               </div>
-                    <div>
+              <div>
                 <span className="text-sm text-slate-400">状态</span>
                 <p className="mt-1">
-                  <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+                  <Badge variant={statusBadge.variant}>
+                    {statusBadge.label}
+                  </Badge>
                 </p>
-                    </div>
+              </div>
               <div>
                 <span className="text-sm text-slate-400">会议日期</span>
                 <p className="text-white font-medium">
                   {formatDate(meeting.meeting_date)}
                 </p>
-                  </div>
+              </div>
               {meeting.start_time && (
                 <div>
                   <span className="text-sm text-slate-400">时间</span>
@@ -1101,18 +1139,20 @@ function MeetingDetailDialog({ open, onOpenChange, meeting }) {
                     {formatTime(meeting.start_time)}
                     {meeting.end_time && ` - ${formatTime(meeting.end_time)}`}
                   </p>
-                    </div>
-                  )}
+                </div>
+              )}
               {meeting.location && (
                 <div>
                   <span className="text-sm text-slate-400">地点</span>
                   <p className="text-white font-medium">{meeting.location}</p>
-          </div>
+                </div>
               )}
               {meeting.organizer_name && (
                 <div>
                   <span className="text-sm text-slate-400">组织者</span>
-                  <p className="text-white font-medium">{meeting.organizer_name}</p>
+                  <p className="text-white font-medium">
+                    {meeting.organizer_name}
+                  </p>
                 </div>
               )}
             </div>
@@ -1120,31 +1160,45 @@ function MeetingDetailDialog({ open, onOpenChange, meeting }) {
             {/* Agenda */}
             {meeting.agenda && (
               <div>
-                <h4 className="text-sm font-medium text-white mb-2">会议议程</h4>
-                <p className="text-white whitespace-pre-wrap">{meeting.agenda}</p>
+                <h4 className="text-sm font-medium text-white mb-2">
+                  会议议程
+                </h4>
+                <p className="text-white whitespace-pre-wrap">
+                  {meeting.agenda}
+                </p>
               </div>
             )}
 
             {/* Minutes */}
             {meeting.minutes && (
               <div>
-                <h4 className="text-sm font-medium text-white mb-2">会议纪要</h4>
-                <p className="text-white whitespace-pre-wrap">{meeting.minutes}</p>
+                <h4 className="text-sm font-medium text-white mb-2">
+                  会议纪要
+                </h4>
+                <p className="text-white whitespace-pre-wrap">
+                  {meeting.minutes}
+                </p>
               </div>
             )}
 
             {/* Decisions */}
             {meeting.decisions && (
               <div>
-                <h4 className="text-sm font-medium text-white mb-2">会议决议</h4>
-                <p className="text-white whitespace-pre-wrap">{meeting.decisions}</p>
-                        </div>
+                <h4 className="text-sm font-medium text-white mb-2">
+                  会议决议
+                </h4>
+                <p className="text-white whitespace-pre-wrap">
+                  {meeting.decisions}
+                </p>
+              </div>
             )}
 
             {/* Action Items */}
             {meeting.action_items && meeting.action_items.length > 0 && (
               <div>
-                <h4 className="text-sm font-medium text-white mb-2">待办事项</h4>
+                <h4 className="text-sm font-medium text-white mb-2">
+                  待办事项
+                </h4>
                 <div className="space-y-2">
                   {meeting.action_items.map((item, index) => (
                     <div
@@ -1158,23 +1212,27 @@ function MeetingDetailDialog({ open, onOpenChange, meeting }) {
                         {item.status && (
                           <Badge
                             variant={
-                              item.status === 'COMPLETED' ? 'success' : 'secondary'
+                              item.status === "COMPLETED"
+                                ? "success"
+                                : "secondary"
                             }
                           >
-                            {item.status === 'COMPLETED' ? '已完成' : '待办'}
+                            {item.status === "COMPLETED" ? "已完成" : "待办"}
                           </Badge>
                         )}
                       </div>
                     </div>
                   ))}
                 </div>
-                  </div>
+              </div>
             )}
 
             {/* Attendees */}
             {meeting.attendees && meeting.attendees.length > 0 && (
               <div>
-                <h4 className="text-sm font-medium text-white mb-2">参会人员</h4>
+                <h4 className="text-sm font-medium text-white mb-2">
+                  参会人员
+                </h4>
                 <div className="flex flex-wrap gap-2">
                   {meeting.attendees.map((attendee, index) => (
                     <Badge key={index} variant="secondary">
@@ -1191,5 +1249,5 @@ function MeetingDetailDialog({ open, onOpenChange, meeting }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

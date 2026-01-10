@@ -1,19 +1,22 @@
-import React, { useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { FileText } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { useMonthlySummary } from '../hooks/useMonthlySummary'
-import { fadeIn } from '../utils/monthlySummaryUtils'
-import { PeriodInfoCard } from '../components/monthlySummary/PeriodInfoCard'
-import { SummaryForm } from '../components/monthlySummary/SummaryForm'
-import { HistoryList } from '../components/monthlySummary/HistoryList'
-import { TipsCard } from '../components/monthlySummary/TipsCard'
+import React, { useEffect } from "react";
+import { motion } from "framer-motion";
+import { FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useMonthlySummary } from "../hooks/useMonthlySummary";
+import { fadeIn } from "../utils/monthlySummaryUtils";
+import { PeriodInfoCard } from "../components/monthlySummary/PeriodInfoCard";
+import { SummaryForm } from "../components/monthlySummary/SummaryForm";
+import { HistoryList } from "../components/monthlySummary/HistoryList";
+import { TipsCard } from "../components/monthlySummary/TipsCard";
 
 const MonthlySummary = () => {
-  const navigate = useNavigate()
-  
+  const navigate = useNavigate();
+
   // 获取当前用户信息
-  const currentUser = JSON.parse(localStorage.getItem('user') || '{"name":"用户","department":"未知部门","position":"未知职位"}')
+  const currentUser = JSON.parse(
+    localStorage.getItem("user") ||
+      '{"name":"用户","department":"未知部门","position":"未知职位"}',
+  );
 
   const {
     currentPeriod,
@@ -29,19 +32,19 @@ const MonthlySummary = () => {
     handleInputChange,
     loadHistory,
     handleSaveDraft,
-    handleSubmit
-  } = useMonthlySummary()
+    handleSubmit,
+  } = useMonthlySummary();
 
   // 页面加载时加载历史记录
   useEffect(() => {
-    loadHistory()
+    loadHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 
   // 提交处理（需要 navigate）
   const onSubmit = () => {
-    handleSubmit(navigate)
-  }
+    handleSubmit(navigate);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
@@ -55,8 +58,12 @@ const MonthlySummary = () => {
         <motion.div {...fadeIn}>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">月度工作总结</h1>
-              <p className="text-slate-400">记录本月工作成果，为绩效评价提供依据</p>
+              <h1 className="text-3xl font-bold text-white mb-2">
+                月度工作总结
+              </h1>
+              <p className="text-slate-400">
+                记录本月工作成果，为绩效评价提供依据
+              </p>
             </div>
             <FileText className="h-12 w-12 text-blue-400" />
           </div>
@@ -90,7 +97,7 @@ const MonthlySummary = () => {
         <TipsCard />
       </motion.div>
     </div>
-  )
-}
+  );
+};
 
-export default MonthlySummary
+export default MonthlySummary;

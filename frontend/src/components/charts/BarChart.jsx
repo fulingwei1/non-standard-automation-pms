@@ -3,8 +3,8 @@
  * 用于分类数据对比、排名展示
  */
 
-import { Column, Bar } from '@ant-design/plots'
-import { useMemo } from 'react'
+import { Column, Bar } from "@ant-design/plots";
+import { useMemo } from "react";
 
 /**
  * BarChart - 柱状图/条形图
@@ -24,8 +24,8 @@ import { useMemo } from 'react'
  */
 export default function BarChart({
   data = [],
-  xField = 'category',
-  yField = 'value',
+  xField = "category",
+  yField = "value",
   seriesField,
   horizontal = false,
   isGroup = false,
@@ -49,30 +49,36 @@ export default function BarChart({
       isStack,
       columnWidthRatio: 0.6,
       tooltip: {
-        formatter: formatter ? (datum) => ({
-          name: datum[seriesField] || (horizontal ? xField : yField),
-          value: formatter(datum[horizontal ? xField : yField]),
-        }) : undefined,
+        formatter: formatter
+          ? (datum) => ({
+              name: datum[seriesField] || (horizontal ? xField : yField),
+              value: formatter(datum[horizontal ? xField : yField]),
+            })
+          : undefined,
       },
-      label: showLabel ? {
-        position: horizontal ? 'right' : 'top',
-        style: {
-          fill: '#94a3b8',
-          fontSize: 11,
-        },
-        formatter: formatter ? (datum) => formatter(datum[horizontal ? xField : yField]) : undefined,
-      } : false,
+      label: showLabel
+        ? {
+            position: horizontal ? "right" : "top",
+            style: {
+              fill: "#94a3b8",
+              fontSize: 11,
+            },
+            formatter: formatter
+              ? (datum) => formatter(datum[horizontal ? xField : yField])
+              : undefined,
+          }
+        : false,
       xAxis: {
         label: {
           style: {
-            fill: '#94a3b8',
+            fill: "#94a3b8",
             fontSize: 12,
           },
           autoRotate: true,
         },
         line: {
           style: {
-            stroke: '#334155',
+            stroke: "#334155",
           },
         },
       },
@@ -80,54 +86,69 @@ export default function BarChart({
         label: {
           formatter: horizontal ? undefined : formatter,
           style: {
-            fill: '#94a3b8',
+            fill: "#94a3b8",
             fontSize: 12,
           },
         },
         grid: {
           line: {
             style: {
-              stroke: '#334155',
+              stroke: "#334155",
               lineDash: [4, 4],
             },
           },
         },
       },
-      legend: seriesField ? {
-        position: 'top-right',
-        itemName: {
-          style: {
-            fill: '#94a3b8',
-          },
-        },
-      } : false,
+      legend: seriesField
+        ? {
+            position: "top-right",
+            itemName: {
+              style: {
+                fill: "#94a3b8",
+              },
+            },
+          }
+        : false,
       animation: {
         appear: {
-          animation: horizontal ? 'scale-in-x' : 'scale-in-y',
+          animation: horizontal ? "scale-in-x" : "scale-in-y",
           duration: 800,
         },
       },
       ...rest,
-    }
+    };
 
     if (seriesField) {
-      cfg.seriesField = seriesField
+      cfg.seriesField = seriesField;
     }
 
     if (colors) {
-      cfg.color = colors
+      cfg.color = colors;
     }
 
-    return cfg
-  }, [data, xField, yField, seriesField, horizontal, isGroup, isStack, height, formatter, showLabel, colors, rest])
+    return cfg;
+  }, [
+    data,
+    xField,
+    yField,
+    seriesField,
+    horizontal,
+    isGroup,
+    isStack,
+    height,
+    formatter,
+    showLabel,
+    colors,
+    rest,
+  ]);
 
   const handleReady = (plot) => {
     if (onBarClick) {
-      plot.on('element:click', (evt) => {
-        onBarClick(evt.data?.data)
-      })
+      plot.on("element:click", (evt) => {
+        onBarClick(evt.data?.data);
+      });
     }
-  }
+  };
 
   if (!data || data.length === 0) {
     return (
@@ -137,15 +158,17 @@ export default function BarChart({
       >
         暂无数据
       </div>
-    )
+    );
   }
 
-  const ChartComponent = horizontal ? Bar : Column
+  const ChartComponent = horizontal ? Bar : Column;
 
   return (
     <div style={style}>
-      {title && <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>}
+      {title && (
+        <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>
+      )}
       <ChartComponent {...config} onReady={handleReady} />
     </div>
-  )
+  );
 }

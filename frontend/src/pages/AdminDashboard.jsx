@@ -4,10 +4,10 @@
  * Core Functions: System configuration, User management, Permission assignment, System maintenance
  */
 
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
-import api from '../services/api'
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import api from "../services/api";
 import {
   Users,
   Shield,
@@ -46,8 +46,8 @@ import {
   XCircle,
   Info,
   Search,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -56,10 +56,10 @@ import {
   Button,
   Badge,
   Progress,
-} from '../components/ui'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { ApiIntegrationError } from '../components/ui'
+} from "../components/ui";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { ApiIntegrationError } from "../components/ui";
 
 // 默认统计数据（加载前显示）
 const defaultStats = {
@@ -87,45 +87,55 @@ const defaultStats = {
   lastBackup: null,
   auditLogsToday: 0,
   auditLogsThisWeek: 0,
-}
+};
 
 // Mock data - 已移除，使用真实API
 
 // Mock data - 已移除，使用真实API
 
 const DEFAULT_PERMISSION_MODULES = [
-  { code: 'users', name: '用户管理', description: '创建、停用和分配用户角色' },
-  { code: 'roles', name: '角色配置', description: '维护角色及权限组合' },
-  { code: 'permissions', name: '权限策略', description: '配置模块、菜单与 API 授权' },
-  { code: 'system', name: '系统监控', description: '查看系统运行状态与告警' },
-]
+  { code: "users", name: "用户管理", description: "创建、停用和分配用户角色" },
+  { code: "roles", name: "角色配置", description: "维护角色及权限组合" },
+  {
+    code: "permissions",
+    name: "权限策略",
+    description: "配置模块、菜单与 API 授权",
+  },
+  { code: "system", name: "系统监控", description: "查看系统运行状态与告警" },
+];
 
 const cloneRolePermissions = (roles) => {
-  if (!Array.isArray(roles)) return []
+  if (!Array.isArray(roles)) return [];
   return roles.map((role) => ({
     ...role,
     permissions: Array.isArray(role.permissions) ? [...role.permissions] : [],
-  }))
-}
+  }));
+};
 
-
-const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg, onClick }) => {
+const StatCard = ({
+  title,
+  value,
+  subtitle,
+  trend,
+  icon: Icon,
+  color,
+  bg,
+  onClick,
+}) => {
   return (
     <motion.div
       variants={fadeIn}
       onClick={onClick}
       className={cn(
-        'relative overflow-hidden rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-5 backdrop-blur transition-all hover:border-slate-600/80 hover:shadow-lg',
-        onClick && 'cursor-pointer'
+        "relative overflow-hidden rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-5 backdrop-blur transition-all hover:border-slate-600/80 hover:shadow-lg",
+        onClick && "cursor-pointer",
       )}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm text-slate-400 mb-2">{title}</p>
-          <p className={cn('text-2xl font-bold mb-1', color)}>{value}</p>
-          {subtitle && (
-            <p className="text-xs text-slate-500">{subtitle}</p>
-          )}
+          <p className={cn("text-2xl font-bold mb-1", color)}>{value}</p>
+          {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
           {trend !== undefined && (
             <div className="flex items-center gap-1 mt-2">
               {trend > 0 ? (
@@ -143,148 +153,157 @@ const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg, onClic
           )}
         </div>
         {Icon && (
-          <div className={cn('p-3 rounded-lg', bg)}>
-            <Icon className={cn('w-5 h-5', color)} />
+          <div className={cn("p-3 rounded-lg", bg)}>
+            <Icon className={cn("w-5 h-5", color)} />
           </div>
         )}
       </div>
     </motion.div>
-  )
-}
+  );
+};
 
 export default function AdminDashboard() {
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [stats, setStats] = useState(defaultStats)
-  const [rolePermissions, setRolePermissions] = useState([])
-  const [savedRolePermissions, setSavedRolePermissions] = useState([])
-  const [selectedRoleCode, setSelectedRoleCode] = useState('')
-  const [roleSearchKeyword, setRoleSearchKeyword] = useState('')
-  const [savingPermissions, setSavingPermissions] = useState(false)
-  const [permissionNotice, setPermissionNotice] = useState(null)
-  const permissionModules = DEFAULT_PERMISSION_MODULES
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState(defaultStats);
+  const [rolePermissions, setRolePermissions] = useState([]);
+  const [savedRolePermissions, setSavedRolePermissions] = useState([]);
+  const [selectedRoleCode, setSelectedRoleCode] = useState("");
+  const [roleSearchKeyword, setRoleSearchKeyword] = useState("");
+  const [savingPermissions, setSavingPermissions] = useState(false);
+  const [permissionNotice, setPermissionNotice] = useState(null);
+  const permissionModules = DEFAULT_PERMISSION_MODULES;
 
   useEffect(() => {
     // 从后端获取真实统计数据
     const fetchStats = async () => {
       try {
-        setLoading(true)
-        setError(null) // 清除之前的错误
-        const response = await api.get('/admin/stats')
+        setLoading(true);
+        setError(null); // 清除之前的错误
+        const response = await api.get("/admin/stats");
         if (response.data?.data) {
-          setStats(response.data.data)
-          setError(null) // 成功时清除错误
+          setStats(response.data.data);
+          setError(null); // 成功时清除错误
         } else {
-          console.warn('API 返回数据格式异常:', response.data)
-          setError(new Error('API 返回数据格式异常'))
+          console.warn("API 返回数据格式异常:", response.data);
+          setError(new Error("API 返回数据格式异常"));
         }
       } catch (err) {
-        console.error('获取统计数据失败:', err)
-        setError(err)
-        setStats(defaultStats)
+        console.error("获取统计数据失败:", err);
+        setError(err);
+        setStats(defaultStats);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchStats()
-  }, [])
+    };
+    fetchStats();
+  }, []);
 
   useEffect(() => {
-    if (!permissionNotice) return
-    const timer = setTimeout(() => setPermissionNotice(null), 3000)
-    return () => clearTimeout(timer)
-  }, [permissionNotice])
+    if (!permissionNotice) return;
+    const timer = setTimeout(() => setPermissionNotice(null), 3000);
+    return () => clearTimeout(timer);
+  }, [permissionNotice]);
 
   const handleStatCardClick = (type) => {
     switch (type) {
-      case 'users':
-        navigate('/user-management')
-        break
-      case 'roles':
-        navigate('/role-management')
-        break
-      case 'permissions':
-        navigate('/permission-management')
-        break
-      case 'system':
-        navigate('/settings')
-        break
+      case "users":
+        navigate("/user-management");
+        break;
+      case "roles":
+        navigate("/role-management");
+        break;
+      case "permissions":
+        navigate("/permission-management");
+        break;
+      case "system":
+        navigate("/settings");
+        break;
       default:
-        break
+        break;
     }
-  }
+  };
 
-  const selectedRole = rolePermissions.find((role) => role.roleCode === selectedRoleCode) || null
+  const selectedRole =
+    rolePermissions.find((role) => role.roleCode === selectedRoleCode) || null;
 
   const isRolePermissionsChanged = (role) => {
-    if (!role) return false
-    const savedRole = savedRolePermissions.find((item) => item.roleCode === role.roleCode)
-    if (!savedRole) return true
-    if (savedRole.permissions.length !== role.permissions.length) return true
-    const savedSet = new Set(savedRole.permissions)
-    return role.permissions.some((perm) => !savedSet.has(perm))
-  }
+    if (!role) return false;
+    const savedRole = savedRolePermissions.find(
+      (item) => item.roleCode === role.roleCode,
+    );
+    if (!savedRole) return true;
+    if (savedRole.permissions.length !== role.permissions.length) return true;
+    const savedSet = new Set(savedRole.permissions);
+    return role.permissions.some((perm) => !savedSet.has(perm));
+  };
 
-  const keyword = roleSearchKeyword.trim().toLowerCase()
+  const keyword = roleSearchKeyword.trim().toLowerCase();
   const filteredRoles = keyword
     ? rolePermissions.filter((role) => {
-        const roleName = (role.role || '').toLowerCase()
-        const roleCode = (role.roleCode || '').toLowerCase()
-        const desc = (role.description || '').toLowerCase()
-        return roleName.includes(keyword) || roleCode.includes(keyword) || desc.includes(keyword)
+        const roleName = (role.role || "").toLowerCase();
+        const roleCode = (role.roleCode || "").toLowerCase();
+        const desc = (role.description || "").toLowerCase();
+        return (
+          roleName.includes(keyword) ||
+          roleCode.includes(keyword) ||
+          desc.includes(keyword)
+        );
       })
-    : rolePermissions
+    : rolePermissions;
 
-  const hasPendingChanges = rolePermissions.some((role) => isRolePermissionsChanged(role))
-  const selectedRoleChanged = isRolePermissionsChanged(selectedRole)
+  const hasPendingChanges = rolePermissions.some((role) =>
+    isRolePermissionsChanged(role),
+  );
+  const selectedRoleChanged = isRolePermissionsChanged(selectedRole);
 
   const handleRoleSelect = (roleCode) => {
-    setSelectedRoleCode(roleCode)
-  }
+    setSelectedRoleCode(roleCode);
+  };
 
   const handleTogglePermission = (moduleCode) => {
-    if (!selectedRoleCode) return
+    if (!selectedRoleCode) return;
     setRolePermissions((prev) =>
       prev.map((role) => {
-        if (role.roleCode !== selectedRoleCode) return role
-        const hasPermission = role.permissions.includes(moduleCode)
+        if (role.roleCode !== selectedRoleCode) return role;
+        const hasPermission = role.permissions.includes(moduleCode);
         return {
           ...role,
           permissions: hasPermission
             ? role.permissions.filter((code) => code !== moduleCode)
             : [...role.permissions, moduleCode],
-        }
-      })
-    )
-  }
+        };
+      }),
+    );
+  };
 
   const handleResetPermissions = () => {
-    setRolePermissions(cloneRolePermissions(savedRolePermissions))
+    setRolePermissions(cloneRolePermissions(savedRolePermissions));
     setPermissionNotice({
-      type: 'info',
-      message: '已恢复到最近保存的配置（模拟数据）',
-    })
-  }
+      type: "info",
+      message: "已恢复到最近保存的配置（模拟数据）",
+    });
+  };
 
   const handleSavePermissions = () => {
     if (!hasPendingChanges) {
       setPermissionNotice({
-        type: 'warning',
-        message: '当前没有新的变更需要保存',
-      })
-      return
+        type: "warning",
+        message: "当前没有新的变更需要保存",
+      });
+      return;
     }
-    setSavingPermissions(true)
+    setSavingPermissions(true);
     setTimeout(() => {
-      setSavingPermissions(false)
-      setSavedRolePermissions(cloneRolePermissions(rolePermissions))
+      setSavingPermissions(false);
+      setSavedRolePermissions(cloneRolePermissions(rolePermissions));
       setPermissionNotice({
-        type: 'success',
-        message: '权限配置已保存（仅 UI 演示）',
-      })
-    }, 600)
-  }
+        type: "success",
+        message: "权限配置已保存（仅 UI 演示）",
+      });
+    }, 600);
+  };
 
   // Show error state
   if (error && loading === false) {
@@ -300,24 +319,24 @@ export default function AdminDashboard() {
           onRetry={() => {
             const fetchStats = async () => {
               try {
-                setLoading(true)
-                setError(null)
-                const response = await api.get('/admin/stats')
+                setLoading(true);
+                setError(null);
+                const response = await api.get("/admin/stats");
                 if (response.data?.data) {
-                  setStats(response.data.data)
+                  setStats(response.data.data);
                 }
               } catch (err) {
-                setError(err)
-                setStats(defaultStats)
+                setError(err);
+                setStats(defaultStats);
               } finally {
-                setLoading(false)
+                setLoading(false);
               }
-            }
-            fetchStats()
+            };
+            fetchStats();
           }}
         />
       </div>
-    )
+    );
   }
 
   if (loading) {
@@ -325,7 +344,7 @@ export default function AdminDashboard() {
       <div className="flex items-center justify-center h-screen">
         <div className="text-slate-400">加载中...</div>
       </div>
-    )
+    );
   }
 
   return (
@@ -350,7 +369,7 @@ export default function AdminDashboard() {
           icon={Users}
           color="text-blue-400"
           bg="bg-blue-500/10"
-          onClick={() => handleStatCardClick('users')}
+          onClick={() => handleStatCardClick("users")}
         />
         <StatCard
           title="角色总数"
@@ -360,7 +379,7 @@ export default function AdminDashboard() {
           icon={Shield}
           color="text-purple-400"
           bg="bg-purple-500/10"
-          onClick={() => handleStatCardClick('roles')}
+          onClick={() => handleStatCardClick("roles")}
         />
         <StatCard
           title="权限总数"
@@ -369,7 +388,7 @@ export default function AdminDashboard() {
           icon={Key}
           color="text-amber-400"
           bg="bg-amber-500/10"
-          onClick={() => handleStatCardClick('permissions')}
+          onClick={() => handleStatCardClick("permissions")}
         />
         <StatCard
           title="系统可用性"
@@ -378,7 +397,7 @@ export default function AdminDashboard() {
           icon={Activity}
           color="text-emerald-400"
           bg="bg-emerald-500/10"
-          onClick={() => handleStatCardClick('system')}
+          onClick={() => handleStatCardClick("system")}
         />
       </div>
 
@@ -406,32 +425,32 @@ export default function AdminDashboard() {
           <button
             onClick={() => {
               // 系统概览保持在当前页面，滚动到顶部
-              window.scrollTo({ top: 0, behavior: 'smooth' })
+              window.scrollTo({ top: 0, behavior: "smooth" });
             }}
             className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all bg-slate-700 text-white hover:bg-slate-600"
           >
             系统概览
           </button>
           <button
-            onClick={() => navigate('/user-management')}
+            onClick={() => navigate("/user-management")}
             className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-300 hover:bg-slate-700 hover:text-white"
           >
             用户管理
           </button>
           <button
-            onClick={() => navigate('/role-management')}
+            onClick={() => navigate("/role-management")}
             className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-300 hover:bg-slate-700 hover:text-white"
           >
             角色权限
           </button>
           <button
-            onClick={() => navigate('/scheduler-monitoring')}
+            onClick={() => navigate("/scheduler-monitoring")}
             className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-300 hover:bg-slate-700 hover:text-white"
           >
             系统监控
           </button>
           <button
-            onClick={() => navigate('/scheduler-monitoring')}
+            onClick={() => navigate("/scheduler-monitoring")}
             className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-300 hover:bg-slate-700 hover:text-white"
           >
             活动日志
@@ -453,33 +472,45 @@ export default function AdminDashboard() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-400">系统可用性</span>
-                    <span className="text-sm font-medium text-emerald-400">{stats.systemUptime}%</span>
+                    <span className="text-sm font-medium text-emerald-400">
+                      {stats.systemUptime}%
+                    </span>
                   </div>
                   <Progress value={stats.systemUptime} className="h-2" />
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-400">存储使用率</span>
-                    <span className="text-sm font-medium text-amber-400">{stats.storageUsed}%</span>
+                    <span className="text-sm font-medium text-amber-400">
+                      {stats.storageUsed}%
+                    </span>
                   </div>
                   <Progress value={stats.storageUsed} className="h-2" />
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-400">数据库大小</span>
-                    <span className="text-sm font-medium text-blue-400">{stats.databaseSize} GB</span>
+                    <span className="text-sm font-medium text-blue-400">
+                      {stats.databaseSize} GB
+                    </span>
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-400">API 平均响应时间</span>
-                    <span className="text-sm font-medium text-cyan-400">{stats.apiResponseTime} ms</span>
+                    <span className="text-sm text-slate-400">
+                      API 平均响应时间
+                    </span>
+                    <span className="text-sm font-medium text-cyan-400">
+                      {stats.apiResponseTime} ms
+                    </span>
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-400">错误率</span>
-                    <span className="text-sm font-medium text-emerald-400">{stats.errorRate}%</span>
+                    <span className="text-sm font-medium text-emerald-400">
+                      {stats.errorRate}%
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -506,17 +537,27 @@ export default function AdminDashboard() {
                   <CardTitle className="text-white text-sm">今日登录</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold text-blue-400">{stats.loginCountToday}</p>
-                  <p className="text-xs text-slate-400 mt-1">本周总计: {stats.loginCountThisWeek}</p>
+                  <p className="text-2xl font-bold text-blue-400">
+                    {stats.loginCountToday}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    本周总计: {stats.loginCountThisWeek}
+                  </p>
                 </CardContent>
               </Card>
               <Card className="border-slate-700/50 bg-slate-800/50">
                 <CardHeader>
-                  <CardTitle className="text-white text-sm">今日审计日志</CardTitle>
+                  <CardTitle className="text-white text-sm">
+                    今日审计日志
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold text-purple-400">{stats.auditLogsToday}</p>
-                  <p className="text-xs text-slate-400 mt-1">本周总计: {stats.auditLogsThisWeek}</p>
+                  <p className="text-2xl font-bold text-purple-400">
+                    {stats.auditLogsToday}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    本周总计: {stats.auditLogsThisWeek}
+                  </p>
                 </CardContent>
               </Card>
               <Card className="border-slate-700/50 bg-slate-800/50">
@@ -524,7 +565,9 @@ export default function AdminDashboard() {
                   <CardTitle className="text-white text-sm">最后备份</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm font-medium text-emerald-400">{stats.lastBackup}</p>
+                  <p className="text-sm font-medium text-emerald-400">
+                    {stats.lastBackup}
+                  </p>
                   <p className="text-xs text-slate-400 mt-1">自动备份已启用</p>
                 </CardContent>
               </Card>
@@ -533,5 +576,5 @@ export default function AdminDashboard() {
         </div>
       </div>
     </motion.div>
-  )
+  );
 }

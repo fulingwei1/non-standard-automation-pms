@@ -3,8 +3,8 @@
  * Features: Pending approvals, Approval history, Contract review, Approval actions
  */
 
-import { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FileCheck,
   Search,
@@ -25,8 +25,8 @@ import {
   MessageSquare,
   History,
   Shield,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -46,74 +46,90 @@ import {
   TabsList,
   TabsTrigger,
   Textarea,
-} from '../components/ui'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
+} from "../components/ui";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
 
 // Mock approval data
 const formatCurrency = (value) => {
   if (value >= 10000) {
-    return `¥${(value / 10000).toFixed(1)}万`
+    return `¥${(value / 10000).toFixed(1)}万`;
   }
-  return new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency: 'CNY',
+  return new Intl.NumberFormat("zh-CN", {
+    style: "currency",
+    currency: "CNY",
     minimumFractionDigits: 0,
-  }).format(value)
-}
+  }).format(value);
+};
 
 const typeConfig = {
-  contract: { label: '合同', color: 'bg-blue-500', textColor: 'text-blue-400', icon: FileCheck },
-  quotation: { label: '报价', color: 'bg-purple-500', textColor: 'text-purple-400', icon: FileText },
-  discount: { label: '优惠', color: 'bg-red-500', textColor: 'text-red-400', icon: DollarSign },
-}
+  contract: {
+    label: "合同",
+    color: "bg-blue-500",
+    textColor: "text-blue-400",
+    icon: FileCheck,
+  },
+  quotation: {
+    label: "报价",
+    color: "bg-purple-500",
+    textColor: "text-purple-400",
+    icon: FileText,
+  },
+  discount: {
+    label: "优惠",
+    color: "bg-red-500",
+    textColor: "text-red-400",
+    icon: DollarSign,
+  },
+};
 
 const priorityConfig = {
-  high: { label: '紧急', color: 'bg-red-500', textColor: 'text-red-400' },
-  medium: { label: '普通', color: 'bg-amber-500', textColor: 'text-amber-400' },
-  low: { label: '低', color: 'bg-slate-500', textColor: 'text-slate-400' },
-}
+  high: { label: "紧急", color: "bg-red-500", textColor: "text-red-400" },
+  medium: { label: "普通", color: "bg-amber-500", textColor: "text-amber-400" },
+  low: { label: "低", color: "bg-slate-500", textColor: "text-slate-400" },
+};
 
 export default function ContractApproval() {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedApproval, setSelectedApproval] = useState(null)
-  const [showDetailDialog, setShowDetailDialog] = useState(false)
-  const [approvalComments, setApprovalComments] = useState('')
-  const [activeTab, setActiveTab] = useState('pending')
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedApproval, setSelectedApproval] = useState(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [approvalComments, setApprovalComments] = useState("");
+  const [activeTab, setActiveTab] = useState("pending");
 
-// Mock data - 已移除，使用真实API
-const [pendingApprovals, setPendingApprovals] = useState([])
-const [approvalHistory, setApprovalHistory] = useState([])
-
+  // Mock data - 已移除，使用真实API
+  const [pendingApprovals, setPendingApprovals] = useState([]);
+  const [approvalHistory, setApprovalHistory] = useState([]);
 
   const filteredApprovals = useMemo(() => {
-    const approvals = activeTab === 'pending' ? pendingApprovals : approvalHistory
-    if (!searchTerm) return approvals
-    return approvals.filter(item =>
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.submitter.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [searchTerm, activeTab])
+    const approvals =
+      activeTab === "pending" ? pendingApprovals : approvalHistory;
+    if (!searchTerm) return approvals;
+    return approvals.filter(
+      (item) =>
+        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.submitter.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+  }, [searchTerm, activeTab]);
 
   const handleViewDetail = (approval) => {
-    setSelectedApproval(approval)
-    setShowDetailDialog(true)
-  }
+    setSelectedApproval(approval);
+    setShowDetailDialog(true);
+  };
 
   const handleApprove = () => {
     // TODO: Implement approval logic
     // TODO: Call API to approve
-    setShowDetailDialog(false)
-    setApprovalComments('')
-  }
+    setShowDetailDialog(false);
+    setApprovalComments("");
+  };
 
   const handleReject = () => {
     // TODO: Implement rejection logic
     // TODO: Call API to reject
-    setShowDetailDialog(false)
-    setApprovalComments('')
-  }
+    setShowDetailDialog(false);
+    setApprovalComments("");
+  };
 
   return (
     <motion.div
@@ -168,7 +184,12 @@ const [approvalHistory, setApprovalHistory] = useState([])
               <div>
                 <p className="text-sm text-slate-400">待审批金额</p>
                 <p className="text-2xl font-bold text-white mt-1">
-                  {formatCurrency(mockPendingApprovals.reduce((sum, a) => sum + a.totalAmount, 0))}
+                  {formatCurrency(
+                    mockPendingApprovals.reduce(
+                      (sum, a) => sum + a.totalAmount,
+                      0,
+                    ),
+                  )}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">合同总金额</p>
               </div>
@@ -185,7 +206,10 @@ const [approvalHistory, setApprovalHistory] = useState([])
               <div>
                 <p className="text-sm text-slate-400">已批准</p>
                 <p className="text-2xl font-bold text-white mt-1">
-                  {mockApprovalHistory.filter(h => h.status === 'approved').length}
+                  {
+                    mockApprovalHistory.filter((h) => h.status === "approved")
+                      .length
+                  }
                 </p>
                 <p className="text-xs text-slate-500 mt-1">本月已批准</p>
               </div>
@@ -202,7 +226,10 @@ const [approvalHistory, setApprovalHistory] = useState([])
               <div>
                 <p className="text-sm text-slate-400">已拒绝</p>
                 <p className="text-2xl font-bold text-white mt-1">
-                  {mockApprovalHistory.filter(h => h.status === 'rejected').length}
+                  {
+                    mockApprovalHistory.filter((h) => h.status === "rejected")
+                      .length
+                  }
                 </p>
                 <p className="text-xs text-slate-500 mt-1">本月已拒绝</p>
               </div>
@@ -250,9 +277,9 @@ const [approvalHistory, setApprovalHistory] = useState([])
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsContent value="pending" className="space-y-4">
                 {filteredApprovals.map((approval) => {
-                  const typeInfo = typeConfig[approval.type]
-                  const priorityInfo = priorityConfig[approval.priority]
-                  const TypeIcon = typeInfo.icon
+                  const typeInfo = typeConfig[approval.type];
+                  const priorityInfo = priorityConfig[approval.priority];
+                  const TypeIcon = typeInfo.icon;
                   return (
                     <div
                       key={approval.id}
@@ -260,21 +287,33 @@ const [approvalHistory, setApprovalHistory] = useState([])
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-start gap-3 flex-1">
-                          <div className={cn('p-2 rounded-lg', typeInfo.color + '/20')}>
-                            <TypeIcon className={cn('w-5 h-5', typeInfo.textColor)} />
+                          <div
+                            className={cn(
+                              "p-2 rounded-lg",
+                              typeInfo.color + "/20",
+                            )}
+                          >
+                            <TypeIcon
+                              className={cn("w-5 h-5", typeInfo.textColor)}
+                            />
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-white">{approval.title}</span>
+                              <span className="font-medium text-white">
+                                {approval.title}
+                              </span>
                               <Badge
                                 variant="outline"
-                                className={cn('text-xs', typeInfo.textColor)}
+                                className={cn("text-xs", typeInfo.textColor)}
                               >
                                 {typeInfo.label}
                               </Badge>
                               <Badge
                                 variant="outline"
-                                className={cn('text-xs', priorityInfo.textColor)}
+                                className={cn(
+                                  "text-xs",
+                                  priorityInfo.textColor,
+                                )}
                               >
                                 {priorityInfo.label}
                               </Badge>
@@ -326,13 +365,13 @@ const [approvalHistory, setApprovalHistory] = useState([])
                         </Button>
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </TabsContent>
               <TabsContent value="history" className="space-y-4">
                 {filteredApprovals.map((approval) => {
-                  const typeInfo = typeConfig[approval.type]
-                  const TypeIcon = typeInfo.icon
+                  const typeInfo = typeConfig[approval.type];
+                  const TypeIcon = typeInfo.icon;
                   return (
                     <div
                       key={approval.id}
@@ -340,22 +379,33 @@ const [approvalHistory, setApprovalHistory] = useState([])
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3 flex-1">
-                          <div className={cn('p-2 rounded-lg', typeInfo.color + '/20')}>
-                            <TypeIcon className={cn('w-5 h-5', typeInfo.textColor)} />
+                          <div
+                            className={cn(
+                              "p-2 rounded-lg",
+                              typeInfo.color + "/20",
+                            )}
+                          >
+                            <TypeIcon
+                              className={cn("w-5 h-5", typeInfo.textColor)}
+                            />
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-white">{approval.title}</span>
+                              <span className="font-medium text-white">
+                                {approval.title}
+                              </span>
                               <Badge
                                 variant="outline"
                                 className={cn(
-                                  'text-xs',
-                                  approval.status === 'approved'
-                                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                                    : 'bg-red-500/20 text-red-400 border-red-500/30'
+                                  "text-xs",
+                                  approval.status === "approved"
+                                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                                    : "bg-red-500/20 text-red-400 border-red-500/30",
                                 )}
                               >
-                                {approval.status === 'approved' ? '已批准' : '已拒绝'}
+                                {approval.status === "approved"
+                                  ? "已批准"
+                                  : "已拒绝"}
                               </Badge>
                             </div>
                             <div className="flex items-center gap-4 text-xs text-slate-400">
@@ -365,7 +415,9 @@ const [approvalHistory, setApprovalHistory] = useState([])
                               <span>{approval.approveTime}</span>
                             </div>
                             {approval.comments && (
-                              <p className="text-xs text-slate-500 mt-2">{approval.comments}</p>
+                              <p className="text-xs text-slate-500 mt-2">
+                                {approval.comments}
+                              </p>
                             )}
                           </div>
                         </div>
@@ -376,7 +428,7 @@ const [approvalHistory, setApprovalHistory] = useState([])
                         </div>
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </TabsContent>
             </Tabs>
@@ -389,9 +441,7 @@ const [approvalHistory, setApprovalHistory] = useState([])
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>审批详情</DialogTitle>
-            <DialogDescription>
-              查看详细信息并做出审批决定
-            </DialogDescription>
+            <DialogDescription>查看详细信息并做出审批决定</DialogDescription>
           </DialogHeader>
           {selectedApproval && (
             <div className="space-y-4">
@@ -407,8 +457,8 @@ const [approvalHistory, setApprovalHistory] = useState([])
                   <Badge
                     variant="outline"
                     className={cn(
-                      'text-xs',
-                      priorityConfig[selectedApproval.priority].textColor
+                      "text-xs",
+                      priorityConfig[selectedApproval.priority].textColor,
                     )}
                   >
                     {priorityConfig[selectedApproval.priority].label}
@@ -416,19 +466,27 @@ const [approvalHistory, setApprovalHistory] = useState([])
                 </div>
                 <div>
                   <p className="text-sm text-slate-400">客户</p>
-                  <p className="text-white font-medium">{selectedApproval.customerName}</p>
+                  <p className="text-white font-medium">
+                    {selectedApproval.customerName}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-400">项目</p>
-                  <p className="text-white font-medium">{selectedApproval.projectName}</p>
+                  <p className="text-white font-medium">
+                    {selectedApproval.projectName}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-400">提交人</p>
-                  <p className="text-white font-medium">{selectedApproval.submitter}</p>
+                  <p className="text-white font-medium">
+                    {selectedApproval.submitter}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-400">提交时间</p>
-                  <p className="text-white font-medium">{selectedApproval.submitTime}</p>
+                  <p className="text-white font-medium">
+                    {selectedApproval.submitTime}
+                  </p>
                 </div>
                 <div className="col-span-2">
                   <p className="text-sm text-slate-400">金额</p>
@@ -461,10 +519,14 @@ const [approvalHistory, setApprovalHistory] = useState([])
                       >
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-white">
-                            {term.type === 'deposit' ? '签约款' :
-                             term.type === 'progress' ? '进度款' :
-                             term.type === 'acceptance' ? '验收款' :
-                             '质保金'} - {term.percent}%
+                            {term.type === "deposit"
+                              ? "签约款"
+                              : term.type === "progress"
+                                ? "进度款"
+                                : term.type === "acceptance"
+                                  ? "验收款"
+                                  : "质保金"}{" "}
+                            - {term.percent}%
                           </span>
                           <span className="text-white font-medium">
                             {formatCurrency(term.amount)}
@@ -479,25 +541,26 @@ const [approvalHistory, setApprovalHistory] = useState([])
                 </div>
               )}
 
-              {selectedApproval.attachments && selectedApproval.attachments.length > 0 && (
-                <div>
-                  <p className="text-sm text-slate-400 mb-2">附件</p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedApproval.attachments.map((file, index) => (
-                      <Button
-                        key={index}
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-2"
-                      >
-                        <FileText className="w-4 h-4" />
-                        {file}
-                        <Download className="w-3 h-3" />
-                      </Button>
-                    ))}
+              {selectedApproval.attachments &&
+                selectedApproval.attachments.length > 0 && (
+                  <div>
+                    <p className="text-sm text-slate-400 mb-2">附件</p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedApproval.attachments.map((file, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2"
+                        >
+                          <FileText className="w-4 h-4" />
+                          {file}
+                          <Download className="w-3 h-3" />
+                        </Button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {selectedApproval.notes && (
                 <div>
@@ -518,7 +581,10 @@ const [approvalHistory, setApprovalHistory] = useState([])
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDetailDialog(false)}
+            >
               取消
             </Button>
             <Button
@@ -537,6 +603,5 @@ const [approvalHistory, setApprovalHistory] = useState([])
         </DialogContent>
       </Dialog>
     </motion.div>
-  )
+  );
 }
-

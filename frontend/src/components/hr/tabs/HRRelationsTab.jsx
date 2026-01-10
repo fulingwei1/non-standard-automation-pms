@@ -2,38 +2,35 @@
  * HRRelationsTab Component
  * 员工关系 Tab 组件
  */
-import { motion } from 'framer-motion'
-import { Card, CardContent, CardHeader, CardTitle, Badge } from '../../ui'
-import { AlertTriangle, CheckCircle2, Heart } from 'lucide-react'
-import { cn } from '../../../lib/utils'
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle, Badge } from "../../ui";
+import { AlertTriangle, CheckCircle2, Heart } from "lucide-react";
+import { cn } from "../../../lib/utils";
 
 // 状态标签映射
 const getStatusLabel = (status) => {
   const labels = {
-    active: '在职',
-    pending: '待处理',
-    reviewing: '评审中',
-    processing: '处理中',
-    completed: '已完成',
-  }
-  return labels[status] || status
-}
+    active: "在职",
+    pending: "待处理",
+    reviewing: "评审中",
+    processing: "处理中",
+    completed: "已完成",
+  };
+  return labels[status] || status;
+};
 
 // 问题类型颜色
 const getIssueTypeColor = (type) => {
   const colors = {
-    conflict: 'bg-red-500/20 text-red-400 border-red-500/30',
-    leave: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    complaint: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    performance: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  }
-  return colors[type] || 'bg-slate-500/20 text-slate-400 border-slate-500/30'
-}
+    conflict: "bg-red-500/20 text-red-400 border-red-500/30",
+    leave: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+    complaint: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+    performance: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+  };
+  return colors[type] || "bg-slate-500/20 text-slate-400 border-slate-500/30";
+};
 
-export default function HRRelationsTab({
-  mockHRStats,
-  mockEmployeeIssues,
-}) {
+export default function HRRelationsTab({ mockHRStats, mockEmployeeIssues }) {
   return (
     <div className="space-y-6">
       {/* Statistics Cards */}
@@ -107,20 +104,20 @@ export default function HRRelationsTab({
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <Badge
-                        className={cn('text-xs', getIssueTypeColor(issue.type))}
+                        className={cn("text-xs", getIssueTypeColor(issue.type))}
                       >
-                        {issue.type === 'conflict'
-                          ? '冲突'
-                          : issue.type === 'leave'
-                          ? '请假'
-                          : issue.type === 'complaint'
-                          ? '投诉'
-                          : '绩效'}
+                        {issue.type === "conflict"
+                          ? "冲突"
+                          : issue.type === "leave"
+                            ? "请假"
+                            : issue.type === "complaint"
+                              ? "投诉"
+                              : "绩效"}
                       </Badge>
                       <span className="text-sm font-semibold text-white">
                         {issue.title}
                       </span>
-                      {issue.priority === 'high' && (
+                      {issue.priority === "high" && (
                         <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
                           紧急
                         </Badge>
@@ -139,13 +136,13 @@ export default function HRRelationsTab({
                   <div className="ml-4">
                     <Badge
                       className={cn(
-                        'text-xs',
-                        issue.status === 'pending' &&
-                          'bg-amber-500/20 text-amber-400',
-                        issue.status === 'reviewing' &&
-                          'bg-blue-500/20 text-blue-400',
-                        issue.status === 'processing' &&
-                          'bg-purple-500/20 text-purple-400'
+                        "text-xs",
+                        issue.status === "pending" &&
+                          "bg-amber-500/20 text-amber-400",
+                        issue.status === "reviewing" &&
+                          "bg-blue-500/20 text-blue-400",
+                        issue.status === "processing" &&
+                          "bg-purple-500/20 text-purple-400",
                       )}
                     >
                       {getStatusLabel(issue.status)}
@@ -158,5 +155,5 @@ export default function HRRelationsTab({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

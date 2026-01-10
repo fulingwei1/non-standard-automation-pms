@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { cn } from '../lib/utils'
-import { rdProjectApi } from '../services/api'
-import { formatDate, formatCurrency } from '../lib/utils'
-import { PageHeader } from '../components/layout/PageHeader'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { cn } from "../lib/utils";
+import { rdProjectApi } from "../services/api";
+import { formatDate, formatCurrency } from "../lib/utils";
+import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
@@ -17,7 +17,7 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +25,7 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Plus,
   Search,
@@ -41,7 +41,7 @@ import {
   Clock,
   XCircle,
   FileText,
-} from 'lucide-react'
+} from "lucide-react";
 
 // Stagger animation
 const staggerContainer = {
@@ -50,39 +50,41 @@ const staggerContainer = {
     opacity: 1,
     transition: { staggerChildren: 0.05, delayChildren: 0.1 },
   },
-}
+};
 
 const staggerChild = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
-}
+};
 
 // Status badge mapping
 const statusMap = {
-  DRAFT: { label: '草稿', color: 'secondary' },
-  APPROVED: { label: '已审批', color: 'success' },
-  IN_PROGRESS: { label: '进行中', color: 'primary' },
-  COMPLETED: { label: '已完成', color: 'success' },
-  CANCELLED: { label: '已取消', color: 'danger' },
-}
+  DRAFT: { label: "草稿", color: "secondary" },
+  APPROVED: { label: "已审批", color: "success" },
+  IN_PROGRESS: { label: "进行中", color: "primary" },
+  COMPLETED: { label: "已完成", color: "success" },
+  CANCELLED: { label: "已取消", color: "danger" },
+};
 
 const approvalStatusMap = {
-  PENDING: { label: '待审批', color: 'warning' },
-  APPROVED: { label: '已通过', color: 'success' },
-  REJECTED: { label: '已驳回', color: 'danger' },
-}
+  PENDING: { label: "待审批", color: "warning" },
+  APPROVED: { label: "已通过", color: "success" },
+  REJECTED: { label: "已驳回", color: "danger" },
+};
 
 const categoryTypeMap = {
-  SELF: { label: '自主研发', color: 'primary' },
-  ENTRUST: { label: '委托研发', color: 'info' },
-  COOPERATION: { label: '合作研发', color: 'success' },
-}
+  SELF: { label: "自主研发", color: "primary" },
+  ENTRUST: { label: "委托研发", color: "info" },
+  COOPERATION: { label: "合作研发", color: "success" },
+};
 
 // R&D Project Card Component
 function RdProjectCard({ project, onClick }) {
-  const status = statusMap[project.status] || statusMap.DRAFT
-  const approvalStatus = approvalStatusMap[project.approval_status] || approvalStatusMap.PENDING
-  const categoryType = categoryTypeMap[project.category_type] || categoryTypeMap.SELF
+  const status = statusMap[project.status] || statusMap.DRAFT;
+  const approvalStatus =
+    approvalStatusMap[project.approval_status] || approvalStatusMap.PENDING;
+  const categoryType =
+    categoryTypeMap[project.category_type] || categoryTypeMap.SELF;
 
   return (
     <motion.div variants={staggerChild}>
@@ -107,7 +109,7 @@ function RdProjectCard({ project, onClick }) {
             </div>
             <div className="flex flex-col gap-1 items-end">
               <Badge variant={status.color}>{status.label}</Badge>
-              {project.approval_status === 'PENDING' && (
+              {project.approval_status === "PENDING" && (
                 <Badge variant={approvalStatus.color} className="text-xs">
                   {approvalStatus.label}
                 </Badge>
@@ -119,14 +121,16 @@ function RdProjectCard({ project, onClick }) {
           <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
             <div className="flex items-center gap-2 text-slate-400">
               <Users className="h-4 w-4" />
-              <span className="truncate">{project.project_manager_name || '未指定'}</span>
+              <span className="truncate">
+                {project.project_manager_name || "未指定"}
+              </span>
             </div>
             <div className="flex items-center gap-2 text-slate-400">
               <Calendar className="h-4 w-4" />
               <span>
                 {project.planned_end_date
                   ? formatDate(project.planned_end_date)
-                  : '未设置'}
+                  : "未设置"}
               </span>
             </div>
           </div>
@@ -163,17 +167,19 @@ function RdProjectCard({ project, onClick }) {
           {/* Footer */}
           <div className="flex items-center justify-between pt-3 border-t border-white/5">
             <div className="flex items-center gap-2">
-              {project.status === 'COMPLETED' && (
+              {project.status === "COMPLETED" && (
                 <CheckCircle2 className="h-4 w-4 text-emerald-500" />
               )}
-              {project.status === 'IN_PROGRESS' && (
+              {project.status === "IN_PROGRESS" && (
                 <Clock className="h-4 w-4 text-primary" />
               )}
-              {project.status === 'CANCELLED' && (
+              {project.status === "CANCELLED" && (
                 <XCircle className="h-4 w-4 text-red-500" />
               )}
               <span className="text-xs text-slate-500">
-                {project.initiation_date ? formatDate(project.initiation_date) : '未立项'}
+                {project.initiation_date
+                  ? formatDate(project.initiation_date)
+                  : "未立项"}
               </span>
             </div>
             <div className="flex items-center gap-1 text-sm text-slate-500 group-hover:text-primary transition-colors">
@@ -184,66 +190,73 @@ function RdProjectCard({ project, onClick }) {
         </CardContent>
       </Card>
     </motion.div>
-  )
+  );
 }
 
 // R&D Project Form Component
-function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories = [] }) {
+function RdProjectFormDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+  categories = [],
+}) {
   const [formData, setFormData] = useState({
-    project_name: '',
-    category_id: '',
-    category_type: 'SELF',
-    initiation_date: '',
-    planned_start_date: '',
-    planned_end_date: '',
+    project_name: "",
+    category_id: "",
+    category_type: "SELF",
+    initiation_date: "",
+    planned_start_date: "",
+    planned_end_date: "",
     project_manager_id: null,
-    initiation_reason: '',
-    research_goal: '',
-    research_content: '',
-    expected_result: '',
-    budget_amount: '',
+    initiation_reason: "",
+    research_goal: "",
+    research_content: "",
+    expected_result: "",
+    budget_amount: "",
     linked_project_id: null,
-    remark: '',
-  })
-  const [loading, setLoading] = useState(false)
+    remark: "",
+  });
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
     try {
       const submitData = {
         ...formData,
-        budget_amount: formData.budget_amount ? parseFloat(formData.budget_amount) : null,
+        budget_amount: formData.budget_amount
+          ? parseFloat(formData.budget_amount)
+          : null,
         project_manager_id: formData.project_manager_id || null,
         linked_project_id: formData.linked_project_id || null,
         initiation_date: formData.initiation_date || null,
         planned_start_date: formData.planned_start_date || null,
         planned_end_date: formData.planned_end_date || null,
-      }
-      await onSubmit(submitData)
+      };
+      await onSubmit(submitData);
       setFormData({
-        project_name: '',
-        category_id: '',
-        category_type: 'SELF',
-        initiation_date: '',
-        planned_start_date: '',
-        planned_end_date: '',
+        project_name: "",
+        category_id: "",
+        category_type: "SELF",
+        initiation_date: "",
+        planned_start_date: "",
+        planned_end_date: "",
         project_manager_id: null,
-        initiation_reason: '',
-        research_goal: '',
-        research_content: '',
-        expected_result: '',
-        budget_amount: '',
+        initiation_reason: "",
+        research_goal: "",
+        research_content: "",
+        expected_result: "",
+        budget_amount: "",
         linked_project_id: null,
-        remark: '',
-      })
-      onOpenChange(false)
+        remark: "",
+      });
+      onOpenChange(false);
     } catch (err) {
-      console.error('Failed to create project:', err)
+      console.error("Failed to create project:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -260,7 +273,9 @@ function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories = [] }) 
                 </label>
                 <Input
                   value={formData.project_name}
-                  onChange={(e) => setFormData({ ...formData, project_name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, project_name: e.target.value })
+                  }
                   placeholder="请输入项目名称"
                   required
                 />
@@ -270,8 +285,14 @@ function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories = [] }) 
                   项目分类
                 </label>
                 <Select
-                  value={formData.category_id?.toString() || '__none__'}
-                  onValueChange={(value) => setFormData({ ...formData, category_id: value && value !== '__none__' ? parseInt(value) : '' })}
+                  value={formData.category_id?.toString() || "__none__"}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      category_id:
+                        value && value !== "__none__" ? parseInt(value) : "",
+                    })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="请选择分类" />
@@ -292,7 +313,9 @@ function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories = [] }) 
                 </label>
                 <Select
                   value={formData.category_type}
-                  onValueChange={(value) => setFormData({ ...formData, category_type: value })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, category_type: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="请选择类型" />
@@ -311,7 +334,12 @@ function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories = [] }) 
                 <Input
                   type="date"
                   value={formData.initiation_date}
-                  onChange={(e) => setFormData({ ...formData, initiation_date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      initiation_date: e.target.value,
+                    })
+                  }
                 />
               </div>
               <div>
@@ -321,7 +349,12 @@ function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories = [] }) 
                 <Input
                   type="date"
                   value={formData.planned_start_date}
-                  onChange={(e) => setFormData({ ...formData, planned_start_date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      planned_start_date: e.target.value,
+                    })
+                  }
                 />
               </div>
               <div>
@@ -331,7 +364,12 @@ function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories = [] }) 
                 <Input
                   type="date"
                   value={formData.planned_end_date}
-                  onChange={(e) => setFormData({ ...formData, planned_end_date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      planned_end_date: e.target.value,
+                    })
+                  }
                 />
               </div>
               <div>
@@ -342,7 +380,9 @@ function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories = [] }) 
                   type="number"
                   step="0.01"
                   value={formData.budget_amount}
-                  onChange={(e) => setFormData({ ...formData, budget_amount: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, budget_amount: e.target.value })
+                  }
                   placeholder="0.00"
                 />
               </div>
@@ -355,7 +395,12 @@ function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories = [] }) 
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary"
                 rows={2}
                 value={formData.initiation_reason}
-                onChange={(e) => setFormData({ ...formData, initiation_reason: e.target.value })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    initiation_reason: e.target.value,
+                  })
+                }
                 placeholder="请输入立项原因"
               />
             </div>
@@ -367,7 +412,9 @@ function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories = [] }) 
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary"
                 rows={2}
                 value={formData.research_goal}
-                onChange={(e) => setFormData({ ...formData, research_goal: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, research_goal: e.target.value })
+                }
                 placeholder="请输入研究目标"
               />
             </div>
@@ -379,7 +426,9 @@ function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories = [] }) 
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary"
                 rows={3}
                 value={formData.research_content}
-                onChange={(e) => setFormData({ ...formData, research_content: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, research_content: e.target.value })
+                }
                 placeholder="请输入研究内容"
               />
             </div>
@@ -391,7 +440,9 @@ function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories = [] }) 
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary"
                 rows={2}
                 value={formData.expected_result}
-                onChange={(e) => setFormData({ ...formData, expected_result: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, expected_result: e.target.value })
+                }
                 placeholder="请输入预期结果"
               />
             </div>
@@ -403,7 +454,9 @@ function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories = [] }) 
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary"
                 rows={2}
                 value={formData.remark}
-                onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, remark: e.target.value })
+                }
                 placeholder="请输入备注"
               />
             </div>
@@ -423,97 +476,98 @@ function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories = [] }) 
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 export default function RdProjectList() {
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [projects, setProjects] = useState([])
-  const [categories, setCategories] = useState([])
-  const [searchQuery, setSearchQuery] = useState('')
-  const [filterStatus, setFilterStatus] = useState('all')
-  const [filterCategoryType, setFilterCategoryType] = useState('all')
-  const [viewMode, setViewMode] = useState('grid')
-  const [formOpen, setFormOpen] = useState(false)
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [projects, setProjects] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterCategoryType, setFilterCategoryType] = useState("all");
+  const [viewMode, setViewMode] = useState("grid");
+  const [formOpen, setFormOpen] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
     page_size: 20,
     total: 0,
     pages: 0,
-  })
+  });
 
   const fetchCategories = async () => {
     try {
-      const response = await rdProjectApi.getCategories()
-      const data = response.data?.data || response.data || []
-      setCategories(data)
+      const response = await rdProjectApi.getCategories();
+      const data = response.data?.data || response.data || [];
+      setCategories(data);
     } catch (err) {
-      console.error('Failed to fetch categories:', err)
+      console.error("Failed to fetch categories:", err);
     }
-  }
+  };
 
   const fetchProjects = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const params = {
         page: pagination.page,
         page_size: pagination.page_size,
-      }
-      if (searchQuery) params.keyword = searchQuery
-      if (filterStatus && filterStatus !== 'all') params.status = filterStatus
-      if (filterCategoryType && filterCategoryType !== 'all') params.category_type = filterCategoryType
+      };
+      if (searchQuery) params.keyword = searchQuery;
+      if (filterStatus && filterStatus !== "all") params.status = filterStatus;
+      if (filterCategoryType && filterCategoryType !== "all")
+        params.category_type = filterCategoryType;
 
-      const response = await rdProjectApi.list(params)
-      const data = response.data || response
-      
+      const response = await rdProjectApi.list(params);
+      const data = response.data || response;
+
       if (data.items) {
         // PaginatedResponse format
-        setProjects(data.items || [])
+        setProjects(data.items || []);
         setPagination({
           page: data.page || 1,
           page_size: data.page_size || 20,
           total: data.total || 0,
           pages: data.pages || 0,
-        })
+        });
       } else {
         // Array format
-        setProjects(Array.isArray(data) ? data : [])
+        setProjects(Array.isArray(data) ? data : []);
       }
     } catch (err) {
-      console.error('Failed to fetch projects:', err)
-      setProjects([])
+      console.error("Failed to fetch projects:", err);
+      setProjects([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchCategories()
-  }, [])
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
-    fetchProjects()
-  }, [pagination.page, searchQuery, filterStatus, filterCategoryType])
+    fetchProjects();
+  }, [pagination.page, searchQuery, filterStatus, filterCategoryType]);
 
   const handleCreateProject = async (data) => {
     try {
-      const response = await rdProjectApi.create(data)
+      const response = await rdProjectApi.create(data);
       if (response.data?.code === 201 || response.status === 201) {
-        setFormOpen(false)
-        fetchProjects()
+        setFormOpen(false);
+        fetchProjects();
       } else {
-        throw new Error(response.data?.message || '创建失败')
+        throw new Error(response.data?.message || "创建失败");
       }
     } catch (err) {
-      alert('创建研发项目失败: ' + (err.response?.data?.detail || err.message))
-      throw err
+      alert("创建研发项目失败: " + (err.response?.data?.detail || err.message));
+      throw err;
     }
-  }
+  };
 
   const handleProjectClick = (project) => {
-    navigate(`/rd-projects/${project.id}`)
-  }
+    navigate(`/rd-projects/${project.id}`);
+  };
 
   return (
     <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
@@ -556,7 +610,10 @@ export default function RdProjectList() {
                 <SelectItem value="CANCELLED">已取消</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={filterCategoryType} onValueChange={setFilterCategoryType}>
+            <Select
+              value={filterCategoryType}
+              onValueChange={setFilterCategoryType}
+            >
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="项目类型" />
               </SelectTrigger>
@@ -569,16 +626,16 @@ export default function RdProjectList() {
             </Select>
             <div className="flex items-center gap-2">
               <Button
-                variant={viewMode === 'grid' ? 'primary' : 'secondary'}
+                variant={viewMode === "grid" ? "primary" : "secondary"}
                 size="icon"
-                onClick={() => setViewMode('grid')}
+                onClick={() => setViewMode("grid")}
               >
                 <Grid3X3 className="h-4 w-4" />
               </Button>
               <Button
-                variant={viewMode === 'list' ? 'primary' : 'secondary'}
+                variant={viewMode === "list" ? "primary" : "secondary"}
                 size="icon"
-                onClick={() => setViewMode('list')}
+                onClick={() => setViewMode("list")}
               >
                 <List className="h-4 w-4" />
               </Button>
@@ -613,10 +670,10 @@ export default function RdProjectList() {
         <>
           <div
             className={cn(
-              'grid gap-6',
-              viewMode === 'grid'
-                ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-                : 'grid-cols-1'
+              "grid gap-6",
+              viewMode === "grid"
+                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                : "grid-cols-1",
             )}
           >
             {projects.map((project) => (
@@ -634,18 +691,23 @@ export default function RdProjectList() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
+                onClick={() =>
+                  setPagination({ ...pagination, page: pagination.page - 1 })
+                }
                 disabled={pagination.page <= 1}
               >
                 上一页
               </Button>
               <span className="text-sm text-slate-400">
-                第 {pagination.page} / {pagination.pages} 页，共 {pagination.total} 条
+                第 {pagination.page} / {pagination.pages} 页，共{" "}
+                {pagination.total} 条
               </span>
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
+                onClick={() =>
+                  setPagination({ ...pagination, page: pagination.page + 1 })
+                }
                 disabled={pagination.page >= pagination.pages}
               >
                 下一页
@@ -663,6 +725,5 @@ export default function RdProjectList() {
         categories={categories}
       />
     </motion.div>
-  )
+  );
 }
-

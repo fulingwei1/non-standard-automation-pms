@@ -1,120 +1,157 @@
-import { useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
-import { Search, Eye, Filter, Calendar, User, Shield, RefreshCw } from 'lucide-react'
-import { PageHeader } from '../components/layout'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog'
-import { Label } from '../components/ui/label'
-import { auditApi } from '../services/api'
-import { formatDate } from '../lib/utils'
-import { fadeIn } from '../lib/animations'
+import { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
+import {
+  Search,
+  Eye,
+  Filter,
+  Calendar,
+  User,
+  Shield,
+  RefreshCw,
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../components/ui/dialog";
+import { Label } from "../components/ui/label";
+import { auditApi } from "../services/api";
+import { formatDate } from "../lib/utils";
+import { fadeIn } from "../lib/animations";
 
 export default function AuditLogs() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [audits, setAudits] = useState([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
-  const [pageSize] = useState(20)
-  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [audits, setAudits] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+
   // 筛选条件
-  const [operatorId, setOperatorId] = useState('')
-  const [targetType, setTargetType] = useState('')
-  const [targetId, setTargetId] = useState('')
-  const [action, setAction] = useState('')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  
+  const [operatorId, setOperatorId] = useState("");
+  const [targetType, setTargetType] = useState("");
+  const [targetId, setTargetId] = useState("");
+  const [action, setAction] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
   // 详情对话框
-  const [selectedAudit, setSelectedAudit] = useState(null)
-  const [detailDialogOpen, setDetailDialogOpen] = useState(false)
+  const [selectedAudit, setSelectedAudit] = useState(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
   const loadAudits = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
-      
+      setLoading(true);
+      setError(null);
+
       const params = {
         page,
         page_size: pageSize,
-      }
-      
-      if (operatorId) params.operator_id = parseInt(operatorId)
-      if (targetType) params.target_type = targetType
-      if (targetId) params.target_id = parseInt(targetId)
-      if (action) params.action = action
-      if (startDate) params.start_date = startDate
-      if (endDate) params.end_date = endDate
-      
-      const response = await auditApi.list(params)
-      const data = response.data?.data || response.data || response
-      
-      if (data && typeof data === 'object' && 'items' in data) {
-        setAudits(data.items || [])
-        setTotal(data.total || 0)
+      };
+
+      if (operatorId) params.operator_id = parseInt(operatorId);
+      if (targetType) params.target_type = targetType;
+      if (targetId) params.target_id = parseInt(targetId);
+      if (action) params.action = action;
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
+
+      const response = await auditApi.list(params);
+      const data = response.data?.data || response.data || response;
+
+      if (data && typeof data === "object" && "items" in data) {
+        setAudits(data.items || []);
+        setTotal(data.total || 0);
       } else if (Array.isArray(data)) {
-        setAudits(data)
-        setTotal(data.length)
+        setAudits(data);
+        setTotal(data.length);
       } else {
-        setAudits([])
-        setTotal(0)
+        setAudits([]);
+        setTotal(0);
       }
     } catch (err) {
-      console.error('Failed to load audits:', err)
-      setError(err.response?.data?.detail || err.message || '加载审计日志失败')
-      setAudits([])
-      setTotal(0)
+      console.error("Failed to load audits:", err);
+      setError(err.response?.data?.detail || err.message || "加载审计日志失败");
+      setAudits([]);
+      setTotal(0);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [page, pageSize, operatorId, targetType, targetId, action, startDate, endDate])
+  }, [
+    page,
+    pageSize,
+    operatorId,
+    targetType,
+    targetId,
+    action,
+    startDate,
+    endDate,
+  ]);
 
   useEffect(() => {
-    loadAudits()
-  }, [loadAudits])
+    loadAudits();
+  }, [loadAudits]);
 
   const handleViewDetail = async (auditId) => {
     try {
-      const response = await auditApi.get(auditId)
-      const data = response.data?.data || response.data || response
-      setSelectedAudit(data)
-      setDetailDialogOpen(true)
+      const response = await auditApi.get(auditId);
+      const data = response.data?.data || response.data || response;
+      setSelectedAudit(data);
+      setDetailDialogOpen(true);
     } catch (err) {
-      console.error('Failed to load audit detail:', err)
-      setError(err.response?.data?.detail || err.message || '加载审计详情失败')
+      console.error("Failed to load audit detail:", err);
+      setError(err.response?.data?.detail || err.message || "加载审计详情失败");
     }
-  }
+  };
 
   const handleResetFilters = () => {
-    setOperatorId('')
-    setTargetType('')
-    setTargetId('')
-    setAction('')
-    setStartDate('')
-    setEndDate('')
-    setPage(1)
-  }
+    setOperatorId("");
+    setTargetType("");
+    setTargetId("");
+    setAction("");
+    setStartDate("");
+    setEndDate("");
+    setPage(1);
+  };
 
   const getActionBadgeColor = (action) => {
-    if (action?.includes('CREATE') || action?.includes('ADD')) return 'bg-green-100 text-green-800'
-    if (action?.includes('UPDATE') || action?.includes('MODIFY')) return 'bg-blue-100 text-blue-800'
-    if (action?.includes('DELETE') || action?.includes('REMOVE')) return 'bg-red-100 text-red-800'
-    if (action?.includes('VIEW') || action?.includes('READ')) return 'bg-gray-100 text-gray-800'
-    return 'bg-purple-100 text-purple-800'
-  }
+    if (action?.includes("CREATE") || action?.includes("ADD"))
+      return "bg-green-100 text-green-800";
+    if (action?.includes("UPDATE") || action?.includes("MODIFY"))
+      return "bg-blue-100 text-blue-800";
+    if (action?.includes("DELETE") || action?.includes("REMOVE"))
+      return "bg-red-100 text-red-800";
+    if (action?.includes("VIEW") || action?.includes("READ"))
+      return "bg-gray-100 text-gray-800";
+    return "bg-purple-100 text-purple-800";
+  };
 
   const getTargetTypeLabel = (type) => {
     const labels = {
-      'user': '用户',
-      'role': '角色',
-      'permission': '权限',
-    }
-    return labels[type] || type
-  }
+      user: "用户",
+      role: "角色",
+      permission: "权限",
+    };
+    return labels[type] || type;
+  };
 
   return (
     <motion.div
@@ -144,7 +181,7 @@ export default function AuditLogs() {
                 onChange={(e) => setOperatorId(e.target.value)}
               />
             </div>
-            
+
             <div>
               <Label>目标类型</Label>
               <Select value={targetType} onValueChange={setTargetType}>
@@ -159,7 +196,7 @@ export default function AuditLogs() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <Label>目标ID</Label>
               <Input
@@ -169,7 +206,7 @@ export default function AuditLogs() {
                 onChange={(e) => setTargetId(e.target.value)}
               />
             </div>
-            
+
             <div>
               <Label>操作类型</Label>
               <Input
@@ -178,7 +215,7 @@ export default function AuditLogs() {
                 onChange={(e) => setAction(e.target.value)}
               />
             </div>
-            
+
             <div>
               <Label>开始日期</Label>
               <Input
@@ -187,7 +224,7 @@ export default function AuditLogs() {
                 onChange={(e) => setStartDate(e.target.value)}
               />
             </div>
-            
+
             <div>
               <Label>结束日期</Label>
               <Input
@@ -197,7 +234,7 @@ export default function AuditLogs() {
               />
             </div>
           </div>
-          
+
           <div className="flex gap-2 mt-4">
             <Button onClick={loadAudits}>
               <Search className="h-4 w-4 mr-2" />
@@ -266,7 +303,7 @@ export default function AuditLogs() {
                         </td>
                         <td className="p-2">{audit.target_id}</td>
                         <td className="p-2 text-sm text-gray-600">
-                          {audit.ip_address || '-'}
+                          {audit.ip_address || "-"}
                         </td>
                         <td className="p-2 text-sm">
                           {formatDate(audit.created_at)}
@@ -285,12 +322,10 @@ export default function AuditLogs() {
                   </tbody>
                 </table>
               </div>
-              
+
               {/* 分页 */}
               <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-gray-600">
-                  共 {total} 条记录
-                </div>
+                <div className="text-sm text-gray-600">共 {total} 条记录</div>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
@@ -335,13 +370,16 @@ export default function AuditLogs() {
                   <Label>操作人</Label>
                   <div className="mt-1 flex items-center gap-2">
                     <User className="h-4 w-4" />
-                    {selectedAudit.operator_name || `ID: ${selectedAudit.operator_id}`}
+                    {selectedAudit.operator_name ||
+                      `ID: ${selectedAudit.operator_id}`}
                   </div>
                 </div>
                 <div>
                   <Label>操作类型</Label>
                   <div className="mt-1">
-                    <Badge className={getActionBadgeColor(selectedAudit.action)}>
+                    <Badge
+                      className={getActionBadgeColor(selectedAudit.action)}
+                    >
                       {selectedAudit.action}
                     </Badge>
                   </div>
@@ -360,11 +398,13 @@ export default function AuditLogs() {
                 </div>
                 <div>
                   <Label>IP地址</Label>
-                  <div className="mt-1">{selectedAudit.ip_address || '-'}</div>
+                  <div className="mt-1">{selectedAudit.ip_address || "-"}</div>
                 </div>
                 <div>
                   <Label>操作时间</Label>
-                  <div className="mt-1">{formatDate(selectedAudit.created_at)}</div>
+                  <div className="mt-1">
+                    {formatDate(selectedAudit.created_at)}
+                  </div>
                 </div>
                 {selectedAudit.user_agent && (
                   <div className="col-span-2">
@@ -388,5 +428,5 @@ export default function AuditLogs() {
         </DialogContent>
       </Dialog>
     </motion.div>
-  )
+  );
 }

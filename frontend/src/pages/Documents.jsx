@@ -2,8 +2,8 @@
  * Documents Management Page - 文档管理页面
  * Features: Document list, upload, download, delete, filter by project
  */
-import { useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import {
   Archive,
   FileText,
@@ -22,24 +22,24 @@ import {
   FileSpreadsheet,
   Calendar,
   User,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
+} from "../components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -47,202 +47,212 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui/dialog'
-import { cn, formatDate } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { documentApi, projectApi } from '../services/api'
-import { toast } from '../components/ui/toast'
-import { LoadingCard, ErrorMessage, EmptyState } from '../components/common'
+} from "../components/ui/dialog";
+import { cn, formatDate } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { documentApi, projectApi } from "../services/api";
+import { toast } from "../components/ui/toast";
+import { LoadingCard, ErrorMessage, EmptyState } from "../components/common";
 
 // File type icons mapping
 const getFileIcon = (fileName) => {
-  const ext = fileName?.split('.').pop()?.toLowerCase() || ''
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
-    return FileImage
+  const ext = fileName?.split(".").pop()?.toLowerCase() || "";
+  if (["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(ext)) {
+    return FileImage;
   }
-  if (['mp4', 'avi', 'mov', 'wmv', 'flv'].includes(ext)) {
-    return FileVideo
+  if (["mp4", "avi", "mov", "wmv", "flv"].includes(ext)) {
+    return FileVideo;
   }
-  if (['js', 'ts', 'jsx', 'tsx', 'py', 'java', 'cpp', 'c'].includes(ext)) {
-    return FileCode
+  if (["js", "ts", "jsx", "tsx", "py", "java", "cpp", "c"].includes(ext)) {
+    return FileCode;
   }
-  if (['xls', 'xlsx', 'csv'].includes(ext)) {
-    return FileSpreadsheet
+  if (["xls", "xlsx", "csv"].includes(ext)) {
+    return FileSpreadsheet;
   }
-  return FileText
-}
+  return FileText;
+};
 
 // Format file size
 const formatFileSize = (bytes) => {
-  if (!bytes) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
-}
+  if (!bytes) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+};
 
 export default function Documents() {
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [documents, setDocuments] = useState([])
-  const [projects, setProjects] = useState([])
-  const [selectedProject, setSelectedProject] = useState('all')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [showUploadDialog, setShowUploadDialog] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [uploadFile, setUploadFile] = useState(null)
-  const [uploadProjectId, setUploadProjectId] = useState('')
-  const [uploadDescription, setUploadDescription] = useState('')
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [documents, setDocuments] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploadProjectId, setUploadProjectId] = useState("");
+  const [uploadDescription, setUploadDescription] = useState("");
 
   // Load projects
   const loadProjects = useCallback(async () => {
     try {
-      const response = await projectApi.list({ page_size: 1000 })
-      const data = response.data || response
-      const projectList = data.items || data || []
-      setProjects(projectList)
+      const response = await projectApi.list({ page_size: 1000 });
+      const data = response.data || response;
+      const projectList = data.items || data || [];
+      setProjects(projectList);
     } catch (err) {
-      console.error('Failed to load projects:', err)
+      console.error("Failed to load projects:", err);
     }
-  }, [])
+  }, []);
 
   // Load documents
   const loadDocuments = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
-      
+      setLoading(true);
+      setError(null);
+
       // If a specific project is selected, load documents for that project
-      if (selectedProject && selectedProject !== 'all') {
-        const response = await documentApi.list(selectedProject)
-        const data = response.data || response
-        const docList = Array.isArray(data) ? data : (data.items || [])
-        setDocuments(docList)
+      if (selectedProject && selectedProject !== "all") {
+        const response = await documentApi.list(selectedProject);
+        const data = response.data || response;
+        const docList = Array.isArray(data) ? data : data.items || [];
+        setDocuments(docList);
       } else {
         // Load documents for all projects
         // Since API requires project_id, we'll load from all projects
-        const allDocs = []
+        const allDocs = [];
         if (projects.length > 0) {
-          const promises = projects.slice(0, 20).map(project => 
-            documentApi.list(project.id).catch(() => ({ data: [] }))
-          )
-          const results = await Promise.allSettled(promises)
-          results.forEach(result => {
-            if (result.status === 'fulfilled') {
-              const data = result.value.data || result.value
-              const docs = Array.isArray(data) ? data : (data.items || [])
-              allDocs.push(...docs)
+          const promises = projects
+            .slice(0, 20)
+            .map((project) =>
+              documentApi.list(project.id).catch(() => ({ data: [] })),
+            );
+          const results = await Promise.allSettled(promises);
+          results.forEach((result) => {
+            if (result.status === "fulfilled") {
+              const data = result.value.data || result.value;
+              const docs = Array.isArray(data) ? data : data.items || [];
+              allDocs.push(...docs);
             }
-          })
+          });
         }
-        setDocuments(allDocs)
+        setDocuments(allDocs);
       }
     } catch (err) {
-      console.error('Failed to load documents:', err)
-      const errorMessage = err.response?.data?.detail || err.message || '加载文档失败'
-      setError(errorMessage)
-      setDocuments([])
+      console.error("Failed to load documents:", err);
+      const errorMessage =
+        err.response?.data?.detail || err.message || "加载文档失败";
+      setError(errorMessage);
+      setDocuments([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [selectedProject, projects])
+  }, [selectedProject, projects]);
 
   useEffect(() => {
-    loadProjects()
-  }, [loadProjects])
+    loadProjects();
+  }, [loadProjects]);
 
   useEffect(() => {
-    if (projects.length > 0 || selectedProject === 'all') {
-      loadDocuments()
+    if (projects.length > 0 || selectedProject === "all") {
+      loadDocuments();
     }
-  }, [loadDocuments, selectedProject])
+  }, [loadDocuments, selectedProject]);
 
   // Handle file upload
   const handleFileSelect = (e) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
       // Check file size (max 50MB)
       if (file.size > 50 * 1024 * 1024) {
-        toast.error('文件大小不能超过 50MB')
-        return
+        toast.error("文件大小不能超过 50MB");
+        return;
       }
-      setUploadFile(file)
+      setUploadFile(file);
     }
-  }
+  };
 
   const handleUpload = async () => {
     if (!uploadFile) {
-      toast.error('请选择要上传的文件')
-      return
+      toast.error("请选择要上传的文件");
+      return;
     }
     if (!uploadProjectId) {
-      toast.error('请选择关联项目')
-      return
+      toast.error("请选择关联项目");
+      return;
     }
 
     try {
-      setUploading(true)
-      const formData = new FormData()
-      formData.append('file', uploadFile)
-      formData.append('project_id', uploadProjectId)
+      setUploading(true);
+      const formData = new FormData();
+      formData.append("file", uploadFile);
+      formData.append("project_id", uploadProjectId);
       if (uploadDescription) {
-        formData.append('description', uploadDescription)
+        formData.append("description", uploadDescription);
       }
 
-      await documentApi.create(formData)
-      toast.success('文件上传成功')
-      setShowUploadDialog(false)
-      setUploadFile(null)
-      setUploadProjectId('')
-      setUploadDescription('')
-      await loadDocuments()
+      await documentApi.create(formData);
+      toast.success("文件上传成功");
+      setShowUploadDialog(false);
+      setUploadFile(null);
+      setUploadProjectId("");
+      setUploadDescription("");
+      await loadDocuments();
     } catch (err) {
-      console.error('Failed to upload file:', err)
-      const errorMessage = err.response?.data?.detail || err.message || '上传失败，请稍后重试'
-      toast.error(errorMessage)
+      console.error("Failed to upload file:", err);
+      const errorMessage =
+        err.response?.data?.detail || err.message || "上传失败，请稍后重试";
+      toast.error(errorMessage);
     } finally {
-      setUploading(false)
+      setUploading(false);
     }
-  }
+  };
 
   // Handle download
   const handleDownload = async (document) => {
     try {
       // If document has a download_url, use it
       if (document.download_url || document.file_url) {
-        window.open(document.download_url || document.file_url, '_blank')
+        window.open(document.download_url || document.file_url, "_blank");
       } else if (document.id) {
         // Try to construct download URL
-        const baseURL = process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8000'
-        window.open(`${baseURL}/api/v1/documents/${document.id}/download`, '_blank')
+        const baseURL =
+          process.env.REACT_APP_API_BASE_URL || "http://127.0.0.1:8000";
+        window.open(
+          `${baseURL}/api/v1/documents/${document.id}/download`,
+          "_blank",
+        );
       } else {
-        toast.error('无法获取下载链接')
+        toast.error("无法获取下载链接");
       }
     } catch (err) {
-      console.error('Failed to download file:', err)
-      toast.error('下载失败，请稍后重试')
+      console.error("Failed to download file:", err);
+      toast.error("下载失败，请稍后重试");
     }
-  }
+  };
 
   // Filter documents
   const filteredDocuments = documents.filter((doc) => {
     if (searchQuery) {
-      const query = searchQuery.toLowerCase()
+      const query = searchQuery.toLowerCase();
       return (
         doc.file_name?.toLowerCase().includes(query) ||
         doc.name?.toLowerCase().includes(query) ||
         doc.description?.toLowerCase().includes(query) ||
         doc.project_name?.toLowerCase().includes(query)
-      )
+      );
     }
-    return true
-  })
+    return true;
+  });
 
   // Get project name
   const getProjectName = (projectId) => {
-    const project = projects.find(p => p.id === projectId || p.project_code === projectId)
-    return project?.project_name || '未知项目'
-  }
+    const project = projects.find(
+      (p) => p.id === projectId || p.project_code === projectId,
+    );
+    return project?.project_name || "未知项目";
+  };
 
   if (loading && documents.length === 0) {
     return (
@@ -252,7 +262,7 @@ export default function Documents() {
           <LoadingCard rows={5} />
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -260,10 +270,7 @@ export default function Documents() {
       <PageHeader
         title="文件管理"
         actions={
-          <Button
-            className="gap-2"
-            onClick={() => setShowUploadDialog(true)}
-          >
+          <Button className="gap-2" onClick={() => setShowUploadDialog(true)}>
             <Upload className="w-4 h-4" />
             上传文件
           </Button>
@@ -287,14 +294,20 @@ export default function Documents() {
                   </div>
                 </div>
                 <div className="w-full md:w-64">
-                  <Select value={selectedProject} onValueChange={setSelectedProject}>
+                  <Select
+                    value={selectedProject}
+                    onValueChange={setSelectedProject}
+                  >
                     <SelectTrigger className="bg-slate-800/50 border-slate-700">
                       <SelectValue placeholder="选择项目" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">全部项目</SelectItem>
                       {projects.map((project) => (
-                        <SelectItem key={project.id || project.project_code} value={project.id || project.project_code}>
+                        <SelectItem
+                          key={project.id || project.project_code}
+                          value={project.id || project.project_code}
+                        >
                           {project.project_name}
                         </SelectItem>
                       ))}
@@ -313,7 +326,11 @@ export default function Documents() {
           <EmptyState
             icon={Archive}
             title="暂无文档"
-            description={searchQuery || selectedProject !== 'all' ? '没有找到匹配的文档' : '还没有上传任何文档'}
+            description={
+              searchQuery || selectedProject !== "all"
+                ? "没有找到匹配的文档"
+                : "还没有上传任何文档"
+            }
           />
         ) : (
           <motion.div
@@ -323,21 +340,23 @@ export default function Documents() {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
           >
             {filteredDocuments.map((doc) => {
-              const FileIcon = getFileIcon(doc.file_name || doc.name)
+              const FileIcon = getFileIcon(doc.file_name || doc.name);
               return (
                 <motion.div key={doc.id} variants={fadeIn}>
                   <Card className="bg-surface-1/50 hover:bg-surface-1/70 transition-colors">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
-                        <div className={cn(
-                          "p-2 rounded-lg",
-                          "bg-blue-500/10 text-blue-400"
-                        )}>
+                        <div
+                          className={cn(
+                            "p-2 rounded-lg",
+                            "bg-blue-500/10 text-blue-400",
+                          )}
+                        >
                           <FileIcon className="w-5 h-5" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-medium text-white truncate mb-1">
-                            {doc.file_name || doc.name || '未命名文件'}
+                            {doc.file_name || doc.name || "未命名文件"}
                           </h4>
                           <div className="space-y-1 text-xs text-slate-400">
                             {doc.file_size && (
@@ -391,7 +410,7 @@ export default function Documents() {
                     </CardContent>
                   </Card>
                 </motion.div>
-              )
+              );
             })}
           </motion.div>
         )}
@@ -404,14 +423,22 @@ export default function Documents() {
             </DialogHeader>
             <DialogBody className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">选择项目</label>
-                <Select value={uploadProjectId} onValueChange={setUploadProjectId}>
+                <label className="block text-sm font-medium mb-2">
+                  选择项目
+                </label>
+                <Select
+                  value={uploadProjectId}
+                  onValueChange={setUploadProjectId}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="选择关联项目" />
                   </SelectTrigger>
                   <SelectContent>
                     {projects.map((project) => (
-                      <SelectItem key={project.id || project.project_code} value={project.id || project.project_code}>
+                      <SelectItem
+                        key={project.id || project.project_code}
+                        value={project.id || project.project_code}
+                      >
                         {project.project_name}
                       </SelectItem>
                     ))}
@@ -419,7 +446,9 @@ export default function Documents() {
                 </Select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">选择文件</label>
+                <label className="block text-sm font-medium mb-2">
+                  选择文件
+                </label>
                 <div className="border-2 border-dashed border-slate-700 rounded-lg p-6 text-center">
                   <input
                     type="file"
@@ -433,7 +462,7 @@ export default function Documents() {
                   >
                     <Upload className="w-8 h-8 text-slate-400" />
                     <span className="text-sm text-slate-400">
-                      {uploadFile ? uploadFile.name : '点击选择文件'}
+                      {uploadFile ? uploadFile.name : "点击选择文件"}
                     </span>
                     {uploadFile && (
                       <span className="text-xs text-slate-500">
@@ -444,7 +473,9 @@ export default function Documents() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">描述（可选）</label>
+                <label className="block text-sm font-medium mb-2">
+                  描述（可选）
+                </label>
                 <Input
                   placeholder="输入文件描述..."
                   value={uploadDescription}
@@ -456,10 +487,10 @@ export default function Documents() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  setShowUploadDialog(false)
-                  setUploadFile(null)
-                  setUploadProjectId('')
-                  setUploadDescription('')
+                  setShowUploadDialog(false);
+                  setUploadFile(null);
+                  setUploadProjectId("");
+                  setUploadDescription("");
                 }}
               >
                 取消
@@ -468,12 +499,12 @@ export default function Documents() {
                 onClick={handleUpload}
                 disabled={uploading || !uploadFile || !uploadProjectId}
               >
-                {uploading ? '上传中...' : '上传'}
+                {uploading ? "上传中..." : "上传"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
     </div>
-  )
+  );
 }

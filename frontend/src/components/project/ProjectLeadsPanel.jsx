@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Edit3,
@@ -22,16 +22,11 @@ import {
   X,
   Check,
   AlertCircle,
-} from 'lucide-react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '../ui/card';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Badge } from '../ui/badge';
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Badge } from "../ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -39,13 +34,19 @@ import {
   DialogTitle,
   DialogFooter,
   DialogBody,
-} from '../ui/dialog';
-import { Label } from '../ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Switch } from '../ui/switch';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { cn } from '../../lib/utils';
-import { projectRoleApi, userApi } from '../../services/api';
+} from "../ui/dialog";
+import { Label } from "../ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Switch } from "../ui/switch";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { cn } from "../../lib/utils";
+import { projectRoleApi, userApi } from "../../services/api";
 
 // 角色编码对应的图标
 const ROLE_ICONS = {
@@ -63,10 +64,30 @@ const ROLE_ICONS = {
 
 // 角色分类颜色
 const CATEGORY_COLORS = {
-  MANAGEMENT: { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400', icon: 'text-purple-400' },
-  TECHNICAL: { bg: 'bg-blue-500/10', border: 'border-blue-500/30', text: 'text-blue-400', icon: 'text-blue-400' },
-  SUPPORT: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400', icon: 'text-emerald-400' },
-  GENERAL: { bg: 'bg-slate-500/10', border: 'border-slate-500/30', text: 'text-slate-400', icon: 'text-slate-400' },
+  MANAGEMENT: {
+    bg: "bg-purple-500/10",
+    border: "border-purple-500/30",
+    text: "text-purple-400",
+    icon: "text-purple-400",
+  },
+  TECHNICAL: {
+    bg: "bg-blue-500/10",
+    border: "border-blue-500/30",
+    text: "text-blue-400",
+    icon: "text-blue-400",
+  },
+  SUPPORT: {
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/30",
+    text: "text-emerald-400",
+    icon: "text-emerald-400",
+  },
+  GENERAL: {
+    bg: "bg-slate-500/10",
+    border: "border-slate-500/30",
+    text: "text-slate-400",
+    icon: "text-slate-400",
+  },
 };
 
 export default function ProjectLeadsPanel({ projectId, editable = true }) {
@@ -83,20 +104,20 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
 
   // 表单数据
   const [assignForm, setAssignForm] = useState({
-    user_id: '',
-    role_type_id: '',
+    user_id: "",
+    role_type_id: "",
     allocation_pct: 100,
-    start_date: '',
-    end_date: '',
-    remark: '',
+    start_date: "",
+    end_date: "",
+    remark: "",
   });
 
   const [teamMemberForm, setTeamMemberForm] = useState({
-    user_id: '',
+    user_id: "",
     allocation_pct: 100,
-    start_date: '',
-    end_date: '',
-    remark: '',
+    start_date: "",
+    end_date: "",
+    remark: "",
   });
 
   // 角色配置列表
@@ -113,29 +134,59 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
       const response = await projectRoleApi.getOverview(projectId);
       setRoleOverview(response.data || []);
     } catch (error) {
-      console.error('加载项目角色概览失败:', error);
+      console.error("加载项目角色概览失败:", error);
       // Mock data for demo
       setRoleOverview([
         {
-          role_type: { id: 1, role_code: 'PM', role_name: '项目经理', role_category: 'MANAGEMENT', can_have_team: true },
+          role_type: {
+            id: 1,
+            role_code: "PM",
+            role_name: "项目经理",
+            role_category: "MANAGEMENT",
+            can_have_team: true,
+          },
           config: { is_enabled: true, is_required: true },
-          lead: { id: 1, user_id: 1, user: { id: 1, real_name: '张三', username: 'zhangsan' }, allocation_pct: 100, team_members: [] },
+          lead: {
+            id: 1,
+            user_id: 1,
+            user: { id: 1, real_name: "张三", username: "zhangsan" },
+            allocation_pct: 100,
+            team_members: [],
+          },
           is_enabled: true,
           is_required: true,
           has_lead: true,
         },
         {
-          role_type: { id: 2, role_code: 'TECH_LEAD', role_name: '技术负责人', role_category: 'TECHNICAL', can_have_team: true },
+          role_type: {
+            id: 2,
+            role_code: "TECH_LEAD",
+            role_name: "技术负责人",
+            role_category: "TECHNICAL",
+            can_have_team: true,
+          },
           config: { is_enabled: true, is_required: false },
-          lead: { id: 2, user_id: 2, user: { id: 2, real_name: '李四', username: 'lisi' }, allocation_pct: 80, team_members: [
-            { id: 3, user: { real_name: '王五' }, allocation_pct: 100 },
-          ] },
+          lead: {
+            id: 2,
+            user_id: 2,
+            user: { id: 2, real_name: "李四", username: "lisi" },
+            allocation_pct: 80,
+            team_members: [
+              { id: 3, user: { real_name: "王五" }, allocation_pct: 100 },
+            ],
+          },
           is_enabled: true,
           is_required: false,
           has_lead: true,
         },
         {
-          role_type: { id: 3, role_code: 'ME_LEAD', role_name: '机械负责人', role_category: 'TECHNICAL', can_have_team: true },
+          role_type: {
+            id: 3,
+            role_code: "ME_LEAD",
+            role_name: "机械负责人",
+            role_category: "TECHNICAL",
+            can_have_team: true,
+          },
           config: { is_enabled: true, is_required: false },
           lead: null,
           is_enabled: true,
@@ -143,7 +194,13 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
           has_lead: false,
         },
         {
-          role_type: { id: 6, role_code: 'PROC_LEAD', role_name: '采购负责人', role_category: 'SUPPORT', can_have_team: false },
+          role_type: {
+            id: 6,
+            role_code: "PROC_LEAD",
+            role_name: "采购负责人",
+            role_category: "SUPPORT",
+            can_have_team: false,
+          },
           config: { is_enabled: true, is_required: false },
           lead: null,
           is_enabled: true,
@@ -151,18 +208,36 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
           has_lead: false,
         },
         {
-          role_type: { id: 7, role_code: 'CS_LEAD', role_name: '客服负责人', role_category: 'SUPPORT', can_have_team: true },
+          role_type: {
+            id: 7,
+            role_code: "CS_LEAD",
+            role_name: "客服负责人",
+            role_category: "SUPPORT",
+            can_have_team: true,
+          },
           config: { is_enabled: true, is_required: false },
-          lead: { id: 4, user_id: 3, user: { id: 3, real_name: '赵六', username: 'zhaoliu' }, allocation_pct: 50, team_members: [
-            { id: 5, user: { real_name: '小陈' }, allocation_pct: 100 },
-            { id: 6, user: { real_name: '小刘' }, allocation_pct: 100 },
-          ] },
+          lead: {
+            id: 4,
+            user_id: 3,
+            user: { id: 3, real_name: "赵六", username: "zhaoliu" },
+            allocation_pct: 50,
+            team_members: [
+              { id: 5, user: { real_name: "小陈" }, allocation_pct: 100 },
+              { id: 6, user: { real_name: "小刘" }, allocation_pct: 100 },
+            ],
+          },
           is_enabled: true,
           is_required: false,
           has_lead: true,
         },
         {
-          role_type: { id: 8, role_code: 'QA_LEAD', role_name: '质量负责人', role_category: 'SUPPORT', can_have_team: false },
+          role_type: {
+            id: 8,
+            role_code: "QA_LEAD",
+            role_name: "质量负责人",
+            role_category: "SUPPORT",
+            can_have_team: false,
+          },
           config: { is_enabled: false, is_required: false },
           lead: null,
           is_enabled: false,
@@ -178,18 +253,32 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
   // 加载用户列表
   const loadUsers = async () => {
     try {
-      const response = await userApi.list({ page: 1, page_size: 100, is_active: true });
+      const response = await userApi.list({
+        page: 1,
+        page_size: 100,
+        is_active: true,
+      });
       setUsers(response.data?.items || []);
     } catch (error) {
-      console.error('加载用户列表失败:', error);
+      console.error("加载用户列表失败:", error);
       // Mock users
       setUsers([
-        { id: 1, real_name: '张三', username: 'zhangsan', department: '项目部' },
-        { id: 2, real_name: '李四', username: 'lisi', department: '技术部' },
-        { id: 3, real_name: '王五', username: 'wangwu', department: '技术部' },
-        { id: 4, real_name: '赵六', username: 'zhaoliu', department: '客服部' },
-        { id: 5, real_name: '小陈', username: 'xiaochen', department: '客服部' },
-        { id: 6, real_name: '小刘', username: 'xiaoliu', department: '客服部' },
+        {
+          id: 1,
+          real_name: "张三",
+          username: "zhangsan",
+          department: "项目部",
+        },
+        { id: 2, real_name: "李四", username: "lisi", department: "技术部" },
+        { id: 3, real_name: "王五", username: "wangwu", department: "技术部" },
+        { id: 4, real_name: "赵六", username: "zhaoliu", department: "客服部" },
+        {
+          id: 5,
+          real_name: "小陈",
+          username: "xiaochen",
+          department: "客服部",
+        },
+        { id: 6, real_name: "小刘", username: "xiaoliu", department: "客服部" },
       ]);
     }
   };
@@ -201,24 +290,28 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
 
   // 打开配置对话框
   const handleConfigClick = () => {
-    setRoleConfigs(roleOverview.map(ro => ({
-      role_type_id: ro.role_type.id,
-      role_name: ro.role_type.role_name,
-      role_code: ro.role_type.role_code,
-      is_enabled: ro.is_enabled,
-      is_required: ro.is_required,
-    })));
+    setRoleConfigs(
+      roleOverview.map((ro) => ({
+        role_type_id: ro.role_type.id,
+        role_name: ro.role_type.role_name,
+        role_code: ro.role_type.role_code,
+        is_enabled: ro.is_enabled,
+        is_required: ro.is_required,
+      })),
+    );
     setShowConfigDialog(true);
   };
 
   // 保存角色配置
   const handleSaveConfig = async () => {
     try {
-      await projectRoleApi.configs.batchUpdate(projectId, { configs: roleConfigs });
+      await projectRoleApi.configs.batchUpdate(projectId, {
+        configs: roleConfigs,
+      });
       setShowConfigDialog(false);
       loadRoleOverview();
     } catch (error) {
-      console.error('保存配置失败:', error);
+      console.error("保存配置失败:", error);
       // Update locally for demo
       setShowConfigDialog(false);
     }
@@ -228,12 +321,12 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
   const handleAssignClick = (roleOverviewItem) => {
     setSelectedRole(roleOverviewItem);
     setAssignForm({
-      user_id: '',
+      user_id: "",
       role_type_id: roleOverviewItem.role_type.id,
       allocation_pct: 100,
-      start_date: '',
-      end_date: '',
-      remark: '',
+      start_date: "",
+      end_date: "",
+      remark: "",
     });
     setShowAssignDialog(true);
   };
@@ -245,19 +338,22 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
       setShowAssignDialog(false);
       loadRoleOverview();
     } catch (error) {
-      console.error('指定负责人失败:', error);
-      alert('指定失败: ' + (error.response?.data?.detail || error.message));
+      console.error("指定负责人失败:", error);
+      alert("指定失败: " + (error.response?.data?.detail || error.message));
     }
   };
 
   // 移除负责人
   const handleRemoveLead = async (lead) => {
-    if (!window.confirm(`确定要移除 ${lead.user?.real_name || '该负责人'} 吗？`)) return;
+    if (
+      !window.confirm(`确定要移除 ${lead.user?.real_name || "该负责人"} 吗？`)
+    )
+      return;
     try {
       await projectRoleApi.leads.delete(projectId, lead.id);
       loadRoleOverview();
     } catch (error) {
-      console.error('移除负责人失败:', error);
+      console.error("移除负责人失败:", error);
     }
   };
 
@@ -266,11 +362,11 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
     setSelectedRole(roleOverviewItem);
     setSelectedLead(roleOverviewItem.lead);
     setTeamMemberForm({
-      user_id: '',
+      user_id: "",
       allocation_pct: 100,
-      start_date: '',
-      end_date: '',
-      remark: '',
+      start_date: "",
+      end_date: "",
+      remark: "",
     });
     setShowTeamDialog(true);
   };
@@ -281,14 +377,14 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
       await projectRoleApi.team.add(projectId, selectedLead.id, teamMemberForm);
       loadRoleOverview();
       setTeamMemberForm({
-        user_id: '',
+        user_id: "",
         allocation_pct: 100,
-        start_date: '',
-        end_date: '',
-        remark: '',
+        start_date: "",
+        end_date: "",
+        remark: "",
       });
     } catch (error) {
-      console.error('添加团队成员失败:', error);
+      console.error("添加团队成员失败:", error);
     }
   };
 
@@ -298,13 +394,13 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
       await projectRoleApi.team.remove(projectId, selectedLead.id, memberId);
       loadRoleOverview();
     } catch (error) {
-      console.error('移除团队成员失败:', error);
+      console.error("移除团队成员失败:", error);
     }
   };
 
   // 切换展开状态
   const toggleExpand = (leadId) => {
-    setExpandedLeads(prev => {
+    setExpandedLeads((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(leadId)) {
         newSet.delete(leadId);
@@ -324,8 +420,8 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
     return CATEGORY_COLORS[category] || CATEGORY_COLORS.GENERAL;
   };
 
-  const enabledRoles = roleOverview.filter(ro => ro.is_enabled);
-  const disabledRoles = roleOverview.filter(ro => !ro.is_enabled);
+  const enabledRoles = roleOverview.filter((ro) => ro.is_enabled);
+  const disabledRoles = roleOverview.filter((ro) => !ro.is_enabled);
 
   return (
     <div className="space-y-6">
@@ -338,7 +434,8 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
           <div>
             <h3 className="text-lg font-semibold text-white">项目负责人</h3>
             <p className="text-sm text-slate-400">
-              已配置 {enabledRoles.filter(ro => ro.has_lead).length}/{enabledRoles.length} 个角色
+              已配置 {enabledRoles.filter((ro) => ro.has_lead).length}/
+              {enabledRoles.length} 个角色
             </p>
           </div>
         </div>
@@ -353,8 +450,11 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
       {/* 角色卡片网格 */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map(i => (
-            <Card key={i} className="bg-surface-100 border-white/5 animate-pulse">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Card
+              key={i}
+              className="bg-surface-100 border-white/5 animate-pulse"
+            >
               <CardContent className="p-4 h-[180px]" />
             </Card>
           ))}
@@ -364,8 +464,11 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
           <AnimatePresence mode="popLayout">
             {enabledRoles.map((roleItem, index) => {
               const IconComponent = getRoleIcon(roleItem.role_type.role_code);
-              const categoryColor = getCategoryColor(roleItem.role_type.role_category);
-              const isExpanded = roleItem.lead && expandedLeads.has(roleItem.lead.id);
+              const categoryColor = getCategoryColor(
+                roleItem.role_type.role_category,
+              );
+              const isExpanded =
+                roleItem.lead && expandedLeads.has(roleItem.lead.id);
               const teamMembers = roleItem.lead?.team_members || [];
 
               return (
@@ -376,27 +479,44 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <Card className={cn(
-                    "bg-surface-100 border transition-all duration-200",
-                    roleItem.has_lead
-                      ? "border-white/10 hover:border-white/20"
-                      : "border-dashed border-white/10 hover:border-white/20"
-                  )}>
+                  <Card
+                    className={cn(
+                      "bg-surface-100 border transition-all duration-200",
+                      roleItem.has_lead
+                        ? "border-white/10 hover:border-white/20"
+                        : "border-dashed border-white/10 hover:border-white/20",
+                    )}
+                  >
                     <CardContent className="p-4">
                       {/* 角色头部 */}
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className={cn("p-2 rounded-xl", categoryColor.bg)}>
-                            <IconComponent className={cn("h-5 w-5", categoryColor.icon)} />
+                          <div
+                            className={cn("p-2 rounded-xl", categoryColor.bg)}
+                          >
+                            <IconComponent
+                              className={cn("h-5 w-5", categoryColor.icon)}
+                            />
                           </div>
                           <div>
-                            <h4 className="font-medium text-white">{roleItem.role_type.role_name}</h4>
+                            <h4 className="font-medium text-white">
+                              {roleItem.role_type.role_name}
+                            </h4>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <Badge variant="outline" className={cn("text-xs border", categoryColor.border, categoryColor.text)}>
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "text-xs border",
+                                  categoryColor.border,
+                                  categoryColor.text,
+                                )}
+                              >
                                 {roleItem.role_type.role_code}
                               </Badge>
                               {roleItem.is_required && (
-                                <Badge className="bg-amber-500/20 text-amber-400 text-xs">必需</Badge>
+                                <Badge className="bg-amber-500/20 text-amber-400 text-xs">
+                                  必需
+                                </Badge>
                               )}
                             </div>
                           </div>
@@ -410,12 +530,17 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
                             <Avatar className="h-10 w-10">
                               <AvatarImage src={roleItem.lead.user?.avatar} />
                               <AvatarFallback className="bg-violet-500/20 text-violet-400">
-                                {(roleItem.lead.user?.real_name || roleItem.lead.user?.username || '?')[0]}
+                                {
+                                  (roleItem.lead.user?.real_name ||
+                                    roleItem.lead.user?.username ||
+                                    "?")[0]
+                                }
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-white truncate">
-                                {roleItem.lead.user?.real_name || roleItem.lead.user?.username}
+                                {roleItem.lead.user?.real_name ||
+                                  roleItem.lead.user?.username}
                               </p>
                               <div className="flex items-center gap-2 text-xs text-slate-400">
                                 <span className="flex items-center gap-1">
@@ -443,51 +568,57 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
                           </div>
 
                           {/* 团队成员 */}
-                          {roleItem.role_type.can_have_team && teamMembers.length > 0 && (
-                            <div>
-                              <button
-                                onClick={() => toggleExpand(roleItem.lead.id)}
-                                className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors w-full"
-                              >
-                                <Users className="h-4 w-4" />
-                                <span>团队成员 ({teamMembers.length})</span>
-                                {isExpanded ? (
-                                  <ChevronUp className="h-4 w-4 ml-auto" />
-                                ) : (
-                                  <ChevronDown className="h-4 w-4 ml-auto" />
-                                )}
-                              </button>
-                              <AnimatePresence>
-                                {isExpanded && (
-                                  <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    className="overflow-hidden"
-                                  >
-                                    <div className="mt-2 space-y-1 pl-6">
-                                      {teamMembers.map(member => (
-                                        <div
-                                          key={member.id}
-                                          className="flex items-center gap-2 text-sm text-slate-300 py-1"
-                                        >
-                                          <Avatar className="h-6 w-6">
-                                            <AvatarFallback className="bg-white/5 text-slate-400 text-xs">
-                                              {(member.user?.real_name || '?')[0]}
-                                            </AvatarFallback>
-                                          </Avatar>
-                                          <span>{member.user?.real_name}</span>
-                                          <span className="text-xs text-slate-500">
-                                            {member.allocation_pct}%
-                                          </span>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
-                            </div>
-                          )}
+                          {roleItem.role_type.can_have_team &&
+                            teamMembers.length > 0 && (
+                              <div>
+                                <button
+                                  onClick={() => toggleExpand(roleItem.lead.id)}
+                                  className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors w-full"
+                                >
+                                  <Users className="h-4 w-4" />
+                                  <span>团队成员 ({teamMembers.length})</span>
+                                  {isExpanded ? (
+                                    <ChevronUp className="h-4 w-4 ml-auto" />
+                                  ) : (
+                                    <ChevronDown className="h-4 w-4 ml-auto" />
+                                  )}
+                                </button>
+                                <AnimatePresence>
+                                  {isExpanded && (
+                                    <motion.div
+                                      initial={{ height: 0, opacity: 0 }}
+                                      animate={{ height: "auto", opacity: 1 }}
+                                      exit={{ height: 0, opacity: 0 }}
+                                      className="overflow-hidden"
+                                    >
+                                      <div className="mt-2 space-y-1 pl-6">
+                                        {teamMembers.map((member) => (
+                                          <div
+                                            key={member.id}
+                                            className="flex items-center gap-2 text-sm text-slate-300 py-1"
+                                          >
+                                            <Avatar className="h-6 w-6">
+                                              <AvatarFallback className="bg-white/5 text-slate-400 text-xs">
+                                                {
+                                                  (member.user?.real_name ||
+                                                    "?")[0]
+                                                }
+                                              </AvatarFallback>
+                                            </Avatar>
+                                            <span>
+                                              {member.user?.real_name}
+                                            </span>
+                                            <span className="text-xs text-slate-500">
+                                              {member.allocation_pct}%
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
+                            )}
 
                           {/* 操作按钮 */}
                           {editable && roleItem.role_type.can_have_team && (
@@ -507,7 +638,9 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
                           <div className="p-3 rounded-full bg-white/5 mb-2">
                             <AlertCircle className="h-6 w-6 text-slate-500" />
                           </div>
-                          <p className="text-sm text-slate-500 mb-3">尚未指定负责人</p>
+                          <p className="text-sm text-slate-500 mb-3">
+                            尚未指定负责人
+                          </p>
                           {editable && (
                             <Button
                               variant="outline"
@@ -534,7 +667,7 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
         <div className="mt-6">
           <p className="text-sm text-slate-500 mb-2">
             未启用的角色 ({disabledRoles.length})：
-            {disabledRoles.map(ro => ro.role_type.role_name).join('、')}
+            {disabledRoles.map((ro) => ro.role_type.role_name).join("、")}
           </p>
         </div>
       )}
@@ -569,8 +702,12 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
                       }}
                     />
                     <div>
-                      <p className="font-medium text-white">{config.role_name}</p>
-                      <code className="text-xs text-slate-500">{config.role_code}</code>
+                      <p className="font-medium text-white">
+                        {config.role_name}
+                      </p>
+                      <code className="text-xs text-slate-500">
+                        {config.role_code}
+                      </code>
                     </div>
                   </div>
                   {config.is_enabled && (
@@ -592,12 +729,13 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setShowConfigDialog(false)}>
+            <Button
+              variant="secondary"
+              onClick={() => setShowConfigDialog(false)}
+            >
               取消
             </Button>
-            <Button onClick={handleSaveConfig}>
-              保存配置
-            </Button>
+            <Button onClick={handleSaveConfig}>保存配置</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -616,13 +754,15 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
               <Label>选择人员 *</Label>
               <Select
                 value={assignForm.user_id?.toString()}
-                onValueChange={(v) => setAssignForm(prev => ({ ...prev, user_id: parseInt(v) }))}
+                onValueChange={(v) =>
+                  setAssignForm((prev) => ({ ...prev, user_id: parseInt(v) }))
+                }
               >
                 <SelectTrigger className="bg-white/5 border-white/10">
                   <SelectValue placeholder="请选择人员" />
                 </SelectTrigger>
                 <SelectContent>
-                  {users.map(user => (
+                  {users.map((user) => (
                     <SelectItem key={user.id} value={user.id.toString()}>
                       {user.real_name || user.username}
                       {user.department && ` (${user.department})`}
@@ -639,7 +779,12 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
                   min={0}
                   max={100}
                   value={assignForm.allocation_pct}
-                  onChange={(e) => setAssignForm(prev => ({ ...prev, allocation_pct: parseInt(e.target.value) || 0 }))}
+                  onChange={(e) =>
+                    setAssignForm((prev) => ({
+                      ...prev,
+                      allocation_pct: parseInt(e.target.value) || 0,
+                    }))
+                  }
                   className="bg-white/5 border-white/10"
                 />
               </div>
@@ -648,7 +793,12 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
                 <Input
                   type="date"
                   value={assignForm.start_date}
-                  onChange={(e) => setAssignForm(prev => ({ ...prev, start_date: e.target.value }))}
+                  onChange={(e) =>
+                    setAssignForm((prev) => ({
+                      ...prev,
+                      start_date: e.target.value,
+                    }))
+                  }
                   className="bg-white/5 border-white/10"
                 />
               </div>
@@ -658,7 +808,12 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
               <Input
                 type="date"
                 value={assignForm.end_date}
-                onChange={(e) => setAssignForm(prev => ({ ...prev, end_date: e.target.value }))}
+                onChange={(e) =>
+                  setAssignForm((prev) => ({
+                    ...prev,
+                    end_date: e.target.value,
+                  }))
+                }
                 className="bg-white/5 border-white/10"
               />
             </div>
@@ -667,13 +822,18 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
               <Input
                 placeholder="可选备注..."
                 value={assignForm.remark}
-                onChange={(e) => setAssignForm(prev => ({ ...prev, remark: e.target.value }))}
+                onChange={(e) =>
+                  setAssignForm((prev) => ({ ...prev, remark: e.target.value }))
+                }
                 className="bg-white/5 border-white/10"
               />
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setShowAssignDialog(false)}>
+            <Button
+              variant="secondary"
+              onClick={() => setShowAssignDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleAssign} disabled={!assignForm.user_id}>
@@ -699,7 +859,7 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
                     <AvatarFallback className="bg-violet-500/20 text-violet-400">
-                      {(selectedLead.user?.real_name || '?')[0]}
+                      {(selectedLead.user?.real_name || "?")[0]}
                     </AvatarFallback>
                   </Avatar>
                   <div>
@@ -719,7 +879,7 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
               <Label className="text-slate-400 mb-2 block">团队成员</Label>
               {(selectedLead?.team_members || []).length > 0 ? (
                 <div className="space-y-2">
-                  {(selectedLead?.team_members || []).map(member => (
+                  {(selectedLead?.team_members || []).map((member) => (
                     <div
                       key={member.id}
                       className="flex items-center justify-between p-2 rounded-lg bg-white/[0.02] border border-white/5"
@@ -727,12 +887,16 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
                       <div className="flex items-center gap-2">
                         <Avatar className="h-8 w-8">
                           <AvatarFallback className="bg-white/5 text-slate-400 text-xs">
-                            {(member.user?.real_name || '?')[0]}
+                            {(member.user?.real_name || "?")[0]}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="text-sm text-white">{member.user?.real_name}</p>
-                          <p className="text-xs text-slate-500">{member.allocation_pct}%</p>
+                          <p className="text-sm text-white">
+                            {member.user?.real_name}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {member.allocation_pct}%
+                          </p>
                         </div>
                       </div>
                       <Button
@@ -747,7 +911,9 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-slate-500 text-center py-4">暂无团队成员</p>
+                <p className="text-sm text-slate-500 text-center py-4">
+                  暂无团队成员
+                </p>
               )}
             </div>
 
@@ -757,18 +923,26 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
               <div className="grid grid-cols-2 gap-3">
                 <Select
                   value={teamMemberForm.user_id?.toString()}
-                  onValueChange={(v) => setTeamMemberForm(prev => ({ ...prev, user_id: parseInt(v) }))}
+                  onValueChange={(v) =>
+                    setTeamMemberForm((prev) => ({
+                      ...prev,
+                      user_id: parseInt(v),
+                    }))
+                  }
                 >
                   <SelectTrigger className="bg-white/5 border-white/10">
                     <SelectValue placeholder="选择人员" />
                   </SelectTrigger>
                   <SelectContent>
                     {users
-                      .filter(u =>
-                        u.id !== selectedLead?.user_id &&
-                        !(selectedLead?.team_members || []).some(m => m.user_id === u.id)
+                      .filter(
+                        (u) =>
+                          u.id !== selectedLead?.user_id &&
+                          !(selectedLead?.team_members || []).some(
+                            (m) => m.user_id === u.id,
+                          ),
                       )
-                      .map(user => (
+                      .map((user) => (
                         <SelectItem key={user.id} value={user.id.toString()}>
                           {user.real_name || user.username}
                         </SelectItem>
@@ -782,7 +956,12 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
                     max={100}
                     placeholder="分配%"
                     value={teamMemberForm.allocation_pct}
-                    onChange={(e) => setTeamMemberForm(prev => ({ ...prev, allocation_pct: parseInt(e.target.value) || 0 }))}
+                    onChange={(e) =>
+                      setTeamMemberForm((prev) => ({
+                        ...prev,
+                        allocation_pct: parseInt(e.target.value) || 0,
+                      }))
+                    }
                     className="bg-white/5 border-white/10 w-20"
                   />
                   <Button
@@ -797,7 +976,10 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setShowTeamDialog(false)}>
+            <Button
+              variant="secondary"
+              onClick={() => setShowTeamDialog(false)}
+            >
               完成
             </Button>
           </DialogFooter>

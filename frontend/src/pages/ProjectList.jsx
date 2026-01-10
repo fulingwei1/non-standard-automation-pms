@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { cn } from '../lib/utils'
-import { projectApi } from '../services/api'
-import { formatDate } from '../lib/utils'
-import { PageHeader } from '../components/layout/PageHeader'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { cn } from "../lib/utils";
+import { projectApi } from "../services/api";
+import { formatDate } from "../lib/utils";
+import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
@@ -14,7 +14,7 @@ import {
   Progress,
   Input,
   SkeletonCard,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +22,7 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Plus,
   Search,
@@ -34,9 +34,9 @@ import {
   Calendar,
   Users,
   ChevronDown,
-} from 'lucide-react'
+} from "lucide-react";
 // Sprint 3: 使用优化的分步骤表单组件
-import ProjectFormStepper from '../components/project/ProjectFormStepper'
+import ProjectFormStepper from "../components/project/ProjectFormStepper";
 
 // Stagger animation
 const staggerContainer = {
@@ -45,28 +45,25 @@ const staggerContainer = {
     opacity: 1,
     transition: { staggerChildren: 0.05, delayChildren: 0.1 },
   },
-}
+};
 
 const staggerChild = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
-}
+};
 
 // Project Card Component
 function ProjectCard({ project, onClick }) {
   return (
     <motion.div variants={staggerChild}>
-      <Card
-        className="group cursor-pointer overflow-hidden"
-        onClick={onClick}
-      >
+      <Card className="group cursor-pointer overflow-hidden" onClick={onClick}>
         {/* Top colored bar based on health */}
         <div
-          className={cn('h-1', {
-            'bg-emerald-500': project.health === 'H1',
-            'bg-amber-500': project.health === 'H2',
-            'bg-red-500': project.health === 'H3',
-            'bg-slate-500': project.health === 'H4',
+          className={cn("h-1", {
+            "bg-emerald-500": project.health === "H1",
+            "bg-amber-500": project.health === "H2",
+            "bg-red-500": project.health === "H3",
+            "bg-slate-500": project.health === "H4",
           })}
         />
 
@@ -76,10 +73,10 @@ function ProjectCard({ project, onClick }) {
             <div className="flex items-center gap-3">
               <div
                 className={cn(
-                  'p-2.5 rounded-xl',
-                  'bg-gradient-to-br from-primary/20 to-indigo-500/10',
-                  'ring-1 ring-primary/20',
-                  'group-hover:scale-105 transition-transform'
+                  "p-2.5 rounded-xl",
+                  "bg-gradient-to-br from-primary/20 to-indigo-500/10",
+                  "ring-1 ring-primary/20",
+                  "group-hover:scale-105 transition-transform",
                 )}
               >
                 <Briefcase className="h-5 w-5 text-primary" />
@@ -91,7 +88,7 @@ function ProjectCard({ project, onClick }) {
                 <p className="text-xs text-slate-500">{project.project_code}</p>
               </div>
             </div>
-            <HealthBadge health={project.health || 'H1'} />
+            <HealthBadge health={project.health || "H1"} />
           </div>
 
           {/* Meta info */}
@@ -105,7 +102,7 @@ function ProjectCard({ project, onClick }) {
               <span>
                 {project.planned_end_date
                   ? formatDate(project.planned_end_date)
-                  : '未设置'}
+                  : "未设置"}
               </span>
             </div>
           </div>
@@ -121,18 +118,18 @@ function ProjectCard({ project, onClick }) {
             <Progress
               value={project.progress_pct || 0}
               color={
-                project.health === 'H3'
-                  ? 'danger'
-                  : project.health === 'H2'
-                  ? 'warning'
-                  : 'primary'
+                project.health === "H3"
+                  ? "danger"
+                  : project.health === "H2"
+                    ? "warning"
+                    : "primary"
               }
             />
           </div>
 
           {/* Footer */}
           <div className="flex items-center justify-between pt-3 border-t border-white/5">
-            <Badge variant="secondary">{project.stage || 'S1'}</Badge>
+            <Badge variant="secondary">{project.stage || "S1"}</Badge>
             <div className="flex items-center gap-1 text-sm text-slate-500 group-hover:text-primary transition-colors">
               查看详情
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -141,47 +138,56 @@ function ProjectCard({ project, onClick }) {
         </CardContent>
       </Card>
     </motion.div>
-  )
+  );
 }
 
 export default function ProjectList() {
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [projects, setProjects] = useState([])
-  const [searchQuery, setSearchQuery] = useState('')
-  const [viewMode, setViewMode] = useState('grid') // grid | list
-  const [formOpen, setFormOpen] = useState(false)
-  const [recommendedTemplates, setRecommendedTemplates] = useState([])
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [projects, setProjects] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState("grid"); // grid | list
+  const [formOpen, setFormOpen] = useState(false);
+  const [recommendedTemplates, setRecommendedTemplates] = useState([]);
 
   const fetchProjects = async () => {
     try {
-      setLoading(true)
-      const response = await projectApi.list()
+      setLoading(true);
+      const response = await projectApi.list();
       // Handle PaginatedResponse format: { items, total, page, page_size, pages }
-      const data = response.data || response
-      const projectList = data.items || data || []
-      setProjects(projectList)
-      
+      const data = response.data || response;
+      const projectList = data.items || data || [];
+      setProjects(projectList);
+
       // 调试日志：检查目标项目是否在列表中
-      const targetProject = projectList.find(p => p.project_code === 'PJ250114' || p.id === 14)
+      const targetProject = projectList.find(
+        (p) => p.project_code === "PJ250114" || p.id === 14,
+      );
       if (targetProject) {
-        console.log('✓ 项目PJ250114在列表中:', targetProject)
+        console.log("✓ 项目PJ250114在列表中:", targetProject);
       } else {
-        console.warn('⚠️ 项目PJ250114不在列表中')
-        console.log('列表中的项目:', projectList.map(p => ({ id: p.id, code: p.project_code, name: p.project_name })))
+        console.warn("⚠️ 项目PJ250114不在列表中");
+        console.log(
+          "列表中的项目:",
+          projectList.map((p) => ({
+            id: p.id,
+            code: p.project_code,
+            name: p.project_name,
+          })),
+        );
       }
     } catch (err) {
-      console.error('Failed to fetch projects:', err)
-      setProjects([])
+      console.error("Failed to fetch projects:", err);
+      setProjects([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchProjects()
-  }, [])
-  
+    fetchProjects();
+  }, []);
+
   // Sprint 3.2: 加载模板推荐
   useEffect(() => {
     if (formOpen) {
@@ -189,34 +195,34 @@ export default function ProjectList() {
         try {
           const response = await projectApi.recommendTemplates({
             limit: 5,
-          })
-          setRecommendedTemplates(response.data?.recommendations || [])
+          });
+          setRecommendedTemplates(response.data?.recommendations || []);
         } catch (err) {
-          console.error('Failed to load recommended templates:', err)
-          setRecommendedTemplates([])
+          console.error("Failed to load recommended templates:", err);
+          setRecommendedTemplates([]);
         }
-      }
-      loadRecommendedTemplates()
+      };
+      loadRecommendedTemplates();
     }
-  }, [formOpen])
+  }, [formOpen]);
 
   const handleCreateProject = async (data) => {
     try {
-      await projectApi.create(data)
-      setFormOpen(false)
-      fetchProjects()
+      await projectApi.create(data);
+      setFormOpen(false);
+      fetchProjects();
     } catch (err) {
-      alert('创建项目失败: ' + (err.response?.data?.detail || err.message))
+      alert("创建项目失败: " + (err.response?.data?.detail || err.message));
     }
-  }
+  };
 
   // Filter projects based on search
   const filteredProjects = projects.filter(
     (p) =>
       p.project_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.project_code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.customer_name?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+      p.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   return (
     <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
@@ -224,10 +230,7 @@ export default function ProjectList() {
         <PageHeader
           title="项目列表"
           description={`共 ${projects.length} 个项目`}
-          breadcrumbs={[
-            { label: '首页', href: '/' },
-            { label: '项目列表' },
-          ]}
+          breadcrumbs={[{ label: "首页", href: "/" }, { label: "项目列表" }]}
           actions={
             <Button onClick={() => setFormOpen(true)}>
               <Plus className="h-4 w-4" />
@@ -262,23 +265,23 @@ export default function ProjectList() {
         {/* View Mode Toggle */}
         <div className="flex items-center rounded-xl bg-white/[0.05] p-1">
           <button
-            onClick={() => setViewMode('grid')}
+            onClick={() => setViewMode("grid")}
             className={cn(
-              'p-2 rounded-lg transition-colors',
-              viewMode === 'grid'
-                ? 'bg-primary text-white'
-                : 'text-slate-400 hover:text-white'
+              "p-2 rounded-lg transition-colors",
+              viewMode === "grid"
+                ? "bg-primary text-white"
+                : "text-slate-400 hover:text-white",
             )}
           >
             <Grid3X3 className="h-4 w-4" />
           </button>
           <button
-            onClick={() => setViewMode('list')}
+            onClick={() => setViewMode("list")}
             className={cn(
-              'p-2 rounded-lg transition-colors',
-              viewMode === 'list'
-                ? 'bg-primary text-white'
-                : 'text-slate-400 hover:text-white'
+              "p-2 rounded-lg transition-colors",
+              viewMode === "list"
+                ? "bg-primary text-white"
+                : "text-slate-400 hover:text-white",
             )}
           >
             <List className="h-4 w-4" />
@@ -290,9 +293,9 @@ export default function ProjectList() {
       {loading ? (
         <div
           className={cn(
-            viewMode === 'grid'
-              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'
-              : 'space-y-4'
+            viewMode === "grid"
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+              : "space-y-4",
           )}
         >
           {Array(6)
@@ -307,9 +310,9 @@ export default function ProjectList() {
           initial="hidden"
           animate="visible"
           className={cn(
-            viewMode === 'grid'
-              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'
-              : 'space-y-4'
+            viewMode === "grid"
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+              : "space-y-4",
           )}
         >
           {filteredProjects.map((project) => (
@@ -325,12 +328,12 @@ export default function ProjectList() {
           <Card className="p-12 text-center">
             <div className="text-5xl mb-4">📦</div>
             <h3 className="text-lg font-semibold text-white mb-2">
-              {searchQuery ? '未找到匹配的项目' : '暂无项目'}
+              {searchQuery ? "未找到匹配的项目" : "暂无项目"}
             </h3>
             <p className="text-slate-400 mb-6">
               {searchQuery
-                ? '请尝试其他搜索关键词'
-                : '点击右上角按钮创建您的第一个项目'}
+                ? "请尝试其他搜索关键词"
+                : "点击右上角按钮创建您的第一个项目"}
             </p>
             {!searchQuery && (
               <Button onClick={() => setFormOpen(true)}>
@@ -350,5 +353,5 @@ export default function ProjectList() {
         recommendedTemplates={recommendedTemplates}
       />
     </motion.div>
-  )
+  );
 }

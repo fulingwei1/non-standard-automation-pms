@@ -1,36 +1,42 @@
-import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
-import { projectContributionApi } from '../services/api'
-import { PageHeader } from '../components/layout/PageHeader'
-import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '../components/ui'
-import ContributionChart from '../components/project/ContributionChart'
-import { formatCurrency, formatDate } from '../lib/utils'
-import { Award, TrendingUp, Clock, CheckCircle2 } from 'lucide-react'
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { projectContributionApi } from "../services/api";
+import { PageHeader } from "../components/layout/PageHeader";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Skeleton,
+} from "../components/ui";
+import ContributionChart from "../components/project/ContributionChart";
+import { formatCurrency, formatDate } from "../lib/utils";
+import { Award, TrendingUp, Clock, CheckCircle2 } from "lucide-react";
 
 export default function ProjectContributionReport() {
-  const { id } = useParams()
-  const [loading, setLoading] = useState(true)
-  const [report, setReport] = useState(null)
+  const { id } = useParams();
+  const [loading, setLoading] = useState(true);
+  const [report, setReport] = useState(null);
   const [period, setPeriod] = useState(() => {
-    const now = new Date()
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  })
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
 
   useEffect(() => {
-    fetchReport()
-  }, [id, period])
+    fetchReport();
+  }, [id, period]);
 
   const fetchReport = async () => {
     try {
-      setLoading(true)
-      const response = await projectContributionApi.getReport(id, { period })
-      setReport(response.data)
+      setLoading(true);
+      const response = await projectContributionApi.getReport(id, { period });
+      setReport(response.data);
     } catch (error) {
-      console.error('Failed to load contribution report:', error)
+      console.error("Failed to load contribution report:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -42,7 +48,7 @@ export default function ProjectContributionReport() {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   if (!report) {
@@ -55,15 +61,12 @@ export default function ProjectContributionReport() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
     <div className="p-6 space-y-6">
-      <PageHeader
-        title="项目贡献度报告"
-        description={`统计周期: ${period}`}
-      />
+      <PageHeader title="项目贡献度报告" description={`统计周期: ${period}`} />
 
       {/* 统计概览 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -82,13 +85,17 @@ export default function ProjectContributionReport() {
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-gray-500">总工时</p>
-            <p className="text-2xl font-bold">{report.total_hours.toFixed(1)}h</p>
+            <p className="text-2xl font-bold">
+              {report.total_hours.toFixed(1)}h
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-gray-500">总奖金</p>
-            <p className="text-2xl font-bold">{formatCurrency(report.total_bonus)}</p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(report.total_bonus)}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -150,17 +157,26 @@ export default function ProjectContributionReport() {
               </thead>
               <tbody>
                 {report.contributions?.map((contrib) => (
-                  <tr key={contrib.user_id} className="border-b hover:bg-gray-50">
+                  <tr
+                    key={contrib.user_id}
+                    className="border-b hover:bg-gray-50"
+                  >
                     <td className="p-3 font-medium">{contrib.user_name}</td>
                     <td className="p-3">{contrib.task_count}</td>
                     <td className="p-3">{contrib.actual_hours.toFixed(1)}h</td>
                     <td className="p-3">{contrib.deliverable_count}</td>
                     <td className="p-3">{contrib.issue_resolved}</td>
-                    <td className="p-3">{formatCurrency(contrib.bonus_amount)}</td>
-                    <td className="p-3 font-semibold">{contrib.contribution_score.toFixed(1)}</td>
+                    <td className="p-3">
+                      {formatCurrency(contrib.bonus_amount)}
+                    </td>
+                    <td className="p-3 font-semibold">
+                      {contrib.contribution_score.toFixed(1)}
+                    </td>
                     <td className="p-3">
                       {contrib.pm_rating ? (
-                        <span className="text-yellow-500">⭐ {contrib.pm_rating}/5</span>
+                        <span className="text-yellow-500">
+                          ⭐ {contrib.pm_rating}/5
+                        </span>
                       ) : (
                         <span className="text-gray-400">未评分</span>
                       )}
@@ -173,5 +189,5 @@ export default function ProjectContributionReport() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

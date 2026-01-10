@@ -2,12 +2,20 @@
  * 竞品分析组件
  * 展示竞争对手信息和比较
  */
-import React from 'react'
-import { motion } from 'framer-motion'
-import { Shield, Award, ThumbsDown, HelpCircle, DollarSign, TrendingUp, TrendingDown } from 'lucide-react'
-import { Badge } from '../ui/badge'
-import { cn } from '../../lib/utils'
-import { fadeIn } from '../../lib/animations'
+import React from "react";
+import { motion } from "framer-motion";
+import {
+  Shield,
+  Award,
+  ThumbsDown,
+  HelpCircle,
+  DollarSign,
+  TrendingUp,
+  TrendingDown,
+} from "lucide-react";
+import { Badge } from "../ui/badge";
+import { cn } from "../../lib/utils";
+import { fadeIn } from "../../lib/animations";
 
 export function CompetitorAnalysis({ competitors, className }) {
   if (!competitors || competitors.length === 0) {
@@ -16,29 +24,29 @@ export function CompetitorAnalysis({ competitors, className }) {
         <Shield className="w-8 h-8 mx-auto mb-2 text-slate-600" />
         <p className="text-sm">暂无竞争对手信息</p>
       </div>
-    )
+    );
   }
 
   const getStatusConfig = (status) => {
     switch (status) {
-      case 'confirmed':
-        return { text: '已确认', color: 'bg-blue-500', icon: Shield }
-      case 'rumored':
-        return { text: '传闻', color: 'bg-slate-500', icon: HelpCircle }
-      case 'won':
-        return { text: '中标', color: 'bg-emerald-500', icon: Award }
-      case 'lost':
-        return { text: '未中标', color: 'bg-red-500', icon: ThumbsDown }
+      case "confirmed":
+        return { text: "已确认", color: "bg-blue-500", icon: Shield };
+      case "rumored":
+        return { text: "传闻", color: "bg-slate-500", icon: HelpCircle };
+      case "won":
+        return { text: "中标", color: "bg-emerald-500", icon: Award };
+      case "lost":
+        return { text: "未中标", color: "bg-red-500", icon: ThumbsDown };
       default:
-        return { text: '未知', color: 'bg-slate-500', icon: HelpCircle }
+        return { text: "未知", color: "bg-slate-500", icon: HelpCircle };
     }
-  }
+  };
 
   return (
-    <motion.div variants={fadeIn} className={cn('space-y-3', className)}>
+    <motion.div variants={fadeIn} className={cn("space-y-3", className)}>
       {competitors.map((competitor, index) => {
-        const statusConfig = getStatusConfig(competitor.status)
-        const StatusIcon = statusConfig.icon
+        const statusConfig = getStatusConfig(competitor.status);
+        const StatusIcon = statusConfig.icon;
 
         return (
           <div
@@ -50,8 +58,10 @@ export function CompetitorAnalysis({ competitors, className }) {
                 <StatusIcon className="w-4 h-4 text-red-400" />
               </div>
               <div>
-                <p className="text-sm font-medium text-white">{competitor.name}</p>
-                <Badge className={cn('text-xs mt-1', statusConfig.color)}>
+                <p className="text-sm font-medium text-white">
+                  {competitor.name}
+                </p>
+                <Badge className={cn("text-xs mt-1", statusConfig.color)}>
                   {statusConfig.text}
                 </Badge>
               </div>
@@ -77,11 +87,10 @@ export function CompetitorAnalysis({ competitors, className }) {
               )}
             </div>
           </div>
-        )
+        );
       })}
     </motion.div>
-  )
+  );
 }
 
-export default CompetitorAnalysis
-
+export default CompetitorAnalysis;

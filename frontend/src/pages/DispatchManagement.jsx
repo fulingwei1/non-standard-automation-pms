@@ -2,8 +2,8 @@
  * Dispatch Management Page - 派工管理页面
  * Features: 批量派工、工单分配、工人选择
  */
-import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Users,
   Package,
@@ -14,25 +14,25 @@ import {
   User,
   Clock,
   AlertTriangle,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
+} from "../components/ui/select";
 import {
   Table,
   TableBody,
@@ -40,7 +40,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../components/ui/table'
+} from "../components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -48,119 +48,116 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui/dialog'
-import { cn, formatDate } from '../lib/utils'
-import { productionApi, projectApi } from '../services/api'
+} from "../components/ui/dialog";
+import { cn, formatDate } from "../lib/utils";
+import { productionApi, projectApi } from "../services/api";
 export default function DispatchManagement() {
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [workOrders, setWorkOrders] = useState([])
-  const [workers, setWorkers] = useState([])
-  const [workshops, setWorkshops] = useState([])
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [workOrders, setWorkOrders] = useState([]);
+  const [workers, setWorkers] = useState([]);
+  const [workshops, setWorkshops] = useState([]);
   // Filters
-  const [filterWorkshop, setFilterWorkshop] = useState('')
-  const [filterStatus, setFilterStatus] = useState('PENDING')
+  const [filterWorkshop, setFilterWorkshop] = useState("");
+  const [filterStatus, setFilterStatus] = useState("PENDING");
   // Selection
-  const [selectedOrders, setSelectedOrders] = useState(new Set())
-  const [showAssignDialog, setShowAssignDialog] = useState(false)
+  const [selectedOrders, setSelectedOrders] = useState(new Set());
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [assignData, setAssignData] = useState({
     worker_id: null,
     workstation_id: null,
-    remark: '',
-  })
+    remark: "",
+  });
   useEffect(() => {
-    fetchWorkshops()
-    fetchWorkers()
-    fetchWorkOrders()
-  }, [filterWorkshop, filterStatus])
+    fetchWorkshops();
+    fetchWorkers();
+    fetchWorkOrders();
+  }, [filterWorkshop, filterStatus]);
   const fetchWorkshops = async () => {
     try {
-      const res = await productionApi.workshops.list({ page_size: 1000 })
-      setWorkshops(res.data?.items || res.data || [])
+      const res = await productionApi.workshops.list({ page_size: 1000 });
+      setWorkshops(res.data?.items || res.data || []);
     } catch (error) {
-      console.error('Failed to fetch workshops:', error)
+      console.error("Failed to fetch workshops:", error);
     }
-  }
+  };
   const fetchWorkers = async () => {
     try {
-      const res = await productionApi.workers.list({ page_size: 1000 })
-      setWorkers(res.data?.items || res.data || [])
+      const res = await productionApi.workers.list({ page_size: 1000 });
+      setWorkers(res.data?.items || res.data || []);
     } catch (error) {
-      console.error('Failed to fetch workers:', error)
-      setWorkers([])
+      console.error("Failed to fetch workers:", error);
+      setWorkers([]);
     }
-  }
+  };
   const fetchWorkOrders = async () => {
     try {
-      setLoading(true)
-      const params = { status: filterStatus || 'PENDING' }
-      if (filterWorkshop) params.workshop_id = filterWorkshop
-      const res = await productionApi.workOrders.list(params)
-      const orderList = res.data?.items || res.data || []
-      setWorkOrders(orderList)
+      setLoading(true);
+      const params = { status: filterStatus || "PENDING" };
+      if (filterWorkshop) params.workshop_id = filterWorkshop;
+      const res = await productionApi.workOrders.list(params);
+      const orderList = res.data?.items || res.data || [];
+      setWorkOrders(orderList);
     } catch (error) {
-      console.error('Failed to fetch work orders:', error)
+      console.error("Failed to fetch work orders:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
   const handleSelectOrder = (orderId) => {
-    const newSelected = new Set(selectedOrders)
+    const newSelected = new Set(selectedOrders);
     if (newSelected.has(orderId)) {
-      newSelected.delete(orderId)
+      newSelected.delete(orderId);
     } else {
-      newSelected.add(orderId)
+      newSelected.add(orderId);
     }
-    setSelectedOrders(newSelected)
-  }
+    setSelectedOrders(newSelected);
+  };
   const handleSelectAll = () => {
     if (selectedOrders.size === workOrders.length) {
-      setSelectedOrders(new Set())
+      setSelectedOrders(new Set());
     } else {
-      setSelectedOrders(new Set(workOrders.map(wo => wo.id)))
+      setSelectedOrders(new Set(workOrders.map((wo) => wo.id)));
     }
-  }
+  };
   const handleBatchAssign = async () => {
     if (selectedOrders.size === 0) {
-      alert('请选择要派工的工单')
-      return
+      alert("请选择要派工的工单");
+      return;
     }
     if (!assignData.worker_id) {
-      alert('请选择工人')
-      return
+      alert("请选择工人");
+      return;
     }
     try {
-      const orderIds = Array.from(selectedOrders)
+      const orderIds = Array.from(selectedOrders);
       for (const orderId of orderIds) {
         await productionApi.workOrders.assign(orderId, {
           assigned_to: assignData.worker_id,
           workstation_id: assignData.workstation_id,
           remark: assignData.remark,
-        })
+        });
       }
-      setShowAssignDialog(false)
-      setSelectedOrders(new Set())
+      setShowAssignDialog(false);
+      setSelectedOrders(new Set());
       setAssignData({
         worker_id: null,
         workstation_id: null,
-        remark: '',
-      })
-      fetchWorkOrders()
-      alert(`成功派工 ${orderIds.length} 个工单`)
+        remark: "",
+      });
+      fetchWorkOrders();
+      alert(`成功派工 ${orderIds.length} 个工单`);
     } catch (error) {
-      console.error('Failed to assign work orders:', error)
-      alert('派工失败: ' + (error.response?.data?.detail || error.message))
+      console.error("Failed to assign work orders:", error);
+      alert("派工失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
   const pendingOrders = useMemo(() => {
-    return workOrders.filter(wo => wo.status === 'PENDING')
-  }, [workOrders])
+    return workOrders.filter((wo) => wo.status === "PENDING");
+  }, [workOrders]);
   return (
     <div className="space-y-6 p-6">
-      <PageHeader
-        title="派工管理"
-        description="批量派工、工单分配、工人选择"
-      />
+      <PageHeader title="派工管理" description="批量派工、工单分配、工人选择" />
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -227,17 +224,15 @@ export default function DispatchManagement() {
           {loading ? (
             <div className="text-center py-8 text-slate-400">加载中...</div>
           ) : pendingOrders.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">暂无待派工工单</div>
+            <div className="text-center py-8 text-slate-400">
+              暂无待派工工单
+            </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleSelectAll}
-                    >
+                    <Button variant="ghost" size="sm" onClick={handleSelectAll}>
                       {selectedOrders.size === pendingOrders.length ? (
                         <CheckSquare className="w-4 h-4" />
                       ) : (
@@ -259,9 +254,7 @@ export default function DispatchManagement() {
                 {pendingOrders.map((order) => (
                   <TableRow
                     key={order.id}
-                    className={cn(
-                      selectedOrders.has(order.id) && 'bg-blue-50'
-                    )}
+                    className={cn(selectedOrders.has(order.id) && "bg-blue-50")}
                   >
                     <TableCell>
                       <Button
@@ -282,17 +275,21 @@ export default function DispatchManagement() {
                     <TableCell className="font-medium">
                       {order.task_name}
                     </TableCell>
-                    <TableCell>{order.project_name || '-'}</TableCell>
-                    <TableCell>{order.workshop_name || '-'}</TableCell>
+                    <TableCell>{order.project_name || "-"}</TableCell>
+                    <TableCell>{order.workshop_name || "-"}</TableCell>
                     <TableCell>{order.plan_qty || 0}</TableCell>
                     <TableCell className="text-slate-500 text-sm">
-                      {order.plan_start_date ? formatDate(order.plan_start_date) : '-'}
+                      {order.plan_start_date
+                        ? formatDate(order.plan_start_date)
+                        : "-"}
                     </TableCell>
                     <TableCell className="text-slate-500 text-sm">
-                      {order.plan_end_date ? formatDate(order.plan_end_date) : '-'}
+                      {order.plan_end_date
+                        ? formatDate(order.plan_end_date)
+                        : "-"}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{order.priority || '-'}</Badge>
+                      <Badge variant="outline">{order.priority || "-"}</Badge>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -315,10 +312,17 @@ export default function DispatchManagement() {
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">选择工人 *</label>
+                <label className="text-sm font-medium mb-2 block">
+                  选择工人 *
+                </label>
                 <Select
-                  value={assignData.worker_id?.toString() || ''}
-                  onValueChange={(val) => setAssignData({ ...assignData, worker_id: val ? parseInt(val) : null })}
+                  value={assignData.worker_id?.toString() || ""}
+                  onValueChange={(val) =>
+                    setAssignData({
+                      ...assignData,
+                      worker_id: val ? parseInt(val) : null,
+                    })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="选择工人" />
@@ -338,10 +342,17 @@ export default function DispatchManagement() {
                 )}
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">选择工位（可选）</label>
+                <label className="text-sm font-medium mb-2 block">
+                  选择工位（可选）
+                </label>
                 <Select
-                  value={assignData.workstation_id?.toString() || ''}
-                  onValueChange={(val) => setAssignData({ ...assignData, workstation_id: val ? parseInt(val) : null })}
+                  value={assignData.workstation_id?.toString() || ""}
+                  onValueChange={(val) =>
+                    setAssignData({
+                      ...assignData,
+                      workstation_id: val ? parseInt(val) : null,
+                    })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="选择工位" />
@@ -356,22 +367,30 @@ export default function DispatchManagement() {
                 <label className="text-sm font-medium mb-2 block">备注</label>
                 <Input
                   value={assignData.remark}
-                  onChange={(e) => setAssignData({ ...assignData, remark: e.target.value })}
+                  onChange={(e) =>
+                    setAssignData({ ...assignData, remark: e.target.value })
+                  }
                   placeholder="派工备注"
                 />
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAssignDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowAssignDialog(false)}
+            >
               取消
             </Button>
-            <Button onClick={handleBatchAssign} disabled={!assignData.worker_id}>
+            <Button
+              onClick={handleBatchAssign}
+              disabled={!assignData.worker_id}
+            >
               确认派工
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

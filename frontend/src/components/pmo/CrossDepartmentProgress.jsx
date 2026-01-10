@@ -2,37 +2,44 @@
  * 跨部门进度可视化组件
  * 用于展示项目的跨部门进度数据
  */
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { Card, CardContent, Progress, Badge } from '../ui'
-import { Users, TrendingUp, AlertTriangle, CheckCircle2, Clock, Target } from 'lucide-react'
-import { engineersApi } from '../../services/api'
-import { cn } from '../../lib/utils'
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Card, CardContent, Progress, Badge } from "../ui";
+import {
+  Users,
+  TrendingUp,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Target,
+} from "lucide-react";
+import { engineersApi } from "../../services/api";
+import { cn } from "../../lib/utils";
 
 export function CrossDepartmentProgress({ projectId }) {
-  const [loading, setLoading] = useState(true)
-  const [data, setData] = useState(null)
-  const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true)
-        const response = await engineersApi.getProgressVisibility(projectId)
-        setData(response.data)
-        setError(null)
+        setLoading(true);
+        const response = await engineersApi.getProgressVisibility(projectId);
+        setData(response.data);
+        setError(null);
       } catch (err) {
-        console.error('Failed to fetch cross-department progress:', err)
-        setError(err.response?.data?.detail || err.message || '加载失败')
+        console.error("Failed to fetch cross-department progress:", err);
+        setError(err.response?.data?.detail || err.message || "加载失败");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
     if (projectId) {
-      fetchData()
+      fetchData();
     }
-  }, [projectId])
+  }, [projectId]);
 
   if (loading) {
     return (
@@ -46,7 +53,7 @@ export function CrossDepartmentProgress({ projectId }) {
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (error) {
@@ -62,19 +69,17 @@ export function CrossDepartmentProgress({ projectId }) {
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (!data) {
     return (
       <Card>
         <CardContent className="p-6">
-          <div className="text-center text-slate-400 py-8">
-            暂无数据
-          </div>
+          <div className="text-center text-slate-400 py-8">暂无数据</div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   const {
@@ -86,30 +91,59 @@ export function CrossDepartmentProgress({ projectId }) {
     in_progress_tasks,
     pending_tasks,
     department_progress,
-    active_delays
-  } = data
+    active_delays,
+  } = data;
 
   // 健康度颜色和标签
   const healthConfig = {
-    H1: { label: '正常', color: 'text-emerald-400', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-500/30' },
-    H2: { label: '有风险', color: 'text-amber-400', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/30' },
-    H3: { label: '阻塞', color: 'text-red-400', bgColor: 'bg-red-500/10', borderColor: 'border-red-500/30' },
-    H4: { label: '已完结', color: 'text-slate-400', bgColor: 'bg-slate-500/10', borderColor: 'border-slate-500/30' },
-  }
+    H1: {
+      label: "正常",
+      color: "text-emerald-400",
+      bgColor: "bg-emerald-500/10",
+      borderColor: "border-emerald-500/30",
+    },
+    H2: {
+      label: "有风险",
+      color: "text-amber-400",
+      bgColor: "bg-amber-500/10",
+      borderColor: "border-amber-500/30",
+    },
+    H3: {
+      label: "阻塞",
+      color: "text-red-400",
+      bgColor: "bg-red-500/10",
+      borderColor: "border-red-500/30",
+    },
+    H4: {
+      label: "已完结",
+      color: "text-slate-400",
+      bgColor: "bg-slate-500/10",
+      borderColor: "border-slate-500/30",
+    },
+  };
 
-  const health = healthConfig[project_health] || healthConfig.H1
+  const health = healthConfig[project_health] || healthConfig.H1;
 
   return (
     <div className="space-y-6">
       {/* 项目整体进度 */}
-      <Card className={cn('border-2', health.borderColor)}>
+      <Card className={cn("border-2", health.borderColor)}>
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-lg font-semibold text-white">{project_name || '项目进度'}</h3>
+              <h3 className="text-lg font-semibold text-white">
+                {project_name || "项目进度"}
+              </h3>
               <p className="text-xs text-slate-400 mt-1">项目整体进度概览</p>
             </div>
-            <Badge className={cn('px-3 py-1 text-sm font-medium', health.color, health.bgColor, health.borderColor)}>
+            <Badge
+              className={cn(
+                "px-3 py-1 text-sm font-medium",
+                health.color,
+                health.bgColor,
+                health.borderColor,
+              )}
+            >
               {health.label}
             </Badge>
           </div>
@@ -121,22 +155,30 @@ export function CrossDepartmentProgress({ projectId }) {
             </div>
             <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
               <div className="text-xs text-emerald-400 mb-1">已完成</div>
-              <div className="text-2xl font-bold text-emerald-400">{completed_tasks}</div>
+              <div className="text-2xl font-bold text-emerald-400">
+                {completed_tasks}
+              </div>
             </div>
             <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
               <div className="text-xs text-blue-400 mb-1">进行中</div>
-              <div className="text-2xl font-bold text-blue-400">{in_progress_tasks}</div>
+              <div className="text-2xl font-bold text-blue-400">
+                {in_progress_tasks}
+              </div>
             </div>
             <div className="p-3 rounded-lg bg-slate-500/10 border border-slate-500/20">
               <div className="text-xs text-slate-400 mb-1">待开始</div>
-              <div className="text-2xl font-bold text-slate-400">{pending_tasks}</div>
+              <div className="text-2xl font-bold text-slate-400">
+                {pending_tasks}
+              </div>
             </div>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-400">整体进度</span>
-              <span className="text-white font-medium text-lg">{overall_progress?.toFixed(1) || 0}%</span>
+              <span className="text-white font-medium text-lg">
+                {overall_progress?.toFixed(1) || 0}%
+              </span>
             </div>
             <Progress value={overall_progress || 0} className="h-4" />
           </div>
@@ -185,7 +227,10 @@ export function CrossDepartmentProgress({ projectId }) {
                     </div>
                   </div>
 
-                  <Progress value={dept.average_progress || 0} className="h-2 mb-3" />
+                  <Progress
+                    value={dept.average_progress || 0}
+                    className="h-2 mb-3"
+                  />
 
                   {/* 部门成员明细 */}
                   {dept.members && Object.keys(dept.members).length > 0 && (
@@ -193,9 +238,16 @@ export function CrossDepartmentProgress({ projectId }) {
                       <p className="text-xs text-slate-400 mb-2">成员进度:</p>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                         {Object.entries(dept.members).map(([name, member]) => (
-                          <div key={name} className="flex items-center justify-between text-xs p-2 rounded bg-surface-2/50">
-                            <span className="text-slate-300 truncate flex-1">{member.real_name}</span>
-                            <span className="text-white font-medium ml-2">{member.average_progress?.toFixed(0) || 0}%</span>
+                          <div
+                            key={name}
+                            className="flex items-center justify-between text-xs p-2 rounded bg-surface-2/50"
+                          >
+                            <span className="text-slate-300 truncate flex-1">
+                              {member.real_name}
+                            </span>
+                            <span className="text-white font-medium ml-2">
+                              {member.average_progress?.toFixed(0) || 0}%
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -249,7 +301,9 @@ export function CrossDepartmentProgress({ projectId }) {
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <div className="text-sm text-white font-medium">{task.progress}%</div>
+                      <div className="text-sm text-white font-medium">
+                        {task.progress}%
+                      </div>
                       <div className="text-xs text-slate-400">进度</div>
                     </div>
                   </div>
@@ -272,5 +326,5 @@ export function CrossDepartmentProgress({ projectId }) {
         </Card>
       )}
     </div>
-  )
+  );
 }

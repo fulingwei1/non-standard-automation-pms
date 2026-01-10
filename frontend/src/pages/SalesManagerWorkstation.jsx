@@ -4,8 +4,8 @@
  * Core Functions: Team management, Performance monitoring, Contract approval, Customer relationship
  */
 
-import { useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import {
   TrendingUp,
   TrendingDown,
@@ -31,8 +31,8 @@ import {
   Mail,
   Flame,
   Zap,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -41,10 +41,14 @@ import {
   Button,
   Badge,
   Progress,
-} from '../components/ui'
-import { cn, formatCurrency } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { SalesFunnel, CustomerCard, PaymentTimeline } from '../components/sales'
+} from "../components/ui";
+import { cn, formatCurrency } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import {
+  SalesFunnel,
+  CustomerCard,
+  PaymentTimeline,
+} from "../components/sales";
 import {
   salesStatisticsApi,
   salesTeamApi,
@@ -53,44 +57,44 @@ import {
   contractApi,
   paymentPlanApi,
   paymentApi,
-} from '../services/api'
-import { ApiIntegrationError } from '../components/ui'
+} from "../services/api";
+import { ApiIntegrationError } from "../components/ui";
 
-const toISODate = (value) => value.toISOString().split('T')[0]
+const toISODate = (value) => value.toISOString().split("T")[0];
 
 const getRangeForPeriod = (period) => {
-  const now = new Date()
-  if (period === 'quarter') {
-    const start = new Date(now.getFullYear(), now.getMonth() - 2, 1)
-    return { start, end: now }
+  const now = new Date();
+  if (period === "quarter") {
+    const start = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+    return { start, end: now };
   }
-  if (period === 'year') {
-    const start = new Date(now.getFullYear(), 0, 1)
-    return { start, end: now }
+  if (period === "year") {
+    const start = new Date(now.getFullYear(), 0, 1);
+    return { start, end: now };
   }
-  const start = new Date(now.getFullYear(), now.getMonth(), 1)
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-  return { start, end }
-}
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  return { start, end };
+};
 
 const transformPlanToPayment = (plan) => ({
   id: plan.id,
-  type: (plan.payment_type || 'progress').toLowerCase(),
-  projectName: plan.project_name || plan.contract_name || '收款计划',
+  type: (plan.payment_type || "progress").toLowerCase(),
+  projectName: plan.project_name || plan.contract_name || "收款计划",
   amount: Number(plan.planned_amount || plan.amount || 0),
   dueDate: plan.planned_date || plan.due_date,
   paidDate: plan.actual_date || plan.paid_date,
-  status: (plan.status || 'PENDING').toLowerCase(),
-})
+  status: (plan.status || "PENDING").toLowerCase(),
+});
 
 const formatTimelineLabel = (value) => {
-  if (!value) return '刚刚'
+  if (!value) return "刚刚";
   try {
-    return new Date(value).toLocaleString('zh-CN', { hour12: false })
+    return new Date(value).toLocaleString("zh-CN", { hour12: false });
   } catch (err) {
-    return value
+    return value;
   }
-}
+};
 
 // Mock data - 已移除，使用真实API
 /* const mockDeptStats = {
@@ -169,68 +173,98 @@ const formatTimelineLabel = (value) => {
 
 // Type config for approvals
 const typeConfig = {
-  contract: { label: '合同审批', textColor: 'text-blue-400', bgColor: 'bg-blue-500/20' },
-  opportunity: { label: '商机审批', textColor: 'text-emerald-400', bgColor: 'bg-emerald-500/20' },
-  payment: { label: '回款审批', textColor: 'text-amber-400', bgColor: 'bg-amber-500/20' },
-}
+  contract: {
+    label: "合同审批",
+    textColor: "text-blue-400",
+    bgColor: "bg-blue-500/20",
+  },
+  opportunity: {
+    label: "商机审批",
+    textColor: "text-emerald-400",
+    bgColor: "bg-emerald-500/20",
+  },
+  payment: {
+    label: "回款审批",
+    textColor: "text-amber-400",
+    bgColor: "bg-amber-500/20",
+  },
+};
 
 const priorityConfig = {
-  high: { label: '紧急', color: 'text-red-400' },
-  medium: { label: '普通', color: 'text-amber-400' },
-  low: { label: '低', color: 'text-slate-400' },
-}
+  high: { label: "紧急", color: "text-red-400" },
+  medium: { label: "普通", color: "text-amber-400" },
+  low: { label: "低", color: "text-slate-400" },
+};
 
 const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg }) => {
-  const [isHovered, setIsHovered] = useState(false)
+  const [isHovered, setIsHovered] = useState(false);
   return (
     <motion.div
       variants={fadeIn}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
     >
-      <Card className={cn('transition-all duration-300', isHovered && 'scale-105', bg, 'border-slate-700/50')}>
+      <Card
+        className={cn(
+          "transition-all duration-300",
+          isHovered && "scale-105",
+          bg,
+          "border-slate-700/50",
+        )}
+      >
         <CardContent className="p-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <p className="text-xs text-slate-400 mb-1">{title}</p>
-              <p className={cn('text-xl font-bold text-white', color)}>{value}</p>
+              <p className={cn("text-xl font-bold text-white", color)}>
+                {value}
+              </p>
               <p className="text-xs text-slate-400 mt-1">{subtitle}</p>
               {trend !== undefined && (
-                <div className={cn('flex items-center text-xs mt-1', trend > 0 ? 'text-emerald-400' : 'text-red-400')}>
-                  {trend > 0 ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
+                <div
+                  className={cn(
+                    "flex items-center text-xs mt-1",
+                    trend > 0 ? "text-emerald-400" : "text-red-400",
+                  )}
+                >
+                  {trend > 0 ? (
+                    <ArrowUpRight className="w-3 h-3 mr-1" />
+                  ) : (
+                    <ArrowDownRight className="w-3 h-3 mr-1" />
+                  )}
                   {Math.abs(trend)}%
                 </div>
               )}
             </div>
-            <div className={cn('p-2 rounded-lg', bg)}>
-              <Icon className={cn('w-5 h-5', color)} />
+            <div className={cn("p-2 rounded-lg", bg)}>
+              <Icon className={cn("w-5 h-5", color)} />
             </div>
           </div>
         </CardContent>
       </Card>
     </motion.div>
-  )
-}
+  );
+};
 
 export default function SalesManagerWorkstation() {
-  const [selectedPeriod, setSelectedPeriod] = useState('month')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [deptStats, setDeptStats] = useState(null)
-  const [teamMembers, setTeamMembers] = useState([])
-  const [salesFunnel, setSalesFunnel] = useState({})
-  const [pendingApprovals, setPendingApprovals] = useState([])
-  const [topCustomers, setTopCustomers] = useState([])
-  const [payments, setPayments] = useState([])
+  const [selectedPeriod, setSelectedPeriod] = useState("month");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [deptStats, setDeptStats] = useState(null);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [salesFunnel, setSalesFunnel] = useState({});
+  const [pendingApprovals, setPendingApprovals] = useState([]);
+  const [topCustomers, setTopCustomers] = useState([]);
+  const [payments, setPayments] = useState([]);
 
-  const extractData = (res) => res?.data || {}
+  const extractData = (res) => res?.data || {};
 
   const loadDashboard = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
-      const { start, end } = getRangeForPeriod(selectedPeriod)
+      const { start, end } = getRangeForPeriod(selectedPeriod);
 
       // Parallel API calls for better performance
       const [
@@ -245,108 +279,146 @@ export default function SalesManagerWorkstation() {
         plansRes,
         paymentStatsRes,
       ] = await Promise.all([
-        salesStatisticsApi.getDepartmentStatistics({
-          start_date: toISODate(start),
-          end_date: toISODate(end),
-        }).catch(() => ({ data: {} })),
-        salesStatisticsApi.getDepartmentStatistics({
-          start_date: toISODate(new Date(start.getFullYear(), 0, 1)),
-          end_date: toISODate(end),
-        }).catch(() => ({ data: {} })),
-        salesTargetApi.list({
-          target_scope: 'DEPARTMENT',
-          target_period: 'MONTHLY',
-          period_value: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`,
-        }).catch(() => ({ data: { items: [] } })),
-        salesTargetApi.list({
-          target_scope: 'DEPARTMENT',
-          target_period: 'YEARLY',
-          period_value: String(start.getFullYear()),
-        }).catch(() => ({ data: { items: [] } })),
-        salesTeamApi.listDepartmentMembers().catch(() => ({ data: { items: [] } })),
-        salesStatisticsApi.getFunnelStatistics({
-          start_date: toISODate(start),
-          end_date: toISODate(end),
-        }).catch(() => ({ data: {} })),
-        contractApi.list({
-          page: 1,
-          page_size: 100,
-          approval_status: 'PENDING',
-        }).catch(() => ({ data: { items: [] } })),
-        salesReportApi.getCustomerContribution({
-          start_date: toISODate(start),
-          end_date: toISODate(end),
-        }).catch(() => ({ data: {} })),
-        paymentPlanApi.list({
-          page: 1,
-          page_size: 100,
-          planned_date_start: toISODate(start),
-          planned_date_end: toISODate(end),
-        }).catch(() => ({ data: { items: [] } })),
-        paymentApi.getStatistics({
-          start_date: toISODate(start),
-          end_date: toISODate(end),
-        }).catch(() => ({ data: {} })),
-      ])
+        salesStatisticsApi
+          .getDepartmentStatistics({
+            start_date: toISODate(start),
+            end_date: toISODate(end),
+          })
+          .catch(() => ({ data: {} })),
+        salesStatisticsApi
+          .getDepartmentStatistics({
+            start_date: toISODate(new Date(start.getFullYear(), 0, 1)),
+            end_date: toISODate(end),
+          })
+          .catch(() => ({ data: {} })),
+        salesTargetApi
+          .list({
+            target_scope: "DEPARTMENT",
+            target_period: "MONTHLY",
+            period_value: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}`,
+          })
+          .catch(() => ({ data: { items: [] } })),
+        salesTargetApi
+          .list({
+            target_scope: "DEPARTMENT",
+            target_period: "YEARLY",
+            period_value: String(start.getFullYear()),
+          })
+          .catch(() => ({ data: { items: [] } })),
+        salesTeamApi
+          .listDepartmentMembers()
+          .catch(() => ({ data: { items: [] } })),
+        salesStatisticsApi
+          .getFunnelStatistics({
+            start_date: toISODate(start),
+            end_date: toISODate(end),
+          })
+          .catch(() => ({ data: {} })),
+        contractApi
+          .list({
+            page: 1,
+            page_size: 100,
+            approval_status: "PENDING",
+          })
+          .catch(() => ({ data: { items: [] } })),
+        salesReportApi
+          .getCustomerContribution({
+            start_date: toISODate(start),
+            end_date: toISODate(end),
+          })
+          .catch(() => ({ data: {} })),
+        paymentPlanApi
+          .list({
+            page: 1,
+            page_size: 100,
+            planned_date_start: toISODate(start),
+            planned_date_end: toISODate(end),
+          })
+          .catch(() => ({ data: { items: [] } })),
+        paymentApi
+          .getStatistics({
+            start_date: toISODate(start),
+            end_date: toISODate(end),
+          })
+          .catch(() => ({ data: {} })),
+      ]);
 
-      const funnelPayload = extractData(funnelRes)
-      const teamData = extractData(teamRes)?.items || extractData(teamRes) || []
-      const approvals = approvalsRes?.data?.items || approvalsRes?.data || []
-      const customerContribution = extractData(customersRes)?.customers || []
-      const planItems = plansRes?.data?.items || plansRes?.data || []
-      const summaryData = extractData(summaryRes)
-      const paymentSummary = extractData(paymentStatsRes)?.summary || {}
-      const targetItem = targetRes?.data?.items?.[0]
-      const yearSummaryData = extractData(yearSummaryRes)
-      const yearTargetItem = yearTargetRes?.data?.items?.[0]
+      const funnelPayload = extractData(funnelRes);
+      const teamData =
+        extractData(teamRes)?.items || extractData(teamRes) || [];
+      const approvals = approvalsRes?.data?.items || approvalsRes?.data || [];
+      const customerContribution = extractData(customersRes)?.customers || [];
+      const planItems = plansRes?.data?.items || plansRes?.data || [];
+      const summaryData = extractData(summaryRes);
+      const paymentSummary = extractData(paymentStatsRes)?.summary || {};
+      const targetItem = targetRes?.data?.items?.[0];
+      const yearSummaryData = extractData(yearSummaryRes);
+      const yearTargetItem = yearTargetRes?.data?.items?.[0];
 
       setSalesFunnel({
         lead: funnelPayload.leads || 0,
         contact: funnelPayload.opportunities || 0,
         quote: funnelPayload.quotes || 0,
-        negotiate: Math.max((funnelPayload.opportunities || 0) - (funnelPayload.contracts || 0), 0),
+        negotiate: Math.max(
+          (funnelPayload.opportunities || 0) - (funnelPayload.contracts || 0),
+          0,
+        ),
         won: funnelPayload.contracts || 0,
-      })
+      });
 
-      setTeamMembers(teamData)
+      setTeamMembers(teamData);
 
       const approvalsTransformed = approvals.map((contract) => ({
         id: contract.id,
-        type: 'contract',
-        title: contract.contract_code || contract.contract_name || '合同审批',
-        customer: contract.customer_name || '未命名客户',
+        type: "contract",
+        title: contract.contract_code || contract.contract_name || "合同审批",
+        customer: contract.customer_name || "未命名客户",
         amount: Number(contract.contract_amount || 0),
-        submitter: contract.owner_name || '系统',
+        submitter: contract.owner_name || "系统",
         submitTime: contract.created_at,
-        priority: Number(contract.contract_amount || 0) > 300000 ? 'high' : 'medium',
-      }))
-      setPendingApprovals(approvalsTransformed)
+        priority:
+          Number(contract.contract_amount || 0) > 300000 ? "high" : "medium",
+      }));
+      setPendingApprovals(approvalsTransformed);
 
       const customersMapped = customerContribution.map((item) => ({
         id: item.customer_id || item.customer_name,
-        name: item.customer_name || '未命名客户',
-        shortName: item.customer_name || '客户',
-        grade: 'A',
-        status: 'active',
-        industry: item.industry || '未分类',
-        location: '',
-        lastContact: '',
+        name: item.customer_name || "未命名客户",
+        shortName: item.customer_name || "客户",
+        grade: "A",
+        status: "active",
+        industry: item.industry || "未分类",
+        location: "",
+        lastContact: "",
         opportunityCount: item.contract_count || 0,
         totalAmount: item.total_amount || 0,
-      }))
-      setTopCustomers(customersMapped)
-      setPayments(planItems.map(transformPlanToPayment))
+      }));
+      setTopCustomers(customersMapped);
+      setPayments(planItems.map(transformPlanToPayment));
 
-      const monthlyTarget = targetItem?.target_value || summaryData?.monthly_target || 0
-      const monthlyAchieved = summaryData?.total_contract_amount || 0
-      const achievementRate = monthlyTarget > 0 ? (monthlyAchieved / monthlyTarget) * 100 : 0
-      const totalCustomers = teamData.reduce((sum, member) => sum + (member.customer_total || 0), 0)
-      const newCustomers = teamData.reduce((sum, member) => sum + (member.new_customers || 0), 0)
-      const overallOpportunities = summaryData?.total_opportunities || 0
+      const monthlyTarget =
+        targetItem?.target_value || summaryData?.monthly_target || 0;
+      const monthlyAchieved = summaryData?.total_contract_amount || 0;
+      const achievementRate =
+        monthlyTarget > 0 ? (monthlyAchieved / monthlyTarget) * 100 : 0;
+      const totalCustomers = teamData.reduce(
+        (sum, member) => sum + (member.customer_total || 0),
+        0,
+      );
+      const newCustomers = teamData.reduce(
+        (sum, member) => sum + (member.new_customers || 0),
+        0,
+      );
+      const overallOpportunities = summaryData?.total_opportunities || 0;
 
-      const yearTargetValue = yearTargetItem?.target_value || yearSummaryData?.year_target || monthlyTarget * 12
-      const yearAchieved = yearSummaryData?.total_contract_amount || monthlyAchieved
-      const yearProgress = yearTargetValue > 0 ? (yearAchieved / yearTargetValue) * 100 : 0
+      const yearTargetValue =
+        yearTargetItem?.target_value ||
+        yearSummaryData?.year_target ||
+        monthlyTarget * 12;
+      const yearAchieved =
+        yearSummaryData?.total_contract_amount || monthlyAchieved;
+      const yearProgress =
+        yearTargetValue > 0 ? (yearAchieved / yearTargetValue) * 100 : 0;
 
       setDeptStats({
         monthlyTarget,
@@ -358,31 +430,34 @@ export default function SalesManagerWorkstation() {
         totalCustomers,
         newCustomersThisMonth: newCustomers,
         activeOpportunities: overallOpportunities,
-        hotOpportunities: teamData.reduce((sum, member) => sum + (member.opportunity_count || 0), 0),
+        hotOpportunities: teamData.reduce(
+          (sum, member) => sum + (member.opportunity_count || 0),
+          0,
+        ),
         pendingPayment: paymentSummary.total_unpaid || 0,
         overduePayment: paymentSummary.total_overdue || 0,
         collectionRate: paymentSummary.collection_rate || 0,
         yearTarget: yearTargetValue,
         yearAchieved,
         yearProgress: Number(yearProgress.toFixed(1)),
-      })
+      });
     } catch (err) {
-      console.error('Failed to load sales manager dashboard:', err)
-      setError(err)
-      setDeptStats(null)
-      setTeamMembers([])
-      setSalesFunnel({})
-      setPendingApprovals([])
-      setTopCustomers([])
-      setPayments([])
+      console.error("Failed to load sales manager dashboard:", err);
+      setError(err);
+      setDeptStats(null);
+      setTeamMembers([]);
+      setSalesFunnel({});
+      setPendingApprovals([]);
+      setTopCustomers([]);
+      setPayments([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [selectedPeriod])
+  }, [selectedPeriod]);
 
   useEffect(() => {
-    loadDashboard()
-  }, [loadDashboard])
+    loadDashboard();
+  }, [loadDashboard]);
 
   if (loading) {
     return (
@@ -390,7 +465,7 @@ export default function SalesManagerWorkstation() {
         <PageHeader title="销售经理工作台" description="部门级销售管理仪表板" />
         <div className="text-center py-16 text-slate-400">加载中...</div>
       </div>
-    )
+    );
   }
 
   if (error && !deptStats) {
@@ -403,7 +478,7 @@ export default function SalesManagerWorkstation() {
           onRetry={loadDashboard}
         />
       </div>
-    )
+    );
   }
 
   return (
@@ -416,7 +491,11 @@ export default function SalesManagerWorkstation() {
       {/* Page Header */}
       <PageHeader
         title="销售经理工作台"
-        description={deptStats ? `部门目标: ${formatCurrency(deptStats.monthlyTarget || 0)} | 已完成: ${formatCurrency(deptStats.monthlyAchieved || 0)} (${deptStats.achievementRate || 0}%)` : '部门级销售管理仪表板'}
+        description={
+          deptStats
+            ? `部门目标: ${formatCurrency(deptStats.monthlyTarget || 0)} | 已完成: ${formatCurrency(deptStats.monthlyAchieved || 0)} (${deptStats.achievementRate || 0}%)`
+            : "部门级销售管理仪表板"
+        }
         actions={
           <motion.div variants={fadeIn} className="flex gap-2">
             <Button variant="outline" className="flex items-center gap-2">
@@ -452,44 +531,44 @@ export default function SalesManagerWorkstation() {
               value={`${deptStats.achievementRate || 0}%`}
               subtitle="本月目标达成"
               icon={Target}
-          color="text-emerald-400"
-          bg="bg-emerald-500/10"
-        />
-        <StatCard
-          title="团队规模"
-          value={deptStats?.teamSize || 0}
-          subtitle={`活跃成员 ${deptStats?.teamSize || 0}`}
-          icon={Users}
-          color="text-blue-400"
-          bg="bg-blue-500/10"
-        />
-        <StatCard
-          title="活跃客户"
-          value={deptStats?.totalCustomers || 0}
-          subtitle={`本月新增 ${deptStats?.newCustomersThisMonth || 0}`}
-          trend={6.2}
-          icon={Building2}
-          color="text-purple-400"
-          bg="bg-purple-500/10"
-        />
-        <StatCard
-          title="待回款"
-          value={formatCurrency(deptStats?.pendingPayment || 0)}
-          subtitle={`逾期 ${formatCurrency(deptStats?.overduePayment || 0)}`}
-          icon={CreditCard}
-          color="text-red-400"
-          bg="bg-red-500/10"
-        />
-        <StatCard
-          title="待审批"
-          value={deptStats?.pendingApprovals || 0}
-          subtitle="项待处理"
-          icon={AlertTriangle}
-          color="text-amber-400"
-          bg="bg-amber-500/10"
-        />
-        </>
-      )}
+              color="text-emerald-400"
+              bg="bg-emerald-500/10"
+            />
+            <StatCard
+              title="团队规模"
+              value={deptStats?.teamSize || 0}
+              subtitle={`活跃成员 ${deptStats?.teamSize || 0}`}
+              icon={Users}
+              color="text-blue-400"
+              bg="bg-blue-500/10"
+            />
+            <StatCard
+              title="活跃客户"
+              value={deptStats?.totalCustomers || 0}
+              subtitle={`本月新增 ${deptStats?.newCustomersThisMonth || 0}`}
+              trend={6.2}
+              icon={Building2}
+              color="text-purple-400"
+              bg="bg-purple-500/10"
+            />
+            <StatCard
+              title="待回款"
+              value={formatCurrency(deptStats?.pendingPayment || 0)}
+              subtitle={`逾期 ${formatCurrency(deptStats?.overduePayment || 0)}`}
+              icon={CreditCard}
+              color="text-red-400"
+              bg="bg-red-500/10"
+            />
+            <StatCard
+              title="待审批"
+              value={deptStats?.pendingApprovals || 0}
+              subtitle="项待处理"
+              icon={AlertTriangle}
+              color="text-amber-400"
+              bg="bg-amber-500/10"
+            />
+          </>
+        )}
       </motion.div>
 
       {/* Main Content Grid */}
@@ -505,7 +584,10 @@ export default function SalesManagerWorkstation() {
                     <BarChart3 className="h-5 w-5 text-blue-400" />
                     销售漏斗分析
                   </CardTitle>
-                  <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                  <Badge
+                    variant="outline"
+                    className="bg-blue-500/20 text-blue-400 border-blue-500/30"
+                  >
                     {deptStats?.activeOpportunities || 0} 个商机
                   </Badge>
                 </div>
@@ -531,71 +613,117 @@ export default function SalesManagerWorkstation() {
                     <Users className="h-5 w-5 text-purple-400" />
                     团队成员业绩
                   </CardTitle>
-                  <Button variant="ghost" size="sm" className="text-xs text-primary">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-primary"
+                  >
                     查看详情 <ChevronRight className="w-3 h-3 ml-1" />
                   </Button>
                 </div>
               </CardHeader>
               <CardContent>
                 {teamMembers.length > 0 ? (
-                <div className="space-y-4">
-                  {teamMembers.map((member, index) => (
-                    <div
-                      key={member.id}
-                      className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className={cn(
-                            'w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm',
-                            index === 0 && 'bg-gradient-to-br from-amber-500 to-orange-500',
-                            index === 1 && 'bg-gradient-to-br from-blue-500 to-cyan-500',
-                            index === 2 && 'bg-gradient-to-br from-slate-500 to-gray-600',
-                            index === 3 && 'bg-gradient-to-br from-purple-500 to-pink-500',
-                          )}>
-                            {index + 1}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-white">{member.name || member.user_name || 'N/A'}</span>
-                              <Badge variant="outline" className="text-xs bg-slate-700/40">
-                                {member.role || member.user_role || 'N/A'}
-                              </Badge>
+                  <div className="space-y-4">
+                    {teamMembers.map((member, index) => (
+                      <div
+                        key={member.id}
+                        className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={cn(
+                                "w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm",
+                                index === 0 &&
+                                  "bg-gradient-to-br from-amber-500 to-orange-500",
+                                index === 1 &&
+                                  "bg-gradient-to-br from-blue-500 to-cyan-500",
+                                index === 2 &&
+                                  "bg-gradient-to-br from-slate-500 to-gray-600",
+                                index === 3 &&
+                                  "bg-gradient-to-br from-purple-500 to-pink-500",
+                              )}
+                            >
+                              {index + 1}
                             </div>
-                            <div className="text-xs text-slate-400 mt-1">
-                              {member.active_projects || member.activeProjects || 0} 个项目 · {member.new_customers || member.newCustomers || 0} 个新客户
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-white">
+                                  {member.name || member.user_name || "N/A"}
+                                </span>
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs bg-slate-700/40"
+                                >
+                                  {member.role || member.user_role || "N/A"}
+                                </Badge>
+                              </div>
+                              <div className="text-xs text-slate-400 mt-1">
+                                {member.active_projects ||
+                                  member.activeProjects ||
+                                  0}{" "}
+                                个项目 ·{" "}
+                                {member.new_customers ||
+                                  member.newCustomers ||
+                                  0}{" "}
+                                个新客户
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-white">
+                              {formatCurrency(
+                                member.monthly_achieved ||
+                                  member.monthlyAchieved ||
+                                  0,
+                              )}
+                            </div>
+                            <div className="text-xs text-slate-400">
+                              目标:{" "}
+                              {formatCurrency(
+                                member.monthly_target ||
+                                  member.monthlyTarget ||
+                                  0,
+                              )}
                             </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-white">
-                            {formatCurrency(member.monthly_achieved || member.monthlyAchieved || 0)}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-400">完成率</span>
+                            <span
+                              className={cn(
+                                "font-medium",
+                                (member.achievement_rate ||
+                                  member.achievementRate ||
+                                  0) >= 90
+                                  ? "text-emerald-400"
+                                  : (member.achievement_rate ||
+                                        member.achievementRate ||
+                                        0) >= 70
+                                    ? "text-amber-400"
+                                    : "text-red-400",
+                              )}
+                            >
+                              {member.achievement_rate ||
+                                member.achievementRate ||
+                                0}
+                              %
+                            </span>
                           </div>
-                          <div className="text-xs text-slate-400">
-                            目标: {formatCurrency(member.monthly_target || member.monthlyTarget || 0)}
-                          </div>
+                          <Progress
+                            value={
+                              member.achievement_rate ||
+                              member.achievementRate ||
+                              0
+                            }
+                            className="h-1.5 bg-slate-700/50"
+                          />
                         </div>
                       </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-400">完成率</span>
-                          <span className={cn(
-                            'font-medium',
-                            (member.achievement_rate || member.achievementRate || 0) >= 90 ? 'text-emerald-400' :
-                            (member.achievement_rate || member.achievementRate || 0) >= 70 ? 'text-amber-400' :
-                            'text-red-400'
-                          )}>
-                            {member.achievement_rate || member.achievementRate || 0}%
-                          </span>
-                        </div>
-                        <Progress
-                          value={member.achievement_rate || member.achievementRate || 0}
-                          className="h-1.5 bg-slate-700/50"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
                 ) : (
                   <div className="text-center py-8 text-slate-500">
                     <p>团队成员数据需要从API获取</p>
@@ -617,51 +745,59 @@ export default function SalesManagerWorkstation() {
                     <AlertTriangle className="h-5 w-5 text-amber-400" />
                     待审批事项
                   </CardTitle>
-                  <Badge variant="outline" className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+                  <Badge
+                    variant="outline"
+                    className="bg-amber-500/20 text-amber-400 border-amber-500/30"
+                  >
                     {pendingApprovals.length}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 {pendingApprovals.length > 0 ? (
-                pendingApprovals.map((item) => {
-                  const typeInfo = typeConfig[item.type]
-                  const priorityInfo = priorityConfig[item.priority]
-                  return (
-                    <div
-                      key={item.id}
-                      className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge
-                              variant="outline"
-                              className={cn('text-xs', typeInfo.textColor)}
-                            >
-                              {typeInfo.label}
-                            </Badge>
-                            {item.priority === 'high' && (
-                              <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
-                                紧急
+                  pendingApprovals.map((item) => {
+                    const typeInfo = typeConfig[item.type];
+                    const priorityInfo = priorityConfig[item.priority];
+                    return (
+                      <div
+                        key={item.id}
+                        className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge
+                                variant="outline"
+                                className={cn("text-xs", typeInfo.textColor)}
+                              >
+                                {typeInfo.label}
                               </Badge>
-                            )}
+                              {item.priority === "high" && (
+                                <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
+                                  紧急
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="font-medium text-white text-sm">
+                              {item.title}
+                            </p>
+                            <p className="text-xs text-slate-400 mt-1">
+                              {item.customer}
+                            </p>
                           </div>
-                          <p className="font-medium text-white text-sm">{item.title}</p>
-                          <p className="text-xs text-slate-400 mt-1">{item.customer}</p>
+                        </div>
+                        <div className="flex items-center justify-between text-xs mt-2">
+                          <span className="text-slate-400">
+                            {item.submitter} ·{" "}
+                            {formatTimelineLabel(item.submitTime)}
+                          </span>
+                          <span className="font-medium text-amber-400">
+                            {formatCurrency(item.amount)}
+                          </span>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between text-xs mt-2">
-                        <span className="text-slate-400">
-                          {item.submitter} · {formatTimelineLabel(item.submitTime)}
-                        </span>
-                        <span className="font-medium text-amber-400">
-                          {formatCurrency(item.amount)}
-                        </span>
-                      </div>
-                    </div>
-                  )
-                })
+                    );
+                  })
                 ) : (
                   <div className="text-center py-8 text-slate-500">
                     <p>暂无待审批事项</p>
@@ -683,23 +819,27 @@ export default function SalesManagerWorkstation() {
                     <Award className="h-5 w-5 text-amber-400" />
                     重点客户
                   </CardTitle>
-                  <Button variant="ghost" size="sm" className="text-xs text-primary">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-primary"
+                  >
                     全部 <ChevronRight className="w-3 h-3 ml-1" />
                   </Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 {topCustomers.length > 0 ? (
-                topCustomers.map((customer) => (
-                  <CustomerCard
-                    key={customer.id}
-                    customer={customer}
-                    compact
-                    onClick={(c) => {
-                      // Handle customer click if needed
-                    }}
-                  />
-                ))
+                  topCustomers.map((customer) => (
+                    <CustomerCard
+                      key={customer.id}
+                      customer={customer}
+                      compact
+                      onClick={(c) => {
+                        // Handle customer click if needed
+                      }}
+                    />
+                  ))
                 ) : (
                   <div className="text-center py-8 text-slate-500">
                     <p>暂无重点客户数据</p>
@@ -718,7 +858,11 @@ export default function SalesManagerWorkstation() {
                     <Receipt className="h-5 w-5 text-emerald-400" />
                     近期回款计划
                   </CardTitle>
-                  <Button variant="ghost" size="sm" className="text-xs text-primary">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-primary"
+                  >
                     全部回款 <ChevronRight className="w-3 h-3 ml-1" />
                   </Button>
                 </div>
@@ -739,47 +883,51 @@ export default function SalesManagerWorkstation() {
 
       {/* Year Progress */}
       {deptStats && (
-      <motion.div variants={fadeIn}>
-        <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Activity className="h-5 w-5 text-cyan-400" />
-              年度销售目标进度
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-400">年度目标</p>
-                  <p className="text-2xl font-bold text-white mt-1">
-                    {formatCurrency(deptStats.yearTarget || 0)}
-                  </p>
+        <motion.div variants={fadeIn}>
+          <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Activity className="h-5 w-5 text-cyan-400" />
+                年度销售目标进度
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-400">年度目标</p>
+                    <p className="text-2xl font-bold text-white mt-1">
+                      {formatCurrency(deptStats.yearTarget || 0)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-slate-400">已完成</p>
+                    <p className="text-2xl font-bold text-emerald-400 mt-1">
+                      {formatCurrency(deptStats.yearAchieved || 0)}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm text-slate-400">已完成</p>
-                  <p className="text-2xl font-bold text-emerald-400 mt-1">
-                    {formatCurrency(deptStats.yearAchieved || 0)}
-                  </p>
+                <Progress
+                  value={deptStats.yearProgress || 0}
+                  className="h-3 bg-slate-700/50"
+                />
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-400">
+                    完成率: {deptStats.yearProgress || 0}%
+                  </span>
+                  <span className="text-slate-400">
+                    剩余:{" "}
+                    {formatCurrency(
+                      (deptStats.yearTarget || 0) -
+                        (deptStats.yearAchieved || 0),
+                    )}
+                  </span>
                 </div>
               </div>
-              <Progress
-                value={deptStats.yearProgress || 0}
-                className="h-3 bg-slate-700/50"
-              />
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400">
-                  完成率: {deptStats.yearProgress || 0}%
-                </span>
-                <span className="text-slate-400">
-                  剩余: {formatCurrency((deptStats.yearTarget || 0) - (deptStats.yearAchieved || 0))}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
     </motion.div>
-  )
+  );
 }

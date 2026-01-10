@@ -3,8 +3,8 @@
  * Features: Payment schedule, aging analysis, invoice management, collection reminders
  */
 
-import { useState, useMemo, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useMemo, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   DollarSign,
   Search,
@@ -34,8 +34,8 @@ import {
   X,
   Phone,
   Mail,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -51,255 +51,310 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '../components/ui'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { PaymentTimeline, PaymentStats } from '../components/sales'
-import { paymentApi, invoiceApi, receivableApi, paymentPlanApi } from '../services/api'
+} from "../components/ui";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { PaymentTimeline, PaymentStats } from "../components/sales";
+import {
+  paymentApi,
+  invoiceApi,
+  receivableApi,
+  paymentPlanApi,
+} from "../services/api";
 
 // Payment type configuration
 const paymentTypes = {
-  deposit: { label: '签约款', color: 'bg-blue-500', ratio: '30%' },
-  progress: { label: '进度款', color: 'bg-amber-500', ratio: '40%' },
-  delivery: { label: '发货款', color: 'bg-purple-500', ratio: '20%' },
-  acceptance: { label: '验收款', color: 'bg-emerald-500', ratio: '5%' },
-  warranty: { label: '质保金', color: 'bg-slate-500', ratio: '5%' },
-}
+  deposit: { label: "签约款", color: "bg-blue-500", ratio: "30%" },
+  progress: { label: "进度款", color: "bg-amber-500", ratio: "40%" },
+  delivery: { label: "发货款", color: "bg-purple-500", ratio: "20%" },
+  acceptance: { label: "验收款", color: "bg-emerald-500", ratio: "5%" },
+  warranty: { label: "质保金", color: "bg-slate-500", ratio: "5%" },
+};
 
 const statusConfig = {
-  paid: { label: '已到账', color: 'bg-emerald-500', textColor: 'text-emerald-400', icon: CheckCircle2 },
-  pending: { label: '待收款', color: 'bg-blue-500', textColor: 'text-blue-400', icon: Clock },
-  overdue: { label: '已逾期', color: 'bg-red-500', textColor: 'text-red-400', icon: AlertTriangle },
-  invoiced: { label: '已开票', color: 'bg-amber-500', textColor: 'text-amber-400', icon: FileText },
-}
+  paid: {
+    label: "已到账",
+    color: "bg-emerald-500",
+    textColor: "text-emerald-400",
+    icon: CheckCircle2,
+  },
+  pending: {
+    label: "待收款",
+    color: "bg-blue-500",
+    textColor: "text-blue-400",
+    icon: Clock,
+  },
+  overdue: {
+    label: "已逾期",
+    color: "bg-red-500",
+    textColor: "text-red-400",
+    icon: AlertTriangle,
+  },
+  invoiced: {
+    label: "已开票",
+    color: "bg-amber-500",
+    textColor: "text-amber-400",
+    icon: FileText,
+  },
+};
 
 // Mock payment data
 // Mock data - 已移除，使用真实API
 export default function PaymentManagement() {
-  const [viewMode, setViewMode] = useState('list') // 'list', 'timeline', 'aging'
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedType, setSelectedType] = useState('all')
-  const [selectedStatus, setSelectedStatus] = useState('all')
-  const [selectedPayment, setSelectedPayment] = useState(null)
-  const [showInvoiceDialog, setShowInvoiceDialog] = useState(false)
-  const [showCollectionDialog, setShowCollectionDialog] = useState(false)
-  const [showDetailDialog, setShowDetailDialog] = useState(false)
-  const [payments, setPayments] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [page, setPage] = useState(1)
-  const [total, setTotal] = useState(0)
-  const pageSize = 20
-  
+  const [viewMode, setViewMode] = useState("list"); // 'list', 'timeline', 'aging'
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
+  const [showCollectionDialog, setShowCollectionDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const pageSize = 20;
+
   // 新增状态：回款提醒、统计分析
-  const [reminders, setReminders] = useState([])
-  const [remindersLoading, setRemindersLoading] = useState(false)
-  const [statistics, setStatistics] = useState(null)
-  const [statisticsLoading, setStatisticsLoading] = useState(false)
-  const [showReminders, setShowReminders] = useState(false)
+  const [reminders, setReminders] = useState([]);
+  const [remindersLoading, setRemindersLoading] = useState(false);
+  const [statistics, setStatistics] = useState(null);
+  const [statisticsLoading, setStatisticsLoading] = useState(false);
+  const [showReminders, setShowReminders] = useState(false);
 
   // Load payments from API
   const loadPayments = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const params = {
         page,
         page_size: pageSize,
-        payment_status: selectedStatus !== 'all' ? selectedStatus.toUpperCase() : undefined,
-      }
-      
+        payment_status:
+          selectedStatus !== "all" ? selectedStatus.toUpperCase() : undefined,
+      };
+
       if (searchTerm) {
         // 如果搜索关键词是项目编码或合同编码，可以通过project_id或contract_id筛选
         // 这里简化处理，只搜索项目名称
-        params.keyword = searchTerm
+        params.keyword = searchTerm;
       }
 
-      const response = await paymentApi.list(params)
-      const data = response.data || {}
-      
+      const response = await paymentApi.list(params);
+      const data = response.data || {};
+
       // 转换数据格式
       const transformedPayments = (data.items || []).map((item) => {
         // 根据payment_status确定状态
         const statusMap = {
-          PAID: 'paid',
-          PENDING: 'pending',
-          PARTIAL: 'pending',
-          OVERDUE: 'overdue',
-        }
-        
+          PAID: "paid",
+          PENDING: "pending",
+          PARTIAL: "pending",
+          OVERDUE: "overdue",
+        };
+
         // 根据合同类型确定payment type（这里简化处理，从合同或项目中获取）
-        const type = 'progress' // 默认类型，可以从合同payment_plan中获取
+        const type = "progress"; // 默认类型，可以从合同payment_plan中获取
 
         return {
           id: item.id || item.invoice_id,
           type: type,
           projectId: item.project_code || item.project_id,
-          projectName: item.project_name || item.project_code || '',
-          contractNo: item.contract_code || '',
-          customerName: item.customer_name || '',
-          customerShort: item.customer_name || '',
+          projectName: item.project_name || item.project_code || "",
+          contractNo: item.contract_code || "",
+          customerName: item.customer_name || "",
+          customerShort: item.customer_name || "",
           amount: parseFloat(item.invoice_amount || item.amount || 0),
-          dueDate: item.due_date || '',
-          status: statusMap[item.payment_status] || 'pending',
-          invoiceNo: item.invoice_code || '',
-          invoiceDate: item.issue_date || '',
+          dueDate: item.due_date || "",
+          status: statusMap[item.payment_status] || "pending",
+          invoiceNo: item.invoice_code || "",
+          invoiceDate: item.issue_date || "",
           paidAmount: parseFloat(item.paid_amount || 0),
-          paidDate: item.paid_date || '',
-          notes: item.remark || '',
+          paidDate: item.paid_date || "",
+          notes: item.remark || "",
           overdueDay: item.overdue_days || null,
-          createdAt: item.created_at || '',
+          createdAt: item.created_at || "",
           raw: item, // 保存原始数据
-        }
-      })
+        };
+      });
 
-      setPayments(transformedPayments)
-      setTotal(data.total || 0)
+      setPayments(transformedPayments);
+      setTotal(data.total || 0);
     } catch (error) {
-      console.error('加载回款列表失败:', error)
+      console.error("加载回款列表失败:", error);
       // 如果API失败，使用mock数据作为fallback
-      setPayments(mockPayments)
-      setTotal(mockPayments.length)
+      setPayments(mockPayments);
+      setTotal(mockPayments.length);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    loadPayments()
-  }, [page, selectedStatus])
+    loadPayments();
+  }, [page, selectedStatus]);
 
   // 搜索防抖
   useEffect(() => {
     const timer = setTimeout(() => {
       if (page === 1) {
-        loadPayments()
+        loadPayments();
       } else {
-        setPage(1)
+        setPage(1);
       }
-    }, 500)
+    }, 500);
 
-    return () => clearTimeout(timer)
-  }, [searchTerm])
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Filter payments (前端筛选，用于类型筛选)
   const filteredPayments = useMemo(() => {
-    return payments.filter(payment => {
-      const matchesType = selectedType === 'all' || payment.type === selectedType
-      return matchesType
-    })
-  }, [payments, selectedType])
+    return payments.filter((payment) => {
+      const matchesType =
+        selectedType === "all" || payment.type === selectedType;
+      return matchesType;
+    });
+  }, [payments, selectedType]);
 
   // Stats calculation
   const stats = useMemo(() => {
-    const paid = payments.filter(p => p.status === 'paid')
-    const pending = payments.filter(p => p.status === 'pending')
-    const overdue = payments.filter(p => p.status === 'overdue')
-    
+    const paid = payments.filter((p) => p.status === "paid");
+    const pending = payments.filter((p) => p.status === "pending");
+    const overdue = payments.filter((p) => p.status === "overdue");
+
     return {
       totalPaid: paid.reduce((sum, p) => sum + (p.paidAmount || 0), 0),
       paidCount: paid.length,
-      totalPending: pending.reduce((sum, p) => sum + (p.amount - (p.paidAmount || 0)), 0),
+      totalPending: pending.reduce(
+        (sum, p) => sum + (p.amount - (p.paidAmount || 0)),
+        0,
+      ),
       pendingCount: pending.length,
-      totalOverdue: overdue.reduce((sum, p) => sum + (p.amount - (p.paidAmount || 0)), 0),
+      totalOverdue: overdue.reduce(
+        (sum, p) => sum + (p.amount - (p.paidAmount || 0)),
+        0,
+      ),
       overdueCount: overdue.length,
-      invoicedCount: payments.filter(p => p.invoiceNo).length,
+      invoicedCount: payments.filter((p) => p.invoiceNo).length,
       thisMonthTarget: 450000, // 可以从配置或API获取
       thisMonthAchieved: paid.reduce((sum, p) => {
-        const paidDate = p.paidDate ? new Date(p.paidDate) : null
+        const paidDate = p.paidDate ? new Date(p.paidDate) : null;
         if (paidDate) {
-          const now = new Date()
-          if (paidDate.getMonth() === now.getMonth() && paidDate.getFullYear() === now.getFullYear()) {
-            return sum + (p.paidAmount || 0)
+          const now = new Date();
+          if (
+            paidDate.getMonth() === now.getMonth() &&
+            paidDate.getFullYear() === now.getFullYear()
+          ) {
+            return sum + (p.paidAmount || 0);
           }
         }
-        return sum
+        return sum;
       }, 0),
-    }
-  }, [payments])
+    };
+  }, [payments]);
 
   // Load aging analysis from API
   const [agingData, setAgingData] = useState({
     current: { amount: 0, count: 0 },
-    '1-30': { amount: 0, count: 0 },
-    '31-60': { amount: 0, count: 0 },
-    '61-90': { amount: 0, count: 0 },
-    '90+': { amount: 0, count: 0 },
-  })
+    "1-30": { amount: 0, count: 0 },
+    "31-60": { amount: 0, count: 0 },
+    "61-90": { amount: 0, count: 0 },
+    "90+": { amount: 0, count: 0 },
+  });
 
   useEffect(() => {
     const loadAging = async () => {
       try {
-        const response = await receivableApi.getAging({})
-        const data = response.data || {}
-        
+        const response = await receivableApi.getAging({});
+        const data = response.data || {};
+
         // 转换API返回的账龄数据
         setAgingData({
-          current: { amount: parseFloat(data.current || 0), count: data.current_count || 0 },
-          '1-30': { amount: parseFloat(data.days_1_30 || 0), count: data.days_1_30_count || 0 },
-          '31-60': { amount: parseFloat(data.days_31_60 || 0), count: data.days_31_60_count || 0 },
-          '61-90': { amount: parseFloat(data.days_61_90 || 0), count: data.days_61_90_count || 0 },
-          '90+': { amount: parseFloat(data.days_over_90 || 0), count: data.days_over_90_count || 0 },
-        })
+          current: {
+            amount: parseFloat(data.current || 0),
+            count: data.current_count || 0,
+          },
+          "1-30": {
+            amount: parseFloat(data.days_1_30 || 0),
+            count: data.days_1_30_count || 0,
+          },
+          "31-60": {
+            amount: parseFloat(data.days_31_60 || 0),
+            count: data.days_31_60_count || 0,
+          },
+          "61-90": {
+            amount: parseFloat(data.days_61_90 || 0),
+            count: data.days_61_90_count || 0,
+          },
+          "90+": {
+            amount: parseFloat(data.days_over_90 || 0),
+            count: data.days_over_90_count || 0,
+          },
+        });
       } catch (error) {
-        console.error('加载账龄分析失败:', error)
+        console.error("加载账龄分析失败:", error);
         // 使用本地计算作为fallback
-        const now = new Date()
+        const now = new Date();
         const aging = {
           current: { amount: 0, count: 0 },
-          '1-30': { amount: 0, count: 0 },
-          '31-60': { amount: 0, count: 0 },
-          '61-90': { amount: 0, count: 0 },
-          '90+': { amount: 0, count: 0 },
-        }
+          "1-30": { amount: 0, count: 0 },
+          "31-60": { amount: 0, count: 0 },
+          "61-90": { amount: 0, count: 0 },
+          "90+": { amount: 0, count: 0 },
+        };
 
-        payments.filter(p => p.status !== 'paid' && p.dueDate).forEach(payment => {
-          const dueDate = new Date(payment.dueDate)
-          const daysDiff = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24))
-          const unpaidAmount = payment.amount - (payment.paidAmount || 0)
+        payments
+          .filter((p) => p.status !== "paid" && p.dueDate)
+          .forEach((payment) => {
+            const dueDate = new Date(payment.dueDate);
+            const daysDiff = Math.floor(
+              (now - dueDate) / (1000 * 60 * 60 * 24),
+            );
+            const unpaidAmount = payment.amount - (payment.paidAmount || 0);
 
-          if (daysDiff < 0) {
-            aging.current.amount += unpaidAmount
-            aging.current.count++
-          } else if (daysDiff <= 30) {
-            aging['1-30'].amount += unpaidAmount
-            aging['1-30'].count++
-          } else if (daysDiff <= 60) {
-            aging['31-60'].amount += unpaidAmount
-            aging['31-60'].count++
-          } else if (daysDiff <= 90) {
-            aging['61-90'].amount += unpaidAmount
-            aging['61-90'].count++
-          } else {
-            aging['90+'].amount += unpaidAmount
-            aging['90+'].count++
-          }
-        })
-        setAgingData(aging)
+            if (daysDiff < 0) {
+              aging.current.amount += unpaidAmount;
+              aging.current.count++;
+            } else if (daysDiff <= 30) {
+              aging["1-30"].amount += unpaidAmount;
+              aging["1-30"].count++;
+            } else if (daysDiff <= 60) {
+              aging["31-60"].amount += unpaidAmount;
+              aging["31-60"].count++;
+            } else if (daysDiff <= 90) {
+              aging["61-90"].amount += unpaidAmount;
+              aging["61-90"].count++;
+            } else {
+              aging["90+"].amount += unpaidAmount;
+              aging["90+"].count++;
+            }
+          });
+        setAgingData(aging);
       }
-    }
-    loadAging()
-  }, [payments])
+    };
+    loadAging();
+  }, [payments]);
 
   const handlePaymentClick = async (payment) => {
     if (payment.raw && payment.raw.id) {
       try {
-        const response = await paymentApi.get(payment.raw.id)
+        const response = await paymentApi.get(payment.raw.id);
         if (response.data && response.data.data) {
           setSelectedPayment({
             ...payment,
             raw: response.data.data,
-          })
+          });
         } else {
-          setSelectedPayment(payment)
+          setSelectedPayment(payment);
         }
       } catch (error) {
-        console.error('加载回款详情失败:', error)
-        setSelectedPayment(payment)
+        console.error("加载回款详情失败:", error);
+        setSelectedPayment(payment);
       }
     } else {
-      setSelectedPayment(payment)
+      setSelectedPayment(payment);
     }
-    setShowDetailDialog(true)
-  }
+    setShowDetailDialog(true);
+  };
 
   // 登记回款
   const handleRecordPayment = async (payment, paymentData) => {
@@ -311,102 +366,111 @@ export default function PaymentManagement() {
         payment_method: paymentData.method,
         bank_account: paymentData.account,
         remark: paymentData.remark,
-      })
-      
+      });
+
       // 重新加载数据
-      loadPayments()
-      setShowCollectionDialog(false)
-      setSelectedPayment(null)
+      loadPayments();
+      setShowCollectionDialog(false);
+      setSelectedPayment(null);
     } catch (error) {
-      console.error('登记回款失败:', error)
-      alert('登记回款失败: ' + (error.response?.data?.detail || error.message))
+      console.error("登记回款失败:", error);
+      alert("登记回款失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   // 加载回款提醒
   const loadReminders = async () => {
-    setRemindersLoading(true)
+    setRemindersLoading(true);
     try {
       const response = await paymentApi.getReminders({
         page: 1,
         page_size: 20,
         days_before: 7,
-      })
-      const data = response.data || {}
-      setReminders(data.items || [])
+      });
+      const data = response.data || {};
+      setReminders(data.items || []);
     } catch (error) {
       // axios timeout 或连接错误时，静默处理，使用空数据
-      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout') || error.message?.includes('Network Error')) {
-        console.log('回款提醒API超时或连接失败，使用空数据')
+      if (
+        error.code === "ECONNABORTED" ||
+        error.message?.includes("timeout") ||
+        error.message?.includes("Network Error")
+      ) {
+        console.log("回款提醒API超时或连接失败，使用空数据");
       } else {
-        console.error('加载回款提醒失败:', error)
+        console.error("加载回款提醒失败:", error);
       }
-      setReminders([])
+      setReminders([]);
     } finally {
-      setRemindersLoading(false)
+      setRemindersLoading(false);
     }
-  }
+  };
 
   // 加载统计分析
   const loadStatistics = async () => {
-    setStatisticsLoading(true)
+    setStatisticsLoading(true);
     try {
-      const response = await paymentApi.getStatistics({})
-      const data = response.data || {}
-      setStatistics(data)
+      const response = await paymentApi.getStatistics({});
+      const data = response.data || {};
+      setStatistics(data);
     } catch (error) {
       // axios timeout 或连接错误时，静默处理，使用本地计算数据
-      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout') || error.message?.includes('Network Error')) {
-        console.log('统计分析API超时或连接失败，使用本地计算数据')
+      if (
+        error.code === "ECONNABORTED" ||
+        error.message?.includes("timeout") ||
+        error.message?.includes("Network Error")
+      ) {
+        console.log("统计分析API超时或连接失败，使用本地计算数据");
       } else {
-        console.error('加载统计分析失败:', error)
+        console.error("加载统计分析失败:", error);
       }
-      setStatistics(null)
+      setStatistics(null);
     } finally {
-      setStatisticsLoading(false)
+      setStatisticsLoading(false);
     }
-  }
+  };
 
   // 导出回款记录
   const handleExportPayments = async () => {
     try {
       const params = {
-        payment_status: selectedStatus !== 'all' ? selectedStatus.toUpperCase() : undefined,
-      }
-      
+        payment_status:
+          selectedStatus !== "all" ? selectedStatus.toUpperCase() : undefined,
+      };
+
       if (searchTerm) {
-        params.keyword = searchTerm
+        params.keyword = searchTerm;
       }
 
-      const response = await paymentApi.exportInvoices(params)
-      
+      const response = await paymentApi.exportInvoices(params);
+
       // 创建下载链接
       const blob = new Blob([response.data], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      })
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `回款记录_${new Date().toISOString().split('T')[0]}.xlsx`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `回款记录_${new Date().toISOString().split("T")[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('导出回款记录失败:', error)
-      alert('导出失败: ' + (error.response?.data?.detail || error.message))
+      console.error("导出回款记录失败:", error);
+      alert("导出失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   // 组件加载时获取提醒和统计（延迟加载，避免阻塞页面渲染）
   useEffect(() => {
     // 使用 setTimeout 延迟加载，确保页面先渲染
     const timer = setTimeout(() => {
-      loadReminders()
-      loadStatistics()
-    }, 100)
-    return () => clearTimeout(timer)
-  }, [])
+      loadReminders();
+      loadStatistics();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <motion.div
@@ -421,19 +485,26 @@ export default function PaymentManagement() {
         description="跟踪应收账款、管理开票和催收"
         actions={
           <motion.div variants={fadeIn} className="flex gap-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="flex items-center gap-2"
               onClick={handleExportPayments}
             >
               <Download className="w-4 h-4" />
               导出报表
             </Button>
-            <Button variant="outline" className="flex items-center gap-2" onClick={() => setShowInvoiceDialog(true)}>
+            <Button
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={() => setShowInvoiceDialog(true)}
+            >
               <FileText className="w-4 h-4" />
               申请开票
             </Button>
-            <Button className="flex items-center gap-2" onClick={() => setShowCollectionDialog(true)}>
+            <Button
+              className="flex items-center gap-2"
+              onClick={() => setShowCollectionDialog(true)}
+            >
               <Bell className="w-4 h-4" />
               批量催收
             </Button>
@@ -456,7 +527,7 @@ export default function PaymentManagement() {
                   size="sm"
                   onClick={() => setShowReminders(!showReminders)}
                 >
-                  {showReminders ? '收起' : '展开'}
+                  {showReminders ? "收起" : "展开"}
                 </Button>
               </div>
             </CardHeader>
@@ -468,34 +539,40 @@ export default function PaymentManagement() {
                       key={reminder.id}
                       className={cn(
                         "p-3 rounded-lg border",
-                        reminder.reminder_level === 'urgent' 
-                          ? "bg-red-500/10 border-red-500/20" 
-                          : reminder.reminder_level === 'warning'
-                          ? "bg-amber-500/10 border-amber-500/20"
-                          : "bg-blue-500/10 border-blue-500/20"
+                        reminder.reminder_level === "urgent"
+                          ? "bg-red-500/10 border-red-500/20"
+                          : reminder.reminder_level === "warning"
+                            ? "bg-amber-500/10 border-amber-500/20"
+                            : "bg-blue-500/10 border-blue-500/20",
                       )}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-white">
-                              {reminder.customer_name || '未知客户'}
+                              {reminder.customer_name || "未知客户"}
                             </span>
                             <Badge
                               variant={
-                                reminder.reminder_level === 'urgent' ? 'destructive' :
-                                reminder.reminder_level === 'warning' ? 'default' : 'secondary'
+                                reminder.reminder_level === "urgent"
+                                  ? "destructive"
+                                  : reminder.reminder_level === "warning"
+                                    ? "default"
+                                    : "secondary"
                               }
                             >
-                              {reminder.is_overdue 
-                                ? `逾期${reminder.overdue_days}天` 
+                              {reminder.is_overdue
+                                ? `逾期${reminder.overdue_days}天`
                                 : `还有${reminder.days_until_due}天到期`}
                             </Badge>
                           </div>
                           <div className="mt-1 text-sm text-slate-400">
-                            {reminder.contract_code && `合同：${reminder.contract_code} | `}
-                            {reminder.project_code && `项目：${reminder.project_code} | `}
-                            未收金额：¥{(reminder.unpaid_amount / 10000).toFixed(2)}万
+                            {reminder.contract_code &&
+                              `合同：${reminder.contract_code} | `}
+                            {reminder.project_code &&
+                              `项目：${reminder.project_code} | `}
+                            未收金额：¥
+                            {(reminder.unpaid_amount / 10000).toFixed(2)}万
                           </div>
                         </div>
                         <div className="text-right">
@@ -514,16 +591,21 @@ export default function PaymentManagement() {
       )}
 
       {/* Stats Row */}
-      <motion.div variants={fadeIn} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <motion.div
+        variants={fadeIn}
+        className="grid grid-cols-2 sm:grid-cols-4 gap-4"
+      >
         <Card className="bg-gradient-to-br from-emerald-500/10 to-green-500/5 border-emerald-500/20">
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-slate-400">已回款</p>
                 <p className="text-2xl font-bold text-emerald-400 mt-1">
-                  ¥{statistics?.summary?.total_paid 
-                    ? (statistics.summary.total_paid / 10000).toFixed(0) 
-                    : (stats.totalPaid / 10000).toFixed(0)}万
+                  ¥
+                  {statistics?.summary?.total_paid
+                    ? (statistics.summary.total_paid / 10000).toFixed(0)
+                    : (stats.totalPaid / 10000).toFixed(0)}
+                  万
                 </p>
                 <div className="flex items-center gap-1 mt-1">
                   <span className="text-xs text-slate-500">
@@ -544,16 +626,19 @@ export default function PaymentManagement() {
               <div>
                 <p className="text-sm text-slate-400">待回款</p>
                 <p className="text-2xl font-bold text-blue-400 mt-1">
-                  ¥{statistics?.summary?.total_unpaid 
-                    ? (statistics.summary.total_unpaid / 10000).toFixed(0) 
-                    : (stats.totalPending / 10000).toFixed(0)}万
+                  ¥
+                  {statistics?.summary?.total_unpaid
+                    ? (statistics.summary.total_unpaid / 10000).toFixed(0)
+                    : (stats.totalPending / 10000).toFixed(0)}
+                  万
                 </p>
                 <div className="flex items-center gap-1 mt-1">
                   <span className="text-xs text-slate-500">
                     {statistics?.summary?.pending_count || stats.pendingCount}笔
                   </span>
                   <span className="text-xs text-amber-400">
-                    ({statistics?.summary?.invoice_count || stats.invoicedCount}已开票)
+                    ({statistics?.summary?.invoice_count || stats.invoicedCount}
+                    已开票)
                   </span>
                 </div>
               </div>
@@ -570,14 +655,17 @@ export default function PaymentManagement() {
               <div>
                 <p className="text-sm text-slate-400">已逾期</p>
                 <p className="text-2xl font-bold text-red-400 mt-1">
-                  ¥{statistics?.summary?.total_overdue 
-                    ? (statistics.summary.total_overdue / 10000).toFixed(0) 
-                    : (stats.totalOverdue / 10000).toFixed(0)}万
+                  ¥
+                  {statistics?.summary?.total_overdue
+                    ? (statistics.summary.total_overdue / 10000).toFixed(0)
+                    : (stats.totalOverdue / 10000).toFixed(0)}
+                  万
                 </p>
                 <div className="flex items-center gap-1 mt-1">
                   <AlertTriangle className="w-3 h-3 text-red-400" />
                   <span className="text-xs text-red-400">
-                    {statistics?.summary?.overdue_count || stats.overdueCount}笔需催收
+                    {statistics?.summary?.overdue_count || stats.overdueCount}
+                    笔需催收
                   </span>
                 </div>
               </div>
@@ -597,12 +685,18 @@ export default function PaymentManagement() {
                   ¥{(stats.thisMonthTarget / 10000).toFixed(0)}万
                 </p>
                 <div className="flex items-center gap-1 mt-1">
-                  <Progress 
-                    value={(stats.thisMonthAchieved / stats.thisMonthTarget) * 100} 
+                  <Progress
+                    value={
+                      (stats.thisMonthAchieved / stats.thisMonthTarget) * 100
+                    }
                     className="w-16 h-1.5"
                   />
                   <span className="text-xs text-slate-400">
-                    {((stats.thisMonthAchieved / stats.thisMonthTarget) * 100).toFixed(0)}%
+                    {(
+                      (stats.thisMonthAchieved / stats.thisMonthTarget) *
+                      100
+                    ).toFixed(0)}
+                    %
                   </span>
                 </div>
               </div>
@@ -615,7 +709,10 @@ export default function PaymentManagement() {
       </motion.div>
 
       {/* Filters */}
-      <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      <motion.div
+        variants={fadeIn}
+        className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
+      >
         <div className="flex flex-wrap gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -633,7 +730,9 @@ export default function PaymentManagement() {
           >
             <option value="all">全部类型</option>
             {Object.entries(paymentTypes).map(([key, val]) => (
-              <option key={key} value={key}>{val.label}</option>
+              <option key={key} value={key}>
+                {val.label}
+              </option>
             ))}
           </select>
           <select
@@ -643,7 +742,9 @@ export default function PaymentManagement() {
           >
             <option value="all">全部状态</option>
             {Object.entries(statusConfig).map(([key, val]) => (
-              <option key={key} value={key}>{val.label}</option>
+              <option key={key} value={key}>
+                {val.label}
+              </option>
             ))}
           </select>
         </div>
@@ -651,26 +752,26 @@ export default function PaymentManagement() {
         <div className="flex items-center gap-2">
           <div className="flex border border-white/10 rounded-lg overflow-hidden">
             <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              variant={viewMode === "list" ? "default" : "ghost"}
               size="sm"
               className="rounded-none"
-              onClick={() => setViewMode('list')}
+              onClick={() => setViewMode("list")}
             >
               <List className="w-4 h-4" />
             </Button>
             <Button
-              variant={viewMode === 'timeline' ? 'default' : 'ghost'}
+              variant={viewMode === "timeline" ? "default" : "ghost"}
               size="sm"
               className="rounded-none"
-              onClick={() => setViewMode('timeline')}
+              onClick={() => setViewMode("timeline")}
             >
               <Calendar className="w-4 h-4" />
             </Button>
             <Button
-              variant={viewMode === 'aging' ? 'default' : 'ghost'}
+              variant={viewMode === "aging" ? "default" : "ghost"}
               size="sm"
               className="rounded-none"
-              onClick={() => setViewMode('aging')}
+              onClick={() => setViewMode("aging")}
             >
               <BarChart3 className="w-4 h-4" />
             </Button>
@@ -680,120 +781,163 @@ export default function PaymentManagement() {
 
       {/* Content */}
       <motion.div variants={fadeIn}>
-        {viewMode === 'list' && (
+        {viewMode === "list" && (
           <Card>
             <CardContent className="p-0">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/5">
-                    <th className="text-left p-4 text-sm font-medium text-slate-400">项目/合同</th>
-                    <th className="text-left p-4 text-sm font-medium text-slate-400">客户</th>
-                    <th className="text-left p-4 text-sm font-medium text-slate-400">类型</th>
-                    <th className="text-right p-4 text-sm font-medium text-slate-400">金额</th>
-                    <th className="text-left p-4 text-sm font-medium text-slate-400">到期日</th>
-                    <th className="text-left p-4 text-sm font-medium text-slate-400">发票</th>
-                    <th className="text-left p-4 text-sm font-medium text-slate-400">状态</th>
-                    <th className="text-center p-4 text-sm font-medium text-slate-400">操作</th>
+                    <th className="text-left p-4 text-sm font-medium text-slate-400">
+                      项目/合同
+                    </th>
+                    <th className="text-left p-4 text-sm font-medium text-slate-400">
+                      客户
+                    </th>
+                    <th className="text-left p-4 text-sm font-medium text-slate-400">
+                      类型
+                    </th>
+                    <th className="text-right p-4 text-sm font-medium text-slate-400">
+                      金额
+                    </th>
+                    <th className="text-left p-4 text-sm font-medium text-slate-400">
+                      到期日
+                    </th>
+                    <th className="text-left p-4 text-sm font-medium text-slate-400">
+                      发票
+                    </th>
+                    <th className="text-left p-4 text-sm font-medium text-slate-400">
+                      状态
+                    </th>
+                    <th className="text-center p-4 text-sm font-medium text-slate-400">
+                      操作
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={8} className="p-8 text-center text-slate-400">
+                      <td
+                        colSpan={8}
+                        className="p-8 text-center text-slate-400"
+                      >
                         加载中...
                       </td>
                     </tr>
                   ) : filteredPayments.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="p-8 text-center text-slate-400">
+                      <td
+                        colSpan={8}
+                        className="p-8 text-center text-slate-400"
+                      >
                         暂无回款记录
                       </td>
                     </tr>
                   ) : (
                     filteredPayments.map((payment) => {
-                    const typeConf = paymentTypes[payment.type]
-                    const statusConf = statusConfig[payment.status]
-                    const StatusIcon = statusConf.icon
-                    const isOverdue = payment.status === 'overdue' || 
-                      (payment.status === 'pending' && new Date(payment.dueDate) < new Date())
+                      const typeConf = paymentTypes[payment.type];
+                      const statusConf = statusConfig[payment.status];
+                      const StatusIcon = statusConf.icon;
+                      const isOverdue =
+                        payment.status === "overdue" ||
+                        (payment.status === "pending" &&
+                          new Date(payment.dueDate) < new Date());
 
-                    return (
-                      <tr
-                        key={payment.id}
-                        onClick={() => handlePaymentClick(payment)}
-                        className="border-b border-white/5 hover:bg-surface-100 cursor-pointer transition-colors"
-                      >
-                        <td className="p-4">
-                          <div>
-                            <div className="font-medium text-white">{payment.projectName}</div>
-                            <div className="text-xs text-slate-500">{payment.contractNo}</div>
-                          </div>
-                        </td>
-                        <td className="p-4 text-sm text-slate-400">{payment.customerShort}</td>
-                        <td className="p-4">
-                          <Badge variant="secondary" className="text-xs">
-                            {typeConf?.label}
-                          </Badge>
-                        </td>
-                        <td className="p-4 text-right">
-                          <span className="text-amber-400 font-medium">
-                            ¥{(payment.amount / 10000).toFixed(1)}万
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          <span className={cn(
-                            'text-sm',
-                            isOverdue ? 'text-red-400' : 'text-slate-400'
-                          )}>
-                            {payment.dueDate}
-                          </span>
-                          {payment.overdueDay && (
-                            <div className="text-xs text-red-400">逾期{payment.overdueDay}天</div>
-                          )}
-                        </td>
-                        <td className="p-4">
-                          {payment.invoiceNo ? (
-                            <div className="text-sm text-white">{payment.invoiceNo}</div>
-                          ) : (
-                            <span className="text-sm text-slate-500">未开票</span>
-                          )}
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <StatusIcon className={cn('w-4 h-4', statusConf.textColor)} />
-                            <span className={cn('text-sm', statusConf.textColor)}>
-                              {statusConf.label}
+                      return (
+                        <tr
+                          key={payment.id}
+                          onClick={() => handlePaymentClick(payment)}
+                          className="border-b border-white/5 hover:bg-surface-100 cursor-pointer transition-colors"
+                        >
+                          <td className="p-4">
+                            <div>
+                              <div className="font-medium text-white">
+                                {payment.projectName}
+                              </div>
+                              <div className="text-xs text-slate-500">
+                                {payment.contractNo}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-4 text-sm text-slate-400">
+                            {payment.customerShort}
+                          </td>
+                          <td className="p-4">
+                            <Badge variant="secondary" className="text-xs">
+                              {typeConf?.label}
+                            </Badge>
+                          </td>
+                          <td className="p-4 text-right">
+                            <span className="text-amber-400 font-medium">
+                              ¥{(payment.amount / 10000).toFixed(1)}万
                             </span>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex justify-center gap-1">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8"
-                              onClick={() => handlePaymentClick(payment)}
+                          </td>
+                          <td className="p-4">
+                            <span
+                              className={cn(
+                                "text-sm",
+                                isOverdue ? "text-red-400" : "text-slate-400",
+                              )}
                             >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            {payment.status !== 'paid' && (
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-8 w-8"
-                                onClick={() => {
-                                  setSelectedPayment(payment)
-                                  setShowCollectionDialog(true)
-                                }}
-                              >
-                                <Bell className="w-4 h-4 text-amber-400" />
-                              </Button>
+                              {payment.dueDate}
+                            </span>
+                            {payment.overdueDay && (
+                              <div className="text-xs text-red-400">
+                                逾期{payment.overdueDay}天
+                              </div>
                             )}
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  }))}
+                          </td>
+                          <td className="p-4">
+                            {payment.invoiceNo ? (
+                              <div className="text-sm text-white">
+                                {payment.invoiceNo}
+                              </div>
+                            ) : (
+                              <span className="text-sm text-slate-500">
+                                未开票
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
+                              <StatusIcon
+                                className={cn("w-4 h-4", statusConf.textColor)}
+                              />
+                              <span
+                                className={cn("text-sm", statusConf.textColor)}
+                              >
+                                {statusConf.label}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex justify-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handlePaymentClick(payment)}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              {payment.status !== "paid" && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => {
+                                    setSelectedPayment(payment);
+                                    setShowCollectionDialog(true);
+                                  }}
+                                >
+                                  <Bell className="w-4 h-4 text-amber-400" />
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </CardContent>
@@ -801,7 +945,8 @@ export default function PaymentManagement() {
             {!loading && total > pageSize && (
               <div className="flex items-center justify-between p-4 border-t border-white/5">
                 <div className="text-sm text-slate-400">
-                  共 {total} 条记录，第 {page} / {Math.ceil(total / pageSize)} 页
+                  共 {total} 条记录，第 {page} / {Math.ceil(total / pageSize)}{" "}
+                  页
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -826,7 +971,7 @@ export default function PaymentManagement() {
           </Card>
         )}
 
-        {viewMode === 'timeline' && (
+        {viewMode === "timeline" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
@@ -842,61 +987,101 @@ export default function PaymentManagement() {
               </CardHeader>
               <CardContent>
                 <PaymentStats payments={payments} />
-                
+
                 {/* 新增：统计分析数据 */}
                 {statistics && (
                   <div className="mt-6 pt-6 border-t border-white/5">
-                    <h4 className="text-sm font-medium text-slate-400 mb-4">详细统计</h4>
+                    <h4 className="text-sm font-medium text-slate-400 mb-4">
+                      详细统计
+                    </h4>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-slate-400">回款率</span>
                         <span className="text-sm font-medium text-white">
-                          {statistics.summary?.collection_rate?.toFixed(2) || 0}%
+                          {statistics.summary?.collection_rate?.toFixed(2) || 0}
+                          %
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-slate-400">总开票金额</span>
+                        <span className="text-sm text-slate-400">
+                          总开票金额
+                        </span>
                         <span className="text-sm font-medium text-white">
-                          ¥{(statistics.summary?.total_invoiced / 10000 || 0).toFixed(2)}万
+                          ¥
+                          {(
+                            statistics.summary?.total_invoiced / 10000 || 0
+                          ).toFixed(2)}
+                          万
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-slate-400">总已收金额</span>
+                        <span className="text-sm text-slate-400">
+                          总已收金额
+                        </span>
                         <span className="text-sm font-medium text-emerald-400">
-                          ¥{(statistics.summary?.total_paid / 10000 || 0).toFixed(2)}万
+                          ¥
+                          {(
+                            statistics.summary?.total_paid / 10000 || 0
+                          ).toFixed(2)}
+                          万
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-slate-400">总未收金额</span>
+                        <span className="text-sm text-slate-400">
+                          总未收金额
+                        </span>
                         <span className="text-sm font-medium text-amber-400">
-                          ¥{(statistics.summary?.total_unpaid / 10000 || 0).toFixed(2)}万
+                          ¥
+                          {(
+                            statistics.summary?.total_unpaid / 10000 || 0
+                          ).toFixed(2)}
+                          万
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-slate-400">逾期金额</span>
                         <span className="text-sm font-medium text-red-400">
-                          ¥{(statistics.summary?.total_overdue / 10000 || 0).toFixed(2)}万
+                          ¥
+                          {(
+                            statistics.summary?.total_overdue / 10000 || 0
+                          ).toFixed(2)}
+                          万
                         </span>
                       </div>
                     </div>
                   </div>
                 )}
-                
+
                 {/* Type breakdown */}
                 <div className="mt-6 pt-6 border-t border-white/5">
-                  <h4 className="text-sm font-medium text-slate-400 mb-4">按类型分布</h4>
+                  <h4 className="text-sm font-medium text-slate-400 mb-4">
+                    按类型分布
+                  </h4>
                   <div className="space-y-3">
                     {Object.entries(paymentTypes).map(([key, conf]) => {
-                      const typePayments = payments.filter(p => p.type === key && p.status !== 'paid')
-                      const total = typePayments.reduce((sum, p) => sum + p.amount - p.paidAmount, 0)
-                      
+                      const typePayments = payments.filter(
+                        (p) => p.type === key && p.status !== "paid",
+                      );
+                      const total = typePayments.reduce(
+                        (sum, p) => sum + p.amount - p.paidAmount,
+                        0,
+                      );
+
                       return (
                         <div key={key} className="flex items-center gap-3">
-                          <div className={cn('w-3 h-3 rounded-full', conf.color)} />
-                          <span className="text-sm text-slate-400 w-16">{conf.label}</span>
+                          <div
+                            className={cn("w-3 h-3 rounded-full", conf.color)}
+                          />
+                          <span className="text-sm text-slate-400 w-16">
+                            {conf.label}
+                          </span>
                           <div className="flex-1">
-                            <Progress 
-                              value={stats.totalPending > 0 ? (total / stats.totalPending) * 100 : 0} 
+                            <Progress
+                              value={
+                                stats.totalPending > 0
+                                  ? (total / stats.totalPending) * 100
+                                  : 0
+                              }
                               className="h-2"
                             />
                           </div>
@@ -904,7 +1089,7 @@ export default function PaymentManagement() {
                             ¥{(total / 10000).toFixed(0)}万
                           </span>
                         </div>
-                      )
+                      );
                     })}
                   </div>
                 </div>
@@ -913,7 +1098,7 @@ export default function PaymentManagement() {
           </div>
         )}
 
-        {viewMode === 'aging' && (
+        {viewMode === "aging" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Aging Chart */}
             <Card className="lg:col-span-2">
@@ -924,31 +1109,44 @@ export default function PaymentManagement() {
                 <div className="space-y-4">
                   {Object.entries(agingData).map(([key, data]) => {
                     const labels = {
-                      current: '未到期',
-                      '1-30': '1-30天',
-                      '31-60': '31-60天',
-                      '61-90': '61-90天',
-                      '90+': '90天以上',
-                    }
+                      current: "未到期",
+                      "1-30": "1-30天",
+                      "31-60": "31-60天",
+                      "61-90": "61-90天",
+                      "90+": "90天以上",
+                    };
                     const colors = {
-                      current: 'bg-emerald-500',
-                      '1-30': 'bg-blue-500',
-                      '31-60': 'bg-amber-500',
-                      '61-90': 'bg-orange-500',
-                      '90+': 'bg-red-500',
-                    }
-                    const totalUnpaid = Object.values(agingData).reduce((sum, d) => sum + d.amount, 0)
-                    const percentage = totalUnpaid > 0 ? (data.amount / totalUnpaid * 100) : 0
+                      current: "bg-emerald-500",
+                      "1-30": "bg-blue-500",
+                      "31-60": "bg-amber-500",
+                      "61-90": "bg-orange-500",
+                      "90+": "bg-red-500",
+                    };
+                    const totalUnpaid = Object.values(agingData).reduce(
+                      (sum, d) => sum + d.amount,
+                      0,
+                    );
+                    const percentage =
+                      totalUnpaid > 0 ? (data.amount / totalUnpaid) * 100 : 0;
 
                     return (
                       <div key={key} className="space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <div className={cn('w-3 h-3 rounded-full', colors[key])} />
-                            <span className="text-sm text-white">{labels[key]}</span>
+                            <div
+                              className={cn(
+                                "w-3 h-3 rounded-full",
+                                colors[key],
+                              )}
+                            />
+                            <span className="text-sm text-white">
+                              {labels[key]}
+                            </span>
                           </div>
                           <div className="flex items-center gap-4">
-                            <span className="text-sm text-slate-400">{data.count}笔</span>
+                            <span className="text-sm text-slate-400">
+                              {data.count}笔
+                            </span>
                             <span className="text-sm font-medium text-white w-24 text-right">
                               ¥{(data.amount / 10000).toFixed(0)}万
                             </span>
@@ -956,7 +1154,7 @@ export default function PaymentManagement() {
                         </div>
                         <Progress value={percentage} className="h-3" />
                       </div>
-                    )
+                    );
                   })}
                 </div>
 
@@ -964,19 +1162,29 @@ export default function PaymentManagement() {
                 <div className="mt-6 pt-6 border-t border-white/5 grid grid-cols-3 gap-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-emerald-400">
-                      {((agingData.current.amount / (stats.totalPending + stats.totalOverdue)) * 100).toFixed(0)}%
+                      {(
+                        (agingData.current.amount /
+                          (stats.totalPending + stats.totalOverdue)) *
+                        100
+                      ).toFixed(0)}
+                      %
                     </div>
                     <div className="text-xs text-slate-400">正常账款占比</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-amber-400">
-                      {agingData['1-30'].count + agingData['31-60'].count}
+                      {agingData["1-30"].count + agingData["31-60"].count}
                     </div>
                     <div className="text-xs text-slate-400">1-60天逾期笔数</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-red-400">
-                      ¥{((agingData['61-90'].amount + agingData['90+'].amount) / 10000).toFixed(0)}万
+                      ¥
+                      {(
+                        (agingData["61-90"].amount + agingData["90+"].amount) /
+                        10000
+                      ).toFixed(0)}
+                      万
                     </div>
                     <div className="text-xs text-slate-400">高风险账款</div>
                   </div>
@@ -994,9 +1202,13 @@ export default function PaymentManagement() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {payments
-                  .filter(p => p.status === 'overdue' || 
-                    (p.status === 'pending' && new Date(p.dueDate) < new Date()))
-                  .map(payment => (
+                  .filter(
+                    (p) =>
+                      p.status === "overdue" ||
+                      (p.status === "pending" &&
+                        new Date(p.dueDate) < new Date()),
+                  )
+                  .map((payment) => (
                     <div
                       key={payment.id}
                       onClick={() => handlePaymentClick(payment)}
@@ -1004,8 +1216,12 @@ export default function PaymentManagement() {
                     >
                       <div className="flex items-start justify-between">
                         <div>
-                          <div className="font-medium text-white text-sm">{payment.projectName}</div>
-                          <div className="text-xs text-slate-400">{payment.customerShort}</div>
+                          <div className="font-medium text-white text-sm">
+                            {payment.projectName}
+                          </div>
+                          <div className="text-xs text-slate-400">
+                            {payment.customerShort}
+                          </div>
                         </div>
                         <span className="text-sm font-medium text-red-400">
                           ¥{(payment.amount / 10000).toFixed(1)}万
@@ -1014,12 +1230,19 @@ export default function PaymentManagement() {
                       <div className="flex items-center gap-2 mt-2 text-xs text-red-400">
                         <AlertTriangle className="w-3 h-3" />
                         <span>
-                          逾期{payment.overdueDay || Math.floor((new Date() - new Date(payment.dueDate)) / (1000 * 60 * 60 * 24))}天
+                          逾期
+                          {payment.overdueDay ||
+                            Math.floor(
+                              (new Date() - new Date(payment.dueDate)) /
+                                (1000 * 60 * 60 * 24),
+                            )}
+                          天
                         </span>
                       </div>
                     </div>
                   ))}
-                {payments.filter(p => p.status === 'overdue').length === 0 && (
+                {payments.filter((p) => p.status === "overdue").length ===
+                  0 && (
                   <div className="text-center py-8 text-slate-500 text-sm">
                     暂无逾期账款
                   </div>
@@ -1045,20 +1268,21 @@ export default function PaymentManagement() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>申请开票</DialogTitle>
-            <DialogDescription>
-              选择需要开票的回款记录
-            </DialogDescription>
+            <DialogDescription>选择需要开票的回款记录</DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="space-y-2">
               <label className="text-sm text-slate-400">选择回款 *</label>
               <select className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white">
                 <option value="">请选择待开票回款</option>
-                {payments.filter(p => !p.invoiceNo && p.status !== 'paid').map(p => (
-                  <option key={p.id} value={p.id}>
-                    {p.projectName} - {paymentTypes[p.type]?.label} - ¥{(p.amount / 10000).toFixed(1)}万
-                  </option>
-                ))}
+                {payments
+                  .filter((p) => !p.invoiceNo && p.status !== "paid")
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.projectName} - {paymentTypes[p.type]?.label} - ¥
+                      {(p.amount / 10000).toFixed(1)}万
+                    </option>
+                  ))}
               </select>
             </div>
             <div className="space-y-2">
@@ -1074,7 +1298,10 @@ export default function PaymentManagement() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowInvoiceDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowInvoiceDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={() => setShowInvoiceDialog(false)}>
@@ -1093,7 +1320,9 @@ export default function PaymentManagement() {
               回款详情
             </DialogTitle>
             <DialogDescription>
-              {selectedPayment ? `查看回款记录 "${selectedPayment.projectName}" 的详细信息` : ''}
+              {selectedPayment
+                ? `查看回款记录 "${selectedPayment.projectName}" 的详细信息`
+                : ""}
             </DialogDescription>
           </DialogHeader>
 
@@ -1108,49 +1337,79 @@ export default function PaymentManagement() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-slate-400">发票编号</span>
-                      <p className="text-white font-medium">{selectedPayment.invoiceNo || '-'}</p>
+                      <p className="text-white font-medium">
+                        {selectedPayment.invoiceNo || "-"}
+                      </p>
                     </div>
                     <div>
                       <span className="text-slate-400">状态</span>
                       <p>
-                        <Badge className={cn('text-xs', statusConfig[selectedPayment.status]?.color, statusConfig[selectedPayment.status]?.textColor)}>
+                        <Badge
+                          className={cn(
+                            "text-xs",
+                            statusConfig[selectedPayment.status]?.color,
+                            statusConfig[selectedPayment.status]?.textColor,
+                          )}
+                        >
                           {statusConfig[selectedPayment.status]?.label}
                         </Badge>
                       </p>
                     </div>
                     <div>
                       <span className="text-slate-400">项目名称</span>
-                      <p className="text-white">{selectedPayment.projectName || '-'}</p>
+                      <p className="text-white">
+                        {selectedPayment.projectName || "-"}
+                      </p>
                     </div>
                     <div>
                       <span className="text-slate-400">合同编号</span>
-                      <p className="text-white">{selectedPayment.contractNo || '-'}</p>
+                      <p className="text-white">
+                        {selectedPayment.contractNo || "-"}
+                      </p>
                     </div>
                     <div>
                       <span className="text-slate-400">客户名称</span>
-                      <p className="text-white">{selectedPayment.customerName || '-'}</p>
+                      <p className="text-white">
+                        {selectedPayment.customerName || "-"}
+                      </p>
                     </div>
                     <div>
                       <span className="text-slate-400">回款类型</span>
-                      <p className="text-white">{paymentTypes[selectedPayment.type]?.label || '-'}</p>
+                      <p className="text-white">
+                        {paymentTypes[selectedPayment.type]?.label || "-"}
+                      </p>
                     </div>
                     <div>
                       <span className="text-slate-400">发票金额</span>
-                      <p className="text-white font-semibold">¥{(selectedPayment.amount / 10000).toFixed(2)}万</p>
+                      <p className="text-white font-semibold">
+                        ¥{(selectedPayment.amount / 10000).toFixed(2)}万
+                      </p>
                     </div>
                     <div>
                       <span className="text-slate-400">已收金额</span>
-                      <p className="text-white font-semibold text-emerald-400">¥{((selectedPayment.paidAmount || 0) / 10000).toFixed(2)}万</p>
+                      <p className="text-white font-semibold text-emerald-400">
+                        ¥
+                        {((selectedPayment.paidAmount || 0) / 10000).toFixed(2)}
+                        万
+                      </p>
                     </div>
                     <div>
                       <span className="text-slate-400">未收金额</span>
                       <p className="text-white font-semibold text-amber-400">
-                        ¥{(((selectedPayment.amount || 0) - (selectedPayment.paidAmount || 0)) / 10000).toFixed(2)}万
+                        ¥
+                        {(
+                          ((selectedPayment.amount || 0) -
+                            (selectedPayment.paidAmount || 0)) /
+                          10000
+                        ).toFixed(2)}
+                        万
                       </p>
                     </div>
                     <div>
                       <span className="text-slate-400">到期日期</span>
-                      <p className="text-white">{selectedPayment.dueDate || '-'}</p>
+                      <p className="text-white">
+                        {selectedPayment.dueDate || "-"}
+                      </p>
                     </div>
                     {selectedPayment.paidDate && (
                       <div>
@@ -1161,7 +1420,9 @@ export default function PaymentManagement() {
                     {selectedPayment.overdueDay && (
                       <div>
                         <span className="text-slate-400">逾期天数</span>
-                        <p className="text-red-400 font-semibold">{selectedPayment.overdueDay}天</p>
+                        <p className="text-red-400 font-semibold">
+                          {selectedPayment.overdueDay}天
+                        </p>
                       </div>
                     )}
                   </div>
@@ -1175,7 +1436,9 @@ export default function PaymentManagement() {
                     <CardTitle className="text-sm text-white">备注</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-slate-300 whitespace-pre-wrap">{selectedPayment.notes}</p>
+                    <p className="text-sm text-slate-300 whitespace-pre-wrap">
+                      {selectedPayment.notes}
+                    </p>
                   </CardContent>
                 </Card>
               )}
@@ -1183,14 +1446,19 @@ export default function PaymentManagement() {
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDetailDialog(false)}
+            >
               关闭
             </Button>
-            {selectedPayment && selectedPayment.status !== 'paid' && (
-              <Button onClick={() => {
-                setShowDetailDialog(false)
-                setShowCollectionDialog(true)
-              }}>
+            {selectedPayment && selectedPayment.status !== "paid" && (
+              <Button
+                onClick={() => {
+                  setShowDetailDialog(false);
+                  setShowCollectionDialog(true);
+                }}
+              >
                 <Send className="w-4 h-4 mr-2" />
                 登记回款
               </Button>
@@ -1200,13 +1468,14 @@ export default function PaymentManagement() {
       </Dialog>
 
       {/* Collection Dialog */}
-      <Dialog open={showCollectionDialog} onOpenChange={setShowCollectionDialog}>
+      <Dialog
+        open={showCollectionDialog}
+        onOpenChange={setShowCollectionDialog}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>批量催收</DialogTitle>
-            <DialogDescription>
-              向逾期客户发送催收提醒
-            </DialogDescription>
+            <DialogDescription>向逾期客户发送催收提醒</DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
@@ -1242,7 +1511,10 @@ export default function PaymentManagement() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCollectionDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCollectionDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={() => setShowCollectionDialog(false)}>
@@ -1252,21 +1524,21 @@ export default function PaymentManagement() {
         </DialogContent>
       </Dialog>
     </motion.div>
-  )
+  );
 }
 
 // Payment Detail Panel
 function PaymentDetailPanel({ payment, onClose }) {
-  const typeConf = paymentTypes[payment.type]
-  const statusConf = statusConfig[payment.status]
-  const StatusIcon = statusConf.icon
+  const typeConf = paymentTypes[payment.type];
+  const statusConf = statusConfig[payment.status];
+  const StatusIcon = statusConf.icon;
 
   return (
     <motion.div
-      initial={{ x: '100%' }}
+      initial={{ x: "100%" }}
       animate={{ x: 0 }}
-      exit={{ x: '100%' }}
-      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+      exit={{ x: "100%" }}
+      transition={{ type: "spring", damping: 25, stiffness: 200 }}
       className="fixed right-0 top-0 h-full w-full md:w-[450px] bg-surface-100/95 backdrop-blur-xl border-l border-white/5 shadow-2xl z-50 flex flex-col"
     >
       {/* Header */}
@@ -1276,11 +1548,15 @@ function PaymentDetailPanel({ payment, onClose }) {
             <div className="flex items-center gap-2 mb-1">
               <Badge variant="secondary">{typeConf?.label}</Badge>
               <div className="flex items-center gap-1">
-                <StatusIcon className={cn('w-4 h-4', statusConf.textColor)} />
-                <span className={cn('text-sm', statusConf.textColor)}>{statusConf.label}</span>
+                <StatusIcon className={cn("w-4 h-4", statusConf.textColor)} />
+                <span className={cn("text-sm", statusConf.textColor)}>
+                  {statusConf.label}
+                </span>
               </div>
             </div>
-            <h2 className="text-lg font-semibold text-white">{payment.projectName}</h2>
+            <h2 className="text-lg font-semibold text-white">
+              {payment.projectName}
+            </h2>
             <p className="text-sm text-slate-400">{payment.contractNo}</p>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
@@ -1299,10 +1575,13 @@ function PaymentDetailPanel({ payment, onClose }) {
           </div>
           {payment.paidAmount > 0 && (
             <div className="flex items-center gap-2 mt-2 text-sm">
-              <span className="text-emerald-400">已收: ¥{(payment.paidAmount / 10000).toFixed(2)}万</span>
+              <span className="text-emerald-400">
+                已收: ¥{(payment.paidAmount / 10000).toFixed(2)}万
+              </span>
               <span className="text-slate-500">|</span>
               <span className="text-blue-400">
-                待收: ¥{((payment.amount - payment.paidAmount) / 10000).toFixed(2)}万
+                待收: ¥
+                {((payment.amount - payment.paidAmount) / 10000).toFixed(2)}万
               </span>
             </div>
           )}
@@ -1325,9 +1604,11 @@ function PaymentDetailPanel({ payment, onClose }) {
           <div className="space-y-2 text-sm">
             <div className="flex items-center justify-between">
               <span className="text-slate-400">到期日期</span>
-              <span className={cn(
-                payment.status === 'overdue' ? 'text-red-400' : 'text-white'
-              )}>
+              <span
+                className={cn(
+                  payment.status === "overdue" ? "text-red-400" : "text-white",
+                )}
+              >
                 {payment.dueDate}
               </span>
             </div>
@@ -1339,7 +1620,9 @@ function PaymentDetailPanel({ payment, onClose }) {
             )}
             <div className="flex items-center justify-between">
               <span className="text-slate-400">发票号</span>
-              <span className="text-white">{payment.invoiceNo || '未开票'}</span>
+              <span className="text-white">
+                {payment.invoiceNo || "未开票"}
+              </span>
             </div>
             {payment.invoiceDate && (
               <div className="flex items-center justify-between">
@@ -1364,13 +1647,13 @@ function PaymentDetailPanel({ payment, onClose }) {
         <div className="space-y-3">
           <h3 className="text-sm font-medium text-slate-400">操作</h3>
           <div className="grid grid-cols-2 gap-2">
-            {!payment.invoiceNo && payment.status !== 'paid' && (
+            {!payment.invoiceNo && payment.status !== "paid" && (
               <Button variant="outline" size="sm" className="justify-start">
                 <FileText className="w-4 h-4 mr-2 text-amber-400" />
                 申请开票
               </Button>
             )}
-            {payment.status !== 'paid' && (
+            {payment.status !== "paid" && (
               <Button variant="outline" size="sm" className="justify-start">
                 <Bell className="w-4 h-4 mr-2 text-blue-400" />
                 发送催收
@@ -1380,7 +1663,7 @@ function PaymentDetailPanel({ payment, onClose }) {
               <Phone className="w-4 h-4 mr-2 text-green-400" />
               联系客户
             </Button>
-            {payment.status !== 'paid' && (
+            {payment.status !== "paid" && (
               <Button variant="outline" size="sm" className="justify-start">
                 <CreditCard className="w-4 h-4 mr-2 text-emerald-400" />
                 确认到账
@@ -1401,6 +1684,5 @@ function PaymentDetailPanel({ payment, onClose }) {
         </Button>
       </div>
     </motion.div>
-  )
+  );
 }
-

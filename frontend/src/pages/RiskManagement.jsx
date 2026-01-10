@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { cn } from '../lib/utils'
-import { pmoApi, projectApi } from '../services/api'
-import { formatDate } from '../lib/utils'
-import { PageHeader } from '../components/layout/PageHeader'
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { cn } from "../lib/utils";
+import { pmoApi, projectApi } from "../services/api";
+import { formatDate } from "../lib/utils";
+import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
@@ -12,7 +12,7 @@ import {
   Badge,
   Input,
   SkeletonCard,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Plus,
   Search,
@@ -34,7 +34,7 @@ import {
   Target,
   FileText,
   User,
-} from 'lucide-react'
+} from "lucide-react";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -42,145 +42,154 @@ const staggerContainer = {
     opacity: 1,
     transition: { staggerChildren: 0.05, delayChildren: 0.1 },
   },
-}
+};
 
 const staggerChild = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
-}
+};
 
 const getRiskLevelBadge = (level) => {
   const badges = {
     CRITICAL: {
-      label: '严重',
-      variant: 'danger',
-      color: 'text-red-400',
-      bgColor: 'bg-red-500/20',
-      borderColor: 'border-red-500/30',
+      label: "严重",
+      variant: "danger",
+      color: "text-red-400",
+      bgColor: "bg-red-500/20",
+      borderColor: "border-red-500/30",
     },
     HIGH: {
-      label: '高',
-      variant: 'danger',
-      color: 'text-orange-400',
-      bgColor: 'bg-orange-500/20',
-      borderColor: 'border-orange-500/30',
+      label: "高",
+      variant: "danger",
+      color: "text-orange-400",
+      bgColor: "bg-orange-500/20",
+      borderColor: "border-orange-500/30",
     },
     MEDIUM: {
-      label: '中',
-      variant: 'warning',
-      color: 'text-yellow-400',
-      bgColor: 'bg-yellow-500/20',
-      borderColor: 'border-yellow-500/30',
+      label: "中",
+      variant: "warning",
+      color: "text-yellow-400",
+      bgColor: "bg-yellow-500/20",
+      borderColor: "border-yellow-500/30",
     },
     LOW: {
-      label: '低',
-      variant: 'info',
-      color: 'text-blue-400',
-      bgColor: 'bg-blue-500/20',
-      borderColor: 'border-blue-500/30',
+      label: "低",
+      variant: "info",
+      color: "text-blue-400",
+      bgColor: "bg-blue-500/20",
+      borderColor: "border-blue-500/30",
     },
-  }
-  return badges[level] || badges.LOW
-}
+  };
+  return badges[level] || badges.LOW;
+};
 
 const getStatusBadge = (status) => {
   const badges = {
-    IDENTIFIED: { label: '已识别', variant: 'secondary' },
-    ANALYZING: { label: '分析中', variant: 'info' },
-    RESPONDING: { label: '应对中', variant: 'warning' },
-    MONITORING: { label: '监控中', variant: 'info' },
-    CLOSED: { label: '已关闭', variant: 'success' },
-  }
-  return badges[status] || badges.IDENTIFIED
-}
+    IDENTIFIED: { label: "已识别", variant: "secondary" },
+    ANALYZING: { label: "分析中", variant: "info" },
+    RESPONDING: { label: "应对中", variant: "warning" },
+    MONITORING: { label: "监控中", variant: "info" },
+    CLOSED: { label: "已关闭", variant: "success" },
+  };
+  return badges[status] || badges.IDENTIFIED;
+};
 
 const getProbabilityLabel = (prob) => {
   const labels = {
-    HIGH: '高',
-    MEDIUM: '中',
-    LOW: '低',
-  }
-  return labels[prob] || '未知'
-}
+    HIGH: "高",
+    MEDIUM: "中",
+    LOW: "低",
+  };
+  return labels[prob] || "未知";
+};
 
 const getImpactLabel = (impact) => {
   const labels = {
-    HIGH: '高',
-    MEDIUM: '中',
-    LOW: '低',
-  }
-  return labels[impact] || '未知'
-}
+    HIGH: "高",
+    MEDIUM: "中",
+    LOW: "低",
+  };
+  return labels[impact] || "未知";
+};
 
 export default function RiskManagement() {
-  const { projectId } = useParams()
-  const navigate = useNavigate()
+  const { projectId } = useParams();
+  const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [project, setProject] = useState(null)
-  const [risks, setRisks] = useState([])
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [project, setProject] = useState(null);
+  const [risks, setRisks] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState(
-    projectId ? parseInt(projectId) : null
-  )
-  const [projectSearch, setProjectSearch] = useState('')
-  const [projectList, setProjectList] = useState([])
-  const [showProjectSelect, setShowProjectSelect] = useState(!projectId)
-  const [statusFilter, setStatusFilter] = useState('')
-  const [levelFilter, setLevelFilter] = useState('')
+    projectId ? parseInt(projectId) : null,
+  );
+  const [projectSearch, setProjectSearch] = useState("");
+  const [projectList, setProjectList] = useState([]);
+  const [showProjectSelect, setShowProjectSelect] = useState(!projectId);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [levelFilter, setLevelFilter] = useState("");
 
   // Dialogs
-  const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [assessDialog, setAssessDialog] = useState({ open: false, riskId: null })
-  const [responseDialog, setResponseDialog] = useState({ open: false, riskId: null })
-  const [statusDialog, setStatusDialog] = useState({ open: false, riskId: null })
-  const [closeDialog, setCloseDialog] = useState({ open: false, riskId: null })
-  const [detailDialog, setDetailDialog] = useState({ open: false, risk: null })
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [assessDialog, setAssessDialog] = useState({
+    open: false,
+    riskId: null,
+  });
+  const [responseDialog, setResponseDialog] = useState({
+    open: false,
+    riskId: null,
+  });
+  const [statusDialog, setStatusDialog] = useState({
+    open: false,
+    riskId: null,
+  });
+  const [closeDialog, setCloseDialog] = useState({ open: false, riskId: null });
+  const [detailDialog, setDetailDialog] = useState({ open: false, risk: null });
 
   useEffect(() => {
     if (selectedProjectId) {
-      fetchProjectData()
-      fetchRisks()
+      fetchProjectData();
+      fetchRisks();
     } else {
-      fetchProjectList()
+      fetchProjectList();
     }
-  }, [selectedProjectId, statusFilter, levelFilter])
+  }, [selectedProjectId, statusFilter, levelFilter]);
 
   const fetchProjectData = async () => {
-    if (!selectedProjectId) return
+    if (!selectedProjectId) return;
     try {
-      const res = await projectApi.get(selectedProjectId)
-      const data = res.data || res
-      setProject(data)
+      const res = await projectApi.get(selectedProjectId);
+      const data = res.data || res;
+      setProject(data);
     } catch (err) {
-      console.error('Failed to fetch project:', err)
-      setError(err.response?.data?.detail || err.message || '加载项目信息失败')
+      console.error("Failed to fetch project:", err);
+      setError(err.response?.data?.detail || err.message || "加载项目信息失败");
     }
-  }
+  };
 
   const fetchRisks = async () => {
-    if (!selectedProjectId) return
+    if (!selectedProjectId) return;
     try {
-      setLoading(true)
-      setError(null)
-      const params = {}
+      setLoading(true);
+      setError(null);
+      const params = {};
       if (statusFilter) {
-        params.status = statusFilter
+        params.status = statusFilter;
       }
       if (levelFilter) {
-        params.risk_level = levelFilter
+        params.risk_level = levelFilter;
       }
-      const res = await pmoApi.risks.list(selectedProjectId, params)
-      const data = res.data || res
-      setRisks(Array.isArray(data) ? data : [])
+      const res = await pmoApi.risks.list(selectedProjectId, params);
+      const data = res.data || res;
+      setRisks(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error('Failed to fetch risks:', err)
-      setError(err.response?.data?.detail || err.message || '加载风险数据失败')
-      setRisks([])
+      console.error("Failed to fetch risks:", err);
+      setError(err.response?.data?.detail || err.message || "加载风险数据失败");
+      setRisks([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchProjectList = async () => {
     try {
@@ -188,76 +197,76 @@ export default function RiskManagement() {
         page: 1,
         page_size: 50,
         keyword: projectSearch,
-      })
-      const data = res.data || res
+      });
+      const data = res.data || res;
       // Handle PaginatedResponse format
-      if (data && typeof data === 'object' && 'items' in data) {
-        setProjectList(data.items || [])
+      if (data && typeof data === "object" && "items" in data) {
+        setProjectList(data.items || []);
       } else if (Array.isArray(data)) {
-        setProjectList(data)
+        setProjectList(data);
       } else {
-        setProjectList([])
+        setProjectList([]);
       }
     } catch (err) {
-      console.error('Failed to fetch projects:', err)
-      setProjectList([])
+      console.error("Failed to fetch projects:", err);
+      setProjectList([]);
     }
-  }
+  };
 
   const handleCreate = async (formData) => {
     try {
-      await pmoApi.risks.create(selectedProjectId, formData)
-      setCreateDialogOpen(false)
-      fetchRisks()
+      await pmoApi.risks.create(selectedProjectId, formData);
+      setCreateDialogOpen(false);
+      fetchRisks();
     } catch (err) {
-      console.error('Failed to create risk:', err)
-      alert('创建失败: ' + (err.response?.data?.detail || err.message))
+      console.error("Failed to create risk:", err);
+      alert("创建失败: " + (err.response?.data?.detail || err.message));
     }
-  }
+  };
 
   const handleAssess = async (riskId, data) => {
     try {
-      await pmoApi.risks.assess(riskId, data)
-      setAssessDialog({ open: false, riskId: null })
-      fetchRisks()
+      await pmoApi.risks.assess(riskId, data);
+      setAssessDialog({ open: false, riskId: null });
+      fetchRisks();
     } catch (err) {
-      console.error('Failed to assess risk:', err)
-      alert('评估失败: ' + (err.response?.data?.detail || err.message))
+      console.error("Failed to assess risk:", err);
+      alert("评估失败: " + (err.response?.data?.detail || err.message));
     }
-  }
+  };
 
   const handleResponse = async (riskId, data) => {
     try {
-      await pmoApi.risks.response(riskId, data)
-      setResponseDialog({ open: false, riskId: null })
-      fetchRisks()
+      await pmoApi.risks.response(riskId, data);
+      setResponseDialog({ open: false, riskId: null });
+      fetchRisks();
     } catch (err) {
-      console.error('Failed to update response:', err)
-      alert('更新失败: ' + (err.response?.data?.detail || err.message))
+      console.error("Failed to update response:", err);
+      alert("更新失败: " + (err.response?.data?.detail || err.message));
     }
-  }
+  };
 
   const handleStatusUpdate = async (riskId, data) => {
     try {
-      await pmoApi.risks.updateStatus(riskId, data)
-      setStatusDialog({ open: false, riskId: null })
-      fetchRisks()
+      await pmoApi.risks.updateStatus(riskId, data);
+      setStatusDialog({ open: false, riskId: null });
+      fetchRisks();
     } catch (err) {
-      console.error('Failed to update status:', err)
-      alert('更新失败: ' + (err.response?.data?.detail || err.message))
+      console.error("Failed to update status:", err);
+      alert("更新失败: " + (err.response?.data?.detail || err.message));
     }
-  }
+  };
 
   const handleClose = async (riskId, data) => {
     try {
-      await pmoApi.risks.close(riskId, data)
-      setCloseDialog({ open: false, riskId: null })
-      fetchRisks()
+      await pmoApi.risks.close(riskId, data);
+      setCloseDialog({ open: false, riskId: null });
+      fetchRisks();
     } catch (err) {
-      console.error('Failed to close risk:', err)
-      alert('关闭失败: ' + (err.response?.data?.detail || err.message))
+      console.error("Failed to close risk:", err);
+      alert("关闭失败: " + (err.response?.data?.detail || err.message));
     }
-  }
+  };
 
   if (showProjectSelect) {
     return (
@@ -266,10 +275,7 @@ export default function RiskManagement() {
         animate="visible"
         variants={staggerContainer}
       >
-        <PageHeader
-          title="风险管理"
-          description="选择项目以管理其风险"
-        />
+        <PageHeader title="风险管理" description="选择项目以管理其风险" />
 
         <Card className="max-w-2xl mx-auto">
           <CardContent className="p-6">
@@ -278,8 +284,8 @@ export default function RiskManagement() {
                 placeholder="搜索项目名称或编码..."
                 value={projectSearch}
                 onChange={(e) => {
-                  setProjectSearch(e.target.value)
-                  fetchProjectList()
+                  setProjectSearch(e.target.value);
+                  fetchProjectList();
                 }}
                 className="w-full"
                 icon={Search}
@@ -291,16 +297,20 @@ export default function RiskManagement() {
                 <div
                   key={proj.id}
                   onClick={() => {
-                    setSelectedProjectId(proj.id)
-                    setShowProjectSelect(false)
-                    navigate(`/pmo/risks/${proj.id}`)
+                    setSelectedProjectId(proj.id);
+                    setShowProjectSelect(false);
+                    navigate(`/pmo/risks/${proj.id}`);
                   }}
                   className="p-4 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] hover:border-white/10 cursor-pointer transition-all"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-white">{proj.project_name}</h3>
-                      <p className="text-sm text-slate-400">{proj.project_code}</p>
+                      <h3 className="font-medium text-white">
+                        {proj.project_name}
+                      </h3>
+                      <p className="text-sm text-slate-400">
+                        {proj.project_code}
+                      </p>
                     </div>
                     <ArrowRight className="h-5 w-5 text-slate-500" />
                   </div>
@@ -310,25 +320,23 @@ export default function RiskManagement() {
           </CardContent>
         </Card>
       </motion.div>
-    )
+    );
   }
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={staggerContainer}
-    >
+    <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
       <PageHeader
         title="风险管理"
-        description={project ? `${project.project_name} - 项目风险管理` : '项目风险管理'}
+        description={
+          project ? `${project.project_name} - 项目风险管理` : "项目风险管理"
+        }
         action={
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               onClick={() => {
-                setShowProjectSelect(true)
-                navigate('/pmo/risks')
+                setShowProjectSelect(true);
+                navigate("/pmo/risks");
               }}
             >
               选择项目
@@ -385,10 +393,10 @@ export default function RiskManagement() {
                 size="sm"
                 variant="outline"
                 onClick={() => {
-                  setError(null)
+                  setError(null);
                   if (selectedProjectId) {
-                    fetchProjectData()
-                    fetchRisks()
+                    fetchProjectData();
+                    fetchRisks();
                   }
                 }}
                 className="border-red-500/30 text-red-400 hover:bg-red-500/20"
@@ -412,15 +420,15 @@ export default function RiskManagement() {
       ) : error ? null : risks.length > 0 ? (
         <div className="space-y-4">
           {risks.map((risk) => {
-            const levelBadge = getRiskLevelBadge(risk.risk_level)
-            const statusBadge = getStatusBadge(risk.status)
+            const levelBadge = getRiskLevelBadge(risk.risk_level);
+            const statusBadge = getStatusBadge(risk.status);
 
             return (
               <motion.div key={risk.id} variants={staggerChild}>
                 <Card
                   className={cn(
-                    'hover:bg-white/[0.02] transition-colors border-l-4',
-                    levelBadge.borderColor
+                    "hover:bg-white/[0.02] transition-colors border-l-4",
+                    levelBadge.borderColor,
                   )}
                 >
                   <CardContent className="p-5">
@@ -429,14 +437,14 @@ export default function RiskManagement() {
                       <div className="flex items-center gap-3">
                         <div
                           className={cn(
-                            'p-2.5 rounded-xl',
+                            "p-2.5 rounded-xl",
                             levelBadge.bgColor,
-                            'ring-1',
-                            levelBadge.borderColor
+                            "ring-1",
+                            levelBadge.borderColor,
                           )}
                         >
                           <AlertTriangle
-                            className={cn('h-5 w-5', levelBadge.color)}
+                            className={cn("h-5 w-5", levelBadge.color)}
                           />
                         </div>
                         <div>
@@ -485,7 +493,7 @@ export default function RiskManagement() {
                       <div>
                         <span className="text-xs text-slate-400">负责人</span>
                         <p className="text-white font-medium">
-                          {risk.owner_name || '未分配'}
+                          {risk.owner_name || "未分配"}
                         </p>
                       </div>
                       <div>
@@ -493,7 +501,7 @@ export default function RiskManagement() {
                         <p className="text-white font-medium">
                           {risk.follow_up_date
                             ? formatDate(risk.follow_up_date)
-                            : '未设置'}
+                            : "未设置"}
                         </p>
                       </div>
                     </div>
@@ -511,7 +519,7 @@ export default function RiskManagement() {
                     {/* Actions */}
                     <div className="flex items-center justify-between pt-4 border-t border-white/5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        {risk.status === 'IDENTIFIED' && (
+                        {risk.status === "IDENTIFIED" && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -523,7 +531,7 @@ export default function RiskManagement() {
                             风险评估
                           </Button>
                         )}
-                        {risk.status === 'ANALYZING' && (
+                        {risk.status === "ANALYZING" && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -535,7 +543,7 @@ export default function RiskManagement() {
                             制定应对
                           </Button>
                         )}
-                        {risk.status !== 'CLOSED' && (
+                        {risk.status !== "CLOSED" && (
                           <>
                             <Button
                               size="sm"
@@ -572,7 +580,7 @@ export default function RiskManagement() {
                   </CardContent>
                 </Card>
               </motion.div>
-            )
+            );
           })}
         </div>
       ) : !error ? (
@@ -625,37 +633,37 @@ export default function RiskManagement() {
         risk={detailDialog.risk}
       />
     </motion.div>
-  )
+  );
 }
 
 // Create Risk Dialog
 function CreateRiskDialog({ open, onOpenChange, onSubmit }) {
   const [formData, setFormData] = useState({
-    risk_category: '',
-    risk_name: '',
-    description: '',
-    probability: '',
-    impact: '',
-    owner_id: '',
-    trigger_condition: '',
-  })
+    risk_category: "",
+    risk_name: "",
+    description: "",
+    probability: "",
+    impact: "",
+    owner_id: "",
+    trigger_condition: "",
+  });
 
   const handleSubmit = () => {
     if (!formData.risk_name.trim() || !formData.risk_category.trim()) {
-      alert('请填写风险名称和类别')
-      return
+      alert("请填写风险名称和类别");
+      return;
     }
-    onSubmit(formData)
+    onSubmit(formData);
     setFormData({
-      risk_category: '',
-      risk_name: '',
-      description: '',
-      probability: '',
-      impact: '',
-      owner_id: '',
-      trigger_condition: '',
-    })
-  }
+      risk_category: "",
+      risk_name: "",
+      description: "",
+      probability: "",
+      impact: "",
+      owner_id: "",
+      trigger_condition: "",
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -751,7 +759,10 @@ function CreateRiskDialog({ open, onOpenChange, onSubmit }) {
               <Input
                 value={formData.trigger_condition}
                 onChange={(e) =>
-                  setFormData({ ...formData, trigger_condition: e.target.value })
+                  setFormData({
+                    ...formData,
+                    trigger_condition: e.target.value,
+                  })
                 }
                 placeholder="描述风险触发条件（可选）"
               />
@@ -766,25 +777,25 @@ function CreateRiskDialog({ open, onOpenChange, onSubmit }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // Assess Risk Dialog
 function AssessRiskDialog({ open, onOpenChange, onSubmit }) {
   const [formData, setFormData] = useState({
-    probability: '',
-    impact: '',
-    risk_level: '',
-  })
+    probability: "",
+    impact: "",
+    risk_level: "",
+  });
 
   const handleSubmit = () => {
     if (!formData.probability || !formData.impact) {
-      alert('请选择发生概率和影响程度')
-      return
+      alert("请选择发生概率和影响程度");
+      return;
     }
-    onSubmit(formData)
-    setFormData({ probability: '', impact: '', risk_level: '' })
-  }
+    onSubmit(formData);
+    setFormData({ probability: "", impact: "", risk_level: "" });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -838,25 +849,25 @@ function AssessRiskDialog({ open, onOpenChange, onSubmit }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // Response Risk Dialog
 function ResponseRiskDialog({ open, onOpenChange, onSubmit }) {
   const [formData, setFormData] = useState({
-    response_strategy: '',
-    response_plan: '',
-    owner_id: '',
-  })
+    response_strategy: "",
+    response_plan: "",
+    owner_id: "",
+  });
 
   const handleSubmit = () => {
     if (!formData.response_strategy.trim() || !formData.response_plan.trim()) {
-      alert('请填写应对策略和应对措施')
-      return
+      alert("请填写应对策略和应对措施");
+      return;
     }
-    onSubmit(formData)
-    setFormData({ response_strategy: '', response_plan: '', owner_id: '' })
-  }
+    onSubmit(formData);
+    setFormData({ response_strategy: "", response_plan: "", owner_id: "" });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -873,7 +884,10 @@ function ResponseRiskDialog({ open, onOpenChange, onSubmit }) {
               <select
                 value={formData.response_strategy}
                 onChange={(e) =>
-                  setFormData({ ...formData, response_strategy: e.target.value })
+                  setFormData({
+                    ...formData,
+                    response_strategy: e.target.value,
+                  })
                 }
                 className="w-full px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               >
@@ -908,25 +922,25 @@ function ResponseRiskDialog({ open, onOpenChange, onSubmit }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // Status Risk Dialog
 function StatusRiskDialog({ open, onOpenChange, onSubmit }) {
   const [formData, setFormData] = useState({
-    status: '',
-    last_update: '',
-    follow_up_date: '',
-  })
+    status: "",
+    last_update: "",
+    follow_up_date: "",
+  });
 
   const handleSubmit = () => {
     if (!formData.status) {
-      alert('请选择状态')
-      return
+      alert("请选择状态");
+      return;
     }
-    onSubmit(formData)
-    setFormData({ status: '', last_update: '', follow_up_date: '' })
-  }
+    onSubmit(formData);
+    setFormData({ status: "", last_update: "", follow_up_date: "" });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -990,23 +1004,23 @@ function StatusRiskDialog({ open, onOpenChange, onSubmit }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // Close Risk Dialog
 function CloseRiskDialog({ open, onOpenChange, onSubmit }) {
   const [formData, setFormData] = useState({
-    closed_reason: '',
-  })
+    closed_reason: "",
+  });
 
   const handleSubmit = () => {
     if (!formData.closed_reason.trim()) {
-      alert('请填写关闭原因')
-      return
+      alert("请填写关闭原因");
+      return;
     }
-    onSubmit(formData)
-    setFormData({ closed_reason: '' })
-  }
+    onSubmit(formData);
+    setFormData({ closed_reason: "" });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1038,15 +1052,15 @@ function CloseRiskDialog({ open, onOpenChange, onSubmit }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // Risk Detail Dialog
 function RiskDetailDialog({ open, onOpenChange, risk }) {
-  if (!risk) return null
+  if (!risk) return null;
 
-  const levelBadge = getRiskLevelBadge(risk.risk_level)
-  const statusBadge = getStatusBadge(risk.status)
+  const levelBadge = getRiskLevelBadge(risk.risk_level);
+  const statusBadge = getStatusBadge(risk.status);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1080,7 +1094,9 @@ function RiskDetailDialog({ open, onOpenChange, risk }) {
               <div>
                 <span className="text-sm text-slate-400">状态</span>
                 <p className="mt-1">
-                  <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+                  <Badge variant={statusBadge.variant}>
+                    {statusBadge.label}
+                  </Badge>
                 </p>
               </div>
             </div>
@@ -1097,7 +1113,9 @@ function RiskDetailDialog({ open, onOpenChange, risk }) {
 
             {/* Risk Matrix */}
             <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
-              <h4 className="text-sm font-medium text-white mb-3">风险评估矩阵</h4>
+              <h4 className="text-sm font-medium text-white mb-3">
+                风险评估矩阵
+              </h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <span className="text-xs text-slate-400">发生概率</span>
@@ -1117,7 +1135,9 @@ function RiskDetailDialog({ open, onOpenChange, risk }) {
             {/* Response Plan */}
             {risk.response_strategy && (
               <div>
-                <h4 className="text-sm font-medium text-white mb-3">应对计划</h4>
+                <h4 className="text-sm font-medium text-white mb-3">
+                  应对计划
+                </h4>
                 <div className="space-y-3">
                   <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
                     <span className="text-xs text-slate-400">应对策略</span>
@@ -1140,7 +1160,7 @@ function RiskDetailDialog({ open, onOpenChange, risk }) {
               <div>
                 <span className="text-sm text-slate-400">负责人</span>
                 <p className="text-white font-medium">
-                  {risk.owner_name || '未分配'}
+                  {risk.owner_name || "未分配"}
                 </p>
               </div>
               <div>
@@ -1148,7 +1168,7 @@ function RiskDetailDialog({ open, onOpenChange, risk }) {
                 <p className="text-white font-medium">
                   {risk.follow_up_date
                     ? formatDate(risk.follow_up_date)
-                    : '未设置'}
+                    : "未设置"}
                 </p>
               </div>
               {risk.last_update && (
@@ -1170,7 +1190,7 @@ function RiskDetailDialog({ open, onOpenChange, risk }) {
             )}
 
             {/* Close Info */}
-            {risk.status === 'CLOSED' && (
+            {risk.status === "CLOSED" && (
               <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
                 <span className="text-xs text-slate-400">关闭信息</span>
                 <div className="mt-2 space-y-1">
@@ -1194,8 +1214,5 @@ function RiskDetailDialog({ open, onOpenChange, risk }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-
-
-

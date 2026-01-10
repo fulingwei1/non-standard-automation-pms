@@ -1,39 +1,39 @@
-import React from 'react'
-import { AlertCircle, RefreshCw, Home } from 'lucide-react'
-import { Button } from './button'
-import { Card, CardContent } from './card'
+import React from "react";
+import { AlertCircle, RefreshCw, Home } from "lucide-react";
+import { Button } from "./button";
+import { Card, CardContent } from "./card";
 
-const isDev = import.meta.env.DEV
+const isDev = import.meta.env.DEV;
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
-    super(props)
-    this.state = { hasError: false, error: null, errorInfo: null }
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
   }
 
   static getDerivedStateFromError() {
-    return { hasError: true }
+    return { hasError: true };
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo)
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
     this.setState({
       error,
       errorInfo,
-    })
+    });
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: null, errorInfo: null })
+    this.setState({ hasError: false, error: null, errorInfo: null });
     if (this.props.onReset) {
-      this.props.onReset()
+      this.props.onReset();
     }
-  }
+  };
 
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
-        return this.props.fallback(this.state.error, this.handleReset)
+        return this.props.fallback(this.state.error, this.handleReset);
       }
 
       return (
@@ -47,9 +47,11 @@ class ErrorBoundary extends React.Component {
                   </div>
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-white mb-2">出现错误</h2>
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    出现错误
+                  </h2>
                   <p className="text-slate-400 mb-4">
-                    {this.props.message || '页面加载时发生错误，请刷新页面重试'}
+                    {this.props.message || "页面加载时发生错误，请刷新页面重试"}
                   </p>
                 </div>
                 {isDev && this.state.error && (
@@ -59,7 +61,9 @@ class ErrorBoundary extends React.Component {
                     </p>
                     {this.state.errorInfo && (
                       <details className="text-xs text-slate-500">
-                        <summary className="cursor-pointer mb-2">错误堆栈</summary>
+                        <summary className="cursor-pointer mb-2">
+                          错误堆栈
+                        </summary>
                         <pre className="overflow-auto max-h-40">
                           {this.state.errorInfo.componentStack}
                         </pre>
@@ -74,7 +78,7 @@ class ErrorBoundary extends React.Component {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => (window.location.href = '/')}
+                    onClick={() => (window.location.href = "/")}
                     className="gap-2"
                   >
                     <Home className="w-4 h-4" />
@@ -85,12 +89,11 @@ class ErrorBoundary extends React.Component {
             </CardContent>
           </Card>
         </div>
-      )
+      );
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }
 
-export default ErrorBoundary
-
+export default ErrorBoundary;

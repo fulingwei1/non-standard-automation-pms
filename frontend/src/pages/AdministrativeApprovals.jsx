@@ -3,8 +3,8 @@
  * Features: Approval list, approval workflow, approval history
  */
 
-import { useState, useEffect, useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
 import {
   Search,
   Filter,
@@ -21,8 +21,8 @@ import {
   Eye,
   Download,
   Loader2,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -35,96 +35,109 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../components/ui'
-import { cn, formatCurrency } from '../lib/utils'
-import { staggerContainer } from '../lib/animations'
-import { SimpleBarChart, MonthlyTrendChart, SimplePieChart, TrendComparisonCard } from '../components/administrative/StatisticsCharts'
-import { adminApi } from '../services/api'
+} from "../components/ui";
+import { cn, formatCurrency } from "../lib/utils";
+import { staggerContainer } from "../lib/animations";
+import {
+  SimpleBarChart,
+  MonthlyTrendChart,
+  SimplePieChart,
+  TrendComparisonCard,
+} from "../components/administrative/StatisticsCharts";
+import { adminApi } from "../services/api";
 
 export default function AdministrativeApprovals() {
-  const [loading, setLoading] = useState(true)
-  const [approvals, setApprovals] = useState([])
-  const [approvedList, setApprovedList] = useState([])
-  const [rejectedList, setRejectedList] = useState([])
-  const [searchText, setSearchText] = useState('')
-  const [typeFilter, setTypeFilter] = useState('all')
-  const [priorityFilter, setPriorityFilter] = useState('all')
+  const [loading, setLoading] = useState(true);
+  const [approvals, setApprovals] = useState([]);
+  const [approvedList, setApprovedList] = useState([]);
+  const [rejectedList, setRejectedList] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
 
   // Load data from API with fallback to mock data
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
-        const res = await adminApi.approvals.list({ status: 'pending' })
+        const res = await adminApi.approvals.list({ status: "pending" });
         if (res.data?.items) {
-          setApprovals(res.data.items)
+          setApprovals(res.data.items);
         }
       } catch (err) {
-        console.log('Admin approvals API unavailable, using mock data')
+        console.log("Admin approvals API unavailable, using mock data");
       }
 
       try {
-        const approvedRes = await adminApi.approvals.list({ status: 'approved' })
+        const approvedRes = await adminApi.approvals.list({
+          status: "approved",
+        });
         if (approvedRes.data?.items) {
-          setApprovedList(approvedRes.data.items)
+          setApprovedList(approvedRes.data.items);
         }
       } catch (err) {
-        console.log('Approved approvals API unavailable')
+        console.log("Approved approvals API unavailable");
       }
 
       try {
-        const rejectedRes = await adminApi.approvals.list({ status: 'rejected' })
+        const rejectedRes = await adminApi.approvals.list({
+          status: "rejected",
+        });
         if (rejectedRes.data?.items) {
-          setRejectedList(rejectedRes.data.items)
+          setRejectedList(rejectedRes.data.items);
         }
       } catch (err) {
-        console.log('Rejected approvals API unavailable')
+        console.log("Rejected approvals API unavailable");
       }
 
-      setLoading(false)
-    }
-    fetchData()
-  }, [])
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
 
   const filteredApprovals = useMemo(() => {
-    return approvals.filter(approval => {
-      const matchSearch = approval.title.toLowerCase().includes(searchText.toLowerCase()) ||
-        approval.applicant.toLowerCase().includes(searchText.toLowerCase())
-      const matchType = typeFilter === 'all' || approval.type === typeFilter
-      const matchPriority = priorityFilter === 'all' || approval.priority === priorityFilter
-      return matchSearch && matchType && matchPriority
-    })
-  }, [approvals, searchText, typeFilter, priorityFilter])
+    return approvals.filter((approval) => {
+      const matchSearch =
+        approval.title.toLowerCase().includes(searchText.toLowerCase()) ||
+        approval.applicant.toLowerCase().includes(searchText.toLowerCase());
+      const matchType = typeFilter === "all" || approval.type === typeFilter;
+      const matchPriority =
+        priorityFilter === "all" || approval.priority === priorityFilter;
+      return matchSearch && matchType && matchPriority;
+    });
+  }, [approvals, searchText, typeFilter, priorityFilter]);
 
   const stats = useMemo(() => {
-    const total = approvals.length
-    const urgent = approvals.filter(a => a.priority === 'high').length
-    const officeSupplies = approvals.filter(a => a.type === 'office_supplies').length
-    const vehicle = approvals.filter(a => a.type === 'vehicle').length
-    return { total, urgent, officeSupplies, vehicle }
-  }, [approvals])
+    const total = approvals.length;
+    const urgent = approvals.filter((a) => a.priority === "high").length;
+    const officeSupplies = approvals.filter(
+      (a) => a.type === "office_supplies",
+    ).length;
+    const vehicle = approvals.filter((a) => a.type === "vehicle").length;
+    return { total, urgent, officeSupplies, vehicle };
+  }, [approvals]);
 
   const handleApprove = async (id) => {
     try {
-      await adminApi.approvals.approve(id, { comment: '同意' })
-      setApprovals(prev => prev.filter(a => a.id !== id))
+      await adminApi.approvals.approve(id, { comment: "同意" });
+      setApprovals((prev) => prev.filter((a) => a.id !== id));
     } catch (err) {
-      console.log('Approval API unavailable')
+      console.log("Approval API unavailable");
       // Simulate approval in demo mode
-      setApprovals(prev => prev.filter(a => a.id !== id))
+      setApprovals((prev) => prev.filter((a) => a.id !== id));
     }
-  }
+  };
 
   const handleReject = async (id) => {
     try {
-      await adminApi.approvals.reject(id, { reason: '不符合要求' })
-      setApprovals(prev => prev.filter(a => a.id !== id))
+      await adminApi.approvals.reject(id, { reason: "不符合要求" });
+      setApprovals((prev) => prev.filter((a) => a.id !== id));
     } catch (err) {
-      console.log('Rejection API unavailable')
+      console.log("Rejection API unavailable");
       // Simulate rejection in demo mode
-      setApprovals(prev => prev.filter(a => a.id !== id))
+      setApprovals((prev) => prev.filter((a) => a.id !== id));
     }
-  }
+  };
 
   const getTypeIcon = (type) => {
     const icons = {
@@ -133,20 +146,20 @@ export default function AdministrativeApprovals() {
       asset: Building2,
       meeting: Calendar,
       leave: User,
-    }
-    return icons[type] || ClipboardCheck
-  }
+    };
+    return icons[type] || ClipboardCheck;
+  };
 
   const getTypeLabel = (type) => {
     const labels = {
-      office_supplies: '办公用品',
-      vehicle: '车辆',
-      asset: '资产',
-      meeting: '会议',
-      leave: '请假',
-    }
-    return labels[type] || '其他'
-  }
+      office_supplies: "办公用品",
+      vehicle: "车辆",
+      asset: "资产",
+      meeting: "会议",
+      leave: "请假",
+    };
+    return labels[type] || "其他";
+  };
 
   return (
     <motion.div
@@ -173,7 +186,9 @@ export default function AdministrativeApprovals() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">待审批</p>
-                <p className="text-2xl font-bold text-amber-400 mt-1">{stats.total}</p>
+                <p className="text-2xl font-bold text-amber-400 mt-1">
+                  {stats.total}
+                </p>
               </div>
               <ClipboardCheck className="h-8 w-8 text-amber-400" />
             </div>
@@ -184,7 +199,9 @@ export default function AdministrativeApprovals() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">紧急事项</p>
-                <p className="text-2xl font-bold text-red-400 mt-1">{stats.urgent}</p>
+                <p className="text-2xl font-bold text-red-400 mt-1">
+                  {stats.urgent}
+                </p>
               </div>
               <AlertTriangle className="h-8 w-8 text-red-400" />
             </div>
@@ -195,7 +212,9 @@ export default function AdministrativeApprovals() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">办公用品</p>
-                <p className="text-2xl font-bold text-blue-400 mt-1">{stats.officeSupplies}</p>
+                <p className="text-2xl font-bold text-blue-400 mt-1">
+                  {stats.officeSupplies}
+                </p>
               </div>
               <Package className="h-8 w-8 text-blue-400" />
             </div>
@@ -206,7 +225,9 @@ export default function AdministrativeApprovals() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">车辆申请</p>
-                <p className="text-2xl font-bold text-cyan-400 mt-1">{stats.vehicle}</p>
+                <p className="text-2xl font-bold text-cyan-400 mt-1">
+                  {stats.vehicle}
+                </p>
               </div>
               <Car className="h-8 w-8 text-cyan-400" />
             </div>
@@ -233,11 +254,28 @@ export default function AdministrativeApprovals() {
               <CardContent>
                 <SimplePieChart
                   data={[
-                    { label: '办公用品', value: stats.officeSupplies, color: '#3b82f6' },
-                    { label: '车辆', value: stats.vehicle, color: '#06b6d4' },
-                    { label: '资产', value: approvals.filter(a => a.type === 'asset').length, color: '#a855f7' },
-                    { label: '会议', value: approvals.filter(a => a.type === 'meeting').length, color: '#10b981' },
-                    { label: '请假', value: approvals.filter(a => a.type === 'leave').length, color: '#f472b6' },
+                    {
+                      label: "办公用品",
+                      value: stats.officeSupplies,
+                      color: "#3b82f6",
+                    },
+                    { label: "车辆", value: stats.vehicle, color: "#06b6d4" },
+                    {
+                      label: "资产",
+                      value: approvals.filter((a) => a.type === "asset").length,
+                      color: "#a855f7",
+                    },
+                    {
+                      label: "会议",
+                      value: approvals.filter((a) => a.type === "meeting")
+                        .length,
+                      color: "#10b981",
+                    },
+                    {
+                      label: "请假",
+                      value: approvals.filter((a) => a.type === "leave").length,
+                      color: "#f472b6",
+                    },
                   ]}
                   size={180}
                 />
@@ -250,10 +288,10 @@ export default function AdministrativeApprovals() {
               <CardContent>
                 <MonthlyTrendChart
                   data={[
-                    { month: '2024-10', amount: 18 },
-                    { month: '2024-11', amount: 22 },
-                    { month: '2024-12', amount: 20 },
-                    { month: '2025-01', amount: stats.total },
+                    { month: "2024-10", amount: 18 },
+                    { month: "2024-11", amount: 22 },
+                    { month: "2024-12", amount: 20 },
+                    { month: "2025-01", amount: stats.total },
                   ]}
                   valueKey="amount"
                   labelKey="month"
@@ -321,7 +359,7 @@ export default function AdministrativeApprovals() {
           {/* Approvals List */}
           <div className="space-y-4">
             {filteredApprovals.map((approval) => {
-              const TypeIcon = getTypeIcon(approval.type)
+              const TypeIcon = getTypeIcon(approval.type);
               return (
                 <Card key={approval.id}>
                   <CardContent className="p-6">
@@ -329,20 +367,27 @@ export default function AdministrativeApprovals() {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <TypeIcon className="h-5 w-5 text-slate-400" />
-                          <h3 className="text-lg font-semibold text-white">{approval.title}</h3>
+                          <h3 className="text-lg font-semibold text-white">
+                            {approval.title}
+                          </h3>
                           <Badge
                             variant="outline"
                             className={cn(
-                              approval.type === 'office_supplies' && 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-                              approval.type === 'vehicle' && 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-                              approval.type === 'asset' && 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-                              approval.type === 'meeting' && 'bg-green-500/20 text-green-400 border-green-500/30',
-                              approval.type === 'leave' && 'bg-pink-500/20 text-pink-400 border-pink-500/30'
+                              approval.type === "office_supplies" &&
+                                "bg-blue-500/20 text-blue-400 border-blue-500/30",
+                              approval.type === "vehicle" &&
+                                "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+                              approval.type === "asset" &&
+                                "bg-purple-500/20 text-purple-400 border-purple-500/30",
+                              approval.type === "meeting" &&
+                                "bg-green-500/20 text-green-400 border-green-500/30",
+                              approval.type === "leave" &&
+                                "bg-pink-500/20 text-pink-400 border-pink-500/30",
                             )}
                           >
                             {getTypeLabel(approval.type)}
                           </Badge>
-                          {approval.priority === 'high' && (
+                          {approval.priority === "high" && (
                             <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
                               紧急
                             </Badge>
@@ -352,14 +397,20 @@ export default function AdministrativeApprovals() {
                           {approval.department} · {approval.applicant}
                         </div>
                         <div className="text-sm text-slate-500 mb-3">
-                          {approval.items && `物品: ${approval.items.join('、')}`}
-                          {approval.purpose && `用途: ${approval.purpose} · 目的地: ${approval.destination || '待定'}`}
+                          {approval.items &&
+                            `物品: ${approval.items.join("、")}`}
+                          {approval.purpose &&
+                            `用途: ${approval.purpose} · 目的地: ${approval.destination || "待定"}`}
                           {approval.item && `资产: ${approval.item}`}
-                          {approval.room && `会议室: ${approval.room} · 时间: ${approval.date} ${approval.time}`}
-                          {approval.leaveType && `类型: ${approval.leaveType} · 天数: ${approval.days} 天 · 日期: ${approval.date}`}
+                          {approval.room &&
+                            `会议室: ${approval.room} · 时间: ${approval.date} ${approval.time}`}
+                          {approval.leaveType &&
+                            `类型: ${approval.leaveType} · 天数: ${approval.days} 天 · 日期: ${approval.date}`}
                         </div>
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-500">提交时间: {approval.submitTime}</span>
+                          <span className="text-slate-500">
+                            提交时间: {approval.submitTime}
+                          </span>
                           {approval.amount && (
                             <span className="font-medium text-amber-400">
                               {formatCurrency(approval.amount)}
@@ -371,13 +422,24 @@ export default function AdministrativeApprovals() {
                         <Button variant="outline" size="sm">
                           <Eye className="w-4 h-4" />
                         </Button>
-                        <Button size="sm" onClick={() => handleApprove(approval.id)}>批准</Button>
-                        <Button size="sm" variant="outline" onClick={() => handleReject(approval.id)}>拒绝</Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleApprove(approval.id)}
+                        >
+                          批准
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleReject(approval.id)}
+                        >
+                          拒绝
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              )
+              );
             })}
           </div>
         </TabsContent>
@@ -416,6 +478,5 @@ export default function AdministrativeApprovals() {
         </TabsContent>
       </Tabs>
     </motion.div>
-  )
+  );
 }
-

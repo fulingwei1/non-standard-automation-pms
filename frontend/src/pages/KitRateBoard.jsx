@@ -2,7 +2,7 @@
  * Kit Rate Board Page - 齐套看板页面
  * Features: 齐套率分布、缺料预警汇总
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 import {
   Package,
   AlertTriangle,
@@ -12,24 +12,24 @@ import {
   RefreshCw,
   Filter,
   BarChart3,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Badge } from '../components/ui/badge'
-import { Progress } from '../components/ui/progress'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { Progress } from "../components/ui/progress";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
+} from "../components/ui/select";
 import {
   Table,
   TableBody,
@@ -37,56 +37,56 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../components/ui/table'
-import { cn, formatCurrency } from '../lib/utils'
-import { purchaseApi, projectApi } from '../services/api'
+} from "../components/ui/table";
+import { cn, formatCurrency } from "../lib/utils";
+import { purchaseApi, projectApi } from "../services/api";
 export default function KitRateBoard() {
-  const [loading, setLoading] = useState(true)
-  const [dashboardData, setDashboardData] = useState(null)
-  const [projects, setProjects] = useState([])
-  const [filterProject, setFilterProject] = useState('')
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [filterProject, setFilterProject] = useState("");
   useEffect(() => {
-    fetchProjects()
-    fetchDashboardData()
-  }, [filterProject])
+    fetchProjects();
+    fetchDashboardData();
+  }, [filterProject]);
   const fetchProjects = async () => {
     try {
-      const res = await projectApi.list({ page_size: 1000 })
-      setProjects(res.data?.items || res.data || [])
+      const res = await projectApi.list({ page_size: 1000 });
+      setProjects(res.data?.items || res.data || []);
     } catch (error) {
-      console.error('Failed to fetch projects:', error)
+      console.error("Failed to fetch projects:", error);
     }
-  }
+  };
   const fetchDashboardData = async () => {
     try {
-      setLoading(true)
-      const params = {}
-      if (filterProject) params.project_id = filterProject
-      const res = await purchaseApi.kitRate.dashboard(params)
-      setDashboardData(res.data || res || null)
+      setLoading(true);
+      const params = {};
+      if (filterProject) params.project_id = filterProject;
+      const res = await purchaseApi.kitRate.dashboard(params);
+      setDashboardData(res.data || res || null);
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error)
-      setDashboardData(null) // 不再使用mock数据，显示空状态
+      console.error("Failed to fetch dashboard data:", error);
+      setDashboardData(null); // 不再使用mock数据，显示空状态
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
   const getKitRateColor = (rate) => {
-    if (rate >= 90) return 'text-emerald-600'
-    if (rate >= 70) return 'text-amber-600'
-    return 'text-red-600'
-  }
+    if (rate >= 90) return "text-emerald-600";
+    if (rate >= 70) return "text-amber-600";
+    return "text-red-600";
+  };
   const getKitRateBadge = (rate) => {
-    if (rate >= 90) return { label: '良好', color: 'bg-emerald-500' }
-    if (rate >= 70) return { label: '一般', color: 'bg-amber-500' }
-    return { label: '不足', color: 'bg-red-500' }
-  }
+    if (rate >= 90) return { label: "良好", color: "bg-emerald-500" };
+    if (rate >= 70) return { label: "一般", color: "bg-amber-500" };
+    return { label: "不足", color: "bg-red-500" };
+  };
   if (loading) {
     return (
       <div className="space-y-6 p-6">
         <div className="text-center py-8 text-slate-400">加载中...</div>
       </div>
-    )
+    );
   }
   return (
     <div className="space-y-6 p-6">
@@ -123,7 +123,12 @@ export default function KitRateBoard() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm text-slate-500 mb-1">平均齐套率</div>
-                  <div className={cn("text-2xl font-bold", getKitRateColor(dashboardData.summary.avg_kit_rate || 0))}>
+                  <div
+                    className={cn(
+                      "text-2xl font-bold",
+                      getKitRateColor(dashboardData.summary.avg_kit_rate || 0),
+                    )}
+                  >
                     {dashboardData.summary.avg_kit_rate || 0}%
                   </div>
                 </div>
@@ -192,29 +197,43 @@ export default function KitRateBoard() {
               </TableHeader>
               <TableBody>
                 {dashboardData.projects.map((item) => {
-                  const badge = getKitRateBadge(item.kit_rate || 0)
+                  const badge = getKitRateBadge(item.kit_rate || 0);
                   return (
                     <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.project_name}</TableCell>
-                      <TableCell>{item.machine_name || '-'}</TableCell>
+                      <TableCell className="font-medium">
+                        {item.project_name}
+                      </TableCell>
+                      <TableCell>{item.machine_name || "-"}</TableCell>
                       <TableCell>
                         <div className="space-y-1">
-                          <div className={cn("font-bold", getKitRateColor(item.kit_rate || 0))}>
+                          <div
+                            className={cn(
+                              "font-bold",
+                              getKitRateColor(item.kit_rate || 0),
+                            )}
+                          >
                             {item.kit_rate || 0}%
                           </div>
-                          <Progress value={item.kit_rate || 0} className="h-1.5" />
+                          <Progress
+                            value={item.kit_rate || 0}
+                            className="h-1.5"
+                          />
                         </div>
                       </TableCell>
                       <TableCell>
                         {item.shortage_count > 0 ? (
-                          <Badge className="bg-red-500">{item.shortage_count} 项</Badge>
+                          <Badge className="bg-red-500">
+                            {item.shortage_count} 项
+                          </Badge>
                         ) : (
                           <span className="text-slate-400">-</span>
                         )}
                       </TableCell>
                       <TableCell>
                         {item.in_transit_count > 0 ? (
-                          <Badge variant="outline">{item.in_transit_count} 项</Badge>
+                          <Badge variant="outline">
+                            {item.in_transit_count} 项
+                          </Badge>
                         ) : (
                           <span className="text-slate-400">-</span>
                         )}
@@ -223,7 +242,7 @@ export default function KitRateBoard() {
                         <Badge className={badge.color}>{badge.label}</Badge>
                       </TableCell>
                     </TableRow>
-                  )
+                  );
                 })}
               </TableBody>
             </Table>
@@ -255,7 +274,8 @@ export default function KitRateBoard() {
                         <Badge className="bg-red-500">{alert.level}</Badge>
                       </div>
                       <div className="text-sm text-slate-600 mb-1">
-                        {alert.material_name} - 缺料 {alert.shortage_qty} {alert.unit}
+                        {alert.material_name} - 缺料 {alert.shortage_qty}{" "}
+                        {alert.unit}
                       </div>
                       <div className="text-xs text-slate-500">
                         需求日期: {alert.required_date}
@@ -274,5 +294,5 @@ export default function KitRateBoard() {
         </Card>
       )}
     </div>
-  )
+  );
 }

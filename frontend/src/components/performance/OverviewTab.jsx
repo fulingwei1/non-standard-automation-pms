@@ -1,20 +1,19 @@
-import React from 'react'
-import { motion } from 'framer-motion'
+import React from "react";
+import { motion } from "framer-motion";
+import { Award, Target, TrendingUp, Users, Briefcase } from "lucide-react";
+import { cn } from "../../lib/utils";
 import {
-  Award,
-  Target,
-  TrendingUp,
-  Users,
-  Briefcase
-} from 'lucide-react'
-import { cn } from '../../lib/utils'
-import { getStatusBadge, getLevelInfo, getTrendIcon, calculateQuarterComparison } from '../../utils/performanceUtils'
+  getStatusBadge,
+  getLevelInfo,
+  getTrendIcon,
+  calculateQuarterComparison,
+} from "../../utils/performanceUtils";
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.4 }
-}
+  transition: { duration: 0.4 },
+};
 
 /**
  * 绩效概览Tab组件
@@ -22,8 +21,8 @@ const fadeIn = {
 export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
   const quarterComparison = React.useMemo(
     () => calculateQuarterComparison(quarterlyTrend),
-    [quarterlyTrend]
-  )
+    [quarterlyTrend],
+  );
 
   return (
     <motion.div
@@ -46,13 +45,18 @@ export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
           {/* 总体状态 */}
           <div className="flex items-center justify-between p-4 bg-slate-900/50 rounded-lg border border-slate-700/50">
             <div className="flex items-center gap-3">
-              <div className={cn(
-                'h-10 w-10 rounded-full flex items-center justify-center',
-                getStatusBadge(currentPeriod.status).color
-              )}>
-                {React.createElement(getStatusBadge(currentPeriod.status).icon, {
-                  className: 'h-5 w-5'
-                })}
+              <div
+                className={cn(
+                  "h-10 w-10 rounded-full flex items-center justify-center",
+                  getStatusBadge(currentPeriod.status).color,
+                )}
+              >
+                {React.createElement(
+                  getStatusBadge(currentPeriod.status).icon,
+                  {
+                    className: "h-5 w-5",
+                  },
+                )}
               </div>
               <div>
                 <p className="text-white font-medium">评价状态</p>
@@ -61,10 +65,12 @@ export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
                 </p>
               </div>
             </div>
-            <span className={cn(
-              'px-4 py-2 rounded-full text-sm font-medium',
-              getStatusBadge(currentPeriod.status).color
-            )}>
+            <span
+              className={cn(
+                "px-4 py-2 rounded-full text-sm font-medium",
+                getStatusBadge(currentPeriod.status).color,
+              )}
+            >
               {getStatusBadge(currentPeriod.status).label}
             </span>
           </div>
@@ -89,11 +95,13 @@ export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
                   <p className="text-xs text-slate-400">已评分</p>
                 </div>
               ) : (
-                <span className={cn(
-                  'px-3 py-1 rounded-full text-sm font-medium',
-                  getStatusBadge('PENDING').color
-                )}>
-                  {getStatusBadge('PENDING').label}
+                <span
+                  className={cn(
+                    "px-3 py-1 rounded-full text-sm font-medium",
+                    getStatusBadge("PENDING").color,
+                  )}
+                >
+                  {getStatusBadge("PENDING").label}
                 </span>
               )}
             </div>
@@ -107,7 +115,10 @@ export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
             </div>
             <div className="space-y-3">
               {currentPeriod.projectEvaluations.map((proj, idx) => (
-                <div key={idx} className="flex items-center justify-between pl-8">
+                <div
+                  key={idx}
+                  className="flex items-center justify-between pl-8"
+                >
                   <div>
                     <p className="text-slate-300">{proj.projectName}</p>
                     <p className="text-xs text-slate-400">
@@ -116,15 +127,19 @@ export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
                   </div>
                   {proj.score ? (
                     <div className="text-right">
-                      <p className="text-xl font-bold text-purple-400">{proj.score}</p>
+                      <p className="text-xl font-bold text-purple-400">
+                        {proj.score}
+                      </p>
                       <p className="text-xs text-slate-400">已评分</p>
                     </div>
                   ) : (
-                    <span className={cn(
-                      'px-3 py-1 rounded-full text-xs font-medium',
-                      getStatusBadge('PENDING').color
-                    )}>
-                      {getStatusBadge('PENDING').label}
+                    <span
+                      className={cn(
+                        "px-3 py-1 rounded-full text-xs font-medium",
+                        getStatusBadge("PENDING").color,
+                      )}
+                    >
+                      {getStatusBadge("PENDING").label}
                     </span>
                   )}
                 </div>
@@ -141,27 +156,38 @@ export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             {/* 综合得分 */}
-            <div className={cn(
-              'p-6 rounded-xl border-2',
-              getLevelInfo(latestScore.level).bgColor,
-              getLevelInfo(latestScore.level).borderColor
-            )}>
+            <div
+              className={cn(
+                "p-6 rounded-xl border-2",
+                getLevelInfo(latestScore.level).bgColor,
+                getLevelInfo(latestScore.level).borderColor,
+              )}
+            >
               <div className="flex items-center gap-3 mb-3">
-                <Award className={cn('h-6 w-6', getLevelInfo(latestScore.level).color)} />
+                <Award
+                  className={cn(
+                    "h-6 w-6",
+                    getLevelInfo(latestScore.level).color,
+                  )}
+                />
                 <span className="text-slate-400">综合得分</span>
               </div>
-              <p className={cn(
-                'text-4xl font-bold mb-2',
-                getLevelInfo(latestScore.level).color
-              )}>
+              <p
+                className={cn(
+                  "text-4xl font-bold mb-2",
+                  getLevelInfo(latestScore.level).color,
+                )}
+              >
                 {latestScore.totalScore}
               </p>
               <div className="flex items-center gap-2">
-                <span className={cn(
-                  'px-3 py-1 rounded-full text-sm font-medium',
-                  getLevelInfo(latestScore.level).color,
-                  getLevelInfo(latestScore.level).bgColor
-                )}>
+                <span
+                  className={cn(
+                    "px-3 py-1 rounded-full text-sm font-medium",
+                    getLevelInfo(latestScore.level).color,
+                    getLevelInfo(latestScore.level).bgColor,
+                  )}
+                >
                   {latestScore.level}级 · {getLevelInfo(latestScore.level).name}
                 </span>
               </div>
@@ -191,11 +217,24 @@ export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
                 <>
                   <div className="flex items-baseline gap-2 mb-2">
                     <p className="text-4xl font-bold text-purple-400">
-                      {quarterComparison.change > 0 ? '+' : ''}{quarterComparison.change}
+                      {quarterComparison.change > 0 ? "+" : ""}
+                      {quarterComparison.change}
                     </p>
-                    {React.createElement(getTrendIcon(quarterComparison.current, quarterComparison.previous).icon, {
-                      className: cn('h-6 w-6', getTrendIcon(quarterComparison.current, quarterComparison.previous).color)
-                    })}
+                    {React.createElement(
+                      getTrendIcon(
+                        quarterComparison.current,
+                        quarterComparison.previous,
+                      ).icon,
+                      {
+                        className: cn(
+                          "h-6 w-6",
+                          getTrendIcon(
+                            quarterComparison.current,
+                            quarterComparison.previous,
+                          ).color,
+                        ),
+                      },
+                    )}
                   </div>
                   <p className="text-sm text-slate-400">
                     相比上季度 {quarterComparison.percentChange}%
@@ -227,10 +266,16 @@ export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
               <div className="space-y-2">
                 {latestScore.projectScores.map((ps, idx) => (
                   <div key={idx} className="flex items-center justify-between">
-                    <span className="text-sm text-slate-400">{ps.projectName}</span>
+                    <span className="text-sm text-slate-400">
+                      {ps.projectName}
+                    </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold text-purple-400">{ps.score}</span>
-                      <span className="text-xs text-slate-500">({ps.weight}%)</span>
+                      <span className="text-lg font-bold text-purple-400">
+                        {ps.score}
+                      </span>
+                      <span className="text-xs text-slate-500">
+                        ({ps.weight}%)
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -245,16 +290,26 @@ export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
         <h3 className="text-xl font-bold text-white mb-6">季度绩效趋势</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {quarterlyTrend.map((item, idx) => (
-            <div key={idx} className="p-4 bg-slate-900/50 rounded-lg border border-slate-700/50 hover:border-slate-600 transition-colors">
+            <div
+              key={idx}
+              className="p-4 bg-slate-900/50 rounded-lg border border-slate-700/50 hover:border-slate-600 transition-colors"
+            >
               <p className="text-sm text-slate-400 mb-2">{item.quarter}</p>
-              <p className={cn('text-2xl font-bold mb-1', getLevelInfo(item.level).color)}>
+              <p
+                className={cn(
+                  "text-2xl font-bold mb-1",
+                  getLevelInfo(item.level).color,
+                )}
+              >
                 {item.score}
               </p>
-              <span className={cn(
-                'inline-block px-2 py-0.5 rounded text-xs font-medium',
-                getLevelInfo(item.level).color,
-                getLevelInfo(item.level).bgColor
-              )}>
+              <span
+                className={cn(
+                  "inline-block px-2 py-0.5 rounded text-xs font-medium",
+                  getLevelInfo(item.level).color,
+                  getLevelInfo(item.level).bgColor,
+                )}
+              >
                 {item.level}级
               </span>
             </div>
@@ -262,5 +317,5 @@ export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
         </div>
       </div>
     </motion.div>
-  )
-}
+  );
+};

@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { cn } from '../lib/utils'
-import { projectApi, machineApi } from '../services/api'
-import { formatCurrency, getHealthColor, getStageName } from '../lib/utils'
-import { PageHeader } from '../components/layout/PageHeader'
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { cn } from "../lib/utils";
+import { projectApi, machineApi } from "../services/api";
+import { formatCurrency, getHealthColor, getStageName } from "../lib/utils";
+import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import {
   Badge,
   HealthBadge,
   SkeletonCard,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Briefcase,
   Box,
@@ -23,7 +23,7 @@ import {
   BarChart3,
   CheckCircle2,
   Clock,
-} from 'lucide-react'
+} from "lucide-react";
 
 // Stagger animation variants
 const staggerContainer = {
@@ -32,25 +32,25 @@ const staggerContainer = {
     opacity: 1,
     transition: { staggerChildren: 0.05, delayChildren: 0.1 },
   },
-}
+};
 
 const staggerChild = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
-}
+};
 
 // Note: Role-based redirect mapping is now handled in App.jsx at the route level
 // This Dashboard component will only render for users without a specific dashboard
 
 export default function Dashboard() {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalProjects: 0,
     activeProjects: 0,
     totalMachines: 0,
     atRiskProjects: 0,
-  })
-  const [recentProjects, setRecentProjects] = useState([])
+  });
+  const [recentProjects, setRecentProjects] = useState([]);
 
   // Note: Role-based redirect is now handled at the route level in App.jsx
   // This component will only render for users without a specific dashboard
@@ -58,106 +58,99 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true)
+        setLoading(true);
         const [projectsRes, machinesRes] = await Promise.all([
           projectApi.list(),
           machineApi.list({}),
-        ])
+        ]);
 
         // Handle different API response formats (array, {items: []}, {data: []})
-        let projects = []
-        let machines = []
+        let projects = [];
+        let machines = [];
 
         if (projectsRes.data) {
           if (Array.isArray(projectsRes.data)) {
-            projects = projectsRes.data
+            projects = projectsRes.data;
           } else if (Array.isArray(projectsRes.data.items)) {
-            projects = projectsRes.data.items
+            projects = projectsRes.data.items;
           } else if (Array.isArray(projectsRes.data.data)) {
-            projects = projectsRes.data.data
+            projects = projectsRes.data.data;
           }
         }
 
         if (machinesRes.data) {
           if (Array.isArray(machinesRes.data)) {
-            machines = machinesRes.data
+            machines = machinesRes.data;
           } else if (Array.isArray(machinesRes.data.items)) {
-            machines = machinesRes.data.items
+            machines = machinesRes.data.items;
           } else if (Array.isArray(machinesRes.data.data)) {
-            machines = machinesRes.data.data
+            machines = machinesRes.data.data;
           }
         }
 
         setStats({
           totalProjects: projects.length,
-          activeProjects: projects.filter((p) => p.health !== 'H4').length,
+          activeProjects: projects.filter((p) => p.health !== "H4").length,
           totalMachines: machines.length,
           atRiskProjects: projects.filter((p) =>
-            ['H2', 'H3'].includes(p.health)
+            ["H2", "H3"].includes(p.health),
           ).length,
-        })
+        });
 
-        setRecentProjects(projects.slice(0, 5))
+        setRecentProjects(projects.slice(0, 5));
       } catch (err) {
-        console.error('Failed to fetch dashboard data:', err)
+        console.error("Failed to fetch dashboard data:", err);
         // Use empty arrays on error - don't crash the UI
         setStats({
           totalProjects: 0,
           activeProjects: 0,
           totalMachines: 0,
           atRiskProjects: 0,
-        })
-        setRecentProjects([])
+        });
+        setRecentProjects([]);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
   const statCards = [
     {
       icon: Briefcase,
-      label: '总项目数',
+      label: "总项目数",
       value: stats.totalProjects,
-      change: '+12%',
-      trend: 'up',
+      change: "+12%",
+      trend: "up",
     },
     {
       icon: BarChart3,
-      label: '进行中项目',
+      label: "进行中项目",
       value: stats.activeProjects,
-      change: '+3',
-      trend: 'up',
+      change: "+3",
+      trend: "up",
     },
     {
       icon: Box,
-      label: '设备总数',
+      label: "设备总数",
       value: stats.totalMachines,
-      change: '+8%',
-      trend: 'up',
+      change: "+8%",
+      trend: "up",
     },
     {
       icon: AlertTriangle,
-      label: '风险项目',
+      label: "风险项目",
       value: stats.atRiskProjects,
-      change: '-2',
-      trend: 'down',
+      change: "-2",
+      trend: "down",
     },
-  ]
+  ];
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={staggerContainer}
-    >
+    <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
       <motion.div variants={staggerChild}>
-        <PageHeader
-          title="仪表盘"
-          description="项目全局概览与关键指标"
-        />
+        <PageHeader title="仪表盘" description="项目全局概览与关键指标" />
       </motion.div>
 
       {/* Stats Grid */}
@@ -177,9 +170,7 @@ export default function Dashboard() {
                   </div>
                 </Card>
               ))
-          : statCards.map((stat, i) => (
-              <StatCard key={i} {...stat} />
-            ))}
+          : statCards.map((stat, i) => <StatCard key={i} {...stat} />)}
       </motion.div>
 
       {/* Main Content Grid */}
@@ -217,10 +208,10 @@ export default function Dashboard() {
                       {/* Icon */}
                       <div
                         className={cn(
-                          'p-3 rounded-xl',
-                          'bg-gradient-to-br from-primary/20 to-indigo-500/10',
-                          'ring-1 ring-primary/20',
-                          'group-hover:scale-105 transition-transform'
+                          "p-3 rounded-xl",
+                          "bg-gradient-to-br from-primary/20 to-indigo-500/10",
+                          "ring-1 ring-primary/20",
+                          "group-hover:scale-105 transition-transform",
                         )}
                       >
                         <Briefcase className="h-5 w-5 text-primary" />
@@ -232,7 +223,7 @@ export default function Dashboard() {
                           <h4 className="font-medium text-white truncate">
                             {project.project_name}
                           </h4>
-                          <HealthBadge health={project.health || 'H1'} />
+                          <HealthBadge health={project.health || "H1"} />
                         </div>
                         <div className="flex items-center gap-4 text-sm text-slate-500">
                           <span>{project.project_code}</span>
@@ -249,10 +240,7 @@ export default function Dashboard() {
                             {project.progress_pct || 0}%
                           </span>
                         </div>
-                        <Progress
-                          value={project.progress_pct || 0}
-                          size="sm"
-                        />
+                        <Progress value={project.progress_pct || 0} size="sm" />
                       </div>
 
                       {/* Arrow */}
@@ -280,10 +268,10 @@ export default function Dashboard() {
                 <Link
                   to="/projects"
                   className={cn(
-                    'flex items-center gap-3 p-3 rounded-xl',
-                    'bg-white/[0.03] border border-white/5',
-                    'text-white hover:bg-white/[0.06] hover:border-white/10',
-                    'transition-all duration-200'
+                    "flex items-center gap-3 p-3 rounded-xl",
+                    "bg-white/[0.03] border border-white/5",
+                    "text-white hover:bg-white/[0.06] hover:border-white/10",
+                    "transition-all duration-200",
                   )}
                 >
                   <div className="p-2 rounded-lg bg-primary/20">
@@ -295,10 +283,10 @@ export default function Dashboard() {
                 <Link
                   to="/machines"
                   className={cn(
-                    'flex items-center gap-3 p-3 rounded-xl',
-                    'bg-white/[0.03] border border-white/5',
-                    'text-white hover:bg-white/[0.06] hover:border-white/10',
-                    'transition-all duration-200'
+                    "flex items-center gap-3 p-3 rounded-xl",
+                    "bg-white/[0.03] border border-white/5",
+                    "text-white hover:bg-white/[0.06] hover:border-white/10",
+                    "transition-all duration-200",
                   )}
                 >
                   <div className="p-2 rounded-lg bg-emerald-500/20">
@@ -310,10 +298,10 @@ export default function Dashboard() {
                 <Link
                   to="/alerts"
                   className={cn(
-                    'flex items-center gap-3 p-3 rounded-xl',
-                    'bg-white/[0.03] border border-white/5',
-                    'text-white hover:bg-white/[0.06] hover:border-white/10',
-                    'transition-all duration-200'
+                    "flex items-center gap-3 p-3 rounded-xl",
+                    "bg-white/[0.03] border border-white/5",
+                    "text-white hover:bg-white/[0.06] hover:border-white/10",
+                    "transition-all duration-200",
                   )}
                 >
                   <div className="p-2 rounded-lg bg-amber-500/20">
@@ -365,6 +353,5 @@ export default function Dashboard() {
         </motion.div>
       </div>
     </motion.div>
-  )
+  );
 }
-

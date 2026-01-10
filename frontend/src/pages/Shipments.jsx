@@ -1,11 +1,16 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Package, Truck, MapPin, Calendar } from 'lucide-react'
-import { PageHeader } from '../components/layout'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Badge } from '../components/ui/badge'
-import { fadeIn, staggerContainer } from '../lib/animations'
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Package, Truck, MapPin, Calendar } from "lucide-react";
+import { PageHeader } from "../components/layout";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { fadeIn, staggerContainer } from "../lib/animations";
 
 export default function Shipments() {
   return (
@@ -30,8 +35,5 @@ export default function Shipments() {
         </motion.div>
       </div>
     </div>
-  )
+  );
 }
-
-
-

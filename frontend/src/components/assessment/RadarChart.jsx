@@ -3,66 +3,66 @@
  * 用于展示技术评估的五维评分
  */
 
-import { useMemo } from 'react'
+import { useMemo } from "react";
 
 const dimensionLabels = {
-  technology: '技术',
-  business: '商务',
-  resource: '资源',
-  delivery: '交付',
-  customer: '客户关系'
-}
+  technology: "技术",
+  business: "商务",
+  resource: "资源",
+  delivery: "交付",
+  customer: "客户关系",
+};
 
 export function RadarChart({ data, size = 300, maxScore = 20 }) {
   const dimensions = useMemo(() => {
-    return Object.keys(dimensionLabels).map(key => ({
+    return Object.keys(dimensionLabels).map((key) => ({
       key,
       label: dimensionLabels[key],
-      score: data[key] || 0
-    }))
-  }, [data])
+      score: data[key] || 0,
+    }));
+  }, [data]);
 
-  const radius = size / 2 - 40
-  const centerX = size / 2
-  const centerY = size / 2
-  const angleStep = (2 * Math.PI) / dimensions.length
+  const radius = size / 2 - 40;
+  const centerX = size / 2;
+  const centerY = size / 2;
+  const angleStep = (2 * Math.PI) / dimensions.length;
 
   // 计算每个维度的坐标点
   const points = useMemo(() => {
     return dimensions.map((dim, index) => {
-      const angle = index * angleStep - Math.PI / 2
-      const normalizedScore = dim.score / maxScore
-      const r = radius * normalizedScore
+      const angle = index * angleStep - Math.PI / 2;
+      const normalizedScore = dim.score / maxScore;
+      const r = radius * normalizedScore;
       return {
         x: centerX + r * Math.cos(angle),
         y: centerY + r * Math.sin(angle),
         label: dim.label,
         score: dim.score,
-        angle: angle + Math.PI / 2
-      }
-    })
-  }, [dimensions, radius, centerX, centerY, angleStep, maxScore])
+        angle: angle + Math.PI / 2,
+      };
+    });
+  }, [dimensions, radius, centerX, centerY, angleStep, maxScore]);
 
   // 生成网格线
-  const gridLevels = 5
+  const gridLevels = 5;
   const gridLines = useMemo(() => {
     return Array.from({ length: gridLevels }, (_, i) => {
-      const level = (i + 1) / gridLevels
-      const levelRadius = radius * level
+      const level = (i + 1) / gridLevels;
+      const levelRadius = radius * level;
       return dimensions.map((_, index) => {
-        const angle = index * angleStep - Math.PI / 2
+        const angle = index * angleStep - Math.PI / 2;
         return {
           x: centerX + levelRadius * Math.cos(angle),
-          y: centerY + levelRadius * Math.sin(angle)
-        }
-      })
-    })
-  }, [dimensions.length, radius, centerX, centerY, angleStep])
+          y: centerY + levelRadius * Math.sin(angle),
+        };
+      });
+    });
+  }, [dimensions.length, radius, centerX, centerY, angleStep]);
 
   // 生成数据区域路径
   const dataPath = useMemo(() => {
-    return points.map(p => `${p.x},${p.y}`).join(' ')
-  }, [points])
+    return points.map((p) => `${p.x},${p.y}`).join(" ");
+  }, [points]);
 
   return (
     <div className="flex flex-col items-center">
@@ -72,7 +72,7 @@ export function RadarChart({ data, size = 300, maxScore = 20 }) {
           {gridLines.map((line, i) => (
             <polygon
               key={i}
-              points={line.map(p => `${p.x},${p.y}`).join(' ')}
+              points={line.map((p) => `${p.x},${p.y}`).join(" ")}
               fill="none"
               stroke="currentColor"
               strokeWidth="1"
@@ -84,9 +84,9 @@ export function RadarChart({ data, size = 300, maxScore = 20 }) {
         {/* 轴线 */}
         <g opacity="0.3">
           {dimensions.map((_, index) => {
-            const angle = index * angleStep - Math.PI / 2
-            const x2 = centerX + radius * Math.cos(angle)
-            const y2 = centerY + radius * Math.sin(angle)
+            const angle = index * angleStep - Math.PI / 2;
+            const x2 = centerX + radius * Math.cos(angle);
+            const y2 = centerY + radius * Math.sin(angle);
             return (
               <line
                 key={index}
@@ -98,7 +98,7 @@ export function RadarChart({ data, size = 300, maxScore = 20 }) {
                 strokeWidth="1"
                 className="text-gray-400"
               />
-            )
+            );
           })}
         </g>
 
@@ -113,17 +113,12 @@ export function RadarChart({ data, size = 300, maxScore = 20 }) {
         {/* 数据点 */}
         {points.map((point, index) => (
           <g key={index}>
-            <circle
-              cx={point.x}
-              cy={point.y}
-              r="4"
-              fill="rgb(59, 130, 246)"
-            />
+            <circle cx={point.x} cy={point.y} r="4" fill="rgb(59, 130, 246)" />
             {/* 标签 */}
             <text
               x={point.x + (point.x > centerX ? 10 : -10)}
               y={point.y + (point.y > centerY ? 15 : -5)}
-              textAnchor={point.x > centerX ? 'start' : 'end'}
+              textAnchor={point.x > centerX ? "start" : "end"}
               className="text-xs fill-gray-300"
             >
               {point.label}
@@ -141,11 +136,5 @@ export function RadarChart({ data, size = 300, maxScore = 20 }) {
         ))}
       </svg>
     </div>
-  )
+  );
 }
-
-
-
-
-
-

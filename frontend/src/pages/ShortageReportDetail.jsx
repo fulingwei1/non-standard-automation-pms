@@ -3,9 +3,9 @@
  * 显示缺料上报的详细信息，支持确认、处理、解决等操作
  */
 
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   ArrowLeft,
   Package,
@@ -21,8 +21,8 @@ import {
   Edit,
   Truck,
   ArrowRightLeft,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -45,161 +45,169 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui'
-import { cn, formatDate } from '../lib/utils'
-import { fadeIn } from '../lib/animations'
-import { shortageApi } from '../services/api'
+} from "../components/ui";
+import { cn, formatDate } from "../lib/utils";
+import { fadeIn } from "../lib/animations";
+import { shortageApi } from "../services/api";
 
 const statusConfigs = {
-  REPORTED: { label: '已上报', color: 'bg-blue-500', icon: Clock },
-  CONFIRMED: { label: '已确认', color: 'bg-amber-500', icon: CheckCircle2 },
-  HANDLING: { label: '处理中', color: 'bg-purple-500', icon: RefreshCw },
-  RESOLVED: { label: '已解决', color: 'bg-emerald-500', icon: CheckCircle2 },
-  REJECTED: { label: '已驳回', color: 'bg-red-500', icon: XCircle },
-}
+  REPORTED: { label: "已上报", color: "bg-blue-500", icon: Clock },
+  CONFIRMED: { label: "已确认", color: "bg-amber-500", icon: CheckCircle2 },
+  HANDLING: { label: "处理中", color: "bg-purple-500", icon: RefreshCw },
+  RESOLVED: { label: "已解决", color: "bg-emerald-500", icon: CheckCircle2 },
+  REJECTED: { label: "已驳回", color: "bg-red-500", icon: XCircle },
+};
 
 const urgentLevelConfigs = {
-  NORMAL: { label: '普通', color: 'text-slate-400', bgColor: 'bg-slate-500/10' },
-  URGENT: { label: '紧急', color: 'text-amber-400', bgColor: 'bg-amber-500/10' },
-  CRITICAL: { label: '特急', color: 'text-red-400', bgColor: 'bg-red-500/10' },
-}
+  NORMAL: {
+    label: "普通",
+    color: "text-slate-400",
+    bgColor: "bg-slate-500/10",
+  },
+  URGENT: {
+    label: "紧急",
+    color: "text-amber-400",
+    bgColor: "bg-amber-500/10",
+  },
+  CRITICAL: { label: "特急", color: "text-red-400", bgColor: "bg-red-500/10" },
+};
 
 export default function ShortageReportDetail() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const [report, setReport] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [actionLoading, setActionLoading] = useState(false)
-  const [showHandleDialog, setShowHandleDialog] = useState(false)
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [showHandleDialog, setShowHandleDialog] = useState(false);
   const [handleData, setHandleData] = useState({
-    solution_type: 'ARRIVAL',
-    solution_note: '',
-  })
-  const [showRejectDialog, setShowRejectDialog] = useState(false)
-  const [rejectReason, setRejectReason] = useState('')
+    solution_type: "ARRIVAL",
+    solution_note: "",
+  });
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   useEffect(() => {
-    loadReport()
-  }, [id])
+    loadReport();
+  }, [id]);
 
   const loadReport = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const res = await shortageApi.reports.get(id)
-      setReport(res.data)
+      const res = await shortageApi.reports.get(id);
+      setReport(res.data);
     } catch (error) {
-      console.error('加载缺料上报详情失败', error)
+      console.error("加载缺料上报详情失败", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleConfirm = async () => {
-    if (!confirm('确认要确认此缺料上报吗？')) return
-    setActionLoading(true)
+    if (!confirm("确认要确认此缺料上报吗？")) return;
+    setActionLoading(true);
     try {
-      await shortageApi.reports.confirm(id)
-      await loadReport()
+      await shortageApi.reports.confirm(id);
+      await loadReport();
     } catch (error) {
-      console.error('确认失败', error)
-      alert('确认失败：' + (error.response?.data?.detail || error.message))
+      console.error("确认失败", error);
+      alert("确认失败：" + (error.response?.data?.detail || error.message));
     } finally {
-      setActionLoading(false)
+      setActionLoading(false);
     }
-  }
+  };
 
   const handleHandle = async () => {
     if (!handleData.solution_note.trim()) {
-      alert('请输入处理说明')
-      return
+      alert("请输入处理说明");
+      return;
     }
-    
-    setActionLoading(true)
+
+    setActionLoading(true);
     try {
-      await shortageApi.reports.handle(id, handleData)
-      await loadReport()
-      setShowHandleDialog(false)
-      setHandleData({ solution_type: 'ARRIVAL', solution_note: '' })
-      alert('处理成功！')
+      await shortageApi.reports.handle(id, handleData);
+      await loadReport();
+      setShowHandleDialog(false);
+      setHandleData({ solution_type: "ARRIVAL", solution_note: "" });
+      alert("处理成功！");
     } catch (error) {
-      console.error('处理失败', error)
-      alert('处理失败：' + (error.response?.data?.detail || error.message))
+      console.error("处理失败", error);
+      alert("处理失败：" + (error.response?.data?.detail || error.message));
     } finally {
-      setActionLoading(false)
+      setActionLoading(false);
     }
-  }
+  };
 
   const handleResolve = async () => {
-    if (!confirm('确认要标记此缺料上报为已解决吗？')) return
-    setActionLoading(true)
+    if (!confirm("确认要标记此缺料上报为已解决吗？")) return;
+    setActionLoading(true);
     try {
-      await shortageApi.reports.resolve(id)
-      await loadReport()
+      await shortageApi.reports.resolve(id);
+      await loadReport();
     } catch (error) {
-      console.error('解决失败', error)
-      alert('解决失败：' + (error.response?.data?.detail || error.message))
+      console.error("解决失败", error);
+      alert("解决失败：" + (error.response?.data?.detail || error.message));
     } finally {
-      setActionLoading(false)
+      setActionLoading(false);
     }
-  }
+  };
 
   const handleCreateArrival = () => {
-    navigate('/shortage/arrivals/new', {
+    navigate("/shortage/arrivals/new", {
       state: {
         shortage_report_id: id,
         project_id: report.project_id,
         material_id: report.material_id,
       },
-    })
-  }
+    });
+  };
 
   const handleCreateSubstitution = () => {
-    navigate('/shortage/substitutions/new', {
+    navigate("/shortage/substitutions/new", {
       state: {
         shortage_report_id: id,
         project_id: report.project_id,
         material_id: report.material_id,
       },
-    })
-  }
+    });
+  };
 
   const handleCreateTransfer = () => {
-    navigate('/shortage/transfers/new', {
+    navigate("/shortage/transfers/new", {
       state: {
         shortage_report_id: id,
         project_id: report.project_id,
         material_id: report.material_id,
       },
-    })
-  }
+    });
+  };
 
   const handleReject = async () => {
     if (!rejectReason.trim()) {
-      alert('请输入驳回原因')
-      return
+      alert("请输入驳回原因");
+      return;
     }
-    
-    setActionLoading(true)
+
+    setActionLoading(true);
     try {
-      await shortageApi.reports.reject(id, rejectReason)
-      await loadReport()
-      setShowRejectDialog(false)
-      setRejectReason('')
-      alert('驳回成功！')
+      await shortageApi.reports.reject(id, rejectReason);
+      await loadReport();
+      setShowRejectDialog(false);
+      setRejectReason("");
+      alert("驳回成功！");
     } catch (error) {
-      console.error('驳回失败', error)
-      alert('驳回失败：' + (error.response?.data?.detail || error.message))
+      console.error("驳回失败", error);
+      alert("驳回失败：" + (error.response?.data?.detail || error.message));
     } finally {
-      setActionLoading(false)
+      setActionLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-muted-foreground">加载中...</div>
       </div>
-    )
+    );
   }
 
   if (!report) {
@@ -207,21 +215,22 @@ export default function ShortageReportDetail() {
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <XCircle className="h-12 w-12 text-muted-foreground" />
         <div className="text-muted-foreground">缺料上报不存在</div>
-        <Button variant="outline" onClick={() => navigate('/shortage')}>
+        <Button variant="outline" onClick={() => navigate("/shortage")}>
           返回列表
         </Button>
       </div>
-    )
+    );
   }
 
-  const status = statusConfigs[report.status] || statusConfigs.REPORTED
-  const urgent = urgentLevelConfigs[report.urgent_level] || urgentLevelConfigs.NORMAL
-  const StatusIcon = status.icon
+  const status = statusConfigs[report.status] || statusConfigs.REPORTED;
+  const urgent =
+    urgentLevelConfigs[report.urgent_level] || urgentLevelConfigs.NORMAL;
+  const StatusIcon = status.icon;
 
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/shortage')}>
+        <Button variant="ghost" size="sm" onClick={() => navigate("/shortage")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           返回
         </Button>
@@ -245,10 +254,16 @@ export default function ShortageReportDetail() {
               <div className="flex items-center justify-between">
                 <CardTitle>基本信息</CardTitle>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className={cn(urgent.bgColor, urgent.color)}>
+                  <Badge
+                    variant="outline"
+                    className={cn(urgent.bgColor, urgent.color)}
+                  >
                     {urgent.label}
                   </Badge>
-                  <Badge variant="outline" className={cn(status.color, 'text-white')}>
+                  <Badge
+                    variant="outline"
+                    className={cn(status.color, "text-white")}
+                  >
                     <StatusIcon className="h-3 w-3 mr-1" />
                     {status.label}
                   </Badge>
@@ -263,23 +278,33 @@ export default function ShortageReportDetail() {
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">项目名称</div>
-                  <div className="font-medium">{report.project_name || '-'}</div>
+                  <div className="font-medium">
+                    {report.project_name || "-"}
+                  </div>
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">机台名称</div>
-                  <div className="font-medium">{report.machine_name || '-'}</div>
+                  <div className="font-medium">
+                    {report.machine_name || "-"}
+                  </div>
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">上报时间</div>
-                  <div className="font-medium">{formatDate(report.report_time)}</div>
+                  <div className="font-medium">
+                    {formatDate(report.report_time)}
+                  </div>
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">上报地点</div>
-                  <div className="font-medium">{report.report_location || '-'}</div>
+                  <div className="font-medium">
+                    {report.report_location || "-"}
+                  </div>
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">上报人</div>
-                  <div className="font-medium">{report.reporter_name || '-'}</div>
+                  <div className="font-medium">
+                    {report.reporter_name || "-"}
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -306,14 +331,19 @@ export default function ShortageReportDetail() {
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">缺料数量</div>
-                  <div className="font-medium text-red-400">{report.shortage_qty}</div>
+                  <div className="font-medium text-red-400">
+                    {report.shortage_qty}
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* 处理信息 */}
-          {(report.confirmed_at || report.handler_id || report.resolved_at || report.solution_type) && (
+          {(report.confirmed_at ||
+            report.handler_id ||
+            report.resolved_at ||
+            report.solution_type) && (
             <Card>
               <CardHeader>
                 <CardTitle>处理信息</CardTitle>
@@ -321,32 +351,46 @@ export default function ShortageReportDetail() {
               <CardContent className="space-y-4">
                 {report.confirmed_at && (
                   <div>
-                    <div className="text-sm text-muted-foreground">确认时间</div>
-                    <div className="font-medium">{formatDate(report.confirmed_at)}</div>
+                    <div className="text-sm text-muted-foreground">
+                      确认时间
+                    </div>
+                    <div className="font-medium">
+                      {formatDate(report.confirmed_at)}
+                    </div>
                   </div>
                 )}
                 {report.handler_id && (
                   <div>
                     <div className="text-sm text-muted-foreground">处理人</div>
-                    <div className="font-medium">{report.handler_name || '-'}</div>
+                    <div className="font-medium">
+                      {report.handler_name || "-"}
+                    </div>
                   </div>
                 )}
                 {report.solution_type && (
                   <div>
-                    <div className="text-sm text-muted-foreground">解决方案类型</div>
+                    <div className="text-sm text-muted-foreground">
+                      解决方案类型
+                    </div>
                     <div className="font-medium">{report.solution_type}</div>
                   </div>
                 )}
                 {report.solution_note && (
                   <div>
-                    <div className="text-sm text-muted-foreground">解决方案说明</div>
+                    <div className="text-sm text-muted-foreground">
+                      解决方案说明
+                    </div>
                     <div className="font-medium">{report.solution_note}</div>
                   </div>
                 )}
                 {report.resolved_at && (
                   <div>
-                    <div className="text-sm text-muted-foreground">解决时间</div>
-                    <div className="font-medium">{formatDate(report.resolved_at)}</div>
+                    <div className="text-sm text-muted-foreground">
+                      解决时间
+                    </div>
+                    <div className="font-medium">
+                      {formatDate(report.resolved_at)}
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -360,7 +404,9 @@ export default function ShortageReportDetail() {
                 <CardTitle>备注</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-sm whitespace-pre-wrap">{report.remark}</div>
+                <div className="text-sm whitespace-pre-wrap">
+                  {report.remark}
+                </div>
               </CardContent>
             </Card>
           )}
@@ -373,7 +419,7 @@ export default function ShortageReportDetail() {
               <CardTitle>操作</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {report.status === 'REPORTED' && (
+              {report.status === "REPORTED" && (
                 <>
                   <Button
                     className="w-full"
@@ -394,7 +440,7 @@ export default function ShortageReportDetail() {
                   </Button>
                 </>
               )}
-              {report.status === 'CONFIRMED' && (
+              {report.status === "CONFIRMED" && (
                 <Button
                   className="w-full"
                   variant="outline"
@@ -405,7 +451,7 @@ export default function ShortageReportDetail() {
                   开始处理
                 </Button>
               )}
-              {report.status === 'HANDLING' && (
+              {report.status === "HANDLING" && (
                 <Button
                   className="w-full"
                   onClick={handleResolve}
@@ -418,7 +464,7 @@ export default function ShortageReportDetail() {
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => navigate('/shortage')}
+                onClick={() => navigate("/shortage")}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 返回列表
@@ -427,7 +473,7 @@ export default function ShortageReportDetail() {
           </Card>
 
           {/* 快速操作 */}
-          {(report.status === 'CONFIRMED' || report.status === 'HANDLING') && (
+          {(report.status === "CONFIRMED" || report.status === "HANDLING") && (
             <Card>
               <CardHeader>
                 <CardTitle>快速操作</CardTitle>
@@ -470,7 +516,13 @@ export default function ShortageReportDetail() {
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <div className={cn('rounded-full p-2', status.color, 'bg-opacity-10')}>
+                  <div
+                    className={cn(
+                      "rounded-full p-2",
+                      status.color,
+                      "bg-opacity-10",
+                    )}
+                  >
                     <Clock className="h-4 w-4" />
                   </div>
                   <div className="flex-1">
@@ -539,7 +591,9 @@ export default function ShortageReportDetail() {
               <Label htmlFor="solution_type">解决方案类型</Label>
               <Select
                 value={handleData.solution_type}
-                onValueChange={(value) => setHandleData(prev => ({ ...prev, solution_type: value }))}
+                onValueChange={(value) =>
+                  setHandleData((prev) => ({ ...prev, solution_type: value }))
+                }
               >
                 <SelectTrigger id="solution_type">
                   <SelectValue />
@@ -558,17 +612,25 @@ export default function ShortageReportDetail() {
                 id="solution_note"
                 placeholder="请详细说明处理方案..."
                 value={handleData.solution_note}
-                onChange={(e) => setHandleData(prev => ({ ...prev, solution_note: e.target.value }))}
+                onChange={(e) =>
+                  setHandleData((prev) => ({
+                    ...prev,
+                    solution_note: e.target.value,
+                  }))
+                }
                 rows={4}
               />
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowHandleDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowHandleDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleHandle} disabled={actionLoading}>
-              {actionLoading ? '处理中...' : '确认处理'}
+              {actionLoading ? "处理中..." : "确认处理"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -593,19 +655,25 @@ export default function ShortageReportDetail() {
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setShowRejectDialog(false)
-              setRejectReason('')
-            }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowRejectDialog(false);
+                setRejectReason("");
+              }}
+            >
               取消
             </Button>
-            <Button variant="destructive" onClick={handleReject} disabled={actionLoading}>
-              {actionLoading ? '提交中...' : '确认驳回'}
+            <Button
+              variant="destructive"
+              onClick={handleReject}
+              disabled={actionLoading}
+            >
+              {actionLoading ? "提交中..." : "确认驳回"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-

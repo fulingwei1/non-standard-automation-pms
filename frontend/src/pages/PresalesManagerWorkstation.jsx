@@ -2,9 +2,9 @@
  * 售前技术部经理工作台
  * 核心功能：团队管理、方案审核、投标支持、团队绩效监控
  */
-import React, { useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import React, { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
@@ -31,15 +31,20 @@ import {
   Activity,
   MessageSquare,
   Lightbulb,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
-import { Button } from '../components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Badge } from '../components/ui/badge'
-import { Progress } from '../components/ui/progress'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { presaleApi, opportunityApi, orgApi, userApi } from '../services/api'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Progress } from "../components/ui/progress";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { presaleApi, opportunityApi, orgApi, userApi } from "../services/api";
 
 // Mock 数据 - 总体统计
 // Mock data - 已移除，使用真实API
@@ -54,14 +59,14 @@ import { presaleApi, opportunityApi, orgApi, userApi } from '../services/api'
 // 格式化金额
 const formatCurrency = (value) => {
   if (value >= 10000) {
-    return `¥${(value / 10000).toFixed(1)}万`
+    return `¥${(value / 10000).toFixed(1)}万`;
   }
-  return new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency: 'CNY',
+  return new Intl.NumberFormat("zh-CN", {
+    style: "currency",
+    currency: "CNY",
     minimumFractionDigits: 0,
-  }).format(value)
-}
+  }).format(value);
+};
 
 // 统计卡片组件
 const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg }) => {
@@ -73,7 +78,7 @@ const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg }) => {
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm text-slate-400 mb-2">{title}</p>
-          <p className={cn('text-2xl font-bold mb-1', color)}>{value}</p>
+          <p className={cn("text-2xl font-bold mb-1", color)}>{value}</p>
           {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
           {trend !== undefined && (
             <div className="flex items-center gap-1 mt-2">
@@ -88,22 +93,24 @@ const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg }) => {
                   <span className="text-xs text-red-400">{trend}%</span>
                 </>
               ) : null}
-              {trend !== 0 && <span className="text-xs text-slate-500 ml-1">vs 上月</span>}
+              {trend !== 0 && (
+                <span className="text-xs text-slate-500 ml-1">vs 上月</span>
+              )}
             </div>
           )}
         </div>
-        <div className={cn('rounded-lg p-3 bg-opacity-20', bg)}>
-          <Icon className={cn('h-6 w-6', color)} />
+        <div className={cn("rounded-lg p-3 bg-opacity-20", bg)}>
+          <Icon className={cn("h-6 w-6", color)} />
         </div>
       </div>
       <div className="absolute right-0 bottom-0 h-20 w-20 rounded-full bg-gradient-to-br from-purple-500/10 to-transparent blur-2xl opacity-30" />
     </motion.div>
-  )
-}
+  );
+};
 
 export default function PresalesManagerWorkstation() {
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [overallStats, setOverallStats] = useState({
     teamSize: 0,
     activeSolutions: 0,
@@ -115,127 +122,169 @@ export default function PresalesManagerWorkstation() {
     achievementRate: 0,
     avgSolutionTime: 0,
     solutionQuality: 0,
-  })
-  const [teamPerformance, setTeamPerformance] = useState([])
-  const [pendingReviews, setPendingReviews] = useState([])
+  });
+  const [teamPerformance, setTeamPerformance] = useState([]);
+  const [pendingReviews, setPendingReviews] = useState([]);
 
   // Load dashboard data
   const loadDashboard = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       // Load solutions
       const solutionsResponse = await presaleApi.solutions.list({
         page: 1,
         page_size: 100,
-        status: 'DRAFT,REVIEWING,SUBMITTED',
-      })
-      const solutions = solutionsResponse.data?.items || solutionsResponse.data || []
-      const activeSolutions = solutions.length
-      const pendingReview = solutions.filter(s => s.status === 'REVIEWING').length
+        status: "DRAFT,REVIEWING,SUBMITTED",
+      });
+      const solutions =
+        solutionsResponse.data?.items || solutionsResponse.data || [];
+      const activeSolutions = solutions.length;
+      const pendingReview = solutions.filter(
+        (s) => s.status === "REVIEWING",
+      ).length;
 
       // Load tenders
       const tendersResponse = await presaleApi.tenders.list({
         page: 1,
         page_size: 100,
-      })
-      const tenders = tendersResponse.data?.items || tendersResponse.data || []
-      const activeBids = tenders.length
-      const urgentBids = tenders.filter(t => {
-        const deadline = new Date(t.submission_deadline)
-        const now = new Date()
-        const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24))
-        return daysLeft <= 7 && daysLeft > 0
-      }).length
+      });
+      const tenders = tendersResponse.data?.items || tendersResponse.data || [];
+      const activeBids = tenders.length;
+      const urgentBids = tenders.filter((t) => {
+        const deadline = new Date(t.submission_deadline);
+        const now = new Date();
+        const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+        return daysLeft <= 7 && daysLeft > 0;
+      }).length;
 
       // Calculate monthly output (sum of estimated values)
-      const monthlyOutput = solutions.reduce((sum, s) => sum + (s.estimated_cost || s.suggested_price || 0), 0)
-      const monthlyTarget = monthlyOutput * 1.15 // Assume 15% target increase
-      const achievementRate = monthlyTarget > 0 ? (monthlyOutput / monthlyTarget) * 100 : 0
+      const monthlyOutput = solutions.reduce(
+        (sum, s) => sum + (s.estimated_cost || s.suggested_price || 0),
+        0,
+      );
+      const monthlyTarget = monthlyOutput * 1.15; // Assume 15% target increase
+      const achievementRate =
+        monthlyTarget > 0 ? (monthlyOutput / monthlyTarget) * 100 : 0;
 
       // Get pending reviews
       const reviews = solutions
-        .filter(s => s.status === 'REVIEWING')
-        .map(s => ({
+        .filter((s) => s.status === "REVIEWING")
+        .map((s) => ({
           id: s.id,
-          title: s.name || '',
-          customer: s.customer_name || '',
-          author: s.creator_name || '',
-          version: s.version || 'V1.0',
-          submitTime: s.submitted_at || s.created_at || '',
+          title: s.name || "",
+          customer: s.customer_name || "",
+          author: s.creator_name || "",
+          version: s.version || "V1.0",
+          submitTime: s.submitted_at || s.created_at || "",
           amount: s.estimated_cost || s.suggested_price || 0,
-          priority: s.priority?.toLowerCase() || 'medium',
-          daysWaiting: s.submitted_at ? Math.floor((new Date() - new Date(s.submitted_at)) / (1000 * 60 * 60 * 24)) : 0,
+          priority: s.priority?.toLowerCase() || "medium",
+          daysWaiting: s.submitted_at
+            ? Math.floor(
+                (new Date() - new Date(s.submitted_at)) / (1000 * 60 * 60 * 24),
+              )
+            : 0,
         }))
-        .sort((a, b) => b.daysWaiting - a.daysWaiting)
+        .sort((a, b) => b.daysWaiting - a.daysWaiting);
 
       // Get team size - try to get from department or user API
-      let teamSize = 12 // default
+      let teamSize = 12; // default
       try {
         // Try to get users from "售前技术部" department
-        const usersResponse = await userApi.list({ 
-          department: '售前技术部', 
-          is_active: true,
-          page_size: 100 
-        }).catch(() => null)
+        const usersResponse = await userApi
+          .list({
+            department: "售前技术部",
+            is_active: true,
+            page_size: 100,
+          })
+          .catch(() => null);
         if (usersResponse?.data?.total) {
-          teamSize = usersResponse.data.total
+          teamSize = usersResponse.data.total;
         }
       } catch (err) {
-        console.error('Failed to get team size:', err)
+        console.error("Failed to get team size:", err);
       }
 
       // Get response time stats (for avgSolutionTime)
-      let avgSolutionTime = 5.2 // default
+      let avgSolutionTime = 5.2; // default
       try {
-        const responseTimeResponse = await presaleApi.statistics.responseTime({}).catch(() => null)
-        if (responseTimeResponse?.data?.data?.completion_time?.avg_completion_hours) {
-          avgSolutionTime = parseFloat(responseTimeResponse.data.data.completion_time.avg_completion_hours.toFixed(1))
+        const responseTimeResponse = await presaleApi.statistics
+          .responseTime({})
+          .catch(() => null);
+        if (
+          responseTimeResponse?.data?.data?.completion_time
+            ?.avg_completion_hours
+        ) {
+          avgSolutionTime = parseFloat(
+            responseTimeResponse.data.data.completion_time.avg_completion_hours.toFixed(
+              1,
+            ),
+          );
         }
       } catch (err) {
-        console.error('Failed to get response time stats:', err)
+        console.error("Failed to get response time stats:", err);
       }
 
       // Calculate solution quality from solutions
       // Quality can be based on review status, approval rate, etc.
-      let solutionQuality = 92.5 // default
+      let solutionQuality = 92.5; // default
       try {
-        const allSolutionsResponse = await presaleApi.solutions.list({
-          page: 1,
-          page_size: 100,
-        }).catch(() => null)
-        const allSolutions = allSolutionsResponse?.data?.items || allSolutionsResponse?.data || []
+        const allSolutionsResponse = await presaleApi.solutions
+          .list({
+            page: 1,
+            page_size: 100,
+          })
+          .catch(() => null);
+        const allSolutions =
+          allSolutionsResponse?.data?.items || allSolutionsResponse?.data || [];
         if (allSolutions.length > 0) {
           // Calculate quality based on approved/reviewed solutions
-          const approvedSolutions = allSolutions.filter(s => s.status === 'APPROVED' || s.status === 'PUBLISHED').length
-          const reviewedSolutions = allSolutions.filter(s => s.status !== 'DRAFT').length
+          const approvedSolutions = allSolutions.filter(
+            (s) => s.status === "APPROVED" || s.status === "PUBLISHED",
+          ).length;
+          const reviewedSolutions = allSolutions.filter(
+            (s) => s.status !== "DRAFT",
+          ).length;
           if (reviewedSolutions > 0) {
-            solutionQuality = parseFloat(((approvedSolutions / reviewedSolutions) * 100).toFixed(1))
+            solutionQuality = parseFloat(
+              ((approvedSolutions / reviewedSolutions) * 100).toFixed(1),
+            );
           }
         }
       } catch (err) {
-        console.error('Failed to calculate solution quality:', err)
+        console.error("Failed to calculate solution quality:", err);
       }
 
       // Load team performance
-      let teamPerformanceData = []
+      let teamPerformanceData = [];
       try {
-        const performanceResponse = await presaleApi.statistics.performance({}).catch(() => null)
+        const performanceResponse = await presaleApi.statistics
+          .performance({})
+          .catch(() => null);
         if (performanceResponse?.data?.data?.performance) {
-          teamPerformanceData = performanceResponse.data.data.performance.map(p => ({
-            id: p.user_id,
-            name: p.user_name,
-            role: '售前技术工程师',
-            activeSolutions: p.solutions_count || 0,
-            completedThisMonth: p.completed_tickets || 0,
-            pendingReview: 0, // Not available in API
-            avgQuality: p.avg_satisfaction ? parseFloat((p.avg_satisfaction * 20).toFixed(0)) : 0, // Convert 0-5 to 0-100
-            status: p.avg_satisfaction >= 4.5 ? 'excellent' : p.avg_satisfaction >= 4.0 ? 'good' : 'warning',
-          }))
+          teamPerformanceData = performanceResponse.data.data.performance.map(
+            (p) => ({
+              id: p.user_id,
+              name: p.user_name,
+              role: "售前技术工程师",
+              activeSolutions: p.solutions_count || 0,
+              completedThisMonth: p.completed_tickets || 0,
+              pendingReview: 0, // Not available in API
+              avgQuality: p.avg_satisfaction
+                ? parseFloat((p.avg_satisfaction * 20).toFixed(0))
+                : 0, // Convert 0-5 to 0-100
+              status:
+                p.avg_satisfaction >= 4.5
+                  ? "excellent"
+                  : p.avg_satisfaction >= 4.0
+                    ? "good"
+                    : "warning",
+            }),
+          );
         }
       } catch (err) {
-        console.error('Failed to load team performance:', err)
+        console.error("Failed to load team performance:", err);
       }
 
       setOverallStats({
@@ -249,20 +298,24 @@ export default function PresalesManagerWorkstation() {
         achievementRate,
         avgSolutionTime,
         solutionQuality,
-      })
-      setPendingReviews(reviews)
-      setTeamPerformance(teamPerformanceData.length > 0 ? teamPerformanceData : [])
+      });
+      setPendingReviews(reviews);
+      setTeamPerformance(
+        teamPerformanceData.length > 0 ? teamPerformanceData : [],
+      );
     } catch (err) {
-      console.error('Failed to load dashboard:', err)
-      setError(err.response?.data?.detail || err.message || '加载工作台数据失败')
+      console.error("Failed to load dashboard:", err);
+      setError(
+        err.response?.data?.detail || err.message || "加载工作台数据失败",
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    loadDashboard()
-  }, [loadDashboard])
+    loadDashboard();
+  }, [loadDashboard]);
 
   if (loading) {
     return (
@@ -270,7 +323,7 @@ export default function PresalesManagerWorkstation() {
         <PageHeader title="售前技术部经理工作台" description="加载中..." />
         <div className="text-center py-16 text-slate-400">加载中...</div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -282,7 +335,7 @@ export default function PresalesManagerWorkstation() {
           <div className="text-sm mt-2">{error}</div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -382,7 +435,11 @@ export default function PresalesManagerWorkstation() {
                     团队绩效排行
                   </CardTitle>
                   <Link to="/presales-tasks">
-                    <Button variant="ghost" size="sm" className="text-xs text-primary">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-primary"
+                    >
                       查看详情 <ChevronRight className="w-3 h-3 ml-1" />
                     </Button>
                   </Link>
@@ -399,24 +456,34 @@ export default function PresalesManagerWorkstation() {
                         <div className="flex items-center gap-3">
                           <div
                             className={cn(
-                              'w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm',
-                              index === 0 && 'bg-gradient-to-br from-amber-500 to-orange-500',
-                              index === 1 && 'bg-gradient-to-br from-blue-500 to-cyan-500',
-                              index === 2 && 'bg-gradient-to-br from-slate-500 to-gray-600',
-                              index === 3 && 'bg-gradient-to-br from-purple-500 to-pink-500'
+                              "w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm",
+                              index === 0 &&
+                                "bg-gradient-to-br from-amber-500 to-orange-500",
+                              index === 1 &&
+                                "bg-gradient-to-br from-blue-500 to-cyan-500",
+                              index === 2 &&
+                                "bg-gradient-to-br from-slate-500 to-gray-600",
+                              index === 3 &&
+                                "bg-gradient-to-br from-purple-500 to-pink-500",
                             )}
                           >
                             {index + 1}
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-white">{member.name}</span>
-                              <Badge variant="outline" className="text-xs bg-slate-700/40">
+                              <span className="font-medium text-white">
+                                {member.name}
+                              </span>
+                              <Badge
+                                variant="outline"
+                                className="text-xs bg-slate-700/40"
+                              >
                                 {member.role}
                               </Badge>
                             </div>
                             <div className="text-xs text-slate-400 mt-1">
-                              {member.activeSolutions} 个进行中 · 本月完成 {member.completedThisMonth} 个
+                              {member.activeSolutions} 个进行中 · 本月完成{" "}
+                              {member.completedThisMonth} 个
                               {member.pendingReview > 0 && (
                                 <span className="text-amber-400 ml-1">
                                   · 待审核 {member.pendingReview}
@@ -437,12 +504,12 @@ export default function PresalesManagerWorkstation() {
                           <span className="text-slate-400">质量评分</span>
                           <span
                             className={cn(
-                              'font-medium',
+                              "font-medium",
                               member.avgQuality >= 90
-                                ? 'text-emerald-400'
+                                ? "text-emerald-400"
                                 : member.avgQuality >= 80
-                                ? 'text-amber-400'
-                                : 'text-red-400'
+                                  ? "text-amber-400"
+                                  : "text-red-400",
                             )}
                           >
                             {member.avgQuality}%
@@ -470,7 +537,11 @@ export default function PresalesManagerWorkstation() {
                     进行中方案
                   </CardTitle>
                   <Link to="/solutions">
-                    <Button variant="ghost" size="sm" className="text-xs text-primary">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-primary"
+                    >
                       方案中心 <ChevronRight className="w-3 h-3 ml-1" />
                     </Button>
                   </Link>
@@ -485,7 +556,9 @@ export default function PresalesManagerWorkstation() {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="text-sm font-medium text-white">{solution.name}</h4>
+                          <h4 className="text-sm font-medium text-white">
+                            {solution.name}
+                          </h4>
                           <Badge variant="outline" className="text-xs">
                             {solution.version}
                           </Badge>
@@ -505,7 +578,7 @@ export default function PresalesManagerWorkstation() {
                           </span>
                         </div>
                       </div>
-                      <Badge className={cn('text-xs', solution.statusColor)}>
+                      <Badge className={cn("text-xs", solution.statusColor)}>
                         {solution.status}
                       </Badge>
                     </div>
@@ -514,7 +587,10 @@ export default function PresalesManagerWorkstation() {
                         <span className="text-slate-400">完成进度</span>
                         <span className="text-white">{solution.progress}%</span>
                       </div>
-                      <Progress value={solution.progress} className="h-1.5 bg-slate-700/50" />
+                      <Progress
+                        value={solution.progress}
+                        className="h-1.5 bg-slate-700/50"
+                      />
                     </div>
                     <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
                       <span className="flex items-center gap-1">
@@ -540,7 +616,10 @@ export default function PresalesManagerWorkstation() {
                     <FileCheck className="h-5 w-5 text-amber-400" />
                     待审核方案
                   </CardTitle>
-                  <Badge variant="outline" className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+                  <Badge
+                    variant="outline"
+                    className="bg-amber-500/20 text-amber-400 border-amber-500/30"
+                  >
                     {pendingReviews.length}
                   </Badge>
                 </div>
@@ -554,7 +633,7 @@ export default function PresalesManagerWorkstation() {
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          {item.priority === 'high' && (
+                          {item.priority === "high" && (
                             <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
                               紧急
                             </Badge>
@@ -565,13 +644,18 @@ export default function PresalesManagerWorkstation() {
                             </Badge>
                           )}
                         </div>
-                        <p className="font-medium text-white text-sm">{item.title}</p>
-                        <p className="text-xs text-slate-400 mt-1">{item.customer}</p>
+                        <p className="font-medium text-white text-sm">
+                          {item.title}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-1">
+                          {item.customer}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center justify-between text-xs mt-2">
                       <span className="text-slate-400">
-                        {item.author} · {item.version} · {item.submitTime.split(' ')[1]}
+                        {item.author} · {item.version} ·{" "}
+                        {item.submitTime.split(" ")[1]}
                       </span>
                       <span className="font-medium text-amber-400">
                         {formatCurrency(item.amount)}
@@ -598,7 +682,11 @@ export default function PresalesManagerWorkstation() {
                     投标项目
                   </CardTitle>
                   <Link to="/bidding">
-                    <Button variant="ghost" size="sm" className="text-xs text-primary">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-primary"
+                    >
                       全部 <ChevronRight className="w-3 h-3 ml-1" />
                     </Button>
                   </Link>
@@ -612,35 +700,48 @@ export default function PresalesManagerWorkstation() {
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-white truncate">{bid.name}</h4>
-                        <p className="text-xs text-slate-500 mt-0.5">{bid.customer}</p>
+                        <h4 className="text-sm font-medium text-white truncate">
+                          {bid.name}
+                        </h4>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          {bid.customer}
+                        </p>
                       </div>
-                      <Badge className={cn('text-xs', bid.statusColor)}>{bid.status}</Badge>
+                      <Badge className={cn("text-xs", bid.statusColor)}>
+                        {bid.status}
+                      </Badge>
                     </div>
                     <div className="space-y-2 mt-2">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-slate-400 flex items-center gap-1">
                           <Timer className="w-3 h-3" />
-                          剩余{' '}
+                          剩余{" "}
                           <span
                             className={cn(
-                              'font-medium',
-                              bid.daysLeft <= 7 ? 'text-red-400' : 'text-white'
+                              "font-medium",
+                              bid.daysLeft <= 7 ? "text-red-400" : "text-white",
                             )}
                           >
                             {bid.daysLeft}
-                          </span>{' '}
+                          </span>{" "}
                           天
                         </span>
-                        <span className="text-slate-400">{formatCurrency(bid.amount)}</span>
+                        <span className="text-slate-400">
+                          {formatCurrency(bid.amount)}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-slate-400">
                           负责人: {bid.responsible}
                         </span>
-                        <span className="text-slate-400">进度: {bid.progress}%</span>
+                        <span className="text-slate-400">
+                          进度: {bid.progress}%
+                        </span>
                       </div>
-                      <Progress value={bid.progress} className="h-1 bg-slate-700/50" />
+                      <Progress
+                        value={bid.progress}
+                        className="h-1 bg-slate-700/50"
+                      />
                     </div>
                   </div>
                 ))}
@@ -684,9 +785,9 @@ export default function PresalesManagerWorkstation() {
                   完成率: {overallStats.achievementRate.toFixed(1)}%
                 </span>
                 <span className="text-slate-400">
-                  剩余:{' '}
+                  剩余:{" "}
                   {formatCurrency(
-                    overallStats.monthlyTarget - overallStats.monthlyOutput
+                    overallStats.monthlyTarget - overallStats.monthlyOutput,
                   )}
                 </span>
               </div>
@@ -695,6 +796,5 @@ export default function PresalesManagerWorkstation() {
         </Card>
       </motion.div>
     </motion.div>
-  )
+  );
 }
-

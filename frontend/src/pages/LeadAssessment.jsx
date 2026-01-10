@@ -3,8 +3,8 @@
  * Features: Lead list, assessment form, scoring, qualification status
  */
 
-import { useState, useMemo, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useMemo, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   Filter,
@@ -35,8 +35,8 @@ import {
   ChevronRight,
   MessageSquare,
   Briefcase,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -58,86 +58,134 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../components/ui'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { leadApi } from '../services/api'
+} from "../components/ui";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { leadApi } from "../services/api";
 
 // 线索状态配置（映射后端状态到前端显示）
 const statusConfig = {
-  new: { label: '新线索', color: 'bg-blue-500', textColor: 'text-blue-400', backend: 'NEW' },
-  assessing: { label: '评估中', color: 'bg-amber-500', textColor: 'text-amber-400', backend: 'QUALIFYING' },
-  qualified: { label: '已合格', color: 'bg-emerald-500', textColor: 'text-emerald-400', backend: 'QUALIFYING' },
-  unqualified: { label: '不合格', color: 'bg-red-500', textColor: 'text-red-400', backend: 'INVALID' },
-  converted: { label: '已转化', color: 'bg-purple-500', textColor: 'text-purple-400', backend: 'CONVERTED' },
-  lost: { label: '已流失', color: 'bg-slate-600', textColor: 'text-slate-500', backend: 'INVALID' },
-}
+  new: {
+    label: "新线索",
+    color: "bg-blue-500",
+    textColor: "text-blue-400",
+    backend: "NEW",
+  },
+  assessing: {
+    label: "评估中",
+    color: "bg-amber-500",
+    textColor: "text-amber-400",
+    backend: "QUALIFYING",
+  },
+  qualified: {
+    label: "已合格",
+    color: "bg-emerald-500",
+    textColor: "text-emerald-400",
+    backend: "QUALIFYING",
+  },
+  unqualified: {
+    label: "不合格",
+    color: "bg-red-500",
+    textColor: "text-red-400",
+    backend: "INVALID",
+  },
+  converted: {
+    label: "已转化",
+    color: "bg-purple-500",
+    textColor: "text-purple-400",
+    backend: "CONVERTED",
+  },
+  lost: {
+    label: "已流失",
+    color: "bg-slate-600",
+    textColor: "text-slate-500",
+    backend: "INVALID",
+  },
+};
 
 // 线索等级配置
 const gradeConfig = {
-  hot: { label: '热门', color: 'bg-red-500', textColor: 'text-red-400', icon: '🔥' },
-  warm: { label: '温线索', color: 'bg-orange-500', textColor: 'text-orange-400', icon: '🟠' },
-  cold: { label: '冷线索', color: 'bg-blue-500', textColor: 'text-blue-400', icon: '🔵' },
-}
+  hot: {
+    label: "热门",
+    color: "bg-red-500",
+    textColor: "text-red-400",
+    icon: "🔥",
+  },
+  warm: {
+    label: "温线索",
+    color: "bg-orange-500",
+    textColor: "text-orange-400",
+    icon: "🟠",
+  },
+  cold: {
+    label: "冷线索",
+    color: "bg-blue-500",
+    textColor: "text-blue-400",
+    icon: "🔵",
+  },
+};
 
 // Mock 线索数据
 // Mock data - 已移除，使用真实API
 // 评估维度配置
 const assessmentDimensions = [
-  { id: 'demand', label: '需求明确度', weight: 0.25 },
-  { id: 'budget', label: '预算充足度', weight: 0.25 },
-  { id: 'authority', label: '决策权限', weight: 0.20 },
-  { id: 'timeline', label: '时间紧迫度', weight: 0.15 },
-  { id: 'fit', label: '方案匹配度', weight: 0.15 },
-]
+  { id: "demand", label: "需求明确度", weight: 0.25 },
+  { id: "budget", label: "预算充足度", weight: 0.25 },
+  { id: "authority", label: "决策权限", weight: 0.2 },
+  { id: "timeline", label: "时间紧迫度", weight: 0.15 },
+  { id: "fit", label: "方案匹配度", weight: 0.15 },
+];
 
 export default function LeadAssessment() {
-  const [leads, setLeads] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [gradeFilter, setGradeFilter] = useState('all')
-  const [viewMode, setViewMode] = useState('grid')
-  const [selectedLead, setSelectedLead] = useState(null)
-  const [showAssessmentForm, setShowAssessmentForm] = useState(false)
-  const [showDetailDialog, setShowDetailDialog] = useState(false)
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [assessmentScores, setAssessmentScores] = useState({})
-  const [page, setPage] = useState(1)
-  const [total, setTotal] = useState(0)
-  const pageSize = 20
+  const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [gradeFilter, setGradeFilter] = useState("all");
+  const [viewMode, setViewMode] = useState("grid");
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [showAssessmentForm, setShowAssessmentForm] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [assessmentScores, setAssessmentScores] = useState({});
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const pageSize = 20;
   const [newLead, setNewLead] = useState({
-    lead_name: '',
-    company_name: '',
-    contact_name: '',
-    contact_phone: '',
-    contact_email: '',
-    source: 'direct',
-    estimated_amount: '',
-    demand_summary: '',
-  })
+    lead_name: "",
+    company_name: "",
+    contact_name: "",
+    contact_phone: "",
+    contact_email: "",
+    source: "direct",
+    estimated_amount: "",
+    demand_summary: "",
+  });
 
   // 加载线索列表
   const loadLeads = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const params = {
         page,
         page_size: pageSize,
         keyword: searchTerm || undefined,
-        status: statusFilter !== 'all' ? statusConfig[statusFilter]?.backend : undefined,
-      }
-      const response = await leadApi.list(params)
+        status:
+          statusFilter !== "all"
+            ? statusConfig[statusFilter]?.backend
+            : undefined,
+      };
+      const response = await leadApi.list(params);
       if (response.data && response.data.items) {
         // 转换数据格式以适配评估页面
         const transformedLeads = response.data.items.map((lead) => {
           // 从需求摘要中解析评估信息（如果有）
-          let assessmentInfo = null
+          let assessmentInfo = null;
           if (lead.demand_summary) {
             try {
-              const parsed = JSON.parse(lead.demand_summary)
+              const parsed = JSON.parse(lead.demand_summary);
               if (parsed.assessment) {
-                assessmentInfo = parsed.assessment
+                assessmentInfo = parsed.assessment;
               }
             } catch (e) {
               // 不是JSON格式，忽略
@@ -146,259 +194,277 @@ export default function LeadAssessment() {
 
           // 根据状态映射到评估页面的状态
           const statusMap = {
-            NEW: 'new',
-            QUALIFYING: 'assessing',
-            CONVERTED: 'converted',
-            INVALID: 'unqualified',
-          }
+            NEW: "new",
+            QUALIFYING: "assessing",
+            CONVERTED: "converted",
+            INVALID: "unqualified",
+          };
 
           // 反向映射：从后端状态到前端状态
           const getFrontendStatus = (backendStatus) => {
-            for (const [frontendStatus, config] of Object.entries(statusConfig)) {
+            for (const [frontendStatus, config] of Object.entries(
+              statusConfig,
+            )) {
               if (config.backend === backendStatus) {
-                return frontendStatus
+                return frontendStatus;
               }
             }
-            return 'new'
-          }
+            return "new";
+          };
 
           // 根据评估分数确定等级
           const getGrade = (score) => {
-            if (!score) return null
-            if (score >= 75) return 'hot'
-            if (score >= 60) return 'warm'
-            return 'cold'
-          }
+            if (!score) return null;
+            if (score >= 75) return "hot";
+            if (score >= 60) return "warm";
+            return "cold";
+          };
 
           return {
             id: lead.id,
             lead_code: lead.lead_code,
-            name: lead.demand_summary || lead.customer_name || '未命名线索',
-            companyName: lead.customer_name || '',
-            companyShort: lead.customer_name || '',
-            contactPerson: lead.contact_name || '',
-            phone: lead.contact_phone || '',
-            email: '',
-            location: '',
-            industry: lead.industry || '',
-            source: lead.source || '',
-            status: getFrontendStatus(lead.status) || 'new',
+            name: lead.demand_summary || lead.customer_name || "未命名线索",
+            companyName: lead.customer_name || "",
+            companyShort: lead.customer_name || "",
+            contactPerson: lead.contact_name || "",
+            phone: lead.contact_phone || "",
+            email: "",
+            location: "",
+            industry: lead.industry || "",
+            source: lead.source || "",
+            status: getFrontendStatus(lead.status) || "new",
             grade: assessmentInfo?.grade || getGrade(assessmentInfo?.score),
             expectedAmount: assessmentInfo?.expectedAmount || 0,
             expectedCloseDate: assessmentInfo?.expectedCloseDate || null,
             score: assessmentInfo?.score || null,
             assessmentDate: assessmentInfo?.assessmentDate || null,
             assessedBy: assessmentInfo?.assessedBy || null,
-            notes: lead.demand_summary || '',
+            notes: lead.demand_summary || "",
             tags: [],
-            createdAt: lead.created_at || '',
-            lastContact: '',
+            createdAt: lead.created_at || "",
+            lastContact: "",
             raw: lead, // 保存原始数据
-          }
-        })
-        setLeads(transformedLeads)
-        setTotal(response.data.total || 0)
+          };
+        });
+        setLeads(transformedLeads);
+        setTotal(response.data.total || 0);
       }
     } catch (error) {
-      console.error('加载线索列表失败:', error)
+      console.error("加载线索列表失败:", error);
       // 如果API失败，使用mock数据作为fallback
-      setLeads(mockLeads)
-      setTotal(mockLeads.length)
+      setLeads(mockLeads);
+      setTotal(mockLeads.length);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // 搜索防抖
   useEffect(() => {
     const timer = setTimeout(() => {
       if (page === 1) {
-        loadLeads()
+        loadLeads();
       } else {
-        setPage(1) // 重置到第一页
+        setPage(1); // 重置到第一页
       }
-    }, 500)
+    }, 500);
 
-    return () => clearTimeout(timer)
-  }, [searchTerm])
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
-    loadLeads()
-  }, [page, statusFilter])
+    loadLeads();
+  }, [page, statusFilter]);
 
   // 筛选线索（前端筛选，用于等级筛选）
   const filteredLeads = useMemo(() => {
     return leads.filter((lead) => {
-      const matchesGrade = gradeFilter === 'all' || lead.grade === gradeFilter
-      return matchesGrade
-    })
-  }, [leads, gradeFilter])
+      const matchesGrade = gradeFilter === "all" || lead.grade === gradeFilter;
+      return matchesGrade;
+    });
+  }, [leads, gradeFilter]);
 
   // 统计数据（基于所有数据，不仅仅是当前页）
   const stats = useMemo(() => {
     return {
       total: total, // 使用总数而不是当前页数量
-      new: leads.filter((l) => l.status === 'new').length,
-      assessing: leads.filter((l) => l.status === 'assessing' || l.status === 'qualified').length,
-      qualified: leads.filter((l) => l.status === 'qualified').length,
-      converted: leads.filter((l) => l.status === 'converted').length,
+      new: leads.filter((l) => l.status === "new").length,
+      assessing: leads.filter(
+        (l) => l.status === "assessing" || l.status === "qualified",
+      ).length,
+      qualified: leads.filter((l) => l.status === "qualified").length,
+      converted: leads.filter((l) => l.status === "converted").length,
       totalAmount: leads.reduce((sum, l) => sum + (l.expectedAmount || 0), 0),
-    }
-  }, [leads, total])
+    };
+  }, [leads, total]);
 
   // 打开评估表单
   const handleOpenAssessment = (lead) => {
-    setSelectedLead(lead)
+    setSelectedLead(lead);
     // 如果有已评估的分数，加载它
     if (lead.score !== null) {
-      const scores = {}
+      const scores = {};
       assessmentDimensions.forEach((dim) => {
-        scores[dim.id] = Math.floor((lead.score || 0) / assessmentDimensions.length)
-      })
-      setAssessmentScores(scores)
+        scores[dim.id] = Math.floor(
+          (lead.score || 0) / assessmentDimensions.length,
+        );
+      });
+      setAssessmentScores(scores);
     } else {
       // 初始化分数
-      const scores = {}
+      const scores = {};
       assessmentDimensions.forEach((dim) => {
-        scores[dim.id] = 3 // 默认3分（5分制）
-      })
-      setAssessmentScores(scores)
+        scores[dim.id] = 3; // 默认3分（5分制）
+      });
+      setAssessmentScores(scores);
     }
-    setShowAssessmentForm(true)
-  }
+    setShowAssessmentForm(true);
+  };
 
   // 创建新线索
   const handleCreateLead = async () => {
     if (!newLead.lead_name || !newLead.company_name) {
-      alert('请填写线索名称和公司名称')
-      return
+      alert("请填写线索名称和公司名称");
+      return;
     }
 
     try {
       // 构建需求摘要JSON，包含线索名称和其他信息
       const demandData = {
         lead_name: newLead.lead_name,
-        description: newLead.demand_summary || '',
-        estimated_amount: newLead.estimated_amount ? parseFloat(newLead.estimated_amount) : null,
+        description: newLead.demand_summary || "",
+        estimated_amount: newLead.estimated_amount
+          ? parseFloat(newLead.estimated_amount)
+          : null,
         contact_email: newLead.contact_email || null,
-      }
+      };
 
       await leadApi.create({
         // lead_code 由后端自动生成
         customer_name: newLead.company_name,
         contact_name: newLead.contact_name || undefined,
         contact_phone: newLead.contact_phone || undefined,
-        source: newLead.source || 'direct',
+        source: newLead.source || "direct",
         demand_summary: JSON.stringify(demandData),
-        status: 'NEW',
-      })
+        status: "NEW",
+      });
 
       // 重置表单
       setNewLead({
-        lead_name: '',
-        company_name: '',
-        contact_name: '',
-        contact_phone: '',
-        contact_email: '',
-        source: 'direct',
-        estimated_amount: '',
-        demand_summary: '',
-      })
-      setShowCreateDialog(false)
+        lead_name: "",
+        company_name: "",
+        contact_name: "",
+        contact_phone: "",
+        contact_email: "",
+        source: "direct",
+        estimated_amount: "",
+        demand_summary: "",
+      });
+      setShowCreateDialog(false);
 
       // 刷新列表
-      loadLeads()
+      loadLeads();
     } catch (err) {
-      console.error('Failed to create lead:', err)
-      alert('创建线索失败，请重试')
+      console.error("Failed to create lead:", err);
+      alert("创建线索失败，请重试");
     }
-  }
+  };
 
   // 提交评估
   const handleSubmitAssessment = async () => {
-    if (!selectedLead || !selectedLead.raw) return
+    if (!selectedLead || !selectedLead.raw) return;
 
     // 计算总分
-    let totalScore = 0
+    let totalScore = 0;
     assessmentDimensions.forEach((dim) => {
-      totalScore += (assessmentScores[dim.id] || 0) * dim.weight * 20 // 转换为100分制
-    })
-    totalScore = Math.round(totalScore)
+      totalScore += (assessmentScores[dim.id] || 0) * dim.weight * 20; // 转换为100分制
+    });
+    totalScore = Math.round(totalScore);
 
     // 根据分数确定等级和状态
-    const grade = totalScore >= 75 ? 'hot' : totalScore >= 60 ? 'warm' : 'cold'
-    const newStatus = totalScore >= 70 ? 'QUALIFYING' : totalScore >= 50 ? 'QUALIFYING' : 'INVALID'
+    const grade = totalScore >= 75 ? "hot" : totalScore >= 60 ? "warm" : "cold";
+    const newStatus =
+      totalScore >= 70
+        ? "QUALIFYING"
+        : totalScore >= 50
+          ? "QUALIFYING"
+          : "INVALID";
 
     try {
       // 将评估信息保存到需求摘要的JSON中
       const assessmentInfo = {
         score: totalScore,
         grade: grade,
-        assessmentDate: new Date().toISOString().split('T')[0],
-        assessedBy: '当前用户', // TODO: 从当前用户获取
+        assessmentDate: new Date().toISOString().split("T")[0],
+        assessedBy: "当前用户", // TODO: 从当前用户获取
         dimensions: assessmentScores,
-      }
+      };
 
       // 解析现有的需求摘要
-      let demandData = {}
+      let demandData = {};
       if (selectedLead.raw.demand_summary) {
         try {
-          demandData = JSON.parse(selectedLead.raw.demand_summary)
+          demandData = JSON.parse(selectedLead.raw.demand_summary);
         } catch (e) {
           // 如果不是JSON，保存为文本
-          demandData = { original: selectedLead.raw.demand_summary }
+          demandData = { original: selectedLead.raw.demand_summary };
         }
       }
 
       // 更新评估信息
-      demandData.assessment = assessmentInfo
+      demandData.assessment = assessmentInfo;
 
       // 更新线索
       await leadApi.update(selectedLead.raw.id, {
         status: newStatus,
         demand_summary: JSON.stringify(demandData),
-      })
+      });
 
       // 添加一条跟进记录
       await leadApi.createFollowUp(selectedLead.raw.id, {
-        follow_up_type: 'OTHER',
+        follow_up_type: "OTHER",
         content: `线索评估完成，得分：${totalScore}分，等级：${gradeConfig[grade]?.label}`,
-        next_action: totalScore >= 70 ? '继续跟进，准备转商机' : totalScore >= 50 ? '继续评估' : '暂不跟进',
-      })
+        next_action:
+          totalScore >= 70
+            ? "继续跟进，准备转商机"
+            : totalScore >= 50
+              ? "继续评估"
+              : "暂不跟进",
+      });
 
       // 重新加载数据
-      loadLeads()
-      setShowAssessmentForm(false)
-      setSelectedLead(null)
-      setAssessmentScores({})
+      loadLeads();
+      setShowAssessmentForm(false);
+      setSelectedLead(null);
+      setAssessmentScores({});
     } catch (error) {
-      console.error('保存评估失败:', error)
-      alert('保存评估失败: ' + (error.response?.data?.detail || error.message))
+      console.error("保存评估失败:", error);
+      alert("保存评估失败: " + (error.response?.data?.detail || error.message));
     }
-  }
+  };
 
   // 查看详情
   const handleViewDetail = async (lead) => {
     if (lead.raw) {
       try {
-        const response = await leadApi.get(lead.raw.id)
+        const response = await leadApi.get(lead.raw.id);
         if (response.data) {
           setSelectedLead({
             ...lead,
             raw: response.data,
-          })
-          setShowDetailDialog(true)
+          });
+          setShowDetailDialog(true);
         }
       } catch (error) {
-        console.error('加载线索详情失败:', error)
-        setSelectedLead(lead)
-        setShowDetailDialog(true)
+        console.error("加载线索详情失败:", error);
+        setSelectedLead(lead);
+        setShowDetailDialog(true);
       }
     } else {
-      setSelectedLead(lead)
-      setShowDetailDialog(true)
+      setSelectedLead(lead);
+      setShowDetailDialog(true);
     }
-  }
+  };
 
   return (
     <motion.div
@@ -417,7 +483,10 @@ export default function LeadAssessment() {
               <Filter className="w-4 h-4" />
               筛选
             </Button>
-            <Button className="flex items-center gap-2" onClick={() => setShowCreateDialog(true)}>
+            <Button
+              className="flex items-center gap-2"
+              onClick={() => setShowCreateDialog(true)}
+            >
               <Plus className="w-4 h-4" />
               新建线索
             </Button>
@@ -426,7 +495,10 @@ export default function LeadAssessment() {
       />
 
       {/* Stats Cards */}
-      <motion.div variants={fadeIn} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+      <motion.div
+        variants={fadeIn}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4"
+      >
         <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -454,7 +526,9 @@ export default function LeadAssessment() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">评估中</p>
-                <p className="text-2xl font-bold text-amber-400">{stats.assessing}</p>
+                <p className="text-2xl font-bold text-amber-400">
+                  {stats.assessing}
+                </p>
               </div>
               <Clock className="w-8 h-8 text-amber-400 opacity-50" />
             </div>
@@ -465,7 +539,9 @@ export default function LeadAssessment() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">已合格</p>
-                <p className="text-2xl font-bold text-emerald-400">{stats.qualified}</p>
+                <p className="text-2xl font-bold text-emerald-400">
+                  {stats.qualified}
+                </p>
               </div>
               <CheckCircle2 className="w-8 h-8 text-emerald-400 opacity-50" />
             </div>
@@ -476,7 +552,9 @@ export default function LeadAssessment() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">已转化</p>
-                <p className="text-2xl font-bold text-purple-400">{stats.converted}</p>
+                <p className="text-2xl font-bold text-purple-400">
+                  {stats.converted}
+                </p>
               </div>
               <TrendingUp className="w-8 h-8 text-purple-400 opacity-50" />
             </div>
@@ -512,11 +590,15 @@ export default function LeadAssessment() {
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="w-full sm:w-auto">
               <Filter className="w-4 h-4 mr-2" />
-              {statusFilter === 'all' ? '全部状态' : statusConfig[statusFilter]?.label}
+              {statusFilter === "all"
+                ? "全部状态"
+                : statusConfig[statusFilter]?.label}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setStatusFilter('all')}>全部状态</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setStatusFilter("all")}>
+              全部状态
+            </DropdownMenuItem>
             {Object.entries(statusConfig).map(([key, config]) => (
               <DropdownMenuItem key={key} onClick={() => setStatusFilter(key)}>
                 {config.label}
@@ -528,11 +610,15 @@ export default function LeadAssessment() {
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="w-full sm:w-auto">
               <Star className="w-4 h-4 mr-2" />
-              {gradeFilter === 'all' ? '全部等级' : gradeConfig[gradeFilter]?.label}
+              {gradeFilter === "all"
+                ? "全部等级"
+                : gradeConfig[gradeFilter]?.label}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setGradeFilter('all')}>全部等级</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setGradeFilter("all")}>
+              全部等级
+            </DropdownMenuItem>
             {Object.entries(gradeConfig).map(([key, config]) => (
               <DropdownMenuItem key={key} onClick={() => setGradeFilter(key)}>
                 {config.label}
@@ -542,16 +628,16 @@ export default function LeadAssessment() {
         </DropdownMenu>
         <div className="flex gap-2">
           <Button
-            variant={viewMode === 'grid' ? 'default' : 'outline'}
+            variant={viewMode === "grid" ? "default" : "outline"}
             size="icon"
-            onClick={() => setViewMode('grid')}
+            onClick={() => setViewMode("grid")}
           >
             <LayoutGrid className="w-4 h-4" />
           </Button>
           <Button
-            variant={viewMode === 'list' ? 'default' : 'outline'}
+            variant={viewMode === "list" ? "default" : "outline"}
             size="icon"
-            onClick={() => setViewMode('list')}
+            onClick={() => setViewMode("list")}
           >
             <List className="w-4 h-4" />
           </Button>
@@ -559,7 +645,10 @@ export default function LeadAssessment() {
       </motion.div>
 
       {/* Leads List */}
-      <motion.div variants={fadeIn} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <motion.div
+        variants={fadeIn}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+      >
         <AnimatePresence>
           {filteredLeads.map((lead, index) => (
             <motion.div
@@ -573,7 +662,9 @@ export default function LeadAssessment() {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-base text-white mb-1">{lead.name}</CardTitle>
+                      <CardTitle className="text-base text-white mb-1">
+                        {lead.name}
+                      </CardTitle>
                       <div className="flex items-center gap-2 text-sm text-slate-400">
                         <Building2 className="w-3 h-3" />
                         <span>{lead.companyShort}</span>
@@ -582,9 +673,9 @@ export default function LeadAssessment() {
                     <div className="flex flex-col items-end gap-2">
                       <Badge
                         className={cn(
-                          'text-xs',
+                          "text-xs",
                           statusConfig[lead.status]?.color,
-                          statusConfig[lead.status]?.textColor
+                          statusConfig[lead.status]?.textColor,
                         )}
                       >
                         {statusConfig[lead.status]?.label}
@@ -593,12 +684,13 @@ export default function LeadAssessment() {
                         <Badge
                           variant="outline"
                           className={cn(
-                            'text-xs',
+                            "text-xs",
                             gradeConfig[lead.grade]?.textColor,
-                            'border-current'
+                            "border-current",
                           )}
                         >
-                          {gradeConfig[lead.grade]?.icon} {gradeConfig[lead.grade]?.label}
+                          {gradeConfig[lead.grade]?.icon}{" "}
+                          {gradeConfig[lead.grade]?.label}
                         </Badge>
                       )}
                     </div>
@@ -629,12 +721,12 @@ export default function LeadAssessment() {
                         <span className="text-slate-400">评估分数</span>
                         <Badge
                           className={cn(
-                            'text-sm font-semibold',
+                            "text-sm font-semibold",
                             lead.score >= 70
-                              ? 'bg-emerald-500/20 text-emerald-400'
+                              ? "bg-emerald-500/20 text-emerald-400"
                               : lead.score >= 50
-                              ? 'bg-amber-500/20 text-amber-400'
-                              : 'bg-red-500/20 text-red-400'
+                                ? "bg-amber-500/20 text-amber-400"
+                                : "bg-red-500/20 text-red-400",
                           )}
                         >
                           {lead.score}分
@@ -644,7 +736,12 @@ export default function LeadAssessment() {
                         value={lead.score}
                         className="h-2"
                         style={{
-                          '--progress-background': lead.score >= 70 ? '#10b981' : lead.score >= 50 ? '#f59e0b' : '#ef4444',
+                          "--progress-background":
+                            lead.score >= 70
+                              ? "#10b981"
+                              : lead.score >= 50
+                                ? "#f59e0b"
+                                : "#ef4444",
                         }}
                       />
                     </div>
@@ -663,7 +760,9 @@ export default function LeadAssessment() {
                     {lead.expectedCloseDate && (
                       <div>
                         <span className="text-slate-400">预计成交</span>
-                        <p className="text-white font-medium">{lead.expectedCloseDate}</p>
+                        <p className="text-white font-medium">
+                          {lead.expectedCloseDate}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -703,9 +802,9 @@ export default function LeadAssessment() {
                         </>
                       )}
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="flex-1"
                       onClick={() => handleViewDetail(lead)}
                     >
@@ -740,7 +839,7 @@ export default function LeadAssessment() {
             <DialogDescription>
               {selectedLead
                 ? `评估线索 "${selectedLead.name}" - ${selectedLead.companyShort}`
-                : '请对线索的各项维度进行评分'}
+                : "请对线索的各项维度进行评分"}
             </DialogDescription>
           </DialogHeader>
 
@@ -777,13 +876,17 @@ export default function LeadAssessment() {
 
               {/* 评估维度 */}
               <div className="space-y-4">
-                <h4 className="text-sm font-medium text-white">评估维度（5分制）</h4>
+                <h4 className="text-sm font-medium text-white">
+                  评估维度（5分制）
+                </h4>
                 {assessmentDimensions.map((dim) => (
                   <div key={dim.id} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label className="text-sm text-slate-400">
                         {dim.label}
-                        <span className="text-slate-600 ml-1">(权重: {dim.weight * 100}%)</span>
+                        <span className="text-slate-600 ml-1">
+                          (权重: {dim.weight * 100}%)
+                        </span>
                       </Label>
                       <div className="flex items-center gap-2">
                         <Input
@@ -820,27 +923,29 @@ export default function LeadAssessment() {
                     <span className="text-sm text-slate-400">综合评分</span>
                     <Badge
                       className={cn(
-                        'text-lg font-bold',
+                        "text-lg font-bold",
                         (() => {
-                          let totalScore = 0
+                          let totalScore = 0;
                           assessmentDimensions.forEach((dim) => {
-                            totalScore += (assessmentScores[dim.id] || 0) * dim.weight * 20
-                          })
-                          totalScore = Math.round(totalScore)
+                            totalScore +=
+                              (assessmentScores[dim.id] || 0) * dim.weight * 20;
+                          });
+                          totalScore = Math.round(totalScore);
                           return totalScore >= 70
-                            ? 'bg-emerald-500/20 text-emerald-400'
+                            ? "bg-emerald-500/20 text-emerald-400"
                             : totalScore >= 50
-                            ? 'bg-amber-500/20 text-amber-400'
-                            : 'bg-red-500/20 text-red-400'
-                        })()
+                              ? "bg-amber-500/20 text-amber-400"
+                              : "bg-red-500/20 text-red-400";
+                        })(),
                       )}
                     >
                       {(() => {
-                        let totalScore = 0
+                        let totalScore = 0;
                         assessmentDimensions.forEach((dim) => {
-                          totalScore += (assessmentScores[dim.id] || 0) * dim.weight * 20
-                        })
-                        return Math.round(totalScore)
+                          totalScore +=
+                            (assessmentScores[dim.id] || 0) * dim.weight * 20;
+                        });
+                        return Math.round(totalScore);
                       })()}
                       分
                     </Badge>
@@ -864,7 +969,10 @@ export default function LeadAssessment() {
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAssessmentForm(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowAssessmentForm(false)}
+            >
               取消
             </Button>
             <Button onClick={handleSubmitAssessment}>
@@ -884,7 +992,9 @@ export default function LeadAssessment() {
               线索详情
             </DialogTitle>
             <DialogDescription>
-              {selectedLead ? `查看线索 "${selectedLead.name || selectedLead.lead_code}" 的详细信息` : ''}
+              {selectedLead
+                ? `查看线索 "${selectedLead.name || selectedLead.lead_code}" 的详细信息`
+                : ""}
             </DialogDescription>
           </DialogHeader>
 
@@ -899,39 +1009,67 @@ export default function LeadAssessment() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-slate-400">线索编码</span>
-                      <p className="text-white font-medium">{selectedLead.lead_code || selectedLead.id}</p>
+                      <p className="text-white font-medium">
+                        {selectedLead.lead_code || selectedLead.id}
+                      </p>
                     </div>
                     <div>
                       <span className="text-slate-400">状态</span>
                       <p>
-                        <Badge className={cn('text-xs', statusConfig[selectedLead.status]?.color, statusConfig[selectedLead.status]?.textColor)}>
+                        <Badge
+                          className={cn(
+                            "text-xs",
+                            statusConfig[selectedLead.status]?.color,
+                            statusConfig[selectedLead.status]?.textColor,
+                          )}
+                        >
                           {statusConfig[selectedLead.status]?.label}
                         </Badge>
                       </p>
                     </div>
                     <div>
                       <span className="text-slate-400">客户名称</span>
-                      <p className="text-white">{selectedLead.companyName || selectedLead.raw?.customer_name || '-'}</p>
+                      <p className="text-white">
+                        {selectedLead.companyName ||
+                          selectedLead.raw?.customer_name ||
+                          "-"}
+                      </p>
                     </div>
                     <div>
                       <span className="text-slate-400">行业</span>
-                      <p className="text-white">{selectedLead.industry || selectedLead.raw?.industry || '-'}</p>
+                      <p className="text-white">
+                        {selectedLead.industry ||
+                          selectedLead.raw?.industry ||
+                          "-"}
+                      </p>
                     </div>
                     <div>
                       <span className="text-slate-400">联系人</span>
-                      <p className="text-white">{selectedLead.contactPerson || selectedLead.raw?.contact_name || '-'}</p>
+                      <p className="text-white">
+                        {selectedLead.contactPerson ||
+                          selectedLead.raw?.contact_name ||
+                          "-"}
+                      </p>
                     </div>
                     <div>
                       <span className="text-slate-400">联系电话</span>
-                      <p className="text-white">{selectedLead.phone || selectedLead.raw?.contact_phone || '-'}</p>
+                      <p className="text-white">
+                        {selectedLead.phone ||
+                          selectedLead.raw?.contact_phone ||
+                          "-"}
+                      </p>
                     </div>
                     <div>
                       <span className="text-slate-400">来源</span>
-                      <p className="text-white">{selectedLead.source || selectedLead.raw?.source || '-'}</p>
+                      <p className="text-white">
+                        {selectedLead.source || selectedLead.raw?.source || "-"}
+                      </p>
                     </div>
                     <div>
                       <span className="text-slate-400">负责人</span>
-                      <p className="text-white">{selectedLead.raw?.owner_name || '-'}</p>
+                      <p className="text-white">
+                        {selectedLead.raw?.owner_name || "-"}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -941,11 +1079,15 @@ export default function LeadAssessment() {
               {(selectedLead.notes || selectedLead.raw?.demand_summary) && (
                 <Card className="bg-surface-50/50 border border-white/5">
                   <CardHeader>
-                    <CardTitle className="text-sm text-white">需求摘要</CardTitle>
+                    <CardTitle className="text-sm text-white">
+                      需求摘要
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-slate-300 whitespace-pre-wrap">
-                      {selectedLead.notes || selectedLead.raw?.demand_summary || '-'}
+                      {selectedLead.notes ||
+                        selectedLead.raw?.demand_summary ||
+                        "-"}
                     </p>
                   </CardContent>
                 </Card>
@@ -955,19 +1097,21 @@ export default function LeadAssessment() {
               {selectedLead.score !== null && (
                 <Card className="bg-surface-50/50 border border-white/5">
                   <CardHeader>
-                    <CardTitle className="text-sm text-white">评估信息</CardTitle>
+                    <CardTitle className="text-sm text-white">
+                      评估信息
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-slate-400">评估分数</span>
                       <Badge
                         className={cn(
-                          'text-lg font-semibold',
+                          "text-lg font-semibold",
                           selectedLead.score >= 70
-                            ? 'bg-emerald-500/20 text-emerald-400'
+                            ? "bg-emerald-500/20 text-emerald-400"
                             : selectedLead.score >= 50
-                            ? 'bg-amber-500/20 text-amber-400'
-                            : 'bg-red-500/20 text-red-400'
+                              ? "bg-amber-500/20 text-amber-400"
+                              : "bg-red-500/20 text-red-400",
                         )}
                       >
                         {selectedLead.score}分
@@ -978,22 +1122,31 @@ export default function LeadAssessment() {
                         <span className="text-slate-400">线索等级</span>
                         <Badge
                           variant="outline"
-                          className={cn('text-sm', gradeConfig[selectedLead.grade]?.textColor, 'border-current')}
+                          className={cn(
+                            "text-sm",
+                            gradeConfig[selectedLead.grade]?.textColor,
+                            "border-current",
+                          )}
                         >
-                          {gradeConfig[selectedLead.grade]?.icon} {gradeConfig[selectedLead.grade]?.label}
+                          {gradeConfig[selectedLead.grade]?.icon}{" "}
+                          {gradeConfig[selectedLead.grade]?.label}
                         </Badge>
                       </div>
                     )}
                     {selectedLead.assessmentDate && (
                       <div className="flex items-center justify-between">
                         <span className="text-slate-400">评估日期</span>
-                        <span className="text-white">{selectedLead.assessmentDate}</span>
+                        <span className="text-white">
+                          {selectedLead.assessmentDate}
+                        </span>
                       </div>
                     )}
                     {selectedLead.assessedBy && (
                       <div className="flex items-center justify-between">
                         <span className="text-slate-400">评估人</span>
-                        <span className="text-white">{selectedLead.assessedBy}</span>
+                        <span className="text-white">
+                          {selectedLead.assessedBy}
+                        </span>
                       </div>
                     )}
                   </CardContent>
@@ -1009,12 +1162,18 @@ export default function LeadAssessment() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-slate-400">创建时间</span>
-                      <p className="text-white">{selectedLead.createdAt || selectedLead.raw?.created_at || '-'}</p>
+                      <p className="text-white">
+                        {selectedLead.createdAt ||
+                          selectedLead.raw?.created_at ||
+                          "-"}
+                      </p>
                     </div>
                     {selectedLead.raw?.next_action_at && (
                       <div>
                         <span className="text-slate-400">下次行动时间</span>
-                        <p className="text-white">{selectedLead.raw.next_action_at}</p>
+                        <p className="text-white">
+                          {selectedLead.raw.next_action_at}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -1024,16 +1183,21 @@ export default function LeadAssessment() {
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDetailDialog(false)}
+            >
               关闭
             </Button>
             {selectedLead && (
-              <Button onClick={() => {
-                setShowDetailDialog(false)
-                handleOpenAssessment(selectedLead)
-              }}>
+              <Button
+                onClick={() => {
+                  setShowDetailDialog(false);
+                  handleOpenAssessment(selectedLead);
+                }}
+              >
                 <Star className="w-4 h-4 mr-2" />
-                {selectedLead.score !== null ? '重新评估' : '开始评估'}
+                {selectedLead.score !== null ? "重新评估" : "开始评估"}
               </Button>
             )}
           </DialogFooter>
@@ -1060,7 +1224,9 @@ export default function LeadAssessment() {
                   id="lead_name"
                   placeholder="如：新能源电池测试设备需求"
                   value={newLead.lead_name}
-                  onChange={(e) => setNewLead({ ...newLead, lead_name: e.target.value })}
+                  onChange={(e) =>
+                    setNewLead({ ...newLead, lead_name: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -1069,7 +1235,9 @@ export default function LeadAssessment() {
                   id="company_name"
                   placeholder="如：深圳新能源科技"
                   value={newLead.company_name}
-                  onChange={(e) => setNewLead({ ...newLead, company_name: e.target.value })}
+                  onChange={(e) =>
+                    setNewLead({ ...newLead, company_name: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -1080,7 +1248,9 @@ export default function LeadAssessment() {
                   id="contact_name"
                   placeholder="如：张总"
                   value={newLead.contact_name}
-                  onChange={(e) => setNewLead({ ...newLead, contact_name: e.target.value })}
+                  onChange={(e) =>
+                    setNewLead({ ...newLead, contact_name: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -1089,7 +1259,9 @@ export default function LeadAssessment() {
                   id="contact_phone"
                   placeholder="如：138****1234"
                   value={newLead.contact_phone}
-                  onChange={(e) => setNewLead({ ...newLead, contact_phone: e.target.value })}
+                  onChange={(e) =>
+                    setNewLead({ ...newLead, contact_phone: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -1101,7 +1273,9 @@ export default function LeadAssessment() {
                   type="email"
                   placeholder="如：zhang@company.com"
                   value={newLead.contact_email}
-                  onChange={(e) => setNewLead({ ...newLead, contact_email: e.target.value })}
+                  onChange={(e) =>
+                    setNewLead({ ...newLead, contact_email: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -1111,7 +1285,9 @@ export default function LeadAssessment() {
                   type="number"
                   placeholder="如：120"
                   value={newLead.estimated_amount}
-                  onChange={(e) => setNewLead({ ...newLead, estimated_amount: e.target.value })}
+                  onChange={(e) =>
+                    setNewLead({ ...newLead, estimated_amount: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -1121,13 +1297,18 @@ export default function LeadAssessment() {
                 id="demand_summary"
                 placeholder="简要描述客户需求..."
                 value={newLead.demand_summary}
-                onChange={(e) => setNewLead({ ...newLead, demand_summary: e.target.value })}
+                onChange={(e) =>
+                  setNewLead({ ...newLead, demand_summary: e.target.value })
+                }
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleCreateLead}>
@@ -1152,7 +1333,10 @@ export default function LeadAssessment() {
 
       {/* Pagination */}
       {!loading && total > pageSize && (
-        <motion.div variants={fadeIn} className="flex items-center justify-between pt-4">
+        <motion.div
+          variants={fadeIn}
+          className="flex items-center justify-between pt-4"
+        >
           <div className="text-sm text-slate-400">
             共 {total} 条线索，第 {page} / {Math.ceil(total / pageSize)} 页
           </div>
@@ -1177,6 +1361,5 @@ export default function LeadAssessment() {
         </motion.div>
       )}
     </motion.div>
-  )
+  );
 }
-

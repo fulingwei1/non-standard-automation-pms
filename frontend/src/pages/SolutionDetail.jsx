@@ -2,9 +2,9 @@
  * 方案详情页面
  * 展示方案完整信息、技术规格、设备配置、成本估算等
  */
-import React, { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import React, { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   FileText,
   ArrowLeft,
@@ -44,95 +44,100 @@ import {
   Send,
   Target,
   ExternalLink,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
-import { Button } from '../components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
-import { Progress } from '../components/ui/progress'
-import { Avatar, AvatarFallback } from '../components/ui/avatar'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
+import { Progress } from "../components/ui/progress";
+import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { presaleApi } from '../services/api'
+} from "../components/ui/dropdown-menu";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { presaleApi } from "../services/api";
 
 // Mock 方案详情数据
 // Mock data - 已移除，使用真实API
 // 获取状态样式
 const getStatusStyle = (status) => {
   switch (status) {
-    case 'draft':
-      return { bg: 'bg-slate-500', text: '草稿' }
-    case 'in_progress':
-      return { bg: 'bg-blue-500', text: '编写中' }
-    case 'reviewing':
-      return { bg: 'bg-amber-500', text: '评审中' }
-    case 'published':
-      return { bg: 'bg-emerald-500', text: '已发布' }
-    case 'archived':
-      return { bg: 'bg-slate-600', text: '已归档' }
+    case "draft":
+      return { bg: "bg-slate-500", text: "草稿" };
+    case "in_progress":
+      return { bg: "bg-blue-500", text: "编写中" };
+    case "reviewing":
+      return { bg: "bg-amber-500", text: "评审中" };
+    case "published":
+      return { bg: "bg-emerald-500", text: "已发布" };
+    case "archived":
+      return { bg: "bg-slate-600", text: "已归档" };
     default:
-      return { bg: 'bg-slate-500', text: status }
+      return { bg: "bg-slate-500", text: status };
   }
-}
+};
 
 // 获取交付物状态样式
 const getDeliverableStatus = (status) => {
   switch (status) {
-    case 'completed':
-      return { icon: CheckCircle, color: 'text-emerald-500', text: '已完成' }
-    case 'in_progress':
-      return { icon: Clock, color: 'text-blue-500', text: '进行中' }
-    case 'pending':
-      return { icon: AlertTriangle, color: 'text-slate-500', text: '待开始' }
+    case "completed":
+      return { icon: CheckCircle, color: "text-emerald-500", text: "已完成" };
+    case "in_progress":
+      return { icon: Clock, color: "text-blue-500", text: "进行中" };
+    case "pending":
+      return { icon: AlertTriangle, color: "text-slate-500", text: "待开始" };
     default:
-      return { icon: AlertTriangle, color: 'text-slate-500', text: status }
+      return { icon: AlertTriangle, color: "text-slate-500", text: status };
   }
-}
+};
 
 // Tab 配置
 const tabs = [
-  { id: 'overview', name: '概览', icon: FileText },
-  { id: 'specs', name: '技术规格', icon: Cpu },
-  { id: 'equipment', name: '设备配置', icon: Package },
-  { id: 'deliverables', name: '交付物', icon: Paperclip },
-  { id: 'cost', name: '成本估算', icon: DollarSign },
-  { id: 'history', name: '版本历史', icon: History },
-]
+  { id: "overview", name: "概览", icon: FileText },
+  { id: "specs", name: "技术规格", icon: Cpu },
+  { id: "equipment", name: "设备配置", icon: Package },
+  { id: "deliverables", name: "交付物", icon: Paperclip },
+  { id: "cost", name: "成本估算", icon: DollarSign },
+  { id: "history", name: "版本历史", icon: History },
+];
 
 export default function SolutionDetail() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('overview')
-  const [solution, setSolution] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [costEstimate, setCostEstimate] = useState(null)
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [solution, setSolution] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [costEstimate, setCostEstimate] = useState(null);
 
   // Load solution detail
   const loadSolution = useCallback(async () => {
-    if (!id) return
+    if (!id) return;
 
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       // Load solution detail
-      const solutionResponse = await presaleApi.solutions.get(id)
-      const solutionData = solutionResponse.data
+      const solutionResponse = await presaleApi.solutions.get(id);
+      const solutionData = solutionResponse.data;
 
       // Load cost estimate if available
-      let costData = null
+      let costData = null;
       try {
-        const costResponse = await presaleApi.solutions.getCost(id)
-        costData = costResponse.data
+        const costResponse = await presaleApi.solutions.getCost(id);
+        costData = costResponse.data;
       } catch (err) {
         // Cost estimate may not exist, ignore error
       }
@@ -141,45 +146,49 @@ export default function SolutionDetail() {
       const transformedSolution = {
         id: solutionData.id,
         code: solutionData.solution_no || `SOL-${solutionData.id}`,
-        name: solutionData.name || '',
-        customer: solutionData.customer_name || '',
+        name: solutionData.name || "",
+        customer: solutionData.customer_name || "",
         customerId: solutionData.customer_id,
-        version: solutionData.version || 'V1.0',
-        status: solutionData.status?.toLowerCase() || 'draft',
-        deviceType: solutionData.solution_type?.toLowerCase() || '',
-        deviceTypeName: solutionData.solution_type || '',
+        version: solutionData.version || "V1.0",
+        status: solutionData.status?.toLowerCase() || "draft",
+        deviceType: solutionData.solution_type?.toLowerCase() || "",
+        deviceTypeName: solutionData.solution_type || "",
         progress: solutionData.progress || 0,
-        amount: solutionData.estimated_cost ? solutionData.estimated_cost / 10000 : solutionData.suggested_price ? solutionData.suggested_price / 10000 : 0,
-        deadline: solutionData.deadline || '',
-        createdAt: solutionData.created_at || '',
-        updatedAt: solutionData.updated_at || solutionData.created_at || '',
-        creator: solutionData.creator_name || '',
-        opportunity: solutionData.opportunity_name || '',
+        amount: solutionData.estimated_cost
+          ? solutionData.estimated_cost / 10000
+          : solutionData.suggested_price
+            ? solutionData.suggested_price / 10000
+            : 0,
+        deadline: solutionData.deadline || "",
+        createdAt: solutionData.created_at || "",
+        updatedAt: solutionData.updated_at || solutionData.created_at || "",
+        creator: solutionData.creator_name || "",
+        opportunity: solutionData.opportunity_name || "",
         opportunityId: solutionData.opportunity_id,
-        salesPerson: solutionData.sales_person_name || '',
+        salesPerson: solutionData.sales_person_name || "",
         tags: solutionData.tags || [],
-        description: solutionData.description || '',
+        description: solutionData.description || "",
         techSpecs: solutionData.tech_specs || {},
         equipment: solutionData.equipment || {},
         deliverables: solutionData.deliverables || [],
         versionHistory: [],
         reviews: [],
         collaborators: [],
-      }
+      };
 
-      setSolution(transformedSolution)
-      setCostEstimate(costData)
+      setSolution(transformedSolution);
+      setCostEstimate(costData);
     } catch (err) {
-      console.error('Failed to load solution:', err)
-      setError(err.response?.data?.detail || err.message || '加载方案详情失败')
+      console.error("Failed to load solution:", err);
+      setError(err.response?.data?.detail || err.message || "加载方案详情失败");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [id])
+  }, [id]);
 
   useEffect(() => {
-    loadSolution()
-  }, [loadSolution])
+    loadSolution();
+  }, [loadSolution]);
 
   if (loading) {
     return (
@@ -190,7 +199,7 @@ export default function SolutionDetail() {
           <p className="text-lg font-medium">加载中...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !solution) {
@@ -199,16 +208,16 @@ export default function SolutionDetail() {
         <PageHeader title="方案详情" description="加载失败" />
         <div className="text-center py-16 text-red-400">
           <div className="text-lg font-medium">加载失败</div>
-          <div className="text-sm mt-2">{error || '方案不存在'}</div>
-          <Button className="mt-4" onClick={() => navigate('/solutions')}>
+          <div className="text-sm mt-2">{error || "方案不存在"}</div>
+          <Button className="mt-4" onClick={() => navigate("/solutions")}>
             返回方案列表
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
-  const statusStyle = getStatusStyle(solution.status)
+  const statusStyle = getStatusStyle(solution.status);
 
   return (
     <motion.div
@@ -222,14 +231,14 @@ export default function SolutionDetail() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate('/solutions')}
+          onClick={() => navigate("/solutions")}
           className="text-slate-400 hover:text-white"
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-1">
-            <Badge className={cn('text-xs', statusStyle.bg)}>
+            <Badge className={cn("text-xs", statusStyle.bg)}>
               {statusStyle.text}
             </Badge>
             <Badge variant="outline" className="text-xs">
@@ -282,7 +291,10 @@ export default function SolutionDetail() {
       </motion.div>
 
       {/* 基本信息卡片 */}
-      <motion.div variants={fadeIn} className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+      <motion.div
+        variants={fadeIn}
+        className="grid grid-cols-1 lg:grid-cols-4 gap-4"
+      >
         <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -291,7 +303,9 @@ export default function SolutionDetail() {
               </div>
               <div>
                 <p className="text-xs text-slate-500">客户</p>
-                <p className="text-sm font-medium text-white">{solution.customer}</p>
+                <p className="text-sm font-medium text-white">
+                  {solution.customer}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -304,7 +318,9 @@ export default function SolutionDetail() {
               </div>
               <div>
                 <p className="text-xs text-slate-500">设备类型</p>
-                <p className="text-sm font-medium text-white">{solution.deviceTypeName}</p>
+                <p className="text-sm font-medium text-white">
+                  {solution.deviceTypeName}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -317,7 +333,9 @@ export default function SolutionDetail() {
               </div>
               <div>
                 <p className="text-xs text-slate-500">方案金额</p>
-                <p className="text-sm font-medium text-emerald-400">¥{solution.amount}万</p>
+                <p className="text-sm font-medium text-emerald-400">
+                  ¥{solution.amount}万
+                </p>
               </div>
             </div>
           </CardContent>
@@ -330,7 +348,9 @@ export default function SolutionDetail() {
               </div>
               <div>
                 <p className="text-xs text-slate-500">截止时间</p>
-                <p className="text-sm font-medium text-white">{solution.deadline}</p>
+                <p className="text-sm font-medium text-white">
+                  {solution.deadline}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -343,7 +363,9 @@ export default function SolutionDetail() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-slate-400">方案进度</span>
-              <span className="text-sm font-medium text-white">{solution.progress}%</span>
+              <span className="text-sm font-medium text-white">
+                {solution.progress}%
+              </span>
             </div>
             <Progress value={solution.progress} className="h-2" />
           </CardContent>
@@ -356,7 +378,7 @@ export default function SolutionDetail() {
           {tabs.map((tab) => (
             <Button
               key={tab.id}
-              variant={activeTab === tab.id ? 'default' : 'ghost'}
+              variant={activeTab === tab.id ? "default" : "ghost"}
               size="sm"
               onClick={() => setActiveTab(tab.id)}
               className="flex items-center gap-2 whitespace-nowrap"
@@ -371,7 +393,7 @@ export default function SolutionDetail() {
       {/* Tab 内容 */}
       <motion.div variants={fadeIn}>
         {/* 概览 Tab */}
-        {activeTab === 'overview' && (
+        {activeTab === "overview" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* 左侧 - 描述和标签 */}
             <div className="lg:col-span-2 space-y-6">
@@ -380,7 +402,9 @@ export default function SolutionDetail() {
                   <CardTitle className="text-lg">方案描述</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-slate-300 leading-relaxed">{solution.description}</p>
+                  <p className="text-sm text-slate-300 leading-relaxed">
+                    {solution.description}
+                  </p>
                   <div className="flex flex-wrap gap-2 mt-4">
                     {solution.tags.map((tag, index) => (
                       <span
@@ -409,8 +433,12 @@ export default function SolutionDetail() {
                         <Briefcase className="w-5 h-5 text-primary" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-white">{solution.opportunity}</p>
-                        <p className="text-xs text-slate-500">销售：{solution.salesPerson}</p>
+                        <p className="text-sm font-medium text-white">
+                          {solution.opportunity}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          销售：{solution.salesPerson}
+                        </p>
                       </div>
                     </div>
                     <Button variant="ghost" size="sm">
@@ -438,22 +466,32 @@ export default function SolutionDetail() {
                       </Avatar>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-white">{review.reviewer}</span>
-                          <span className="text-xs text-slate-500">{review.date}</span>
+                          <span className="text-sm font-medium text-white">
+                            {review.reviewer}
+                          </span>
+                          <span className="text-xs text-slate-500">
+                            {review.date}
+                          </span>
                           <Badge
                             className={cn(
-                              'text-xs',
-                              review.status === 'approved'
-                                ? 'bg-emerald-500'
-                                : review.status === 'pending'
-                                  ? 'bg-amber-500'
-                                  : 'bg-red-500'
+                              "text-xs",
+                              review.status === "approved"
+                                ? "bg-emerald-500"
+                                : review.status === "pending"
+                                  ? "bg-amber-500"
+                                  : "bg-red-500",
                             )}
                           >
-                            {review.status === 'approved' ? '已通过' : review.status === 'pending' ? '待审核' : '需修改'}
+                            {review.status === "approved"
+                              ? "已通过"
+                              : review.status === "pending"
+                                ? "待审核"
+                                : "需修改"}
                           </Badge>
                         </div>
-                        <p className="text-sm text-slate-400">{review.comments}</p>
+                        <p className="text-sm text-slate-400">
+                          {review.comments}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -479,7 +517,9 @@ export default function SolutionDetail() {
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="text-sm font-medium text-white">{person.name}</p>
+                        <p className="text-sm font-medium text-white">
+                          {person.name}
+                        </p>
                         <p className="text-xs text-slate-500">{person.role}</p>
                       </div>
                     </div>
@@ -515,21 +555,31 @@ export default function SolutionDetail() {
         )}
 
         {/* 技术规格 Tab */}
-        {activeTab === 'specs' && (
+        {activeTab === "specs" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5">
               <CardHeader>
                 <CardTitle className="text-lg">产品信息</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
-                {Object.entries(solution.techSpecs.productInfo).map(([key, value]) => (
-                  <div key={key} className="flex justify-between">
-                    <span className="text-slate-500">
-                      {key === 'name' ? '产品名称' : key === 'model' ? '型号规格' : key === 'size' ? '外形尺寸' : key === 'weight' ? '重量' : '材质'}
-                    </span>
-                    <span className="text-white">{value}</span>
-                  </div>
-                ))}
+                {Object.entries(solution.techSpecs.productInfo).map(
+                  ([key, value]) => (
+                    <div key={key} className="flex justify-between">
+                      <span className="text-slate-500">
+                        {key === "name"
+                          ? "产品名称"
+                          : key === "model"
+                            ? "型号规格"
+                            : key === "size"
+                              ? "外形尺寸"
+                              : key === "weight"
+                                ? "重量"
+                                : "材质"}
+                      </span>
+                      <span className="text-white">{value}</span>
+                    </div>
+                  ),
+                )}
               </CardContent>
             </Card>
 
@@ -540,19 +590,27 @@ export default function SolutionDetail() {
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-slate-500">UPH</span>
-                  <span className="text-white">{solution.techSpecs.capacity.uph} pcs/h</span>
+                  <span className="text-white">
+                    {solution.techSpecs.capacity.uph} pcs/h
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">节拍</span>
-                  <span className="text-white">{solution.techSpecs.capacity.cycleTime} 秒/件</span>
+                  <span className="text-white">
+                    {solution.techSpecs.capacity.cycleTime} 秒/件
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">日产能</span>
-                  <span className="text-white">{solution.techSpecs.capacity.dailyOutput} pcs</span>
+                  <span className="text-white">
+                    {solution.techSpecs.capacity.dailyOutput} pcs
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">测试通道</span>
-                  <span className="text-white">{solution.techSpecs.capacity.channels} 通道</span>
+                  <span className="text-white">
+                    {solution.techSpecs.capacity.channels} 通道
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -593,14 +651,29 @@ export default function SolutionDetail() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  {Object.entries(solution.techSpecs.environment).map(([key, value]) => (
-                    <div key={key} className="text-center p-3 bg-surface-50 rounded-lg">
-                      <p className="text-xs text-slate-500 mb-1">
-                        {key === 'temperature' ? '温度范围' : key === 'humidity' ? '湿度范围' : key === 'power' ? '电源' : key === 'airPressure' ? '气压' : '占地面积'}
-                      </p>
-                      <p className="text-sm font-medium text-white">{value}</p>
-                    </div>
-                  ))}
+                  {Object.entries(solution.techSpecs.environment).map(
+                    ([key, value]) => (
+                      <div
+                        key={key}
+                        className="text-center p-3 bg-surface-50 rounded-lg"
+                      >
+                        <p className="text-xs text-slate-500 mb-1">
+                          {key === "temperature"
+                            ? "温度范围"
+                            : key === "humidity"
+                              ? "湿度范围"
+                              : key === "power"
+                                ? "电源"
+                                : key === "airPressure"
+                                  ? "气压"
+                                  : "占地面积"}
+                        </p>
+                        <p className="text-sm font-medium text-white">
+                          {value}
+                        </p>
+                      </div>
+                    ),
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -608,7 +681,7 @@ export default function SolutionDetail() {
         )}
 
         {/* 设备配置 Tab */}
-        {activeTab === 'equipment' && (
+        {activeTab === "equipment" && (
           <div className="space-y-6">
             <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5">
               <CardHeader>
@@ -634,9 +707,15 @@ export default function SolutionDetail() {
                         <tr key={index} className="border-b border-white/5">
                           <td className="py-3 text-white">{item.name}</td>
                           <td className="py-3 text-slate-400">{item.model}</td>
-                          <td className="py-3 text-right text-white">{item.qty}</td>
-                          <td className="py-3 text-right text-slate-400">¥{item.unitPrice.toLocaleString()}</td>
-                          <td className="py-3 text-right text-emerald-400">¥{item.totalPrice.toLocaleString()}</td>
+                          <td className="py-3 text-right text-white">
+                            {item.qty}
+                          </td>
+                          <td className="py-3 text-right text-slate-400">
+                            ¥{item.unitPrice.toLocaleString()}
+                          </td>
+                          <td className="py-3 text-right text-emerald-400">
+                            ¥{item.totalPrice.toLocaleString()}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -669,9 +748,15 @@ export default function SolutionDetail() {
                         <tr key={index} className="border-b border-white/5">
                           <td className="py-3 text-white">{item.name}</td>
                           <td className="py-3 text-slate-400">{item.model}</td>
-                          <td className="py-3 text-right text-white">{item.qty}</td>
-                          <td className="py-3 text-right text-slate-400">¥{item.unitPrice.toLocaleString()}</td>
-                          <td className="py-3 text-right text-emerald-400">¥{item.totalPrice.toLocaleString()}</td>
+                          <td className="py-3 text-right text-white">
+                            {item.qty}
+                          </td>
+                          <td className="py-3 text-right text-slate-400">
+                            ¥{item.unitPrice.toLocaleString()}
+                          </td>
+                          <td className="py-3 text-right text-emerald-400">
+                            ¥{item.totalPrice.toLocaleString()}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -690,12 +775,19 @@ export default function SolutionDetail() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {solution.equipment.software.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-surface-50 rounded-lg">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-surface-50 rounded-lg"
+                    >
                       <div>
-                        <p className="text-sm font-medium text-white">{item.name}</p>
+                        <p className="text-sm font-medium text-white">
+                          {item.name}
+                        </p>
                         <p className="text-xs text-slate-500">{item.version}</p>
                       </div>
-                      <span className="text-sm text-emerald-400">¥{item.price.toLocaleString()}</span>
+                      <span className="text-sm text-emerald-400">
+                        ¥{item.price.toLocaleString()}
+                      </span>
                     </div>
                   ))}
                 </CardContent>
@@ -710,12 +802,21 @@ export default function SolutionDetail() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {solution.equipment.fixtures.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-surface-50 rounded-lg">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-surface-50 rounded-lg"
+                    >
                       <div>
-                        <p className="text-sm font-medium text-white">{item.name}</p>
-                        <p className="text-xs text-slate-500">{item.model} × {item.qty}</p>
+                        <p className="text-sm font-medium text-white">
+                          {item.name}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {item.model} × {item.qty}
+                        </p>
                       </div>
-                      <span className="text-sm text-emerald-400">¥{item.totalPrice.toLocaleString()}</span>
+                      <span className="text-sm text-emerald-400">
+                        ¥{item.totalPrice.toLocaleString()}
+                      </span>
                     </div>
                   ))}
                 </CardContent>
@@ -725,7 +826,7 @@ export default function SolutionDetail() {
         )}
 
         {/* 成本估算 Tab */}
-        {activeTab === 'cost' && (
+        {activeTab === "cost" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {costEstimate ? (
               <>
@@ -736,17 +837,43 @@ export default function SolutionDetail() {
                   <CardContent>
                     <div className="space-y-4">
                       {[
-                        { name: '硬件成本', value: costEstimate.hardware_cost || 0, color: 'bg-blue-500' },
-                        { name: '软件成本', value: costEstimate.software_cost || 0, color: 'bg-violet-500' },
-                        { name: '治具成本', value: costEstimate.fixture_cost || 0, color: 'bg-amber-500' },
-                        { name: '安装调试', value: costEstimate.installation_cost || 0, color: 'bg-emerald-500' },
-                        { name: '培训费用', value: costEstimate.training_cost || 0, color: 'bg-pink-500' },
-                        { name: '运输费用', value: costEstimate.shipping_cost || 0, color: 'bg-slate-500' },
+                        {
+                          name: "硬件成本",
+                          value: costEstimate.hardware_cost || 0,
+                          color: "bg-blue-500",
+                        },
+                        {
+                          name: "软件成本",
+                          value: costEstimate.software_cost || 0,
+                          color: "bg-violet-500",
+                        },
+                        {
+                          name: "治具成本",
+                          value: costEstimate.fixture_cost || 0,
+                          color: "bg-amber-500",
+                        },
+                        {
+                          name: "安装调试",
+                          value: costEstimate.installation_cost || 0,
+                          color: "bg-emerald-500",
+                        },
+                        {
+                          name: "培训费用",
+                          value: costEstimate.training_cost || 0,
+                          color: "bg-pink-500",
+                        },
+                        {
+                          name: "运输费用",
+                          value: costEstimate.shipping_cost || 0,
+                          color: "bg-slate-500",
+                        },
                       ].map((item, index) => {
-                        const total = costEstimate.total_cost || 1
+                        const total = costEstimate.total_cost || 1;
                         return (
                           <div key={index} className="flex items-center gap-4">
-                            <div className="w-24 text-sm text-slate-400">{item.name}</div>
+                            <div className="w-24 text-sm text-slate-400">
+                              {item.name}
+                            </div>
                             <div className="flex-1">
                               <Progress
                                 value={(item.value / total) * 100}
@@ -757,10 +884,12 @@ export default function SolutionDetail() {
                               ¥{item.value.toLocaleString()}
                             </div>
                           </div>
-                        )
+                        );
                       })}
                       <div className="flex items-center gap-4 pt-4 border-t border-white/5">
-                        <div className="w-24 text-sm font-medium text-white">总成本</div>
+                        <div className="w-24 text-sm font-medium text-white">
+                          总成本
+                        </div>
                         <div className="flex-1" />
                         <div className="w-28 text-right text-lg font-bold text-white">
                           ¥{(costEstimate.total_cost || 0).toLocaleString()}
@@ -772,22 +901,32 @@ export default function SolutionDetail() {
 
                 <Card className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20">
                   <CardHeader>
-                    <CardTitle className="text-lg text-emerald-400">利润分析</CardTitle>
+                    <CardTitle className="text-lg text-emerald-400">
+                      利润分析
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="text-center p-4 bg-surface-50/50 rounded-lg">
                       <p className="text-sm text-slate-400 mb-1">报价金额</p>
-                      <p className="text-3xl font-bold text-white">¥{(costEstimate.suggested_price || 0).toLocaleString()}</p>
+                      <p className="text-3xl font-bold text-white">
+                        ¥{(costEstimate.suggested_price || 0).toLocaleString()}
+                      </p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="text-center p-3 bg-surface-50/50 rounded-lg">
                         <p className="text-xs text-slate-400 mb-1">毛利率</p>
-                        <p className="text-xl font-bold text-emerald-400">{(costEstimate.gross_margin || 0).toFixed(0)}%</p>
+                        <p className="text-xl font-bold text-emerald-400">
+                          {(costEstimate.gross_margin || 0).toFixed(0)}%
+                        </p>
                       </div>
                       <div className="text-center p-3 bg-surface-50/50 rounded-lg">
                         <p className="text-xs text-slate-400 mb-1">预计利润</p>
                         <p className="text-xl font-bold text-emerald-400">
-                          ¥{((costEstimate.suggested_price || 0) - (costEstimate.total_cost || 0)).toLocaleString()}
+                          ¥
+                          {(
+                            (costEstimate.suggested_price || 0) -
+                            (costEstimate.total_cost || 0)
+                          ).toLocaleString()}
                         </p>
                       </div>
                     </div>
@@ -805,7 +944,7 @@ export default function SolutionDetail() {
         )}
 
         {/* 交付物 Tab */}
-        {activeTab === 'deliverables' && (
+        {activeTab === "deliverables" && (
           <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">交付物清单</CardTitle>
@@ -817,8 +956,8 @@ export default function SolutionDetail() {
             <CardContent>
               <div className="space-y-3">
                 {solution.deliverables.map((item) => {
-                  const statusConfig = getDeliverableStatus(item.status)
-                  const StatusIcon = statusConfig.icon
+                  const statusConfig = getDeliverableStatus(item.status);
+                  const StatusIcon = statusConfig.icon;
                   return (
                     <div
                       key={item.id}
@@ -829,9 +968,13 @@ export default function SolutionDetail() {
                           <FileText className="w-5 h-5 text-primary" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-white">{item.name}</p>
+                          <p className="text-sm font-medium text-white">
+                            {item.name}
+                          </p>
                           {item.file ? (
-                            <p className="text-xs text-slate-500">{item.file} ({item.size})</p>
+                            <p className="text-xs text-slate-500">
+                              {item.file} ({item.size})
+                            </p>
                           ) : (
                             <p className="text-xs text-slate-500">待上传</p>
                           )}
@@ -839,8 +982,12 @@ export default function SolutionDetail() {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
-                          <StatusIcon className={cn('w-4 h-4', statusConfig.color)} />
-                          <span className={cn('text-xs', statusConfig.color)}>{statusConfig.text}</span>
+                          <StatusIcon
+                            className={cn("w-4 h-4", statusConfig.color)}
+                          />
+                          <span className={cn("text-xs", statusConfig.color)}>
+                            {statusConfig.text}
+                          </span>
                         </div>
                         {item.file && (
                           <Button variant="ghost" size="sm">
@@ -849,7 +996,7 @@ export default function SolutionDetail() {
                         )}
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             </CardContent>
@@ -857,7 +1004,7 @@ export default function SolutionDetail() {
         )}
 
         {/* 版本历史 Tab */}
-        {activeTab === 'history' && (
+        {activeTab === "history" && (
           <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
@@ -870,10 +1017,12 @@ export default function SolutionDetail() {
                 {solution.versionHistory.map((version, index) => (
                   <div key={index} className="flex gap-4">
                     <div className="flex flex-col items-center">
-                      <div className={cn(
-                        'w-8 h-8 rounded-full flex items-center justify-center',
-                        index === 0 ? 'bg-primary' : 'bg-slate-600'
-                      )}>
+                      <div
+                        className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center",
+                          index === 0 ? "bg-primary" : "bg-slate-600",
+                        )}
+                      >
                         <History className="w-4 h-4 text-white" />
                       </div>
                       {index < solution.versionHistory.length - 1 && (
@@ -882,14 +1031,21 @@ export default function SolutionDetail() {
                     </div>
                     <div className="flex-1 pb-6">
                       <div className="flex items-center gap-3 mb-1">
-                        <Badge variant="outline" className={cn(
-                          'text-xs',
-                          index === 0 && 'border-primary text-primary'
-                        )}>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-xs",
+                            index === 0 && "border-primary text-primary",
+                          )}
+                        >
                           {version.version}
                         </Badge>
-                        <span className="text-sm text-slate-400">{version.date}</span>
-                        <span className="text-sm text-slate-500">by {version.author}</span>
+                        <span className="text-sm text-slate-400">
+                          {version.date}
+                        </span>
+                        <span className="text-sm text-slate-500">
+                          by {version.author}
+                        </span>
                       </div>
                       <p className="text-sm text-white">{version.changes}</p>
                     </div>
@@ -901,6 +1057,5 @@ export default function SolutionDetail() {
         )}
       </motion.div>
     </motion.div>
-  )
+  );
 }
-

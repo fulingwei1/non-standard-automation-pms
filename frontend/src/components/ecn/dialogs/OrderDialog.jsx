@@ -9,17 +9,17 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../../ui/dialog'
-import { Button } from '../../ui/button'
-import { Input } from '../../ui/input'
-import { Textarea } from '../../ui/textarea'
+} from "../../ui/dialog";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Textarea } from "../../ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../ui/select'
+} from "../../ui/select";
 
 export default function OrderDialog({
   open,
@@ -34,7 +34,7 @@ export default function OrderDialog({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {editingOrder ? '编辑受影响订单' : '添加受影响订单'}
+            {editingOrder ? "编辑受影响订单" : "添加受影响订单"}
           </DialogTitle>
         </DialogHeader>
         <DialogBody className="space-y-4">
@@ -43,7 +43,12 @@ export default function OrderDialog({
             <Select
               value={form.order_type}
               onValueChange={(value) =>
-                setForm({ ...form, order_type: value, order_id: null, order_no: '' })
+                setForm({
+                  ...form,
+                  order_type: value,
+                  order_id: null,
+                  order_no: "",
+                })
               }
             >
               <SelectTrigger>
@@ -111,5 +116,5 @@ export default function OrderDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

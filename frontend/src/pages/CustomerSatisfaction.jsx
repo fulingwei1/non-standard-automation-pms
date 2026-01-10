@@ -1,7 +1,7 @@
 /**
  * Customer Satisfaction Survey
  * 客户满意度调查 - 客服工程师高级功能
- * 
+ *
  * 功能：
  * 1. 满意度调查创建、发送、跟踪
  * 2. 调查问卷模板管理
@@ -10,71 +10,122 @@
  * 5. 满意度趋势分析
  */
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus, Search, Filter, Eye, Send, Star, TrendingUp, TrendingDown,
-  Calendar, User, CheckCircle2, XCircle, RefreshCw, Download, BarChart3,
-  MessageSquare, FileText, Mail, Phone, AlertCircle, ChevronRight,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+  Plus,
+  Search,
+  Filter,
+  Eye,
+  Send,
+  Star,
+  TrendingUp,
+  TrendingDown,
+  Calendar,
+  User,
+  CheckCircle2,
+  XCircle,
+  RefreshCw,
+  Download,
+  BarChart3,
+  MessageSquare,
+  FileText,
+  Mail,
+  Phone,
+  AlertCircle,
+  ChevronRight,
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
-  Card, CardContent, CardHeader, CardTitle,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
+} from "../components/ui/select";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogBody
-} from '../components/ui/dialog'
-import { Textarea } from '../components/ui/textarea'
-import { LoadingCard, ErrorMessage, EmptyState } from '../components/common'
-import { toast } from '../components/ui/toast'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { serviceApi } from '../services/api'
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+  DialogBody,
+} from "../components/ui/dialog";
+import { Textarea } from "../components/ui/textarea";
+import { LoadingCard, ErrorMessage, EmptyState } from "../components/common";
+import { toast } from "../components/ui/toast";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { serviceApi } from "../services/api";
 
 // Mock data
 // Mock data - 已移除，使用真实API
 const statusConfig = {
-  '待发送': { label: '待发送', color: 'bg-slate-500', textColor: 'text-slate-400' },
-  '已发送': { label: '已发送', color: 'bg-blue-500', textColor: 'text-blue-400' },
-  '待回复': { label: '待回复', color: 'bg-amber-500', textColor: 'text-amber-400' },
-  '已完成': { label: '已完成', color: 'bg-emerald-500', textColor: 'text-emerald-400' },
-  '已过期': { label: '已过期', color: 'bg-red-500', textColor: 'text-red-400' },
-}
+  待发送: {
+    label: "待发送",
+    color: "bg-slate-500",
+    textColor: "text-slate-400",
+  },
+  已发送: { label: "已发送", color: "bg-blue-500", textColor: "text-blue-400" },
+  待回复: {
+    label: "待回复",
+    color: "bg-amber-500",
+    textColor: "text-amber-400",
+  },
+  已完成: {
+    label: "已完成",
+    color: "bg-emerald-500",
+    textColor: "text-emerald-400",
+  },
+  已过期: { label: "已过期", color: "bg-red-500", textColor: "text-red-400" },
+};
 
 const surveyTypeConfig = {
-  '项目满意度': { label: '项目满意度', color: 'text-blue-400', bg: 'bg-blue-500/20' },
-  '服务满意度': { label: '服务满意度', color: 'text-purple-400', bg: 'bg-purple-500/20' },
-  '产品满意度': { label: '产品满意度', color: 'text-green-400', bg: 'bg-green-500/20' },
-}
+  项目满意度: {
+    label: "项目满意度",
+    color: "text-blue-400",
+    bg: "bg-blue-500/20",
+  },
+  服务满意度: {
+    label: "服务满意度",
+    color: "text-purple-400",
+    bg: "bg-purple-500/20",
+  },
+  产品满意度: {
+    label: "产品满意度",
+    color: "text-green-400",
+    bg: "bg-green-500/20",
+  },
+};
 
 const sendMethodConfig = {
-  '邮件': { label: '邮件', icon: Mail, color: 'text-blue-400' },
-  '电话': { label: '电话', icon: Phone, color: 'text-green-400' },
-  '微信': { label: '微信', icon: MessageSquare, color: 'text-emerald-400' },
-  '现场': { label: '现场', icon: User, color: 'text-purple-400' },
-}
+  邮件: { label: "邮件", icon: Mail, color: "text-blue-400" },
+  电话: { label: "电话", icon: Phone, color: "text-green-400" },
+  微信: { label: "微信", icon: MessageSquare, color: "text-emerald-400" },
+  现场: { label: "现场", icon: User, color: "text-purple-400" },
+};
 
 export default function CustomerSatisfaction() {
-  const [surveys, setSurveys] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState('ALL')
-  const [typeFilter, setTypeFilter] = useState('ALL')
-  const [dateFilter, setDateFilter] = useState({ start: '', end: '' })
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [showDetailDialog, setShowDetailDialog] = useState(false)
-  const [selectedSurvey, setSelectedSurvey] = useState(null)
+  const [surveys, setSurveys] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [typeFilter, setTypeFilter] = useState("ALL");
+  const [dateFilter, setDateFilter] = useState({ start: "", end: "" });
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [selectedSurvey, setSelectedSurvey] = useState(null);
   const [stats, setStats] = useState({
     total: 0,
     sent: 0,
@@ -82,98 +133,100 @@ export default function CustomerSatisfaction() {
     completed: 0,
     averageScore: 0,
     responseRate: 0,
-  })
+  });
 
   useEffect(() => {
-    loadSurveys()
-    loadStatistics()
-  }, [])
+    loadSurveys();
+    loadStatistics();
+  }, []);
 
   // Map backend status to frontend status
   const mapBackendStatus = (backendStatus) => {
     const statusMap = {
-      'DRAFT': '草稿',
-      'SENT': '已发送',
-      'PENDING': '待回复',
-      'COMPLETED': '已完成',
-    }
-    return statusMap[backendStatus] || backendStatus
-  }
+      DRAFT: "草稿",
+      SENT: "已发送",
+      PENDING: "待回复",
+      COMPLETED: "已完成",
+    };
+    return statusMap[backendStatus] || backendStatus;
+  };
 
   const loadSurveys = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
-      
+      setLoading(true);
+      setError(null);
+
       const params = {
         page: 1,
         page_size: 100,
-      }
-      
-      if (statusFilter !== 'ALL') {
+      };
+
+      if (statusFilter !== "ALL") {
         const statusMap = {
-          '草稿': 'DRAFT',
-          '已发送': 'SENT',
-          '待回复': 'PENDING',
-          '已完成': 'COMPLETED',
-        }
-        params.status = statusMap[statusFilter] || statusFilter
+          草稿: "DRAFT",
+          已发送: "SENT",
+          待回复: "PENDING",
+          已完成: "COMPLETED",
+        };
+        params.status = statusMap[statusFilter] || statusFilter;
       }
-      
-      if (typeFilter !== 'ALL') {
-        params.survey_type = typeFilter
+
+      if (typeFilter !== "ALL") {
+        params.survey_type = typeFilter;
       }
-      
+
       if (dateFilter.start) {
-        params.date_from = dateFilter.start
+        params.date_from = dateFilter.start;
       }
-      
+
       if (dateFilter.end) {
-        params.date_to = dateFilter.end
+        params.date_to = dateFilter.end;
       }
-      
+
       if (searchQuery) {
-        params.keyword = searchQuery
+        params.keyword = searchQuery;
       }
-      
-      const response = await serviceApi.satisfaction.list(params)
-      const surveysData = response.data?.items || response.data || []
-      
+
+      const response = await serviceApi.satisfaction.list(params);
+      const surveysData = response.data?.items || response.data || [];
+
       // Transform backend data to frontend format
-      const transformedSurveys = surveysData.map(survey => ({
+      const transformedSurveys = surveysData.map((survey) => ({
         id: survey.id,
-        survey_no: survey.survey_no || '',
-        survey_type: survey.survey_type || '',
-        customer_name: survey.customer_name || '',
-        customer_contact: survey.customer_contact || '',
-        customer_email: survey.customer_email || '',
-        project_code: survey.project_code || '',
-        project_name: survey.project_name || '',
-        survey_date: survey.survey_date || '',
-        send_date: survey.send_date || '',
-        send_method: survey.send_method || '',
+        survey_no: survey.survey_no || "",
+        survey_type: survey.survey_type || "",
+        customer_name: survey.customer_name || "",
+        customer_contact: survey.customer_contact || "",
+        customer_email: survey.customer_email || "",
+        project_code: survey.project_code || "",
+        project_name: survey.project_name || "",
+        survey_date: survey.survey_date || "",
+        send_date: survey.send_date || "",
+        send_method: survey.send_method || "",
         status: mapBackendStatus(survey.status),
-        response_date: survey.response_date || '',
+        response_date: survey.response_date || "",
         overall_score: survey.overall_score || null,
         scores: survey.scores || {},
-        feedback: survey.feedback || '',
-      }))
-      
-      setSurveys(transformedSurveys)
+        feedback: survey.feedback || "",
+      }));
+
+      setSurveys(transformedSurveys);
     } catch (err) {
-      console.error('Failed to load surveys:', err)
-      setError(err.response?.data?.detail || err.message || '加载满意度调查失败')
-      setSurveys([]) // 不再使用mock数据，显示空列表
+      console.error("Failed to load surveys:", err);
+      setError(
+        err.response?.data?.detail || err.message || "加载满意度调查失败",
+      );
+      setSurveys([]); // 不再使用mock数据，显示空列表
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [statusFilter, typeFilter, dateFilter, searchQuery])
+  }, [statusFilter, typeFilter, dateFilter, searchQuery]);
 
   const loadStatistics = useCallback(async () => {
     try {
-      const response = await serviceApi.satisfaction.statistics()
-      const statsData = response.data || {}
-      
+      const response = await serviceApi.satisfaction.statistics();
+      const statsData = response.data || {};
+
       setStats({
         total: statsData.total || 0,
         sent: statsData.sent || 0,
@@ -181,142 +234,182 @@ export default function CustomerSatisfaction() {
         completed: statsData.completed || 0,
         averageScore: statsData.average_score || 0,
         responseRate: statsData.response_rate || 0,
-      })
+      });
     } catch (err) {
-      console.error('Failed to load statistics:', err)
+      console.error("Failed to load statistics:", err);
       // Calculate from local surveys as fallback
-      const completed = surveys.filter(s => s.status === '已完成')
-      const totalScores = completed.reduce((sum, s) => sum + (s.overall_score || 0), 0)
-      
+      const completed = surveys.filter((s) => s.status === "已完成");
+      const totalScores = completed.reduce(
+        (sum, s) => sum + (s.overall_score || 0),
+        0,
+      );
+
       setStats({
         total: surveys.length,
-        sent: surveys.filter(s => ['已发送', '待回复', '已完成'].includes(s.status)).length,
-        pending: surveys.filter(s => s.status === '待回复').length,
+        sent: surveys.filter((s) =>
+          ["已发送", "待回复", "已完成"].includes(s.status),
+        ).length,
+        pending: surveys.filter((s) => s.status === "待回复").length,
         completed: completed.length,
-        averageScore: completed.length > 0 ? (totalScores / completed.length).toFixed(1) : 0,
-        responseRate: surveys.length > 0 ? ((completed.length / surveys.length) * 100).toFixed(1) : 0,
-      })
+        averageScore:
+          completed.length > 0
+            ? (totalScores / completed.length).toFixed(1)
+            : 0,
+        responseRate:
+          surveys.length > 0
+            ? ((completed.length / surveys.length) * 100).toFixed(1)
+            : 0,
+      });
     }
-  }, [surveys])
+  }, [surveys]);
 
   const filteredSurveys = useMemo(() => {
-    let result = surveys
+    let result = surveys;
 
     // Search filter
     if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      result = result.filter(survey =>
-        survey.survey_no.toLowerCase().includes(query) ||
-        survey.customer_name.toLowerCase().includes(query) ||
-        survey.project_name.toLowerCase().includes(query)
-      )
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (survey) =>
+          survey.survey_no.toLowerCase().includes(query) ||
+          survey.customer_name.toLowerCase().includes(query) ||
+          survey.project_name.toLowerCase().includes(query),
+      );
     }
 
     // Status filter
-    if (statusFilter !== 'ALL') {
-      result = result.filter(survey => survey.status === statusFilter)
+    if (statusFilter !== "ALL") {
+      result = result.filter((survey) => survey.status === statusFilter);
     }
 
     // Type filter
-    if (typeFilter !== 'ALL') {
-      result = result.filter(survey => survey.survey_type === typeFilter)
+    if (typeFilter !== "ALL") {
+      result = result.filter((survey) => survey.survey_type === typeFilter);
     }
 
     // Date filter
     if (dateFilter.start) {
-      result = result.filter(survey => survey.survey_date >= dateFilter.start)
+      result = result.filter(
+        (survey) => survey.survey_date >= dateFilter.start,
+      );
     }
     if (dateFilter.end) {
-      result = result.filter(survey => survey.survey_date <= dateFilter.end)
+      result = result.filter((survey) => survey.survey_date <= dateFilter.end);
     }
 
     return result.sort((a, b) => {
-      return new Date(b.survey_date) - new Date(a.survey_date)
-    })
-  }, [surveys, searchQuery, statusFilter, typeFilter, dateFilter])
+      return new Date(b.survey_date) - new Date(a.survey_date);
+    });
+  }, [surveys, searchQuery, statusFilter, typeFilter, dateFilter]);
 
   const handleViewDetail = (survey) => {
-    setSelectedSurvey(survey)
-    setShowDetailDialog(true)
-  }
+    setSelectedSurvey(survey);
+    setShowDetailDialog(true);
+  };
 
   const handleCreateSurvey = async (surveyData) => {
     try {
-      await serviceApi.satisfaction.create(surveyData)
-      toast.success('满意度调查创建成功')
-      setShowCreateDialog(false)
-      await loadSurveys()
-      await loadStatistics()
+      await serviceApi.satisfaction.create(surveyData);
+      toast.success("满意度调查创建成功");
+      setShowCreateDialog(false);
+      await loadSurveys();
+      await loadStatistics();
     } catch (error) {
-      console.error('Failed to create survey:', error)
-      toast.error('创建失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
+      console.error("Failed to create survey:", error);
+      toast.error(
+        "创建失败: " +
+          (error.response?.data?.detail || error.message || "请稍后重试"),
+      );
     }
-  }
+  };
 
   const handleSendSurvey = async (surveyId, sendData) => {
     try {
-      await serviceApi.satisfaction.send(surveyId, sendData || {})
-      toast.success('调查已发送')
-      await loadSurveys()
-      await loadStatistics()
+      await serviceApi.satisfaction.send(surveyId, sendData || {});
+      toast.success("调查已发送");
+      await loadSurveys();
+      await loadStatistics();
     } catch (error) {
-      console.error('Failed to send survey:', error)
-      toast.error('发送失败: ' + (error.response?.data?.detail || error.message || '请稍后重试'))
+      console.error("Failed to send survey:", error);
+      toast.error(
+        "发送失败: " +
+          (error.response?.data?.detail || error.message || "请稍后重试"),
+      );
     }
-  }
+  };
 
   const handleExportSurveys = () => {
     try {
-      const surveysToExport = filteredSurveys
+      const surveysToExport = filteredSurveys;
       if (surveysToExport.length === 0) {
-        toast.warning('没有可导出的数据')
-        return
+        toast.warning("没有可导出的数据");
+        return;
       }
 
-      const headers = ['调查号', '调查类型', '客户名称', '客户联系人', '客户邮箱', '客户电话',
-                      '项目编号', '项目名称', '调查日期', '发送日期', '发送方式', '截止日期',
-                      '状态', '回复日期', '总体评分', '客户反馈', '改进建议']
-      
+      const headers = [
+        "调查号",
+        "调查类型",
+        "客户名称",
+        "客户联系人",
+        "客户邮箱",
+        "客户电话",
+        "项目编号",
+        "项目名称",
+        "调查日期",
+        "发送日期",
+        "发送方式",
+        "截止日期",
+        "状态",
+        "回复日期",
+        "总体评分",
+        "客户反馈",
+        "改进建议",
+      ];
+
       const csvRows = [
-        headers.join(','),
-        ...surveysToExport.map(survey => [
-          survey.survey_no || '',
-          survey.survey_type || '',
-          survey.customer_name || '',
-          survey.customer_contact || '',
-          survey.customer_email || '',
-          survey.customer_phone || '',
-          survey.project_code || '',
-          survey.project_name || '',
-          survey.survey_date || '',
-          survey.send_date || '',
-          survey.send_method || '',
-          survey.deadline || '',
-          survey.status || '',
-          survey.response_date || '',
-          survey.overall_score || '',
-          `"${(survey.feedback || '').replace(/"/g, '""')}"`,
-          `"${(survey.suggestions || '').replace(/"/g, '""')}"`,
-        ].join(','))
-      ]
-      
-      const csvContent = csvRows.join('\n')
-      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `客户满意度调查_${new Date().toISOString().split('T')[0]}.csv`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-      
-      toast.success(`成功导出 ${surveysToExport.length} 条调查记录`)
+        headers.join(","),
+        ...surveysToExport.map((survey) =>
+          [
+            survey.survey_no || "",
+            survey.survey_type || "",
+            survey.customer_name || "",
+            survey.customer_contact || "",
+            survey.customer_email || "",
+            survey.customer_phone || "",
+            survey.project_code || "",
+            survey.project_name || "",
+            survey.survey_date || "",
+            survey.send_date || "",
+            survey.send_method || "",
+            survey.deadline || "",
+            survey.status || "",
+            survey.response_date || "",
+            survey.overall_score || "",
+            `"${(survey.feedback || "").replace(/"/g, '""')}"`,
+            `"${(survey.suggestions || "").replace(/"/g, '""')}"`,
+          ].join(","),
+        ),
+      ];
+
+      const csvContent = csvRows.join("\n");
+      const blob = new Blob(["\ufeff" + csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `客户满意度调查_${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success(`成功导出 ${surveysToExport.length} 条调查记录`);
     } catch (error) {
-      console.error('Failed to export surveys:', error)
-      toast.error('导出失败: ' + (error.message || '请稍后重试'))
+      console.error("Failed to export surveys:", error);
+      toast.error("导出失败: " + (error.message || "请稍后重试"));
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -329,10 +422,16 @@ export default function CustomerSatisfaction() {
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={() => { loadSurveys(); loadStatistics(); toast.success('数据已刷新'); }}
+              onClick={() => {
+                loadSurveys();
+                loadStatistics();
+                toast.success("数据已刷新");
+              }}
               disabled={loading}
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+              />
               刷新
             </Button>
             <Button
@@ -369,7 +468,9 @@ export default function CustomerSatisfaction() {
             <Card className="bg-slate-800/30 border-slate-700">
               <CardContent className="p-4">
                 <div className="text-sm text-slate-400 mb-1">总调查数</div>
-                <div className="text-2xl font-bold text-white">{stats.total}</div>
+                <div className="text-2xl font-bold text-white">
+                  {stats.total}
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -377,7 +478,9 @@ export default function CustomerSatisfaction() {
             <Card className="bg-blue-500/10 border-blue-500/20">
               <CardContent className="p-4">
                 <div className="text-sm text-slate-400 mb-1">已发送</div>
-                <div className="text-2xl font-bold text-blue-400">{stats.sent}</div>
+                <div className="text-2xl font-bold text-blue-400">
+                  {stats.sent}
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -385,7 +488,9 @@ export default function CustomerSatisfaction() {
             <Card className="bg-amber-500/10 border-amber-500/20">
               <CardContent className="p-4">
                 <div className="text-sm text-slate-400 mb-1">待回复</div>
-                <div className="text-2xl font-bold text-amber-400">{stats.pending}</div>
+                <div className="text-2xl font-bold text-amber-400">
+                  {stats.pending}
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -393,7 +498,9 @@ export default function CustomerSatisfaction() {
             <Card className="bg-emerald-500/10 border-emerald-500/20">
               <CardContent className="p-4">
                 <div className="text-sm text-slate-400 mb-1">已完成</div>
-                <div className="text-2xl font-bold text-emerald-400">{stats.completed}</div>
+                <div className="text-2xl font-bold text-emerald-400">
+                  {stats.completed}
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -402,7 +509,9 @@ export default function CustomerSatisfaction() {
               <CardContent className="p-4">
                 <div className="text-sm text-slate-400 mb-1">平均分</div>
                 <div className="flex items-center gap-1">
-                  <div className="text-2xl font-bold text-yellow-400">{stats.averageScore}</div>
+                  <div className="text-2xl font-bold text-yellow-400">
+                    {stats.averageScore}
+                  </div>
                   <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
                 </div>
               </CardContent>
@@ -412,7 +521,9 @@ export default function CustomerSatisfaction() {
             <Card className="bg-purple-500/10 border-purple-500/20">
               <CardContent className="p-4">
                 <div className="text-sm text-slate-400 mb-1">回复率</div>
-                <div className="text-2xl font-bold text-purple-400">{stats.responseRate}%</div>
+                <div className="text-2xl font-bold text-purple-400">
+                  {stats.responseRate}%
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -460,26 +571,34 @@ export default function CustomerSatisfaction() {
                   <Input
                     type="date"
                     value={dateFilter.start}
-                    onChange={(e) => setDateFilter({ ...dateFilter, start: e.target.value })}
+                    onChange={(e) =>
+                      setDateFilter({ ...dateFilter, start: e.target.value })
+                    }
                     placeholder="开始日期"
                     className="w-40 bg-slate-800/50 border-slate-700 text-sm"
                   />
                   <Input
                     type="date"
                     value={dateFilter.end}
-                    onChange={(e) => setDateFilter({ ...dateFilter, end: e.target.value })}
+                    onChange={(e) =>
+                      setDateFilter({ ...dateFilter, end: e.target.value })
+                    }
                     placeholder="结束日期"
                     className="w-40 bg-slate-800/50 border-slate-700 text-sm"
                   />
-                  {(searchQuery || statusFilter !== 'ALL' || typeFilter !== 'ALL' || dateFilter.start || dateFilter.end) && (
+                  {(searchQuery ||
+                    statusFilter !== "ALL" ||
+                    typeFilter !== "ALL" ||
+                    dateFilter.start ||
+                    dateFilter.end) && (
                     <Button
                       variant="secondary"
                       size="sm"
                       onClick={() => {
-                        setSearchQuery('')
-                        setStatusFilter('ALL')
-                        setTypeFilter('ALL')
-                        setDateFilter({ start: '', end: '' })
+                        setSearchQuery("");
+                        setStatusFilter("ALL");
+                        setTypeFilter("ALL");
+                        setDateFilter({ start: "", end: "" });
                       }}
                       className="gap-2"
                     >
@@ -494,7 +613,12 @@ export default function CustomerSatisfaction() {
         </motion.div>
 
         {/* Survey List */}
-        <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-3">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="space-y-3"
+        >
           {loading ? (
             <LoadingCard rows={5} />
           ) : error && surveys.length === 0 ? (
@@ -504,17 +628,26 @@ export default function CustomerSatisfaction() {
               icon={Star}
               title="暂无满意度调查"
               description={
-                searchQuery || statusFilter !== 'ALL' || typeFilter !== 'ALL' || dateFilter.start || dateFilter.end
+                searchQuery ||
+                statusFilter !== "ALL" ||
+                typeFilter !== "ALL" ||
+                dateFilter.start ||
+                dateFilter.end
                   ? "当前筛选条件下没有匹配的调查，请尝试调整筛选条件"
                   : "当前没有满意度调查数据"
               }
             />
           ) : (
             filteredSurveys.map((survey) => {
-              const status = statusConfig[survey.status] || statusConfig['待发送']
-              const typeConfig = surveyTypeConfig[survey.survey_type] || surveyTypeConfig['项目满意度']
-              const methodConfig = sendMethodConfig[survey.send_method] || sendMethodConfig['邮件']
-              const MethodIcon = methodConfig.icon
+              const status =
+                statusConfig[survey.status] || statusConfig["待发送"];
+              const typeConfig =
+                surveyTypeConfig[survey.survey_type] ||
+                surveyTypeConfig["项目满意度"];
+              const methodConfig =
+                sendMethodConfig[survey.send_method] ||
+                sendMethodConfig["邮件"];
+              const MethodIcon = methodConfig.icon;
 
               return (
                 <motion.div key={survey.id} variants={fadeIn}>
@@ -524,11 +657,19 @@ export default function CustomerSatisfaction() {
                         <div className="flex-1 space-y-3">
                           {/* Header */}
                           <div className="flex items-center gap-3 flex-wrap">
-                            <span className="font-mono text-sm text-slate-300">{survey.survey_no}</span>
-                            <Badge className={cn(status.color, 'text-xs')}>
+                            <span className="font-mono text-sm text-slate-300">
+                              {survey.survey_no}
+                            </span>
+                            <Badge className={cn(status.color, "text-xs")}>
                               {status.label}
                             </Badge>
-                            <Badge className={cn(typeConfig.bg, typeConfig.color, 'text-xs')}>
+                            <Badge
+                              className={cn(
+                                typeConfig.bg,
+                                typeConfig.color,
+                                "text-xs",
+                              )}
+                            >
                               {typeConfig.label}
                             </Badge>
                             <Badge variant="outline" className="text-xs">
@@ -536,7 +677,10 @@ export default function CustomerSatisfaction() {
                               {methodConfig.label}
                             </Badge>
                             {survey.overall_score && (
-                              <Badge variant="outline" className="text-xs text-yellow-400 border-yellow-500/30">
+                              <Badge
+                                variant="outline"
+                                className="text-xs text-yellow-400 border-yellow-500/30"
+                              >
                                 <Star className="w-3 h-3 mr-1 fill-yellow-400" />
                                 {survey.overall_score}/5.0
                               </Badge>
@@ -571,42 +715,58 @@ export default function CustomerSatisfaction() {
                               )}
                             </div>
                             {survey.feedback && (
-                              <p className="text-sm text-slate-300 mt-2 line-clamp-2">{survey.feedback}</p>
+                              <p className="text-sm text-slate-300 mt-2 line-clamp-2">
+                                {survey.feedback}
+                              </p>
                             )}
                           </div>
 
                           {/* Scores */}
                           {survey.scores && (
                             <div className="grid grid-cols-5 gap-2 text-xs">
-                              {Object.entries(survey.scores).map(([key, score]) => (
-                                <div key={key} className="flex items-center gap-1">
-                                  <span className="text-slate-400">{key === 'service_quality' ? '服务质量' : 
-                                    key === 'response_speed' ? '响应速度' :
-                                    key === 'technical_support' ? '技术支持' :
-                                    key === 'problem_resolution' ? '问题解决' :
-                                    key === 'communication' ? '沟通' : key}:</span>
-                                  <div className="flex items-center gap-0.5">
-                                    {[1, 2, 3, 4, 5].map((i) => (
-                                      <Star
-                                        key={i}
-                                        className={cn(
-                                          'w-3 h-3',
-                                          i <= score
-                                            ? 'fill-yellow-400 text-yellow-400'
-                                            : 'text-slate-600'
-                                        )}
-                                      />
-                                    ))}
+                              {Object.entries(survey.scores).map(
+                                ([key, score]) => (
+                                  <div
+                                    key={key}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <span className="text-slate-400">
+                                      {key === "service_quality"
+                                        ? "服务质量"
+                                        : key === "response_speed"
+                                          ? "响应速度"
+                                          : key === "technical_support"
+                                            ? "技术支持"
+                                            : key === "problem_resolution"
+                                              ? "问题解决"
+                                              : key === "communication"
+                                                ? "沟通"
+                                                : key}
+                                      :
+                                    </span>
+                                    <div className="flex items-center gap-0.5">
+                                      {[1, 2, 3, 4, 5].map((i) => (
+                                        <Star
+                                          key={i}
+                                          className={cn(
+                                            "w-3 h-3",
+                                            i <= score
+                                              ? "fill-yellow-400 text-yellow-400"
+                                              : "text-slate-600",
+                                          )}
+                                        />
+                                      ))}
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
+                                ),
+                              )}
                             </div>
                           )}
                         </div>
 
                         {/* Actions */}
                         <div className="flex items-center gap-2">
-                          {survey.status === '待发送' && (
+                          {survey.status === "待发送" && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -631,7 +791,7 @@ export default function CustomerSatisfaction() {
                     </CardContent>
                   </Card>
                 </motion.div>
-              )
+              );
             })
           )}
         </motion.div>
@@ -653,105 +813,113 @@ export default function CustomerSatisfaction() {
           <SurveyDetailDialog
             survey={selectedSurvey}
             onClose={() => {
-              setShowDetailDialog(false)
-              setSelectedSurvey(null)
+              setShowDetailDialog(false);
+              setSelectedSurvey(null);
             }}
             onSend={handleSendSurvey}
           />
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }
 
 // Create Survey Dialog Component
 function CreateSurveyDialog({ onClose, onSubmit }) {
   const [formData, setFormData] = useState({
-    survey_type: '项目满意度',
-    customer_name: '',
-    customer_contact: '',
-    customer_email: '',
-    customer_phone: '',
-    project_code: '',
-    project_name: '',
-    survey_date: new Date().toISOString().split('T')[0],
-    send_method: '邮件',
-    deadline: '',
-    notes: '',
-    template_id: '',
-  })
-  const [templates, setTemplates] = useState([])
-  const [loadingTemplates, setLoadingTemplates] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState(null)
+    survey_type: "项目满意度",
+    customer_name: "",
+    customer_contact: "",
+    customer_email: "",
+    customer_phone: "",
+    project_code: "",
+    project_name: "",
+    survey_date: new Date().toISOString().split("T")[0],
+    send_method: "邮件",
+    deadline: "",
+    notes: "",
+    template_id: "",
+  });
+  const [templates, setTemplates] = useState([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   useEffect(() => {
-    loadTemplates()
-  }, [formData.survey_type])
+    loadTemplates();
+  }, [formData.survey_type]);
 
   const loadTemplates = async () => {
     try {
-      setLoadingTemplates(true)
+      setLoadingTemplates(true);
       const response = await serviceApi.satisfaction.templates.list({
         survey_type: formData.survey_type,
         is_active: true,
         page_size: 50,
-      })
-      const templatesData = response.data?.items || response.data || []
-      setTemplates(templatesData)
+      });
+      const templatesData = response.data?.items || response.data || [];
+      setTemplates(templatesData);
     } catch (error) {
-      console.error('Failed to load templates:', error)
-      setTemplates([])
+      console.error("Failed to load templates:", error);
+      setTemplates([]);
     } finally {
-      setLoadingTemplates(false)
+      setLoadingTemplates(false);
     }
-  }
+  };
 
   const handleTemplateSelect = async (templateId) => {
     if (!templateId) {
-      setSelectedTemplate(null)
-      setFormData(prev => ({ ...prev, template_id: '' }))
-      return
+      setSelectedTemplate(null);
+      setFormData((prev) => ({ ...prev, template_id: "" }));
+      return;
     }
 
     try {
-      const response = await serviceApi.satisfaction.templates.get(templateId)
-      const template = response.data || response
-      setSelectedTemplate(template)
-      setFormData(prev => ({
+      const response = await serviceApi.satisfaction.templates.get(templateId);
+      const template = response.data || response;
+      setSelectedTemplate(template);
+      setFormData((prev) => ({
         ...prev,
         template_id: templateId,
         send_method: template.default_send_method || prev.send_method,
-        deadline: template.default_deadline_days 
-          ? new Date(Date.now() + template.default_deadline_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        deadline: template.default_deadline_days
+          ? new Date(
+              Date.now() + template.default_deadline_days * 24 * 60 * 60 * 1000,
+            )
+              .toISOString()
+              .split("T")[0]
           : prev.deadline,
-      }))
-      toast.success(`已应用模板: ${template.template_name}`)
+      }));
+      toast.success(`已应用模板: ${template.template_name}`);
     } catch (error) {
-      console.error('Failed to load template:', error)
-      toast.error('加载模板失败')
+      console.error("Failed to load template:", error);
+      toast.error("加载模板失败");
     }
-  }
+  };
 
   const handleSubmit = () => {
     if (!formData.customer_name || !formData.survey_date) {
-      toast.error('请填写客户名称和调查日期')
-      return
+      toast.error("请填写客户名称和调查日期");
+      return;
     }
-    onSubmit(formData)
-  }
+    onSubmit(formData);
+  };
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl bg-slate-900 border-slate-700 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>创建满意度调查</DialogTitle>
-          <DialogDescription>填写调查信息，系统将自动生成调查号</DialogDescription>
+          <DialogDescription>
+            填写调查信息，系统将自动生成调查号
+          </DialogDescription>
         </DialogHeader>
         <DialogBody>
           <div className="space-y-4">
             {/* Template Selection */}
             <div>
-              <label className="text-sm text-slate-400 mb-1 block">使用模板（可选）</label>
+              <label className="text-sm text-slate-400 mb-1 block">
+                使用模板（可选）
+              </label>
               <div className="flex items-center gap-2">
                 <Select
                   value={formData.template_id}
@@ -759,32 +927,46 @@ function CreateSurveyDialog({ onClose, onSubmit }) {
                   disabled={loadingTemplates}
                 >
                   <SelectTrigger className="flex-1 bg-slate-800/50 border-slate-700">
-                    <SelectValue placeholder={loadingTemplates ? "加载模板中..." : "选择调查模板"} />
+                    <SelectValue
+                      placeholder={
+                        loadingTemplates ? "加载模板中..." : "选择调查模板"
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__none__">不使用模板</SelectItem>
                     {templates.map((template) => (
-                      <SelectItem key={template.id} value={template.id.toString()}>
+                      <SelectItem
+                        key={template.id}
+                        value={template.id.toString()}
+                      >
                         {template.template_name} ({template.survey_type})
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 {selectedTemplate && (
-                  <Badge variant="outline" className="text-xs text-emerald-400 border-emerald-500/30">
+                  <Badge
+                    variant="outline"
+                    className="text-xs text-emerald-400 border-emerald-500/30"
+                  >
                     ✓ 已应用模板
                   </Badge>
                 )}
               </div>
               {selectedTemplate && selectedTemplate.questions && (
                 <div className="mt-2 p-3 bg-slate-800/30 border border-slate-700 rounded-lg">
-                  <p className="text-xs text-slate-400 mb-1">模板包含 {selectedTemplate.questions.length} 个问题</p>
+                  <p className="text-xs text-slate-400 mb-1">
+                    模板包含 {selectedTemplate.questions.length} 个问题
+                  </p>
                   <div className="text-xs text-slate-500 space-y-1">
                     {selectedTemplate.questions.slice(0, 3).map((q, idx) => (
                       <div key={idx}>• {q.question || q.text}</div>
                     ))}
                     {selectedTemplate.questions.length > 3 && (
-                      <div>... 还有 {selectedTemplate.questions.length - 3} 个问题</div>
+                      <div>
+                        ... 还有 {selectedTemplate.questions.length - 3} 个问题
+                      </div>
                     )}
                   </div>
                 </div>
@@ -793,13 +975,19 @@ function CreateSurveyDialog({ onClose, onSubmit }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">调查类型 *</label>
+                <label className="text-sm text-slate-400 mb-1 block">
+                  调查类型 *
+                </label>
                 <select
                   value={formData.survey_type}
                   onChange={(e) => {
-                    setFormData({ ...formData, survey_type: e.target.value, template_id: '' })
-                    setSelectedTemplate(null)
-                    loadTemplates()
+                    setFormData({
+                      ...formData,
+                      survey_type: e.target.value,
+                      template_id: "",
+                    });
+                    setSelectedTemplate(null);
+                    loadTemplates();
                   }}
                   className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white"
                 >
@@ -809,10 +997,14 @@ function CreateSurveyDialog({ onClose, onSubmit }) {
                 </select>
               </div>
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">发送方式 *</label>
+                <label className="text-sm text-slate-400 mb-1 block">
+                  发送方式 *
+                </label>
                 <select
                   value={formData.send_method}
-                  onChange={(e) => setFormData({ ...formData, send_method: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, send_method: e.target.value })
+                  }
                   className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white"
                 >
                   <option value="邮件">邮件</option>
@@ -825,19 +1017,30 @@ function CreateSurveyDialog({ onClose, onSubmit }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">客户名称 *</label>
+                <label className="text-sm text-slate-400 mb-1 block">
+                  客户名称 *
+                </label>
                 <Input
                   value={formData.customer_name}
-                  onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, customer_name: e.target.value })
+                  }
                   placeholder="输入客户名称"
                   className="bg-slate-800/50 border-slate-700"
                 />
               </div>
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">客户联系人</label>
+                <label className="text-sm text-slate-400 mb-1 block">
+                  客户联系人
+                </label>
                 <Input
                   value={formData.customer_contact}
-                  onChange={(e) => setFormData({ ...formData, customer_contact: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      customer_contact: e.target.value,
+                    })
+                  }
                   placeholder="输入客户联系人"
                   className="bg-slate-800/50 border-slate-700"
                 />
@@ -846,20 +1049,28 @@ function CreateSurveyDialog({ onClose, onSubmit }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">客户邮箱</label>
+                <label className="text-sm text-slate-400 mb-1 block">
+                  客户邮箱
+                </label>
                 <Input
                   type="email"
                   value={formData.customer_email}
-                  onChange={(e) => setFormData({ ...formData, customer_email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, customer_email: e.target.value })
+                  }
                   placeholder="输入客户邮箱"
                   className="bg-slate-800/50 border-slate-700"
                 />
               </div>
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">客户电话</label>
+                <label className="text-sm text-slate-400 mb-1 block">
+                  客户电话
+                </label>
                 <Input
                   value={formData.customer_phone}
-                  onChange={(e) => setFormData({ ...formData, customer_phone: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, customer_phone: e.target.value })
+                  }
                   placeholder="输入客户电话"
                   className="bg-slate-800/50 border-slate-700"
                 />
@@ -868,19 +1079,27 @@ function CreateSurveyDialog({ onClose, onSubmit }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">项目编号</label>
+                <label className="text-sm text-slate-400 mb-1 block">
+                  项目编号
+                </label>
                 <Input
                   value={formData.project_code}
-                  onChange={(e) => setFormData({ ...formData, project_code: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, project_code: e.target.value })
+                  }
                   placeholder="输入项目编号"
                   className="bg-slate-800/50 border-slate-700"
                 />
               </div>
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">项目名称</label>
+                <label className="text-sm text-slate-400 mb-1 block">
+                  项目名称
+                </label>
                 <Input
                   value={formData.project_name}
-                  onChange={(e) => setFormData({ ...formData, project_name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, project_name: e.target.value })
+                  }
                   placeholder="输入项目名称"
                   className="bg-slate-800/50 border-slate-700"
                 />
@@ -889,20 +1108,28 @@ function CreateSurveyDialog({ onClose, onSubmit }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">调查日期 *</label>
+                <label className="text-sm text-slate-400 mb-1 block">
+                  调查日期 *
+                </label>
                 <Input
                   type="date"
                   value={formData.survey_date}
-                  onChange={(e) => setFormData({ ...formData, survey_date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, survey_date: e.target.value })
+                  }
                   className="bg-slate-800/50 border-slate-700"
                 />
               </div>
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">截止日期</label>
+                <label className="text-sm text-slate-400 mb-1 block">
+                  截止日期
+                </label>
                 <Input
                   type="date"
                   value={formData.deadline}
-                  onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, deadline: e.target.value })
+                  }
                   className="bg-slate-800/50 border-slate-700"
                 />
               </div>
@@ -912,7 +1139,9 @@ function CreateSurveyDialog({ onClose, onSubmit }) {
               <label className="text-sm text-slate-400 mb-1 block">备注</label>
               <Textarea
                 value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, notes: e.target.value })
+                }
                 placeholder="输入备注信息..."
                 rows={3}
                 className="bg-slate-800/50 border-slate-700"
@@ -921,7 +1150,9 @@ function CreateSurveyDialog({ onClose, onSubmit }) {
           </div>
         </DialogBody>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>取消</Button>
+          <Button variant="outline" onClick={onClose}>
+            取消
+          </Button>
           <Button onClick={handleSubmit}>
             <Send className="w-4 h-4 mr-2" />
             创建调查
@@ -929,15 +1160,17 @@ function CreateSurveyDialog({ onClose, onSubmit }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // Survey Detail Dialog Component
 function SurveyDetailDialog({ survey, onClose, onSend }) {
-  const status = statusConfig[survey.status] || statusConfig['待发送']
-  const typeConfig = surveyTypeConfig[survey.survey_type] || surveyTypeConfig['项目满意度']
-  const methodConfig = sendMethodConfig[survey.send_method] || sendMethodConfig['邮件']
-  const MethodIcon = methodConfig.icon
+  const status = statusConfig[survey.status] || statusConfig["待发送"];
+  const typeConfig =
+    surveyTypeConfig[survey.survey_type] || surveyTypeConfig["项目满意度"];
+  const methodConfig =
+    sendMethodConfig[survey.send_method] || sendMethodConfig["邮件"];
+  const MethodIcon = methodConfig.icon;
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -945,8 +1178,10 @@ function SurveyDetailDialog({ survey, onClose, onSend }) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span className="font-mono">{survey.survey_no}</span>
-            <Badge className={cn(status.color, 'text-xs')}>{status.label}</Badge>
-            <Badge className={cn(typeConfig.bg, typeConfig.color, 'text-xs')}>
+            <Badge className={cn(status.color, "text-xs")}>
+              {status.label}
+            </Badge>
+            <Badge className={cn(typeConfig.bg, typeConfig.color, "text-xs")}>
               {typeConfig.label}
             </Badge>
           </DialogTitle>
@@ -962,7 +1197,7 @@ function SurveyDetailDialog({ survey, onClose, onSend }) {
               </div>
               <div>
                 <p className="text-sm text-slate-400 mb-1">客户联系人</p>
-                <p className="text-white">{survey.customer_contact || '-'}</p>
+                <p className="text-white">{survey.customer_contact || "-"}</p>
               </div>
               {survey.customer_email && (
                 <div>
@@ -983,7 +1218,7 @@ function SurveyDetailDialog({ survey, onClose, onSend }) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-slate-400 mb-1">项目编号</p>
-                  <p className="text-white">{survey.project_code || '-'}</p>
+                  <p className="text-white">{survey.project_code || "-"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-400 mb-1">项目名称</p>
@@ -1023,17 +1258,20 @@ function SurveyDetailDialog({ survey, onClose, onSend }) {
                       <Star
                         key={i}
                         className={cn(
-                          'w-6 h-6',
+                          "w-6 h-6",
                           i <= Math.floor(survey.overall_score)
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : i === Math.ceil(survey.overall_score) && survey.overall_score % 1 >= 0.5
-                            ? 'fill-yellow-400/50 text-yellow-400'
-                            : 'text-slate-600'
+                            ? "fill-yellow-400 text-yellow-400"
+                            : i === Math.ceil(survey.overall_score) &&
+                                survey.overall_score % 1 >= 0.5
+                              ? "fill-yellow-400/50 text-yellow-400"
+                              : "text-slate-600",
                         )}
                       />
                     ))}
                   </div>
-                  <span className="text-2xl font-bold text-yellow-400">{survey.overall_score}/5.0</span>
+                  <span className="text-2xl font-bold text-yellow-400">
+                    {survey.overall_score}/5.0
+                  </span>
                 </div>
               </div>
             )}
@@ -1044,13 +1282,22 @@ function SurveyDetailDialog({ survey, onClose, onSend }) {
                 <p className="text-sm text-slate-400 mb-2">详细评分</p>
                 <div className="space-y-3">
                   {Object.entries(survey.scores).map(([key, score]) => (
-                    <div key={key} className="flex items-center justify-between">
+                    <div
+                      key={key}
+                      className="flex items-center justify-between"
+                    >
                       <span className="text-white">
-                        {key === 'service_quality' ? '服务质量' : 
-                         key === 'response_speed' ? '响应速度' :
-                         key === 'technical_support' ? '技术支持' :
-                         key === 'problem_resolution' ? '问题解决' :
-                         key === 'communication' ? '沟通' : key}
+                        {key === "service_quality"
+                          ? "服务质量"
+                          : key === "response_speed"
+                            ? "响应速度"
+                            : key === "technical_support"
+                              ? "技术支持"
+                              : key === "problem_resolution"
+                                ? "问题解决"
+                                : key === "communication"
+                                  ? "沟通"
+                                  : key}
                       </span>
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-0.5">
@@ -1058,15 +1305,17 @@ function SurveyDetailDialog({ survey, onClose, onSend }) {
                             <Star
                               key={i}
                               className={cn(
-                                'w-4 h-4',
+                                "w-4 h-4",
                                 i <= score
-                                  ? 'fill-yellow-400 text-yellow-400'
-                                  : 'text-slate-600'
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-slate-600",
                               )}
                             />
                           ))}
                         </div>
-                        <span className="text-white font-medium w-8 text-right">{score}/5</span>
+                        <span className="text-white font-medium w-8 text-right">
+                          {score}/5
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -1078,7 +1327,9 @@ function SurveyDetailDialog({ survey, onClose, onSend }) {
             {survey.feedback && (
               <div>
                 <p className="text-sm text-slate-400 mb-1">客户反馈</p>
-                <p className="text-white bg-slate-800/50 p-3 rounded-lg">{survey.feedback}</p>
+                <p className="text-white bg-slate-800/50 p-3 rounded-lg">
+                  {survey.feedback}
+                </p>
               </div>
             )}
 
@@ -1086,7 +1337,9 @@ function SurveyDetailDialog({ survey, onClose, onSend }) {
             {survey.suggestions && (
               <div>
                 <p className="text-sm text-slate-400 mb-1">改进建议</p>
-                <p className="text-white bg-slate-800/50 p-3 rounded-lg">{survey.suggestions}</p>
+                <p className="text-white bg-slate-800/50 p-3 rounded-lg">
+                  {survey.suggestions}
+                </p>
               </div>
             )}
 
@@ -1100,16 +1353,17 @@ function SurveyDetailDialog({ survey, onClose, onSend }) {
           </div>
         </DialogBody>
         <DialogFooter>
-          {survey.status === '待发送' && (
+          {survey.status === "待发送" && (
             <Button variant="outline" onClick={() => onSend(survey.id)}>
               <Send className="w-4 h-4 mr-2" />
               发送调查
             </Button>
           )}
-          <Button variant="outline" onClick={onClose}>关闭</Button>
+          <Button variant="outline" onClick={onClose}>
+            关闭
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

@@ -9,17 +9,17 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '../../ui/dialog'
-import { Button } from '../../ui/button'
-import { Input } from '../../ui/input'
-import { Textarea } from '../../ui/textarea'
+} from "../../ui/dialog";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Textarea } from "../../ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../ui/select'
+} from "../../ui/select";
 
 export default function EvaluationDialog({
   open,
@@ -36,14 +36,10 @@ export default function EvaluationDialog({
         </DialogHeader>
         <DialogBody className="space-y-4">
           <div>
-            <label className="text-sm font-medium mb-2 block">
-              评估部门 *
-            </label>
+            <label className="text-sm font-medium mb-2 block">评估部门 *</label>
             <Input
               value={form.eval_dept}
-              onChange={(e) =>
-                setForm({ ...form, eval_dept: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, eval_dept: e.target.value })}
               placeholder="如：机械部、电气部、软件部等"
             />
           </div>
@@ -64,7 +60,9 @@ export default function EvaluationDialog({
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">工期估算（天）</label>
+              <label className="text-sm font-medium mb-2 block">
+                工期估算（天）
+              </label>
               <Input
                 type="number"
                 value={form.schedule_estimate}
@@ -150,9 +148,7 @@ export default function EvaluationDialog({
             <label className="text-sm font-medium mb-2 block">附加条件</label>
             <Textarea
               value={form.conditions}
-              onChange={(e) =>
-                setForm({ ...form, conditions: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, conditions: e.target.value })}
               placeholder="执行变更需要满足的条件"
               rows={2}
             />
@@ -166,5 +162,5 @@ export default function EvaluationDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

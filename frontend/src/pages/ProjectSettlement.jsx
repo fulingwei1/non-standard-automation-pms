@@ -3,8 +3,8 @@
  * Features: Settlement creation, Settlement query, Settlement approval, Settlement statistics
  */
 
-import { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Receipt,
   Search,
@@ -28,8 +28,8 @@ import {
   TrendingUp,
   TrendingDown,
   BarChart3,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -49,54 +49,92 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../components/ui'
-import { cn, formatCurrency, formatDate } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
+} from "../components/ui";
+import { cn, formatCurrency, formatDate } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
 
 // Mock settlement data
 // Mock data - 已移除，使用真实API
 const statusConfig = {
-  DRAFT: { label: '草稿', color: 'bg-slate-500/20 text-slate-400', icon: FileText },
-  PENDING: { label: '待确认', color: 'bg-amber-500/20 text-amber-400', icon: Clock },
-  CONFIRMED: { label: '已确认', color: 'bg-blue-500/20 text-blue-400', icon: CheckCircle2 },
-  SETTLED: { label: '已结算', color: 'bg-emerald-500/20 text-emerald-400', icon: CheckCircle2 },
-}
+  DRAFT: {
+    label: "草稿",
+    color: "bg-slate-500/20 text-slate-400",
+    icon: FileText,
+  },
+  PENDING: {
+    label: "待确认",
+    color: "bg-amber-500/20 text-amber-400",
+    icon: Clock,
+  },
+  CONFIRMED: {
+    label: "已确认",
+    color: "bg-blue-500/20 text-blue-400",
+    icon: CheckCircle2,
+  },
+  SETTLED: {
+    label: "已结算",
+    color: "bg-emerald-500/20 text-emerald-400",
+    icon: CheckCircle2,
+  },
+};
 
 export default function ProjectSettlement() {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedStatus, setSelectedStatus] = useState('all')
-  const [selectedSettlement, setSelectedSettlement] = useState(null)
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedSettlement, setSelectedSettlement] = useState(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   // Filter settlements
   const filteredSettlements = useMemo(() => {
-    return mockSettlements.filter(settlement => {
-      const matchesSearch = !searchTerm ||
-        settlement.settlementNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        settlement.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        settlement.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        settlement.contractNo.toLowerCase().includes(searchTerm.toLowerCase())
-      
-      const matchesStatus = selectedStatus === 'all' || settlement.status === selectedStatus
+    return mockSettlements.filter((settlement) => {
+      const matchesSearch =
+        !searchTerm ||
+        settlement.settlementNo
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        settlement.projectName
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        settlement.customerName
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        settlement.contractNo.toLowerCase().includes(searchTerm.toLowerCase());
 
-      return matchesSearch && matchesStatus
-    })
-  }, [searchTerm, selectedStatus])
+      const matchesStatus =
+        selectedStatus === "all" || settlement.status === selectedStatus;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [searchTerm, selectedStatus]);
 
   // Statistics
   const stats = useMemo(() => {
     return {
       total: filteredSettlements.length,
-      totalContractAmount: filteredSettlements.reduce((sum, s) => sum + s.contractAmount, 0),
+      totalContractAmount: filteredSettlements.reduce(
+        (sum, s) => sum + s.contractAmount,
+        0,
+      ),
       totalCost: filteredSettlements.reduce((sum, s) => sum + s.totalCost, 0),
-      totalProfit: filteredSettlements.reduce((sum, s) => sum + s.grossProfit, 0),
-      averageMargin: filteredSettlements.length > 0
-        ? filteredSettlements.reduce((sum, s) => sum + s.grossMargin, 0) / filteredSettlements.length
-        : 0,
-      totalReceived: filteredSettlements.reduce((sum, s) => sum + s.receivedAmount, 0),
-      totalReceivable: filteredSettlements.reduce((sum, s) => sum + s.receivableAmount, 0),
-    }
-  }, [filteredSettlements])
+      totalProfit: filteredSettlements.reduce(
+        (sum, s) => sum + s.grossProfit,
+        0,
+      ),
+      averageMargin:
+        filteredSettlements.length > 0
+          ? filteredSettlements.reduce((sum, s) => sum + s.grossMargin, 0) /
+            filteredSettlements.length
+          : 0,
+      totalReceived: filteredSettlements.reduce(
+        (sum, s) => sum + s.receivedAmount,
+        0,
+      ),
+      totalReceivable: filteredSettlements.reduce(
+        (sum, s) => sum + s.receivableAmount,
+        0,
+      ),
+    };
+  }, [filteredSettlements]);
 
   return (
     <motion.div
@@ -116,7 +154,10 @@ export default function ProjectSettlement() {
               <Download className="w-4 h-4" />
               导出报表
             </Button>
-            <Button className="flex items-center gap-2" onClick={() => setShowCreateDialog(true)}>
+            <Button
+              className="flex items-center gap-2"
+              onClick={() => setShowCreateDialog(true)}
+            >
               <Plus className="w-4 h-4" />
               创建结算
             </Button>
@@ -139,7 +180,9 @@ export default function ProjectSettlement() {
                 <p className="text-2xl font-bold text-white">
                   {formatCurrency(stats.totalContractAmount)}
                 </p>
-                <p className="text-xs text-slate-500 mt-1">{stats.total}个项目</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {stats.total}个项目
+                </p>
               </div>
               <div className="p-2 bg-blue-500/20 rounded-lg">
                 <DollarSign className="w-5 h-5 text-blue-400" />
@@ -158,8 +201,12 @@ export default function ProjectSettlement() {
                 </p>
                 <p className="text-xs text-slate-500 mt-1">
                   {stats.totalContractAmount > 0
-                    ? ((stats.totalCost / stats.totalContractAmount) * 100).toFixed(1)
-                    : 0}%占比
+                    ? (
+                        (stats.totalCost / stats.totalContractAmount) *
+                        100
+                      ).toFixed(1)
+                    : 0}
+                  %占比
                 </p>
               </div>
               <div className="p-2 bg-red-500/20 rounded-lg">
@@ -195,8 +242,12 @@ export default function ProjectSettlement() {
                 <p className="text-sm text-slate-400 mb-2">回款率</p>
                 <p className="text-2xl font-bold text-cyan-400">
                   {stats.totalContractAmount > 0
-                    ? ((stats.totalReceived / stats.totalContractAmount) * 100).toFixed(1)
-                    : 0}%
+                    ? (
+                        (stats.totalReceived / stats.totalContractAmount) *
+                        100
+                      ).toFixed(1)
+                    : 0}
+                  %
                 </p>
                 <p className="text-xs text-slate-500 mt-1">
                   待收: {formatCurrency(stats.totalReceivable)}
@@ -231,7 +282,9 @@ export default function ProjectSettlement() {
               >
                 <option value="all">全部状态</option>
                 {Object.entries(statusConfig).map(([key, val]) => (
-                  <option key={key} value={key}>{val.label}</option>
+                  <option key={key} value={key}>
+                    {val.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -256,8 +309,8 @@ export default function ProjectSettlement() {
           <CardContent>
             <div className="space-y-4">
               {filteredSettlements.map((settlement) => {
-                const statusConf = statusConfig[settlement.status]
-                const StatusIcon = statusConf?.icon || FileText
+                const statusConf = statusConfig[settlement.status];
+                const StatusIcon = statusConf?.icon || FileText;
                 return (
                   <div
                     key={settlement.id}
@@ -267,8 +320,13 @@ export default function ProjectSettlement() {
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="font-medium text-white">{settlement.settlementNo}</span>
-                          <Badge variant="outline" className={cn('text-xs', statusConf?.color)}>
+                          <span className="font-medium text-white">
+                            {settlement.settlementNo}
+                          </span>
+                          <Badge
+                            variant="outline"
+                            className={cn("text-xs", statusConf?.color)}
+                          >
                             <StatusIcon className="w-3 h-3 mr-1" />
                             {settlement.statusLabel}
                           </Badge>
@@ -278,9 +336,15 @@ export default function ProjectSettlement() {
                         </div>
                         <div className="text-xs text-slate-400 space-y-1">
                           <div>客户: {settlement.customerName}</div>
-                          <div>合同: {settlement.contractNo} · 合同金额: {formatCurrency(settlement.contractAmount)}</div>
+                          <div>
+                            合同: {settlement.contractNo} · 合同金额:{" "}
+                            {formatCurrency(settlement.contractAmount)}
+                          </div>
                           {settlement.settlementDate && (
-                            <div>结算日期: {settlement.settlementDate} · 结算人: {settlement.settledBy}</div>
+                            <div>
+                              结算日期: {settlement.settlementDate} · 结算人:{" "}
+                              {settlement.settledBy}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -300,31 +364,43 @@ export default function ProjectSettlement() {
                     {/* Cost Breakdown */}
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3 pt-3 border-t border-slate-700/50">
                       <div>
-                        <div className="text-xs text-slate-400 mb-1">材料成本</div>
+                        <div className="text-xs text-slate-400 mb-1">
+                          材料成本
+                        </div>
                         <div className="text-sm font-medium text-white">
                           {formatCurrency(settlement.materialCost)}
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs text-slate-400 mb-1">人工成本</div>
+                        <div className="text-xs text-slate-400 mb-1">
+                          人工成本
+                        </div>
                         <div className="text-sm font-medium text-white">
                           {formatCurrency(settlement.laborCost)}
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs text-slate-400 mb-1">外协费用</div>
+                        <div className="text-xs text-slate-400 mb-1">
+                          外协费用
+                        </div>
                         <div className="text-sm font-medium text-white">
                           {formatCurrency(settlement.outsourcingCost)}
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs text-slate-400 mb-1">其他费用</div>
+                        <div className="text-xs text-slate-400 mb-1">
+                          其他费用
+                        </div>
                         <div className="text-sm font-medium text-white">
-                          {formatCurrency(settlement.expenseCost + settlement.otherCost)}
+                          {formatCurrency(
+                            settlement.expenseCost + settlement.otherCost,
+                          )}
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs text-slate-400 mb-1">总成本</div>
+                        <div className="text-xs text-slate-400 mb-1">
+                          总成本
+                        </div>
                         <div className="text-sm font-bold text-red-400">
                           {formatCurrency(settlement.totalCost)}
                         </div>
@@ -336,17 +412,21 @@ export default function ProjectSettlement() {
                       <div className="flex items-center justify-between text-xs mb-2">
                         <span className="text-slate-400">回款进度</span>
                         <span className="text-white">
-                          已收: {formatCurrency(settlement.receivedAmount)} / 
+                          已收: {formatCurrency(settlement.receivedAmount)} /
                           待收: {formatCurrency(settlement.receivableAmount)}
                         </span>
                       </div>
                       <Progress
-                        value={(settlement.receivedAmount / settlement.contractAmount) * 100}
+                        value={
+                          (settlement.receivedAmount /
+                            settlement.contractAmount) *
+                          100
+                        }
                         className="h-2 bg-slate-700/50"
                       />
                     </div>
                   </div>
-                )
+                );
               })}
               {filteredSettlements.length === 0 && (
                 <div className="text-center py-12 text-slate-500">
@@ -359,7 +439,10 @@ export default function ProjectSettlement() {
       </motion.div>
 
       {/* Settlement Detail Dialog */}
-      <Dialog open={!!selectedSettlement} onOpenChange={() => setSelectedSettlement(null)}>
+      <Dialog
+        open={!!selectedSettlement}
+        onOpenChange={() => setSelectedSettlement(null)}
+      >
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>结算单详情</DialogTitle>
@@ -370,15 +453,21 @@ export default function ProjectSettlement() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm text-slate-400">结算单号</label>
-                  <p className="text-white font-medium">{selectedSettlement.settlementNo}</p>
+                  <p className="text-white font-medium">
+                    {selectedSettlement.settlementNo}
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm text-slate-400">项目</label>
-                  <p className="text-white font-medium">{selectedSettlement.projectName}</p>
+                  <p className="text-white font-medium">
+                    {selectedSettlement.projectName}
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm text-slate-400">客户</label>
-                  <p className="text-white">{selectedSettlement.customerName}</p>
+                  <p className="text-white">
+                    {selectedSettlement.customerName}
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm text-slate-400">合同号</label>
@@ -412,7 +501,9 @@ export default function ProjectSettlement() {
 
               {/* Cost Breakdown */}
               <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-3">成本明细</h3>
+                <h3 className="text-sm font-medium text-slate-400 mb-3">
+                  成本明细
+                </h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div className="p-3 bg-slate-800/40 rounded-lg">
                     <div className="text-xs text-slate-400 mb-1">材料成本</div>
@@ -435,7 +526,10 @@ export default function ProjectSettlement() {
                   <div className="p-3 bg-slate-800/40 rounded-lg">
                     <div className="text-xs text-slate-400 mb-1">其他费用</div>
                     <div className="text-lg font-bold text-white">
-                      {formatCurrency(selectedSettlement.expenseCost + selectedSettlement.otherCost)}
+                      {formatCurrency(
+                        selectedSettlement.expenseCost +
+                          selectedSettlement.otherCost,
+                      )}
                     </div>
                   </div>
                   <div className="p-3 bg-slate-800/40 rounded-lg border-2 border-red-500/30">
@@ -449,16 +543,18 @@ export default function ProjectSettlement() {
 
               {/* Payment Milestones */}
               <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-3">收款节点</h3>
+                <h3 className="text-sm font-medium text-slate-400 mb-3">
+                  收款节点
+                </h3>
                 <div className="space-y-2">
                   {selectedSettlement.milestones.map((milestone, index) => (
                     <div
                       key={index}
                       className={cn(
-                        'p-3 rounded-lg border',
+                        "p-3 rounded-lg border",
                         milestone.received
-                          ? 'bg-emerald-500/10 border-emerald-500/30'
-                          : 'bg-slate-800/40 border-slate-700/50'
+                          ? "bg-emerald-500/10 border-emerald-500/30"
+                          : "bg-slate-800/40 border-slate-700/50",
                       )}
                     >
                       <div className="flex items-center justify-between">
@@ -469,7 +565,9 @@ export default function ProjectSettlement() {
                             <Clock className="w-5 h-5 text-slate-400" />
                           )}
                           <div>
-                            <div className="font-medium text-white">{milestone.name}</div>
+                            <div className="font-medium text-white">
+                              {milestone.name}
+                            </div>
                             {milestone.received ? (
                               <div className="text-xs text-slate-400">
                                 已收 · {milestone.receivedDate}
@@ -482,10 +580,14 @@ export default function ProjectSettlement() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className={cn(
-                            'font-bold',
-                            milestone.received ? 'text-emerald-400' : 'text-amber-400'
-                          )}>
+                          <div
+                            className={cn(
+                              "font-bold",
+                              milestone.received
+                                ? "text-emerald-400"
+                                : "text-amber-400",
+                            )}
+                          >
                             {formatCurrency(milestone.amount)}
                           </div>
                         </div>
@@ -497,10 +599,13 @@ export default function ProjectSettlement() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedSettlement(null)}>
+            <Button
+              variant="outline"
+              onClick={() => setSelectedSettlement(null)}
+            >
               关闭
             </Button>
-            {selectedSettlement?.status === 'PENDING' && (
+            {selectedSettlement?.status === "PENDING" && (
               <Button>确认结算</Button>
             )}
             <Button variant="outline">
@@ -516,9 +621,7 @@ export default function ProjectSettlement() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>创建结算单</DialogTitle>
-            <DialogDescription>
-              为项目创建财务结算单
-            </DialogDescription>
+            <DialogDescription>为项目创建财务结算单</DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="space-y-2">
@@ -549,16 +652,16 @@ export default function ProjectSettlement() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
-            <Button onClick={() => setShowCreateDialog(false)}>
-              创建
-            </Button>
+            <Button onClick={() => setShowCreateDialog(false)}>创建</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </motion.div>
-  )
+  );
 }
-

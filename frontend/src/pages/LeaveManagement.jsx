@@ -3,8 +3,8 @@
  * Features: Leave application, approval workflow, leave balance, leave statistics
  */
 
-import { useState, useMemo, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useMemo, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   Search,
   Filter,
@@ -17,8 +17,8 @@ import {
   AlertTriangle,
   Download,
   BarChart3,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -31,60 +31,74 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../components/ui'
-import { cn, formatDate } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { SimpleBarChart, MonthlyTrendChart, SimplePieChart, TrendComparisonCard } from '../components/administrative/StatisticsCharts'
-import { adminApi } from '../services/api'
+} from "../components/ui";
+import { cn, formatDate } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import {
+  SimpleBarChart,
+  MonthlyTrendChart,
+  SimplePieChart,
+  TrendComparisonCard,
+} from "../components/administrative/StatisticsCharts";
+import { adminApi } from "../services/api";
 
 // Mock data
 // Mock data - 已移除，使用真实API
 // Mock data - 已移除，使用真实API
 export default function LeaveManagement() {
-  const [searchText, setSearchText] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [typeFilter, setTypeFilter] = useState('all')
-  const [loading, setLoading] = useState(false)
-  const [leaveApplications, setLeaveApplications] = useState(mockLeaveApplications)
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [loading, setLoading] = useState(false);
+  const [leaveApplications, setLeaveApplications] = useState(
+    mockLeaveApplications,
+  );
 
   // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
-        const res = await adminApi.leave.list()
+        const res = await adminApi.leave.list();
         if (res.data?.items) {
-          setLeaveApplications(res.data.items)
+          setLeaveApplications(res.data.items);
         } else if (Array.isArray(res.data)) {
-          setLeaveApplications(res.data)
+          setLeaveApplications(res.data);
         }
       } catch (err) {
-        console.log('Leave API unavailable, using mock data')
+        console.log("Leave API unavailable, using mock data");
       }
-      setLoading(false)
-    }
-    fetchData()
-  }, [])
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
 
   const filteredApplications = useMemo(() => {
-    return leaveApplications.filter(app => {
-      const matchSearch = app.employee.toLowerCase().includes(searchText.toLowerCase()) ||
-        app.department.toLowerCase().includes(searchText.toLowerCase())
-      const matchStatus = statusFilter === 'all' || app.status === statusFilter
-      const matchType = typeFilter === 'all' || app.type === typeFilter
-      return matchSearch && matchStatus && matchType
-    })
-  }, [leaveApplications, searchText, statusFilter, typeFilter])
+    return leaveApplications.filter((app) => {
+      const matchSearch =
+        app.employee.toLowerCase().includes(searchText.toLowerCase()) ||
+        app.department.toLowerCase().includes(searchText.toLowerCase());
+      const matchStatus = statusFilter === "all" || app.status === statusFilter;
+      const matchType = typeFilter === "all" || app.type === typeFilter;
+      return matchSearch && matchStatus && matchType;
+    });
+  }, [leaveApplications, searchText, statusFilter, typeFilter]);
 
   const stats = useMemo(() => {
-    const pending = leaveApplications.filter(a => a.status === 'pending').length
-    const approved = leaveApplications.filter(a => a.status === 'approved').length
-    const rejected = leaveApplications.filter(a => a.status === 'rejected').length
+    const pending = leaveApplications.filter(
+      (a) => a.status === "pending",
+    ).length;
+    const approved = leaveApplications.filter(
+      (a) => a.status === "approved",
+    ).length;
+    const rejected = leaveApplications.filter(
+      (a) => a.status === "rejected",
+    ).length;
     const totalDays = leaveApplications
-      .filter(a => a.status === 'approved')
-      .reduce((sum, a) => sum + a.days, 0)
-    return { pending, approved, rejected, totalDays }
-  }, [leaveApplications])
+      .filter((a) => a.status === "approved")
+      .reduce((sum, a) => sum + a.days, 0);
+    return { pending, approved, rejected, totalDays };
+  }, [leaveApplications]);
 
   return (
     <motion.div
@@ -117,7 +131,9 @@ export default function LeaveManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">待审批</p>
-                <p className="text-2xl font-bold text-amber-400 mt-1">{stats.pending}</p>
+                <p className="text-2xl font-bold text-amber-400 mt-1">
+                  {stats.pending}
+                </p>
               </div>
               <Clock className="h-8 w-8 text-amber-400" />
             </div>
@@ -128,7 +144,9 @@ export default function LeaveManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">已批准</p>
-                <p className="text-2xl font-bold text-emerald-400 mt-1">{stats.approved}</p>
+                <p className="text-2xl font-bold text-emerald-400 mt-1">
+                  {stats.approved}
+                </p>
               </div>
               <CheckCircle2 className="h-8 w-8 text-emerald-400" />
             </div>
@@ -139,7 +157,9 @@ export default function LeaveManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">已拒绝</p>
-                <p className="text-2xl font-bold text-red-400 mt-1">{stats.rejected}</p>
+                <p className="text-2xl font-bold text-red-400 mt-1">
+                  {stats.rejected}
+                </p>
               </div>
               <XCircle className="h-8 w-8 text-red-400" />
             </div>
@@ -150,7 +170,9 @@ export default function LeaveManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">已批准天数</p>
-                <p className="text-2xl font-bold text-white mt-1">{stats.totalDays}</p>
+                <p className="text-2xl font-bold text-white mt-1">
+                  {stats.totalDays}
+                </p>
               </div>
               <Calendar className="h-8 w-8 text-blue-400" />
             </div>
@@ -176,9 +198,24 @@ export default function LeaveManagement() {
               <CardContent>
                 <SimplePieChart
                   data={[
-                    { label: '年假', value: leaveApplications.filter(a => a.type === '年假').length, color: '#3b82f6' },
-                    { label: '病假', value: leaveApplications.filter(a => a.type === '病假').length, color: '#10b981' },
-                    { label: '事假', value: leaveApplications.filter(a => a.type === '事假').length, color: '#f59e0b' },
+                    {
+                      label: "年假",
+                      value: leaveApplications.filter((a) => a.type === "年假")
+                        .length,
+                      color: "#3b82f6",
+                    },
+                    {
+                      label: "病假",
+                      value: leaveApplications.filter((a) => a.type === "病假")
+                        .length,
+                      color: "#10b981",
+                    },
+                    {
+                      label: "事假",
+                      value: leaveApplications.filter((a) => a.type === "事假")
+                        .length,
+                      color: "#f59e0b",
+                    },
                   ]}
                   size={180}
                 />
@@ -191,10 +228,10 @@ export default function LeaveManagement() {
               <CardContent>
                 <MonthlyTrendChart
                   data={[
-                    { month: '2024-10', amount: 12 },
-                    { month: '2024-11', amount: 15 },
-                    { month: '2024-12', amount: 18 },
-                    { month: '2025-01', amount: leaveApplications.length },
+                    { month: "2024-10", amount: 12 },
+                    { month: "2024-11", amount: 15 },
+                    { month: "2024-12", amount: 18 },
+                    { month: "2025-01", amount: leaveApplications.length },
                   ]}
                   valueKey="amount"
                   labelKey="month"
@@ -265,37 +302,53 @@ export default function LeaveManagement() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-white">{app.employee}</h3>
+                        <h3 className="text-lg font-semibold text-white">
+                          {app.employee}
+                        </h3>
                         <Badge variant="outline">{app.department}</Badge>
                         <Badge variant="outline">{app.type}</Badge>
                         <Badge
                           variant="outline"
                           className={cn(
-                            app.status === 'pending' && 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-                            app.status === 'approved' && 'bg-green-500/20 text-green-400 border-green-500/30',
-                            app.status === 'rejected' && 'bg-red-500/20 text-red-400 border-red-500/30'
+                            app.status === "pending" &&
+                              "bg-amber-500/20 text-amber-400 border-amber-500/30",
+                            app.status === "approved" &&
+                              "bg-green-500/20 text-green-400 border-green-500/30",
+                            app.status === "rejected" &&
+                              "bg-red-500/20 text-red-400 border-red-500/30",
                           )}
                         >
-                          {app.status === 'pending' ? '待审批' : 
-                           app.status === 'approved' ? '已批准' : '已拒绝'}
+                          {app.status === "pending"
+                            ? "待审批"
+                            : app.status === "approved"
+                              ? "已批准"
+                              : "已拒绝"}
                         </Badge>
                       </div>
                       <div className="grid grid-cols-4 gap-4 text-sm mb-3">
                         <div>
                           <p className="text-slate-400">请假天数</p>
-                          <p className="text-white font-medium">{app.days} 天</p>
+                          <p className="text-white font-medium">
+                            {app.days} 天
+                          </p>
                         </div>
                         <div>
                           <p className="text-slate-400">开始日期</p>
-                          <p className="text-white font-medium">{app.startDate}</p>
+                          <p className="text-white font-medium">
+                            {app.startDate}
+                          </p>
                         </div>
                         <div>
                           <p className="text-slate-400">结束日期</p>
-                          <p className="text-white font-medium">{app.endDate}</p>
+                          <p className="text-white font-medium">
+                            {app.endDate}
+                          </p>
                         </div>
                         <div>
                           <p className="text-slate-400">审批人</p>
-                          <p className="text-white font-medium">{app.approver}</p>
+                          <p className="text-white font-medium">
+                            {app.approver}
+                          </p>
                         </div>
                       </div>
                       <div className="text-sm text-slate-400 mb-2">
@@ -311,10 +364,12 @@ export default function LeaveManagement() {
                         {app.approveTime && ` · 审批时间: ${app.approveTime}`}
                       </div>
                     </div>
-                    {app.status === 'pending' && (
+                    {app.status === "pending" && (
                       <div className="flex gap-2 ml-4">
                         <Button size="sm">批准</Button>
-                        <Button size="sm" variant="outline">拒绝</Button>
+                        <Button size="sm" variant="outline">
+                          拒绝
+                        </Button>
                       </div>
                     )}
                   </div>
@@ -347,6 +402,5 @@ export default function LeaveManagement() {
         </TabsContent>
       </Tabs>
     </motion.div>
-  )
+  );
 }
-

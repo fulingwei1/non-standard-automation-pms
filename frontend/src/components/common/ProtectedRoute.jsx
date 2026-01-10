@@ -3,11 +3,19 @@
  * Provides role-based access control for routes
  */
 
-import { Navigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { hasProcurementAccess, hasFinanceAccess, hasProductionAccess, hasProjectReviewAccess } from '../../lib/roleConfig'
-import { hasPermission, hasAnyPurchasePermission } from '../../lib/permissionUtils'
-import { Button } from '../ui/button'
+import { Navigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  hasProcurementAccess,
+  hasFinanceAccess,
+  hasProductionAccess,
+  hasProjectReviewAccess,
+} from "../../lib/roleConfig";
+import {
+  hasPermission,
+  hasAnyPurchasePermission,
+} from "../../lib/permissionUtils";
+import { Button } from "../ui/button";
 
 /**
  * Permission check function type
@@ -25,47 +33,62 @@ import { Button } from '../ui/button'
 export function ProtectedRoute({
   children,
   checkPermission,
-  permissionName = '此功能',
-  redirectTo = '/'
+  permissionName = "此功能",
+  redirectTo = "/",
 }) {
-  const userStr = localStorage.getItem('user')
+  const userStr = localStorage.getItem("user");
 
   if (!userStr) {
-    console.warn('ProtectedRoute: No user in localStorage, redirecting to', redirectTo)
-    return <Navigate to={redirectTo} replace />
+    console.warn(
+      "ProtectedRoute: No user in localStorage, redirecting to",
+      redirectTo,
+    );
+    return <Navigate to={redirectTo} replace />;
   }
 
-  let user = null
-  let role = null
-  let isSuperuser = false
+  let user = null;
+  let role = null;
+  let isSuperuser = false;
 
   try {
-    user = JSON.parse(userStr)
-    role = user.role
-    isSuperuser = user.is_superuser === true || user.isSuperuser === true
-    console.log('ProtectedRoute: User role =', role, ', isSuperuser =', isSuperuser, ', permissionName =', permissionName)
+    user = JSON.parse(userStr);
+    role = user.role;
+    isSuperuser = user.is_superuser === true || user.isSuperuser === true;
+    console.log(
+      "ProtectedRoute: User role =",
+      role,
+      ", isSuperuser =",
+      isSuperuser,
+      ", permissionName =",
+      permissionName,
+    );
   } catch (e) {
-    console.warn('Invalid user data in localStorage:', e)
-    localStorage.removeItem('user')
-    return <Navigate to={redirectTo} replace />
+    console.warn("Invalid user data in localStorage:", e);
+    localStorage.removeItem("user");
+    return <Navigate to={redirectTo} replace />;
   }
 
   // 超级管理员绕过所有权限检查
   if (isSuperuser) {
-    console.log('ProtectedRoute: Superuser bypass, rendering children')
-    return children
+    console.log("ProtectedRoute: Superuser bypass, rendering children");
+    return children;
   }
 
   // 管理员角色也应该绕过权限检查
-  if (role === 'admin' || role === 'super_admin' || role === '管理员' || role === '系统管理员') {
-    console.log('ProtectedRoute: Admin role bypass, rendering children')
-    return children
+  if (
+    role === "admin" ||
+    role === "super_admin" ||
+    role === "管理员" ||
+    role === "系统管理员"
+  ) {
+    console.log("ProtectedRoute: Admin role bypass, rendering children");
+    return children;
   }
 
-  const hasPermission = checkPermission ? checkPermission(role) : true
-  console.log('ProtectedRoute: checkPermission result =', hasPermission)
-  console.log('ProtectedRoute: role =', role, ', role type =', typeof role)
-  console.log('ProtectedRoute: permissionName =', permissionName)
+  const hasPermission = checkPermission ? checkPermission(role) : true;
+  console.log("ProtectedRoute: checkPermission result =", hasPermission);
+  console.log("ProtectedRoute: role =", role, ", role type =", typeof role);
+  console.log("ProtectedRoute: permissionName =", permissionName);
 
   if (!role || !hasPermission) {
     return (
@@ -85,55 +108,54 @@ export function ProtectedRoute({
           返回上一页
         </Button>
       </motion.div>
-    )
+    );
   }
-  
-  return children
+
+  return children;
 }
 
 /**
  * Procurement-specific protected route
  * Wrapper for ProtectedRoute with procurement permission check
- * 
+ *
  * 支持两种模式：
  * 1. 粗粒度检查（默认）：使用角色代码检查（向后兼容）
  * 2. 细粒度检查：使用权限编码检查（推荐）
- * 
+ *
  * @param {Object} props
  * @param {React.ReactNode} props.children - Child components
  * @param {string} props.requiredPermission - 细粒度权限编码（可选），如 'purchase:order:read'
  * @param {boolean} props.useFineGrained - 是否使用细粒度权限检查（默认：true，如果提供了requiredPermission）
  */
-export function ProcurementProtectedRoute({ 
-  children, 
+export function ProcurementProtectedRoute({
+  children,
   requiredPermission = null,
-  useFineGrained = null 
+  useFineGrained = null,
 }) {
-  const userStr = localStorage.getItem('user')
-  let isSuperuser = false
-  let user = null
-  
+  const userStr = localStorage.getItem("user");
+  let isSuperuser = false;
+  let user = null;
+
   if (userStr) {
     try {
-      user = JSON.parse(userStr)
-      isSuperuser = user.is_superuser === true || user.isSuperuser === true
+      user = JSON.parse(userStr);
+      isSuperuser = user.is_superuser === true || user.isSuperuser === true;
     } catch {
       // ignore
     }
   }
-  
+
   // 决定使用哪种检查方式
-  const shouldUseFineGrained = useFineGrained !== null 
-    ? useFineGrained 
-    : (requiredPermission !== null)
-  
+  const shouldUseFineGrained =
+    useFineGrained !== null ? useFineGrained : requiredPermission !== null;
+
   // 细粒度权限检查
   if (shouldUseFineGrained) {
     // 如果指定了具体权限，检查该权限；否则检查是否有任何purchase权限
-    const hasAccess = requiredPermission 
+    const hasAccess = requiredPermission
       ? hasPermission(requiredPermission)
-      : hasAnyPurchasePermission()
-    
+      : hasAnyPurchasePermission();
+
     if (!hasAccess && !isSuperuser) {
       return (
         <motion.div
@@ -144,7 +166,10 @@ export function ProcurementProtectedRoute({
           <div className="text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-semibold text-white mb-2">无权限访问</h1>
           <p className="text-slate-400 mb-4">
-            您没有权限访问{requiredPermission ? `此功能（需要权限：${requiredPermission}）` : '采购和物料管理模块'}
+            您没有权限访问
+            {requiredPermission
+              ? `此功能（需要权限：${requiredPermission}）`
+              : "采购和物料管理模块"}
           </p>
           <Button
             onClick={() => window.history.back()}
@@ -154,12 +179,12 @@ export function ProcurementProtectedRoute({
             返回上一页
           </Button>
         </motion.div>
-      )
+      );
     }
-    
-    return children
+
+    return children;
   }
-  
+
   // 粗粒度权限检查（向后兼容）
   return (
     <ProtectedRoute
@@ -168,7 +193,7 @@ export function ProcurementProtectedRoute({
     >
       {children}
     </ProtectedRoute>
-  )
+  );
 }
 
 /**
@@ -176,17 +201,17 @@ export function ProcurementProtectedRoute({
  * Wrapper for ProtectedRoute with finance permission check
  */
 export function FinanceProtectedRoute({ children }) {
-  const userStr = localStorage.getItem('user')
-  let isSuperuser = false
+  const userStr = localStorage.getItem("user");
+  let isSuperuser = false;
   if (userStr) {
     try {
-      const user = JSON.parse(userStr)
-      isSuperuser = user.is_superuser === true || user.isSuperuser === true
+      const user = JSON.parse(userStr);
+      isSuperuser = user.is_superuser === true || user.isSuperuser === true;
     } catch {
       // ignore
     }
   }
-  
+
   return (
     <ProtectedRoute
       checkPermission={(role) => hasFinanceAccess(role, isSuperuser)}
@@ -194,7 +219,7 @@ export function FinanceProtectedRoute({ children }) {
     >
       {children}
     </ProtectedRoute>
-  )
+  );
 }
 
 /**
@@ -202,17 +227,17 @@ export function FinanceProtectedRoute({ children }) {
  * Wrapper for ProtectedRoute with production permission check
  */
 export function ProductionProtectedRoute({ children }) {
-  const userStr = localStorage.getItem('user')
-  let isSuperuser = false
+  const userStr = localStorage.getItem("user");
+  let isSuperuser = false;
   if (userStr) {
     try {
-      const user = JSON.parse(userStr)
-      isSuperuser = user.is_superuser === true || user.isSuperuser === true
+      const user = JSON.parse(userStr);
+      isSuperuser = user.is_superuser === true || user.isSuperuser === true;
     } catch {
       // ignore
     }
   }
-  
+
   return (
     <ProtectedRoute
       checkPermission={(role) => hasProductionAccess(role, isSuperuser)}
@@ -220,7 +245,7 @@ export function ProductionProtectedRoute({ children }) {
     >
       {children}
     </ProtectedRoute>
-  )
+  );
 }
 
 /**
@@ -228,17 +253,17 @@ export function ProductionProtectedRoute({ children }) {
  * Wrapper for ProtectedRoute with project review permission check
  */
 export function ProjectReviewProtectedRoute({ children }) {
-  const userStr = localStorage.getItem('user')
-  let isSuperuser = false
+  const userStr = localStorage.getItem("user");
+  let isSuperuser = false;
   if (userStr) {
     try {
-      const user = JSON.parse(userStr)
-      isSuperuser = user.is_superuser === true || user.isSuperuser === true
+      const user = JSON.parse(userStr);
+      isSuperuser = user.is_superuser === true || user.isSuperuser === true;
     } catch {
       // ignore
     }
   }
-  
+
   return (
     <ProtectedRoute
       checkPermission={(role) => hasProjectReviewAccess(role, isSuperuser)}
@@ -246,5 +271,5 @@ export function ProjectReviewProtectedRoute({ children }) {
     >
       {children}
     </ProtectedRoute>
-  )
+  );
 }

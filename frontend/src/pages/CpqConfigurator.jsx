@@ -3,8 +3,8 @@
  * Features: Product configuration, Real-time price preview, Price adjustment tracking, Approval prompts
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { motion } from "framer-motion";
 import {
   Calculator,
   Settings,
@@ -18,8 +18,8 @@ import {
   Info,
   Plus,
   Minus,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -41,133 +41,152 @@ import {
   TabsTrigger,
   Alert,
   AlertDescription,
-} from '../components/ui'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { salesTemplateApi, quoteApi } from '../services/api'
-import { toast } from 'sonner'
+} from "../components/ui";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { salesTemplateApi, quoteApi } from "../services/api";
+import { toast } from "sonner";
 
 const formatCurrency = (value) => {
   if (value >= 10000) {
-    return `¥${(value / 10000).toFixed(1)}万`
+    return `¥${(value / 10000).toFixed(1)}万`;
   }
-  return new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency: 'CNY',
+  return new Intl.NumberFormat("zh-CN", {
+    style: "currency",
+    currency: "CNY",
     minimumFractionDigits: 0,
-  }).format(value)
-}
+  }).format(value);
+};
 
 export default function CpqConfigurator() {
-  const [ruleSets, setRuleSets] = useState([])
-  const [templates, setTemplates] = useState([])
-  const [selectedRuleSet, setSelectedRuleSet] = useState(null)
-  const [selectedTemplate, setSelectedTemplate] = useState(null)
-  const [configSchema, setConfigSchema] = useState({})
-  const [selections, setSelections] = useState({})
-  const [pricePreview, setPricePreview] = useState(null)
-  const [priceHistory, setPriceHistory] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [previewLoading, setPreviewLoading] = useState(false)
-  const [manualDiscount, setManualDiscount] = useState('')
-  const [manualMarkup, setManualMarkup] = useState('')
-  const [quoteDraft, setQuoteDraft] = useState(null)
+  const [ruleSets, setRuleSets] = useState([]);
+  const [templates, setTemplates] = useState([]);
+  const [selectedRuleSet, setSelectedRuleSet] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [configSchema, setConfigSchema] = useState({});
+  const [selections, setSelections] = useState({});
+  const [pricePreview, setPricePreview] = useState(null);
+  const [priceHistory, setPriceHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [manualDiscount, setManualDiscount] = useState("");
+  const [manualMarkup, setManualMarkup] = useState("");
+  const [quoteDraft, setQuoteDraft] = useState(null);
 
   // Load rule sets and templates
   useEffect(() => {
-    loadRuleSetsAndTemplates()
-  }, [])
+    loadRuleSetsAndTemplates();
+  }, []);
 
   const loadRuleSetsAndTemplates = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const [ruleRes, templateRes] = await Promise.all([
-        salesTemplateApi.listRuleSets({ page: 1, page_size: 100, status: 'ACTIVE' }),
-        salesTemplateApi.listQuoteTemplates({ page: 1, page_size: 100, status: 'PUBLISHED' }),
-      ])
-      setRuleSets(ruleRes.data?.items || ruleRes.items || [])
-      setTemplates(templateRes.data?.items || templateRes.items || [])
+        salesTemplateApi.listRuleSets({
+          page: 1,
+          page_size: 100,
+          status: "ACTIVE",
+        }),
+        salesTemplateApi.listQuoteTemplates({
+          page: 1,
+          page_size: 100,
+          status: "PUBLISHED",
+        }),
+      ]);
+      setRuleSets(ruleRes.data?.items || ruleRes.items || []);
+      setTemplates(templateRes.data?.items || templateRes.items || []);
     } catch (err) {
-      console.error('Failed to load rule sets and templates:', err)
-      toast.error('加载配置数据失败')
+      console.error("Failed to load rule sets and templates:", err);
+      toast.error("加载配置数据失败");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Load config schema when rule set or template is selected
   useEffect(() => {
     if (selectedRuleSet) {
-      const ruleSet = ruleSets.find(r => r.id === selectedRuleSet)
+      const ruleSet = ruleSets.find((r) => r.id === selectedRuleSet);
       if (ruleSet?.config_schema) {
-        setConfigSchema(ruleSet.config_schema)
+        setConfigSchema(ruleSet.config_schema);
       }
     } else if (selectedTemplate) {
-      const template = templates.find(t => t.id === selectedTemplate)
+      const template = templates.find((t) => t.id === selectedTemplate);
       if (template?.current_version?.config_schema) {
-        setConfigSchema(template.current_version.config_schema)
+        setConfigSchema(template.current_version.config_schema);
       }
     } else {
-      setConfigSchema({})
-      setSelections({})
+      setConfigSchema({});
+      setSelections({});
     }
-  }, [selectedRuleSet, selectedTemplate, ruleSets, templates])
+  }, [selectedRuleSet, selectedTemplate, ruleSets, templates]);
 
   // Preview price when selections change
   useEffect(() => {
     if (selectedRuleSet || selectedTemplate) {
       const timer = setTimeout(() => {
-        previewPrice()
-      }, 500) // Debounce 500ms
-      return () => clearTimeout(timer)
+        previewPrice();
+      }, 500); // Debounce 500ms
+      return () => clearTimeout(timer);
     }
-  }, [selections, manualDiscount, manualMarkup, selectedRuleSet, selectedTemplate])
+  }, [
+    selections,
+    manualDiscount,
+    manualMarkup,
+    selectedRuleSet,
+    selectedTemplate,
+  ]);
 
   const previewPrice = async () => {
-    if (!selectedRuleSet && !selectedTemplate) return
+    if (!selectedRuleSet && !selectedTemplate) return;
 
-    setPreviewLoading(true)
+    setPreviewLoading(true);
     try {
       const requestData = {
         rule_set_id: selectedRuleSet || null,
-        template_version_id: selectedTemplate ? templates.find(t => t.id === selectedTemplate)?.current_version_id : null,
+        template_version_id: selectedTemplate
+          ? templates.find((t) => t.id === selectedTemplate)?.current_version_id
+          : null,
         selections: selections,
         manual_discount_pct: manualDiscount ? parseFloat(manualDiscount) : null,
         manual_markup_pct: manualMarkup ? parseFloat(manualMarkup) : null,
-      }
+      };
 
-      const res = await salesTemplateApi.previewPrice(requestData)
-      const preview = res.data || res
+      const res = await salesTemplateApi.previewPrice(requestData);
+      const preview = res.data || res;
 
-      setPricePreview(preview)
+      setPricePreview(preview);
 
       // Add to price history
-      setPriceHistory(prev => [{
-        timestamp: new Date().toISOString(),
-        selections: { ...selections },
-        base_price: preview.base_price,
-        final_price: preview.final_price,
-        adjustments: preview.adjustments || [],
-      }, ...prev.slice(0, 9)]) // Keep last 10 entries
+      setPriceHistory((prev) => [
+        {
+          timestamp: new Date().toISOString(),
+          selections: { ...selections },
+          base_price: preview.base_price,
+          final_price: preview.final_price,
+          adjustments: preview.adjustments || [],
+        },
+        ...prev.slice(0, 9),
+      ]); // Keep last 10 entries
     } catch (err) {
-      console.error('Failed to preview price:', err)
-      toast.error('价格预览失败')
+      console.error("Failed to preview price:", err);
+      toast.error("价格预览失败");
     } finally {
-      setPreviewLoading(false)
+      setPreviewLoading(false);
     }
-  }
+  };
 
   const handleSelectionChange = (key, value) => {
-    setSelections(prev => ({
+    setSelections((prev) => ({
       ...prev,
       [key]: value,
-    }))
-  }
+    }));
+  };
 
   const handleSaveDraft = async () => {
     if (!pricePreview) {
-      toast.error('请先配置并预览价格')
-      return
+      toast.error("请先配置并预览价格");
+      return;
     }
 
     try {
@@ -177,87 +196,108 @@ export default function CpqConfigurator() {
         quote_code: `DRAFT-${Date.now()}`,
         customer_id: null,
         total_price: pricePreview.final_price,
-        currency: pricePreview.currency || 'CNY',
-        status: 'DRAFT',
+        currency: pricePreview.currency || "CNY",
+        status: "DRAFT",
         cpq_config: {
           rule_set_id: selectedRuleSet,
-          template_version_id: selectedTemplate ? templates.find(t => t.id === selectedTemplate)?.current_version_id : null,
+          template_version_id: selectedTemplate
+            ? templates.find((t) => t.id === selectedTemplate)
+                ?.current_version_id
+            : null,
           selections: selections,
-          manual_discount_pct: manualDiscount ? parseFloat(manualDiscount) : null,
+          manual_discount_pct: manualDiscount
+            ? parseFloat(manualDiscount)
+            : null,
           manual_markup_pct: manualMarkup ? parseFloat(manualMarkup) : null,
         },
-      }
+      };
 
-      const res = await quoteApi.create(quoteData)
-      setQuoteDraft(res.data || res)
-      toast.success('已保存为报价草稿')
+      const res = await quoteApi.create(quoteData);
+      setQuoteDraft(res.data || res);
+      toast.success("已保存为报价草稿");
     } catch (err) {
-      console.error('Failed to save draft:', err)
-      toast.error(err.response?.data?.message || '保存草稿失败')
+      console.error("Failed to save draft:", err);
+      toast.error(err.response?.data?.message || "保存草稿失败");
     }
-  }
+  };
 
   const renderConfigField = (key, fieldConfig) => {
-    const fieldType = fieldConfig.type || 'text'
-    const fieldValue = selections[key] || fieldConfig.default || ''
+    const fieldType = fieldConfig.type || "text";
+    const fieldValue = selections[key] || fieldConfig.default || "";
 
     switch (fieldType) {
-      case 'select':
+      case "select":
         return (
           <Select
             value={fieldValue}
             onValueChange={(value) => handleSelectionChange(key, value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder={fieldConfig.placeholder || `选择${fieldConfig.label}`} />
+              <SelectValue
+                placeholder={
+                  fieldConfig.placeholder || `选择${fieldConfig.label}`
+                }
+              />
             </SelectTrigger>
             <SelectContent>
-              {fieldConfig.options?.map(opt => (
-                <SelectItem key={typeof opt === 'string' ? opt : opt.value} value={typeof opt === 'string' ? opt : opt.value}>
-                  {typeof opt === 'string' ? opt : opt.label}
+              {fieldConfig.options?.map((opt) => (
+                <SelectItem
+                  key={typeof opt === "string" ? opt : opt.value}
+                  value={typeof opt === "string" ? opt : opt.value}
+                >
+                  {typeof opt === "string" ? opt : opt.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-        )
-      case 'number':
+        );
+      case "number":
         return (
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleSelectionChange(key, Math.max(0, (parseFloat(fieldValue) || 0) - 1))}
+              onClick={() =>
+                handleSelectionChange(
+                  key,
+                  Math.max(0, (parseFloat(fieldValue) || 0) - 1),
+                )
+              }
             >
               <Minus className="w-4 h-4" />
             </Button>
             <Input
               type="number"
               value={fieldValue}
-              onChange={(e) => handleSelectionChange(key, parseFloat(e.target.value) || 0)}
+              onChange={(e) =>
+                handleSelectionChange(key, parseFloat(e.target.value) || 0)
+              }
               className="flex-1"
               min={0}
             />
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleSelectionChange(key, (parseFloat(fieldValue) || 0) + 1)}
+              onClick={() =>
+                handleSelectionChange(key, (parseFloat(fieldValue) || 0) + 1)
+              }
             >
               <Plus className="w-4 h-4" />
             </Button>
           </div>
-        )
-      case 'boolean':
+        );
+      case "boolean":
         return (
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
-              checked={fieldValue === true || fieldValue === 'true'}
+              checked={fieldValue === true || fieldValue === "true"}
               onChange={(e) => handleSelectionChange(key, e.target.checked)}
               className="w-4 h-4 rounded border-slate-600 bg-slate-800"
             />
             <span className="text-sm text-slate-400">{fieldConfig.label}</span>
           </div>
-        )
+        );
       default:
         return (
           <Input
@@ -265,9 +305,9 @@ export default function CpqConfigurator() {
             onChange={(e) => handleSelectionChange(key, e.target.value)}
             placeholder={fieldConfig.placeholder || `输入${fieldConfig.label}`}
           />
-        )
+        );
     }
-  }
+  };
 
   return (
     <motion.div
@@ -311,10 +351,10 @@ export default function CpqConfigurator() {
                 <div>
                   <Label>CPQ 规则集</Label>
                   <Select
-                    value={selectedRuleSet?.toString() || ''}
+                    value={selectedRuleSet?.toString() || ""}
                     onValueChange={(value) => {
-                      setSelectedRuleSet(value ? parseInt(value) : null)
-                      setSelectedTemplate(null)
+                      setSelectedRuleSet(value ? parseInt(value) : null);
+                      setSelectedTemplate(null);
                     }}
                   >
                     <SelectTrigger>
@@ -322,8 +362,11 @@ export default function CpqConfigurator() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">不使用规则集</SelectItem>
-                      {ruleSets.map(ruleSet => (
-                        <SelectItem key={ruleSet.id} value={ruleSet.id.toString()}>
+                      {ruleSets.map((ruleSet) => (
+                        <SelectItem
+                          key={ruleSet.id}
+                          value={ruleSet.id.toString()}
+                        >
                           {ruleSet.rule_name} ({ruleSet.rule_code})
                         </SelectItem>
                       ))}
@@ -333,10 +376,10 @@ export default function CpqConfigurator() {
                 <div>
                   <Label>报价模板</Label>
                   <Select
-                    value={selectedTemplate?.toString() || ''}
+                    value={selectedTemplate?.toString() || ""}
                     onValueChange={(value) => {
-                      setSelectedTemplate(value ? parseInt(value) : null)
-                      setSelectedRuleSet(null)
+                      setSelectedTemplate(value ? parseInt(value) : null);
+                      setSelectedRuleSet(null);
                     }}
                   >
                     <SelectTrigger>
@@ -344,8 +387,11 @@ export default function CpqConfigurator() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">不使用模板</SelectItem>
-                      {templates.map(template => (
-                        <SelectItem key={template.id} value={template.id.toString()}>
+                      {templates.map((template) => (
+                        <SelectItem
+                          key={template.id}
+                          value={template.id.toString()}
+                        >
                           {template.template_name} ({template.template_code})
                         </SelectItem>
                       ))}
@@ -367,19 +413,26 @@ export default function CpqConfigurator() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {Object.entries(configSchema).map(([key, fieldConfig]) => {
-                  const config = typeof fieldConfig === 'object' ? fieldConfig : { label: key, type: 'text' }
+                  const config =
+                    typeof fieldConfig === "object"
+                      ? fieldConfig
+                      : { label: key, type: "text" };
                   return (
                     <div key={key}>
                       <Label className="mb-2 block">
                         {config.label || key}
-                        {config.required && <span className="text-red-400 ml-1">*</span>}
+                        {config.required && (
+                          <span className="text-red-400 ml-1">*</span>
+                        )}
                       </Label>
                       {renderConfigField(key, config)}
                       {config.description && (
-                        <p className="text-xs text-slate-400 mt-1">{config.description}</p>
+                        <p className="text-xs text-slate-400 mt-1">
+                          {config.description}
+                        </p>
                       )}
                     </div>
-                  )
+                  );
                 })}
               </CardContent>
             </Card>
@@ -430,7 +483,9 @@ export default function CpqConfigurator() {
                 <Calculator className="h-5 w-5 text-emerald-400" />
                 价格预览
                 {previewLoading && (
-                  <Badge variant="outline" className="ml-auto">计算中...</Badge>
+                  <Badge variant="outline" className="ml-auto">
+                    计算中...
+                  </Badge>
                 )}
               </CardTitle>
             </CardHeader>
@@ -449,24 +504,39 @@ export default function CpqConfigurator() {
                         {formatCurrency(pricePreview.base_price || 0)}
                       </span>
                     </div>
-                    {pricePreview.adjustments && pricePreview.adjustments.length > 0 && (
-                      <div className="space-y-2 pt-2 border-t border-slate-700">
-                        <div className="text-sm text-slate-400 mb-2">价格调整明细</div>
-                        {pricePreview.adjustments.map((adj, idx) => (
-                          <div key={idx} className="flex items-center justify-between text-sm">
-                            <span className="text-slate-400">{adj.label || adj.reason}</span>
-                            <span className={cn(
-                              'font-medium',
-                              (adj.value || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'
-                            )}>
-                              {(adj.value || 0) >= 0 ? '+' : ''}{formatCurrency(adj.value || 0)}
-                            </span>
+                    {pricePreview.adjustments &&
+                      pricePreview.adjustments.length > 0 && (
+                        <div className="space-y-2 pt-2 border-t border-slate-700">
+                          <div className="text-sm text-slate-400 mb-2">
+                            价格调整明细
                           </div>
-                        ))}
-                      </div>
-                    )}
+                          {pricePreview.adjustments.map((adj, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between text-sm"
+                            >
+                              <span className="text-slate-400">
+                                {adj.label || adj.reason}
+                              </span>
+                              <span
+                                className={cn(
+                                  "font-medium",
+                                  (adj.value || 0) >= 0
+                                    ? "text-emerald-400"
+                                    : "text-red-400",
+                                )}
+                              >
+                                {(adj.value || 0) >= 0 ? "+" : ""}
+                                {formatCurrency(adj.value || 0)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     <div className="flex items-center justify-between pt-2 border-t border-slate-700">
-                      <span className="text-lg font-semibold text-white">最终价格</span>
+                      <span className="text-lg font-semibold text-white">
+                        最终价格
+                      </span>
                       <span className="text-2xl font-bold text-emerald-400">
                         {formatCurrency(pricePreview.final_price || 0)}
                       </span>
@@ -479,7 +549,9 @@ export default function CpqConfigurator() {
                       <AlertTriangle className="h-4 w-4 text-amber-400" />
                       <AlertDescription className="text-amber-400">
                         <div className="font-medium mb-1">需要审批</div>
-                        <div className="text-sm">{pricePreview.approval_reason || '此报价需要上级审批'}</div>
+                        <div className="text-sm">
+                          {pricePreview.approval_reason || "此报价需要上级审批"}
+                        </div>
                       </AlertDescription>
                     </Alert>
                   )}
@@ -491,14 +563,17 @@ export default function CpqConfigurator() {
                       <Badge
                         variant="outline"
                         className={cn(
-                          pricePreview.confidence_level === 'HIGH' && 'bg-emerald-500/20 text-emerald-400',
-                          pricePreview.confidence_level === 'MEDIUM' && 'bg-amber-500/20 text-amber-400',
-                          pricePreview.confidence_level === 'LOW' && 'bg-red-500/20 text-red-400',
+                          pricePreview.confidence_level === "HIGH" &&
+                            "bg-emerald-500/20 text-emerald-400",
+                          pricePreview.confidence_level === "MEDIUM" &&
+                            "bg-amber-500/20 text-amber-400",
+                          pricePreview.confidence_level === "LOW" &&
+                            "bg-red-500/20 text-red-400",
                         )}
                       >
-                        {pricePreview.confidence_level === 'HIGH' && '高'}
-                        {pricePreview.confidence_level === 'MEDIUM' && '中'}
-                        {pricePreview.confidence_level === 'LOW' && '低'}
+                        {pricePreview.confidence_level === "HIGH" && "高"}
+                        {pricePreview.confidence_level === "MEDIUM" && "中"}
+                        {pricePreview.confidence_level === "LOW" && "低"}
                       </Badge>
                     </div>
                   )}
@@ -534,12 +609,20 @@ export default function CpqConfigurator() {
                       {entry.adjustments && entry.adjustments.length > 0 && (
                         <div className="text-xs text-slate-500 space-y-1">
                           {entry.adjustments.slice(0, 3).map((adj, adjIdx) => (
-                            <div key={adjIdx} className="flex items-center justify-between">
+                            <div
+                              key={adjIdx}
+                              className="flex items-center justify-between"
+                            >
                               <span>{adj.label || adj.reason}</span>
-                              <span className={cn(
-                                (adj.value || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'
-                              )}>
-                                {(adj.value || 0) >= 0 ? '+' : ''}{formatCurrency(adj.value || 0)}
+                              <span
+                                className={cn(
+                                  (adj.value || 0) >= 0
+                                    ? "text-emerald-400"
+                                    : "text-red-400",
+                                )}
+                              >
+                                {(adj.value || 0) >= 0 ? "+" : ""}
+                                {formatCurrency(adj.value || 0)}
                               </span>
                             </div>
                           ))}
@@ -554,5 +637,5 @@ export default function CpqConfigurator() {
         </div>
       </div>
     </motion.div>
-  )
+  );
 }

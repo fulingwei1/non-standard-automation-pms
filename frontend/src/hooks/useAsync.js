@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback } from "react";
 
 /**
  * Custom hook for handling async operations with loading and error states
@@ -6,29 +6,38 @@ import { useState, useCallback } from 'react'
  * @returns {Object} - { execute, loading, error, data }
  */
 export function useAsync(asyncFunction) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [data, setData] = useState(null);
 
   const execute = useCallback(
     async (...args) => {
       try {
-        setLoading(true)
-        setError(null)
-        const result = await asyncFunction(...args)
-        setData(result)
-        return result
+        setLoading(true);
+        setError(null);
+        const result = await asyncFunction(...args);
+        setData(result);
+        return result;
       } catch (err) {
-        setError(err)
-        throw err
+        setError(err);
+        throw err;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [asyncFunction]
-  )
+    [asyncFunction],
+  );
 
-  return { execute, loading, error, data, reset: () => { setError(null); setData(null) } }
+  return {
+    execute,
+    loading,
+    error,
+    data,
+    reset: () => {
+      setError(null);
+      setData(null);
+    },
+  };
 }
 
 /**
@@ -37,34 +46,41 @@ export function useAsync(asyncFunction) {
  * @param {Object} options - { onSuccess, onError, immediate }
  */
 export function useApiCall(apiCall, options = {}) {
-  const { onSuccess, onError } = options
+  const { onSuccess, onError } = options;
   // Note: immediate option is reserved for future use
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [data, setData] = useState(null);
 
   const execute = useCallback(
     async (...args) => {
       try {
-        setLoading(true)
-        setError(null)
-        const result = await apiCall(...args)
-        setData(result)
-        if (onSuccess) onSuccess(result)
-        return result
+        setLoading(true);
+        setError(null);
+        const result = await apiCall(...args);
+        setData(result);
+        if (onSuccess) onSuccess(result);
+        return result;
       } catch (err) {
-        setError(err)
-        if (onError) onError(err)
-        else console.error('API call failed:', err)
-        throw err
+        setError(err);
+        if (onError) onError(err);
+        else console.error("API call failed:", err);
+        throw err;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [apiCall, onSuccess, onError]
-  )
+    [apiCall, onSuccess, onError],
+  );
 
-  return { execute, loading, error, data, reset: () => { setError(null); setData(null) } }
+  return {
+    execute,
+    loading,
+    error,
+    data,
+    reset: () => {
+      setError(null);
+      setData(null);
+    },
+  };
 }
-
-

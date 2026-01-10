@@ -3,9 +3,9 @@
  * Features: Inventory management, purchase orders, supplier management, low stock alerts
  */
 
-import { useState, useMemo, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { useState, useMemo, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   Search,
   Filter,
@@ -23,8 +23,8 @@ import {
   BarChart3,
   Calendar,
   Building2,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -44,56 +44,64 @@ import {
   DialogTitle,
   DialogDescription,
   DialogBody,
-} from '../components/ui'
-import { cn, formatCurrency, formatDate } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { SimpleBarChart, MonthlyTrendChart, CategoryBreakdownCard } from '../components/administrative/StatisticsCharts'
-import { adminApi } from '../services/api'
+} from "../components/ui";
+import { cn, formatCurrency, formatDate } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import {
+  SimpleBarChart,
+  MonthlyTrendChart,
+  CategoryBreakdownCard,
+} from "../components/administrative/StatisticsCharts";
+import { adminApi } from "../services/api";
 
 // Mock data
 // Mock data - 已移除，使用真实API
 // Mock data - 已移除，使用真实API
 export default function OfficeSuppliesManagement() {
-  const [searchText, setSearchText] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [loading, setLoading] = useState(false)
-  const [supplies, setSupplies] = useState(mockSupplies)
+  const [searchText, setSearchText] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [loading, setLoading] = useState(false);
+  const [supplies, setSupplies] = useState(mockSupplies);
 
   // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
-        const res = await adminApi.supplies.list()
+        const res = await adminApi.supplies.list();
         if (res.data?.items) {
-          setSupplies(res.data.items)
+          setSupplies(res.data.items);
         } else if (Array.isArray(res.data)) {
-          setSupplies(res.data)
+          setSupplies(res.data);
         }
       } catch (err) {
-        console.log('Office supplies API unavailable, using mock data')
+        console.log("Office supplies API unavailable, using mock data");
       }
-      setLoading(false)
-    }
-    fetchData()
-  }, [])
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
 
   const filteredSupplies = useMemo(() => {
-    return supplies.filter(item => {
-      const matchSearch = item.name.toLowerCase().includes(searchText.toLowerCase())
-      const matchCategory = categoryFilter === 'all' || item.category === categoryFilter
-      const matchStatus = statusFilter === 'all' || item.status === statusFilter
-      return matchSearch && matchCategory && matchStatus
-    })
-  }, [supplies, searchText, categoryFilter, statusFilter])
+    return supplies.filter((item) => {
+      const matchSearch = item.name
+        .toLowerCase()
+        .includes(searchText.toLowerCase());
+      const matchCategory =
+        categoryFilter === "all" || item.category === categoryFilter;
+      const matchStatus =
+        statusFilter === "all" || item.status === statusFilter;
+      return matchSearch && matchCategory && matchStatus;
+    });
+  }, [supplies, searchText, categoryFilter, statusFilter]);
 
   const stats = useMemo(() => {
-    const totalItems = supplies.length
-    const lowStockItems = supplies.filter(s => s.status === 'low').length
-    const totalValue = supplies.reduce((sum, s) => sum + s.totalValue, 0)
-    return { totalItems, lowStockItems, totalValue }
-  }, [supplies])
+    const totalItems = supplies.length;
+    const lowStockItems = supplies.filter((s) => s.status === "low").length;
+    const totalValue = supplies.reduce((sum, s) => sum + s.totalValue, 0);
+    return { totalItems, lowStockItems, totalValue };
+  }, [supplies]);
 
   return (
     <motion.div
@@ -130,7 +138,9 @@ export default function OfficeSuppliesManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">物品总数</p>
-                <p className="text-2xl font-bold text-white mt-1">{stats.totalItems}</p>
+                <p className="text-2xl font-bold text-white mt-1">
+                  {stats.totalItems}
+                </p>
               </div>
               <Package className="h-8 w-8 text-blue-400" />
             </div>
@@ -141,7 +151,9 @@ export default function OfficeSuppliesManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">低库存物品</p>
-                <p className="text-2xl font-bold text-red-400 mt-1">{stats.lowStockItems}</p>
+                <p className="text-2xl font-bold text-red-400 mt-1">
+                  {stats.lowStockItems}
+                </p>
               </div>
               <AlertTriangle className="h-8 w-8 text-red-400" />
             </div>
@@ -152,7 +164,9 @@ export default function OfficeSuppliesManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">库存总值</p>
-                <p className="text-2xl font-bold text-white mt-1">{formatCurrency(stats.totalValue)}</p>
+                <p className="text-2xl font-bold text-white mt-1">
+                  {formatCurrency(stats.totalValue)}
+                </p>
               </div>
               <BarChart3 className="h-8 w-8 text-emerald-400" />
             </div>
@@ -163,7 +177,9 @@ export default function OfficeSuppliesManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">待处理订单</p>
-                <p className="text-2xl font-bold text-amber-400 mt-1">{mockPurchaseOrders.length}</p>
+                <p className="text-2xl font-bold text-amber-400 mt-1">
+                  {mockPurchaseOrders.length}
+                </p>
               </div>
               <ShoppingCart className="h-8 w-8 text-amber-400" />
             </div>
@@ -190,8 +206,20 @@ export default function OfficeSuppliesManagement() {
                 <CategoryBreakdownCard
                   title="库存价值"
                   data={[
-                    { label: '办公耗材', value: supplies.filter(s => s.category === '办公耗材').reduce((sum, s) => sum + s.totalValue, 0), color: '#3b82f6' },
-                    { label: '办公文具', value: supplies.filter(s => s.category === '办公文具').reduce((sum, s) => sum + s.totalValue, 0), color: '#10b981' },
+                    {
+                      label: "办公耗材",
+                      value: supplies
+                        .filter((s) => s.category === "办公耗材")
+                        .reduce((sum, s) => sum + s.totalValue, 0),
+                      color: "#3b82f6",
+                    },
+                    {
+                      label: "办公文具",
+                      value: supplies
+                        .filter((s) => s.category === "办公文具")
+                        .reduce((sum, s) => sum + s.totalValue, 0),
+                      color: "#10b981",
+                    },
                   ]}
                   total={stats.totalValue}
                   formatValue={formatCurrency}
@@ -205,10 +233,10 @@ export default function OfficeSuppliesManagement() {
               <CardContent>
                 <MonthlyTrendChart
                   data={[
-                    { month: '2024-10', amount: 42000 },
-                    { month: '2024-11', amount: 38000 },
-                    { month: '2024-12', amount: 45000 },
-                    { month: '2025-01', amount: 45000 },
+                    { month: "2024-10", amount: 42000 },
+                    { month: "2024-11", amount: 38000 },
+                    { month: "2024-12", amount: 45000 },
+                    { month: "2025-01", amount: 45000 },
                   ]}
                   valueKey="amount"
                   labelKey="month"
@@ -258,48 +286,63 @@ export default function OfficeSuppliesManagement() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-white">{item.name}</h3>
+                        <h3 className="text-lg font-semibold text-white">
+                          {item.name}
+                        </h3>
                         <Badge
                           variant="outline"
                           className={cn(
-                            item.status === 'low' && 'bg-red-500/20 text-red-400 border-red-500/30',
-                            item.status === 'normal' && 'bg-slate-700/40'
+                            item.status === "low" &&
+                              "bg-red-500/20 text-red-400 border-red-500/30",
+                            item.status === "normal" && "bg-slate-700/40",
                           )}
                         >
-                          {item.status === 'low' ? '库存不足' : '正常'}
+                          {item.status === "low" ? "库存不足" : "正常"}
                         </Badge>
                         <Badge variant="outline">{item.category}</Badge>
                       </div>
                       <div className="grid grid-cols-4 gap-4 text-sm">
                         <div>
                           <p className="text-slate-400">当前库存</p>
-                          <p className="text-white font-medium">{item.currentStock} {item.unit}</p>
+                          <p className="text-white font-medium">
+                            {item.currentStock} {item.unit}
+                          </p>
                         </div>
                         <div>
                           <p className="text-slate-400">最低库存</p>
-                          <p className="text-white font-medium">{item.minStock} {item.unit}</p>
+                          <p className="text-white font-medium">
+                            {item.minStock} {item.unit}
+                          </p>
                         </div>
                         <div>
                           <p className="text-slate-400">单价</p>
-                          <p className="text-white font-medium">{formatCurrency(item.unitPrice)}</p>
+                          <p className="text-white font-medium">
+                            {formatCurrency(item.unitPrice)}
+                          </p>
                         </div>
                         <div>
                           <p className="text-slate-400">库存价值</p>
-                          <p className="text-white font-medium">{formatCurrency(item.totalValue)}</p>
+                          <p className="text-white font-medium">
+                            {formatCurrency(item.totalValue)}
+                          </p>
                         </div>
                       </div>
                       <div className="mt-4">
                         <div className="flex items-center justify-between text-xs mb-1">
                           <span className="text-slate-400">库存率</span>
                           <span className="text-slate-300">
-                            {((item.currentStock / item.minStock) * 100).toFixed(0)}%
+                            {(
+                              (item.currentStock / item.minStock) *
+                              100
+                            ).toFixed(0)}
+                            %
                           </span>
                         </div>
                         <Progress
                           value={(item.currentStock / item.minStock) * 100}
                           className={cn(
                             "h-2",
-                            item.status === 'low' && "bg-red-500/20"
+                            item.status === "low" && "bg-red-500/20",
                           )}
                         />
                       </div>
@@ -308,12 +351,12 @@ export default function OfficeSuppliesManagement() {
                       </div>
                     </div>
                     <div className="flex gap-2 ml-4">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => {
-                          setSelectedItem(item)
-                          setShowItemDetail(true)
+                          setSelectedItem(item);
+                          setShowItemDetail(true);
                         }}
                       >
                         <Eye className="w-4 h-4" />
@@ -350,31 +393,45 @@ export default function OfficeSuppliesManagement() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <span className="font-medium text-white">{order.orderNo}</span>
+                          <span className="font-medium text-white">
+                            {order.orderNo}
+                          </span>
                           <Badge
                             variant="outline"
                             className={cn(
-                              order.status === 'pending' && 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-                              order.status === 'approved' && 'bg-green-500/20 text-green-400 border-green-500/30',
-                              order.status === 'completed' && 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                              order.status === "pending" &&
+                                "bg-amber-500/20 text-amber-400 border-amber-500/30",
+                              order.status === "approved" &&
+                                "bg-green-500/20 text-green-400 border-green-500/30",
+                              order.status === "completed" &&
+                                "bg-blue-500/20 text-blue-400 border-blue-500/30",
                             )}
                           >
-                            {order.status === 'pending' ? '待审批' : 
-                             order.status === 'approved' ? '已批准' : '已完成'}
+                            {order.status === "pending"
+                              ? "待审批"
+                              : order.status === "approved"
+                                ? "已批准"
+                                : "已完成"}
                           </Badge>
                         </div>
                         <div className="grid grid-cols-3 gap-4 text-sm">
                           <div>
                             <p className="text-slate-400">供应商</p>
-                            <p className="text-white font-medium">{order.supplier}</p>
+                            <p className="text-white font-medium">
+                              {order.supplier}
+                            </p>
                           </div>
                           <div>
                             <p className="text-slate-400">订单金额</p>
-                            <p className="text-white font-medium">{formatCurrency(order.totalAmount)}</p>
+                            <p className="text-white font-medium">
+                              {formatCurrency(order.totalAmount)}
+                            </p>
                           </div>
                           <div>
                             <p className="text-slate-400">物品数量</p>
-                            <p className="text-white font-medium">{order.items} 项</p>
+                            <p className="text-white font-medium">
+                              {order.items} 项
+                            </p>
                           </div>
                         </div>
                         <div className="text-xs text-slate-500 mt-2">
@@ -417,13 +474,18 @@ export default function OfficeSuppliesManagement() {
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="font-medium text-white mb-1">{item.supplier}</h3>
+                        <h3 className="font-medium text-white mb-1">
+                          {item.supplier}
+                        </h3>
                         <div className="text-sm text-slate-400 space-y-1">
                           <p>主要供应: {item.category}</p>
                           <p>最后采购: {item.lastPurchase}</p>
                         </div>
                       </div>
-                      <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/30">
+                      <Badge
+                        variant="outline"
+                        className="bg-green-500/20 text-green-400 border-green-500/30"
+                      >
                         合作中
                       </Badge>
                     </div>
@@ -451,32 +513,43 @@ export default function OfficeSuppliesManagement() {
                   <Badge
                     variant="outline"
                     className={cn(
-                      selectedItem.status === 'low' && 'bg-red-500/20 text-red-400 border-red-500/30',
-                      selectedItem.status === 'normal' && 'bg-slate-700/40'
+                      selectedItem.status === "low" &&
+                        "bg-red-500/20 text-red-400 border-red-500/30",
+                      selectedItem.status === "normal" && "bg-slate-700/40",
                     )}
                   >
-                    {selectedItem.status === 'low' ? '库存不足' : '正常'}
+                    {selectedItem.status === "low" ? "库存不足" : "正常"}
                   </Badge>
                   <Badge variant="outline">{selectedItem.category}</Badge>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-4">{selectedItem.name}</h3>
+                  <h3 className="text-lg font-semibold text-white mb-4">
+                    {selectedItem.name}
+                  </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-slate-400 mb-1">当前库存</p>
-                      <p className="text-white font-medium">{selectedItem.currentStock} {selectedItem.unit}</p>
+                      <p className="text-white font-medium">
+                        {selectedItem.currentStock} {selectedItem.unit}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-400 mb-1">最低库存</p>
-                      <p className="text-white font-medium">{selectedItem.minStock} {selectedItem.unit}</p>
+                      <p className="text-white font-medium">
+                        {selectedItem.minStock} {selectedItem.unit}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-400 mb-1">单价</p>
-                      <p className="text-white font-medium">{formatCurrency(selectedItem.unitPrice)}</p>
+                      <p className="text-white font-medium">
+                        {formatCurrency(selectedItem.unitPrice)}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-400 mb-1">库存价值</p>
-                      <p className="text-white font-medium">{formatCurrency(selectedItem.totalValue)}</p>
+                      <p className="text-white font-medium">
+                        {formatCurrency(selectedItem.totalValue)}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-400 mb-1">供应商</p>
@@ -491,21 +564,30 @@ export default function OfficeSuppliesManagement() {
                     <div className="flex items-center justify-between text-xs mb-1">
                       <span className="text-slate-400">库存率</span>
                       <span className="text-slate-300">
-                        {((selectedItem.currentStock / selectedItem.minStock) * 100).toFixed(0)}%
+                        {(
+                          (selectedItem.currentStock / selectedItem.minStock) *
+                          100
+                        ).toFixed(0)}
+                        %
                       </span>
                     </div>
                     <Progress
-                      value={(selectedItem.currentStock / selectedItem.minStock) * 100}
+                      value={
+                        (selectedItem.currentStock / selectedItem.minStock) *
+                        100
+                      }
                       className={cn(
                         "h-2",
-                        selectedItem.status === 'low' && "bg-red-500/20"
+                        selectedItem.status === "low" && "bg-red-500/20",
                       )}
                     />
                   </div>
                 </div>
                 <div className="pt-4 border-t border-slate-700/50 flex gap-2">
                   <Button className="flex-1">创建采购订单</Button>
-                  <Button variant="outline" className="flex-1">编辑信息</Button>
+                  <Button variant="outline" className="flex-1">
+                    编辑信息
+                  </Button>
                 </div>
               </div>
             )}
@@ -513,6 +595,5 @@ export default function OfficeSuppliesManagement() {
         </DialogContent>
       </Dialog>
     </motion.div>
-  )
+  );
 }
-

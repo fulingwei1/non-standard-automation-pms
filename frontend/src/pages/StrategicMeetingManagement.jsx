@@ -1,8 +1,17 @@
-import { useEffect, useState } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
-import { managementRhythmApi, projectApi } from '../services/api'
-import { PageHeader } from '../components/layout/PageHeader'
-import { Card, CardContent, Badge, Button, Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui'
+import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { managementRhythmApi, projectApi } from "../services/api";
+import { PageHeader } from "../components/layout/PageHeader";
+import {
+  Card,
+  CardContent,
+  Badge,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../components/ui";
 import {
   Plus,
   Edit,
@@ -13,112 +22,112 @@ import {
   AlertTriangle,
   Users,
   FileText,
-} from 'lucide-react'
+} from "lucide-react";
 
 const rhythmLevelConfig = {
-  STRATEGIC: { label: '战略层', color: 'bg-purple-500' },
-  OPERATIONAL: { label: '经营层', color: 'bg-blue-500' },
-  OPERATION: { label: '运营层', color: 'bg-green-500' },
-  TASK: { label: '任务层', color: 'bg-orange-500' },
-}
+  STRATEGIC: { label: "战略层", color: "bg-purple-500" },
+  OPERATIONAL: { label: "经营层", color: "bg-blue-500" },
+  OPERATION: { label: "运营层", color: "bg-green-500" },
+  TASK: { label: "任务层", color: "bg-orange-500" },
+};
 
 const statusConfig = {
-  SCHEDULED: { label: '已安排', color: 'bg-gray-500' },
-  ONGOING: { label: '进行中', color: 'bg-blue-500' },
-  COMPLETED: { label: '已完成', color: 'bg-green-500' },
-  CANCELLED: { label: '已取消', color: 'bg-red-500' },
-}
+  SCHEDULED: { label: "已安排", color: "bg-gray-500" },
+  ONGOING: { label: "进行中", color: "bg-blue-500" },
+  COMPLETED: { label: "已完成", color: "bg-green-500" },
+  CANCELLED: { label: "已取消", color: "bg-red-500" },
+};
 
 export default function StrategicMeetingManagement() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [meetings, setMeetings] = useState([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
-  const [pageSize] = useState(20)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [meetings, setMeetings] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
   const [filters, setFilters] = useState({
-    rhythm_level: searchParams.get('rhythm_level') || '',
-    cycle_type: searchParams.get('cycle_type') || '',
-    status: searchParams.get('status') || '',
-    keyword: searchParams.get('keyword') || '',
-  })
-  const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [projects, setProjects] = useState([])
+    rhythm_level: searchParams.get("rhythm_level") || "",
+    cycle_type: searchParams.get("cycle_type") || "",
+    status: searchParams.get("status") || "",
+    keyword: searchParams.get("keyword") || "",
+  });
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [projects, setProjects] = useState([]);
 
   useEffect(() => {
-    fetchMeetings()
-    fetchProjects()
-  }, [page, filters])
+    fetchMeetings();
+    fetchProjects();
+  }, [page, filters]);
 
   const fetchMeetings = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const params = {
         page,
         page_size: pageSize,
         ...filters,
-      }
+      };
       Object.keys(params).forEach((key) => {
-        if (!params[key]) delete params[key]
-      })
+        if (!params[key]) delete params[key];
+      });
 
-      const res = await managementRhythmApi.meetings.list(params)
-      const data = res.data || res
+      const res = await managementRhythmApi.meetings.list(params);
+      const data = res.data || res;
       if (data.items) {
-        setMeetings(data.items)
-        setTotal(data.total || 0)
+        setMeetings(data.items);
+        setTotal(data.total || 0);
       } else if (Array.isArray(data)) {
-        setMeetings(data)
-        setTotal(data.length)
+        setMeetings(data);
+        setTotal(data.length);
       }
     } catch (err) {
-      console.error('Failed to fetch meetings:', err)
-      setMeetings([])
+      console.error("Failed to fetch meetings:", err);
+      setMeetings([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchProjects = async () => {
     try {
-      const res = await projectApi.list({ page: 1, page_size: 100 })
-      const data = res.data || res
+      const res = await projectApi.list({ page: 1, page_size: 100 });
+      const data = res.data || res;
       if (data.items) {
-        setProjects(data.items)
+        setProjects(data.items);
       } else if (Array.isArray(data)) {
-        setProjects(data)
+        setProjects(data);
       }
     } catch (err) {
-      console.error('Failed to fetch projects:', err)
+      console.error("Failed to fetch projects:", err);
     }
-  }
+  };
 
   const handleFilterChange = (key, value) => {
-    const newFilters = { ...filters, [key]: value }
-    setFilters(newFilters)
-    setPage(1)
-    const params = new URLSearchParams()
+    const newFilters = { ...filters, [key]: value };
+    setFilters(newFilters);
+    setPage(1);
+    const params = new URLSearchParams();
     Object.entries(newFilters).forEach(([k, v]) => {
-      if (v) params.set(k, v)
-    })
-    setSearchParams(params)
-  }
+      if (v) params.set(k, v);
+    });
+    setSearchParams(params);
+  };
 
   const formatDate = (dateStr) => {
-    if (!dateStr) return '-'
-    const date = new Date(dateStr)
-    return date.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    })
-  }
+    if (!dateStr) return "-";
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  };
 
   const formatTime = (timeStr) => {
-    if (!timeStr) return ''
-    return timeStr.substring(0, 5)
-  }
+    if (!timeStr) return "";
+    return timeStr.substring(0, 5);
+  };
 
   return (
     <div className="space-y-6">
@@ -141,7 +150,9 @@ export default function StrategicMeetingManagement() {
               <label className="block text-sm text-gray-600 mb-1">层级</label>
               <select
                 value={filters.rhythm_level}
-                onChange={(e) => handleFilterChange('rhythm_level', e.target.value)}
+                onChange={(e) =>
+                  handleFilterChange("rhythm_level", e.target.value)
+                }
                 className="w-full px-3 py-2 border rounded-md text-sm"
               >
                 <option value="">全部</option>
@@ -156,7 +167,9 @@ export default function StrategicMeetingManagement() {
               <label className="block text-sm text-gray-600 mb-1">周期</label>
               <select
                 value={filters.cycle_type}
-                onChange={(e) => handleFilterChange('cycle_type', e.target.value)}
+                onChange={(e) =>
+                  handleFilterChange("cycle_type", e.target.value)
+                }
                 className="w-full px-3 py-2 border rounded-md text-sm"
               >
                 <option value="">全部</option>
@@ -170,7 +183,7 @@ export default function StrategicMeetingManagement() {
               <label className="block text-sm text-gray-600 mb-1">状态</label>
               <select
                 value={filters.status}
-                onChange={(e) => handleFilterChange('status', e.target.value)}
+                onChange={(e) => handleFilterChange("status", e.target.value)}
                 className="w-full px-3 py-2 border rounded-md text-sm"
               >
                 <option value="">全部</option>
@@ -186,7 +199,7 @@ export default function StrategicMeetingManagement() {
               <input
                 type="text"
                 value={filters.keyword}
-                onChange={(e) => handleFilterChange('keyword', e.target.value)}
+                onChange={(e) => handleFilterChange("keyword", e.target.value)}
                 placeholder="搜索会议名称"
                 className="w-full px-3 py-2 border rounded-md text-sm"
               />
@@ -209,15 +222,23 @@ export default function StrategicMeetingManagement() {
           </div>
         ) : meetings.length > 0 ? (
           meetings.map((meeting) => {
-            const levelConfig = rhythmLevelConfig[meeting.rhythm_level]
-            const status = statusConfig[meeting.status] || statusConfig.SCHEDULED
+            const levelConfig = rhythmLevelConfig[meeting.rhythm_level];
+            const status =
+              statusConfig[meeting.status] || statusConfig.SCHEDULED;
             const completionRate =
               meeting.action_items_count > 0
-                ? ((meeting.completed_action_items_count / meeting.action_items_count) * 100).toFixed(0)
-                : 100
+                ? (
+                    (meeting.completed_action_items_count /
+                      meeting.action_items_count) *
+                    100
+                  ).toFixed(0)
+                : 100;
 
             return (
-              <Card key={meeting.id} className="hover:shadow-md transition-shadow">
+              <Card
+                key={meeting.id}
+                className="hover:shadow-md transition-shadow"
+              >
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -227,7 +248,9 @@ export default function StrategicMeetingManagement() {
                             {levelConfig.label}
                           </Badge>
                         )}
-                        <h3 className="text-lg font-semibold">{meeting.meeting_name}</h3>
+                        <h3 className="text-lg font-semibold">
+                          {meeting.meeting_name}
+                        </h3>
                         <Badge className={status.color}>{status.label}</Badge>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
@@ -235,7 +258,9 @@ export default function StrategicMeetingManagement() {
                           <Calendar className="w-4 h-4" />
                           <span>{formatDate(meeting.meeting_date)}</span>
                           {meeting.start_time && (
-                            <span className="text-gray-400">{formatTime(meeting.start_time)}</span>
+                            <span className="text-gray-400">
+                              {formatTime(meeting.start_time)}
+                            </span>
                           )}
                         </div>
                         {meeting.organizer_name && (
@@ -254,7 +279,8 @@ export default function StrategicMeetingManagement() {
                           <div className="flex items-center gap-2">
                             <CheckCircle2 className="w-4 h-4" />
                             <span>
-                              {meeting.completed_action_items_count}/{meeting.action_items_count} 行动项
+                              {meeting.completed_action_items_count}/
+                              {meeting.action_items_count} 行动项
                             </span>
                           </div>
                         )}
@@ -263,12 +289,18 @@ export default function StrategicMeetingManagement() {
                         <div className="mb-4">
                           <div className="flex items-center justify-between text-sm mb-1">
                             <span className="text-gray-600">行动项完成率</span>
-                            <span className="font-medium">{completionRate}%</span>
+                            <span className="font-medium">
+                              {completionRate}%
+                            </span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
                               className={`h-2 rounded-full ${
-                                completionRate >= 90 ? 'bg-green-500' : completionRate >= 70 ? 'bg-yellow-500' : 'bg-red-500'
+                                completionRate >= 90
+                                  ? "bg-green-500"
+                                  : completionRate >= 70
+                                    ? "bg-yellow-500"
+                                    : "bg-red-500"
                               }`}
                               style={{ width: `${completionRate}%` }}
                             />
@@ -279,7 +311,7 @@ export default function StrategicMeetingManagement() {
                         <div className="text-sm text-gray-600 mb-2">
                           <FileText className="w-4 h-4 inline mr-1" />
                           {meeting.agenda.substring(0, 100)}
-                          {meeting.agenda.length > 100 && '...'}
+                          {meeting.agenda.length > 100 && "..."}
                         </div>
                       )}
                     </div>
@@ -287,7 +319,9 @@ export default function StrategicMeetingManagement() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => navigate(`/strategic-meetings/${meeting.id}`)}
+                        onClick={() =>
+                          navigate(`/strategic-meetings/${meeting.id}`)
+                        }
                       >
                         <Edit className="w-4 h-4 mr-1" />
                         查看
@@ -296,7 +330,7 @@ export default function StrategicMeetingManagement() {
                   </div>
                 </CardContent>
               </Card>
-            )
+            );
           })
         ) : (
           <Card>
@@ -326,7 +360,9 @@ export default function StrategicMeetingManagement() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setPage((p) => Math.min(Math.ceil(total / pageSize), p + 1))}
+              onClick={() =>
+                setPage((p) => Math.min(Math.ceil(total / pageSize), p + 1))
+              }
               disabled={page >= Math.ceil(total / pageSize)}
             >
               下一页
@@ -350,5 +386,5 @@ export default function StrategicMeetingManagement() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

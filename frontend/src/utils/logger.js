@@ -3,7 +3,8 @@
  * 生产环境可通过配置禁用所有日志
  */
 
-const isDevelopment = import.meta.env?.DEV ?? process.env?.NODE_ENV !== 'production';
+const isDevelopment =
+  import.meta.env?.DEV ?? process.env?.NODE_ENV !== "production";
 
 const LOG_LEVELS = {
   NONE: 0,
@@ -25,7 +26,7 @@ export const logger = {
    */
   debug: (...args) => {
     if (isDevelopment && currentLogLevel >= LOG_LEVELS.DEBUG) {
-      console.log('[DEBUG]', ...args);
+      console.log("[DEBUG]", ...args);
     }
   },
 
@@ -34,7 +35,7 @@ export const logger = {
    */
   info: (...args) => {
     if (isDevelopment && currentLogLevel >= LOG_LEVELS.INFO) {
-      console.info('[INFO]', ...args);
+      console.info("[INFO]", ...args);
     }
   },
 
@@ -43,7 +44,7 @@ export const logger = {
    */
   warn: (...args) => {
     if (currentLogLevel >= LOG_LEVELS.WARN) {
-      console.warn('[WARN]', ...args);
+      console.warn("[WARN]", ...args);
     }
   },
 
@@ -52,7 +53,7 @@ export const logger = {
    */
   error: (...args) => {
     if (currentLogLevel >= LOG_LEVELS.ERROR) {
-      console.error('[ERROR]', ...args);
+      console.error("[ERROR]", ...args);
     }
   },
 

@@ -1,23 +1,18 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { cn } from '../lib/utils'
-import { pmoApi } from '../services/api'
-import { formatDate } from '../lib/utils'
-import { PageHeader } from '../components/layout/PageHeader'
-import {
-  Card,
-  CardContent,
-  Badge,
-  SkeletonCard,
-} from '../components/ui'
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { cn } from "../lib/utils";
+import { pmoApi } from "../services/api";
+import { formatDate } from "../lib/utils";
+import { PageHeader } from "../components/layout/PageHeader";
+import { Card, CardContent, Badge, SkeletonCard } from "../components/ui";
 import {
   AlertTriangle,
   TrendingUp,
   Building2,
   Target,
   ArrowRight,
-} from 'lucide-react'
+} from "lucide-react";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -25,67 +20,67 @@ const staggerContainer = {
     opacity: 1,
     transition: { staggerChildren: 0.05, delayChildren: 0.1 },
   },
-}
+};
 
 const staggerChild = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
-}
+};
 
 const getRiskLevelBadge = (level) => {
   const badges = {
     CRITICAL: {
-      label: '严重',
-      variant: 'danger',
-      color: 'text-red-400',
-      bgColor: 'bg-red-500/20',
-      borderColor: 'border-red-500/30',
+      label: "严重",
+      variant: "danger",
+      color: "text-red-400",
+      bgColor: "bg-red-500/20",
+      borderColor: "border-red-500/30",
     },
     HIGH: {
-      label: '高',
-      variant: 'danger',
-      color: 'text-orange-400',
-      bgColor: 'bg-orange-500/20',
-      borderColor: 'border-orange-500/30',
+      label: "高",
+      variant: "danger",
+      color: "text-orange-400",
+      bgColor: "bg-orange-500/20",
+      borderColor: "border-orange-500/30",
     },
     MEDIUM: {
-      label: '中',
-      variant: 'warning',
-      color: 'text-yellow-400',
-      bgColor: 'bg-yellow-500/20',
-      borderColor: 'border-yellow-500/30',
+      label: "中",
+      variant: "warning",
+      color: "text-yellow-400",
+      bgColor: "bg-yellow-500/20",
+      borderColor: "border-yellow-500/30",
     },
     LOW: {
-      label: '低',
-      variant: 'info',
-      color: 'text-blue-400',
-      bgColor: 'bg-blue-500/20',
-      borderColor: 'border-blue-500/30',
+      label: "低",
+      variant: "info",
+      color: "text-blue-400",
+      bgColor: "bg-blue-500/20",
+      borderColor: "border-blue-500/30",
     },
-  }
-  return badges[level] || badges.LOW
-}
+  };
+  return badges[level] || badges.LOW;
+};
 
 export default function RiskWall() {
-  const [loading, setLoading] = useState(true)
-  const [riskData, setRiskData] = useState(null)
+  const [loading, setLoading] = useState(true);
+  const [riskData, setRiskData] = useState(null);
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
     try {
-      setLoading(true)
-      const res = await pmoApi.riskWall()
-      const data = res.data || res
-      setRiskData(data)
+      setLoading(true);
+      const res = await pmoApi.riskWall();
+      const data = res.data || res;
+      setRiskData(data);
     } catch (err) {
-      console.error('Failed to fetch risk wall data:', err)
+      console.error("Failed to fetch risk wall data:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -99,7 +94,7 @@ export default function RiskWall() {
             ))}
         </div>
       </div>
-    )
+    );
   }
 
   if (!riskData) {
@@ -112,23 +107,14 @@ export default function RiskWall() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
-  const {
-    total_risks,
-    critical_risks,
-    high_risks,
-    by_category,
-    by_project,
-  } = riskData
+  const { total_risks, critical_risks, high_risks, by_category, by_project } =
+    riskData;
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={staggerContainer}
-    >
+    <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
       <PageHeader
         title="风险预警墙"
         description="全项目风险监控与预警，重点关注严重和高风险"
@@ -141,7 +127,9 @@ export default function RiskWall() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400 mb-1">总风险数</p>
-                <p className="text-2xl font-bold text-white">{total_risks || 0}</p>
+                <p className="text-2xl font-bold text-white">
+                  {total_risks || 0}
+                </p>
               </div>
               <div className="p-3 rounded-xl bg-blue-500/20">
                 <Target className="h-6 w-6 text-blue-400" />
@@ -201,7 +189,7 @@ export default function RiskWall() {
               {critical_risks && critical_risks.length > 0 ? (
                 <div className="divide-y divide-white/5">
                   {critical_risks.map((risk) => {
-                    const levelBadge = getRiskLevelBadge(risk.risk_level)
+                    const levelBadge = getRiskLevelBadge(risk.risk_level);
                     return (
                       <Link
                         key={risk.id}
@@ -211,14 +199,14 @@ export default function RiskWall() {
                         <div className="flex items-start gap-3">
                           <div
                             className={cn(
-                              'p-2 rounded-lg',
+                              "p-2 rounded-lg",
                               levelBadge.bgColor,
-                              'ring-1',
-                              levelBadge.borderColor
+                              "ring-1",
+                              levelBadge.borderColor,
                             )}
                           >
                             <AlertTriangle
-                              className={cn('h-4 w-4', levelBadge.color)}
+                              className={cn("h-4 w-4", levelBadge.color)}
                             />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -247,7 +235,7 @@ export default function RiskWall() {
                           <ArrowRight className="h-5 w-5 text-slate-500 flex-shrink-0" />
                         </div>
                       </Link>
-                    )
+                    );
                   })}
                 </div>
               ) : (
@@ -276,7 +264,7 @@ export default function RiskWall() {
               {high_risks && high_risks.length > 0 ? (
                 <div className="divide-y divide-white/5 max-h-[600px] overflow-y-auto">
                   {high_risks.map((risk) => {
-                    const levelBadge = getRiskLevelBadge(risk.risk_level)
+                    const levelBadge = getRiskLevelBadge(risk.risk_level);
                     return (
                       <Link
                         key={risk.id}
@@ -286,14 +274,14 @@ export default function RiskWall() {
                         <div className="flex items-start gap-3">
                           <div
                             className={cn(
-                              'p-2 rounded-lg',
+                              "p-2 rounded-lg",
                               levelBadge.bgColor,
-                              'ring-1',
-                              levelBadge.borderColor
+                              "ring-1",
+                              levelBadge.borderColor,
                             )}
                           >
                             <AlertTriangle
-                              className={cn('h-4 w-4', levelBadge.color)}
+                              className={cn("h-4 w-4", levelBadge.color)}
                             />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -316,7 +304,7 @@ export default function RiskWall() {
                           <ArrowRight className="h-5 w-5 text-slate-500 flex-shrink-0" />
                         </div>
                       </Link>
-                    )
+                    );
                   })}
                 </div>
               ) : (
@@ -352,10 +340,14 @@ export default function RiskWall() {
                           <div className="p-2 rounded-lg bg-primary/20">
                             <Target className="h-4 w-4 text-primary" />
                           </div>
-                          <span className="text-white font-medium">{category}</span>
+                          <span className="text-white font-medium">
+                            {category}
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-2xl font-bold text-white">{count}</span>
+                          <span className="text-2xl font-bold text-white">
+                            {count}
+                          </span>
                           <span className="text-sm text-slate-400">个</span>
                         </div>
                       </div>
@@ -421,8 +413,5 @@ export default function RiskWall() {
         </motion.div>
       </div>
     </motion.div>
-  )
+  );
 }
-
-
-

@@ -2,8 +2,8 @@
  * Mobile My Shortage Reports - 移动端我的缺料上报记录
  * 功能：查看我的缺料上报记录和进度
  */
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   RefreshCw,
@@ -12,70 +12,70 @@ import {
   CheckCircle2,
   Clock,
   AlertCircle,
-} from 'lucide-react'
-import { Button } from '../../components/ui/button'
-import { Badge } from '../../components/ui/badge'
-import { Card, CardContent } from '../../components/ui/card'
+} from "lucide-react";
+import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
+import { Card, CardContent } from "../../components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../components/ui/select'
-import { cn, formatDate } from '../../lib/utils'
-import { shortageApi } from '../../services/api'
+} from "../../components/ui/select";
+import { cn, formatDate } from "../../lib/utils";
+import { shortageApi } from "../../services/api";
 
 const statusConfigs = {
-  REPORTED: { label: '已上报', color: 'bg-blue-500' },
-  CONFIRMED: { label: '已确认', color: 'bg-amber-500' },
-  HANDLING: { label: '处理中', color: 'bg-purple-500' },
-  RESOLVED: { label: '已解决', color: 'bg-emerald-500' },
-  CANCELLED: { label: '已取消', color: 'bg-gray-500' },
-}
+  REPORTED: { label: "已上报", color: "bg-blue-500" },
+  CONFIRMED: { label: "已确认", color: "bg-amber-500" },
+  HANDLING: { label: "处理中", color: "bg-purple-500" },
+  RESOLVED: { label: "已解决", color: "bg-emerald-500" },
+  CANCELLED: { label: "已取消", color: "bg-gray-500" },
+};
 
 const urgentLevelConfigs = {
-  LOW: { label: '低', color: 'bg-slate-500' },
-  MEDIUM: { label: '中', color: 'bg-blue-500' },
-  HIGH: { label: '高', color: 'bg-amber-500' },
-  URGENT: { label: '紧急', color: 'bg-red-500' },
-}
+  LOW: { label: "低", color: "bg-slate-500" },
+  MEDIUM: { label: "中", color: "bg-blue-500" },
+  HIGH: { label: "高", color: "bg-amber-500" },
+  URGENT: { label: "紧急", color: "bg-red-500" },
+};
 
 export default function MobileMyShortageReports() {
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [reports, setReports] = useState([])
-  const [filterStatus, setFilterStatus] = useState('')
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [reports, setReports] = useState([]);
+  const [filterStatus, setFilterStatus] = useState("");
 
   useEffect(() => {
-    fetchReports()
-  }, [filterStatus])
+    fetchReports();
+  }, [filterStatus]);
 
   const fetchReports = async () => {
     try {
-      setLoading(true)
-      const params = { page: 1, page_size: 100 }
+      setLoading(true);
+      const params = { page: 1, page_size: 100 };
       if (filterStatus) {
-        params.status = filterStatus
+        params.status = filterStatus;
       }
-      const res = await shortageApi.reports.list(params)
-      const allReports = res.data?.items || res.data || []
-      
+      const res = await shortageApi.reports.list(params);
+      const allReports = res.data?.items || res.data || [];
+
       // 这里应该根据当前登录用户筛选，暂时显示所有
-      setReports(allReports)
+      setReports(allReports);
     } catch (error) {
-      console.error('Failed to fetch reports:', error)
+      console.error("Failed to fetch reports:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const stats = {
     total: reports.length,
-    reported: reports.filter(r => r.status === 'REPORTED').length,
-    handling: reports.filter(r => r.status === 'HANDLING').length,
-    resolved: reports.filter(r => r.status === 'RESOLVED').length,
-  }
+    reported: reports.filter((r) => r.status === "REPORTED").length,
+    handling: reports.filter((r) => r.status === "HANDLING").length,
+    resolved: reports.filter((r) => r.status === "RESOLVED").length,
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -105,7 +105,7 @@ export default function MobileMyShortageReports() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/mobile/shortage-report')}
+              onClick={() => navigate("/mobile/shortage-report")}
               className="p-2"
             >
               <Package className="w-5 h-5 text-red-500" />
@@ -121,14 +121,18 @@ export default function MobileMyShortageReports() {
             <span className="text-sm text-slate-500">已上报</span>
             <Clock className="w-4 h-4 text-blue-500" />
           </div>
-          <div className="text-2xl font-bold text-blue-600">{stats.reported}</div>
+          <div className="text-2xl font-bold text-blue-600">
+            {stats.reported}
+          </div>
         </div>
         <div className="bg-white rounded-lg p-4 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-slate-500">处理中</span>
             <AlertCircle className="w-4 h-4 text-amber-500" />
           </div>
-          <div className="text-2xl font-bold text-amber-600">{stats.handling}</div>
+          <div className="text-2xl font-bold text-amber-600">
+            {stats.handling}
+          </div>
         </div>
       </div>
 
@@ -167,34 +171,54 @@ export default function MobileMyShortageReports() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <Badge className={statusConfigs[report.status]?.color || 'bg-slate-500'}>
+                        <Badge
+                          className={
+                            statusConfigs[report.status]?.color ||
+                            "bg-slate-500"
+                          }
+                        >
                           {statusConfigs[report.status]?.label || report.status}
                         </Badge>
-                        <Badge className={urgentLevelConfigs[report.urgent_level]?.color || 'bg-slate-500'}>
-                          {urgentLevelConfigs[report.urgent_level]?.label || report.urgent_level}
+                        <Badge
+                          className={
+                            urgentLevelConfigs[report.urgent_level]?.color ||
+                            "bg-slate-500"
+                          }
+                        >
+                          {urgentLevelConfigs[report.urgent_level]?.label ||
+                            report.urgent_level}
                         </Badge>
-                        <span className="font-mono text-xs text-slate-500">{report.report_no}</span>
+                        <span className="font-mono text-xs text-slate-500">
+                          {report.report_no}
+                        </span>
                       </div>
-                      <h3 className="font-medium text-base mb-1">{report.material_name}</h3>
+                      <h3 className="font-medium text-base mb-1">
+                        {report.material_name}
+                      </h3>
                       <div className="text-sm text-slate-500">
                         {report.material_code}
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <div className="text-slate-500 mb-1">缺料数量</div>
-                      <div className="font-medium text-red-600">{report.shortage_qty || 0}</div>
+                      <div className="font-medium text-red-600">
+                        {report.shortage_qty || 0}
+                      </div>
                     </div>
                     <div>
                       <div className="text-slate-500 mb-1">需求数量</div>
-                      <div className="font-medium">{report.required_qty || 0}</div>
+                      <div className="font-medium">
+                        {report.required_qty || 0}
+                      </div>
                     </div>
                   </div>
 
                   <div className="text-xs text-slate-400">
-                    上报时间: {report.report_time ? formatDate(report.report_time) : '-'}
+                    上报时间:{" "}
+                    {report.report_time ? formatDate(report.report_time) : "-"}
                   </div>
 
                   {report.project_name && (
@@ -209,6 +233,5 @@ export default function MobileMyShortageReports() {
         )}
       </div>
     </div>
-  )
+  );
 }
-

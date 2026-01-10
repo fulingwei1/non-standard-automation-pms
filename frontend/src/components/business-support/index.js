@@ -3,8 +3,8 @@
  * Exports all business support related components
  */
 
-export { ContractCard } from './ContractCard'
-export { BiddingCard } from './BiddingCard'
+export { ContractCard } from "./ContractCard";
+export { BiddingCard } from "./BiddingCard";
 
 // Add more components as they are created:
 // export { PaymentTimeline } from './PaymentTimeline'

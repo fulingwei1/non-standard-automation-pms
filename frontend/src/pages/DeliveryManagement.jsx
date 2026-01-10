@@ -4,9 +4,9 @@
  * 由PMC负责填写和管理
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   Truck,
   Calendar,
@@ -24,8 +24,8 @@ import {
   TrendingUp,
   PackageCheck,
   PackageX,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -52,51 +52,53 @@ import {
   DialogBody,
   Label,
   Textarea,
-} from '../components/ui'
+} from "../components/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select'
-import { cn } from '../lib/utils'
-import { businessSupportApi } from '../services/api'
+} from "../components/ui/select";
+import { cn } from "../lib/utils";
+import { businessSupportApi } from "../services/api";
 
 // 发货状态映射
 const deliveryStatusMap = {
-  draft: { label: '草稿', color: 'bg-slate-500/20 text-slate-400' },
-  approved: { label: '已审批', color: 'bg-blue-500/20 text-blue-400' },
-  printed: { label: '已打印', color: 'bg-purple-500/20 text-purple-400' },
-  shipped: { label: '已发货', color: 'bg-amber-500/20 text-amber-400' },
-  received: { label: '已签收', color: 'bg-emerald-500/20 text-emerald-400' },
-  returned: { label: '已退回', color: 'bg-red-500/20 text-red-400' },
-}
+  draft: { label: "草稿", color: "bg-slate-500/20 text-slate-400" },
+  approved: { label: "已审批", color: "bg-blue-500/20 text-blue-400" },
+  printed: { label: "已打印", color: "bg-purple-500/20 text-purple-400" },
+  shipped: { label: "已发货", color: "bg-amber-500/20 text-amber-400" },
+  received: { label: "已签收", color: "bg-emerald-500/20 text-emerald-400" },
+  returned: { label: "已退回", color: "bg-red-500/20 text-red-400" },
+};
 
 // 审批状态映射
 const approvalStatusMap = {
-  pending: { label: '待审批', color: 'bg-slate-500/20 text-slate-400' },
-  approved: { label: '已审批', color: 'bg-emerald-500/20 text-emerald-400' },
-  rejected: { label: '已拒绝', color: 'bg-red-500/20 text-red-400' },
-}
+  pending: { label: "待审批", color: "bg-slate-500/20 text-slate-400" },
+  approved: { label: "已审批", color: "bg-emerald-500/20 text-emerald-400" },
+  rejected: { label: "已拒绝", color: "bg-red-500/20 text-red-400" },
+};
 
 export default function DeliveryManagement() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('orders')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("orders");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // 筛选条件
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'all')
-  const [approvalFilter, setApprovalFilter] = useState('all')
-  const [page, setPage] = useState(1)
-  const [pageSize] = useState(20)
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [statusFilter, setStatusFilter] = useState(
+    searchParams.get("status") || "all",
+  );
+  const [approvalFilter, setApprovalFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
 
   // 数据
-  const [deliveryOrders, setDeliveryOrders] = useState([])
-  const [total, setTotal] = useState(0)
+  const [deliveryOrders, setDeliveryOrders] = useState([]);
+  const [total, setTotal] = useState(0);
   const [statistics, setStatistics] = useState({
     pendingShipments: 0,
     shippedToday: 0,
@@ -105,16 +107,16 @@ export default function DeliveryManagement() {
     onTimeShippingRate: 0,
     avgShippingTime: 0,
     totalOrders: 0,
-  })
+  });
 
   // 创建发货单对话框
-  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   // 加载统计数据
   const loadStatistics = useCallback(async () => {
     try {
-      const response = await businessSupportApi.deliveryOrders.statistics()
-      const data = response?.data?.data || response?.data
+      const response = await businessSupportApi.deliveryOrders.statistics();
+      const data = response?.data?.data || response?.data;
       if (data) {
         setStatistics({
           pendingShipments: data.pending_shipments || 0,
@@ -124,109 +126,109 @@ export default function DeliveryManagement() {
           onTimeShippingRate: data.on_time_shipping_rate || 0,
           avgShippingTime: data.avg_shipping_time || 0,
           totalOrders: data.total_orders || 0,
-        })
+        });
       }
     } catch (err) {
-      console.error('Failed to load delivery statistics:', err)
+      console.error("Failed to load delivery statistics:", err);
     }
-  }, [])
+  }, []);
 
   // 加载发货订单列表
   const loadDeliveryOrders = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       const params = {
         page,
         page_size: pageSize,
-      }
+      };
 
       if (searchKeyword) {
-        params.search = searchKeyword
+        params.search = searchKeyword;
       }
 
-      if (statusFilter !== 'all') {
-        params.delivery_status = statusFilter
+      if (statusFilter !== "all") {
+        params.delivery_status = statusFilter;
       }
 
-      if (approvalFilter !== 'all') {
-        params.approval_status = approvalFilter
+      if (approvalFilter !== "all") {
+        params.approval_status = approvalFilter;
       }
 
-      const response = await businessSupportApi.deliveryOrders.list(params)
-      const data = response?.data?.data || response?.data
-      const items = data?.items || data?.data?.items || []
-      const totalCount = data?.total || data?.data?.total || 0
+      const response = await businessSupportApi.deliveryOrders.list(params);
+      const data = response?.data?.data || response?.data;
+      const items = data?.items || data?.data?.items || [];
+      const totalCount = data?.total || data?.data?.total || 0;
 
-      setDeliveryOrders(Array.isArray(items) ? items : [])
-      setTotal(totalCount)
+      setDeliveryOrders(Array.isArray(items) ? items : []);
+      setTotal(totalCount);
     } catch (err) {
-      console.error('Failed to load delivery orders:', err)
-      setError('加载发货订单失败')
-      setDeliveryOrders([])
+      console.error("Failed to load delivery orders:", err);
+      setError("加载发货订单失败");
+      setDeliveryOrders([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [page, pageSize, searchKeyword, statusFilter, approvalFilter])
+  }, [page, pageSize, searchKeyword, statusFilter, approvalFilter]);
 
   useEffect(() => {
-    loadStatistics()
-  }, [loadStatistics])
+    loadStatistics();
+  }, [loadStatistics]);
 
   useEffect(() => {
-    loadDeliveryOrders()
-  }, [loadDeliveryOrders])
+    loadDeliveryOrders();
+  }, [loadDeliveryOrders]);
 
   // 根据URL参数设置Tab和筛选
   useEffect(() => {
-    const status = searchParams.get('status')
-    if (status === 'pending') {
-      setActiveTab('pending')
-      setStatusFilter('approved')
-      setApprovalFilter('approved')
-    } else if (status === 'in_transit') {
-      setActiveTab('in_transit')
-      setStatusFilter('shipped')
+    const status = searchParams.get("status");
+    if (status === "pending") {
+      setActiveTab("pending");
+      setStatusFilter("approved");
+      setApprovalFilter("approved");
+    } else if (status === "in_transit") {
+      setActiveTab("in_transit");
+      setStatusFilter("shipped");
     } else {
-      setActiveTab('orders')
+      setActiveTab("orders");
     }
-  }, [searchParams])
+  }, [searchParams]);
 
   // Tab切换时更新筛选条件
   useEffect(() => {
-    if (activeTab === 'pending') {
-      setStatusFilter('approved')
-      setApprovalFilter('approved')
-    } else if (activeTab === 'in_transit') {
-      setStatusFilter('shipped')
-    } else if (activeTab === 'orders') {
+    if (activeTab === "pending") {
+      setStatusFilter("approved");
+      setApprovalFilter("approved");
+    } else if (activeTab === "in_transit") {
+      setStatusFilter("shipped");
+    } else if (activeTab === "orders") {
       // 重置筛选
-      if (!searchParams.get('status')) {
-        setStatusFilter('all')
-        setApprovalFilter('all')
+      if (!searchParams.get("status")) {
+        setStatusFilter("all");
+        setApprovalFilter("all");
       }
     }
-  }, [activeTab, searchParams])
+  }, [activeTab, searchParams]);
 
   // 格式化日期
   const formatDate = (dateStr) => {
-    if (!dateStr) return '-'
-    const date = new Date(dateStr)
-    return date.toLocaleDateString('zh-CN')
-  }
+    if (!dateStr) return "-";
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("zh-CN");
+  };
 
   // 格式化日期时间
   const formatDateTime = (dateStr) => {
-    if (!dateStr) return '-'
-    const date = new Date(dateStr)
-    return date.toLocaleString('zh-CN')
-  }
+    if (!dateStr) return "-";
+    const date = new Date(dateStr);
+    return date.toLocaleString("zh-CN");
+  };
 
   // 过滤后的订单
   const filteredOrders = useMemo(() => {
-    return deliveryOrders
-  }, [deliveryOrders])
+    return deliveryOrders;
+  }, [deliveryOrders]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -244,7 +246,9 @@ export default function DeliveryManagement() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-400 mb-1">待发货</p>
-                  <p className="text-2xl font-bold text-white">{statistics.pendingShipments}</p>
+                  <p className="text-2xl font-bold text-white">
+                    {statistics.pendingShipments}
+                  </p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-amber-500/10 flex items-center justify-center">
                   <Package className="w-6 h-6 text-amber-400" />
@@ -258,7 +262,9 @@ export default function DeliveryManagement() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-400 mb-1">今日已发</p>
-                  <p className="text-2xl font-bold text-white">{statistics.shippedToday}</p>
+                  <p className="text-2xl font-bold text-white">
+                    {statistics.shippedToday}
+                  </p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                   <PackageCheck className="w-6 h-6 text-emerald-400" />
@@ -272,7 +278,9 @@ export default function DeliveryManagement() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-400 mb-1">在途订单</p>
-                  <p className="text-2xl font-bold text-white">{statistics.inTransit}</p>
+                  <p className="text-2xl font-bold text-white">
+                    {statistics.inTransit}
+                  </p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
                   <Truck className="w-6 h-6 text-blue-400" />
@@ -286,7 +294,9 @@ export default function DeliveryManagement() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-400 mb-1">准时发货率</p>
-                  <p className="text-2xl font-bold text-white">{statistics.onTimeShippingRate.toFixed(1)}%</p>
+                  <p className="text-2xl font-bold text-white">
+                    {statistics.onTimeShippingRate.toFixed(1)}%
+                  </p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center">
                   <TrendingUp className="w-6 h-6 text-purple-400" />
@@ -314,7 +324,11 @@ export default function DeliveryManagement() {
             </div>
           </CardHeader>
           <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="space-y-4"
+            >
               <TabsList className="bg-surface-100 border-white/10">
                 <TabsTrigger value="orders">全部订单</TabsTrigger>
                 <TabsTrigger value="pending">待发货</TabsTrigger>
@@ -346,7 +360,10 @@ export default function DeliveryManagement() {
                     <SelectItem value="received">已签收</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={approvalFilter} onValueChange={setApprovalFilter}>
+                <Select
+                  value={approvalFilter}
+                  onValueChange={setApprovalFilter}
+                >
                   <SelectTrigger className="w-40 bg-surface-100 border-white/10">
                     <SelectValue placeholder="全部审批" />
                   </SelectTrigger>
@@ -362,26 +379,42 @@ export default function DeliveryManagement() {
               {/* 全部订单 */}
               <TabsContent value="orders" className="space-y-4">
                 {loading && (
-                  <div className="text-center py-8 text-slate-400">加载中...</div>
+                  <div className="text-center py-8 text-slate-400">
+                    加载中...
+                  </div>
                 )}
                 {error && (
                   <div className="text-center py-8 text-red-400">{error}</div>
                 )}
                 {!loading && !error && filteredOrders.length === 0 && (
-                  <div className="text-center py-8 text-slate-400">暂无发货订单</div>
+                  <div className="text-center py-8 text-slate-400">
+                    暂无发货订单
+                  </div>
                 )}
                 {!loading && !error && filteredOrders.length > 0 && (
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow className="border-white/10">
-                          <TableHead className="text-slate-300">发货单号</TableHead>
-                          <TableHead className="text-slate-300">项目订单</TableHead>
+                          <TableHead className="text-slate-300">
+                            发货单号
+                          </TableHead>
+                          <TableHead className="text-slate-300">
+                            项目订单
+                          </TableHead>
                           <TableHead className="text-slate-300">客户</TableHead>
-                          <TableHead className="text-slate-300">目的地</TableHead>
-                          <TableHead className="text-slate-300">发货日期</TableHead>
-                          <TableHead className="text-slate-300">订单状态</TableHead>
-                          <TableHead className="text-slate-300">审批状态</TableHead>
+                          <TableHead className="text-slate-300">
+                            目的地
+                          </TableHead>
+                          <TableHead className="text-slate-300">
+                            发货日期
+                          </TableHead>
+                          <TableHead className="text-slate-300">
+                            订单状态
+                          </TableHead>
+                          <TableHead className="text-slate-300">
+                            审批状态
+                          </TableHead>
                           <TableHead className="text-slate-300">操作</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -396,24 +429,32 @@ export default function DeliveryManagement() {
                             </TableCell>
                             <TableCell>
                               <div>
-                                <p className="text-white">{order.order_no || '-'}</p>
+                                <p className="text-white">
+                                  {order.order_no || "-"}
+                                </p>
                                 {order.project_id && (
-                                  <p className="text-xs text-slate-400">项目ID: {order.project_id}</p>
+                                  <p className="text-xs text-slate-400">
+                                    项目ID: {order.project_id}
+                                  </p>
                                 )}
                               </div>
                             </TableCell>
                             <TableCell>
                               <div>
-                                <p className="text-white">{order.customer_name || '-'}</p>
+                                <p className="text-white">
+                                  {order.customer_name || "-"}
+                                </p>
                                 {order.receiver_name && (
-                                  <p className="text-xs text-slate-400">收货人: {order.receiver_name}</p>
+                                  <p className="text-xs text-slate-400">
+                                    收货人: {order.receiver_name}
+                                  </p>
                                 )}
                               </div>
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1 text-slate-300">
                                 <MapPin className="w-4 h-4" />
-                                <span>{order.receiver_address || '-'}</span>
+                                <span>{order.receiver_address || "-"}</span>
                               </div>
                             </TableCell>
                             <TableCell className="text-slate-300">
@@ -422,23 +463,25 @@ export default function DeliveryManagement() {
                             <TableCell>
                               <Badge
                                 className={cn(
-                                  'text-xs',
-                                  deliveryStatusMap[order.delivery_status]?.color ||
-                                    'bg-slate-500/20 text-slate-400'
+                                  "text-xs",
+                                  deliveryStatusMap[order.delivery_status]
+                                    ?.color || "bg-slate-500/20 text-slate-400",
                                 )}
                               >
-                                {deliveryStatusMap[order.delivery_status]?.label || order.delivery_status}
+                                {deliveryStatusMap[order.delivery_status]
+                                  ?.label || order.delivery_status}
                               </Badge>
                             </TableCell>
                             <TableCell>
                               <Badge
                                 className={cn(
-                                  'text-xs',
-                                  approvalStatusMap[order.approval_status]?.color ||
-                                    'bg-slate-500/20 text-slate-400'
+                                  "text-xs",
+                                  approvalStatusMap[order.approval_status]
+                                    ?.color || "bg-slate-500/20 text-slate-400",
                                 )}
                               >
-                                {approvalStatusMap[order.approval_status]?.label || order.approval_status}
+                                {approvalStatusMap[order.approval_status]
+                                  ?.label || order.approval_status}
                               </Badge>
                             </TableCell>
                             <TableCell>
@@ -446,15 +489,21 @@ export default function DeliveryManagement() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => navigate(`/pmc/delivery-orders/${order.id}`)}
+                                  onClick={() =>
+                                    navigate(`/pmc/delivery-orders/${order.id}`)
+                                  }
                                 >
                                   <Eye className="w-4 h-4" />
                                 </Button>
-                                {order.delivery_status === 'draft' && (
+                                {order.delivery_status === "draft" && (
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => navigate(`/pmc/delivery-orders/${order.id}/edit`)}
+                                    onClick={() =>
+                                      navigate(
+                                        `/pmc/delivery-orders/${order.id}/edit`,
+                                      )
+                                    }
                                   >
                                     <Edit className="w-4 h-4" />
                                   </Button>
@@ -472,7 +521,8 @@ export default function DeliveryManagement() {
                 {total > pageSize && (
                   <div className="flex items-center justify-between pt-4">
                     <p className="text-sm text-slate-400">
-                      共 {total} 条记录，第 {page} / {Math.ceil(total / pageSize)} 页
+                      共 {total} 条记录，第 {page} /{" "}
+                      {Math.ceil(total / pageSize)} 页
                     </p>
                     <div className="flex items-center gap-2">
                       <Button
@@ -486,7 +536,11 @@ export default function DeliveryManagement() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setPage((p) => Math.min(Math.ceil(total / pageSize), p + 1))}
+                        onClick={() =>
+                          setPage((p) =>
+                            Math.min(Math.ceil(total / pageSize), p + 1),
+                          )
+                        }
                         disabled={page >= Math.ceil(total / pageSize)}
                       >
                         下一页
@@ -499,7 +553,9 @@ export default function DeliveryManagement() {
               {/* 待发货 */}
               <TabsContent value="pending" className="space-y-4">
                 {loading && (
-                  <div className="text-center py-8 text-slate-400">加载中...</div>
+                  <div className="text-center py-8 text-slate-400">
+                    加载中...
+                  </div>
                 )}
                 {error && (
                   <div className="text-center py-8 text-red-400">{error}</div>
@@ -514,17 +570,27 @@ export default function DeliveryManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow className="border-white/10">
-                          <TableHead className="text-slate-300">发货单号</TableHead>
-                          <TableHead className="text-slate-300">项目订单</TableHead>
+                          <TableHead className="text-slate-300">
+                            发货单号
+                          </TableHead>
+                          <TableHead className="text-slate-300">
+                            项目订单
+                          </TableHead>
                           <TableHead className="text-slate-300">客户</TableHead>
-                          <TableHead className="text-slate-300">目的地</TableHead>
-                          <TableHead className="text-slate-300">计划发货日期</TableHead>
+                          <TableHead className="text-slate-300">
+                            目的地
+                          </TableHead>
+                          <TableHead className="text-slate-300">
+                            计划发货日期
+                          </TableHead>
                           <TableHead className="text-slate-300">操作</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filteredOrders
-                          .filter((order) => order.delivery_status === 'approved')
+                          .filter(
+                            (order) => order.delivery_status === "approved",
+                          )
                           .map((order) => (
                             <TableRow
                               key={order.id}
@@ -535,24 +601,32 @@ export default function DeliveryManagement() {
                               </TableCell>
                               <TableCell>
                                 <div>
-                                  <p className="text-white">{order.order_no || '-'}</p>
+                                  <p className="text-white">
+                                    {order.order_no || "-"}
+                                  </p>
                                   {order.project_id && (
-                                    <p className="text-xs text-slate-400">项目ID: {order.project_id}</p>
+                                    <p className="text-xs text-slate-400">
+                                      项目ID: {order.project_id}
+                                    </p>
                                   )}
                                 </div>
                               </TableCell>
                               <TableCell>
                                 <div>
-                                  <p className="text-white">{order.customer_name || '-'}</p>
+                                  <p className="text-white">
+                                    {order.customer_name || "-"}
+                                  </p>
                                   {order.receiver_name && (
-                                    <p className="text-xs text-slate-400">收货人: {order.receiver_name}</p>
+                                    <p className="text-xs text-slate-400">
+                                      收货人: {order.receiver_name}
+                                    </p>
                                   )}
                                 </div>
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-1 text-slate-300">
                                   <MapPin className="w-4 h-4" />
-                                  <span>{order.receiver_address || '-'}</span>
+                                  <span>{order.receiver_address || "-"}</span>
                                 </div>
                               </TableCell>
                               <TableCell className="text-slate-300">
@@ -563,14 +637,22 @@ export default function DeliveryManagement() {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => navigate(`/pmc/delivery-orders/${order.id}`)}
+                                    onClick={() =>
+                                      navigate(
+                                        `/pmc/delivery-orders/${order.id}`,
+                                      )
+                                    }
                                   >
                                     <Eye className="w-4 h-4" />
                                   </Button>
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => navigate(`/pmc/delivery-orders/${order.id}/edit`)}
+                                    onClick={() =>
+                                      navigate(
+                                        `/pmc/delivery-orders/${order.id}/edit`,
+                                      )
+                                    }
                                   >
                                     <Edit className="w-4 h-4" />
                                   </Button>
@@ -587,7 +669,9 @@ export default function DeliveryManagement() {
               {/* 在途订单 */}
               <TabsContent value="in_transit" className="space-y-4">
                 {loading && (
-                  <div className="text-center py-8 text-slate-400">加载中...</div>
+                  <div className="text-center py-8 text-slate-400">
+                    加载中...
+                  </div>
                 )}
                 {error && (
                   <div className="text-center py-8 text-red-400">{error}</div>
@@ -602,19 +686,35 @@ export default function DeliveryManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow className="border-white/10">
-                          <TableHead className="text-slate-300">发货单号</TableHead>
-                          <TableHead className="text-slate-300">项目订单</TableHead>
+                          <TableHead className="text-slate-300">
+                            发货单号
+                          </TableHead>
+                          <TableHead className="text-slate-300">
+                            项目订单
+                          </TableHead>
                           <TableHead className="text-slate-300">客户</TableHead>
-                          <TableHead className="text-slate-300">目的地</TableHead>
-                          <TableHead className="text-slate-300">发货日期</TableHead>
-                          <TableHead className="text-slate-300">物流单号</TableHead>
-                          <TableHead className="text-slate-300">预计到达</TableHead>
+                          <TableHead className="text-slate-300">
+                            目的地
+                          </TableHead>
+                          <TableHead className="text-slate-300">
+                            发货日期
+                          </TableHead>
+                          <TableHead className="text-slate-300">
+                            物流单号
+                          </TableHead>
+                          <TableHead className="text-slate-300">
+                            预计到达
+                          </TableHead>
                           <TableHead className="text-slate-300">操作</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filteredOrders
-                          .filter((order) => order.delivery_status === 'shipped' && !order.receive_date)
+                          .filter(
+                            (order) =>
+                              order.delivery_status === "shipped" &&
+                              !order.receive_date,
+                          )
                           .map((order) => (
                             <TableRow
                               key={order.id}
@@ -625,31 +725,39 @@ export default function DeliveryManagement() {
                               </TableCell>
                               <TableCell>
                                 <div>
-                                  <p className="text-white">{order.order_no || '-'}</p>
+                                  <p className="text-white">
+                                    {order.order_no || "-"}
+                                  </p>
                                   {order.project_id && (
-                                    <p className="text-xs text-slate-400">项目ID: {order.project_id}</p>
+                                    <p className="text-xs text-slate-400">
+                                      项目ID: {order.project_id}
+                                    </p>
                                   )}
                                 </div>
                               </TableCell>
                               <TableCell>
                                 <div>
-                                  <p className="text-white">{order.customer_name || '-'}</p>
+                                  <p className="text-white">
+                                    {order.customer_name || "-"}
+                                  </p>
                                   {order.receiver_name && (
-                                    <p className="text-xs text-slate-400">收货人: {order.receiver_name}</p>
+                                    <p className="text-xs text-slate-400">
+                                      收货人: {order.receiver_name}
+                                    </p>
                                   )}
                                 </div>
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-1 text-slate-300">
                                   <MapPin className="w-4 h-4" />
-                                  <span>{order.receiver_address || '-'}</span>
+                                  <span>{order.receiver_address || "-"}</span>
                                 </div>
                               </TableCell>
                               <TableCell className="text-slate-300">
                                 {formatDateTime(order.ship_date)}
                               </TableCell>
                               <TableCell className="text-slate-300">
-                                {order.tracking_no || '-'}
+                                {order.tracking_no || "-"}
                               </TableCell>
                               <TableCell className="text-slate-300">
                                 {order.delivery_date ? (
@@ -658,14 +766,16 @@ export default function DeliveryManagement() {
                                     {formatDate(order.delivery_date)}
                                   </div>
                                 ) : (
-                                  '-'
+                                  "-"
                                 )}
                               </TableCell>
                               <TableCell>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => navigate(`/pmc/delivery-orders/${order.id}`)}
+                                  onClick={() =>
+                                    navigate(`/pmc/delivery-orders/${order.id}`)
+                                  }
                                 >
                                   <Eye className="w-4 h-4" />
                                 </Button>
@@ -688,7 +798,9 @@ export default function DeliveryManagement() {
                     <div className="text-center py-8 text-slate-400">
                       发货计划功能开发中...
                       <br />
-                      <span className="text-xs">将支持创建、编辑、查看发货计划</span>
+                      <span className="text-xs">
+                        将支持创建、编辑、查看发货计划
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -703,124 +815,127 @@ export default function DeliveryManagement() {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onSuccess={() => {
-          setCreateDialogOpen(false)
-          loadDeliveryOrders()
-          loadStatistics()
+          setCreateDialogOpen(false);
+          loadDeliveryOrders();
+          loadStatistics();
         }}
       />
     </div>
-  )
+  );
 }
 
 // 创建发货单对话框组件
 function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
-  const [loading, setLoading] = useState(false)
-  const [salesOrders, setSalesOrders] = useState([])
-  const [searchKeyword, setSearchKeyword] = useState('')
+  const [loading, setLoading] = useState(false);
+  const [salesOrders, setSalesOrders] = useState([]);
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [formData, setFormData] = useState({
-    order_id: '',
-    delivery_date: new Date().toISOString().split('T')[0],
-    delivery_type: 'logistics',
-    logistics_company: '',
-    tracking_no: '',
-    receiver_name: '',
-    receiver_phone: '',
-    receiver_address: '',
-    delivery_amount: '',
+    order_id: "",
+    delivery_date: new Date().toISOString().split("T")[0],
+    delivery_type: "logistics",
+    logistics_company: "",
+    tracking_no: "",
+    receiver_name: "",
+    receiver_phone: "",
+    receiver_address: "",
+    delivery_amount: "",
     special_approval: false,
-    special_approval_reason: '',
-    remark: '',
-  })
-  const [selectedSalesOrder, setSelectedSalesOrder] = useState(null)
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState(null)
+    special_approval_reason: "",
+    remark: "",
+  });
+  const [selectedSalesOrder, setSelectedSalesOrder] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
   // 加载销售订单列表
   const loadSalesOrders = useCallback(async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const params = {
         page: 1,
         page_size: 50,
-      }
+      };
       if (searchKeyword) {
-        params.search = searchKeyword
+        params.search = searchKeyword;
       }
       // 只显示已确认的订单
-      params.order_status = 'confirmed'
-      
-      const response = await businessSupportApi.salesOrders.list(params)
-      const data = response?.data?.data || response?.data
-      const items = data?.items || data?.data?.items || []
-      setSalesOrders(Array.isArray(items) ? items : [])
+      params.order_status = "confirmed";
+
+      const response = await businessSupportApi.salesOrders.list(params);
+      const data = response?.data?.data || response?.data;
+      const items = data?.items || data?.data?.items || [];
+      setSalesOrders(Array.isArray(items) ? items : []);
     } catch (err) {
-      console.error('Failed to load sales orders:', err)
-      setSalesOrders([])
+      console.error("Failed to load sales orders:", err);
+      setSalesOrders([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [searchKeyword])
+  }, [searchKeyword]);
 
   useEffect(() => {
     if (open) {
-      loadSalesOrders()
+      loadSalesOrders();
       // 重置表单
       setFormData({
-        order_id: '',
-        delivery_date: new Date().toISOString().split('T')[0],
-        delivery_type: 'logistics',
-        logistics_company: '',
-        tracking_no: '',
-        receiver_name: '',
-        receiver_phone: '',
-        receiver_address: '',
-        delivery_amount: '',
+        order_id: "",
+        delivery_date: new Date().toISOString().split("T")[0],
+        delivery_type: "logistics",
+        logistics_company: "",
+        tracking_no: "",
+        receiver_name: "",
+        receiver_phone: "",
+        receiver_address: "",
+        delivery_amount: "",
         special_approval: false,
-        special_approval_reason: '',
-        remark: '',
-      })
-      setSelectedSalesOrder(null)
-      setError(null)
+        special_approval_reason: "",
+        remark: "",
+      });
+      setSelectedSalesOrder(null);
+      setError(null);
     }
-  }, [open, loadSalesOrders])
+  }, [open, loadSalesOrders]);
 
   // 选择销售订单
   const handleSelectOrder = (order) => {
-    setSelectedSalesOrder(order)
+    setSelectedSalesOrder(order);
     setFormData((prev) => ({
       ...prev,
       order_id: order.id,
-      receiver_name: order.customer_name || '',
-      receiver_address: order.delivery_address || '',
-      delivery_amount: order.total_amount || '',
-    }))
-  }
+      receiver_name: order.customer_name || "",
+      receiver_address: order.delivery_address || "",
+      delivery_amount: order.total_amount || "",
+    }));
+  };
 
   // 提交表单
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
 
     // 验证必填字段
     if (!formData.order_id) {
-      setError('请选择销售订单')
-      return
+      setError("请选择销售订单");
+      return;
     }
     if (!formData.delivery_date) {
-      setError('请选择发货日期')
-      return
+      setError("请选择发货日期");
+      return;
     }
     if (!formData.delivery_type) {
-      setError('请选择发货方式')
-      return
+      setError("请选择发货方式");
+      return;
     }
-    if (!formData.delivery_amount || parseFloat(formData.delivery_amount) <= 0) {
-      setError('请输入有效的发货金额')
-      return
+    if (
+      !formData.delivery_amount ||
+      parseFloat(formData.delivery_amount) <= 0
+    ) {
+      setError("请输入有效的发货金额");
+      return;
     }
 
     try {
-      setSubmitting(true)
+      setSubmitting(true);
       const submitData = {
         order_id: parseInt(formData.order_id),
         delivery_date: formData.delivery_date,
@@ -834,21 +949,22 @@ function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
         special_approval: formData.special_approval,
         special_approval_reason: formData.special_approval_reason || null,
         remark: formData.remark || null,
-      }
+      };
 
-      const response = await businessSupportApi.deliveryOrders.create(submitData)
+      const response =
+        await businessSupportApi.deliveryOrders.create(submitData);
       if (response?.data?.code === 200 || response?.status === 200) {
-        onSuccess()
+        onSuccess();
       } else {
-        setError(response?.data?.message || '创建发货单失败')
+        setError(response?.data?.message || "创建发货单失败");
       }
     } catch (err) {
-      console.error('Failed to create delivery order:', err)
-      setError(err?.response?.data?.detail || err?.message || '创建发货单失败')
+      console.error("Failed to create delivery order:", err);
+      setError(err?.response?.data?.detail || err?.message || "创建发货单失败");
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -874,9 +990,9 @@ function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      loadSalesOrders()
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      loadSalesOrders();
                     }
                   }}
                   className="bg-surface-100 border-white/10"
@@ -895,7 +1011,9 @@ function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
               {loading ? (
                 <div className="text-center py-4 text-slate-400">加载中...</div>
               ) : salesOrders.length === 0 ? (
-                <div className="text-center py-4 text-slate-400">暂无销售订单</div>
+                <div className="text-center py-4 text-slate-400">
+                  暂无销售订单
+                </div>
               ) : (
                 <div className="max-h-48 overflow-y-auto border border-white/10 rounded-lg">
                   {salesOrders.map((order) => (
@@ -903,18 +1021,23 @@ function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
                       key={order.id}
                       onClick={() => handleSelectOrder(order)}
                       className={cn(
-                        'p-3 cursor-pointer border-b border-white/10 hover:bg-white/5 transition-colors',
-                        selectedSalesOrder?.id === order.id && 'bg-primary/20 border-primary/50'
+                        "p-3 cursor-pointer border-b border-white/10 hover:bg-white/5 transition-colors",
+                        selectedSalesOrder?.id === order.id &&
+                          "bg-primary/20 border-primary/50",
                       )}
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-white font-medium">{order.order_no}</p>
+                          <p className="text-white font-medium">
+                            {order.order_no}
+                          </p>
                           <p className="text-sm text-slate-400">
-                            {order.customer_name} | 项目: {order.project_id || '-'}
+                            {order.customer_name} | 项目:{" "}
+                            {order.project_id || "-"}
                           </p>
                           <p className="text-xs text-slate-500">
-                            订单金额: ¥{order.total_amount?.toLocaleString() || '0'}
+                            订单金额: ¥
+                            {order.total_amount?.toLocaleString() || "0"}
                           </p>
                         </div>
                         {selectedSalesOrder?.id === order.id && (
@@ -934,7 +1057,9 @@ function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
                 <Input
                   type="date"
                   value={formData.delivery_date}
-                  onChange={(e) => setFormData({ ...formData, delivery_date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, delivery_date: e.target.value })
+                  }
                   className="bg-surface-100 border-white/10"
                   required
                 />
@@ -943,7 +1068,9 @@ function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
                 <Label>发货方式 *</Label>
                 <Select
                   value={formData.delivery_type}
-                  onValueChange={(value) => setFormData({ ...formData, delivery_type: value })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, delivery_type: value })
+                  }
                 >
                   <SelectTrigger className="bg-surface-100 border-white/10">
                     <SelectValue />
@@ -959,13 +1086,19 @@ function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
             </div>
 
             {/* 物流信息 */}
-            {formData.delivery_type === 'express' || formData.delivery_type === 'logistics' ? (
+            {formData.delivery_type === "express" ||
+            formData.delivery_type === "logistics" ? (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>物流公司</Label>
                   <Input
                     value={formData.logistics_company}
-                    onChange={(e) => setFormData({ ...formData, logistics_company: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        logistics_company: e.target.value,
+                      })
+                    }
                     placeholder="请输入物流公司"
                     className="bg-surface-100 border-white/10"
                   />
@@ -974,7 +1107,9 @@ function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
                   <Label>物流单号</Label>
                   <Input
                     value={formData.tracking_no}
-                    onChange={(e) => setFormData({ ...formData, tracking_no: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, tracking_no: e.target.value })
+                    }
                     placeholder="请输入物流单号"
                     className="bg-surface-100 border-white/10"
                   />
@@ -990,7 +1125,12 @@ function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
                   <Label>收货人</Label>
                   <Input
                     value={formData.receiver_name}
-                    onChange={(e) => setFormData({ ...formData, receiver_name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        receiver_name: e.target.value,
+                      })
+                    }
                     placeholder="请输入收货人"
                     className="bg-surface-100 border-white/10"
                   />
@@ -999,7 +1139,12 @@ function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
                   <Label>收货电话</Label>
                   <Input
                     value={formData.receiver_phone}
-                    onChange={(e) => setFormData({ ...formData, receiver_phone: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        receiver_phone: e.target.value,
+                      })
+                    }
                     placeholder="请输入收货电话"
                     className="bg-surface-100 border-white/10"
                   />
@@ -1009,7 +1154,12 @@ function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
                 <Label>收货地址</Label>
                 <Textarea
                   value={formData.receiver_address}
-                  onChange={(e) => setFormData({ ...formData, receiver_address: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      receiver_address: e.target.value,
+                    })
+                  }
                   placeholder="请输入收货地址"
                   className="bg-surface-100 border-white/10"
                   rows={3}
@@ -1025,7 +1175,12 @@ function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
                   type="number"
                   step="0.01"
                   value={formData.delivery_amount}
-                  onChange={(e) => setFormData({ ...formData, delivery_amount: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      delivery_amount: e.target.value,
+                    })
+                  }
                   placeholder="请输入发货金额"
                   className="bg-surface-100 border-white/10"
                   required
@@ -1037,7 +1192,12 @@ function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
                   <input
                     type="checkbox"
                     checked={formData.special_approval}
-                    onChange={(e) => setFormData({ ...formData, special_approval: e.target.checked })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        special_approval: e.target.checked,
+                      })
+                    }
                     className="w-4 h-4 rounded border-white/20 bg-surface-100"
                   />
                   <span className="text-sm text-slate-400">需要特殊审批</span>
@@ -1050,7 +1210,12 @@ function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
                 <Label>特殊审批原因</Label>
                 <Textarea
                   value={formData.special_approval_reason}
-                  onChange={(e) => setFormData({ ...formData, special_approval_reason: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      special_approval_reason: e.target.value,
+                    })
+                  }
                   placeholder="请输入特殊审批原因"
                   className="bg-surface-100 border-white/10"
                   rows={2}
@@ -1063,7 +1228,9 @@ function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
               <Label>备注</Label>
               <Textarea
                 value={formData.remark}
-                onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, remark: e.target.value })
+                }
                 placeholder="请输入备注信息"
                 className="bg-surface-100 border-white/10"
                 rows={3}
@@ -1079,13 +1246,17 @@ function CreateDeliveryOrderDialog({ open, onOpenChange, onSuccess }) {
               >
                 取消
               </Button>
-              <Button type="submit" disabled={submitting} className="bg-primary hover:bg-primary/90">
-                {submitting ? '创建中...' : '创建发货单'}
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {submitting ? "创建中..." : "创建发货单"}
               </Button>
             </DialogFooter>
           </form>
         </DialogBody>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

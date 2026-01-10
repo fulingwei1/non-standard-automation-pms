@@ -1,8 +1,17 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { managementRhythmApi } from '../services/api'
-import { PageHeader } from '../components/layout/PageHeader'
-import { Card, CardContent, Badge, Button, Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui'
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { managementRhythmApi } from "../services/api";
+import { PageHeader } from "../components/layout/PageHeader";
+import {
+  Card,
+  CardContent,
+  Badge,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../components/ui";
 import {
   Plus,
   FileText,
@@ -12,99 +21,110 @@ import {
   Minus,
   Download,
   Eye,
-} from 'lucide-react'
+} from "lucide-react";
 
 const reportTypeConfig = {
-  ANNUAL: { label: '年度报告', color: 'bg-blue-500' },
-  MONTHLY: { label: '月度报告', color: 'bg-green-500' },
-}
+  ANNUAL: { label: "年度报告", color: "bg-blue-500" },
+  MONTHLY: { label: "月度报告", color: "bg-green-500" },
+};
 
 const statusConfig = {
-  GENERATED: { label: '已生成', color: 'bg-gray-500' },
-  PUBLISHED: { label: '已发布', color: 'bg-green-500' },
-  ARCHIVED: { label: '已归档', color: 'bg-gray-400' },
-}
+  GENERATED: { label: "已生成", color: "bg-gray-500" },
+  PUBLISHED: { label: "已发布", color: "bg-green-500" },
+  ARCHIVED: { label: "已归档", color: "bg-gray-400" },
+};
 
 export default function MeetingReports() {
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [reports, setReports] = useState([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
-  const [pageSize] = useState(20)
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [reports, setReports] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
   const [filters, setFilters] = useState({
-    report_type: '',
+    report_type: "",
     period_year: new Date().getFullYear(),
-    rhythm_level: '',
-  })
-  const [generateDialogOpen, setGenerateDialogOpen] = useState(false)
+    rhythm_level: "",
+  });
+  const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [generateForm, setGenerateForm] = useState({
-    report_type: 'MONTHLY',
+    report_type: "MONTHLY",
     period_year: new Date().getFullYear(),
     period_month: new Date().getMonth() + 1,
-    rhythm_level: '',
-  })
+    rhythm_level: "",
+  });
 
   useEffect(() => {
-    fetchReports()
-  }, [page, filters])
+    fetchReports();
+  }, [page, filters]);
 
   const fetchReports = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const params = {
         page,
         page_size: pageSize,
         ...filters,
-      }
-      const res = await managementRhythmApi.reports.list(params)
-      const data = res.data || res
-      setReports(data.items || [])
-      setTotal(data.total || 0)
+      };
+      const res = await managementRhythmApi.reports.list(params);
+      const data = res.data || res;
+      setReports(data.items || []);
+      setTotal(data.total || 0);
     } catch (err) {
-      console.error('Failed to fetch reports:', err)
+      console.error("Failed to fetch reports:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleGenerate = async () => {
     try {
-      await managementRhythmApi.reports.generate(generateForm)
-      setGenerateDialogOpen(false)
-      fetchReports()
-      alert('报告生成成功')
+      await managementRhythmApi.reports.generate(generateForm);
+      setGenerateDialogOpen(false);
+      fetchReports();
+      alert("报告生成成功");
     } catch (err) {
-      console.error('Failed to generate report:', err)
-      alert('报告生成失败: ' + (err.response?.data?.detail || err.message))
+      console.error("Failed to generate report:", err);
+      alert("报告生成失败: " + (err.response?.data?.detail || err.message));
     }
-  }
+  };
 
   const formatDate = (dateStr) => {
-    if (!dateStr) return '-'
-    const date = new Date(dateStr)
-    return date.toLocaleDateString('zh-CN')
-  }
+    if (!dateStr) return "-";
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("zh-CN");
+  };
 
   const renderComparison = (comparison) => {
-    if (!comparison) return null
+    if (!comparison) return null;
 
-    const change = comparison.change || 0
-    const changeRate = comparison.change_rate || '0%'
-    const isPositive = change > 0
-    const isNegative = change < 0
+    const change = comparison.change || 0;
+    const changeRate = comparison.change_rate || "0%";
+    const isPositive = change > 0;
+    const isNegative = change < 0;
 
     return (
       <div className="flex items-center gap-2 text-sm">
         {isPositive && <TrendingUp className="w-4 h-4 text-green-600" />}
         {isNegative && <TrendingDown className="w-4 h-4 text-red-600" />}
-        {!isPositive && !isNegative && <Minus className="w-4 h-4 text-gray-400" />}
-        <span className={isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : 'text-gray-500'}>
-          {change > 0 ? '+' : ''}{change} ({changeRate})
+        {!isPositive && !isNegative && (
+          <Minus className="w-4 h-4 text-gray-400" />
+        )}
+        <span
+          className={
+            isPositive
+              ? "text-green-600"
+              : isNegative
+                ? "text-red-600"
+                : "text-gray-500"
+          }
+        >
+          {change > 0 ? "+" : ""}
+          {change} ({changeRate})
         </span>
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -127,7 +147,9 @@ export default function MeetingReports() {
               <label className="block text-sm font-medium mb-1">报告类型</label>
               <select
                 value={filters.report_type}
-                onChange={(e) => setFilters({ ...filters, report_type: e.target.value })}
+                onChange={(e) =>
+                  setFilters({ ...filters, report_type: e.target.value })
+                }
                 className="w-full px-3 py-2 border rounded-lg"
               >
                 <option value="">全部</option>
@@ -140,7 +162,13 @@ export default function MeetingReports() {
               <input
                 type="number"
                 value={filters.period_year}
-                onChange={(e) => setFilters({ ...filters, period_year: parseInt(e.target.value) || new Date().getFullYear() })}
+                onChange={(e) =>
+                  setFilters({
+                    ...filters,
+                    period_year:
+                      parseInt(e.target.value) || new Date().getFullYear(),
+                  })
+                }
                 className="w-full px-3 py-2 border rounded-lg"
               />
             </div>
@@ -148,7 +176,9 @@ export default function MeetingReports() {
               <label className="block text-sm font-medium mb-1">节律层级</label>
               <select
                 value={filters.rhythm_level}
-                onChange={(e) => setFilters({ ...filters, rhythm_level: e.target.value })}
+                onChange={(e) =>
+                  setFilters({ ...filters, rhythm_level: e.target.value })
+                }
                 className="w-full px-3 py-2 border rounded-lg"
               >
                 <option value="">全部</option>
@@ -188,10 +218,14 @@ export default function MeetingReports() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <Badge className={reportTypeConfig[report.report_type]?.color}>
+                      <Badge
+                        className={reportTypeConfig[report.report_type]?.color}
+                      >
                         {reportTypeConfig[report.report_type]?.label}
                       </Badge>
-                      <h3 className="text-lg font-semibold">{report.report_title}</h3>
+                      <h3 className="text-lg font-semibold">
+                        {report.report_title}
+                      </h3>
                       <Badge>{report.status}</Badge>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm text-gray-600">
@@ -202,7 +236,8 @@ export default function MeetingReports() {
                       <div>
                         <div className="font-medium">周期</div>
                         <div>
-                          {formatDate(report.period_start)} ~ {formatDate(report.period_end)}
+                          {formatDate(report.period_start)} ~{" "}
+                          {formatDate(report.period_end)}
                         </div>
                       </div>
                       <div>
@@ -218,44 +253,85 @@ export default function MeetingReports() {
                       <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
                           <div className="text-sm text-gray-500">会议总数</div>
-                          <div className="text-lg font-semibold">{report.report_data.summary.total_meetings}</div>
+                          <div className="text-lg font-semibold">
+                            {report.report_data.summary.total_meetings}
+                          </div>
                         </div>
                         <div>
-                          <div className="text-sm text-gray-500">已完成会议</div>
-                          <div className="text-lg font-semibold">{report.report_data.summary.completed_meetings}</div>
+                          <div className="text-sm text-gray-500">
+                            已完成会议
+                          </div>
+                          <div className="text-lg font-semibold">
+                            {report.report_data.summary.completed_meetings}
+                          </div>
                         </div>
                         <div>
-                          <div className="text-sm text-gray-500">行动项总数</div>
-                          <div className="text-lg font-semibold">{report.report_data.summary.total_action_items}</div>
+                          <div className="text-sm text-gray-500">
+                            行动项总数
+                          </div>
+                          <div className="text-lg font-semibold">
+                            {report.report_data.summary.total_action_items}
+                          </div>
                         </div>
                         <div>
                           <div className="text-sm text-gray-500">完成率</div>
-                          <div className="text-lg font-semibold">{report.report_data.summary.action_completion_rate}</div>
+                          <div className="text-lg font-semibold">
+                            {report.report_data.summary.action_completion_rate}
+                          </div>
                         </div>
                       </div>
                     )}
                     {report.comparison_data && (
                       <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                        <div className="font-medium mb-2">与上月对比 ({report.comparison_data.previous_period})</div>
+                        <div className="font-medium mb-2">
+                          与上月对比 ({report.comparison_data.previous_period})
+                        </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div>
                             <div className="text-gray-600">会议数</div>
-                            {renderComparison(report.comparison_data.meetings_comparison)}
+                            {renderComparison(
+                              report.comparison_data.meetings_comparison,
+                            )}
                           </div>
                           <div>
                             <div className="text-gray-600">已完成会议</div>
-                            {renderComparison(report.comparison_data.completed_meetings_comparison)}
+                            {renderComparison(
+                              report.comparison_data
+                                .completed_meetings_comparison,
+                            )}
                           </div>
                           <div>
                             <div className="text-gray-600">行动项</div>
-                            {renderComparison(report.comparison_data.action_items_comparison)}
+                            {renderComparison(
+                              report.comparison_data.action_items_comparison,
+                            )}
                           </div>
                           <div>
                             <div className="text-gray-600">完成率</div>
                             <div className="text-sm">
-                              {report.comparison_data.completion_rate_comparison?.current} → {report.comparison_data.completion_rate_comparison?.previous}
-                              <span className={report.comparison_data.completion_rate_comparison?.change_value > 0 ? 'text-green-600' : 'text-red-600'}>
-                                {' '}{report.comparison_data.completion_rate_comparison?.change}
+                              {
+                                report.comparison_data
+                                  .completion_rate_comparison?.current
+                              }{" "}
+                              →{" "}
+                              {
+                                report.comparison_data
+                                  .completion_rate_comparison?.previous
+                              }
+                              <span
+                                className={
+                                  report.comparison_data
+                                    .completion_rate_comparison?.change_value >
+                                  0
+                                    ? "text-green-600"
+                                    : "text-red-600"
+                                }
+                              >
+                                {" "}
+                                {
+                                  report.comparison_data
+                                    .completion_rate_comparison?.change
+                                }
                               </span>
                             </div>
                           </div>
@@ -277,18 +353,24 @@ export default function MeetingReports() {
                       size="sm"
                       onClick={async () => {
                         try {
-                          const blob = await managementRhythmApi.reports.exportDocx(report.id)
-                          const url = window.URL.createObjectURL(blob)
-                          const a = document.createElement('a')
-                          a.href = url
-                          a.download = `${report.report_no}.docx`
-                          document.body.appendChild(a)
-                          a.click()
-                          window.URL.revokeObjectURL(url)
-                          document.body.removeChild(a)
+                          const blob =
+                            await managementRhythmApi.reports.exportDocx(
+                              report.id,
+                            );
+                          const url = window.URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = `${report.report_no}.docx`;
+                          document.body.appendChild(a);
+                          a.click();
+                          window.URL.revokeObjectURL(url);
+                          document.body.removeChild(a);
                         } catch (err) {
-                          console.error('Failed to export:', err)
-                          alert('导出失败: ' + (err.response?.data?.detail || err.message))
+                          console.error("Failed to export:", err);
+                          alert(
+                            "导出失败: " +
+                              (err.response?.data?.detail || err.message),
+                          );
                         }
                       }}
                     >
@@ -339,7 +421,12 @@ export default function MeetingReports() {
               <label className="block text-sm font-medium mb-1">报告类型</label>
               <select
                 value={generateForm.report_type}
-                onChange={(e) => setGenerateForm({ ...generateForm, report_type: e.target.value })}
+                onChange={(e) =>
+                  setGenerateForm({
+                    ...generateForm,
+                    report_type: e.target.value,
+                  })
+                }
                 className="w-full px-3 py-2 border rounded-lg"
               >
                 <option value="ANNUAL">年度报告</option>
@@ -351,16 +438,27 @@ export default function MeetingReports() {
               <input
                 type="number"
                 value={generateForm.period_year}
-                onChange={(e) => setGenerateForm({ ...generateForm, period_year: parseInt(e.target.value) || new Date().getFullYear() })}
+                onChange={(e) =>
+                  setGenerateForm({
+                    ...generateForm,
+                    period_year:
+                      parseInt(e.target.value) || new Date().getFullYear(),
+                  })
+                }
                 className="w-full px-3 py-2 border rounded-lg"
               />
             </div>
-            {generateForm.report_type === 'MONTHLY' && (
+            {generateForm.report_type === "MONTHLY" && (
               <div>
                 <label className="block text-sm font-medium mb-1">月份</label>
                 <select
                   value={generateForm.period_month}
-                  onChange={(e) => setGenerateForm({ ...generateForm, period_month: parseInt(e.target.value) })}
+                  onChange={(e) =>
+                    setGenerateForm({
+                      ...generateForm,
+                      period_month: parseInt(e.target.value),
+                    })
+                  }
                   className="w-full px-3 py-2 border rounded-lg"
                 >
                   {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
@@ -372,10 +470,17 @@ export default function MeetingReports() {
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium mb-1">节律层级（可选）</label>
+              <label className="block text-sm font-medium mb-1">
+                节律层级（可选）
+              </label>
               <select
                 value={generateForm.rhythm_level}
-                onChange={(e) => setGenerateForm({ ...generateForm, rhythm_level: e.target.value })}
+                onChange={(e) =>
+                  setGenerateForm({
+                    ...generateForm,
+                    rhythm_level: e.target.value,
+                  })
+                }
                 className="w-full px-3 py-2 border rounded-lg"
               >
                 <option value="">全部层级</option>
@@ -386,7 +491,10 @@ export default function MeetingReports() {
               </select>
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setGenerateDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setGenerateDialogOpen(false)}
+              >
                 取消
               </Button>
               <Button onClick={handleGenerate}>生成报告</Button>
@@ -395,5 +503,5 @@ export default function MeetingReports() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

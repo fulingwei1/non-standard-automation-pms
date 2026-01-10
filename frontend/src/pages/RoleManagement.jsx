@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Search,
@@ -13,31 +13,41 @@ import {
   ChevronDown,
   ChevronRight,
   Check,
-} from 'lucide-react';
-import { PageHeader } from '../components/layout';
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Badge } from '../components/ui/badge';
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '../components/ui/dialog';
-import { Label } from '../components/ui/label';
-import { Textarea } from '../components/ui';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { cn } from '../lib/utils';
-import { fadeIn, staggerContainer } from '../lib/animations';
-import { roleApi } from '../services/api';
-import { allMenuGroups, buildNavGroupsFromSelection, extractMenuIdsFromNavGroups } from '../lib/allMenuItems';
+} from "../components/ui/dialog";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { roleApi } from "../services/api";
+import {
+  allMenuGroups,
+  buildNavGroupsFromSelection,
+  extractMenuIdsFromNavGroups,
+} from "../lib/allMenuItems";
 
 export default function RoleManagement() {
   const [roles, setRoles] = useState([]);
@@ -49,41 +59,113 @@ export default function RoleManagement() {
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
   const [showMenuDialog, setShowMenuDialog] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
-  const [searchKeyword, setSearchKeyword] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
 
   // 角色编码选项（带说明）
   const roleCodeOptions = [
-    { code: 'ADMIN', name: '系统管理员', description: '系统管理权限，可管理所有功能和数据' },
-    { code: 'SUPER_ADMIN', name: '超级管理员', description: '系统最高权限，拥有所有权限' },
-    { code: 'PROJECT_MANAGER', name: '项目经理', description: '项目管理权限，可管理项目全流程' },
-    { code: 'PM', name: '项目经理', description: '项目全权管理，进度/变更/验收/成本' },
-    { code: 'GM', name: '总经理', description: '全局数据只读，关键审批权限' },
-    { code: 'CFO', name: '财务总监', description: '财务相关全局权限，成本与回款管理' },
-    { code: 'CTO', name: '技术总监', description: '技术相关全局权限，研发管理' },
-    { code: 'SALES_DIR', name: '销售总监', description: '销售部门全局权限，商机与合同管理' },
-    { code: 'PMC', name: '计划管理', description: '生产计划、物料齐套、进度协调' },
-    { code: 'QA_MGR', name: '质量主管', description: '质量管理、验收审批、问题闭环' },
-    { code: 'PU_MGR', name: '采购主管', description: '采购管理、供应商管理、成本控制' },
-    { code: 'ENGINEER', name: '工程师', description: '工程执行权限，执行设计任务' },
-    { code: 'ME', name: '机械工程师', description: '机械设计任务执行、交付物提交' },
-    { code: 'EE', name: '电气工程师', description: '电气设计任务执行、交付物提交' },
-    { code: 'PURCHASER', name: '采购员', description: '采购相关权限，执行采购任务' },
-    { code: 'QA', name: '质量工程师', description: '质量管理权限，质量检查与验收' },
-    { code: 'FINANCE', name: '财务人员', description: '财务相关权限，财务数据处理' },
-    { code: 'WAREHOUSE', name: '仓库管理员', description: '仓库管理权限，库存管理' },
-    { code: 'VIEWER', name: '查看者', description: '只读权限，仅可查看数据' },
-    { code: 'CUSTOMER', name: '客户', description: '客户门户权限，查看项目进度' },
+    {
+      code: "ADMIN",
+      name: "系统管理员",
+      description: "系统管理权限，可管理所有功能和数据",
+    },
+    {
+      code: "SUPER_ADMIN",
+      name: "超级管理员",
+      description: "系统最高权限，拥有所有权限",
+    },
+    {
+      code: "PROJECT_MANAGER",
+      name: "项目经理",
+      description: "项目管理权限，可管理项目全流程",
+    },
+    {
+      code: "PM",
+      name: "项目经理",
+      description: "项目全权管理，进度/变更/验收/成本",
+    },
+    { code: "GM", name: "总经理", description: "全局数据只读，关键审批权限" },
+    {
+      code: "CFO",
+      name: "财务总监",
+      description: "财务相关全局权限，成本与回款管理",
+    },
+    {
+      code: "CTO",
+      name: "技术总监",
+      description: "技术相关全局权限，研发管理",
+    },
+    {
+      code: "SALES_DIR",
+      name: "销售总监",
+      description: "销售部门全局权限，商机与合同管理",
+    },
+    {
+      code: "PMC",
+      name: "计划管理",
+      description: "生产计划、物料齐套、进度协调",
+    },
+    {
+      code: "QA_MGR",
+      name: "质量主管",
+      description: "质量管理、验收审批、问题闭环",
+    },
+    {
+      code: "PU_MGR",
+      name: "采购主管",
+      description: "采购管理、供应商管理、成本控制",
+    },
+    {
+      code: "ENGINEER",
+      name: "工程师",
+      description: "工程执行权限，执行设计任务",
+    },
+    {
+      code: "ME",
+      name: "机械工程师",
+      description: "机械设计任务执行、交付物提交",
+    },
+    {
+      code: "EE",
+      name: "电气工程师",
+      description: "电气设计任务执行、交付物提交",
+    },
+    {
+      code: "PURCHASER",
+      name: "采购员",
+      description: "采购相关权限，执行采购任务",
+    },
+    {
+      code: "QA",
+      name: "质量工程师",
+      description: "质量管理权限，质量检查与验收",
+    },
+    {
+      code: "FINANCE",
+      name: "财务人员",
+      description: "财务相关权限，财务数据处理",
+    },
+    {
+      code: "WAREHOUSE",
+      name: "仓库管理员",
+      description: "仓库管理权限，库存管理",
+    },
+    { code: "VIEWER", name: "查看者", description: "只读权限，仅可查看数据" },
+    {
+      code: "CUSTOMER",
+      name: "客户",
+      description: "客户门户权限，查看项目进度",
+    },
   ];
 
   const [newRole, setNewRole] = useState({
-    role_code: '',
-    role_name: '',
-    description: '',
-    data_scope: 'OWN',
+    role_code: "",
+    role_name: "",
+    description: "",
+    data_scope: "OWN",
     permission_ids: [],
   });
 
@@ -106,8 +188,8 @@ export default function RoleManagement() {
       if (searchKeyword) {
         params.keyword = searchKeyword;
       }
-      if (filterStatus !== 'all') {
-        params.is_active = filterStatus === 'active';
+      if (filterStatus !== "all") {
+        params.is_active = filterStatus === "active";
       }
 
       const response = await roleApi.list(params);
@@ -115,8 +197,10 @@ export default function RoleManagement() {
       setRoles(data.items || []);
       setTotal(data.total || 0);
     } catch (error) {
-      console.error('加载角色列表失败:', error);
-      alert('加载角色列表失败: ' + (error.response?.data?.detail || error.message));
+      console.error("加载角色列表失败:", error);
+      alert(
+        "加载角色列表失败: " + (error.response?.data?.detail || error.message),
+      );
     } finally {
       setLoading(false);
     }
@@ -128,7 +212,7 @@ export default function RoleManagement() {
       const response = await roleApi.permissions();
       setPermissions(response.data || []);
     } catch (error) {
-      console.error('加载权限列表失败:', error);
+      console.error("加载权限列表失败:", error);
     }
   };
 
@@ -152,15 +236,15 @@ export default function RoleManagement() {
       await roleApi.create(newRole);
       setShowCreateDialog(false);
       setNewRole({
-        role_code: '',
-        role_name: '',
-        description: '',
-        data_scope: 'OWN',
+        role_code: "",
+        role_name: "",
+        description: "",
+        data_scope: "OWN",
         permission_ids: [],
       });
       loadRoles();
     } catch (error) {
-      alert('创建角色失败: ' + (error.response?.data?.detail || error.message));
+      alert("创建角色失败: " + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -171,7 +255,7 @@ export default function RoleManagement() {
       setEditRole(null);
       loadRoles();
     } catch (error) {
-      alert('更新角色失败: ' + (error.response?.data?.detail || error.message));
+      alert("更新角色失败: " + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -181,7 +265,9 @@ export default function RoleManagement() {
       setSelectedRole(response.data);
       setShowDetailDialog(true);
     } catch (error) {
-      alert('获取角色详情失败: ' + (error.response?.data?.detail || error.message));
+      alert(
+        "获取角色详情失败: " + (error.response?.data?.detail || error.message),
+      );
     }
   };
 
@@ -191,7 +277,9 @@ export default function RoleManagement() {
       setEditRole(response.data);
       setShowEditDialog(true);
     } catch (error) {
-      alert('获取角色信息失败: ' + (error.response?.data?.detail || error.message));
+      alert(
+        "获取角色信息失败: " + (error.response?.data?.detail || error.message),
+      );
     }
   };
 
@@ -200,15 +288,19 @@ export default function RoleManagement() {
       const response = await roleApi.get(id);
       setSelectedRole(response.data);
       setSelectedPermissionIds(
-        response.data.permissions?.map((p, idx) => {
-          // 如果permissions是字符串数组，需要找到对应的权限ID
-          const perm = permissions.find(perm => perm.permission_name === p);
-          return perm ? perm.id : null;
-        }).filter(Boolean) || []
+        response.data.permissions
+          ?.map((p, idx) => {
+            // 如果permissions是字符串数组，需要找到对应的权限ID
+            const perm = permissions.find((perm) => perm.permission_name === p);
+            return perm ? perm.id : null;
+          })
+          .filter(Boolean) || [],
       );
       setShowPermissionDialog(true);
     } catch (error) {
-      alert('获取角色信息失败: ' + (error.response?.data?.detail || error.message));
+      alert(
+        "获取角色信息失败: " + (error.response?.data?.detail || error.message),
+      );
     }
   };
 
@@ -218,7 +310,7 @@ export default function RoleManagement() {
       setShowPermissionDialog(false);
       loadRoles();
     } catch (error) {
-      alert('分配权限失败: ' + (error.response?.data?.detail || error.message));
+      alert("分配权限失败: " + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -239,14 +331,17 @@ export default function RoleManagement() {
 
       // 默认展开所有分组
       const expanded = {};
-      allMenuGroups.forEach(group => {
+      allMenuGroups.forEach((group) => {
         expanded[group.id] = true;
       });
       setExpandedGroups(expanded);
 
       setShowMenuDialog(true);
     } catch (error) {
-      alert('获取角色菜单配置失败: ' + (error.response?.data?.detail || error.message));
+      alert(
+        "获取角色菜单配置失败: " +
+          (error.response?.data?.detail || error.message),
+      );
     }
   };
 
@@ -257,26 +352,28 @@ export default function RoleManagement() {
       const navGroups = buildNavGroupsFromSelection(selectedMenuIds);
       await roleApi.updateNavGroups(selectedRole.id, navGroups);
       setShowMenuDialog(false);
-      alert('菜单配置保存成功！用户重新登录后将看到新的菜单。');
+      alert("菜单配置保存成功！用户重新登录后将看到新的菜单。");
       loadRoles();
     } catch (error) {
-      alert('保存菜单配置失败: ' + (error.response?.data?.detail || error.message));
+      alert(
+        "保存菜单配置失败: " + (error.response?.data?.detail || error.message),
+      );
     } finally {
       setSavingMenu(false);
     }
   };
 
   const toggleMenuGroup = (groupId) => {
-    setExpandedGroups(prev => ({
+    setExpandedGroups((prev) => ({
       ...prev,
-      [groupId]: !prev[groupId]
+      [groupId]: !prev[groupId],
     }));
   };
 
   const toggleMenuItem = (itemId) => {
-    setSelectedMenuIds(prev => {
+    setSelectedMenuIds((prev) => {
       if (prev.includes(itemId)) {
-        return prev.filter(id => id !== itemId);
+        return prev.filter((id) => id !== itemId);
       } else {
         return [...prev, itemId];
       }
@@ -284,20 +381,26 @@ export default function RoleManagement() {
   };
 
   const toggleGroupAll = (group) => {
-    const groupItemIds = group.items.map(item => item.id);
-    const allSelected = groupItemIds.every(id => selectedMenuIds.includes(id));
+    const groupItemIds = group.items.map((item) => item.id);
+    const allSelected = groupItemIds.every((id) =>
+      selectedMenuIds.includes(id),
+    );
 
     if (allSelected) {
       // 取消选中该分组的所有菜单
-      setSelectedMenuIds(prev => prev.filter(id => !groupItemIds.includes(id)));
+      setSelectedMenuIds((prev) =>
+        prev.filter((id) => !groupItemIds.includes(id)),
+      );
     } else {
       // 选中该分组的所有菜单
-      setSelectedMenuIds(prev => [...new Set([...prev, ...groupItemIds])]);
+      setSelectedMenuIds((prev) => [...new Set([...prev, ...groupItemIds])]);
     }
   };
 
   const selectAllMenus = () => {
-    const allIds = allMenuGroups.flatMap(group => group.items.map(item => item.id));
+    const allIds = allMenuGroups.flatMap((group) =>
+      group.items.map((item) => item.id),
+    );
     setSelectedMenuIds(allIds);
   };
 
@@ -307,7 +410,7 @@ export default function RoleManagement() {
 
   // 按模块分组权限
   const permissionsByModule = permissions.reduce((acc, perm) => {
-    const module = perm.module || '其他';
+    const module = perm.module || "其他";
     if (!acc[module]) {
       acc[module] = [];
     }
@@ -357,43 +460,65 @@ export default function RoleManagement() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="p-4 text-center text-muted-foreground">加载中...</div>
+              <div className="p-4 text-center text-muted-foreground">
+                加载中...
+              </div>
             ) : (
               <>
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-border">
                     <thead>
                       <tr className="bg-muted/50">
-                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">角色编码</th>
-                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">角色名称</th>
-                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">描述</th>
-                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">权限数量</th>
-                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">数据权限</th>
-                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">状态</th>
-                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">操作</th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">
+                          角色编码
+                        </th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">
+                          角色名称
+                        </th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">
+                          描述
+                        </th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">
+                          权限数量
+                        </th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">
+                          数据权限
+                        </th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">
+                          状态
+                        </th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-foreground">
+                          操作
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                       {roles.map((role) => (
                         <tr key={role.id}>
-                          <td className="px-4 py-2 text-sm text-foreground font-mono">{role.role_code}</td>
-                          <td className="px-4 py-2 text-sm text-foreground">{role.role_name}</td>
+                          <td className="px-4 py-2 text-sm text-foreground font-mono">
+                            {role.role_code}
+                          </td>
+                          <td className="px-4 py-2 text-sm text-foreground">
+                            {role.role_name}
+                          </td>
                           <td className="px-4 py-2 text-sm text-muted-foreground">
-                            {role.description || '-'}
+                            {role.description || "-"}
                           </td>
                           <td className="px-4 py-2 text-sm text-muted-foreground">
                             {role.permissions?.length || 0} 个权限
                           </td>
                           <td className="px-4 py-2 text-sm text-muted-foreground">
                             <Badge variant="outline">
-                              {role.data_scope === 'OWN' && '本人'}
-                              {role.data_scope === 'DEPT' && '本部门'}
-                              {role.data_scope === 'ALL' && '全部'}
+                              {role.data_scope === "OWN" && "本人"}
+                              {role.data_scope === "DEPT" && "本部门"}
+                              {role.data_scope === "ALL" && "全部"}
                             </Badge>
                           </td>
                           <td className="px-4 py-2 text-sm">
-                            <Badge variant={role.is_active ? 'default' : 'secondary'}>
-                              {role.is_active ? '启用' : '禁用'}
+                            <Badge
+                              variant={role.is_active ? "default" : "secondary"}
+                            >
+                              {role.is_active ? "启用" : "禁用"}
                             </Badge>
                             {role.is_system && (
                               <Badge variant="destructive" className="ml-1">
@@ -453,13 +578,14 @@ export default function RoleManagement() {
                 {total > pageSize && (
                   <div className="mt-4 flex items-center justify-between">
                     <div className="text-sm text-muted-foreground">
-                      共 {total} 条记录，第 {page} / {Math.ceil(total / pageSize)} 页
+                      共 {total} 条记录，第 {page} /{" "}
+                      {Math.ceil(total / pageSize)} 页
                     </div>
                     <div className="flex space-x-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
                       >
                         上一页
@@ -467,7 +593,11 @@ export default function RoleManagement() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setPage(p => Math.min(Math.ceil(total / pageSize), p + 1))}
+                        onClick={() =>
+                          setPage((p) =>
+                            Math.min(Math.ceil(total / pageSize), p + 1),
+                          )
+                        }
                         disabled={page >= Math.ceil(total / pageSize)}
                       >
                         下一页
@@ -482,17 +612,17 @@ export default function RoleManagement() {
       </motion.div>
 
       {/* Create Dialog */}
-      <Dialog 
-        open={showCreateDialog} 
+      <Dialog
+        open={showCreateDialog}
         onOpenChange={(open) => {
           setShowCreateDialog(open);
           if (!open) {
             // 关闭对话框时重置表单
             setNewRole({
-              role_code: '',
-              role_name: '',
-              description: '',
-              data_scope: 'OWN',
+              role_code: "",
+              role_name: "",
+              description: "",
+              data_scope: "OWN",
               permission_ids: [],
             });
           }
@@ -504,17 +634,22 @@ export default function RoleManagement() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="create-role-code" className="text-right pt-2">角色编码 *</Label>
+              <Label htmlFor="create-role-code" className="text-right pt-2">
+                角色编码 *
+              </Label>
               <div className="col-span-3 space-y-2">
                 <Select
                   value={newRole.role_code}
                   onValueChange={(value) => {
-                    const selected = roleCodeOptions.find(opt => opt.code === value);
+                    const selected = roleCodeOptions.find(
+                      (opt) => opt.code === value,
+                    );
                     setNewRole((prev) => ({
                       ...prev,
                       role_code: value,
                       // 如果角色名称为空，则自动填充；否则保持用户输入的值
-                      role_name: prev.role_name || (selected ? selected.name : ''),
+                      role_name:
+                        prev.role_name || (selected ? selected.name : ""),
                     }));
                   }}
                 >
@@ -523,13 +658,15 @@ export default function RoleManagement() {
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px]">
                     {roleCodeOptions.map((option) => (
-                      <SelectItem 
-                        key={option.code} 
+                      <SelectItem
+                        key={option.code}
                         value={option.code}
                         title={option.description}
                       >
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-medium">{option.code}</span>
+                          <span className="font-mono font-medium">
+                            {option.code}
+                          </span>
                           <span className="text-muted-foreground">-</span>
                           <span>{option.name}</span>
                         </div>
@@ -541,14 +678,20 @@ export default function RoleManagement() {
                   <div className="rounded-md bg-muted/50 p-2">
                     <p className="text-xs text-muted-foreground">
                       <span className="font-medium">说明：</span>
-                      {roleCodeOptions.find(opt => opt.code === newRole.role_code)?.description}
+                      {
+                        roleCodeOptions.find(
+                          (opt) => opt.code === newRole.role_code,
+                        )?.description
+                      }
                     </p>
                   </div>
                 )}
               </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="create-role-name" className="text-right">角色名称 *</Label>
+              <Label htmlFor="create-role-name" className="text-right">
+                角色名称 *
+              </Label>
               <Input
                 id="create-role-name"
                 name="role_name"
@@ -559,7 +702,9 @@ export default function RoleManagement() {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="create-description" className="text-right">描述</Label>
+              <Label htmlFor="create-description" className="text-right">
+                描述
+              </Label>
               <Textarea
                 id="create-description"
                 name="description"
@@ -570,7 +715,9 @@ export default function RoleManagement() {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="create-data-scope" className="text-right">数据权限</Label>
+              <Label htmlFor="create-data-scope" className="text-right">
+                数据权限
+              </Label>
               <Select
                 value={newRole.data_scope}
                 onValueChange={(value) =>
@@ -589,7 +736,10 @@ export default function RoleManagement() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleCreateSubmit}>保存</Button>
@@ -606,30 +756,36 @@ export default function RoleManagement() {
           {editRole && (
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-role-name" className="text-right">角色名称</Label>
+                <Label htmlFor="edit-role-name" className="text-right">
+                  角色名称
+                </Label>
                 <Input
                   id="edit-role-name"
                   name="role_name"
-                  value={editRole.role_name || ''}
+                  value={editRole.role_name || ""}
                   onChange={handleEditChange}
                   className="col-span-3"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-description" className="text-right">描述</Label>
+                <Label htmlFor="edit-description" className="text-right">
+                  描述
+                </Label>
                 <Textarea
                   id="edit-description"
                   name="description"
-                  value={editRole.description || ''}
+                  value={editRole.description || ""}
                   onChange={handleEditChange}
                   className="col-span-3"
                   rows={3}
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-data-scope" className="text-right">数据权限</Label>
+                <Label htmlFor="edit-data-scope" className="text-right">
+                  数据权限
+                </Label>
                 <Select
-                  value={editRole.data_scope || 'OWN'}
+                  value={editRole.data_scope || "OWN"}
                   onValueChange={(value) =>
                     setEditRole((prev) => ({ ...prev, data_scope: value }))
                   }
@@ -645,11 +801,16 @@ export default function RoleManagement() {
                 </Select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-is-active" className="text-right">状态</Label>
+                <Label htmlFor="edit-is-active" className="text-right">
+                  状态
+                </Label>
                 <Select
-                  value={editRole.is_active ? 'active' : 'inactive'}
+                  value={editRole.is_active ? "active" : "inactive"}
                   onValueChange={(value) =>
-                    setEditRole((prev) => ({ ...prev, is_active: value === 'active' }))
+                    setEditRole((prev) => ({
+                      ...prev,
+                      is_active: value === "active",
+                    }))
                   }
                 >
                   <SelectTrigger className="col-span-3">
@@ -673,44 +834,57 @@ export default function RoleManagement() {
       </Dialog>
 
       {/* Permission Assignment Dialog */}
-      <Dialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
+      <Dialog
+        open={showPermissionDialog}
+        onOpenChange={setShowPermissionDialog}
+      >
         <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>分配API权限 - {selectedRole?.role_name}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            {Object.entries(permissionsByModule).map(([module, modulePermissions]) => (
-              <div key={module} className="space-y-2">
-                <h4 className="font-semibold text-sm">{module}</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  {modulePermissions.map((perm) => (
-                    <label
-                      key={perm.id}
-                      className="flex items-center space-x-2 p-2 rounded border hover:bg-muted cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedPermissionIds.includes(perm.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedPermissionIds([...selectedPermissionIds, perm.id]);
-                          } else {
-                            setSelectedPermissionIds(
-                              selectedPermissionIds.filter((id) => id !== perm.id)
-                            );
-                          }
-                        }}
-                        className="rounded"
-                      />
-                      <span className="text-sm">{perm.permission_name}</span>
-                    </label>
-                  ))}
+            {Object.entries(permissionsByModule).map(
+              ([module, modulePermissions]) => (
+                <div key={module} className="space-y-2">
+                  <h4 className="font-semibold text-sm">{module}</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {modulePermissions.map((perm) => (
+                      <label
+                        key={perm.id}
+                        className="flex items-center space-x-2 p-2 rounded border hover:bg-muted cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedPermissionIds.includes(perm.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedPermissionIds([
+                                ...selectedPermissionIds,
+                                perm.id,
+                              ]);
+                            } else {
+                              setSelectedPermissionIds(
+                                selectedPermissionIds.filter(
+                                  (id) => id !== perm.id,
+                                ),
+                              );
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <span className="text-sm">{perm.permission_name}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ),
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPermissionDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowPermissionDialog(false)}
+            >
               取消
             </Button>
             <Button onClick={handleSavePermissions}>保存</Button>
@@ -727,7 +901,11 @@ export default function RoleManagement() {
 
           <div className="flex items-center justify-between py-2 border-b">
             <div className="text-sm text-muted-foreground">
-              已选择 <span className="font-semibold text-foreground">{selectedMenuIds.length}</span> 个菜单项
+              已选择{" "}
+              <span className="font-semibold text-foreground">
+                {selectedMenuIds.length}
+              </span>{" "}
+              个菜单项
             </div>
             <div className="flex space-x-2">
               <Button variant="outline" size="sm" onClick={selectAllMenus}>
@@ -741,10 +919,13 @@ export default function RoleManagement() {
 
           <div className="flex-1 overflow-y-auto py-4 space-y-2">
             {allMenuGroups.map((group) => {
-              const groupItemIds = group.items.map(item => item.id);
-              const selectedCount = groupItemIds.filter(id => selectedMenuIds.includes(id)).length;
+              const groupItemIds = group.items.map((item) => item.id);
+              const selectedCount = groupItemIds.filter((id) =>
+                selectedMenuIds.includes(id),
+              ).length;
               const allSelected = selectedCount === groupItemIds.length;
-              const someSelected = selectedCount > 0 && selectedCount < groupItemIds.length;
+              const someSelected =
+                selectedCount > 0 && selectedCount < groupItemIds.length;
 
               return (
                 <div key={group.id} className="border rounded-lg">
@@ -764,7 +945,10 @@ export default function RoleManagement() {
                         {selectedCount}/{groupItemIds.length}
                       </Badge>
                     </div>
-                    <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+                    <div
+                      className="flex items-center space-x-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <label className="flex items-center space-x-2 cursor-pointer">
                         <input
                           type="checkbox"
@@ -775,7 +959,9 @@ export default function RoleManagement() {
                           onChange={() => toggleGroupAll(group)}
                           className="rounded"
                         />
-                        <span className="text-sm text-muted-foreground">全选</span>
+                        <span className="text-sm text-muted-foreground">
+                          全选
+                        </span>
                       </label>
                     </div>
                   </div>
@@ -790,7 +976,7 @@ export default function RoleManagement() {
                             "flex items-center space-x-2 p-2 rounded border cursor-pointer transition-colors",
                             selectedMenuIds.includes(item.id)
                               ? "bg-primary/10 border-primary"
-                              : "hover:bg-muted"
+                              : "hover:bg-muted",
                           )}
                         >
                           <input
@@ -814,7 +1000,7 @@ export default function RoleManagement() {
               取消
             </Button>
             <Button onClick={handleSaveMenuConfig} disabled={savingMenu}>
-              {savingMenu ? '保存中...' : '保存配置'}
+              {savingMenu ? "保存中..." : "保存配置"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -831,7 +1017,9 @@ export default function RoleManagement() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-muted-foreground">角色编码</Label>
-                  <p className="font-medium font-mono">{selectedRole.role_code}</p>
+                  <p className="font-medium font-mono">
+                    {selectedRole.role_code}
+                  </p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">角色名称</Label>
@@ -839,30 +1027,35 @@ export default function RoleManagement() {
                 </div>
                 <div className="col-span-2">
                   <Label className="text-muted-foreground">描述</Label>
-                  <p className="font-medium">{selectedRole.description || '-'}</p>
+                  <p className="font-medium">
+                    {selectedRole.description || "-"}
+                  </p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">数据权限</Label>
                   <p className="font-medium">
                     <Badge variant="outline">
-                      {selectedRole.data_scope === 'OWN' && '本人'}
-                      {selectedRole.data_scope === 'DEPT' && '本部门'}
-                      {selectedRole.data_scope === 'ALL' && '全部'}
+                      {selectedRole.data_scope === "OWN" && "本人"}
+                      {selectedRole.data_scope === "DEPT" && "本部门"}
+                      {selectedRole.data_scope === "ALL" && "全部"}
                     </Badge>
                   </p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">状态</Label>
                   <p className="font-medium">
-                    <Badge variant={selectedRole.is_active ? 'default' : 'secondary'}>
-                      {selectedRole.is_active ? '启用' : '禁用'}
+                    <Badge
+                      variant={selectedRole.is_active ? "default" : "secondary"}
+                    >
+                      {selectedRole.is_active ? "启用" : "禁用"}
                     </Badge>
                   </p>
                 </div>
                 <div className="col-span-2">
                   <Label className="text-muted-foreground">API权限列表</Label>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {selectedRole.permissions && selectedRole.permissions.length > 0 ? (
+                    {selectedRole.permissions &&
+                    selectedRole.permissions.length > 0 ? (
                       selectedRole.permissions.map((perm, idx) => (
                         <Badge key={idx} variant="secondary">
                           {perm}

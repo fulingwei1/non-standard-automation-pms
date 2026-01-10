@@ -2,8 +2,8 @@
  * Performance Indicators - 绩效指标配置
  * Features: 指标模板管理、指标分类、权重配置、计算规则
  */
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   Target,
   Plus,
@@ -21,79 +21,85 @@ import {
   Percent,
   Settings,
   Loader2,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Badge } from '../components/ui/badge'
-import { Input } from '../components/ui/input'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
-import { performanceApi } from '../services/api'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { Input } from "../components/ui/input";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { performanceApi } from "../services/api";
 
 // Mock data
 // Mock data - 已移除，使用真实API
 const categories = [
-  { value: 'ALL', label: '全部', color: 'slate' },
-  { value: 'WORKLOAD', label: '工作量类', color: 'blue' },
-  { value: 'TASK', label: '任务类', color: 'purple' },
-  { value: 'QUALITY', label: '质量类', color: 'emerald' },
-  { value: 'COLLABORATION', label: '协作类', color: 'amber' },
-  { value: 'GROWTH', label: '成长类', color: 'cyan' },
-]
+  { value: "ALL", label: "全部", color: "slate" },
+  { value: "WORKLOAD", label: "工作量类", color: "blue" },
+  { value: "TASK", label: "任务类", color: "purple" },
+  { value: "QUALITY", label: "质量类", color: "emerald" },
+  { value: "COLLABORATION", label: "协作类", color: "amber" },
+  { value: "GROWTH", label: "成长类", color: "cyan" },
+];
 
 const statusOptions = [
-  { value: 'ACTIVE', label: '启用', color: 'emerald' },
-  { value: 'INACTIVE', label: '停用', color: 'slate' },
-]
+  { value: "ACTIVE", label: "启用", color: "emerald" },
+  { value: "INACTIVE", label: "停用", color: "slate" },
+];
 
 export default function PerformanceIndicators() {
-  const [selectedCategory, setSelectedCategory] = useState('ALL')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [editingIndicator, setEditingIndicator] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [indicators, setIndicators] = useState(mockIndicators)
+  const [selectedCategory, setSelectedCategory] = useState("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingIndicator, setEditingIndicator] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [indicators, setIndicators] = useState(mockIndicators);
 
   // Fetch indicators from API
   useEffect(() => {
     const fetchIndicators = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
         // Try to fetch weight config which contains indicator settings
-        const weightRes = await performanceApi.getWeightConfig()
+        const weightRes = await performanceApi.getWeightConfig();
         if (weightRes.data?.indicators?.length > 0) {
-          setIndicators(weightRes.data.indicators)
+          setIndicators(weightRes.data.indicators);
         }
       } catch (err) {
-        console.log('Weight config API unavailable, using mock data')
+        console.log("Weight config API unavailable, using mock data");
       }
-      setLoading(false)
-    }
-    fetchIndicators()
-  }, [])
+      setLoading(false);
+    };
+    fetchIndicators();
+  }, []);
 
   const filteredIndicators = indicators.filter((indicator) => {
-    const matchesCategory = selectedCategory === 'ALL' || indicator.category === selectedCategory
+    const matchesCategory =
+      selectedCategory === "ALL" || indicator.category === selectedCategory;
     const matchesSearch =
       indicator.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      indicator.code.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesCategory && matchesSearch
-  })
+      indicator.code.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const totalWeight = indicators
-    .filter((ind) => ind.status === 'ACTIVE')
-    .reduce((sum, ind) => sum + ind.weight, 0)
+    .filter((ind) => ind.status === "ACTIVE")
+    .reduce((sum, ind) => sum + ind.weight, 0);
 
   const getCategoryColor = (category) => {
-    const cat = categories.find((c) => c.value === category)
-    return cat?.color || 'slate'
-  }
+    const cat = categories.find((c) => c.value === category);
+    return cat?.color || "slate";
+  };
 
   const getStatusColor = (status) => {
-    const stat = statusOptions.find((s) => s.value === status)
-    return stat?.color || 'slate'
-  }
+    const stat = statusOptions.find((s) => s.value === status);
+    return stat?.color || "slate";
+  };
 
   return (
     <motion.div
@@ -115,7 +121,10 @@ export default function PerformanceIndicators() {
               <Download className="w-4 h-4" />
               导出配置
             </Button>
-            <Button className="flex items-center gap-2" onClick={() => setShowAddModal(true)}>
+            <Button
+              className="flex items-center gap-2"
+              onClick={() => setShowAddModal(true)}
+            >
               <Plus className="w-4 h-4" />
               新建指标
             </Button>
@@ -124,7 +133,10 @@ export default function PerformanceIndicators() {
       />
 
       {/* Summary Cards */}
-      <motion.div variants={fadeIn} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <motion.div
+        variants={fadeIn}
+        className="grid grid-cols-1 md:grid-cols-4 gap-4"
+      >
         <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -133,7 +145,9 @@ export default function PerformanceIndicators() {
                 {loading ? (
                   <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
                 ) : (
-                  <p className="text-3xl font-bold text-white">{indicators.length}</p>
+                  <p className="text-3xl font-bold text-white">
+                    {indicators.length}
+                  </p>
                 )}
               </div>
               <Target className="h-8 w-8 text-blue-400" />
@@ -150,7 +164,7 @@ export default function PerformanceIndicators() {
                   <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
                 ) : (
                   <p className="text-3xl font-bold text-emerald-400">
-                    {indicators.filter((i) => i.status === 'ACTIVE').length}
+                    {indicators.filter((i) => i.status === "ACTIVE").length}
                   </p>
                 )}
               </div>
@@ -164,7 +178,9 @@ export default function PerformanceIndicators() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400 mb-1">权重总计</p>
-                <p className="text-3xl font-bold text-cyan-400">{totalWeight}%</p>
+                <p className="text-3xl font-bold text-cyan-400">
+                  {totalWeight}%
+                </p>
               </div>
               <Percent className="h-8 w-8 text-cyan-400" />
             </div>
@@ -182,7 +198,9 @@ export default function PerformanceIndicators() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400 mb-1">指标分类</p>
-                <p className="text-3xl font-bold text-purple-400">{categories.length - 1}</p>
+                <p className="text-3xl font-bold text-purple-400">
+                  {categories.length - 1}
+                </p>
               </div>
               <Settings className="h-8 w-8 text-purple-400" />
             </div>
@@ -213,13 +231,15 @@ export default function PerformanceIndicators() {
                 {categories.map((cat) => (
                   <Button
                     key={cat.value}
-                    variant={selectedCategory === cat.value ? 'default' : 'outline'}
+                    variant={
+                      selectedCategory === cat.value ? "default" : "outline"
+                    }
                     size="sm"
                     onClick={() => setSelectedCategory(cat.value)}
                     className={cn(
-                      'transition-all',
+                      "transition-all",
                       selectedCategory === cat.value &&
-                        `bg-${cat.color}-500/20 border-${cat.color}-500/50 text-${cat.color}-400`
+                        `bg-${cat.color}-500/20 border-${cat.color}-500/50 text-${cat.color}-400`,
                     )}
                   >
                     {cat.label}
@@ -254,27 +274,37 @@ export default function PerformanceIndicators() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 space-y-3">
                       <div className="flex items-center gap-3">
-                        <h3 className="text-lg font-semibold text-white">{indicator.name}</h3>
+                        <h3 className="text-lg font-semibold text-white">
+                          {indicator.name}
+                        </h3>
                         <Badge
                           className={cn(
-                            'text-xs',
-                            `bg-${getCategoryColor(indicator.category)}-500/20 text-${getCategoryColor(indicator.category)}-400 border-${getCategoryColor(indicator.category)}-500/50`
+                            "text-xs",
+                            `bg-${getCategoryColor(indicator.category)}-500/20 text-${getCategoryColor(indicator.category)}-400 border-${getCategoryColor(indicator.category)}-500/50`,
                           )}
                         >
                           {indicator.categoryName}
                         </Badge>
                         <Badge
                           className={cn(
-                            'text-xs',
-                            `bg-${getStatusColor(indicator.status)}-500/20 text-${getStatusColor(indicator.status)}-400 border-${getStatusColor(indicator.status)}-500/50`
+                            "text-xs",
+                            `bg-${getStatusColor(indicator.status)}-500/20 text-${getStatusColor(indicator.status)}-400 border-${getStatusColor(indicator.status)}-500/50`,
                           )}
                         >
-                          {statusOptions.find((s) => s.value === indicator.status)?.label}
+                          {
+                            statusOptions.find(
+                              (s) => s.value === indicator.status,
+                            )?.label
+                          }
                         </Badge>
-                        <span className="text-xs text-slate-500">{indicator.code}</span>
+                        <span className="text-xs text-slate-500">
+                          {indicator.code}
+                        </span>
                       </div>
 
-                      <p className="text-sm text-slate-400">{indicator.description}</p>
+                      <p className="text-sm text-slate-400">
+                        {indicator.description}
+                      </p>
 
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
@@ -293,7 +323,7 @@ export default function PerformanceIndicators() {
                         <div className="col-span-2">
                           <span className="text-slate-500">适用角色：</span>
                           <span className="text-slate-300 ml-1">
-                            {indicator.applicableRoles.join('、')}
+                            {indicator.applicableRoles.join("、")}
                           </span>
                         </div>
                       </div>
@@ -341,5 +371,5 @@ export default function PerformanceIndicators() {
         </Card>
       </motion.div>
     </motion.div>
-  )
+  );
 }

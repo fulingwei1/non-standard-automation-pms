@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   CheckSquare,
   Download,
@@ -10,142 +10,142 @@ import {
   Clock,
   FileSpreadsheet,
   Mail,
-} from 'lucide-react'
-import { PageHeader } from '../components/layout'
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Badge } from '../components/ui/badge'
-import { Checkbox } from '../components/ui/checkbox'
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { Checkbox } from "../components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '../components/ui/dialog'
-import { timesheetApi } from '../services/api'
-import { cn } from '../lib/utils'
-import { fadeIn, staggerContainer } from '../lib/animations'
+} from "../components/ui/dialog";
+import { timesheetApi } from "../services/api";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
 
 export default function TimesheetBatchOperations() {
-  const [loading, setLoading] = useState(false)
-  const [timesheets, setTimesheets] = useState([])
-  const [selectedIds, setSelectedIds] = useState(new Set())
-  const [showApproveDialog, setShowApproveDialog] = useState(false)
-  const [showExportDialog, setShowExportDialog] = useState(false)
-  const [showSyncDialog, setShowSyncDialog] = useState(false)
-  const [approveComment, setApproveComment] = useState('')
-  const [filterStatus, setFilterStatus] = useState('PENDING')
+  const [loading, setLoading] = useState(false);
+  const [timesheets, setTimesheets] = useState([]);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [showSyncDialog, setShowSyncDialog] = useState(false);
+  const [approveComment, setApproveComment] = useState("");
+  const [filterStatus, setFilterStatus] = useState("PENDING");
   const [filterDate, setFilterDate] = useState({
     start: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
       .toISOString()
-      .split('T')[0],
-    end: new Date().toISOString().split('T')[0],
-  })
+      .split("T")[0],
+    end: new Date().toISOString().split("T")[0],
+  });
 
   useEffect(() => {
-    loadTimesheets()
-  }, [filterStatus, filterDate])
+    loadTimesheets();
+  }, [filterStatus, filterDate]);
 
   const loadTimesheets = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const response = await timesheetApi.list({
         status: filterStatus,
         start_date: filterDate.start,
         end_date: filterDate.end,
         page_size: 100,
-      })
-      setTimesheets(response.data?.items || response.data?.data?.items || [])
+      });
+      setTimesheets(response.data?.items || response.data?.data?.items || []);
     } catch (error) {
-      console.error('加载工时记录失败:', error)
+      console.error("加载工时记录失败:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleSelectAll = (checked) => {
     if (checked) {
-      setSelectedIds(new Set(timesheets.map((t) => t.id)))
+      setSelectedIds(new Set(timesheets.map((t) => t.id)));
     } else {
-      setSelectedIds(new Set())
+      setSelectedIds(new Set());
     }
-  }
+  };
 
   const handleSelectOne = (id, checked) => {
-    const newSelected = new Set(selectedIds)
+    const newSelected = new Set(selectedIds);
     if (checked) {
-      newSelected.add(id)
+      newSelected.add(id);
     } else {
-      newSelected.delete(id)
+      newSelected.delete(id);
     }
-    setSelectedIds(newSelected)
-  }
+    setSelectedIds(newSelected);
+  };
 
   const handleBatchApprove = async () => {
     if (selectedIds.size === 0) {
-      alert('请选择要审批的记录')
-      return
+      alert("请选择要审批的记录");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
       await timesheetApi.batchApprove({
         timesheet_ids: Array.from(selectedIds),
         comment: approveComment || undefined,
-      })
-      alert(`成功审批 ${selectedIds.size} 条记录`)
-      setShowApproveDialog(false)
-      setApproveComment('')
-      setSelectedIds(new Set())
-      loadTimesheets()
+      });
+      alert(`成功审批 ${selectedIds.size} 条记录`);
+      setShowApproveDialog(false);
+      setApproveComment("");
+      setSelectedIds(new Set());
+      loadTimesheets();
     } catch (error) {
-      console.error('批量审批失败:', error)
-      alert('批量审批失败，请稍后重试')
+      console.error("批量审批失败:", error);
+      alert("批量审批失败，请稍后重试");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const handleBatchExport = async (format = 'excel') => {
+  const handleBatchExport = async (format = "excel") => {
     if (selectedIds.size === 0) {
-      alert('请选择要导出的记录')
-      return
+      alert("请选择要导出的记录");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
       // 获取选中的记录数据
       const selectedTimesheets = timesheets.filter((t) =>
-        selectedIds.has(t.id)
-      )
+        selectedIds.has(t.id),
+      );
 
       // 按项目分组导出
-      const projectGroups = {}
+      const projectGroups = {};
       selectedTimesheets.forEach((ts) => {
-        const projectId = ts.project_id || 'other'
+        const projectId = ts.project_id || "other";
         if (!projectGroups[projectId]) {
-          projectGroups[projectId] = []
+          projectGroups[projectId] = [];
         }
-        projectGroups[projectId].push(ts)
-      })
+        projectGroups[projectId].push(ts);
+      });
 
       // 导出每个项目的报表
       for (const [projectId, projectTimesheets] of Object.entries(
-        projectGroups
+        projectGroups,
       )) {
-        if (projectId === 'other') continue
+        if (projectId === "other") continue;
 
-        const firstTs = projectTimesheets[0]
-        const workDate = new Date(firstTs.work_date)
-        const year = workDate.getFullYear()
-        const month = workDate.getMonth() + 1
+        const firstTs = projectTimesheets[0];
+        const workDate = new Date(firstTs.work_date);
+        const year = workDate.getFullYear();
+        const month = workDate.getMonth() + 1;
 
         try {
           const response = await timesheetApi.getProjectReport({
@@ -153,71 +153,71 @@ export default function TimesheetBatchOperations() {
             format: format,
             start_date: filterDate.start,
             end_date: filterDate.end,
-          })
+          });
 
-          if (format === 'excel') {
+          if (format === "excel") {
             const blob = new Blob([response.data], {
-              type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            })
-            const url = window.URL.createObjectURL(blob)
-            const link = document.createElement('a')
-            link.href = url
-            link.download = `项目工时报表_${projectId}_${year}${String(month).padStart(2, '0')}.xlsx`
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-            window.URL.revokeObjectURL(url)
+              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `项目工时报表_${projectId}_${year}${String(month).padStart(2, "0")}.xlsx`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
           }
         } catch (error) {
-          console.error(`导出项目${projectId}报表失败:`, error)
+          console.error(`导出项目${projectId}报表失败:`, error);
         }
       }
 
-      alert(`成功导出 ${selectedIds.size} 条记录`)
-      setShowExportDialog(false)
+      alert(`成功导出 ${selectedIds.size} 条记录`);
+      setShowExportDialog(false);
     } catch (error) {
-      console.error('批量导出失败:', error)
-      alert('批量导出失败，请稍后重试')
+      console.error("批量导出失败:", error);
+      alert("批量导出失败，请稍后重试");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const handleBatchSync = async (syncTarget = 'all') => {
+  const handleBatchSync = async (syncTarget = "all") => {
     if (selectedIds.size === 0) {
-      alert('请选择要同步的记录')
-      return
+      alert("请选择要同步的记录");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
       // 获取选中记录的项目和日期信息
       const selectedTimesheets = timesheets.filter((t) =>
-        selectedIds.has(t.id)
-      )
+        selectedIds.has(t.id),
+      );
 
       // 按项目分组同步
-      const projectGroups = {}
+      const projectGroups = {};
       selectedTimesheets.forEach((ts) => {
-        const projectId = ts.project_id
+        const projectId = ts.project_id;
         if (projectId) {
           if (!projectGroups[projectId]) {
-            projectGroups[projectId] = []
+            projectGroups[projectId] = [];
           }
-          projectGroups[projectId].push(ts)
+          projectGroups[projectId].push(ts);
         }
-      })
+      });
 
-      let successCount = 0
-      let failCount = 0
+      let successCount = 0;
+      let failCount = 0;
 
       for (const [projectId, projectTimesheets] of Object.entries(
-        projectGroups
+        projectGroups,
       )) {
-        const firstTs = projectTimesheets[0]
-        const workDate = new Date(firstTs.work_date)
-        const year = workDate.getFullYear()
-        const month = workDate.getMonth() + 1
+        const firstTs = projectTimesheets[0];
+        const workDate = new Date(firstTs.work_date);
+        const year = workDate.getFullYear();
+        const month = workDate.getMonth() + 1;
 
         try {
           await timesheetApi.sync({
@@ -225,54 +225,52 @@ export default function TimesheetBatchOperations() {
             year: year,
             month: month,
             sync_target: syncTarget,
-          })
-          successCount += projectTimesheets.length
+          });
+          successCount += projectTimesheets.length;
         } catch (error) {
-          console.error(`同步项目${projectId}失败:`, error)
-          failCount += projectTimesheets.length
+          console.error(`同步项目${projectId}失败:`, error);
+          failCount += projectTimesheets.length;
         }
       }
 
-      alert(
-        `同步完成：成功 ${successCount} 条，失败 ${failCount} 条`
-      )
-      setShowSyncDialog(false)
-      loadTimesheets()
+      alert(`同步完成：成功 ${successCount} 条，失败 ${failCount} 条`);
+      setShowSyncDialog(false);
+      loadTimesheets();
     } catch (error) {
-      console.error('批量同步失败:', error)
-      alert('批量同步失败，请稍后重试')
+      console.error("批量同步失败:", error);
+      alert("批量同步失败，请稍后重试");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getStatusBadge = (status) => {
     const statusMap = {
-      DRAFT: { label: '草稿', variant: 'outline', color: 'text-slate-400' },
+      DRAFT: { label: "草稿", variant: "outline", color: "text-slate-400" },
       PENDING: {
-        label: '待审批',
-        variant: 'default',
-        color: 'text-yellow-500',
+        label: "待审批",
+        variant: "default",
+        color: "text-yellow-500",
       },
       APPROVED: {
-        label: '已通过',
-        variant: 'default',
-        color: 'text-green-500',
+        label: "已通过",
+        variant: "default",
+        color: "text-green-500",
       },
       REJECTED: {
-        label: '已驳回',
-        variant: 'destructive',
-        color: 'text-red-500',
+        label: "已驳回",
+        variant: "destructive",
+        color: "text-red-500",
       },
-    }
+    };
 
-    const config = statusMap[status] || statusMap.DRAFT
+    const config = statusMap[status] || statusMap.DRAFT;
     return (
       <Badge variant={config.variant} className={config.color}>
         {config.label}
       </Badge>
-    )
-  }
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -359,7 +357,7 @@ export default function TimesheetBatchOperations() {
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                {filterStatus === 'PENDING' && (
+                {filterStatus === "PENDING" && (
                   <Button
                     onClick={() => setShowApproveDialog(true)}
                     className="bg-green-600 hover:bg-green-700"
@@ -435,9 +433,9 @@ export default function TimesheetBatchOperations() {
                   <div
                     key={timesheet.id}
                     className={cn(
-                      'flex items-center gap-4 p-3 rounded bg-slate-700/50 hover:bg-slate-700/70 transition-colors',
+                      "flex items-center gap-4 p-3 rounded bg-slate-700/50 hover:bg-slate-700/70 transition-colors",
                       selectedIds.has(timesheet.id) &&
-                        'bg-blue-900/30 border border-blue-500/30'
+                        "bg-blue-900/30 border border-blue-500/30",
                     )}
                   >
                     <Checkbox
@@ -466,15 +464,17 @@ export default function TimesheetBatchOperations() {
                           {timesheet.work_hours || 0}h
                         </p>
                         <p className="text-xs text-slate-400">
-                          {timesheet.work_type || 'NORMAL'}
+                          {timesheet.work_type || "NORMAL"}
                         </p>
                       </div>
                       <div>{getStatusBadge(timesheet.status)}</div>
                       <div className="text-right">
                         <p className="text-xs text-slate-400">
                           {timesheet.created_at
-                            ? new Date(timesheet.created_at).toLocaleDateString()
-                            : '-'}
+                            ? new Date(
+                                timesheet.created_at,
+                              ).toLocaleDateString()
+                            : "-"}
                         </p>
                       </div>
                     </div>
@@ -520,7 +520,7 @@ export default function TimesheetBatchOperations() {
               className="bg-green-600 hover:bg-green-700"
               disabled={loading}
             >
-              {loading ? '审批中...' : '确认审批'}
+              {loading ? "审批中..." : "确认审批"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -548,12 +548,12 @@ export default function TimesheetBatchOperations() {
               取消
             </Button>
             <Button
-              onClick={() => handleBatchExport('excel')}
+              onClick={() => handleBatchExport("excel")}
               className="bg-blue-600 hover:bg-blue-700"
               disabled={loading}
             >
               <FileSpreadsheet className="w-4 h-4 mr-2" />
-              {loading ? '导出中...' : '导出Excel'}
+              {loading ? "导出中..." : "导出Excel"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -571,11 +571,11 @@ export default function TimesheetBatchOperations() {
             <p className="text-slate-300">选择同步目标：</p>
             <div className="space-y-2">
               {[
-                { value: 'all', label: '全部系统' },
-                { value: 'finance', label: '财务系统' },
-                { value: 'rd', label: '研发系统' },
-                { value: 'project', label: '项目系统' },
-                { value: 'hr', label: 'HR系统' },
+                { value: "all", label: "全部系统" },
+                { value: "finance", label: "财务系统" },
+                { value: "rd", label: "研发系统" },
+                { value: "project", label: "项目系统" },
+                { value: "hr", label: "HR系统" },
               ].map((option) => (
                 <label
                   key={option.value}
@@ -585,7 +585,7 @@ export default function TimesheetBatchOperations() {
                     type="radio"
                     name="syncTarget"
                     value={option.value}
-                    defaultChecked={option.value === 'all'}
+                    defaultChecked={option.value === "all"}
                     className="text-blue-500"
                   />
                   {option.label}
@@ -603,20 +603,20 @@ export default function TimesheetBatchOperations() {
             </Button>
             <Button
               onClick={() => {
-                const target = document.querySelector(
-                  'input[name="syncTarget"]:checked'
-                )?.value || 'all'
-                handleBatchSync(target)
+                const target =
+                  document.querySelector('input[name="syncTarget"]:checked')
+                    ?.value || "all";
+                handleBatchSync(target);
               }}
               className="bg-blue-600 hover:bg-blue-700"
               disabled={loading}
             >
               <RefreshCw className="w-4 h-4 mr-2" />
-              {loading ? '同步中...' : '开始同步'}
+              {loading ? "同步中..." : "开始同步"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

@@ -2,49 +2,49 @@
  * ECNLogsTab Component
  * ECN 变更日志 Tab 组件（时间线视图）
  */
-import { useState, useMemo } from 'react'
-import { Card, CardContent } from '../ui/card'
-import { Input } from '../ui/input'
+import { useState, useMemo } from "react";
+import { Card, CardContent } from "../ui/card";
+import { Input } from "../ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select'
-import { Badge } from '../ui/badge'
-import { History } from 'lucide-react'
-import { formatDate } from '../../lib/utils'
+} from "../ui/select";
+import { Badge } from "../ui/badge";
+import { History } from "lucide-react";
+import { formatDate } from "../../lib/utils";
 
 export default function ECNLogsTab({ logs }) {
-  const [logSearchKeyword, setLogSearchKeyword] = useState('')
-  const [logFilterType, setLogFilterType] = useState('all')
+  const [logSearchKeyword, setLogSearchKeyword] = useState("");
+  const [logFilterType, setLogFilterType] = useState("all");
 
   // 筛选日志
   const filteredLogs = useMemo(() => {
-    let filtered = [...logs]
+    let filtered = [...logs];
 
     // 按类型筛选
-    if (logFilterType !== 'all') {
-      filtered = filtered.filter((log) => log.log_type === logFilterType)
+    if (logFilterType !== "all") {
+      filtered = filtered.filter((log) => log.log_type === logFilterType);
     }
 
     // 按关键词搜索
     if (logSearchKeyword) {
-      const keyword = logSearchKeyword.toLowerCase()
+      const keyword = logSearchKeyword.toLowerCase();
       filtered = filtered.filter(
         (log) =>
           log.log_action?.toLowerCase().includes(keyword) ||
           log.log_content?.toLowerCase().includes(keyword) ||
-          log.created_by_name?.toLowerCase().includes(keyword)
-      )
+          log.created_by_name?.toLowerCase().includes(keyword),
+      );
     }
 
     // 按时间倒序
     return filtered.sort(
-      (a, b) => new Date(b.created_at) - new Date(a.created_at)
-    )
-  }, [logs, logFilterType, logSearchKeyword])
+      (a, b) => new Date(b.created_at) - new Date(a.created_at),
+    );
+  }, [logs, logFilterType, logSearchKeyword]);
 
   return (
     <div className="space-y-4">
@@ -80,7 +80,7 @@ export default function ECNLogsTab({ logs }) {
       {filteredLogs.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-slate-400">
-            {logs.length === 0 ? '暂无变更日志' : '没有匹配的日志'}
+            {logs.length === 0 ? "暂无变更日志" : "没有匹配的日志"}
           </CardContent>
         </Card>
       ) : (
@@ -105,16 +105,16 @@ export default function ECNLogsTab({ logs }) {
                       <div>
                         <div className="font-semibold">{log.log_action}</div>
                         <div className="text-sm text-slate-500">
-                          {log.created_by_name || `用户${log.created_by || ''}`} ·{' '}
-                          {formatDate(log.created_at)}
+                          {log.created_by_name || `用户${log.created_by || ""}`}{" "}
+                          · {formatDate(log.created_at)}
                         </div>
                       </div>
                       <Badge className="bg-slate-500">{log.log_type}</Badge>
                     </div>
                     {log.old_status && log.new_status && (
                       <div className="text-sm text-slate-600 mb-2">
-                        状态变更:{' '}
-                        <span className="font-mono">{log.old_status}</span> →{' '}
+                        状态变更:{" "}
+                        <span className="font-mono">{log.old_status}</span> →{" "}
                         <span className="font-mono">{log.new_status}</span>
                       </div>
                     )}
@@ -131,5 +131,5 @@ export default function ECNLogsTab({ logs }) {
         </div>
       )}
     </div>
-  )
+  );
 }

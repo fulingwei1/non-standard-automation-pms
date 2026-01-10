@@ -1,6 +1,6 @@
-import { TrendingUp, Info } from 'lucide-react'
-import { fadeIn } from '../../utils/weightConfigUtils'
-import { motion } from 'framer-motion'
+import { TrendingUp, Info } from "lucide-react";
+import { fadeIn } from "../../utils/weightConfigUtils";
+import { motion } from "framer-motion";
 
 /**
  * 影响范围统计组件
@@ -17,23 +17,31 @@ export const ImpactStatistics = ({ statistics }) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-4 bg-slate-900/50 rounded-lg border border-slate-700/50">
             <p className="text-sm text-slate-400 mb-2">总员工数</p>
-            <p className="text-3xl font-bold text-blue-400">{statistics.totalEmployees}</p>
+            <p className="text-3xl font-bold text-blue-400">
+              {statistics.totalEmployees}
+            </p>
           </div>
 
           <div className="p-4 bg-slate-900/50 rounded-lg border border-slate-700/50">
             <p className="text-sm text-slate-400 mb-2">受影响员工</p>
-            <p className="text-3xl font-bold text-purple-400">{statistics.affectedEmployees}</p>
+            <p className="text-3xl font-bold text-purple-400">
+              {statistics.affectedEmployees}
+            </p>
             <p className="text-xs text-slate-500 mt-1">参与项目的员工</p>
           </div>
 
           <div className="p-4 bg-slate-900/50 rounded-lg border border-slate-700/50">
             <p className="text-sm text-slate-400 mb-2">涉及部门</p>
-            <p className="text-3xl font-bold text-emerald-400">{statistics.departments}</p>
+            <p className="text-3xl font-bold text-emerald-400">
+              {statistics.departments}
+            </p>
           </div>
 
           <div className="p-4 bg-slate-900/50 rounded-lg border border-slate-700/50">
             <p className="text-sm text-slate-400 mb-2">活跃项目</p>
-            <p className="text-3xl font-bold text-amber-400">{statistics.activeProjects}</p>
+            <p className="text-3xl font-bold text-amber-400">
+              {statistics.activeProjects}
+            </p>
           </div>
         </div>
 
@@ -42,7 +50,10 @@ export const ImpactStatistics = ({ statistics }) => {
             <Info className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-slate-300">
               <p className="font-medium text-white mb-1">说明</p>
-              <p>• 对于参与项目的员工，最终得分 = 部门经理评分 × 部门权重 + 项目经理评分 × 项目权重</p>
+              <p>
+                • 对于参与项目的员工，最终得分 = 部门经理评分 × 部门权重 +
+                项目经理评分 × 项目权重
+              </p>
               <p>• 对于未参与项目的员工，直接使用部门经理评分作为最终得分</p>
               <p>• 参与多个项目的员工，项目经理评分为各项目评分的加权平均</p>
             </div>
@@ -50,5 +61,5 @@ export const ImpactStatistics = ({ statistics }) => {
         </div>
       </div>
     </motion.div>
-  )
-}
+  );
+};

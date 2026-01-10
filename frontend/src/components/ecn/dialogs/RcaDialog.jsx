@@ -10,17 +10,17 @@ import {
   DialogBody,
   DialogFooter,
   DialogDescription,
-} from '../../ui/dialog'
-import { Button } from '../../ui/button'
-import { Input } from '../../ui/input'
-import { Textarea } from '../../ui/textarea'
+} from "../../ui/dialog";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Textarea } from "../../ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../ui/select'
+} from "../../ui/select";
 
 export default function RcaDialog({
   open,
@@ -45,9 +45,7 @@ export default function RcaDialog({
             </label>
             <Select
               value={form.root_cause}
-              onValueChange={(value) =>
-                setForm({ ...form, root_cause: value })
-              }
+              onValueChange={(value) => setForm({ ...form, root_cause: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="选择根本原因类型" />
@@ -95,5 +93,5 @@ export default function RcaDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
