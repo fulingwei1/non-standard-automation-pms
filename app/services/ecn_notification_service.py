@@ -11,6 +11,132 @@ from sqlalchemy.orm import Session
 from app.models.notification import Notification
 from app.models.ecn import Ecn, EcnEvaluation, EcnApproval, EcnTask
 from app.models.user import User
+from app.models.organization import Department
+
+
+def _find_users_by_department(db: Session, department_name: str) -> List[User]:
+    """
+    根据部门名称查找用户
+
+    Args:
+        db: 数据库会话
+        department_name: 部门名称
+
+    Returns:
+        List[User]: 用户列表
+    """
+    if not department_name:
+        return []
+
+    # 首先查找部门ID
+    department = db.query(Department).filter(
+        Department.name == department_name
+    ).first()
+
+    if not department:
+        # 如果找不到部门，尝试通过用户表的department字段匹配
+        users = db.query(User).filter(
+            User.department == department_name,
+            User.is_active == True
+        ).all()
+        return users
+
+    # 通过部门ID查找用户
+    users = db.query(User).filter(
+        User.department_id == department.id,
+        User.is_active == True
+    ).all()
+
+    return users
+
+
+def _find_users_by_role(db: Session, role_code: str) -> List[User]:
+    """
+    根据角色代码查找用户
+
+    Args:
+        db: 数据库会话
+        role_code: 角色代码
+
+    Returns:
+        List[User]: 用户列表
+    """
+    if not role_code:
+        return []
+
+    users = db.query(User).join(
+        User.roles
+    ).filter(
+        User.is_active == True
+    ).all()
+
+    # 过滤匹配的角色
+    matched_users = []
+    for user in users:
+        for user_role in user.roles:
+            if user_role.role:
+                rc = user_role.role.role_code.lower() if user_role.role.role_code else ''
+                rn = user_role.role.role_name.lower() if user_role.role.role_name else ''
+                if rc == role_code.lower() or rn == role_code.lower():
+                    matched_users.append(user)
+                    break
+
+    return matched_users
+
+
+def _find_department_manager(db: Session, department_id: Optional[int] = None) -> Optional[User]:
+    """
+    查找部门经理
+
+    Args:
+        db: 数据库会话
+        department_id: 部门ID（可选）
+
+    Returns:
+        Optional[User]: 部门经理用户
+    """
+    if department_id:
+        # 在该部门查找经理角色的用户
+        users = db.query(User).filter(
+            User.department_id == department_id,
+            User.is_active == True
+        ).all()
+
+        for user in users:
+            for user_role in user.roles:
+                if user_role.role:
+                    rc = user_role.role.role_code.lower() if user_role.role.role_code else ''
+                    rn = user_role.role.role_name.lower() if user_role.role.role_name else ''
+                    if rc in ['dept_manager', 'department_manager', '部门经理'] or \
+                       rn in ['dept_manager', 'department_manager', '部门经理']:
+                        return user
+
+    return None
+
+
+def _check_all_evaluations_completed(db: Session, ecn_id: int) -> bool:
+    """
+    检查ECN的所有评估是否完成
+
+    Args:
+        db: 数据库会话
+        ecn_id: ECN ID
+
+    Returns:
+        bool: 是否所有评估都完成
+    """
+    evaluations = db.query(EcnEvaluation).filter(
+        EcnEvaluation.ecn_id == ecn_id
+    ).all()
+
+    if not evaluations:
+        return False
+
+    for eval in evaluations:
+        if eval.eval_status != 'COMPLETED':
+            return False
+
+    return True
 
 
 def create_ecn_notification(
@@ -51,17 +177,26 @@ def notify_evaluation_assigned(
     通知评估任务分配
     """
     if not evaluator_id:
-        # 如果没有指定评估人，需要根据部门查找用户
-        # TODO: 根据部门自动查找用户
+        # 如果没有指定评估人，根据部门查找用户
+        dept_users = _find_users_by_department(db, evaluation.eval_dept)
+        if dept_users:
+            # 选择部门经理作为评估人
+            dept_manager = _find_department_manager(db)
+            if dept_manager:
+                evaluator_id = dept_manager.id
+            elif dept_users:
+                evaluator_id = dept_users[0].id
+
+    if not evaluator_id:
         return
-    
+
     evaluator = db.query(User).filter(User.id == evaluator_id).first()
     if not evaluator:
         return
-    
+
     title = f"ECN评估任务分配：{ecn.ecn_no}"
     content = f"您有一个新的ECN评估任务：\n\nECN编号：{ecn.ecn_no}\nECN标题：{ecn.ecn_title}\n评估部门：{evaluation.eval_dept}\n\n请及时完成评估。"
-    
+
     create_ecn_notification(
         db=db,
         user_id=evaluator_id,
@@ -142,9 +277,40 @@ def notify_evaluation_completed(
                         "is_cc": True  # 标记为抄送
                     }
                 )
-    
+
     # 通知审批人员（如果所有评估都完成，进入审批阶段）
-    # TODO: 检查是否所有评估都完成，如果是则通知审批人员
+    if _check_all_evaluations_completed(db, ecn.id):
+        # 查找下一级审批人员
+        pending_approvals = db.query(EcnApproval).filter(
+            EcnApproval.ecn_id == ecn.id,
+            EcnApproval.approval_status == 'PENDING'
+        ).order_by(EcnApproval.approval_level).all()
+
+        for approval in pending_approvals:
+            # 根据角色查找审批人
+            role_users = _find_users_by_role(db, approval.approval_role)
+            if role_users:
+                # 通知第一个符合条件的审批人
+                approver = role_users[0]
+                title = f"ECN审批任务分配：{ecn.ecn_no}"
+                content = f"所有评估已完成，您有一个新的ECN审批任务：\n\nECN编号：{ecn.ecn_no}\nECN标题：{ecn.ecn_title}\n审批层级：第{approval.approval_level}级\n\n请及时完成审批。"
+
+                create_ecn_notification(
+                    db=db,
+                    user_id=approver.id,
+                    notification_type="ECN_APPROVAL_ASSIGNED",
+                    title=title,
+                    content=content,
+                    ecn_id=ecn.id,
+                    priority="HIGH",
+                    extra_data={
+                        "ecn_no": ecn.ecn_no,
+                        "ecn_title": ecn.ecn_title,
+                        "approval_level": approval.approval_level,
+                        "approval_id": approval.id
+                    }
+                )
+
     db.commit()
 
 
@@ -159,20 +325,24 @@ def notify_approval_assigned(
     通知审批人员，并抄送项目相关人员
     """
     if not approver_id:
-        # 如果没有指定审批人，需要根据角色查找用户
-        # TODO: 根据角色自动查找用户
+        # 如果没有指定审批人，根据角色查找用户
+        role_users = _find_users_by_role(db, approval.approval_role)
+        if role_users:
+            approver_id = role_users[0].id
+
+    if not approver_id:
         return
-    
+
     approver = db.query(User).filter(User.id == approver_id).first()
     if not approver:
         return
-    
+
     # 通知审批人员
     title = f"ECN审批任务分配：{ecn.ecn_no}"
     content = f"您有一个新的ECN审批任务：\n\nECN编号：{ecn.ecn_no}\nECN标题：{ecn.ecn_title}\n审批层级：第{approval.approval_level}级\n审批角色：{approval.approval_role}\n截止日期：{approval.due_date.strftime('%Y-%m-%d') if approval.due_date else '未设置'}\n\n请及时完成审批。"
-    
+
     priority = "URGENT" if approval.due_date and approval.due_date < datetime.now() else "HIGH"
-    
+
     create_ecn_notification(
         db=db,
         user_id=approver_id,
@@ -307,12 +477,35 @@ def notify_approval_result(
                         "is_cc": True  # 标记为抄送
                     }
                 )
-    
+
     # 如果审批通过，通知执行人员
     if result == "APPROVED":
-        # TODO: 通知执行人员
-        pass
-    
+        # 查找所有待执行的ECN任务
+        pending_tasks = db.query(EcnTask).filter(
+            EcnTask.ecn_id == ecn.id,
+            EcnTask.task_status.in_(['PENDING', 'IN_PROGRESS'])
+        ).all()
+
+        for task in pending_tasks:
+            if task.assignee_id:
+                title = f"ECN已批准，请开始执行：{ecn.ecn_no}"
+                content = f"ECN {ecn.ecn_no} 已通过审批，请开始执行您的任务。\n\n任务名称：{task.task_name}\n任务类型：{task.task_type}\n计划完成：{task.planned_end.strftime('%Y-%m-%d') if task.planned_end else '未设置'}"
+
+                create_ecn_notification(
+                    db=db,
+                    user_id=task.assignee_id,
+                    notification_type="ECN_APPROVED_EXECUTION",
+                    title=title,
+                    content=content,
+                    ecn_id=ecn.id,
+                    priority="HIGH",
+                    extra_data={
+                        "ecn_no": ecn.ecn_no,
+                        "task_id": task.id,
+                        "task_name": task.task_name
+                    }
+                )
+
     db.commit()
 
 
@@ -327,22 +520,27 @@ def notify_task_assigned(
     通知执行人员，并抄送项目相关人员
     """
     if not assignee_id:
-        # 如果没有指定执行人，需要根据部门查找用户
-        # TODO: 根据部门自动查找用户
+        # 如果没有指定执行人，根据部门查找用户
+        dept_users = _find_users_by_department(db, task.task_dept)
+        if dept_users:
+            # 选择第一个用户作为执行人
+            assignee_id = dept_users[0].id
+
+    if not assignee_id:
         return
-    
+
     assignee = db.query(User).filter(User.id == assignee_id).first()
     if not assignee:
         return
-    
+
     # 通知执行人员
     title = f"ECN执行任务分配：{ecn.ecn_no}"
     content = f"您有一个新的ECN执行任务：\n\nECN编号：{ecn.ecn_no}\nECN标题：{ecn.ecn_title}\n任务名称：{task.task_name}\n任务类型：{task.task_type}\n责任部门：{task.task_dept}\n计划完成：{task.planned_end.strftime('%Y-%m-%d') if task.planned_end else '未设置'}\n\n请及时开始执行。"
-    
+
     priority = "HIGH"
     if task.planned_end and task.planned_end < datetime.now().date():
         priority = "URGENT"
-    
+
     create_ecn_notification(
         db=db,
         user_id=assignee_id,
