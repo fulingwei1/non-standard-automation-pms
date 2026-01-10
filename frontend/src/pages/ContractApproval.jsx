@@ -81,8 +81,13 @@ export default function ContractApproval() {
   const [approvalComments, setApprovalComments] = useState('')
   const [activeTab, setActiveTab] = useState('pending')
 
+// Mock data - 已移除，使用真实API
+const [pendingApprovals, setPendingApprovals] = useState([])
+const [approvalHistory, setApprovalHistory] = useState([])
+
+
   const filteredApprovals = useMemo(() => {
-    const approvals = activeTab === 'pending' ? mockPendingApprovals : mockApprovalHistory
+    const approvals = activeTab === 'pending' ? pendingApprovals : approvalHistory
     if (!searchTerm) return approvals
     return approvals.filter(item =>
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

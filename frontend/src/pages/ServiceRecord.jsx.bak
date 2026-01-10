@@ -38,6 +38,82 @@ import { toast } from '../components/ui/toast'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { serviceApi } from '../services/api'
+,
+    status: '已完成',
+    created_at: '2026-01-06 08:00:00',
+  },
+  {
+    id: 2,
+    record_no: 'SRV-20260105-002',
+    service_type: '操作培训',
+    project_code: 'PJ250103003',
+    project_name: 'ICT在线测试设备',
+    machine_no: 'PN002',
+    customer_name: '惠州XX电池',
+    service_location: '广东省惠州市XX科技园',
+    service_date: '2026-01-05',
+    service_start_time: '14:00',
+    service_end_time: '18:00',
+    service_duration: 4,
+    service_engineer: '王工程师',
+    service_engineer_phone: '137****3456',
+    customer_contact: '张工',
+    customer_phone: '138****7890',
+    service_content: '对操作人员进行设备操作培训，包括开机、测试流程、日常维护等',
+    service_result: '完成',
+    issues_found: '操作人员对部分功能理解不够深入',
+    solutions: '已提供详细操作手册，并安排后续电话支持',
+    customer_satisfaction: 4,
+    customer_feedback: '培训内容详细，但希望有更多实操练习',
+    customer_signature: true,
+    signature_time: '2026-01-05 18:00:00',
+    photos: ['photo3.jpg'],
+    status: '已完成',
+    created_at: '2026-01-05 13:00:00',
+  },
+  {
+    id: 3,
+    record_no: 'SRV-20260104-003',
+    service_type: '故障维修',
+    project_code: 'PJ250101001',
+    project_name: 'BMS老化测试设备',
+    machine_no: 'PN003',
+    customer_name: '深圳XX科技',
+    service_location: '广东省深圳市XX科技园',
+    service_date: '2026-01-04',
+    service_start_time: '10:00',
+    service_end_time: '15:30',
+    service_duration: 5.5,
+    service_engineer: '李工程师',
+    service_engineer_phone: '136****1234',
+    customer_contact: '王工',
+    customer_phone: '135****5678',
+    service_content: '设备运行异常，出现程序崩溃问题，进行故障排查和修复',
+    service_result: '完成',
+    issues_found: '程序存在内存泄漏问题',
+    solutions: '已修复程序bug，更新软件版本，设备运行正常',
+    customer_satisfaction: 5,
+    customer_feedback: '响应及时，问题解决迅速',
+    customer_signature: true,
+    signature_time: '2026-01-04 15:30:00',
+    photos: ['photo4.jpg', 'photo5.jpg', 'photo6.jpg'],
+    status: '已完成',
+    created_at: '2026-01-04 09:00:00',
+  },
+]
+
+const serviceTypeConfig = {
+  '安装调试': { label: '安装调试', icon: Settings, color: 'text-blue-400', bg: 'bg-blue-500/20' },
+  '操作培训': { label: '操作培训', icon: Users, color: 'text-purple-400', bg: 'bg-purple-500/20' },
+  '定期维护': { label: '定期维护', icon: Wrench, color: 'text-green-400', bg: 'bg-green-500/20' },
+  '故障维修': { label: '故障维修', icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-500/20' },
+}
+
+const statusConfig = {
+  '进行中': { label: '进行中', color: 'bg-blue-500', textColor: 'text-blue-400' },
+  '已完成': { label: '已完成', color: 'bg-emerald-500', textColor: 'text-emerald-400' },
+  '已取消': { label: '已取消', color: 'bg-slate-500', textColor: 'text-slate-400' },
+}
 
 export default function ServiceRecord() {
   const navigate = useNavigate()
@@ -114,8 +190,9 @@ export default function ServiceRecord() {
       setRecords(transformedRecords)
     } catch (err) {
       console.error('Failed to load records:', err)
-      setError(err.response?.data?.detail || err.message || '加载服务记录失败')
-      setRecords([])
+      setError(err.response?.data?.detail || err.message || '加载服务记录失败')       else {
+        setRecords([])
+      }
     } finally {
       setLoading(false)
     }

@@ -36,6 +36,96 @@ import { toast } from '../components/ui/toast'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { serviceApi } from '../services/api'
+,
+    importance: '高',
+    created_by: '当前用户',
+    created_at: '2026-01-06 14:30:00',
+  },
+  {
+    id: 2,
+    communication_no: 'COM-20260105-002',
+    communication_type: '邮件',
+    customer_name: '惠州XX电池',
+    customer_contact: '张工',
+    customer_email: 'zhang@example.com',
+    project_code: 'PJ250103003',
+    project_name: 'ICT在线测试设备',
+    communication_date: '2026-01-05',
+    communication_time: '10:00',
+    topic: '操作培训',
+    subject: '操作培训需求',
+    content: '客户需要对新员工进行设备操作培训，已发送培训资料，并安排下周进行现场培训',
+    follow_up_required: true,
+    follow_up_task: '安排现场操作培训',
+    follow_up_due_date: '2026-01-12',
+    follow_up_status: '已安排',
+    tags: ['培训', '服务'],
+    importance: '中',
+    created_by: '当前用户',
+    created_at: '2026-01-05 10:00:00',
+  },
+  {
+    id: 3,
+    communication_no: 'COM-20260104-003',
+    communication_type: '现场',
+    customer_name: '深圳XX科技',
+    customer_contact: '王工',
+    customer_phone: '137****3456',
+    project_code: 'PJ250101001',
+    project_name: 'BMS老化测试设备',
+    communication_date: '2026-01-04',
+    communication_time: '15:00',
+    duration: 120,
+    location: '广东省深圳市XX科技园',
+    topic: '定期回访',
+    subject: '质保期设备回访',
+    content: '对质保期内的设备进行定期回访，检查设备运行状态，客户反馈设备运行正常，无异常问题',
+    follow_up_required: false,
+    tags: ['回访', '质保'],
+    importance: '中',
+    created_by: '当前用户',
+    created_at: '2026-01-04 15:00:00',
+  },
+  {
+    id: 4,
+    communication_no: 'COM-20260103-004',
+    communication_type: '微信',
+    customer_name: '东莞XX电子',
+    customer_contact: '李工',
+    topic: '技术支持',
+    subject: '设备参数咨询',
+    content: '客户通过微信咨询设备参数设置问题，已提供详细的技术支持',
+    follow_up_required: false,
+    tags: ['技术支持', '咨询'],
+    importance: '低',
+    created_by: '当前用户',
+    created_at: '2026-01-03 16:20:00',
+  },
+]
+
+const communicationTypeConfig = {
+  '电话': { label: '电话', icon: Phone, color: 'text-blue-400', bg: 'bg-blue-500/20' },
+  '邮件': { label: '邮件', icon: Mail, color: 'text-purple-400', bg: 'bg-purple-500/20' },
+  '现场': { label: '现场', icon: MapPin, color: 'text-green-400', bg: 'bg-green-500/20' },
+  '微信': { label: '微信', icon: MessageSquare, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
+  '会议': { label: '会议', icon: Video, color: 'text-orange-400', bg: 'bg-orange-500/20' },
+  '其他': { label: '其他', icon: MessageSquare, color: 'text-slate-400', bg: 'bg-slate-500/20' },
+}
+
+const importanceConfig = {
+  '低': { label: '低', color: 'text-slate-400', bg: 'bg-slate-500/20' },
+  '中': { label: '中', color: 'text-amber-400', bg: 'bg-amber-500/20' },
+  '高': { label: '高', color: 'text-red-400', bg: 'bg-red-500/20' },
+}
+
+const topicConfig = {
+  '设备运行问题': { label: '设备运行问题', color: 'text-red-400' },
+  '操作培训': { label: '操作培训', color: 'text-blue-400' },
+  '定期回访': { label: '定期回访', color: 'text-green-400' },
+  '技术支持': { label: '技术支持', color: 'text-purple-400' },
+  '满意度调查': { label: '满意度调查', color: 'text-amber-400' },
+  '其他': { label: '其他', color: 'text-slate-400' },
+}
 
 export default function CustomerCommunication() {
   const [communications, setCommunications] = useState([])
@@ -110,8 +200,9 @@ export default function CustomerCommunication() {
       setCommunications(transformedCommunications)
     } catch (err) {
       console.error('Failed to load communications:', err)
-      setError(err.response?.data?.detail || err.message || '加载沟通记录失败')
-      setCommunications([])
+      setError(err.response?.data?.detail || err.message || '加载沟通记录失败')       else {
+        setCommunications([])
+      }
     } finally {
       setLoading(false)
     }

@@ -503,7 +503,7 @@ def validate_g3_quote_to_contract(quote: Quote, version: QuoteVersion, items: Li
             errors.append(f"毛利率过低（{gross_margin:.2f}%），低于最低阈值{margin_threshold}%，需要审批")
         elif gross_margin < margin_warning:
             warnings.append(f"毛利率较低（{gross_margin:.2f}%），低于警告阈值{margin_warning}%，建议重新评估")
-    
+
     # 检查交期（使用配置的最小交期）
     if not version.lead_time_days or version.lead_time_days <= 0:
         errors.append("交期不能为空或必须大于0")
@@ -511,13 +511,25 @@ def validate_g3_quote_to_contract(quote: Quote, version: QuoteVersion, items: Li
         min_lead_time = settings.SALES_MIN_LEAD_TIME_DAYS
         if version.lead_time_days < min_lead_time:
             warnings.append(f"交期较短（{version.lead_time_days}天），低于建议最小交期{min_lead_time}天，请确认关键物料交期和设计/装配/调试周期")
-        
-        # TODO: 交期校验 - 需要集成物料交期查询和项目周期估算
-        # 这里可以添加更详细的交期校验逻辑
-        # 1. 查询关键物料的交期
-        # 2. 估算设计/装配/调试周期
-        # 3. 对比报价交期是否合理
-    
+
+        # 详细的交期校验（如果有数据库会话）
+        if db is not None:
+            from app.services.delivery_validation_service import delivery_validation_service
+            validation_result = delivery_validation_service.validate_delivery_date(
+                db, quote, version, items
+            )
+
+            # 根据校验结果添加警告
+            if validation_result["status"] == "WARNING":
+                for warn in validation_result.get("warnings", []):
+                    msg = warn.get("message", "")
+                    if msg:
+                        warnings.append(f"[交期校验] {msg}")
+
+            # 添加优化建议
+            for suggestion in validation_result.get("suggestions", []):
+                warnings.append(f"[优化建议] {suggestion}")
+
     # 检查风险条款
     if not version.risk_terms:
         warnings.append("风险条款未补充，建议补充风险条款与边界条款")
@@ -564,18 +576,65 @@ def validate_g4_contract_to_project(contract: Contract, deliverables: List[Contr
     # 检查合同是否已签订
     if contract.status != "SIGNED":
         errors.append("只有已签订的合同才能生成项目")
-    
+
     # 检查合同是否已关联项目（避免重复生成）
     if contract.project_id:
         errors.append("合同已关联项目，不能重复生成")
-    
-    # TODO: 检查 SOW/验收标准/BOM初版/里程碑基线是否已冻结
-    # 这里可以添加更详细的检查逻辑
-    # 1. 检查是否有 SOW 文档
-    # 2. 检查验收标准是否已确认
-    # 3. 检查 BOM 初版是否已冻结
-    # 4. 检查里程碑基线是否已确定
-    
+
+    # 检查 SOW/验收标准/BOM初版/里程碑基线是否已冻结
+    if db is not None:
+        freeze_checks = []
+
+        # 1. 检查是否有 SOW 文档（通过合同附件或技术文档）
+        from app.models.project import ProjectDocument
+        sow_documents = db.query(ProjectDocument).filter(
+            ProjectDocument.contract_id == contract.id,
+            ProjectDocument.document_type == "SOW"
+        ).count()
+
+        if sow_documents == 0:
+            freeze_checks.append("SOW文档未上传")
+        else:
+            freeze_checks.append(f"SOW文档已上传({sow_documents}份)")
+
+        # 2. 检查验收标准是否已确认
+        if contract.acceptance_summary:
+            freeze_checks.append("验收标准已填写")
+        else:
+            freeze_checks.append("验收标准未确认")
+
+        # 3. 检查 BOM 初版是否已冻结
+        from app.models.material import BomHeader
+        bom_count = db.query(BomHeader).filter(
+            BomHeader.contract_id == contract.id,
+            BomHeader.version == "1.0"  # 初版
+        ).count()
+
+        if bom_count == 0:
+            freeze_checks.append("BOM初版未创建")
+        else:
+            freeze_checks.append(f"BOM初版已创建({bom_count}个)")
+
+        # 4. 检查里程碑基线是否已确定
+        milestone_count = 0
+        if hasattr(contract, 'deliverables') and contract.deliverables:
+            # 通过交付物推算里程碑
+            from app.models.project import ProjectMilestone
+            milestone_count = db.query(ProjectMilestone).filter(
+                ProjectMilestone.contract_id == contract.id
+            ).count()
+
+        if milestone_count == 0:
+            freeze_checks.append("里程碑基线未确定")
+        else:
+            freeze_checks.append(f"里程碑已设置({milestone_count}个)")
+
+        # 汇总冻结检查结果
+        missing_items = [item for item in freeze_checks if "未" in item]
+        if missing_items:
+            # 不阻止生成项目，但给出警告
+            freeze_checks.append(f"警告：以下项目未完成 - {', '.join(missing_items)}")
+
     return len(errors) == 0, errors
 
 
@@ -2628,12 +2687,30 @@ def start_contract_approval(
             routing_params=routing_params,
             comment=approval_request.comment
         )
-        
+
         # 更新合同状态
         contract.status = ContractStatusEnum.IN_REVIEW
-        
+
         db.commit()
-        
+
+        # 发送审批通知给当前审批人
+        from app.services.notification_service import notification_service, NotificationType, NotificationPriority
+        try:
+            # 获取当前待审批的步骤
+            current_step = workflow_service.get_current_step(record.id)
+            if current_step and current_step.get("approver_id"):
+                notification_service.send_notification(
+                    db=db,
+                    recipient_id=current_step["approver_id"],
+                    notification_type=NotificationType.TASK_ASSIGNED,
+                    title=f"待审批合同: {contract.contract_name}",
+                    content=f"合同编码: {contract.contract_no}\n合同金额: ¥{float(contract.contract_amount or 0):,.2f}\n发起人: {current_user.real_name or current_user.username}",
+                    priority=NotificationPriority.HIGH,
+                    link=f"/sales/contracts/{contract.id}/approval"
+                )
+        except Exception:
+            pass  # 通知失败不影响主流程
+
         return ResponseModel(
             code=200,
             message="审批流程已启动",
@@ -2744,12 +2821,28 @@ def contract_approval_action(
                 approver_id=current_user.id,
                 comment=action_request.comment
             )
-            
+
             if record.status == ApprovalRecordStatusEnum.APPROVED:
                 # 审批完成，允许合同签订
                 contract.status = ContractStatusEnum.IN_REVIEW  # 保持待审批状态，等待签订
+
+                # 发送审批完成通知
+                from app.services.notification_service import notification_service, NotificationType, NotificationPriority
+                try:
+                    # 通知合同创建人审批已完成
+                    notification_service.send_notification(
+                        db=db,
+                        recipient_id=contract.created_by,
+                        notification_type=NotificationType.TASK_APPROVED,
+                        title=f"合同审批已完成: {contract.contract_name}",
+                        content=f"合同编号: {contract.contract_no}\n审批人: {current_user.real_name or current_user.username}",
+                        priority=NotificationPriority.NORMAL,
+                        link=f"/sales/contracts/{contract.id}"
+                    )
+                except Exception:
+                    pass  # 通知失败不影响主流程
             message = "审批通过"
-            
+
         elif action_request.action == ApprovalActionEnum.REJECT:
             record = workflow_service.reject_step(
                 record_id=record.id,
@@ -2758,11 +2851,26 @@ def contract_approval_action(
             )
             contract.status = ContractStatusEnum.CANCELLED
             message = "审批已驳回"
-            
+
+            # 发送驳回通知
+            from app.services.notification_service import notification_service, NotificationType, NotificationPriority
+            try:
+                notification_service.send_notification(
+                    db=db,
+                    recipient_id=contract.created_by,
+                    notification_type=NotificationType.TASK_REJECTED,
+                    title=f"合同审批已驳回: {contract.contract_name}",
+                    content=f"合同编号: {contract.contract_no}\n驳回原因: {action_request.comment or '无'}",
+                    priority=NotificationPriority.HIGH,
+                    link=f"/sales/contracts/{contract.id}"
+                )
+            except Exception:
+                pass
+
         elif action_request.action == ApprovalActionEnum.DELEGATE:
             if not action_request.delegate_to_id:
                 raise HTTPException(status_code=400, detail="委托操作需要指定委托给的用户ID")
-            
+
             record = workflow_service.delegate_step(
                 record_id=record.id,
                 approver_id=current_user.id,
@@ -2770,7 +2878,22 @@ def contract_approval_action(
                 comment=action_request.comment
             )
             message = "审批已委托"
-            
+
+            # 发送委托通知
+            from app.services.notification_service import notification_service, NotificationType
+            try:
+                notification_service.send_notification(
+                    db=db,
+                    recipient_id=action_request.delegate_to_id,
+                    notification_type=NotificationType.TASK_ASSIGNED,
+                    title=f"合同审批已委托给您: {contract.contract_name}",
+                    content=f"原审批人: {current_user.real_name or current_user.username}\n合同编码: {contract.contract_no}",
+                    priority=notification_service.NotificationPriority.NORMAL,
+                    link=f"/sales/contracts/{contract.id}/approval"
+                )
+            except Exception:
+                pass
+
         elif action_request.action == ApprovalActionEnum.WITHDRAW:
             record = workflow_service.withdraw_approval(
                 record_id=record.id,
@@ -2779,18 +2902,18 @@ def contract_approval_action(
             )
             contract.status = ContractStatusEnum.DRAFT
             message = "审批已撤回"
-            
+
         else:
             raise HTTPException(status_code=400, detail=f"不支持的审批操作: {action_request.action}")
-        
+
         db.commit()
-        
+
         return ResponseModel(
             code=200,
             message=message,
             data={"approval_record_id": record.id, "status": record.status}
         )
-        
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -5498,136 +5621,39 @@ def get_payment_statistics(
 
     注意：此路由必须定义在 /payments/{payment_id} 之前，否则 FastAPI 会将 "statistics" 解析为 payment_id
     """
-    query = db.query(Invoice).filter(Invoice.status == "ISSUED")
-
-    if customer_id:
-        query = query.join(Contract).filter(Contract.customer_id == customer_id)
-
-    if start_date:
-        # 如果 issue_date 为 NULL，使用 created_at 作为替代进行日期过滤
-        query = query.filter(
-            or_(
-                and_(
-                    Invoice.issue_date.isnot(None),
-                    Invoice.issue_date >= start_date
-                ),
-                and_(
-                    Invoice.issue_date.is_(None),
-                    Invoice.created_at >= datetime.combine(start_date, datetime.min.time())
-                )
-            )
-        )
-
-    if end_date:
-        # 如果 issue_date 为 NULL，使用 created_at 作为替代进行日期过滤
-        query = query.filter(
-            or_(
-                and_(
-                    Invoice.issue_date.isnot(None),
-                    Invoice.issue_date <= end_date
-                ),
-                and_(
-                    Invoice.issue_date.is_(None),
-                    Invoice.created_at <= datetime.combine(end_date, datetime.max.time())
-                )
-            )
-        )
-
+    from app.services.payment_statistics_service import (
+        build_invoice_query,
+        calculate_monthly_statistics,
+        calculate_customer_statistics,
+        calculate_status_statistics,
+        calculate_overdue_amount,
+        build_monthly_list,
+        build_customer_list
+    )
+    
+    # 构建查询
+    query = build_invoice_query(db, customer_id, start_date, end_date)
     invoices = query.all()
-
+    
     today = date.today()
-
-    # 按月份统计
-    monthly_stats = {}
-    # 按客户统计
-    customer_stats = {}
-    # 按状态统计
-    status_stats = {
-        "PAID": {"count": 0, "amount": Decimal("0")},
-        "PARTIAL": {"count": 0, "amount": Decimal("0")},
-        "PENDING": {"count": 0, "amount": Decimal("0")},
-    }
-
-    total_invoiced = Decimal("0")
-    total_paid = Decimal("0")
-    total_unpaid = Decimal("0")
-    total_overdue = Decimal("0")
-
-    for invoice in invoices:
-        total = invoice.total_amount or invoice.amount or Decimal("0")
-        paid = invoice.paid_amount or Decimal("0")
-        unpaid = total - paid
-
-        total_invoiced += total
-        total_paid += paid
-        total_unpaid += unpaid
-
-        # 按月份统计
-        if invoice.issue_date:
-            month_key = invoice.issue_date.strftime("%Y-%m")
-            if month_key not in monthly_stats:
-                monthly_stats[month_key] = {"invoiced": Decimal("0"), "paid": Decimal("0"), "count": 0}
-            monthly_stats[month_key]["invoiced"] += total
-            monthly_stats[month_key]["paid"] += paid
-            monthly_stats[month_key]["count"] += 1
-
-        # 按客户统计
-        if contract := invoice.contract:
-            customer_id_key = contract.customer_id
-            customer_name = contract.customer.customer_name if contract.customer else "未知客户"
-            if customer_id_key not in customer_stats:
-                customer_stats[customer_id_key] = {
-                    "customer_id": customer_id_key,
-                    "customer_name": customer_name,
-                    "invoiced": Decimal("0"),
-                    "paid": Decimal("0"),
-                    "unpaid": Decimal("0"),
-                    "count": 0
-                }
-            customer_stats[customer_id_key]["invoiced"] += total
-            customer_stats[customer_id_key]["paid"] += paid
-            customer_stats[customer_id_key]["unpaid"] += unpaid
-            customer_stats[customer_id_key]["count"] += 1
-
-        # 按状态统计
-        status = invoice.payment_status or "PENDING"
-        if status in status_stats:
-            status_stats[status]["count"] += 1
-            status_stats[status]["amount"] += total
-
-        # 逾期统计
-        if invoice.due_date and invoice.due_date < today and invoice.payment_status in ["PENDING", "PARTIAL"]:
-            total_overdue += unpaid
-
-    # 转换月度统计为列表
-    monthly_list = [
-        {
-            "month": month,
-            "invoiced": float(stats["invoiced"]),
-            "paid": float(stats["paid"]),
-            "unpaid": float(stats["invoiced"] - stats["paid"]),
-            "collection_rate": float((stats["paid"] / stats["invoiced"] * 100) if stats["invoiced"] > 0 else 0),
-            "count": stats["count"]
-        }
-        for month, stats in sorted(monthly_stats.items())
-    ]
-
-    # 转换客户统计为列表
-    customer_list = [
-        {
-            "customer_id": stats["customer_id"],
-            "customer_name": stats["customer_name"],
-            "invoiced": float(stats["invoiced"]),
-            "paid": float(stats["paid"]),
-            "unpaid": float(stats["unpaid"]),
-            "collection_rate": float((stats["paid"] / stats["invoiced"] * 100) if stats["invoiced"] > 0 else 0),
-            "count": stats["count"]
-        }
-        for stats in sorted(customer_stats.values(), key=lambda x: x["unpaid"], reverse=True)
-    ]
-
+    
+    # 计算各项统计
+    monthly_stats = calculate_monthly_statistics(invoices)
+    customer_stats = calculate_customer_statistics(invoices)
+    status_stats = calculate_status_statistics(invoices)
+    
+    # 计算汇总
+    total_invoiced = sum([invoice.total_amount or invoice.amount or Decimal("0") for invoice in invoices])
+    total_paid = sum([invoice.paid_amount or Decimal("0") for invoice in invoices])
+    total_unpaid = total_invoiced - total_paid
+    total_overdue = calculate_overdue_amount(invoices, today)
+    
     collection_rate = (total_paid / total_invoiced * 100) if total_invoiced > 0 else Decimal("0")
-
+    
+    # 构建列表
+    monthly_list = build_monthly_list(monthly_stats)
+    customer_list = build_customer_list(customer_stats, limit=10)
+    
     return ResponseModel(
         code=200,
         message="success",
@@ -5641,7 +5667,7 @@ def get_payment_statistics(
                 "invoice_count": len(invoices),
             },
             "monthly_statistics": monthly_list,
-            "customer_statistics": customer_list[:10],  # 只返回前10个客户
+            "customer_statistics": customer_list,
             "status_statistics": {
                 "PAID": {
                     "count": status_stats["PAID"]["count"],
@@ -8047,6 +8073,92 @@ def check_quote_cost(
     )
 
 
+@router.get("/quotes/{quote_id}/delivery-validation", response_model=ResponseModel)
+def validate_quote_delivery(
+    *,
+    db: Session = Depends(deps.get_db),
+    quote_id: int,
+    version_id: Optional[int] = Query(None, description="报价版本ID，不指定则使用当前版本"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    交期校验API
+
+    验证报价交期的合理性，包括：
+    - 物料交期查询
+    - 项目周期估算
+    - 交期合理性分析
+    - 优化建议
+    """
+    from app.services.delivery_validation_service import delivery_validation_service
+
+    # 获取报价单
+    quote = db.query(Quote).filter(Quote.id == quote_id).first()
+    if not quote:
+        raise HTTPException(status_code=404, detail="报价不存在")
+
+    # 获取版本
+    if version_id:
+        version = db.query(QuoteVersion).filter(
+            QuoteVersion.id == version_id,
+            QuoteVersion.quote_id == quote_id
+        ).first()
+    else:
+        version = db.query(QuoteVersion).filter(
+            QuoteVersion.quote_id == quote_id,
+            QuoteVersion.is_current == True
+        ).first()
+
+    if not version:
+        raise HTTPException(status_code=404, detail="报价版本不存在")
+
+    # 获取报价明细
+    items = db.query(QuoteItem).filter(
+        QuoteItem.quote_version_id == version.id
+    ).all()
+
+    # 执行交期校验
+    validation_result = delivery_validation_service.validate_delivery_date(
+        db, quote, version, items
+    )
+
+    return ResponseModel(
+        code=200,
+        message="交期校验完成",
+        data=validation_result
+    )
+
+
+@router.get("/quotes/project-cycle-estimate", response_model=ResponseModel)
+def estimate_project_cycle(
+    *,
+    contract_amount: Optional[float] = Query(None, description="合同金额（用于估算）"),
+    project_type: Optional[str] = Query(None, description="项目类型"),
+    complexity_level: str = Query("MEDIUM", description="复杂度：SIMPLE/MEDIUM/COMPLEX"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    项目周期估算API
+
+    根据项目类型、金额、复杂度估算项目周期
+    返回各阶段工期建议
+    """
+    from app.services.delivery_validation_service import DeliveryValidationService
+
+    cycle_estimate = DeliveryValidationService.estimate_project_cycle(
+        db=None,  # 不需要数据库
+        contract_amount=contract_amount,
+        project_type=project_type,
+        complexity_level=complexity_level
+    )
+
+    return ResponseModel(
+        code=200,
+        message="项目周期估算完成",
+        data=cycle_estimate
+    )
+
+
 @router.post("/quotes/{quote_id}/cost-approval/submit", response_model=QuoteCostApprovalResponse, status_code=201)
 def submit_cost_approval(
     *,
@@ -8583,6 +8695,12 @@ def get_cost_match_suggestions(
     获取成本匹配建议（AI生成建议，不直接更新）
     根据物料名称和规格，从采购物料成本清单中生成匹配建议，包含异常检查
     """
+    from app.services.cost_match_suggestion_service import (
+        process_cost_match_suggestions,
+        check_overall_anomalies,
+        calculate_summary
+    )
+    
     quote = db.query(Quote).filter(Quote.id == quote_id).first()
     if not quote:
         raise HTTPException(status_code=404, detail="报价不存在")
@@ -8597,148 +8715,34 @@ def get_cost_match_suggestions(
     
     items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == target_version_id).all()
     
-    suggestions = []
-    matched_count = 0
-    unmatched_count = 0
-    warnings = []
-    
     # 获取成本清单查询
     cost_query = db.query(PurchaseMaterialCost).filter(
         PurchaseMaterialCost.is_active == True,
         PurchaseMaterialCost.is_standard_part == True
     )
     
-    # 计算当前总成本（用于异常检查）
-    current_total_cost = sum([float(item.cost or 0) * float(item.qty or 0) for item in items])
+    # 处理成本匹配建议
+    suggestions, matched_count, unmatched_count, _, current_total_cost = process_cost_match_suggestions(
+        db, items, cost_query
+    )
+    
+    # 计算当前总价格
     current_total_price = float(version.total_price or 0)
     
-    for item in items:
-        current_cost = float(item.cost or 0)
-        item_warnings = []
-        matched_cost = None
-        match_score = None
-        reason = None
-        
-        # 如果已有成本，检查异常
-        if current_cost > 0:
-            # 检查成本是否过高或过低（相对于历史采购价）
-            if item.item_name:
-                historical_costs = cost_query.filter(
-                    PurchaseMaterialCost.material_name.like(f"%{item.item_name}%")
-                ).all()
-                
-                if historical_costs:
-                    avg_cost = sum([float(c.unit_cost or 0) for c in historical_costs]) / len(historical_costs)
-                    max_cost = max([float(c.unit_cost or 0) for c in historical_costs])
-                    min_cost = min([float(c.unit_cost or 0) for c in historical_costs])
-                    
-                    if current_cost > max_cost * 1.5:
-                        item_warnings.append(f"成本异常偏高：当前{current_cost}，历史最高{max_cost}，超出50%")
-                    elif current_cost < min_cost * 0.5:
-                        item_warnings.append(f"成本异常偏低：当前{current_cost}，历史最低{min_cost}，低于50%")
-                    elif abs(current_cost - avg_cost) / avg_cost > 0.3:
-                        item_warnings.append(f"成本偏差较大：当前{current_cost}，历史平均{avg_cost:.2f}，偏差超过30%")
-        else:
-            # 尝试匹配成本
-            if item.item_name:
-                # 1. 精确匹配
-                exact_match = cost_query.filter(
-                    PurchaseMaterialCost.material_name == item.item_name
-                ).order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.purchase_date)).first()
-                
-                if exact_match:
-                    matched_cost = exact_match
-                    match_score = 100
-                    reason = "精确匹配物料名称"
-                else:
-                    # 2. 模糊匹配
-                    fuzzy_matches = cost_query.filter(
-                        PurchaseMaterialCost.material_name.like(f"%{item.item_name}%")
-                    ).order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.purchase_date)).limit(1).all()
-                    
-                    if fuzzy_matches:
-                        matched_cost = fuzzy_matches[0]
-                        match_score = 80
-                        reason = "模糊匹配物料名称"
-                    else:
-                        # 3. 关键词匹配
-                        keywords = item.item_name.split()
-                        for keyword in keywords:
-                            if len(keyword) > 2:
-                                keyword_matches = cost_query.filter(
-                                    or_(
-                                        PurchaseMaterialCost.material_name.like(f"%{keyword}%"),
-                                        PurchaseMaterialCost.match_keywords.like(f"%{keyword}%")
-                                    )
-                                ).order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.usage_count)).limit(1).all()
-                                
-                                if keyword_matches:
-                                    matched_cost = keyword_matches[0]
-                                    match_score = 60
-                                    reason = f"关键词匹配：{keyword}"
-                                    break
-        
-        # 构建建议
-        suggestion = CostMatchSuggestion(
-            item_id=item.id,
-            item_name=item.item_name or "",
-            current_cost=Decimal(str(current_cost)) if current_cost > 0 else None,
-            suggested_cost=Decimal(str(matched_cost.unit_cost)) if matched_cost else None,
-            match_score=match_score,
-            suggested_specification=matched_cost.specification if matched_cost else None,
-            suggested_unit=matched_cost.unit if matched_cost else None,
-            suggested_lead_time_days=matched_cost.lead_time_days if matched_cost else None,
-            suggested_cost_category=matched_cost.material_type if matched_cost else None,
-            reason=reason,
-            warnings=item_warnings
-        )
-        
-        # 添加匹配到的成本记录信息
-        if matched_cost:
-            matched_cost_dict = {
-                **{c.name: getattr(matched_cost, c.name) for c in matched_cost.__table__.columns},
-                "submitter_name": matched_cost.submitter.real_name if matched_cost.submitter else None
-            }
-            suggestion.matched_cost_record = PurchaseMaterialCostResponse(**matched_cost_dict)
-            matched_count += 1
-        else:
-            unmatched_count += 1
-            if not item.cost or item.cost == 0:
-                suggestion.warnings.append("未找到匹配的成本记录，请手动填写")
-        
-        suggestions.append(suggestion)
+    # 计算建议总成本
+    suggested_total_cost = sum([
+        float(s.suggested_cost or s.current_cost or 0) * 
+        float(next((item.qty for item in items if item.id == s.item_id), 0) or 0)
+        for s in suggestions
+    ])
     
     # 整体异常检查
-    if current_total_price > 0:
-        suggested_total_cost = sum([
-            float(s.suggested_cost or s.current_cost or 0) * 
-            float(next((item.qty for item in items if item.id == s.item_id), 0) or 0)
-            for s in suggestions
-        ])
-        
-        if suggested_total_cost > 0:
-            suggested_margin = ((current_total_price - suggested_total_cost) / current_total_price * 100)
-            current_margin = ((current_total_price - current_total_cost) / current_total_price * 100) if current_total_cost > 0 else None
-            
-            if suggested_margin < 10:
-                warnings.append(f"建议成本计算后毛利率仅{suggested_margin:.2f}%，低于10%，存在风险")
-            elif current_margin and abs(suggested_margin - current_margin) > 10:
-                warnings.append(f"建议成本与当前成本差异较大：当前毛利率{current_margin:.2f}%，建议毛利率{suggested_margin:.2f}%")
+    warnings = check_overall_anomalies(
+        current_total_price, current_total_cost, suggested_total_cost, items, suggestions
+    )
     
-    summary = {
-        "current_total_cost": current_total_cost,
-        "suggested_total_cost": sum([
-            float(s.suggested_cost or s.current_cost or 0) * 
-            float(next((item.qty for item in items if item.id == s.item_id), 0) or 0)
-            for s in suggestions
-        ]),
-        "current_total_price": current_total_price,
-        "current_margin": ((current_total_price - current_total_cost) / current_total_price * 100) if current_total_price > 0 and current_total_cost > 0 else None,
-        "suggested_margin": None
-    }
-    
-    if summary["suggested_total_cost"] > 0 and current_total_price > 0:
-        summary["suggested_margin"] = ((current_total_price - summary["suggested_total_cost"]) / current_total_price * 100)
+    # 计算汇总
+    summary = calculate_summary(current_total_cost, current_total_price, items, suggestions)
     
     return CostMatchSuggestionsResponse(
         suggestions=suggestions,

@@ -52,65 +52,7 @@ import { purchaseApi, supplierApi, progressApi } from '../services/api'
 import { ApiIntegrationError } from '../components/ui'
 
 // Mock statistics - 已移除，使用真实API
-/* const mockStats = {
-  pendingApprovals: 12,
-  inTransitOrders: 28,
-  shortageAlerts: 5,
-  activeSuppliers: 45,
-  budgetUsed: 68.5,
-  onTimeRate: 94.2,
-  monthlySpending: 2850000,
-  costSavings: 125000,
-  teamSize: 8,
-  activeTeamMembers: 7,
-} */
 
-/* const mockPendingApprovals = [
-  {
-    id: 1,
-    orderNo: 'PO-2025-0018',
-    supplier: '深圳XX供应商',
-    items: '铝合金型材 x100米',
-    amount: 18000,
-    submitter: '陈采购',
-    submitTime: '2025-01-06 10:30',
-    priority: 'high',
-    daysPending: 0,
-  },
-  {
-    id: 2,
-    orderNo: 'PO-2025-0019',
-    supplier: '东莞精密工厂',
-    items: '钣金件组件 x50套',
-    amount: 140000,
-    submitter: '褚工',
-    submitTime: '2025-01-06 09:15',
-    priority: 'high',
-    daysPending: 0,
-  },
-  {
-    id: 3,
-    orderNo: 'PO-2025-0020',
-    supplier: '苏州电器供应',
-    items: '电控柜 x20套',
-    amount: 170000,
-    submitter: '陈采购',
-    submitTime: '2025-01-05 16:45',
-    priority: 'medium',
-    daysPending: 1,
-  },
-  {
-    id: 4,
-    orderNo: 'PO-2025-0021',
-    supplier: '佛山XX铸造厂',
-    items: '机械零件 x200件',
-    amount: 9000,
-    submitter: '褚工',
-    submitTime: '2025-01-05 14:20',
-    priority: 'low',
-    daysPending: 1,
-  },
-] */
 
 /* const mockTeamMembers = [
   {

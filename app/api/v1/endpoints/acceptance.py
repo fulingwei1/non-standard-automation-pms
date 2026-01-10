@@ -2140,6 +2140,13 @@ def generate_acceptance_report(
     """
     生成验收报告
     """
+    from app.services.acceptance_report_service import (
+        generate_report_no,
+        get_report_version,
+        build_report_content,
+        save_report_file
+    )
+    
     order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="验收单不存在")
@@ -2147,122 +2154,20 @@ def generate_acceptance_report(
     if order.status != "COMPLETED":
         raise HTTPException(status_code=400, detail="只有已完成的验收单才能生成报告")
     
-    # 检查是否已有相同类型的报告
-    existing_report = db.query(AcceptanceReport).filter(
-        AcceptanceReport.order_id == order_id,
-        AcceptanceReport.report_type == report_in.report_type
-    ).order_by(desc(AcceptanceReport.version)).first()
-    
-    version = 1
-    if existing_report:
-        version = existing_report.version + 1
-    
+    # 生成报告编号和版本
     report_no = generate_report_no(db, report_in.report_type)
+    version = get_report_version(db, order_id, report_in.report_type)
     
-    # 生成报告文件
-    report_dir = os.path.join(settings.UPLOAD_DIR, "reports")
-    os.makedirs(report_dir, exist_ok=True)
+    # 构建报告内容
+    report_content = build_report_content(db, order, report_no, version, current_user)
     
-    # 准备报告内容（用于文本版本和数据库存储）
-    project_name = order.project.project_name if getattr(order, "project", None) else None
-    machine_name = order.machine.machine_name if getattr(order, "machine", None) else None
-    qa_signer_name = None
-    if order.qa_signer_id:
-        qa_user = db.query(User).filter(User.id == order.qa_signer_id).first()
-        if qa_user:
-            qa_signer_name = qa_user.real_name or qa_user.username
-    total_issues = (
-        db.query(func.count(AcceptanceIssue.id))
-        .filter(AcceptanceIssue.order_id == order_id)
-        .scalar()
-    ) or 0
-    resolved_issues = (
-        db.query(func.count(AcceptanceIssue.id))
-        .filter(
-            AcceptanceIssue.order_id == order_id,
-            AcceptanceIssue.status.in_(["RESOLVED", "CLOSED"]),
-        )
-        .scalar()
-    ) or 0
-    order_completed_at = order.actual_end_date
-
-    report_content = f"""
-验收报告
-
-报告编号：{report_no}
-验收单号：{order.order_no}
-报告类型：{report_in.report_type}
-版本号：{version}
-
-项目信息：
-- 项目名称：{project_name or 'N/A'}
-- 机台名称：{machine_name or 'N/A'}
-
-验收结果：
-- 验收状态：{order.status}
-- 验收日期：{order_completed_at.strftime('%Y-%m-%d') if order_completed_at else 'N/A'}
-- 合格率：{order.pass_rate or 0}%
-
-检查项统计：
-- 总检查项：{order.total_items or 0}
-- 合格项：{order.passed_items or 0}
-- 不合格项：{order.failed_items or 0}
-
-问题统计：
-- 总问题数：{total_issues}
-- 已解决：{resolved_issues}
-- 待解决：{total_issues - resolved_issues}
-
-签字信息：
-- 质检签字：{qa_signer_name or 'N/A'}
-- 客户签字：{order.customer_signer or 'N/A'}
-
-报告生成时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-生成人：{current_user.real_name or current_user.username}
-"""
+    # 保存报告文件
+    file_rel_path, file_size, file_hash = save_report_file(
+        report_content, report_no, report_in.report_type,
+        report_in.include_signatures, order, db, current_user
+    )
     
-    # 尝试生成PDF报告
-    file_rel_path = None
-    file_size = None
-    file_hash = None
-    
-    try:
-        if REPORTLAB_AVAILABLE:
-            # 生成PDF
-            pdf_bytes = generate_pdf_report(
-                order=order,
-                db=db,
-                report_no=report_no,
-                version=version,
-                current_user=current_user,
-                include_signatures=report_in.include_signatures
-            )
-            
-            # 保存PDF文件
-            file_rel_path = f"reports/{report_no}.pdf"
-            file_full_path = os.path.join(settings.UPLOAD_DIR, file_rel_path)
-            with open(file_full_path, "wb") as f:
-                f.write(pdf_bytes)
-            file_size = len(pdf_bytes)
-            file_hash = hashlib.sha256(pdf_bytes).hexdigest()
-        else:
-            # reportlab不可用，使用文本格式
-            raise ImportError("reportlab库未安装")
-            
-    except Exception as e:
-        # 如果PDF生成失败，回退到文本格式
-        logger = logging.getLogger(__name__)
-        logger.warning(f"PDF生成失败，使用文本格式: {str(e)}", exc_info=True)
-        
-        # 生成文本报告
-        file_rel_path = f"reports/{report_no}.txt"
-        file_full_path = os.path.join(settings.UPLOAD_DIR, file_rel_path)
-        file_bytes = report_content.encode("utf-8")
-        with open(file_full_path, "wb") as f:
-            f.write(file_bytes)
-        file_size = len(file_bytes)
-        file_hash = hashlib.sha256(file_bytes).hexdigest()
-    
+    # 创建报告记录
     report = AcceptanceReport(
         order_id=order_id,
         report_no=report_no,

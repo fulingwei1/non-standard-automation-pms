@@ -2970,6 +2970,11 @@ def get_change_impact_analysis(
     项目变更影响分析
     分析项目变更对其他项目、资源、成本等的影响
     """
+    from app.services.change_impact_analysis_service import (
+        build_impact_analysis,
+        calculate_change_statistics
+    )
+    
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
@@ -2981,145 +2986,14 @@ def get_change_impact_analysis(
     
     changes = query.all()
     
-    impact_analysis = []
+    # 构建影响分析
+    impact_analysis = [
+        build_impact_analysis(db, change, project, project_id)
+        for change in changes
+    ]
     
-    for change in changes:
-        impacts = {
-            'change_id': change.id,
-            'change_no': change.change_no,
-            'change_type': change.change_type,
-            'change_level': change.change_level,
-            'title': change.title,
-            'status': change.status,
-            'impacts': {}
-        }
-        
-        if change.schedule_impact:
-            impacts['impacts']['schedule'] = {
-                'description': change.schedule_impact,
-                'affected_items': [],
-                'severity': 'HIGH' if change.change_level == 'CRITICAL' else 'MEDIUM',
-            }
-            
-            if change.status == 'APPROVED':
-                affected_tasks = db.query(Task).filter(
-                    Task.project_id == project_id,
-                    Task.status.in_(['PENDING', 'IN_PROGRESS'])
-                ).all()
-                
-                impacts['impacts']['schedule']['affected_items'] = [
-                    {
-                        'task_id': task.id,
-                        'task_name': task.task_name,
-                        'plan_start': task.plan_start.isoformat() if task.plan_start else None,
-                        'plan_end': task.plan_end.isoformat() if task.plan_end else None,
-                    }
-                    for task in affected_tasks[:10]
-                ]
-        
-        if change.cost_impact:
-            impacts['impacts']['cost'] = {
-                'cost_impact': float(change.cost_impact),
-                'description': f"预计成本影响：{change.cost_impact}元",
-                'severity': 'HIGH' if abs(float(change.cost_impact or 0)) > project.budget_amount * 0.1 else 'MEDIUM',
-            }
-        
-        if change.resource_impact:
-            impacts['impacts']['resource'] = {
-                'description': change.resource_impact,
-                'affected_resources': [],
-                'severity': 'MEDIUM',
-            }
-            
-            if change.status == 'APPROVED':
-                affected_allocations = db.query(PmoResourceAllocation).filter(
-                    PmoResourceAllocation.project_id == project_id,
-                    PmoResourceAllocation.status != 'CANCELLED'
-                ).all()
-                
-                impacts['impacts']['resource']['affected_resources'] = [
-                    {
-                        'allocation_id': alloc.id,
-                        'resource_name': alloc.resource_name,
-                        'allocation_percent': alloc.allocation_percent,
-                        'start_date': alloc.start_date.isoformat() if alloc.start_date else None,
-                        'end_date': alloc.end_date.isoformat() if alloc.end_date else None,
-                    }
-                    for alloc in affected_allocations[:10]
-                ]
-        
-        related_project_impacts = []
-        if change.resource_impact and change.status == 'APPROVED':
-            project_resources = db.query(PmoResourceAllocation).filter(
-                PmoResourceAllocation.project_id == project_id,
-                PmoResourceAllocation.status != 'CANCELLED'
-            ).all()
-            
-            resource_ids = [alloc.resource_id for alloc in project_resources]
-            
-            if resource_ids:
-                shared_projects = (
-                    db.query(PmoResourceAllocation.project_id)
-                    .filter(
-                        PmoResourceAllocation.resource_id.in_(resource_ids),
-                        PmoResourceAllocation.project_id != project_id,
-                        PmoResourceAllocation.status != 'CANCELLED'
-                    )
-                    .distinct()
-                    .all()
-                )
-                
-                for (related_project_id,) in shared_projects:
-                    related_project = db.query(Project).filter(Project.id == related_project_id).first()
-                    if related_project:
-                        related_project_impacts.append({
-                            'project_id': related_project_id,
-                            'project_code': related_project.project_code,
-                            'project_name': related_project.project_name,
-                            'impact_reason': '共享资源可能受影响',
-                        })
-        
-        impacts['impacts']['related_projects'] = {
-            'affected_projects': related_project_impacts,
-            'count': len(related_project_impacts),
-        }
-        
-        impact_analysis.append(impacts)
-    
-    total_cost_impact = sum(
-        abs(float(change.cost_impact or 0)) 
-        for change in changes 
-        if change.cost_impact
-    )
-    
-    stats = {
-        'total_changes': len(changes),
-        'by_type': {},
-        'by_level': {},
-        'by_status': {},
-        'total_cost_impact': total_cost_impact,
-        'affected_projects_count': len(set(
-            proj['project_id'] 
-            for impact in impact_analysis 
-            for proj in impact.get('impacts', {}).get('related_projects', {}).get('affected_projects', [])
-        )),
-    }
-    
-    for change in changes:
-        change_type = change.change_type or 'OTHER'
-        if change_type not in stats['by_type']:
-            stats['by_type'][change_type] = 0
-        stats['by_type'][change_type] += 1
-        
-        change_level = change.change_level or 'MINOR'
-        if change_level not in stats['by_level']:
-            stats['by_level'][change_level] = 0
-        stats['by_level'][change_level] += 1
-        
-        change_status = change.status or 'DRAFT'
-        if change_status not in stats['by_status']:
-            stats['by_status'][change_status] = 0
-        stats['by_status'][change_status] += 1
+    # 计算统计信息
+    stats = calculate_change_statistics(changes, impact_analysis)
     
     return {
         'project_id': project_id,

@@ -58,6 +58,13 @@ class LaborCostService:
         Returns:
             计算结果字典，包含创建的成本记录数量、总成本等
         """
+        from app.services.labor_cost_calculation_service import (
+            query_approved_timesheets,
+            delete_existing_costs,
+            group_timesheets_by_user,
+            process_user_costs
+        )
+        
         project = db.query(Project).filter(Project.id == project_id).first()
         if not project:
             return {
@@ -66,17 +73,7 @@ class LaborCostService:
             }
         
         # 查询已审批的工时记录
-        query = db.query(Timesheet).filter(
-            Timesheet.project_id == project_id,
-            Timesheet.status == "APPROVED"
-        )
-        
-        if start_date:
-            query = query.filter(Timesheet.work_date >= start_date)
-        if end_date:
-            query = query.filter(Timesheet.work_date <= end_date)
-        
-        timesheets = query.all()
+        timesheets = query_approved_timesheets(db, project_id, start_date, end_date)
         
         if not timesheets:
             return {
@@ -88,118 +85,15 @@ class LaborCostService:
         
         # 如果重新计算，删除现有的工时成本记录
         if recalculate:
-            existing_costs = db.query(ProjectCost).filter(
-                ProjectCost.project_id == project_id,
-                ProjectCost.source_module == "TIMESHEET",
-                ProjectCost.source_type == "LABOR_COST"
-            ).all()
-            
-            for cost in existing_costs:
-                # 更新项目实际成本
-                project.actual_cost = max(0, (project.actual_cost or 0) - float(cost.amount))
-                db.delete(cost)
+            delete_existing_costs(db, project, project_id)
         
-        # 按用户和日期分组计算成本
-        user_costs: Dict[int, Dict] = {}
+        # 按用户分组工时记录
+        user_costs = group_timesheets_by_user(timesheets)
         
-        for ts in timesheets:
-            user_id = ts.user_id
-            if user_id not in user_costs:
-                user_costs[user_id] = {
-                    "user_id": user_id,
-                    "user_name": ts.user_name,
-                    "total_hours": Decimal("0"),
-                    "timesheet_ids": [],
-                    "cost_amount": Decimal("0"),
-                    "work_date": ts.work_date  # 保存工作日期用于获取时薪
-                }
-            
-            hours = Decimal(str(ts.hours or 0))
-            user_costs[user_id]["total_hours"] += hours
-            user_costs[user_id]["timesheet_ids"].append(ts.id)
-            # 更新工作日期（使用最新的日期）
-            if ts.work_date:
-                user_costs[user_id]["work_date"] = ts.work_date
-        
-        # 为每个用户创建成本记录
-        created_costs = []
-        total_cost = Decimal("0")
-        
-        for user_id, user_data in user_costs.items():
-            # 获取用户时薪（使用工作日期）
-            work_date = user_data.get("work_date") or end_date or date.today()
-            hourly_rate = LaborCostService.get_user_hourly_rate(db, user_id, work_date)
-            
-            # 计算成本金额
-            cost_amount = user_data["total_hours"] * hourly_rate
-            
-            # 检查是否已存在该用户的成本记录（在指定日期范围内）
-            existing_cost = None
-            if not recalculate:
-                existing_cost = db.query(ProjectCost).filter(
-                    ProjectCost.project_id == project_id,
-                    ProjectCost.source_module == "TIMESHEET",
-                    ProjectCost.source_type == "LABOR_COST",
-                    ProjectCost.source_id == user_id
-                ).first()
-            
-            if existing_cost:
-                # 更新现有成本记录
-                old_amount = existing_cost.amount
-                existing_cost.amount = cost_amount
-                existing_cost.cost_date = end_date or date.today()
-                existing_cost.description = f"人工成本：{user_data['user_name']}，工时：{user_data['total_hours']}小时"
-                
-                # 更新项目实际成本
-                project.actual_cost = (project.actual_cost or 0) - float(old_amount) + float(cost_amount)
-                
-                db.add(existing_cost)
-                created_costs.append(existing_cost)
-                
-                # 检查预算执行情况并生成预警
-                try:
-                    from app.services.cost_alert_service import CostAlertService
-                    CostAlertService.check_budget_execution(
-                        db, project_id, trigger_source="TIMESHEET", source_id=user_id
-                    )
-                except Exception as e:
-                    # 预警失败不影响成本计算
-                    import logging
-                    logging.warning(f"成本预警检查失败：{str(e)}")
-            else:
-                # 创建新的成本记录
-                cost = ProjectCost(
-                    project_id=project_id,
-                    cost_type="LABOR",  # 人工成本
-                    cost_category="LABOR",  # 人工
-                    source_module="TIMESHEET",
-                    source_type="LABOR_COST",
-                    source_id=user_id,  # 使用用户ID作为source_id
-                    source_no=f"LABOR-{user_id}-{date.today().strftime('%Y%m%d')}",
-                    amount=cost_amount,
-                    tax_amount=Decimal("0"),  # 人工成本通常不含税
-                    cost_date=end_date or date.today(),
-                    description=f"人工成本：{user_data['user_name']}，工时：{user_data['total_hours']}小时",
-                    created_by=None  # 系统自动创建
-                )
-                db.add(cost)
-                created_costs.append(cost)
-                
-                # 更新项目实际成本
-                project.actual_cost = (project.actual_cost or 0) + float(cost_amount)
-                
-                # 检查预算执行情况并生成预警
-                try:
-                    from app.services.cost_alert_service import CostAlertService
-                    CostAlertService.check_budget_execution(
-                        db, project_id, trigger_source="TIMESHEET", source_id=user_id
-                    )
-                except Exception as e:
-                    # 预警失败不影响成本计算
-                    import logging
-                    logging.warning(f"成本预警检查失败：{str(e)}")
-            
-            total_cost += cost_amount
+        # 处理用户成本
+        created_costs, total_cost = process_user_costs(
+            db, project, project_id, user_costs, end_date, recalculate
+        )
         
         db.add(project)
         db.commit()
