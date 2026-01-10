@@ -986,6 +986,101 @@ def require_sales_assessment_access():
     return assessment_checker
 
 
+def has_sales_approval_access(user: User, db: Session) -> bool:
+    """
+    检查用户是否有销售审批权限
+    包括：报价审批、合同审批、发票审批
+    """
+    if user.is_superuser:
+        return True
+
+    # 定义有审批权限的角色代码
+    approval_roles = [
+        'sales_manager',         # 销售经理
+        '销售经理',
+        'sales_director',        # 销售总监
+        '销售总监',
+        'finance_manager',       # 财务经理
+        '财务经理',
+        'finance_director',      # 财务总监
+        '财务总监',
+        'gm',                    # 总经理
+        '总经理',
+        'chairman',              # 董事长
+        '董事长',
+        'admin',                 # 系统管理员
+        'super_admin',           # 超级管理员
+    ]
+
+    # 检查用户角色
+    for user_role in user.roles:
+        role_code = user_role.role.role_code.lower() if user_role.role.role_code else ''
+        if role_code in approval_roles:
+            return True
+
+    return False
+
+
+def check_sales_approval_permission(user: User, approval: Any, db: Session) -> bool:
+    """
+    检查销售审批权限
+
+    Args:
+        user: 当前用户
+        approval: 审批对象（QuoteApproval/ContractApproval/InvoiceApproval）
+        db: 数据库会话
+
+    Returns:
+        bool: 是否有审批权限
+    """
+    if user.is_superuser:
+        return True
+
+    # 检查用户是否有审批权限角色
+    if not has_sales_approval_access(user, db):
+        return False
+
+    # 检查审批级别是否匹配用户角色
+    approval_level = getattr(approval, 'approval_level', 1)
+    approval_role = getattr(approval, 'approval_role', '')
+
+    # 如果指定了审批角色，检查用户是否具有该角色
+    if approval_role:
+        for user_role in user.roles:
+            if user_role.role.role_code == approval_role:
+                return True
+
+    # 根据审批级别检查权限
+    if approval_level == 1:
+        # 一级审批：销售经理、财务经理
+        level1_roles = ['sales_manager', '销售经理', 'finance_manager', '财务经理']
+        for user_role in user.roles:
+            if user_role.role.role_code.lower() in level1_roles:
+                return True
+
+    elif approval_level >= 2:
+        # 二级及以上审批：销售总监、财务总监、总经理
+        level2_roles = ['sales_director', '销售总监', 'finance_director', '财务总监',
+                       'gm', '总经理', 'chairman', '董事长']
+        for user_role in user.roles:
+            if user_role.role.role_code.lower() in level2_roles:
+                return True
+
+    return False
+
+
+def require_sales_approval_permission():
+    """销售审批权限检查依赖"""
+    async def approval_checker(current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+        if not has_sales_approval_access(current_user, db):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="您没有权限进行审批操作"
+            )
+        return current_user
+    return approval_checker
+
+
 def has_hr_access(user: User) -> bool:
     """检查用户是否有人力资源管理模块的访问权限（奖金规则配置等）"""
     if user.is_superuser:

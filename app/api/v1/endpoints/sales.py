@@ -1666,8 +1666,12 @@ def approve_quote_approval(
     if approval.status != "PENDING":
         raise HTTPException(status_code=400, detail="只能审批待审批状态的记录")
 
-    # 检查审批权限（简化版：检查用户角色）
-    # TODO: 实现更严格的权限检查
+    # 检查审批权限
+    if not security.check_sales_approval_permission(current_user, approval, db):
+        raise HTTPException(
+            status_code=403,
+            detail="您没有权限审批此记录"
+        )
 
     approval.approval_result = "APPROVED"
     approval.approval_opinion = approval_opinion
@@ -1733,6 +1737,13 @@ def reject_quote_approval(
 
     if approval.status != "PENDING":
         raise HTTPException(status_code=400, detail="只能审批待审批状态的记录")
+
+    # 检查审批权限
+    if not security.check_sales_approval_permission(current_user, approval, db):
+        raise HTTPException(
+            status_code=403,
+            detail="您没有权限审批此记录"
+        )
 
     approval.approval_result = "REJECTED"
     approval.approval_opinion = rejection_reason
@@ -4789,6 +4800,13 @@ def approve_contract(
     """
     合同审批
     """
+    # 检查审批权限
+    if not security.has_sales_approval_access(current_user, db):
+        raise HTTPException(
+            status_code=403,
+            detail="您没有权限审批合同"
+        )
+
     contract = db.query(Contract).filter(Contract.id == contract_id).first()
     if not contract:
         raise HTTPException(status_code=404, detail="合同不存在")
@@ -4848,6 +4866,13 @@ def approve_invoice(
     """
     开票审批（单级审批，兼容旧接口）
     """
+    # 检查审批权限
+    if not security.has_sales_approval_access(current_user, db):
+        raise HTTPException(
+            status_code=403,
+            detail="您没有权限审批发票"
+        )
+
     invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
     if not invoice:
         raise HTTPException(status_code=404, detail="发票不存在")
@@ -4973,6 +4998,13 @@ def approve_invoice_approval(
     if approval.status != "PENDING":
         raise HTTPException(status_code=400, detail="只能审批待审批状态的记录")
 
+    # 检查审批权限
+    if not security.check_sales_approval_permission(current_user, approval, db):
+        raise HTTPException(
+            status_code=403,
+            detail="您没有权限审批此记录"
+        )
+
     approval.approval_result = "APPROVED"
     approval.approval_opinion = approval_opinion
     approval.approved_at = datetime.now()
@@ -5033,6 +5065,13 @@ def reject_invoice_approval(
 
     if approval.status != "PENDING":
         raise HTTPException(status_code=400, detail="只能审批待审批状态的记录")
+
+    # 检查审批权限
+    if not security.check_sales_approval_permission(current_user, approval, db):
+        raise HTTPException(
+            status_code=403,
+            detail="您没有权限审批此记录"
+        )
 
     approval.approval_result = "REJECTED"
     approval.approval_opinion = rejection_reason
