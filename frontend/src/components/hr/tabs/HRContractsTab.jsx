@@ -52,7 +52,7 @@ export default function HRContractsTab() {
       toast.success('合同续签成功')
       loadContracts()
       loadReminders()
-    } catch (err) {
+    } catch {
       toast.error('续签失败')
     }
   }
@@ -66,7 +66,7 @@ export default function HRContractsTab() {
       })
       toast.success('处理成功')
       loadReminders()
-    } catch (err) {
+    } catch {
       toast.error('操作失败')
     }
   }
@@ -79,7 +79,7 @@ export default function HRContractsTab() {
         `生成了 ${response.data?.created_count || 0} 条提醒`
       )
       loadReminders()
-    } catch (err) {
+    } catch {
       toast.error('生成提醒失败')
     }
   }

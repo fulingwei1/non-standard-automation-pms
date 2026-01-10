@@ -40,6 +40,7 @@ export default function ECNDetail() {
     tasks,
     affectedMaterials,
     affectedOrders,
+    logs,
     activeTab,
     setActiveTab,
     refetch,
@@ -48,10 +49,6 @@ export default function ECNDetail() {
     handleVerify,
     handleClose,
   } = useECNDetail(id)
-
-  // 对话框状态（临时保留，后续会提取到各自的 Tab 组件中）
-  const [showVerifyDialog, setShowVerifyDialog] = useState(false)
-  const [showCloseDialog, setShowCloseDialog] = useState(false)
 
   // 处理操作
   const handleSubmitClick = async () => {
@@ -66,34 +63,6 @@ export default function ECNDetail() {
   const handleStartExecutionClick = async () => {
     const result = await handleStartExecution()
     if (result.success) {
-      alert(result.message)
-    } else {
-      alert(result.message)
-    }
-  }
-
-  const handleVerifyClick = () => {
-    setShowVerifyDialog(true)
-  }
-
-  const handleCloseClick = () => {
-    setShowCloseDialog(true)
-  }
-
-  const handleVerifySubmit = async (verifyForm) => {
-    const result = await handleVerify(verifyForm)
-    if (result.success) {
-      setShowVerifyDialog(false)
-      alert(result.message)
-    } else {
-      alert(result.message)
-    }
-  }
-
-  const handleCloseSubmit = async (closeForm) => {
-    const result = await handleClose(closeForm)
-    if (result.success) {
-      setShowCloseDialog(false)
       alert(result.message)
     } else {
       alert(result.message)

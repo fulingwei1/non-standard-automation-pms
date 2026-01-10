@@ -45,7 +45,6 @@ import HREmployeesTab from './tabs/HREmployeesTab'
 import HRRelationsTab from './tabs/HRRelationsTab'
 import HRStatisticsTab from './tabs/HRStatisticsTab'
 import { toast } from '../ui/toast'
-import { employeeApi } from '../../services/api'
 
 // Mock statistics (这些数据应该从 API 获取)
 const mockHRStats = {
@@ -321,6 +320,7 @@ const mockDepartmentPerformanceComparison = [
 
 // StatCard 组件（从原文件提取）
 const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg }) => {
+  const IconComponent = Icon
   return (
     <motion.div
       variants={fadeIn}
@@ -380,8 +380,6 @@ export default function HRManagerDashboard() {
     refresh,
   } = useHRDashboard()
 
-  const [showEmployeeDialog, setShowEmployeeDialog] = useState(false)
-  const [selectedEmployee, setSelectedEmployee] = useState(null)
 
   // 导出报表
   const handleExportReport = () => {

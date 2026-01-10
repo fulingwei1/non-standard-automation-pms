@@ -77,30 +77,10 @@ export default function ECNImpactAnalysisTab({
     }
   }
 
-  // 处理保存物料
-  const handleMaterialSave = async () => {
-    const result = await handleSaveMaterial()
-    if (result.success) {
-      alert(result.message)
-    } else {
-      alert(result.message)
-    }
-  }
-
   // 处理删除物料
   const handleMaterialDelete = async (materialId) => {
     if (!confirm('确定要删除这个受影响物料吗？')) return
     const result = await handleDeleteMaterial(materialId)
-    if (result.success) {
-      alert(result.message)
-    } else {
-      alert(result.message)
-    }
-  }
-
-  // 处理保存订单
-  const handleOrderSave = async () => {
-    const result = await handleSaveOrder()
     if (result.success) {
       alert(result.message)
     } else {

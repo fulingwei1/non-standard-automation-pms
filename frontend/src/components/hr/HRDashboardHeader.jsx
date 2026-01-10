@@ -28,9 +28,6 @@ import { fadeIn } from '../../lib/animations'
 
 export default function HRDashboardHeader({
   mockHRStats,
-  selectedTab,
-  setSelectedTab,
-  statisticsPeriod,
   refreshing,
   onRefresh,
   onExportReport,

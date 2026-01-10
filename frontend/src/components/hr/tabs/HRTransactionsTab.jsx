@@ -61,7 +61,7 @@ export default function HRTransactionsTab() {
       })
       toast.success(action === 'approve' ? '审批通过' : '已拒绝')
       loadTransactions()
-    } catch (err) {
+    } catch {
       toast.error('操作失败')
     }
   }

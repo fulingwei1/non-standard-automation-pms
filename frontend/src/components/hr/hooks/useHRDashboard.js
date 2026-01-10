@@ -15,7 +15,7 @@ export function useHRDashboard() {
   const [searchKeyword, setSearchKeyword] = useState('')
   const [filterDepartment, setFilterDepartment] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
-  const [statsLoading, setStatsLoading] = useState(false)
+  const [statsLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
 
   // 加载员工列表

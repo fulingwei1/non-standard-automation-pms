@@ -6,7 +6,6 @@ import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle, Badge } from '../../ui'
 import { AlertTriangle, CheckCircle2, Heart } from 'lucide-react'
 import { cn } from '../../../lib/utils'
-import { fadeIn } from '../../../lib/animations'
 
 // 状态标签映射
 const getStatusLabel = (status) => {

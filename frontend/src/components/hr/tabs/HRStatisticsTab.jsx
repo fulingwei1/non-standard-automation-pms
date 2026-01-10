@@ -23,6 +23,8 @@ import {
   Activity,
 } from 'lucide-react'
 import { fadeIn } from '../../../lib/animations'
+import { cn } from '../../../lib/utils'
+import { cn } from '../../../lib/utils'
 
 export default function HRStatisticsTab({
   statisticsPeriod,
