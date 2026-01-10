@@ -394,6 +394,14 @@ def preview_import_data(
 ) -> Any:
     """
     预览导入数据（上传预览）
+
+    支持多种数据类型预览：
+    - PROJECT: 项目导入
+    - USER: 用户导入
+    - TIMESHEET: 工时导入
+    - TASK: 任务导入
+    - MATERIAL: 物料导入
+    - BOM: BOM导入
     """
     # 检查Excel库是否可用
     try:
@@ -403,15 +411,25 @@ def preview_import_data(
             status_code=500,
             detail="Excel处理库未安装，请安装pandas"
         )
-    
+
+    # 各模板类型的必需列定义
+    REQUIRED_COLUMNS = {
+        "PROJECT": ['项目编码*', '项目名称*'],
+        "USER": ['姓名'],
+        "TIMESHEET": ['工作日期*', '人员姓名*', '工时(小时)*'],
+        "TASK": ['任务名称*', '项目编码*'],
+        "MATERIAL": ['物料编码*', '物料名称*'],
+        "BOM": ['BOM编码*', '项目编码*', '物料编码*', '用量*']
+    }
+
     try:
         file_content = file.file.read()
         df = pd.read_excel(io.BytesIO(file_content))
-        
+
         # 去除空行
         df = df.dropna(how='all')
         total_rows = len(df)
-        
+
         if total_rows == 0:
             return ImportPreviewResponse(
                 total_rows=0,
@@ -420,54 +438,114 @@ def preview_import_data(
                 preview_data=[],
                 errors=[{"row": 0, "field": "", "message": "文件中没有数据"}]
             )
-        
-        # 验证必需列（项目导入）
-        if template_type.upper() == "PROJECT":
-            required_columns = ['项目编码*', '项目名称*']
-            # 兼容不带*的列名
-            column_mapping = {
-                '项目编码*': '项目编码',
-                '项目名称*': '项目名称'
-            }
-            
-            missing_columns = []
-            for req_col in required_columns:
-                if req_col not in df.columns and column_mapping.get(req_col) not in df.columns:
-                    missing_columns.append(req_col)
-            
-            if missing_columns:
-                return ImportPreviewResponse(
-                    total_rows=total_rows,
-                    valid_rows=0,
-                    invalid_rows=total_rows,
-                    preview_data=[],
-                    errors=[{"row": 0, "field": "", "message": f"缺少必需的列：{', '.join(missing_columns)}"}]
-                )
-        
+
+        template_type_upper = template_type.upper()
+
+        # 验证必需列
+        required_columns = REQUIRED_COLUMNS.get(template_type_upper, [])
+        missing_columns = []
+
+        for req_col in required_columns:
+            if req_col not in df.columns and req_col.replace('*', '') not in df.columns:
+                missing_columns.append(req_col)
+
+        if missing_columns:
+            return ImportPreviewResponse(
+                total_rows=total_rows,
+                valid_rows=0,
+                invalid_rows=total_rows,
+                preview_data=[],
+                errors=[{"row": 0, "field": "", "message": f"缺少必需的列：{', '.join(missing_columns)}"}]
+            )
+
         # 预览前10行数据
         preview_rows = min(10, total_rows)
         preview_data = df.head(preview_rows).to_dict('records')
-        
-        # 简单验证（检查必填字段）
+
+        # 根据类型进行简单验证
         errors = []
         valid_rows = 0
-        
+
         for idx, row in df.iterrows():
             is_valid = True
-            if template_type.upper() == "PROJECT":
+            row_num = idx + 2
+
+            if template_type_upper == "PROJECT":
                 project_code = str(row.get('项目编码*', row.get('项目编码', ''))).strip()
                 project_name = str(row.get('项目名称*', row.get('项目名称', ''))).strip()
-                
+
                 if not project_code:
-                    errors.append({"row": idx + 2, "field": "项目编码", "message": "项目编码不能为空"})
+                    errors.append({"row": row_num, "field": "项目编码", "message": "项目编码不能为空"})
                     is_valid = False
                 if not project_name:
-                    errors.append({"row": idx + 2, "field": "项目名称", "message": "项目名称不能为空"})
+                    errors.append({"row": row_num, "field": "项目名称", "message": "项目名称不能为空"})
                     is_valid = False
-                
-                if is_valid:
-                    valid_rows += 1
-        
+
+            elif template_type_upper == "USER":
+                name = str(row.get('姓名', row.get('名字', ''))).strip()
+                if not name:
+                    errors.append({"row": row_num, "field": "姓名", "message": "姓名不能为空"})
+                    is_valid = False
+
+            elif template_type_upper == "TIMESHEET":
+                work_date = row.get('工作日期*') or row.get('工作日期')
+                user_name = str(row.get('人员姓名*', row.get('人员姓名', ''))).strip()
+                hours = row.get('工时(小时)*') or row.get('工时(小时)') or row.get('工时')
+
+                if pd.isna(work_date) or not work_date:
+                    errors.append({"row": row_num, "field": "工作日期", "message": "工作日期不能为空"})
+                    is_valid = False
+                if not user_name:
+                    errors.append({"row": row_num, "field": "人员姓名", "message": "人员姓名不能为空"})
+                    is_valid = False
+                if pd.isna(hours):
+                    errors.append({"row": row_num, "field": "工时", "message": "工时不能为空"})
+                    is_valid = False
+
+            elif template_type_upper == "TASK":
+                task_name = str(row.get('任务名称*', row.get('任务名称', ''))).strip()
+                project_code = str(row.get('项目编码*', row.get('项目编码', ''))).strip()
+
+                if not task_name:
+                    errors.append({"row": row_num, "field": "任务名称", "message": "任务名称不能为空"})
+                    is_valid = False
+                if not project_code:
+                    errors.append({"row": row_num, "field": "项目编码", "message": "项目编码不能为空"})
+                    is_valid = False
+
+            elif template_type_upper == "MATERIAL":
+                material_code = str(row.get('物料编码*', row.get('物料编码', ''))).strip()
+                material_name = str(row.get('物料名称*', row.get('物料名称', ''))).strip()
+
+                if not material_code:
+                    errors.append({"row": row_num, "field": "物料编码", "message": "物料编码不能为空"})
+                    is_valid = False
+                if not material_name:
+                    errors.append({"row": row_num, "field": "物料名称", "message": "物料名称不能为空"})
+                    is_valid = False
+
+            elif template_type_upper == "BOM":
+                bom_code = str(row.get('BOM编码*', row.get('BOM编码', ''))).strip()
+                project_code = str(row.get('项目编码*', row.get('项目编码', ''))).strip()
+                material_code = str(row.get('物料编码*', row.get('物料编码', ''))).strip()
+                quantity = row.get('用量*') or row.get('用量')
+
+                if not bom_code:
+                    errors.append({"row": row_num, "field": "BOM编码", "message": "BOM编码不能为空"})
+                    is_valid = False
+                if not project_code:
+                    errors.append({"row": row_num, "field": "项目编码", "message": "项目编码不能为空"})
+                    is_valid = False
+                if not material_code:
+                    errors.append({"row": row_num, "field": "物料编码", "message": "物料编码不能为空"})
+                    is_valid = False
+                if pd.isna(quantity):
+                    errors.append({"row": row_num, "field": "用量", "message": "用量不能为空"})
+                    is_valid = False
+
+            if is_valid:
+                valid_rows += 1
+
         return ImportPreviewResponse(
             total_rows=total_rows,
             valid_rows=valid_rows,
@@ -475,7 +553,7 @@ def preview_import_data(
             preview_data=preview_data[:preview_rows],
             errors=errors[:20]  # 最多返回20个错误
         )
-    
+
     except Exception as e:
         return ImportPreviewResponse(
             total_rows=0,
@@ -496,44 +574,46 @@ def validate_import_data(
     """
     验证导入数据（格式校验）
     验证数据格式和业务规则
+
+    支持多种数据类型验证：
+    - PROJECT: 项目导入
+    - USER: 用户导入
+    - TIMESHEET: 工时导入
+    - TASK: 任务导入
+    - MATERIAL: 物料导入
+    - BOM: BOM导入
     """
     errors = []
     valid_count = 0
-    
-    # 根据模板类型进行验证
-    if validate_in.template_type.upper() == "PROJECT":
-        for idx, row_data in enumerate(validate_in.data, start=1):
-            row_errors = []
-            
+    template_type = validate_in.template_type.upper()
+
+    for idx, row_data in enumerate(validate_in.data, start=1):
+        row_errors = []
+
+        if template_type == "PROJECT":
             # 验证必填字段
             project_code = row_data.get('project_code', '').strip() if row_data.get('project_code') else ''
             project_name = row_data.get('project_name', '').strip() if row_data.get('project_name') else ''
-            
+
             if not project_code:
                 row_errors.append({"field": "project_code", "message": "项目编码不能为空"})
             if not project_name:
                 row_errors.append({"field": "project_name", "message": "项目名称不能为空"})
-            
-            # 验证项目编码格式（如果提供）
+
+            # 检查项目编码是否已存在
             if project_code:
-                # 检查项目编码是否已存在
                 existing = db.query(Project).filter(Project.project_code == project_code).first()
                 if existing:
                     row_errors.append({"field": "project_code", "message": f"项目编码 {project_code} 已存在"})
-            
+
             # 验证日期格式
-            if row_data.get('planned_start_date'):
-                try:
-                    datetime.strptime(str(row_data['planned_start_date']), '%Y-%m-%d')
-                except:
-                    row_errors.append({"field": "planned_start_date", "message": "日期格式错误，应为YYYY-MM-DD"})
-            
-            if row_data.get('planned_end_date'):
-                try:
-                    datetime.strptime(str(row_data['planned_end_date']), '%Y-%m-%d')
-                except:
-                    row_errors.append({"field": "planned_end_date", "message": "日期格式错误，应为YYYY-MM-DD"})
-            
+            for date_field in ['planned_start_date', 'planned_end_date']:
+                if row_data.get(date_field):
+                    try:
+                        datetime.strptime(str(row_data[date_field]), '%Y-%m-%d')
+                    except:
+                        row_errors.append({"field": date_field, "message": "日期格式错误，应为YYYY-MM-DD"})
+
             # 验证日期逻辑
             if row_data.get('planned_start_date') and row_data.get('planned_end_date'):
                 try:
@@ -543,7 +623,7 @@ def validate_import_data(
                         row_errors.append({"field": "planned_end_date", "message": "计划结束日期不能早于计划开始日期"})
                 except:
                     pass
-            
+
             # 验证金额格式
             for amount_field in ['contract_amount', 'budget_amount']:
                 if row_data.get(amount_field):
@@ -551,15 +631,111 @@ def validate_import_data(
                         float(row_data[amount_field])
                     except:
                         row_errors.append({"field": amount_field, "message": f"{amount_field} 必须是数字"})
-            
-            if row_errors:
-                errors.append({
-                    "row": idx,
-                    "errors": row_errors
-                })
+
+        elif template_type == "USER":
+            name = row_data.get('name', '').strip() if row_data.get('name') else ''
+            if not name:
+                row_errors.append({"field": "name", "message": "姓名不能为空"})
+
+        elif template_type == "TIMESHEET":
+            work_date = row_data.get('work_date')
+            user_name = row_data.get('user_name', '').strip() if row_data.get('user_name') else ''
+            hours = row_data.get('hours')
+
+            if not work_date:
+                row_errors.append({"field": "work_date", "message": "工作日期不能为空"})
             else:
-                valid_count += 1
-    
+                try:
+                    datetime.strptime(str(work_date), '%Y-%m-%d')
+                except:
+                    row_errors.append({"field": "work_date", "message": "日期格式错误，应为YYYY-MM-DD"})
+
+            if not user_name:
+                row_errors.append({"field": "user_name", "message": "人员姓名不能为空"})
+
+            if hours is None:
+                row_errors.append({"field": "hours", "message": "工时不能为空"})
+            else:
+                try:
+                    h = float(hours)
+                    if h <= 0 or h > 24:
+                        row_errors.append({"field": "hours", "message": "工时必须在0-24之间"})
+                except:
+                    row_errors.append({"field": "hours", "message": "工时格式错误"})
+
+        elif template_type == "TASK":
+            task_name = row_data.get('task_name', '').strip() if row_data.get('task_name') else ''
+            project_code = row_data.get('project_code', '').strip() if row_data.get('project_code') else ''
+
+            if not task_name:
+                row_errors.append({"field": "task_name", "message": "任务名称不能为空"})
+            if not project_code:
+                row_errors.append({"field": "project_code", "message": "项目编码不能为空"})
+
+            # 检查项目是否存在
+            if project_code:
+                project = db.query(Project).filter(Project.project_code == project_code).first()
+                if not project:
+                    row_errors.append({"field": "project_code", "message": f"项目 {project_code} 不存在"})
+
+        elif template_type == "MATERIAL":
+            material_code = row_data.get('material_code', '').strip() if row_data.get('material_code') else ''
+            material_name = row_data.get('material_name', '').strip() if row_data.get('material_name') else ''
+
+            if not material_code:
+                row_errors.append({"field": "material_code", "message": "物料编码不能为空"})
+            if not material_name:
+                row_errors.append({"field": "material_name", "message": "物料名称不能为空"})
+
+            # 检查物料编码是否已存在
+            if material_code:
+                from app.models.material import Material
+                existing = db.query(Material).filter(Material.material_code == material_code).first()
+                if existing:
+                    row_errors.append({"field": "material_code", "message": f"物料编码 {material_code} 已存在"})
+
+        elif template_type == "BOM":
+            bom_code = row_data.get('bom_code', '').strip() if row_data.get('bom_code') else ''
+            project_code = row_data.get('project_code', '').strip() if row_data.get('project_code') else ''
+            material_code = row_data.get('material_code', '').strip() if row_data.get('material_code') else ''
+            quantity = row_data.get('quantity')
+
+            if not bom_code:
+                row_errors.append({"field": "bom_code", "message": "BOM编码不能为空"})
+            if not project_code:
+                row_errors.append({"field": "project_code", "message": "项目编码不能为空"})
+            if not material_code:
+                row_errors.append({"field": "material_code", "message": "物料编码不能为空"})
+            if quantity is None:
+                row_errors.append({"field": "quantity", "message": "用量不能为空"})
+            else:
+                try:
+                    q = float(quantity)
+                    if q <= 0:
+                        row_errors.append({"field": "quantity", "message": "用量必须大于0"})
+                except:
+                    row_errors.append({"field": "quantity", "message": "用量格式错误"})
+
+            # 检查项目和物料是否存在
+            if project_code:
+                project = db.query(Project).filter(Project.project_code == project_code).first()
+                if not project:
+                    row_errors.append({"field": "project_code", "message": f"项目 {project_code} 不存在"})
+
+            if material_code:
+                from app.models.material import Material
+                material = db.query(Material).filter(Material.material_code == material_code).first()
+                if not material:
+                    row_errors.append({"field": "material_code", "message": f"物料 {material_code} 不存在"})
+
+        if row_errors:
+            errors.append({
+                "row": idx,
+                "errors": row_errors
+            })
+        else:
+            valid_count += 1
+
     return ImportValidateResponse(
         is_valid=len(errors) == 0,
         valid_count=valid_count,
@@ -574,13 +750,19 @@ def upload_and_import_data(
     db: Session = Depends(deps.get_db),
     file: UploadFile = File(...),
     template_type: str = Query(..., description="模板类型"),
-    update_existing: bool = Query(False, description="是否更新已存在的项目"),
+    update_existing: bool = Query(False, description="是否更新已存在的数据"),
     current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     上传并导入数据（执行导入）
-    
-    支持项目导入，从Excel文件批量创建项目
+
+    支持多种数据类型导入：
+    - PROJECT: 项目导入
+    - USER: 用户导入
+    - TIMESHEET: 工时导入
+    - TASK: 任务导入
+    - MATERIAL: 物料导入
+    - BOM: BOM导入
     """
     # 检查Excel库是否可用
     try:
@@ -590,65 +772,61 @@ def upload_and_import_data(
             status_code=500,
             detail="Excel处理库未安装，请安装pandas"
         )
-    
-    from app.services.project_import_service import (
-        validate_excel_file,
-        parse_excel_data,
-        validate_project_columns,
-        import_projects_from_dataframe
-    )
-    
-    # 验证文件类型
-    validate_excel_file(file.filename)
-    
-    # 项目导入
-    if template_type.upper() == "PROJECT":
-        try:
-            file_content = file.file.read()
-            df = parse_excel_data(file_content)
-            validate_project_columns(df)
-            
-            # 导入项目
-            imported_count, updated_count, failed_rows = import_projects_from_dataframe(
-                db, df, update_existing
-            )
-            
-            db.commit()
-            
-            # 创建导入任务记录
-            task_code = f"IMP-{datetime.now().strftime('%y%m%d%H%M%S')}"
-            import_task = DataImportTask(
-                task_code=task_code,
-                template_type=template_type,
-                file_url=file.filename,
-                status="COMPLETED",
-                requested_by=current_user.id,
-                import_options={"update_existing": update_existing}
-            )
-            db.add(import_task)
-            db.commit()
-            
-            message = f"导入完成：成功导入 {imported_count} 条"
-            if updated_count > 0:
-                message += f"，更新 {updated_count} 条"
-            if failed_rows:
-                message += f"，失败 {len(failed_rows)} 条"
-            
-            return ImportUploadResponse(
-                task_id=import_task.id,
-                task_code=import_task.task_code,
-                status="COMPLETED",
-                message=message
-            )
-        
-        except HTTPException:
-            raise
-        except Exception as e:
-            db.rollback()
-            raise HTTPException(status_code=400, detail=f"导入失败: {str(e)}")
-    
-    # 其他类型暂未实现
-    raise HTTPException(status_code=501, detail=f"该模板类型 {template_type} 暂未实现")
+
+    from app.services.unified_import_service import unified_import_service
+
+    try:
+        file_content = file.file.read()
+
+        # 使用统一导入服务
+        result = unified_import_service.import_data(
+            db=db,
+            file_content=file_content,
+            filename=file.filename,
+            template_type=template_type,
+            current_user_id=current_user.id,
+            update_existing=update_existing
+        )
+
+        db.commit()
+
+        # 创建导入任务记录
+        task_code = f"IMP-{datetime.now().strftime('%y%m%d%H%M%S')}"
+        import_task = DataImportTask(
+            task_code=task_code,
+            template_type=template_type,
+            file_url=file.filename,
+            status="COMPLETED" if result.get("failed_count", 0) == 0 else "PARTIAL",
+            requested_by=current_user.id,
+            import_options={"update_existing": update_existing}
+        )
+        db.add(import_task)
+        db.commit()
+
+        # 生成消息
+        imported = result.get("imported_count", 0)
+        updated = result.get("updated_count", 0)
+        failed = result.get("failed_count", 0)
+
+        message = f"导入完成：成功导入 {imported} 条"
+        if updated > 0:
+            message += f"，更新 {updated} 条"
+        if failed > 0:
+            message += f"，失败 {failed} 条"
+
+        return ImportUploadResponse(
+            task_id=import_task.id,
+            task_code=import_task.task_code,
+            status="COMPLETED" if failed == 0 else "PARTIAL",
+            message=message
+        )
+
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"导入失败: {str(e)}")
 
 
 # ==================== 数据导出 ====================
