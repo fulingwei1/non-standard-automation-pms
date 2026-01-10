@@ -107,8 +107,8 @@ export default function ProjectTimeline({
         events.push({
           id: `doc-${doc.id}`,
           type: 'DOCUMENT',
-          title: `文档审批通过: ${doc.document_name}`,
-          description: doc.document_type || '',
+          title: `文档审批通过: ${doc.doc_name || doc.document_name || doc.file_name || '未命名文档'}`,
+          description: doc.doc_type || doc.document_type || '',
           date: doc.updated_at,
           user: null,
           data: doc,

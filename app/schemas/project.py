@@ -785,6 +785,8 @@ class ProjectCostResponse(TimestampSchema):
     tax_amount: Decimal
     description: Optional[str] = None
     cost_date: date
+    is_financial_correction: Optional[bool] = False  # 是否为财务修正数据
+    upload_batch_no: Optional[str] = None  # 上传批次号（财务上传）
 
     class Config:
         from_attributes = True

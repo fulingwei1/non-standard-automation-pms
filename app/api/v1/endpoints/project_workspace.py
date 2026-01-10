@@ -6,7 +6,7 @@
 
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
@@ -53,15 +53,20 @@ def get_project_workspace(
         'pm_name': project.pm_name,
     }
     
-    # 获取项目成员
-    members = db.query(ProjectMember).filter(
-        ProjectMember.project_id == project_id,
-        ProjectMember.is_active == True
-    ).all()
+    # 获取项目成员（预加载User关联）
+    members = (
+        db.query(ProjectMember)
+        .options(joinedload(ProjectMember.user))
+        .filter(
+            ProjectMember.project_id == project_id,
+            ProjectMember.is_active == True
+        )
+        .all()
+    )
     team_info = [
         {
             'user_id': m.user_id,
-            'user_name': m.user.real_name or m.user.username if m.user else 'Unknown',
+            'user_name': m.user.real_name or m.user.username if m.user else f'user_{m.user_id}',
             'role_code': m.role_code,
             'allocation_pct': float(m.allocation_pct or 100),
             'start_date': m.start_date.isoformat() if m.start_date else None,
@@ -86,70 +91,91 @@ def get_project_workspace(
         for t in tasks
     ]
     
-    # 获取项目奖金
-    bonus_service = ProjectBonusService(db)
-    bonus_rules = bonus_service.get_project_bonus_rules(project_id)
-    bonus_calculations = bonus_service.get_project_bonus_calculations(project_id)
-    bonus_distributions = bonus_service.get_project_bonus_distributions(project_id)
-    bonus_statistics = bonus_service.get_project_bonus_statistics(project_id)
-    bonus_member_summary = bonus_service.get_project_member_bonus_summary(project_id)
+    # 获取项目奖金（添加错误处理）
+    try:
+        bonus_service = ProjectBonusService(db)
+        bonus_rules = bonus_service.get_project_bonus_rules(project_id) or []
+        bonus_calculations = bonus_service.get_project_bonus_calculations(project_id) or []
+        bonus_distributions = bonus_service.get_project_bonus_distributions(project_id) or []
+        bonus_statistics = bonus_service.get_project_bonus_statistics(project_id) or {}
+        bonus_member_summary = bonus_service.get_project_member_bonus_summary(project_id) or []
+        
+        bonus_info = {
+            'rules': [
+                {
+                    'id': r.id,
+                    'rule_name': r.rule_name,
+                    'bonus_type': r.bonus_type,
+                    'coefficient': float(r.coefficient or 0),
+                }
+                for r in bonus_rules
+            ],
+            'calculations': [
+                {
+                    'id': c.id,
+                    'calculation_code': c.calculation_code,
+                    'user_name': getattr(c.user, 'real_name', None) or getattr(c.user, 'username', None) if hasattr(c, 'user') and c.user else 'Unknown',
+                    'calculated_amount': float(c.calculated_amount or 0),
+                    'status': c.status,
+                    'calculated_at': c.calculated_at.isoformat() if hasattr(c, 'calculated_at') and c.calculated_at else None,
+                }
+                for c in bonus_calculations[:20]  # 限制返回数量
+            ],
+            'distributions': [
+                {
+                    'id': d.id,
+                    'user_name': getattr(d.user, 'real_name', None) or getattr(d.user, 'username', None) if hasattr(d, 'user') and d.user else 'Unknown',
+                    'distributed_amount': float(d.distributed_amount or 0),
+                    'status': d.status,
+                    'distributed_at': d.distributed_at.isoformat() if hasattr(d, 'distributed_at') and d.distributed_at else None,
+                }
+                for d in bonus_distributions[:20]
+            ],
+            'statistics': bonus_statistics,
+            'member_summary': bonus_member_summary,
+        }
+    except Exception as e:
+        # 如果奖金服务出错，返回空数据
+        import logging
+        logging.error(f"获取项目奖金数据失败: {str(e)}")
+        bonus_info = {
+            'rules': [],
+            'calculations': [],
+            'distributions': [],
+            'statistics': {},
+            'member_summary': [],
+        }
     
-    bonus_info = {
-        'rules': [
-            {
-                'id': r.id,
-                'rule_name': r.rule_name,
-                'bonus_type': r.bonus_type,
-                'coefficient': float(r.coefficient or 0),
-            }
-            for r in bonus_rules
-        ],
-        'calculations': [
-            {
-                'id': c.id,
-                'calculation_code': c.calculation_code,
-                'user_name': c.user.real_name or c.user.username if c.user else 'Unknown',
-                'calculated_amount': float(c.calculated_amount or 0),
-                'status': c.status,
-                'calculated_at': c.calculated_at.isoformat() if c.calculated_at else None,
-            }
-            for c in bonus_calculations[:20]  # 限制返回数量
-        ],
-        'distributions': [
-            {
-                'id': d.id,
-                'user_name': d.user.real_name or d.user.username if d.user else 'Unknown',
-                'distributed_amount': float(d.distributed_amount or 0),
-                'status': d.status,
-                'distributed_at': d.distributed_at.isoformat() if d.distributed_at else None,
-            }
-            for d in bonus_distributions[:20]
-        ],
-        'statistics': bonus_statistics,
-        'member_summary': bonus_member_summary,
-    }
-    
-    # 获取项目会议
-    meeting_service = ProjectMeetingService(db)
-    meetings = meeting_service.get_project_meetings(project_id)
-    meeting_statistics = meeting_service.get_project_meeting_statistics(project_id)
-    
-    meeting_info = {
-        'meetings': [
-            {
-                'id': m.id,
-                'meeting_name': m.meeting_name,
-                'meeting_date': m.meeting_date.isoformat() if m.meeting_date else None,
-                'rhythm_level': m.rhythm_level,
-                'status': m.status,
-                'organizer_name': m.organizer_name,
-                'minutes': m.minutes,  # 只包含会议纪要内容
-                'has_minutes': bool(m.minutes),
-            }
-            for m in meetings[:20]
-        ],
-        'statistics': meeting_statistics,
-    }
+    # 获取项目会议（添加错误处理）
+    try:
+        meeting_service = ProjectMeetingService(db)
+        meetings = meeting_service.get_project_meetings(project_id) or []
+        meeting_statistics = meeting_service.get_project_meeting_statistics(project_id) or {}
+        
+        meeting_info = {
+            'meetings': [
+                {
+                    'id': m.id,
+                    'meeting_name': getattr(m, 'meeting_name', ''),
+                    'meeting_date': m.meeting_date.isoformat() if hasattr(m, 'meeting_date') and m.meeting_date else None,
+                    'rhythm_level': getattr(m, 'rhythm_level', ''),
+                    'status': getattr(m, 'status', ''),
+                    'organizer_name': getattr(m, 'organizer_name', ''),
+                    'minutes': getattr(m, 'minutes', ''),  # 只包含会议纪要内容
+                    'has_minutes': bool(getattr(m, 'minutes', '')),
+                }
+                for m in meetings[:20]
+            ],
+            'statistics': meeting_statistics,
+        }
+    except Exception as e:
+        # 如果会议服务出错，返回空数据
+        import logging
+        logging.error(f"获取项目会议数据失败: {str(e)}")
+        meeting_info = {
+            'meetings': [],
+            'statistics': {},
+        }
     
     # 获取项目问题
     issues = db.query(Issue).filter(
@@ -173,15 +199,24 @@ def get_project_workspace(
         ],
     }
     
-    # 获取解决方案
-    solution_service = ProjectSolutionService(db)
-    solutions = solution_service.get_project_solutions(project_id)
-    solution_statistics = solution_service.get_project_solution_statistics(project_id)
-    
-    solution_info = {
-        'solutions': solutions[:20],
-        'statistics': solution_statistics,
-    }
+    # 获取解决方案（添加错误处理）
+    try:
+        solution_service = ProjectSolutionService(db)
+        solutions = solution_service.get_project_solutions(project_id) or []
+        solution_statistics = solution_service.get_project_solution_statistics(project_id) or {}
+        
+        solution_info = {
+            'solutions': solutions[:20] if isinstance(solutions, list) else [],
+            'statistics': solution_statistics,
+        }
+    except Exception as e:
+        # 如果解决方案服务出错，返回空数据
+        import logging
+        logging.error(f"获取项目解决方案数据失败: {str(e)}")
+        solution_info = {
+            'solutions': [],
+            'statistics': {},
+        }
     
     # 获取项目文档
     documents = db.query(ProjectDocument).filter(

@@ -176,6 +176,8 @@ export const allMenuGroups = [
       { id: 'notifications', name: '通知中心', path: '/notifications', icon: 'Bell' },
       { id: 'punch-in', name: '岗位打卡', path: '/punch-in', icon: 'Clock' },
       { id: 'timesheet', name: '工时填报', path: '/timesheet', icon: 'Clock' },
+      { id: 'timesheet-dashboard', name: '工时统计', path: '/timesheet/dashboard', icon: 'BarChart3' },
+      { id: 'timesheet-batch', name: '批量操作', path: '/timesheet/batch', icon: 'CheckSquare' },
       { id: 'my-performance', name: '我的绩效', path: '/personal/my-performance', icon: 'Award' },
       { id: 'my-bonus', name: '我的奖金', path: '/personal/my-bonus', icon: 'DollarSign' },
       { id: 'monthly-summary', name: '月度总结', path: '/personal/monthly-summary', icon: 'FileText' },

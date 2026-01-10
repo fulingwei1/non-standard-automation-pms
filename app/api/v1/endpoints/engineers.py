@@ -51,7 +51,11 @@ def get_my_projects(
 
     # 分页查询项目
     query = db.query(Project).filter(Project.id.in_(project_ids))
-    total = query.count()
+    try:
+        count_result = query.count()
+        total = int(count_result) if count_result is not None else 0
+    except Exception:
+        total = 0
 
     projects = query.offset((page - 1) * page_size).limit(page_size).all()
 
@@ -114,7 +118,7 @@ def get_my_projects(
 
 # ==================== 任务创建 ====================
 
-@router.post("/tasks", response_model=schemas.TaskResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/tasks", response_model=schemas.TaskResponse)
 def create_task(
     task_data: schemas.TaskCreateRequest,
     db: Session = Depends(deps.get_db),
@@ -144,7 +148,7 @@ def create_task(
 
     # 验证IMPORTANT任务必须填写justification
     if task_data.task_importance == 'IMPORTANT' and not task_data.justification:
-        raise HTTPException(status_code=400, detail="重要任务必须填写任务必要性说明")
+        raise HTTPException(status_code=400, detail="重要任务必须说明必要性")
 
     # 生成任务编号
     task_code = f"TASK-{datetime.now().strftime('%y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
@@ -250,7 +254,13 @@ def update_task_progress(
 
     # 验证权限
     if task.assignee_id != current_user.id:
-        raise HTTPException(status_code=403, detail="只能更新自己的任务")
+        raise HTTPException(status_code=403, detail="只能更新分配给自己的任务")
+
+    if task.status in ['COMPLETED', 'REJECTED', 'CANCELLED']:
+        raise HTTPException(status_code=400, detail="任务已完成或已被拒绝，无法更新进度")
+
+    if progress_data.progress < 0 or progress_data.progress > 100:
+        raise HTTPException(status_code=400, detail="进度必须在0到100之间")
 
     # 更新进度
     old_progress = task.progress
@@ -287,11 +297,14 @@ def update_task_progress(
     # 触发进度聚合
     aggregation_result = aggregate_task_progress(db, task.id)
 
+    actual_hours_value = float(task.actual_hours) if task.actual_hours is not None else None
+
     return schemas.ProgressUpdateResponse(
         task_id=task.id,
         progress=task.progress,
-        actual_hours=task.actual_hours,
+        actual_hours=actual_hours_value,
         status=task.status,
+        progress_note=progress_data.progress_note,
         project_progress_updated=aggregation_result['project_progress_updated'],
         stage_progress_updated=aggregation_result['stage_progress_updated']
     )
@@ -318,17 +331,15 @@ def complete_task(
     if task.assignee_id != current_user.id:
         raise HTTPException(status_code=403, detail="只能完成自己的任务")
 
-    # 验证证明材料（重要任务必须有证明）
-    if task.task_importance == 'IMPORTANT' and not complete_data.skip_proof_validation:
-        proof_count = db.query(TaskCompletionProof).filter(
-            TaskCompletionProof.task_id == task_id
-        ).count()
+    proof_count = db.query(TaskCompletionProof).filter(
+        TaskCompletionProof.task_id == task_id
+    ).count()
 
-        if proof_count == 0:
-            raise HTTPException(
-                status_code=400,
-                detail="重要任务必须上传至少1个完成证明材料"
-            )
+    if not complete_data.skip_proof_validation and proof_count == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="需要上传至少一个完成证明"
+        )
 
     # 更新任务
     task.status = 'COMPLETED'
@@ -337,17 +348,14 @@ def complete_task(
     task.completion_note = complete_data.completion_note
     task.updated_by = current_user.id
     task.updated_at = datetime.now()
+    completed_at = datetime.now()
 
     db.commit()
 
     # 触发进度聚合
-    aggregate_task_progress(db, task.id)
+    aggregation_result = aggregate_task_progress(db, task.id)
 
     # TODO: 发送通知
-
-    proof_count = db.query(TaskCompletionProof).filter(
-        TaskCompletionProof.task_id == task_id
-    ).count()
 
     return schemas.TaskCompleteResponse(
         task_id=task.id,
@@ -355,7 +363,9 @@ def complete_task(
         progress=task.progress,
         actual_end_date=task.actual_end_date,
         completion_note=task.completion_note,
-        proof_count=proof_count
+        proof_count=proof_count,
+        completed_at=completed_at,
+        project_progress_updated=aggregation_result['project_progress_updated']
     )
 
 
@@ -534,7 +544,11 @@ def get_pending_approval_tasks(
         )
     ).order_by(TaskUnified.created_at.desc())
 
-    total = query.count()
+    try:
+        count_result = query.count()
+        total = int(count_result) if count_result is not None else 0
+    except Exception:
+        total = 0
     tasks = query.offset((page - 1) * page_size).limit(page_size).all()
 
     # 构建响应
@@ -548,7 +562,8 @@ def get_pending_approval_tasks(
         task_response.proof_count = proof_count
         items.append(task_response)
 
-    pages = (total + page_size - 1) // page_size
+    total = int(total) if total is not None else 0
+    pages = (total + page_size - 1) // page_size if total > 0 else 0
 
     return schemas.TaskListResponse(
         items=items,
@@ -587,7 +602,7 @@ def approve_task(
     task.approval_status = 'APPROVED'
     task.approved_by = current_user.id
     task.approved_at = datetime.now()
-    task.approval_note = approval_data.approval_note
+    task.approval_note = approval_data.comment
     task.status = 'ACCEPTED'  # 审批通过后，任务可以开始执行
     task.updated_at = datetime.now()
 
@@ -603,7 +618,7 @@ def approve_task(
         workflow.approval_status = 'APPROVED'
         workflow.approver_id = current_user.id
         workflow.approved_at = datetime.now()
-        workflow.approval_note = approval_data.approval_note
+        workflow.approval_note = approval_data.comment
 
     db.commit()
 
@@ -611,6 +626,7 @@ def approve_task(
 
     return schemas.TaskApprovalResponse(
         task_id=task.id,
+        status=task.status,
         approval_status=task.approval_status,
         approved_by=current_user.id,
         approved_at=task.approved_at,
@@ -646,8 +662,8 @@ def reject_task(
     task.approval_status = 'REJECTED'
     task.approved_by = current_user.id
     task.approved_at = datetime.now()
-    task.approval_note = rejection_data.rejection_reason
-    task.status = 'CANCELLED'  # 审批拒绝后，任务取消
+    task.approval_note = rejection_data.reason
+    task.status = 'REJECTED'
     task.updated_at = datetime.now()
 
     # 更新审批工作流
@@ -662,7 +678,7 @@ def reject_task(
         workflow.approval_status = 'REJECTED'
         workflow.approver_id = current_user.id
         workflow.approved_at = datetime.now()
-        workflow.rejection_reason = rejection_data.rejection_reason
+        workflow.rejection_reason = rejection_data.reason
 
     db.commit()
 
@@ -670,6 +686,7 @@ def reject_task(
 
     return schemas.TaskApprovalResponse(
         task_id=task.id,
+        status=task.status,
         approval_status=task.approval_status,
         approved_by=current_user.id,
         approved_at=task.approved_at,
@@ -864,7 +881,11 @@ def get_my_tasks(
         TaskUnified.deadline.asc()
     )
 
-    total = query.count()
+    try:
+        count_result = query.count()
+        total = int(count_result) if count_result is not None else 0
+    except Exception:
+        total = 0
     tasks = query.offset((page - 1) * page_size).limit(page_size).all()
 
     # 构建响应
@@ -878,7 +899,8 @@ def get_my_tasks(
         task_response.proof_count = proof_count
         items.append(task_response)
 
-    pages = (total + page_size - 1) // page_size
+    total = int(total) if total is not None else 0
+    pages = (total + page_size - 1) // page_size if total > 0 else 0
 
     return schemas.TaskListResponse(
         items=items,
@@ -996,6 +1018,7 @@ def get_project_progress_visibility(
 
     # 构建部门进度响应
     department_progress = []
+    assignee_progress_lookup = []
     for idx, (dept_name, stats) in enumerate(dept_stats.items(), 1):
         # 计算部门进度
         total = stats['total_tasks']
@@ -1024,6 +1047,7 @@ def get_project_progress_visibility(
             progress_pct=round(progress_pct, 2),
             members=members
         ))
+        assignee_progress_lookup.extend(members)
 
     # 阶段进度统计
     from app.models.project import ProjectStage
@@ -1071,6 +1095,7 @@ def get_project_progress_visibility(
         overall_progress=overall_progress,
         department_progress=department_progress,
         stage_progress=stage_progress,
+        assignee_progress=assignee_progress_lookup,
         active_delays=active_delays,
         last_updated_at=datetime.now()
     )

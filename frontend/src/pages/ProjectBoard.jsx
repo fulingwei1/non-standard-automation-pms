@@ -57,11 +57,9 @@ export default function ProjectBoard() {
     setError(null)
     try {
       const response = await projectApi.list()
-      if (response.data && response.data.length > 0) {
-        setProjects(response.data)
-      } else {
-        setProjects([])
-      }
+      // API返回分页格式：{ items: [], total: 0, page: 1, page_size: 20, pages: 0 }
+      const items = response.data?.items || response.data || []
+      setProjects(Array.isArray(items) ? items : [])
     } catch (err) {
       console.error('Failed to fetch projects:', err)
       setError(err)
@@ -293,7 +291,8 @@ function MatrixView({ projects, stages, onProjectClick }) {
     })
     
     projects.forEach(project => {
-      const stageKey = project.current_stage || 'S1'
+      // API返回的是 stage 字段，不是 current_stage
+      const stageKey = project.stage || project.current_stage || 'S1'
       const healthKey = project.health || 'H1'
       if (result[stageKey]) {
         result[stageKey][healthKey].push(project)
@@ -420,7 +419,7 @@ function ListView({ projects, onProjectClick, isProjectRelevant }) {
               <div className="text-center px-4">
                 <div className="text-xs text-slate-500">阶段</div>
                 <div className="text-sm text-white">
-                  {PROJECT_STAGES.find(s => s.key === project.current_stage)?.shortName || '-'}
+                  {PROJECT_STAGES.find(s => (s.key || s.code) === (project.stage || project.current_stage))?.shortName || '-'}
                 </div>
               </div>
               

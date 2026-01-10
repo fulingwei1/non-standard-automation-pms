@@ -3,7 +3,7 @@
  * Features: 机台列表、详情、创建、更新、进度管理
  */
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Plus,
@@ -88,6 +88,7 @@ const healthConfigs = {
 export default function MachineManagement() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [project, setProject] = useState(null)
   const [machines, setMachines] = useState([])
@@ -128,6 +129,27 @@ export default function MachineManagement() {
       fetchMachines()
     }
   }, [id, filterStatus, filterHealth])
+
+  // 如果 URL 中有 machine_id 参数，自动打开详情对话框
+  useEffect(() => {
+    const machineId = searchParams.get('machine_id')
+    if (machineId && !showDetailDialog && machines.length > 0 && !selectedMachine) {
+      const machineIdNum = parseInt(machineId)
+      const machine = machines.find(m => m.id === machineIdNum)
+      if (machine) {
+        // 直接调用 API 并设置状态，避免依赖 handleViewDetail
+        machineApi.get(machineIdNum).then((res) => {
+          setSelectedMachine(res.data || res)
+          setShowDetailDialog(true)
+          setDetailTab('info')
+          fetchMachineDocuments(machineIdNum)
+        }).catch((error) => {
+          console.error('Failed to fetch machine detail:', error)
+        })
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, machines, showDetailDialog, selectedMachine])
   const fetchProject = async () => {
     try {
       const res = await projectApi.get(id)
@@ -534,7 +556,18 @@ export default function MachineManagement() {
         </DialogContent>
       </Dialog>
       {/* Machine Detail Dialog */}
-      <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
+      <Dialog 
+        open={showDetailDialog} 
+        onOpenChange={(open) => {
+          setShowDetailDialog(open)
+          // 关闭对话框时，清除 URL 参数
+          if (!open) {
+            const newParams = new URLSearchParams(searchParams)
+            newParams.delete('machine_id')
+            setSearchParams(newParams, { replace: true })
+          }
+        }}
+      >
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>机台详情 - {selectedMachine?.machine_code}</DialogTitle>

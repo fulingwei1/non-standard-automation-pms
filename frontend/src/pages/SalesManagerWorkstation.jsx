@@ -4,7 +4,7 @@
  * Core Functions: Team management, Performance monitoring, Contract approval, Customer relationship
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
   TrendingUp,
@@ -45,8 +45,52 @@ import {
 import { cn, formatCurrency } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { SalesFunnel, CustomerCard, PaymentTimeline } from '../components/sales'
-import { salesStatisticsApi, salesApi } from '../services/api'
+import {
+  salesStatisticsApi,
+  salesTeamApi,
+  salesTargetApi,
+  salesReportApi,
+  contractApi,
+  paymentPlanApi,
+  paymentApi,
+} from '../services/api'
 import { ApiIntegrationError } from '../components/ui'
+
+const toISODate = (value) => value.toISOString().split('T')[0]
+
+const getRangeForPeriod = (period) => {
+  const now = new Date()
+  if (period === 'quarter') {
+    const start = new Date(now.getFullYear(), now.getMonth() - 2, 1)
+    return { start, end: now }
+  }
+  if (period === 'year') {
+    const start = new Date(now.getFullYear(), 0, 1)
+    return { start, end: now }
+  }
+  const start = new Date(now.getFullYear(), now.getMonth(), 1)
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  return { start, end }
+}
+
+const transformPlanToPayment = (plan) => ({
+  id: plan.id,
+  type: (plan.payment_type || 'progress').toLowerCase(),
+  projectName: plan.project_name || plan.contract_name || '收款计划',
+  amount: Number(plan.planned_amount || plan.amount || 0),
+  dueDate: plan.planned_date || plan.due_date,
+  paidDate: plan.actual_date || plan.paid_date,
+  status: (plan.status || 'PENDING').toLowerCase(),
+})
+
+const formatTimelineLabel = (value) => {
+  if (!value) return '刚刚'
+  try {
+    return new Date(value).toLocaleString('zh-CN', { hour12: false })
+  } catch (err) {
+    return value
+  }
+}
 
 // Mock data - 已移除，使用真实API
 /* const mockDeptStats = {
@@ -262,77 +306,147 @@ export default function SalesManagerWorkstation() {
   const [topCustomers, setTopCustomers] = useState([])
   const [payments, setPayments] = useState([])
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
+  const loadDashboard = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
 
-        const [statsRes, teamRes, funnelRes, approvalsRes, customersRes, paymentsRes] = await Promise.all([
-          salesStatisticsApi.getDepartmentStats().catch(() => ({ data: null })),
-          salesStatisticsApi.exportTeam().catch(() => ({ data: null })),
-          salesApi.getFunnel().catch(() => ({ data: null })),
-          salesApi.getPendingApprovals().catch(() => ({ data: null })),
-          salesApi.getTopCustomers({ limit: 5 }).catch(() => ({ data: null })),
-          salesApi.getPaymentSchedule({ limit: 5 }).catch(() => ({ data: null })),
-        ])
+      const range = getRangeForPeriod(selectedPeriod)
+      const params = { start_date: toISODate(range.start), end_date: toISODate(range.end) }
+      const monthLabel = `${range.start.getFullYear()}-${String(range.start.getMonth() + 1).padStart(2, '0')}`
 
-        if (statsRes?.data) {
-          setDeptStats({
-            monthlyTarget: statsRes.data.monthly_target || 0,
-            monthlyAchieved: statsRes.data.monthly_achieved || 0,
-            achievementRate: statsRes.data.achievement_rate || 0,
-            yearTarget: statsRes.data.year_target || 0,
-            yearAchieved: statsRes.data.year_achieved || 0,
-            yearProgress: statsRes.data.year_progress || 0,
-            teamSize: statsRes.data.team_size || 0,
-            activeContracts: statsRes.data.active_contracts || 0,
-            pendingApprovals: statsRes.data.pending_approvals || 0,
-            totalCustomers: statsRes.data.total_customers || 0,
-            newCustomersThisMonth: statsRes.data.new_customers_this_month || 0,
-            activeOpportunities: statsRes.data.active_opportunities || 0,
-            hotOpportunities: statsRes.data.hot_opportunities || 0,
-            pendingPayment: statsRes.data.pending_payment || 0,
-            overduePayment: statsRes.data.overdue_payment || 0,
-            collectionRate: statsRes.data.collection_rate || 0,
-          })
-        }
+      const [
+        funnelRes,
+        teamRes,
+        approvalsRes,
+        customersRes,
+        plansRes,
+        summaryRes,
+        paymentStatsRes,
+        targetRes,
+        yearSummaryRes,
+        yearTargetRes,
+      ] = await Promise.all([
+        salesStatisticsApi.funnel(params),
+        salesTeamApi.getTeam({ page_size: 50, ...params }),
+        contractApi.list({ status: 'IN_REVIEW', page_size: 5 }),
+        salesReportApi.customerContribution({ top_n: 5, ...params }),
+        paymentPlanApi.list({ page_size: 5, status: 'PENDING' }),
+        salesStatisticsApi.summary(params),
+        paymentApi.getStatistics(params),
+        salesTargetApi.list({
+          target_scope: 'DEPARTMENT',
+          target_period: 'MONTHLY',
+          period_value: monthLabel,
+          page_size: 1,
+        }),
+        salesStatisticsApi.summary({
+          start_date: toISODate(new Date(range.start.getFullYear(), 0, 1)),
+          end_date: params.end_date,
+        }),
+        salesTargetApi.list({
+          target_scope: 'DEPARTMENT',
+          target_period: 'YEARLY',
+          period_value: String(range.start.getFullYear()),
+          page_size: 1,
+        }),
+      ])
 
-        if (teamRes?.data) {
-          setTeamMembers(teamRes.data.items || teamRes.data || [])
-        }
+      const extractData = (res) => res?.data?.data || res?.data || res || {}
+      const funnelPayload = extractData(funnelRes) || {}
+      const teamData = teamRes?.data?.team_members || teamRes?.data?.data?.team_members || teamRes?.team_members || []
+      const approvals = approvalsRes?.data?.items || approvalsRes?.data || []
+      const customerContribution = extractData(customersRes)?.customers || []
+      const planItems = plansRes?.data?.items || plansRes?.data || []
+      const summaryData = extractData(summaryRes)
+      const paymentSummary = extractData(paymentStatsRes)?.summary || {}
+      const targetItem = targetRes?.data?.items?.[0]
+      const yearSummaryData = extractData(yearSummaryRes)
+      const yearTargetItem = yearTargetRes?.data?.items?.[0]
 
-        if (funnelRes?.data) {
-          setSalesFunnel(funnelRes.data)
-        }
+      setSalesFunnel({
+        lead: funnelPayload.leads || 0,
+        contact: funnelPayload.opportunities || 0,
+        quote: funnelPayload.quotes || 0,
+        negotiate: Math.max((funnelPayload.opportunities || 0) - (funnelPayload.contracts || 0), 0),
+        won: funnelPayload.contracts || 0,
+      })
 
-        if (approvalsRes?.data) {
-          setPendingApprovals(approvalsRes.data.items || approvalsRes.data || [])
-        }
+      setTeamMembers(teamData)
 
-        if (customersRes?.data) {
-          setTopCustomers(customersRes.data.items || customersRes.data || [])
-        }
+      const approvalsTransformed = approvals.map((contract) => ({
+        id: contract.id,
+        type: 'contract',
+        title: contract.contract_code || contract.contract_name || '合同审批',
+        customer: contract.customer_name || '未命名客户',
+        amount: Number(contract.contract_amount || 0),
+        submitter: contract.owner_name || '系统',
+        submitTime: contract.created_at,
+        priority: Number(contract.contract_amount || 0) > 300000 ? 'high' : 'medium',
+      }))
+      setPendingApprovals(approvalsTransformed)
 
-        if (paymentsRes?.data) {
-          setPayments(paymentsRes.data.items || paymentsRes.data || [])
-        }
-      } catch (err) {
-        console.error('Failed to load sales manager dashboard:', err)
-        setError(err)
-        setDeptStats(null)
-        setTeamMembers([])
-        setSalesFunnel({})
-        setPendingApprovals([])
-        setTopCustomers([])
-        setPayments([])
-      } finally {
-        setLoading(false)
-      }
+      const customersMapped = customerContribution.map((item) => ({
+        id: item.customer_id || item.customer_name,
+        name: item.customer_name || '未命名客户',
+        shortName: item.customer_name || '客户',
+        grade: 'A',
+        status: 'active',
+        industry: item.industry || '未分类',
+        location: '',
+        lastContact: '',
+        opportunityCount: item.contract_count || 0,
+        totalAmount: item.total_amount || 0,
+      }))
+      setTopCustomers(customersMapped)
+      setPayments(planItems.map(transformPlanToPayment))
+
+      const monthlyTarget = targetItem?.target_value || summaryData?.monthly_target || 0
+      const monthlyAchieved = summaryData?.total_contract_amount || 0
+      const achievementRate = monthlyTarget > 0 ? (monthlyAchieved / monthlyTarget) * 100 : 0
+      const totalCustomers = teamData.reduce((sum, member) => sum + (member.customer_total || 0), 0)
+      const newCustomers = teamData.reduce((sum, member) => sum + (member.new_customers || 0), 0)
+      const overallOpportunities = summaryData?.total_opportunities || 0
+
+      const yearTargetValue = yearTargetItem?.target_value || yearSummaryData?.year_target || monthlyTarget * 12
+      const yearAchieved = yearSummaryData?.total_contract_amount || monthlyAchieved
+      const yearProgress = yearTargetValue > 0 ? (yearAchieved / yearTargetValue) * 100 : 0
+
+      setDeptStats({
+        monthlyTarget,
+        monthlyAchieved,
+        achievementRate: Number(achievementRate.toFixed(1)),
+        teamSize: teamData.length,
+        activeContracts: summaryData?.signed_contracts || 0,
+        pendingApprovals: approvalsTransformed.length,
+        totalCustomers,
+        newCustomersThisMonth: newCustomers,
+        activeOpportunities: overallOpportunities,
+        hotOpportunities: teamData.reduce((sum, member) => sum + (member.opportunity_count || 0), 0),
+        pendingPayment: paymentSummary.total_unpaid || 0,
+        overduePayment: paymentSummary.total_overdue || 0,
+        collectionRate: paymentSummary.collection_rate || 0,
+        yearTarget: yearTargetValue,
+        yearAchieved,
+        yearProgress: Number(yearProgress.toFixed(1)),
+      })
+    } catch (err) {
+      console.error('Failed to load sales manager dashboard:', err)
+      setError(err)
+      setDeptStats(null)
+      setTeamMembers([])
+      setSalesFunnel({})
+      setPendingApprovals([])
+      setTopCustomers([])
+      setPayments([])
+    } finally {
+      setLoading(false)
     }
-
-    fetchData()
   }, [selectedPeriod])
+
+  useEffect(() => {
+    loadDashboard()
+  }, [loadDashboard])
 
   if (loading) {
     return (
@@ -350,10 +464,7 @@ export default function SalesManagerWorkstation() {
         <ApiIntegrationError
           error={error}
           apiEndpoint="/api/v1/sales/statistics/department"
-          onRetry={() => {
-            setError(null)
-            setLoading(true)
-          }}
+          onRetry={loadDashboard}
         />
       </div>
     )
@@ -465,52 +576,10 @@ export default function SalesManagerWorkstation() {
               </CardHeader>
               <CardContent>
                 {Object.keys(salesFunnel).length > 0 ? (
-                <div className="space-y-4">
-                  {Object.entries(salesFunnel).map(([stage, data], index) => {
-                    const stageNames = {
-                      inquiry: '询价阶段',
-                      qualification: '需求确认',
-                      proposal: '方案报价',
-                      negotiation: '商务谈判',
-                      closed: '签约成交',
-                    }
-                    return (
-                      <div key={stage} className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2">
-                            <div className={cn(
-                              'w-2 h-2 rounded-full',
-                              index === 0 && 'bg-blue-500',
-                              index === 1 && 'bg-cyan-500',
-                              index === 2 && 'bg-amber-500',
-                              index === 3 && 'bg-orange-500',
-                              index === 4 && 'bg-emerald-500'
-                            )} />
-                            <span className="text-slate-300">{stageNames[stage]}</span>
-                            <Badge variant="outline" className="text-xs bg-slate-700/40">
-                              {data.count} 个
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-slate-400 text-xs">
-                              转化率: {data.conversion}%
-                            </span>
-                            <span className="text-white font-medium">
-                              {formatCurrency(data.amount)}
-                            </span>
-                          </div>
-                        </div>
-                        <Progress
-                          value={data.conversion}
-                          className="h-2 bg-slate-700/50"
-                        />
-                      </div>
-                    )
-                  })}
-                </div>
+                  <SalesFunnel data={salesFunnel} />
                 ) : (
                   <div className="text-center py-8 text-slate-500">
-                    <p>销售漏斗数据需要从API获取</p>
+                    <p>暂无销售漏斗数据</p>
                   </div>
                 )}
               </CardContent>
@@ -648,7 +717,7 @@ export default function SalesManagerWorkstation() {
                       </div>
                       <div className="flex items-center justify-between text-xs mt-2">
                         <span className="text-slate-400">
-                          {item.submitter} · {item.submitTime.split(' ')[1]}
+                          {item.submitter} · {formatTimelineLabel(item.submitTime)}
                         </span>
                         <span className="font-medium text-amber-400">
                           {formatCurrency(item.amount)}
@@ -659,7 +728,7 @@ export default function SalesManagerWorkstation() {
                 })
                 ) : (
                   <div className="text-center py-8 text-slate-500">
-                    <p>待审批事项数据需要从API获取</p>
+                    <p>暂无待审批事项</p>
                   </div>
                 )}
                 <Button variant="outline" className="w-full mt-3">
@@ -697,7 +766,7 @@ export default function SalesManagerWorkstation() {
                 ))
                 ) : (
                   <div className="text-center py-8 text-slate-500">
-                    <p>重点客户数据需要从API获取</p>
+                    <p>暂无重点客户数据</p>
                   </div>
                 )}
               </CardContent>
@@ -723,7 +792,7 @@ export default function SalesManagerWorkstation() {
                   <PaymentTimeline payments={payments} compact />
                 ) : (
                   <div className="text-center py-8 text-slate-500">
-                    <p>回款计划数据需要从API获取</p>
+                    <p>暂无回款计划</p>
                   </div>
                 )}
               </CardContent>
@@ -778,4 +847,3 @@ export default function SalesManagerWorkstation() {
     </motion.div>
   )
 }
-

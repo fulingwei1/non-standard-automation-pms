@@ -15,7 +15,11 @@ export function useRoleFilter(user, projects = []) {
       return PROJECT_STAGES
     }
     
-    return PROJECT_STAGES.filter(stage => stage.roles.includes(user.role))
+    // 如果阶段配置中有 roles 字段，则按角色筛选
+    return PROJECT_STAGES.filter(stage => {
+      if (!stage.roles) return true  // 没有 roles 字段则显示所有阶段
+      return stage.roles.includes(user.role)
+    })
   }, [user.role])
 
   // 获取与当前用户相关的项目
@@ -37,7 +41,7 @@ export function useRoleFilter(user, projects = []) {
 
   // 获取所有相关阶段的key
   const relevantStageKeys = useMemo(() => {
-    return relevantStages.map(s => s.key)
+    return relevantStages.map(s => s.key || s.code)
   }, [relevantStages])
 
   // 判断项目是否与当前用户相关
@@ -67,7 +71,8 @@ export function useRoleFilter(user, projects = []) {
       // 销售负责人
       if (project.sales_id === user?.id) return true
       // 按角色相关阶段筛选
-      if (isStageRelevant(project.current_stage)) return true
+      const projectStage = project.stage || project.current_stage
+      if (projectStage && isStageRelevant(projectStage)) return true
       return false
     })
   }
@@ -75,14 +80,21 @@ export function useRoleFilter(user, projects = []) {
   // 按阶段分组项目
   const groupByStage = (projectList) => {
     const grouped = {}
+    // PROJECT_STAGES 使用 code 字段作为 key
     PROJECT_STAGES.forEach(stage => {
-      grouped[stage.key] = []
+      const stageKey = stage.key || stage.code
+      grouped[stageKey] = []
     })
     
     projectList.forEach(project => {
-      const stageKey = project.current_stage || 'S1'
+      // 支持多种字段名：stage, current_stage
+      // API返回的是 stage 字段（如 'S1', 'S2'）
+      const stageKey = project.stage || project.current_stage || 'S1'
       if (grouped[stageKey]) {
         grouped[stageKey].push(project)
+      } else {
+        // 如果阶段不在预定义列表中，记录警告（但不阻塞）
+        console.warn(`项目 ${project.project_code || project.id} 的阶段 "${stageKey}" 不在预定义列表中，将忽略`)
       }
     })
     
@@ -107,7 +119,8 @@ export function useRoleFilter(user, projects = []) {
   const stageStats = useMemo(() => {
     const stats = {}
     PROJECT_STAGES.forEach(stage => {
-      stats[stage.key] = {
+      const stageKey = stage.key || stage.code
+      stats[stageKey] = {
         total: 0,
         H1: 0,
         H2: 0,
@@ -117,7 +130,9 @@ export function useRoleFilter(user, projects = []) {
     })
     
     projects.forEach(project => {
-      const stageKey = project.current_stage || 'S1'
+      // 支持多种字段名：stage, current_stage
+      // API返回的是 stage 字段（如 'S1', 'S2'）
+      const stageKey = project.stage || project.current_stage || 'S1'
       const healthKey = project.health || 'H1'
       if (stats[stageKey]) {
         stats[stageKey].total++

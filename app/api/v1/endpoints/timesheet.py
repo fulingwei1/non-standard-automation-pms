@@ -96,12 +96,11 @@ def list_timesheets(
             task_name=task_name,
             work_date=ts.work_date,
             work_hours=ts.hours or Decimal("0"),
-            work_type=ts.work_type or "NORMAL",
-            description=ts.description,
-            is_billable=ts.is_billable if ts.is_billable is not None else True,
+            work_type=ts.overtime_type or "NORMAL",
+            description=ts.work_content,
             status=ts.status or "DRAFT",
-            approved_by=ts.approved_by,
-            approved_at=ts.approved_at,
+            approved_by=ts.approver_id,
+            approved_at=ts.approve_time,
             created_at=ts.created_at,
             updated_at=ts.updated_at
         ))
@@ -156,17 +155,41 @@ def create_timesheet(
     if existing:
         raise HTTPException(status_code=400, detail="该日期已有工时记录，请更新或删除后重试")
     
+    # 获取用户和部门信息
+    user = db.query(User).filter(User.id == current_user.id).first()
+    department_id = None
+    department_name = None
+    if user and hasattr(user, 'department_id') and user.department_id:
+        department = db.query(Department).filter(Department.id == user.department_id).first()
+        if department:
+            department_id = department.id
+            department_name = department.name
+    
+    # 获取项目信息
+    project_code = None
+    project_name = None
+    if timesheet_in.project_id:
+        project = db.query(Project).filter(Project.id == timesheet_in.project_id).first()
+        if project:
+            project_code = project.project_code
+            project_name = project.project_name
+    
     timesheet = Timesheet(
         user_id=current_user.id,
+        user_name=user.real_name or user.username if user else None,
+        department_id=department_id,
+        department_name=department_name,
         project_id=timesheet_in.project_id,
+        project_code=project_code,
+        project_name=project_name,
         rd_project_id=timesheet_in.rd_project_id,
         task_id=timesheet_in.task_id,
         work_date=timesheet_in.work_date,
         hours=timesheet_in.work_hours,
-        work_type=timesheet_in.work_type,
-        description=timesheet_in.description,
-        is_billable=timesheet_in.is_billable,
-        status="DRAFT"
+        overtime_type=timesheet_in.work_type,
+        work_content=timesheet_in.description,
+        status="DRAFT",
+        created_by=current_user.id
     )
     
     db.add(timesheet)
@@ -213,16 +236,29 @@ def batch_create_timesheets(
                 failed_count += 1
                 continue
             
+            # 获取用户和项目信息
+            user = db.query(User).filter(User.id == current_user.id).first()
+            project_code = None
+            project_name = None
+            if ts_in.project_id:
+                project = db.query(Project).filter(Project.id == ts_in.project_id).first()
+                if project:
+                    project_code = project.project_code
+                    project_name = project.project_name
+            
             timesheet = Timesheet(
                 user_id=current_user.id,
+                user_name=user.real_name or user.username if user else None,
                 project_id=ts_in.project_id,
+                project_code=project_code,
+                project_name=project_name,
                 task_id=ts_in.task_id,
                 work_date=ts_in.work_date,
                 hours=ts_in.work_hours,
-                work_type=ts_in.work_type,
-                description=ts_in.description,
-                is_billable=ts_in.is_billable,
-                status="DRAFT"
+                overtime_type=ts_in.work_type,
+                work_content=ts_in.description,
+                status="DRAFT",
+                created_by=current_user.id
             )
             
             db.add(timesheet)
@@ -278,13 +314,13 @@ def get_timesheet_detail(
         task_id=timesheet.task_id,
         task_name=None,
         work_date=timesheet.work_date,
-        work_hours=timesheet.work_hours or Decimal("0"),
-        work_type=timesheet.work_type or "NORMAL",
-        description=timesheet.description,
-        is_billable=timesheet.is_billable if timesheet.is_billable is not None else True,
+        work_hours=timesheet.hours or Decimal("0"),
+        work_type=timesheet.overtime_type or "NORMAL",
+        description=timesheet.work_content,
+        is_billable=True,
         status=timesheet.status or "DRAFT",
-        approved_by=timesheet.approved_by,
-        approved_at=timesheet.approved_at,
+        approved_by=timesheet.approver_id,
+        approved_at=timesheet.approve_time,
         created_at=timesheet.created_at,
         updated_at=timesheet.updated_at
     )
@@ -317,11 +353,9 @@ def update_timesheet(
     if timesheet_in.work_hours is not None:
         timesheet.hours = timesheet_in.work_hours
     if timesheet_in.work_type is not None:
-        timesheet.work_type = timesheet_in.work_type
+        timesheet.overtime_type = timesheet_in.work_type
     if timesheet_in.description is not None:
-        timesheet.description = timesheet_in.description
-    if timesheet_in.is_billable is not None:
-        timesheet.is_billable = timesheet_in.is_billable
+        timesheet.work_content = timesheet_in.description
     
     db.add(timesheet)
     db.commit()
@@ -406,18 +440,32 @@ def approve_timesheet(
     # TODO: 检查审批权限
     
     timesheet.status = "APPROVED"
-    timesheet.approved_by = current_user.id
-    timesheet.approved_at = datetime.now()
+    timesheet.approver_id = current_user.id
+    timesheet.approver_name = current_user.real_name or current_user.username
+    timesheet.approve_time = datetime.now()
+    timesheet.approve_comment = comment
     
     # 记录审批日志
     log = TimesheetApprovalLog(
         timesheet_id=timesheet.id,
         approver_id=current_user.id,
-        approval_action="APPROVE",
-        approval_comment=comment
+        approver_name=current_user.real_name or current_user.username,
+        action="APPROVE",
+        comment=comment
     )
     db.add(log)
     db.commit()
+    
+    # 审批通过后自动同步到各系统
+    try:
+        from app.services.timesheet_sync_service import TimesheetSyncService
+        sync_service = TimesheetSyncService(db)
+        sync_service.sync_all_on_approval(timesheet.id)
+    except Exception as e:
+        # 同步失败不影响审批结果，只记录日志
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"工时记录{timesheet.id}审批通过后自动同步失败: {str(e)}")
     
     return ResponseModel(message="工时记录已审批通过")
 
@@ -445,19 +493,38 @@ def approve_timesheets(
     
     for ts in timesheets:
         ts.status = "APPROVED"
-        ts.approved_by = current_user.id
-        ts.approved_at = datetime.now()
+        ts.approver_id = current_user.id
+        ts.approver_name = current_user.real_name or current_user.username
+        ts.approve_time = datetime.now()
+        ts.approve_comment = comment
         
         # 记录审批日志
         log = TimesheetApprovalLog(
             timesheet_id=ts.id,
             approver_id=current_user.id,
-            approval_action="APPROVE",
-            approval_comment=comment
+            approver_name=current_user.real_name or current_user.username,
+            action="APPROVE",
+            comment=comment
         )
         db.add(log)
     
     db.commit()
+    
+    # 批量审批通过后自动同步
+    try:
+        from app.services.timesheet_sync_service import TimesheetSyncService
+        sync_service = TimesheetSyncService(db)
+        for ts in timesheets:
+            try:
+                sync_service.sync_all_on_approval(ts.id)
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"工时记录{ts.id}审批通过后自动同步失败: {str(e)}")
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"批量同步失败: {str(e)}")
     
     return ResponseModel(message=f"已审批通过 {len(timesheets)} 条工时记录")
 
@@ -497,8 +564,9 @@ def reject_timesheets(
     
     for ts in timesheets:
         ts.status = "REJECTED"
-        ts.approved_by = current_user.id
-        ts.approved_at = datetime.now()
+        ts.approver_id = current_user.id
+        ts.approver_name = current_user.real_name or current_user.username
+        ts.approve_time = datetime.now()
         
         log = TimesheetApprovalLog(
             timesheet_id=ts.id,
@@ -588,12 +656,11 @@ def get_week_timesheet(
             task_name=None,
             work_date=ts.work_date,
             work_hours=ts.hours or Decimal("0"),
-            work_type=ts.work_type or "NORMAL",
-            description=ts.description,
-            is_billable=ts.is_billable if ts.is_billable is not None else True,
+            work_type=ts.overtime_type or "NORMAL",
+            description=ts.work_content,
             status=ts.status or "DRAFT",
-            approved_by=ts.approved_by,
-            approved_at=ts.approved_at,
+            approved_by=ts.approver_id,
+            approved_at=ts.approve_time,
             created_at=ts.created_at,
             updated_at=ts.updated_at
         ))
@@ -651,7 +718,7 @@ def get_month_summary(
         hours = ts.hours or Decimal("0")
         total_hours += hours
         
-        if ts.is_billable:
+        if True:  # 所有已审批的工时都是可计费的
             billable_hours += hours
         else:
             non_billable_hours += hours
@@ -667,7 +734,7 @@ def get_month_summary(
         by_project[project_name] += hours
         
         # 按工作类型统计
-        work_type = ts.work_type or "NORMAL"
+        work_type = ts.overtime_type or "NORMAL"
         if work_type not in by_work_type:
             by_work_type[work_type] = Decimal("0")
         by_work_type[work_type] += hours
@@ -736,12 +803,11 @@ def get_pending_approval_timesheets(
             task_name=None,
             work_date=ts.work_date,
             work_hours=ts.hours or Decimal("0"),
-            work_type=ts.work_type or "NORMAL",
-            description=ts.description,
-            is_billable=ts.is_billable if ts.is_billable is not None else True,
+            work_type=ts.overtime_type or "NORMAL",
+            description=ts.work_content,
             status=ts.status or "DRAFT",
-            approved_by=ts.approved_by,
-            approved_at=ts.approved_at,
+            approved_by=ts.approver_id,
+            approved_at=ts.approve_time,
             created_at=ts.created_at,
             updated_at=ts.updated_at
         ))
@@ -800,7 +866,7 @@ def get_timesheet_statistics(
         hours = ts.hours or Decimal("0")
         total_hours += hours
         
-        if ts.is_billable:
+        if True:  # 所有已审批的工时都是可计费的
             billable_hours += hours
         
         # 按用户统计
@@ -827,7 +893,7 @@ def get_timesheet_statistics(
         by_date[date_str] += hours
         
         # 按工作类型统计
-        work_type = ts.work_type or "NORMAL"
+        work_type = ts.overtime_type or "NORMAL"
         if work_type not in by_work_type:
             by_work_type[work_type] = Decimal("0")
         by_work_type[work_type] += hours
@@ -876,7 +942,7 @@ def get_my_timesheet_summary(
         hours = Decimal(str(ts.hours or 0))
         total_hours += hours
         
-        if ts.is_billable:
+        if True:  # 所有已审批的工时都是可计费的
             billable_hours += hours
         
         # 按项目统计
@@ -902,7 +968,7 @@ def get_my_timesheet_summary(
         by_date[date_str] += hours
         
         # 按工作类型统计
-        work_type = ts.work_type or "NORMAL"
+        work_type = ts.overtime_type or "NORMAL"
         if work_type not in by_work_type:
             by_work_type[work_type] = Decimal(0)
         by_work_type[work_type] += hours
@@ -1040,4 +1106,349 @@ def get_department_timesheet_summary(
             "start_date": start_date.isoformat() if start_date else None,
             "end_date": end_date.isoformat() if end_date else None,
         }
+    )
+
+
+# ==================== 工时汇总与报表 ====================
+
+@router.post("/aggregate", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def aggregate_timesheet(
+    *,
+    db: Session = Depends(deps.get_db),
+    year: int = Query(..., description="年份"),
+    month: int = Query(..., ge=1, le=12, description="月份"),
+    user_id: Optional[int] = Query(None, description="用户ID（可选）"),
+    department_id: Optional[int] = Query(None, description="部门ID（可选）"),
+    project_id: Optional[int] = Query(None, description="项目ID（可选）"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    手动触发工时汇总
+    """
+    from app.services.timesheet_aggregation_service import TimesheetAggregationService
+    
+    try:
+        service = TimesheetAggregationService(db)
+        result = service.aggregate_monthly_timesheet(year, month, user_id, department_id, project_id)
+        
+        return ResponseModel(
+            code=200,
+            message="工时汇总完成",
+            data=result
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"工时汇总失败: {str(e)}")
+
+
+@router.get("/reports/hr", response_model=ResponseModel)
+def get_hr_report(
+    *,
+    db: Session = Depends(deps.get_db),
+    year: int = Query(..., description="年份"),
+    month: int = Query(..., ge=1, le=12, description="月份"),
+    department_id: Optional[int] = Query(None, description="部门ID（可选）"),
+    format: str = Query("json", description="格式：json/excel"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取HR加班工资报表
+    """
+    from app.services.timesheet_aggregation_service import TimesheetAggregationService
+    from app.services.timesheet_report_service import TimesheetReportService
+    from fastapi.responses import StreamingResponse
+    
+    try:
+        if format == "excel":
+            # 生成Excel报表
+            report_service = TimesheetReportService(db)
+            excel_file = report_service.generate_hr_report_excel(year, month, department_id)
+            
+            filename = f"HR加班工资表_{year}年{month}月.xlsx"
+            return StreamingResponse(
+                excel_file,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": f"attachment; filename={filename}"}
+            )
+        else:
+            # 返回JSON数据
+            service = TimesheetAggregationService(db)
+            data = service.generate_hr_report(year, month, department_id)
+            
+            return ResponseModel(
+                code=200,
+                message="success",
+                data=data
+            )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"生成HR报表失败: {str(e)}")
+
+
+@router.get("/reports/finance", response_model=ResponseModel)
+def get_finance_report(
+    *,
+    db: Session = Depends(deps.get_db),
+    year: int = Query(..., description="年份"),
+    month: int = Query(..., ge=1, le=12, description="月份"),
+    project_id: Optional[int] = Query(None, description="项目ID（可选）"),
+    format: str = Query("json", description="格式：json/excel"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取财务报表（项目成本核算表）
+    """
+    from app.services.timesheet_aggregation_service import TimesheetAggregationService
+    from app.services.timesheet_report_service import TimesheetReportService
+    from fastapi.responses import StreamingResponse
+    
+    try:
+        if format == "excel":
+            # 生成Excel报表
+            report_service = TimesheetReportService(db)
+            excel_file = report_service.generate_finance_report_excel(year, month, project_id)
+            
+            filename = f"项目成本核算表_{year}年{month}月.xlsx"
+            return StreamingResponse(
+                excel_file,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": f"attachment; filename={filename}"}
+            )
+        else:
+            # 返回JSON数据
+            service = TimesheetAggregationService(db)
+            data = service.generate_finance_report(year, month, project_id)
+            
+            return ResponseModel(
+                code=200,
+                message="success",
+                data=data
+            )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"生成财务报表失败: {str(e)}")
+
+
+@router.get("/reports/rd", response_model=ResponseModel)
+def get_rd_report(
+    *,
+    db: Session = Depends(deps.get_db),
+    year: int = Query(..., description="年份"),
+    month: int = Query(..., ge=1, le=12, description="月份"),
+    rd_project_id: Optional[int] = Query(None, description="研发项目ID（可选）"),
+    format: str = Query("json", description="格式：json/excel"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取研发报表（研发费用核算表）
+    """
+    from app.services.timesheet_aggregation_service import TimesheetAggregationService
+    from app.services.timesheet_report_service import TimesheetReportService
+    from fastapi.responses import StreamingResponse
+    
+    try:
+        if format == "excel":
+            # 生成Excel报表
+            report_service = TimesheetReportService(db)
+            excel_file = report_service.generate_rd_report_excel(year, month, rd_project_id)
+            
+            filename = f"研发费用核算表_{year}年{month}月.xlsx"
+            return StreamingResponse(
+                excel_file,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": f"attachment; filename={filename}"}
+            )
+        else:
+            # 返回JSON数据
+            service = TimesheetAggregationService(db)
+            data = service.generate_rd_report(year, month, rd_project_id)
+            
+            return ResponseModel(
+                code=200,
+                message="success",
+                data=data
+            )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"生成研发报表失败: {str(e)}")
+
+
+@router.get("/reports/project", response_model=ResponseModel)
+def get_project_report(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int = Query(..., description="项目ID"),
+    start_date: Optional[date] = Query(None, description="开始日期（可选）"),
+    end_date: Optional[date] = Query(None, description="结束日期（可选）"),
+    format: str = Query("json", description="格式：json/excel"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取项目报表（项目工时统计）
+    """
+    from app.services.timesheet_aggregation_service import TimesheetAggregationService
+    from app.services.timesheet_report_service import TimesheetReportService
+    from fastapi.responses import StreamingResponse
+    
+    try:
+        if format == "excel":
+            # 生成Excel报表
+            report_service = TimesheetReportService(db)
+            excel_file = report_service.generate_project_report_excel(project_id, start_date, end_date)
+            
+            project = db.query(Project).filter(Project.id == project_id).first()
+            project_name = project.project_name if project else f"项目{project_id}"
+            filename = f"{project_name}_工时报表.xlsx"
+            
+            return StreamingResponse(
+                excel_file,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": f"attachment; filename={filename}"}
+            )
+        else:
+            # 返回JSON数据
+            service = TimesheetAggregationService(db)
+            data = service.generate_project_report(project_id, start_date, end_date)
+            
+            return ResponseModel(
+                code=200,
+                message="success",
+                data=data
+            )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"生成项目报表失败: {str(e)}")
+
+
+@router.post("/sync", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def sync_timesheet(
+    *,
+    db: Session = Depends(deps.get_db),
+    timesheet_id: Optional[int] = Query(None, description="工时记录ID（可选）"),
+    project_id: Optional[int] = Query(None, description="项目ID（可选，用于批量同步）"),
+    rd_project_id: Optional[int] = Query(None, description="研发项目ID（可选，用于批量同步）"),
+    year: Optional[int] = Query(None, description="年份（用于批量同步）"),
+    month: Optional[int] = Query(None, ge=1, le=12, description="月份（用于批量同步）"),
+    sync_target: str = Query("all", description="同步目标：all/finance/rd/project/hr"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    手动触发数据同步
+    """
+    from app.services.timesheet_sync_service import TimesheetSyncService
+    
+    try:
+        service = TimesheetSyncService(db)
+        results = {}
+        
+        if timesheet_id:
+            # 同步单个工时记录
+            if sync_target in ["all", "finance"]:
+                results['finance'] = service.sync_to_finance(timesheet_id=timesheet_id)
+            if sync_target in ["all", "rd"]:
+                results['rd'] = service.sync_to_rd(timesheet_id=timesheet_id)
+            if sync_target in ["all", "project"]:
+                results['project'] = service.sync_to_project(timesheet_id=timesheet_id)
+        elif project_id and year and month:
+            # 批量同步项目
+            if sync_target in ["all", "finance"]:
+                results['finance'] = service.sync_to_finance(project_id=project_id, year=year, month=month)
+            if sync_target in ["all", "project"]:
+                results['project'] = service.sync_to_project(project_id=project_id)
+        elif rd_project_id and year and month:
+            # 批量同步研发项目
+            if sync_target in ["all", "rd"]:
+                results['rd'] = service.sync_to_rd(rd_project_id=rd_project_id, year=year, month=month)
+        elif year and month:
+            # 同步所有数据
+            if sync_target in ["all", "hr"]:
+                results['hr'] = service.sync_to_hr(year=year, month=month)
+        else:
+            raise HTTPException(status_code=400, detail="参数不完整")
+        
+        return ResponseModel(
+            code=200,
+            message="数据同步完成",
+            data=results
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"数据同步失败: {str(e)}")
+
+
+@router.get("/sync-status/{timesheet_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def get_sync_status(
+    *,
+    db: Session = Depends(deps.get_db),
+    timesheet_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取工时记录的同步状态
+    """
+    from app.models.finance import FinancialProjectCost
+    from app.models.rd_project import RdCost
+    from app.models.project import ProjectCost
+    
+    timesheet = db.query(Timesheet).filter(Timesheet.id == timesheet_id).first()
+    if not timesheet:
+        raise HTTPException(status_code=404, detail="工时记录不存在")
+    
+    # 检查同步状态
+    sync_status = {
+        'finance': {'status': 'not_synced', 'message': '未同步'},
+        'rd': {'status': 'not_synced', 'message': '未同步'},
+        'project': {'status': 'not_synced', 'message': '未同步'},
+        'hr': {'status': 'not_synced', 'message': '未同步'},
+    }
+    
+    # 检查财务同步状态
+    if timesheet.project_id and timesheet.status == 'APPROVED':
+        finance_cost = db.query(FinancialProjectCost).filter(
+            FinancialProjectCost.source_type == 'TIMESHEET',
+            FinancialProjectCost.source_id == timesheet_id
+        ).first()
+        if finance_cost:
+            sync_status['finance'] = {
+                'status': 'synced',
+                'message': '已同步',
+                'cost_id': finance_cost.id,
+                'sync_time': finance_cost.created_at.isoformat() if finance_cost.created_at else None
+            }
+    
+    # 检查研发同步状态
+    if timesheet.rd_project_id and timesheet.status == 'APPROVED':
+        rd_cost = db.query(RdCost).filter(
+            RdCost.source_type == 'CALCULATED',
+            RdCost.source_id == timesheet_id
+        ).first()
+        if rd_cost:
+            sync_status['rd'] = {
+                'status': 'synced',
+                'message': '已同步',
+                'cost_id': rd_cost.id,
+                'sync_time': rd_cost.created_at.isoformat() if rd_cost.created_at else None
+            }
+    
+    # 检查项目同步状态（通过ProjectCost）
+    if timesheet.project_id and timesheet.status == 'APPROVED':
+        # 项目成本通过LaborCostService更新，这里检查是否有对应的成本记录
+        project_cost = db.query(ProjectCost).filter(
+            ProjectCost.project_id == timesheet.project_id,
+            ProjectCost.cost_type == 'LABOR'
+        ).first()
+        if project_cost:
+            sync_status['project'] = {
+                'status': 'synced',
+                'message': '已同步',
+                'cost_id': project_cost.id,
+                'sync_time': project_cost.updated_at.isoformat() if project_cost.updated_at else None
+            }
+    
+    # HR同步状态（审批通过即视为已同步到HR）
+    if timesheet.status == 'APPROVED':
+        sync_status['hr'] = {
+            'status': 'synced',
+            'message': '已同步',
+            'sync_time': timesheet.approve_time.isoformat() if timesheet.approve_time else None
+        }
+    
+    return ResponseModel(
+        code=200,
+        message="success",
+        data=sync_status
     )

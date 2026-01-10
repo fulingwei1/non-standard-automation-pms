@@ -161,7 +161,7 @@ class TaskResponse(BaseModel):
 
 class ProgressUpdateRequest(BaseModel):
     """进度更新请求"""
-    progress: int = Field(..., ge=0, le=100, description="进度百分比(0-100)")
+    progress: int = Field(..., description="进度百分比(0-100)")
     actual_hours: Optional[Decimal] = Field(None, ge=0, description="实际工时")
     progress_note: Optional[str] = Field(None, description="进度说明")
 
@@ -170,8 +170,9 @@ class ProgressUpdateResponse(BaseModel):
     """进度更新响应"""
     task_id: int
     progress: int
-    actual_hours: Optional[Decimal]
+    actual_hours: Optional[float]
     status: str
+    progress_note: Optional[str] = None
     project_progress_updated: bool = Field(False, description="项目进度是否已更新")
     stage_progress_updated: bool = Field(False, description="阶段进度是否已更新")
 
@@ -192,6 +193,8 @@ class TaskCompleteResponse(BaseModel):
     actual_end_date: date
     completion_note: str
     proof_count: int = Field(0, description="完成证明数量")
+    completed_at: datetime
+    project_progress_updated: bool = Field(False, description="项目进度是否已更新")
 
 
 # ==================== 完成证明上传 ====================
@@ -247,17 +250,18 @@ class DelayReportResponse(BaseModel):
 
 class TaskApprovalRequest(BaseModel):
     """任务审批请求"""
-    approval_note: Optional[str] = Field(None, description="审批意见")
+    comment: Optional[str] = Field(None, description="审批意见")
 
 
 class TaskRejectionRequest(BaseModel):
     """任务拒绝请求"""
-    rejection_reason: str = Field(..., min_length=5, description="拒绝原因")
+    reason: str = Field(..., min_length=5, description="拒绝原因")
 
 
 class TaskApprovalResponse(BaseModel):
     """任务审批响应"""
     task_id: int
+    status: str
     approval_status: str
     approved_by: int
     approved_at: datetime
@@ -314,6 +318,7 @@ class ProjectProgressVisibilityResponse(BaseModel):
 
     department_progress: List[DepartmentProgressSummary]
     stage_progress: dict[str, StageProgressSummary]
+    assignee_progress: List[MemberProgressSummary]
 
     active_delays: List[ActiveDelayInfo]
 

@@ -10,15 +10,15 @@ from enum import Enum
 
 class ProjectStageEnum(str, Enum):
     """项目阶段"""
-    S1 = 'S1'  # 需求进入
-    S2 = 'S2'  # 方案设计
-    S3 = 'S3'  # 采购备料
-    S4 = 'S4'  # 加工制造
-    S5 = 'S5'  # 装配调试
-    S6 = 'S6'  # 出厂验收(FAT)
-    S7 = 'S7'  # 包装发运
-    S8 = 'S8'  # 现场安装(SAT)
-    S9 = 'S9'  # 质保结项
+    S0 = 'S0'  # 售前跟进（评估通过，待签合同）
+    S1 = 'S1'  # 方案设计
+    S2 = 'S2'  # 采购备料
+    S3 = 'S3'  # 加工制造
+    S4 = 'S4'  # 装配调试
+    S5 = 'S5'  # 出厂验收(FAT)
+    S6 = 'S6'  # 包装发运
+    S7 = 'S7'  # 现场安装(SAT)
+    S8 = 'S8'  # 质保结项
 
 
 class ProjectHealthEnum(str, Enum):
@@ -151,6 +151,43 @@ class TeamBonusAllocationMethodEnum(str, Enum):
     BY_CONTRIBUTION = 'BY_CONTRIBUTION'  # 按贡献分配
     BY_ROLE = 'BY_ROLE'              # 按角色分配
     CUSTOM = 'CUSTOM'                # 自定义
+
+
+# ==================== 工程师任务中心相关 ====================
+
+class TaskImportance(str, Enum):
+    """任务重要性"""
+    GENERAL = 'GENERAL'      # 一般任务，直接接受
+    IMPORTANT = 'IMPORTANT'  # 重要任务，需要审批
+
+
+class TaskStatus(str, Enum):
+    """任务状态"""
+    PENDING = 'PENDING'                # 待接收
+    PENDING_APPROVAL = 'PENDING_APPROVAL'  # 待审批（重要任务）
+    ACCEPTED = 'ACCEPTED'              # 已接收
+    IN_PROGRESS = 'IN_PROGRESS'        # 进行中
+    PAUSED = 'PAUSED'                  # 已暂停
+    SUBMITTED = 'SUBMITTED'            # 已提交（待验收）
+    APPROVED = 'APPROVED'              # 已通过
+    REJECTED = 'REJECTED'              # 已驳回
+    COMPLETED = 'COMPLETED'            # 已完成
+    CANCELLED = 'CANCELLED'            # 已取消
+
+
+class TaskPriority(str, Enum):
+    """任务优先级"""
+    URGENT = 'URGENT'  # 紧急
+    HIGH = 'HIGH'      # 高
+    MEDIUM = 'MEDIUM'  # 中
+    LOW = 'LOW'        # 低
+
+
+class ApprovalDecision(str, Enum):
+    """审批决策"""
+    PENDING = 'PENDING'      # 待审批
+    APPROVED = 'APPROVED'    # 已通过
+    REJECTED = 'REJECTED'    # 已驳回
 
 
 # ==================== 项目评价相关 ====================
@@ -522,6 +559,64 @@ class SpecMatchStatusEnum(str, Enum):
     MATCHED = 'MATCHED'        # 匹配
     MISMATCHED = 'MISMATCHED'  # 不匹配
     UNKNOWN = 'UNKNOWN'        # 未知
+
+
+# ==================== 售前评估相关 ====================
+
+class PresalesLeadStatusEnum(str, Enum):
+    """售前线索状态（与presales-system对接）"""
+    DRAFT = 'draft'                    # 草稿
+    PENDING = 'pending'                # 待评估
+    ASSIGNED = 'assigned'              # 已分配评估人
+    EVALUATING = 'evaluating'          # 评估中
+    SCORED = 'scored'                  # 已评分
+    APPROVED = 'approved'              # 通过（可立项）
+    REJECTED = 'rejected'              # 拒绝
+    DEFERRED = 'deferred'              # 搁置
+
+
+class EvaluationDecisionEnum(str, Enum):
+    """评估决策"""
+    APPROVED = 'approved'              # 通过
+    REJECTED = 'rejected'              # 拒绝
+    DEFERRED = 'deferred'              # 搁置
+
+
+class WinProbabilityLevelEnum(str, Enum):
+    """中标概率等级"""
+    VERY_HIGH = 'VERY_HIGH'            # 极高 (>80%)
+    HIGH = 'HIGH'                      # 高 (60-80%)
+    MEDIUM = 'MEDIUM'                  # 中 (40-60%)
+    LOW = 'LOW'                        # 低 (20-40%)
+    VERY_LOW = 'VERY_LOW'              # 极低 (<20%)
+
+
+class LeadOutcomeEnum(str, Enum):
+    """线索最终结果"""
+    PENDING = 'PENDING'                # 进行中
+    WON = 'WON'                        # 中标
+    LOST = 'LOST'                      # 丢标
+    ABANDONED = 'ABANDONED'            # 放弃
+    ON_HOLD = 'ON_HOLD'                # 搁置
+
+
+class LossReasonEnum(str, Enum):
+    """丢标原因"""
+    PRICE_TOO_HIGH = 'PRICE_TOO_HIGH'              # 价格过高
+    TECH_NOT_MATCH = 'TECH_NOT_MATCH'              # 技术不匹配
+    DELIVERY_TOO_LONG = 'DELIVERY_TOO_LONG'        # 交期过长
+    COMPETITOR_ADVANTAGE = 'COMPETITOR_ADVANTAGE'  # 竞对优势
+    CUSTOMER_BUDGET = 'CUSTOMER_BUDGET'            # 客户预算变化
+    CUSTOMER_CANCEL = 'CUSTOMER_CANCEL'            # 客户取消项目
+    RELATIONSHIP = 'RELATIONSHIP'                  # 客户关系不足
+    OTHER = 'OTHER'                                # 其他
+
+
+class ProductMatchTypeEnum(str, Enum):
+    """产品匹配类型（用于中标率预测）"""
+    ADVANTAGE = 'ADVANTAGE'    # 优势产品（公司主推产品）
+    NEW = 'NEW'                # 新产品（不在优势产品列表）
+    UNKNOWN = 'UNKNOWN'        # 未指定
 
 
 # ==================== 销售管理相关 ====================

@@ -11,6 +11,8 @@ from sqlalchemy import and_, or_
 from app.models.work_log import WorkLog, WorkLogConfig, WorkLogMention, MentionTypeEnum
 from app.models.project import Project, Machine, ProjectStatusLog
 from app.models.user import User
+from app.models.timesheet import Timesheet
+from app.models.organization import Department
 from app.schemas.work_log import WorkLogCreate, WorkLogUpdate, MentionOption, MentionOptionsResponse
 
 
@@ -71,6 +73,11 @@ class WorkLogService:
         
         # 自动关联到项目/设备进展
         self._link_to_progress(work_log, work_log_in, user_id)
+        
+        # 如果提供了工时信息，自动创建工时记录
+        if work_log_in.work_hours is not None and work_log_in.work_hours > 0:
+            timesheet = self._create_timesheet_from_worklog(work_log, work_log_in, user_id)
+            work_log.timesheet_id = timesheet.id
         
         self.db.commit()
         self.db.refresh(work_log)
@@ -138,6 +145,13 @@ class WorkLogService:
             # 重新关联到项目/设备进展（删除旧的，创建新的）
             # 注意：这里简化处理，实际可能需要更复杂的逻辑
             self._link_to_progress(work_log, create_data, user_id)
+        
+        # 更新工时记录（如果提供了工时信息）
+        if work_log_in.work_hours is not None or \
+           work_log_in.work_type is not None or \
+           work_log_in.project_id is not None or \
+           work_log_in.rd_project_id is not None:
+            self._update_timesheet_from_worklog(work_log, work_log_in, user_id)
         
         self.db.commit()
         self.db.refresh(work_log)
@@ -228,6 +242,134 @@ class WorkLogService:
                         changed_at=datetime.now()
                     )
                     self.db.add(status_log)
+    
+    def _create_timesheet_from_worklog(
+        self,
+        work_log: WorkLog,
+        work_log_in: WorkLogCreate,
+        user_id: int
+    ) -> Timesheet:
+        """
+        从工作日志创建工时记录
+        
+        Args:
+            work_log: 工作日志对象
+            work_log_in: 工作日志创建数据
+            user_id: 用户ID
+            
+        Returns:
+            Timesheet: 创建的工时记录
+        """
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise ValueError('用户不存在')
+        
+        # 获取部门信息
+        department_id = None
+        department_name = None
+        if hasattr(user, 'department_id') and user.department_id:
+            department = self.db.query(Department).filter(Department.id == user.department_id).first()
+            if department:
+                department_id = department.id
+                department_name = department.name
+        
+        # 获取项目信息
+        project_id = work_log_in.project_id
+        project_code = None
+        project_name = None
+        if project_id:
+            project = self.db.query(Project).filter(Project.id == project_id).first()
+            if project:
+                project_code = project.project_code
+                project_name = project.project_name
+        
+        # 确定项目ID（优先使用project_id，如果没有则从mentioned_projects中取第一个）
+        if not project_id and work_log_in.mentioned_projects:
+            project_id = work_log_in.mentioned_projects[0]
+            project = self.db.query(Project).filter(Project.id == project_id).first()
+            if project:
+                project_code = project.project_code
+                project_name = project.project_name
+        
+        # 创建工时记录
+        timesheet = Timesheet(
+            user_id=user_id,
+            user_name=user.real_name or user.username,
+            department_id=department_id,
+            department_name=department_name,
+            project_id=project_id,
+            project_code=project_code,
+            project_name=project_name,
+            rd_project_id=work_log_in.rd_project_id,
+            task_id=work_log_in.task_id,
+            work_date=work_log_in.work_date,
+            hours=work_log_in.work_hours,
+            overtime_type=work_log_in.work_type or 'NORMAL',
+            work_content=work_log_in.content,
+            status='DRAFT',  # 初始状态为草稿，需要单独提交审批
+            created_by=user_id
+        )
+        
+        self.db.add(timesheet)
+        self.db.flush()  # 获取timesheet.id
+        
+        return timesheet
+    
+    def _update_timesheet_from_worklog(
+        self,
+        work_log: WorkLog,
+        work_log_in: WorkLogUpdate,
+        user_id: int
+    ):
+        """
+        从工作日志更新工时记录
+        
+        Args:
+            work_log: 工作日志对象
+            work_log_in: 工作日志更新数据
+            user_id: 用户ID
+        """
+        # 如果已有工时记录，更新它
+        if work_log.timesheet_id:
+            timesheet = self.db.query(Timesheet).filter(Timesheet.id == work_log.timesheet_id).first()
+            if timesheet:
+                # 只能更新草稿状态的工时记录
+                if timesheet.status == 'DRAFT':
+                    if work_log_in.work_hours is not None:
+                        timesheet.hours = work_log_in.work_hours
+                    if work_log_in.work_type is not None:
+                        timesheet.overtime_type = work_log_in.work_type
+                    if work_log_in.project_id is not None:
+                        timesheet.project_id = work_log_in.project_id
+                        if work_log_in.project_id:
+                            project = self.db.query(Project).filter(Project.id == work_log_in.project_id).first()
+                            if project:
+                                timesheet.project_code = project.project_code
+                                timesheet.project_name = project.project_name
+                    if work_log_in.rd_project_id is not None:
+                        timesheet.rd_project_id = work_log_in.rd_project_id
+                    if work_log_in.task_id is not None:
+                        timesheet.task_id = work_log_in.task_id
+                    if work_log_in.content is not None:
+                        timesheet.work_content = work_log_in.content
+        else:
+            # 如果没有工时记录，但提供了工时信息，创建新的
+            if work_log_in.work_hours is not None and work_log_in.work_hours > 0:
+                create_data = WorkLogCreate(
+                    work_date=work_log.work_date,
+                    content=work_log_in.content or work_log.content,
+                    mentioned_projects=[],
+                    mentioned_machines=[],
+                    mentioned_users=[],
+                    status=work_log.status,
+                    work_hours=work_log_in.work_hours,
+                    work_type=work_log_in.work_type or 'NORMAL',
+                    project_id=work_log_in.project_id,
+                    rd_project_id=work_log_in.rd_project_id,
+                    task_id=work_log_in.task_id
+                )
+                timesheet = self._create_timesheet_from_worklog(work_log, create_data, user_id)
+                work_log.timesheet_id = timesheet.id
     
     def get_mention_options(
         self,

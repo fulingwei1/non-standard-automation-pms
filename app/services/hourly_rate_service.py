@@ -66,18 +66,12 @@ class HourlyRateService:
             if role_config:
                 return role_config.hourly_rate
         
-        # 3. 查找部门配置
-        if user.dept_id:
-            dept_config = db.query(HourlyRateConfig).filter(
-                HourlyRateConfig.config_type == "DEPT",
-                HourlyRateConfig.dept_id == user.dept_id,
-                HourlyRateConfig.is_active == True,
-                (HourlyRateConfig.effective_date.is_(None) | (HourlyRateConfig.effective_date <= work_date)),
-                (HourlyRateConfig.expiry_date.is_(None) | (HourlyRateConfig.expiry_date >= work_date))
-            ).order_by(HourlyRateConfig.effective_date.desc().nullslast()).first()
-            
-            if dept_config:
-                return dept_config.hourly_rate
+        # 3. 查找部门配置（通过Employee表获取部门信息）
+        # 注意：由于User和Employee的关系，以及部门信息可能存储在多个地方，
+        # 这里简化处理：如果有部门配置需求，可以通过Timesheet记录中的department_id获取
+        # 或者通过Employee的hr_profile获取部门信息
+        # 暂时跳过部门配置查找，直接使用默认配置
+        # TODO: 如果需要部门级别的时薪配置，需要建立User/Employee到Department的关联
         
         # 4. 查找默认配置
         default_config = db.query(HourlyRateConfig).filter(

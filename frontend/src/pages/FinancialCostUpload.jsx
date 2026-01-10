@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   Upload,
@@ -55,6 +56,7 @@ import { fadeIn, staggerContainer } from '../lib/animations'
 import { financialCostApi } from '../services/api'
 
 export default function FinancialCostUpload() {
+  const [searchParams] = useSearchParams()
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [costs, setCosts] = useState([])
@@ -68,13 +70,22 @@ export default function FinancialCostUpload() {
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [projectId, setProjectId] = useState(null) // 项目ID筛选
   
   // File input ref
   const fileInputRef = useRef(null)
   
+  // 从URL参数读取项目ID
+  useEffect(() => {
+    const projectIdParam = searchParams.get('project_id')
+    if (projectIdParam) {
+      setProjectId(parseInt(projectIdParam))
+    }
+  }, [searchParams])
+  
   useEffect(() => {
     loadCosts()
-  }, [])
+  }, [projectId])
   
   useEffect(() => {
     filterCosts()
@@ -84,6 +95,7 @@ export default function FinancialCostUpload() {
     setLoading(true)
     try {
       const params = {}
+      if (projectId) params.project_id = projectId
       if (startDate) params.start_date = startDate
       if (endDate) params.end_date = endDate
       if (typeFilter !== 'all') params.cost_type = typeFilter

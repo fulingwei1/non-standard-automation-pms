@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
   Clock,
@@ -37,6 +37,8 @@ import {
 } from '../components/ui/dialog'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
+import { timesheetApi, projectApi } from '../services/api'
+import { RefreshCw } from 'lucide-react'
 
 // Current week dates helper
 const getWeekDates = (offset = 0) => {
@@ -64,99 +66,16 @@ const formatFullDate = (date) => {
 
 const dayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 
-// Mock timesheet data
-const mockTimesheetData = {
-  entries: [
-    {
-      id: 1,
-      projectId: 'PJ250108001',
-      projectName: 'BMS老化测试设备',
-      taskId: 'T001',
-      taskName: '机械结构设计',
-      hours: {
-        '2026-01-06': 4,
-        '2026-01-07': 6,
-        '2026-01-08': 5,
-        '2026-01-09': 3,
-        '2026-01-10': 0,
-      },
-      status: 'draft',
-    },
-    {
-      id: 2,
-      projectId: 'PJ250108001',
-      projectName: 'BMS老化测试设备',
-      taskId: 'T002',
-      taskName: '3D建模',
-      hours: {
-        '2026-01-06': 4,
-        '2026-01-07': 2,
-        '2026-01-08': 3,
-        '2026-01-09': 5,
-        '2026-01-10': 8,
-      },
-      status: 'submitted',
-    },
-    {
-      id: 3,
-      projectId: 'PJ250105002',
-      projectName: 'EOL功能测试设备',
-      taskId: 'T003',
-      taskName: '设计评审',
-      hours: {
-        '2026-01-08': 2,
-        '2026-01-09': 0,
-        '2026-01-10': 0,
-      },
-      status: 'approved',
-    },
-  ],
-  summary: {
-    totalHours: 42,
-    weeklyTarget: 40,
-    overtimeHours: 2,
-    projectCount: 2,
-    taskCount: 3,
-  },
-}
-
-// Available projects for new entry
-const availableProjects = [
-  {
-    id: 'PJ250108001',
-    name: 'BMS老化测试设备',
-    tasks: [
-      { id: 'T001', name: '机械结构设计' },
-      { id: 'T002', name: '3D建模' },
-      { id: 'T003', name: '图纸输出' },
-    ],
-  },
-  {
-    id: 'PJ250105002',
-    name: 'EOL功能测试设备',
-    tasks: [
-      { id: 'T004', name: '方案设计' },
-      { id: 'T005', name: '设计评审' },
-    ],
-  },
-  {
-    id: 'PJ250106003',
-    name: 'ICT测试设备',
-    tasks: [
-      { id: 'T006', name: '电气设计' },
-      { id: 'T007', name: 'PLC编程' },
-    ],
-  },
-]
-
 const getStatusBadge = (status) => {
+  const statusUpper = status?.toUpperCase() || 'DRAFT'
   const configs = {
-    draft: { label: '草稿', variant: 'secondary', icon: Edit3 },
-    submitted: { label: '已提交', variant: 'default', icon: AlertCircle },
-    approved: { label: '已审批', variant: 'success', icon: CheckCircle2 },
-    rejected: { label: '已退回', variant: 'destructive', icon: XCircle },
+    DRAFT: { label: '草稿', variant: 'secondary', icon: Edit3 },
+    PENDING: { label: '待审批', variant: 'default', icon: AlertCircle },
+    SUBMITTED: { label: '已提交', variant: 'default', icon: AlertCircle },
+    APPROVED: { label: '已审批', variant: 'default', icon: CheckCircle2 },
+    REJECTED: { label: '已退回', variant: 'destructive', icon: XCircle },
   }
-  const config = configs[status] || configs.draft
+  const config = configs[statusUpper] || configs.DRAFT
   return (
     <Badge variant={config.variant} className="gap-1">
       <config.icon className="w-3 h-3" />
@@ -165,26 +84,55 @@ const getStatusBadge = (status) => {
   )
 }
 
-function AddEntryDialog({ open, onOpenChange, onAdd, weekDates }) {
-  const [selectedProject, setSelectedProject] = useState('')
-  const [selectedTask, setSelectedTask] = useState('')
+function AddEntryDialog({ open, onOpenChange, onAdd, weekDates, projects, loading }) {
+  const [selectedProjectId, setSelectedProjectId] = useState('')
+  const [selectedTaskId, setSelectedTaskId] = useState('')
   const [hours, setHours] = useState({})
+  const [tasks, setTasks] = useState([])
+  const [loadingTasks, setLoadingTasks] = useState(false)
 
-  const project = availableProjects.find((p) => p.id === selectedProject)
+  const selectedProject = projects.find((p) => p.id === Number(selectedProjectId))
+
+  // 当选择项目时，加载任务列表
+  useEffect(() => {
+    if (selectedProjectId) {
+      loadTasks(Number(selectedProjectId))
+    } else {
+      setTasks([])
+      setSelectedTaskId('')
+    }
+  }, [selectedProjectId])
+
+  const loadTasks = async (projectId) => {
+    setLoadingTasks(true)
+    try {
+      // 使用progressApi获取项目任务
+      const { progressApi } = await import('../services/api')
+      const response = await progressApi.tasks.list({
+        project_id: projectId,
+        page_size: 100,
+      })
+      const items = response.data?.items || response.data?.data?.items || response.items || []
+      setTasks(items)
+    } catch (error) {
+      console.error('加载任务失败:', error)
+      setTasks([])
+    } finally {
+      setLoadingTasks(false)
+    }
+  }
 
   const handleAdd = () => {
-    if (selectedProject && selectedTask) {
-      const projectInfo = availableProjects.find((p) => p.id === selectedProject)
-      const taskInfo = projectInfo?.tasks.find((t) => t.id === selectedTask)
+    if (selectedProjectId && selectedTaskId) {
       onAdd({
-        projectId: selectedProject,
-        projectName: projectInfo?.name,
-        taskId: selectedTask,
-        taskName: taskInfo?.name,
+        project_id: Number(selectedProjectId),
+        project_name: selectedProject?.project_name,
+        task_id: Number(selectedTaskId),
+        task_name: tasks.find((t) => t.id === Number(selectedTaskId))?.task_name,
         hours,
       })
-      setSelectedProject('')
-      setSelectedTask('')
+      setSelectedProjectId('')
+      setSelectedTaskId('')
       setHours({})
       onOpenChange(false)
     }
@@ -201,17 +149,18 @@ function AddEntryDialog({ open, onOpenChange, onAdd, weekDates }) {
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-300">项目</label>
             <select
-              value={selectedProject}
+              value={selectedProjectId}
               onChange={(e) => {
-                setSelectedProject(e.target.value)
-                setSelectedTask('')
+                setSelectedProjectId(e.target.value)
+                setSelectedTaskId('')
               }}
-              className="w-full h-10 px-3 rounded-lg bg-surface-2 border border-border text-white focus:border-accent focus:outline-none"
+              disabled={loading}
+              className="w-full h-10 px-3 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-blue-500 focus:outline-none disabled:opacity-50"
             >
               <option value="">选择项目</option>
-              {availableProjects.map((project) => (
+              {projects.map((project) => (
                 <option key={project.id} value={project.id}>
-                  {project.id} - {project.name}
+                  {project.project_code} - {project.project_name}
                 </option>
               ))}
             </select>
@@ -221,15 +170,15 @@ function AddEntryDialog({ open, onOpenChange, onAdd, weekDates }) {
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-300">任务</label>
             <select
-              value={selectedTask}
-              onChange={(e) => setSelectedTask(e.target.value)}
-              disabled={!selectedProject}
-              className="w-full h-10 px-3 rounded-lg bg-surface-2 border border-border text-white focus:border-accent focus:outline-none disabled:opacity-50"
+              value={selectedTaskId}
+              onChange={(e) => setSelectedTaskId(e.target.value)}
+              disabled={!selectedProjectId || loadingTasks}
+              className="w-full h-10 px-3 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-blue-500 focus:outline-none disabled:opacity-50"
             >
-              <option value="">选择任务</option>
-              {project?.tasks.map((task) => (
+              <option value="">{loadingTasks ? '加载中...' : '选择任务（可选）'}</option>
+              {tasks.map((task) => (
                 <option key={task.id} value={task.id}>
-                  {task.name}
+                  {task.task_name || task.title}
                 </option>
               ))}
             </select>
@@ -260,7 +209,7 @@ function AddEntryDialog({ open, onOpenChange, onAdd, weekDates }) {
                         [formatFullDate(date)]: parseFloat(e.target.value) || 0,
                       })
                     }
-                    className="text-center h-9"
+                    className="text-center h-9 bg-slate-700 border-slate-600 text-white"
                   />
                 </div>
               ))}
@@ -271,7 +220,7 @@ function AddEntryDialog({ open, onOpenChange, onAdd, weekDates }) {
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             取消
           </Button>
-          <Button onClick={handleAdd} disabled={!selectedProject || !selectedTask}>
+          <Button onClick={handleAdd} disabled={!selectedProjectId}>
             添加
           </Button>
         </DialogFooter>
@@ -282,52 +231,304 @@ function AddEntryDialog({ open, onOpenChange, onAdd, weekDates }) {
 
 export default function Timesheet() {
   const [weekOffset, setWeekOffset] = useState(0)
-  const [entries, setEntries] = useState(mockTimesheetData.entries)
+  const [entries, setEntries] = useState([])
   const [showAddDialog, setShowAddDialog] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [projects, setProjects] = useState([])
+  const [weekData, setWeekData] = useState(null)
 
   const weekDates = getWeekDates(weekOffset)
   const isCurrentWeek = weekOffset === 0
+  const weekStart = formatFullDate(weekDates[0])
+
+  // 加载周工时数据
+  const loadWeekTimesheet = useCallback(async () => {
+    setLoading(true)
+    try {
+      const response = await timesheetApi.getWeek({
+        week_start: weekStart,
+      })
+      const data = response.data?.data || response.data
+      
+      // 转换数据格式：将API返回的timesheets转换为UI需要的格式
+      const timesheets = data.timesheets || []
+      
+      // 按项目和任务分组（同一项目+任务的多条记录合并为一行）
+      const grouped = {}
+      timesheets.forEach((ts) => {
+        // 使用项目ID和任务ID作为分组键（如果没有任务ID，使用'none'）
+        const key = `${ts.project_id || 'none'}_${ts.task_id || 'none'}`
+        
+        if (!grouped[key]) {
+          // 生成一个唯一的entry ID（使用第一个timesheet的ID）
+          grouped[key] = {
+            id: `entry_${ts.id}`, // 使用entry_前缀避免与timesheet ID冲突
+            project_id: ts.project_id,
+            project_code: ts.project_id ? `PJ${String(ts.project_id).padStart(9, '0')}` : '',
+            project_name: ts.project_name || '未分配项目',
+            task_id: ts.task_id,
+            task_name: ts.task_name,
+            hours: {},
+            status: ts.status || 'DRAFT',
+            timesheet_ids: [], // 存储该entry对应的所有timesheet ID
+            timesheet_map: {}, // 存储日期到timesheet ID的映射
+          }
+        }
+        
+        // 处理日期（可能是字符串或Date对象）
+        const dateStr = typeof ts.work_date === 'string' 
+          ? ts.work_date.split('T')[0] // 处理ISO格式日期
+          : ts.work_date
+        
+        grouped[key].hours[dateStr] = parseFloat(ts.work_hours || 0)
+        grouped[key].timesheet_map[dateStr] = ts.id
+        
+        if (!grouped[key].timesheet_ids.includes(ts.id)) {
+          grouped[key].timesheet_ids.push(ts.id)
+        }
+        
+        // 状态优先级：APPROVED > PENDING > DRAFT > REJECTED
+        const statusPriority = { APPROVED: 3, PENDING: 2, SUBMITTED: 2, DRAFT: 1, REJECTED: 0 }
+        const currentPriority = statusPriority[grouped[key].status] || 0
+        const newPriority = statusPriority[ts.status] || 0
+        if (newPriority > currentPriority) {
+          grouped[key].status = ts.status
+        }
+      })
+      
+      setEntries(Object.values(grouped))
+      setWeekData(data)
+    } catch (error) {
+      console.error('加载周工时数据失败:', error)
+      // 如果API失败，保持空数组
+      setEntries([])
+    } finally {
+      setLoading(false)
+    }
+  }, [weekStart])
+
+  // 加载项目列表
+  const loadProjects = useCallback(async () => {
+    try {
+      const response = await projectApi.list({
+        page_size: 100,
+        is_active: true,
+      })
+      const items = response.data?.items || response.data?.data?.items || []
+      setProjects(items)
+    } catch (error) {
+      console.error('加载项目列表失败:', error)
+      setProjects([])
+    }
+  }, [])
+
+  // 初始化加载
+  useEffect(() => {
+    loadProjects()
+  }, [loadProjects])
+
+  useEffect(() => {
+    loadWeekTimesheet()
+  }, [loadWeekTimesheet])
 
   // Calculate totals
   const dailyTotals = weekDates.reduce((acc, date) => {
     const dateStr = formatFullDate(date)
-    acc[dateStr] = entries.reduce((sum, entry) => sum + (entry.hours[dateStr] || 0), 0)
+    acc[dateStr] = entries.reduce((sum, entry) => {
+      const hours = entry.hours?.[dateStr] || 0
+      return sum + (typeof hours === 'number' ? hours : parseFloat(hours) || 0)
+    }, 0)
     return acc
   }, {})
 
   const weeklyTotal = Object.values(dailyTotals).reduce((a, b) => a + b, 0)
 
-  const handleAddEntry = (newEntry) => {
-    setEntries([
-      ...entries,
-      {
-        id: Date.now(),
-        ...newEntry,
-        status: 'draft',
-      },
-    ])
+  // 处理添加新记录
+  const handleAddEntry = async (newEntry) => {
+    if (!newEntry.project_id) return
+
+    setSaving(true)
+    try {
+      // 为本周的每一天创建工时记录（如果有工时）
+      const timesheetsToCreate = []
+      
+      weekDates.forEach((date) => {
+        const dateStr = formatFullDate(date)
+        const hours = newEntry.hours?.[dateStr]
+        if (hours && parseFloat(hours) > 0) {
+          timesheetsToCreate.push({
+            project_id: newEntry.project_id,
+            task_id: newEntry.task_id || null,
+            work_date: dateStr,
+            work_hours: parseFloat(hours),
+            work_type: 'NORMAL',
+            description: newEntry.task_name || '',
+          })
+        }
+      })
+
+      if (timesheetsToCreate.length > 0) {
+        const response = await timesheetApi.batchCreate({
+          timesheets: timesheetsToCreate,
+        })
+        
+        // 检查响应（batchCreate可能返回ResponseModel格式）
+        if (response.data?.code === 200 || response.data?.success !== false || response.status === 201) {
+          // 重新加载数据
+          await loadWeekTimesheet()
+          setShowAddDialog(false)
+        } else {
+          throw new Error(response.data?.message || response.data?.detail || '创建失败')
+        }
+      }
+    } catch (error) {
+      console.error('创建工时记录失败:', error)
+      alert('创建工时记录失败，请稍后重试')
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const handleHoursChange = (entryId, dateStr, value) => {
+  // 处理工时修改（防抖处理，避免频繁请求）
+  const handleHoursChange = async (entryId, dateStr, value) => {
+    const entry = entries.find((e) => e.id === entryId)
+    if (!entry) return
+
+    const hours = parseFloat(value) || 0
+    
+    // 更新本地状态（乐观更新）
     setEntries(
-      entries.map((entry) =>
-        entry.id === entryId
-          ? { ...entry, hours: { ...entry.hours, [dateStr]: parseFloat(value) || 0 } }
-          : entry
+      entries.map((e) =>
+        e.id === entryId
+          ? { ...e, hours: { ...e.hours, [dateStr]: hours } }
+          : e
       )
     )
+
+    // 使用防抖，延迟500ms后执行实际保存
+    if (handleHoursChange.timeout) {
+      clearTimeout(handleHoursChange.timeout)
+    }
+    
+    handleHoursChange.timeout = setTimeout(async () => {
+      try {
+        // 查找该日期是否已有记录（通过timesheet_map）
+        const existingTimesheetId = entry.timesheet_map?.[dateStr]
+        
+        // 或者从weekData中查找
+        let existingTimesheet = null
+        if (weekData?.timesheets) {
+          existingTimesheet = weekData.timesheets.find(
+            (ts) => {
+              const tsDate = typeof ts.work_date === 'string' 
+                ? ts.work_date.split('T')[0]
+                : ts.work_date
+              return ts.id === existingTimesheetId ||
+                (ts.project_id === entry.project_id &&
+                 ts.task_id === entry.task_id &&
+                 tsDate === dateStr)
+            }
+          )
+        }
+
+        if (hours > 0) {
+          if (existingTimesheet) {
+            // 更新现有记录
+            await timesheetApi.update(existingTimesheet.id, {
+              work_hours: hours,
+            })
+          } else {
+            // 创建新记录
+            await timesheetApi.create({
+              project_id: entry.project_id,
+              task_id: entry.task_id || null,
+              work_date: dateStr,
+              work_hours: hours,
+              work_type: 'NORMAL',
+              description: entry.task_name || '',
+            })
+          }
+        } else if (existingTimesheet) {
+          // 删除记录（工时为0）
+          await timesheetApi.delete(existingTimesheet.id)
+        }
+
+        // 重新加载数据
+        await loadWeekTimesheet()
+      } catch (error) {
+        console.error('更新工时记录失败:', error)
+        // 恢复原值
+        await loadWeekTimesheet()
+        alert('更新工时记录失败，请稍后重试')
+      }
+    }, 500) // 500ms防抖
   }
 
-  const handleDeleteEntry = (entryId) => {
-    setEntries(entries.filter((e) => e.id !== entryId))
+  // 处理删除记录
+  const handleDeleteEntry = async (entryId) => {
+    const entry = entries.find((e) => e.id === entryId)
+    if (!entry || !confirm('确定要删除这条工时记录吗？')) return
+
+    try {
+      // 删除该条目对应的所有工时记录
+      if (entry.timesheet_ids && entry.timesheet_ids.length > 0) {
+        for (const tsId of entry.timesheet_ids) {
+          await timesheetApi.delete(tsId)
+        }
+      }
+      // 重新加载数据
+      await loadWeekTimesheet()
+    } catch (error) {
+      console.error('删除工时记录失败:', error)
+      alert('删除工时记录失败，请稍后重试')
+    }
   }
 
-  const handleSubmit = () => {
-    setEntries(
-      entries.map((entry) =>
-        entry.status === 'draft' ? { ...entry, status: 'submitted' } : entry
-      )
-    )
+  // 处理提交审批
+  const handleSubmit = async () => {
+    // 收集所有草稿状态的工时记录ID
+    const timesheetIds = []
+    entries.forEach((entry) => {
+      if (entry.status === 'DRAFT' && entry.timesheet_ids) {
+        timesheetIds.push(...entry.timesheet_ids)
+      }
+    })
+    
+    if (timesheetIds.length === 0) {
+      alert('没有可提交的记录（只有草稿状态的记录可以提交）')
+      return
+    }
+
+    if (!confirm(`确定要提交 ${timesheetIds.length} 条工时记录进行审批吗？`)) {
+      return
+    }
+
+    setSaving(true)
+    try {
+      const response = await timesheetApi.submit({
+        timesheet_ids: timesheetIds,
+      })
+      
+      if (response.data?.code === 200 || response.data?.message) {
+        alert(response.data.message || `成功提交 ${timesheetIds.length} 条工时记录`)
+        // 重新加载数据
+        await loadWeekTimesheet()
+      } else {
+        throw new Error(response.data?.message || '提交失败')
+      }
+    } catch (error) {
+      console.error('提交工时记录失败:', error)
+      alert(error.response?.data?.detail || error.message || '提交工时记录失败，请稍后重试')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // 处理保存草稿（自动保存，无需额外操作）
+  const handleSaveDraft = () => {
+    // 工时记录在修改时已自动保存，这里只是提示
+    alert('工时记录已自动保存为草稿')
   }
 
   return (
@@ -343,6 +544,13 @@ export default function Timesheet() {
         title="工时填报"
         description="记录您的工作时间，便于项目成本核算与绩效统计"
       />
+
+      {loading && (
+        <div className="flex items-center justify-center py-8">
+          <RefreshCw className="w-6 h-6 animate-spin text-blue-500 mr-2" />
+          <span className="text-slate-400">加载中...</span>
+        </div>
+      )}
 
       {/* Week Summary */}
       <motion.div variants={fadeIn} className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -425,17 +633,33 @@ export default function Timesheet() {
                 </Button>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={() => setShowAddDialog(true)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAddDialog(true)}
+                  disabled={loading}
+                >
                   <Plus className="w-4 h-4 mr-1" />
                   添加记录
                 </Button>
-                <Button variant="outline">
+                <Button
+                  variant="outline"
+                  onClick={handleSaveDraft}
+                  disabled={loading || saving}
+                >
                   <Save className="w-4 h-4 mr-1" />
                   保存草稿
                 </Button>
-                <Button onClick={handleSubmit}>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={
+                    loading ||
+                    saving ||
+                    entries.filter((e) => e.status === 'DRAFT').length === 0
+                  }
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
                   <Send className="w-4 h-4 mr-1" />
-                  提交审批
+                  {saving ? '提交中...' : '提交审批'}
                 </Button>
               </div>
             </div>
@@ -488,12 +712,22 @@ export default function Timesheet() {
                   </tr>
                 </thead>
                 <tbody>
-                  {entries.map((entry) => {
-                    const entryTotal = Object.values(entry.hours).reduce(
-                      (a, b) => a + b,
-                      0
-                    )
-                    const isEditable = entry.status === 'draft'
+                  {entries.length === 0 && !loading ? (
+                    <tr>
+                      <td colSpan={10} className="p-8 text-center text-slate-400">
+                        暂无工时记录，点击"添加记录"开始填报
+                      </td>
+                    </tr>
+                  ) : (
+                    entries.map((entry) => {
+                      const entryTotal = Object.values(entry.hours || {}).reduce(
+                        (a, b) => {
+                          const val = typeof b === 'number' ? b : parseFloat(b) || 0
+                          return a + val
+                        },
+                        0
+                      )
+                      const isEditable = entry.status === 'DRAFT'
 
                     return (
                       <tr
@@ -503,16 +737,17 @@ export default function Timesheet() {
                         <td className="p-4">
                           <div>
                             <div className="font-medium text-white text-sm">
-                              {entry.projectName}
+                              {entry.project_name || '未分配项目'}
                             </div>
                             <div className="text-xs text-slate-400">
-                              {entry.projectId} · {entry.taskName}
+                              {entry.project_code || entry.project_id} {entry.task_name ? `· ${entry.task_name}` : ''}
                             </div>
                           </div>
                         </td>
                         {weekDates.map((date, index) => {
                           const dateStr = formatFullDate(date)
-                          const hours = entry.hours[dateStr] || 0
+                          const hoursValue = entry.hours?.[dateStr]
+                          const hours = typeof hoursValue === 'number' ? hoursValue : parseFloat(hoursValue) || 0
                           const isToday = dateStr === formatFullDate(new Date())
                           const isWeekend = index >= 5
 
@@ -521,8 +756,8 @@ export default function Timesheet() {
                               key={index}
                               className={cn(
                                 'p-2 text-center',
-                                isToday && 'bg-accent/10',
-                                isWeekend && 'bg-surface-0/30'
+                                isToday && 'bg-blue-500/10',
+                                isWeekend && 'bg-slate-700/30'
                               )}
                             >
                               {isEditable ? (
@@ -531,11 +766,11 @@ export default function Timesheet() {
                                   min="0"
                                   max="24"
                                   step="0.5"
-                                  value={hours || ''}
+                                  value={hours > 0 ? hours : ''}
                                   onChange={(e) =>
                                     handleHoursChange(entry.id, dateStr, e.target.value)
                                   }
-                                  className="w-16 h-8 text-center mx-auto"
+                                  className="w-16 h-8 text-center mx-auto bg-slate-700 border-slate-600 text-white"
                                   placeholder="0"
                                 />
                               ) : (
@@ -545,7 +780,7 @@ export default function Timesheet() {
                                     hours > 0 ? 'text-white' : 'text-slate-500'
                                   )}
                                 >
-                                  {hours || '-'}
+                                  {hours > 0 ? hours : '-'}
                                 </span>
                               )}
                             </td>
@@ -573,7 +808,7 @@ export default function Timesheet() {
                         </td>
                       </tr>
                     )
-                  })}
+                  }))}
 
                   {/* Daily Totals Row */}
                   <tr className="bg-surface-2/50 border-t-2 border-border">
@@ -622,6 +857,8 @@ export default function Timesheet() {
         onOpenChange={setShowAddDialog}
         onAdd={handleAddEntry}
         weekDates={weekDates}
+        projects={projects}
+        loading={loading}
       />
     </motion.div>
       </div>

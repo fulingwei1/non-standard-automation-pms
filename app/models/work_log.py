@@ -50,9 +50,13 @@ class WorkLog(Base, TimestampMixin):
     # 状态
     status = Column(String(20), default='DRAFT', comment='状态：DRAFT/SUBMITTED')
     
+    # 工时记录关联
+    timesheet_id = Column(Integer, ForeignKey('timesheet.id'), nullable=True, comment='关联的工时记录ID')
+    
     # 关系
     user = relationship('User', foreign_keys=[user_id])
     mentions = relationship('WorkLogMention', back_populates='work_log', cascade='all, delete-orphan')
+    timesheet = relationship('Timesheet', foreign_keys=[timesheet_id])
     
     __table_args__ = (
         Index('idx_work_log_user', 'user_id'),

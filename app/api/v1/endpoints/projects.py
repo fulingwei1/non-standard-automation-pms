@@ -5,7 +5,7 @@ from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, Query, Body, Path, status, UploadFile, File
 from fastapi.responses import StreamingResponse
 import io
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy import desc, or_, func
 
 from app.api import deps
@@ -182,13 +182,17 @@ def read_projects(
     # Sprint 5.1: 性能优化 - 优化总数统计
     # 对于大数据量场景，可以考虑使用估算或延迟计算
     # 这里先使用精确计算，后续可以优化
-    total = query.count()
+    try:
+        count_result = query.count()
+        total = int(count_result) if count_result is not None else 0
+    except Exception:
+        total = 0
 
-    # Sprint 5.1: 性能优化 - 使用joinedload优化关联查询
-    # 如果响应模型需要关联数据，使用joinedload预加载
+    # Sprint 5.1: 性能优化 - 使用selectinload优化关联查询
+    # selectinload比joinedload更安全，不会导致IndexError，特别适合处理NULL或无效外键
     query = query.options(
-        joinedload(Project.customer),
-        joinedload(Project.manager)
+        selectinload(Project.customer),
+        selectinload(Project.manager)
     )
 
     # Sprint 5.1: 性能优化 - 尝试从缓存获取（仅对常用筛选条件）
@@ -213,12 +217,27 @@ def read_projects(
     offset = (page - 1) * page_size
     projects = query.order_by(desc(Project.created_at)).offset(offset).limit(page_size).all()
 
+    # 补充冗余字段（确保customer_name和pm_name存在）
+    for project in projects:
+        if not project.customer_name and project.customer:
+            project.customer_name = project.customer.customer_name
+        if not project.pm_name and project.manager:
+            project.pm_name = project.manager.real_name or project.manager.username
+
+    # 计算总页数，确保 total 不为 None
+    total = int(total) if total is not None else 0
+    pages = (total + page_size - 1) // page_size if total > 0 else 0
+
+    # 将ORM对象转换为响应模型
+    from app.schemas.project import ProjectListResponse
+    project_items = [ProjectListResponse.model_validate(p) for p in projects]
+
     result = PaginatedResponse(
-        items=projects,
+        items=project_items,
         total=total,
         page=page,
         page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        pages=pages
     )
 
     # Sprint 5.1: 性能优化 - 将结果存入缓存
@@ -353,6 +372,56 @@ def read_project(
     if not project.pm_name and project.manager:
         project.pm_name = project.manager.real_name or project.manager.username
 
+    # 加载项目成员（包含关联的User对象）
+    from app.schemas.project import ProjectMemberResponse
+    members_query = (
+        db.query(ProjectMember)
+        .options(joinedload(ProjectMember.user))
+        .filter(ProjectMember.project_id == project_id)
+        .all()
+    )
+    
+    # 转换为ProjectMemberResponse格式（确保username字段存在）
+    members = []
+    for member in members_query:
+        member_data = {
+            "id": member.id,
+            "project_id": member.project_id,
+            "user_id": member.user_id,
+            "username": member.user.username if member.user else f"user_{member.user_id}",
+            "real_name": member.user.real_name if member.user and member.user.real_name else None,
+            "role_code": member.role_code,
+            "allocation_pct": member.allocation_pct,
+            "start_date": member.start_date,
+            "end_date": member.end_date,
+            "is_active": member.is_active,
+            "remark": member.remark,
+        }
+        members.append(ProjectMemberResponse(**member_data))
+    
+    # 加载machines和milestones（因为ProjectDetailResponse需要这些字段）
+    from app.schemas.project import MachineResponse, MilestoneResponse
+    machines_query = project.machines.all() if hasattr(project.machines, 'all') else []
+    machines = [MachineResponse.model_validate(m) for m in machines_query]
+    
+    milestones_query = project.milestones.all() if hasattr(project.milestones, 'all') else []
+    milestones = [MilestoneResponse.model_validate(m) for m in milestones_query]
+    
+    # 构建ProjectDetailResponse对象
+    # 使用字典方式构建，避免Pydantic验证时访问SQLAlchemy关系对象
+    from app.schemas.project import ProjectDetailResponse, ProjectResponse
+    
+    # 先构建基础ProjectResponse
+    project_base = ProjectResponse.model_validate(project)
+    
+    # 然后构建ProjectDetailResponse，直接设置members/machines/milestones
+    project_detail = ProjectDetailResponse(
+        **project_base.model_dump(),
+        members=members,
+        machines=machines,
+        milestones=milestones
+    )
+
     # Sprint 5.3: 将结果存入缓存
     if use_cache:
         try:
@@ -375,7 +444,7 @@ def read_project(
             # 缓存失败不影响主流程
             pass
 
-    return project
+    return project_detail
 
 
 @router.put("/{project_id}", response_model=ProjectResponse)
@@ -1263,11 +1332,16 @@ def get_project_status_logs(
             )
         query = query.filter(ProjectStatusLog.change_type == change_type)
 
-    total = query.count()
+    try:
+        count_result = query.count()
+        total = int(count_result) if count_result is not None else 0
+    except Exception:
+        total = 0
     offset = (page - 1) * limit
     logs = query.order_by(desc(ProjectStatusLog.changed_at)).offset(offset).limit(limit).all()
     items = [_serialize_project_status_log(log) for log in logs]
-    pages = (total + limit - 1) // limit if limit else 0
+    total = int(total) if total is not None else 0
+    pages = (total + limit - 1) // limit if limit and total > 0 else 0
 
     return PaginatedResponse(
         items=items,

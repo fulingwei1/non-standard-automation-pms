@@ -5,7 +5,7 @@
 """
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
 
@@ -46,6 +46,7 @@ def aggregate_task_progress(db: Session, task_id: int) -> dict:
     project_tasks = db.query(TaskUnified).filter(
         and_(
             TaskUnified.project_id == project_id,
+            TaskUnified.is_active == True,
             TaskUnified.status.notin_(['CANCELLED'])  # 排除已取消任务
         )
     ).all()
@@ -76,6 +77,7 @@ def aggregate_task_progress(db: Session, task_id: int) -> dict:
             and_(
                 TaskUnified.project_id == project_id,
                 TaskUnified.stage == stage_code,
+                TaskUnified.is_active == True,
                 TaskUnified.status.notin_(['CANCELLED'])
             )
         ).all()
@@ -125,6 +127,7 @@ def _check_and_update_health(db: Session, project_id: int):
     tasks = db.query(TaskUnified).filter(
         and_(
             TaskUnified.project_id == project_id,
+            TaskUnified.is_active == True,
             TaskUnified.status.notin_(['CANCELLED', 'COMPLETED'])
         )
     ).all()
@@ -194,6 +197,7 @@ def create_progress_log(
         return progress_log
     except Exception as e:
         # 如果 ProgressLog 表不存在或其他错误，记录日志但不影响主流程
+        db.rollback()
         print(f"Warning: Could not create progress log: {e}")
         return None
 
@@ -232,3 +236,81 @@ def get_project_progress_summary(db: Session, project_id: int) -> dict:
         'overall_progress': round(overall_progress, 2),
         'completion_rate': round(completed_tasks / total_tasks * 100, 2) if total_tasks > 0 else 0
     }
+
+
+class ProgressAggregationService:
+    """
+    项目进度聚合服务
+    
+    提供基于任务数据的聚合能力，用于快速计算项目整体进度。
+    前端和自动化测试都依赖该类，请保持接口稳定。
+    """
+
+    @staticmethod
+    def aggregate_project_progress(project_id: int, db: Session) -> Dict[str, Any]:
+        """
+        计算项目整体进度（按任务预估工时加权）
+
+        Args:
+            project_id: 项目ID
+            db: 数据库会话
+
+        Returns:
+            dict: 聚合后的进度指标
+        """
+        tasks = db.query(TaskUnified).filter(TaskUnified.project_id == project_id).all()
+
+        # 仅统计处于激活状态且未取消的任务
+        active_tasks = [
+            task for task in tasks
+            if getattr(task, "is_active", True) and (task.status or "").upper() != "CANCELLED"
+        ]
+
+        total_tasks = len(active_tasks)
+        completed_tasks = len([t for t in active_tasks if (t.status or "").upper() == "COMPLETED"])
+        in_progress_tasks = len([
+            t for t in active_tasks if (t.status or "").upper() in {"IN_PROGRESS", "ACCEPTED"}
+        ])
+        pending_approval_tasks = len([
+            t for t in active_tasks if (t.status or "").upper() == "PENDING_APPROVAL"
+        ])
+
+        total_hours = 0.0
+        weighted_progress = 0.0
+
+        for task in active_tasks:
+            progress = float(task.progress or 0)
+            if task.estimated_hours and float(task.estimated_hours) > 0:
+                weight = float(task.estimated_hours)
+            else:
+                # 没有预估工时时按1小时处理，避免除零
+                weight = 1.0
+            total_hours += weight
+            weighted_progress += progress * weight
+
+        if total_hours > 0:
+            overall_progress = weighted_progress / total_hours
+        elif total_tasks > 0:
+            # 所有任务都缺少工时估计时，退化为简单平均
+            overall_progress = sum(float(t.progress or 0) for t in active_tasks) / total_tasks
+        else:
+            overall_progress = 0.0
+
+        delayed_tasks = len([t for t in active_tasks if getattr(t, "is_delayed", False)])
+        overdue_tasks = len([
+            t for t in active_tasks
+            if t.deadline and t.deadline < datetime.now()
+            and (t.status or "").upper() not in {"COMPLETED", "CANCELLED"}
+        ])
+
+        return {
+            "project_id": project_id,
+            "total_tasks": total_tasks,
+            "completed_tasks": completed_tasks,
+            "in_progress_tasks": in_progress_tasks,
+            "pending_approval_tasks": pending_approval_tasks,
+            "delayed_tasks": delayed_tasks,
+            "overdue_tasks": overdue_tasks,
+            "overall_progress": round(overall_progress, 2),
+            "calculated_at": datetime.now().isoformat(),
+        }

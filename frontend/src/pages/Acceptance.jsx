@@ -40,10 +40,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogBody,
 } from '../components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
-import { acceptanceApi } from '../services/api'
+import { acceptanceApi, projectApi } from '../services/api'
 
 const typeConfigs = {
   FAT: { label: '出厂验收', color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
@@ -52,9 +60,13 @@ const typeConfigs = {
 }
 
 const statusConfigs = {
+  draft: { label: '草稿', color: 'bg-slate-500', icon: FileText },
+  ready: { label: '待验收', color: 'bg-slate-500', icon: Clock },
   pending: { label: '待验收', color: 'bg-slate-500', icon: Clock },
+  pending_sign: { label: '待签字', color: 'bg-amber-500', icon: AlertCircle },
   in_progress: { label: '验收中', color: 'bg-blue-500', icon: ClipboardList },
-  completed: { label: '已通过', color: 'bg-emerald-500', icon: CheckCircle2 },
+  completed: { label: '已完成', color: 'bg-emerald-500', icon: CheckCircle2 },
+  cancelled: { label: '已取消', color: 'bg-gray-500', icon: XCircle },
   failed: { label: '未通过', color: 'bg-red-500', icon: XCircle },
 }
 
@@ -65,8 +77,8 @@ const severityConfigs = {
 }
 
 function AcceptanceCard({ acceptance, onView }) {
-  const type = typeConfigs[acceptance.type]
-  const status = statusConfigs[acceptance.status]
+  const type = typeConfigs[acceptance.type] || { label: acceptance.type || '未知', color: 'text-slate-400', bgColor: 'bg-slate-500/10' }
+  const status = statusConfigs[acceptance.status] || { label: acceptance.status || '未知', color: 'bg-slate-500', icon: AlertCircle }
   const StatusIcon = status.icon
 
   const openIssues = acceptance.issues.filter((i) => i.status === 'open').length
@@ -168,8 +180,8 @@ function AcceptanceDetailDialog({ acceptance, open, onOpenChange }) {
 
   if (!acceptance) return null
 
-  const type = typeConfigs[acceptance.type]
-  const status = statusConfigs[acceptance.status]
+  const type = typeConfigs[acceptance.type] || { label: acceptance.type || '未知', color: 'text-slate-400', bgColor: 'bg-slate-500/10' }
+  const status = statusConfigs[acceptance.status] || { label: acceptance.status || '未知', color: 'bg-slate-500', icon: AlertCircle }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -282,9 +294,9 @@ function AcceptanceDetailDialog({ acceptance, open, onOpenChange }) {
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-medium text-white">{issue.item}</span>
                           <Badge
-                            className={cn('text-[10px] border', severityConfigs[issue.severity].color)}
+                            className={cn('text-[10px] border', (severityConfigs[issue.severity] || { color: 'bg-slate-500/20 text-slate-400 border-slate-500/30' }).color)}
                           >
-                            {severityConfigs[issue.severity].label}
+                            {(severityConfigs[issue.severity] || { label: issue.severity || '未知' }).label}
                           </Badge>
                         </div>
                         <span className="text-xs text-slate-500">{issue.category}</span>
@@ -354,16 +366,30 @@ export default function Acceptance() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedAcceptance, setSelectedAcceptance] = useState(null)
   const [showDetail, setShowDetail] = useState(false)
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [projects, setProjects] = useState([])
+  const [newOrder, setNewOrder] = useState({
+    project_id: null,
+    machine_id: null,
+    acceptance_type: 'FAT',
+    template_id: null,
+    planned_date: '',
+    location: '',
+  })
 
   // Map backend status to frontend status
   const mapBackendStatusToFrontend = (backendStatus) => {
     const statusMap = {
+      'DRAFT': 'draft',
+      'READY': 'ready',
       'PENDING': 'pending',
+      'PENDING_SIGN': 'pending_sign',
       'IN_PROGRESS': 'in_progress',
       'COMPLETED': 'completed',
+      'CANCELLED': 'cancelled',
       'FAILED': 'failed',
     }
-    return statusMap[backendStatus] || backendStatus?.toLowerCase() || 'pending'
+    return statusMap[backendStatus] || (backendStatus?.toLowerCase() || 'pending')
   }
 
   // Load acceptances from API
@@ -385,9 +411,13 @@ export default function Acceptance() {
       if (statusFilter !== 'all') {
         // Map frontend status to backend status
         const statusMap = {
+          'draft': 'DRAFT',
+          'ready': 'READY',
           'pending': 'PENDING',
+          'pending_sign': 'PENDING_SIGN',
           'in_progress': 'IN_PROGRESS',
           'completed': 'COMPLETED',
+          'cancelled': 'CANCELLED',
           'failed': 'FAILED',
         }
         params.status = statusMap[statusFilter] || statusFilter.toUpperCase()
@@ -489,10 +519,45 @@ export default function Acceptance() {
     }
   }, [typeFilter, statusFilter, searchQuery])
 
+  // Load projects for create dialog
+  const fetchProjects = useCallback(async () => {
+    try {
+      const res = await projectApi.list({ page_size: 1000 })
+      setProjects(res.data?.items || res.data || [])
+    } catch (error) {
+      console.error('Failed to fetch projects:', error)
+    }
+  }, [])
+
   // Load acceptances when component mounts or filters change
   useEffect(() => {
     loadAcceptances()
-  }, [loadAcceptances])
+    fetchProjects()
+  }, [loadAcceptances, fetchProjects])
+
+  // Handle create order
+  const handleCreateOrder = async () => {
+    if (!newOrder.project_id || !newOrder.planned_date) {
+      alert('请填写项目和计划日期')
+      return
+    }
+    try {
+      await acceptanceApi.orders.create(newOrder)
+      setShowCreateDialog(false)
+      setNewOrder({
+        project_id: null,
+        machine_id: null,
+        acceptance_type: 'FAT',
+        template_id: null,
+        planned_date: '',
+        location: '',
+      })
+      loadAcceptances()
+    } catch (error) {
+      console.error('Failed to create order:', error)
+      alert('创建验收单失败: ' + (error.response?.data?.detail || error.message))
+    }
+  }
 
   // Client-side filtering (for additional filtering beyond API)
   const normalizedQuery = searchQuery.trim().toLowerCase()
@@ -569,7 +634,7 @@ export default function Acceptance() {
         title="验收管理"
         description="管理FAT/SAT验收流程，记录验收问题"
         actions={
-          <Button>
+          <Button onClick={() => setShowCreateDialog(true)}>
             <Plus className="w-4 h-4 mr-1" />
             新建验收单
           </Button>
@@ -711,6 +776,79 @@ export default function Acceptance() {
         open={showDetail}
         onOpenChange={setShowDetail}
       />
+
+      {/* Create Order Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>新建验收单</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block text-white">项目 *</label>
+                <Select
+                  value={newOrder.project_id?.toString() || ''}
+                  onValueChange={(val) => setNewOrder({ ...newOrder, project_id: val ? parseInt(val) : null })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择项目" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((proj) => (
+                      <SelectItem key={proj.id} value={proj.id.toString()}>
+                        {proj.project_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block text-white">验收类型</label>
+                  <Select
+                    value={newOrder.acceptance_type}
+                    onValueChange={(val) => setNewOrder({ ...newOrder, acceptance_type: val })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(typeConfigs).map(([key, config]) => (
+                        <SelectItem key={key} value={key}>
+                          {config.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block text-white">计划日期 *</label>
+                  <Input
+                    type="date"
+                    value={newOrder.planned_date}
+                    onChange={(e) => setNewOrder({ ...newOrder, planned_date: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block text-white">验收地点</label>
+                <Input
+                  value={newOrder.location}
+                  onChange={(e) => setNewOrder({ ...newOrder, location: e.target.value })}
+                  placeholder="验收地点"
+                />
+              </div>
+            </div>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+              取消
+            </Button>
+            <Button onClick={handleCreateOrder}>创建</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       </motion.div>
     </div>
   )

@@ -127,17 +127,18 @@ def get_work_logs(
                 mention_name=mention.mention_name
             ))
         
-        items.append(WorkLogResponse(
-            id=work_log.id,
-            user_id=work_log.user_id,
-            user_name=work_log.user_name,
-            work_date=work_log.work_date,
-            content=work_log.content,
-            status=work_log.status,
-            mentions=mentions,
-            created_at=work_log.created_at,
-            updated_at=work_log.updated_at
-        ))
+            items.append(WorkLogResponse(
+                id=work_log.id,
+                user_id=work_log.user_id,
+                user_name=work_log.user_name,
+                work_date=work_log.work_date,
+                content=work_log.content,
+                status=work_log.status,
+                mentions=mentions,
+                timesheet_id=work_log.timesheet_id,
+                created_at=work_log.created_at,
+                updated_at=work_log.updated_at
+            ))
     
     return ResponseModel(
         code=200,

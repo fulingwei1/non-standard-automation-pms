@@ -364,12 +364,37 @@ def get_suppliers(
     if supplier_level:
         query = query.filter(Supplier.supplier_level == supplier_level)
     
-    # 总数
+    # 总数 - 使用独立的查询避免连接问题
     total = query.count()
     
-    # 分页
-    offset = (page - 1) * page_size
-    suppliers = query.order_by(desc(Supplier.created_at)).offset(offset).limit(page_size).all()
+    # 分页 - 确保 offset 和 limit 都是有效的整数
+    offset = max(0, (page - 1) * page_size)
+    page_size_int = max(1, int(page_size))
+    
+    # 重新构建查询对象以避免 SQLite 连接问题
+    suppliers_query = db.query(Supplier)
+    
+    # 重新应用所有筛选条件
+    if keyword:
+        suppliers_query = suppliers_query.filter(
+            or_(
+                Supplier.supplier_name.contains(keyword),
+                Supplier.supplier_code.contains(keyword),
+                Supplier.supplier_short_name.contains(keyword),
+            )
+        )
+    if supplier_type:
+        suppliers_query = suppliers_query.filter(Supplier.supplier_type == supplier_type)
+    if status:
+        suppliers_query = suppliers_query.filter(Supplier.status == status)
+    if supplier_level:
+        suppliers_query = suppliers_query.filter(Supplier.supplier_level == supplier_level)
+    
+    # 应用排序和分页
+    suppliers_query = suppliers_query.order_by(desc(Supplier.created_at))
+    if offset > 0:
+        suppliers_query = suppliers_query.offset(offset)
+    suppliers = suppliers_query.limit(page_size_int).all()
     
     # 手动构建响应对象，确保 Decimal 类型正确处理
     items = []

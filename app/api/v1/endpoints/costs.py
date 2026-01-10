@@ -10,7 +10,7 @@ from app.api import deps
 from app.core.config import settings
 from app.core import security
 from app.models.user import User
-from app.models.project import ProjectCost, Project, Machine
+from app.models.project import ProjectCost, Project, Machine, FinancialProjectCost
 from app.models.sales import Contract
 from app.schemas.project import ProjectCostCreate, ProjectCostResponse, ProjectCostUpdate
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -62,8 +62,11 @@ def read_costs(
     offset = (page - 1) * page_size
     costs = query.order_by(desc(ProjectCost.cost_date)).offset(offset).limit(page_size).all()
     
+    # 将ORM对象转换为响应模型
+    cost_items = [ProjectCostResponse.model_validate(c) for c in costs]
+    
     return PaginatedResponse(
-        items=costs,
+        items=cost_items,
         total=total,
         page=page,
         page_size=page_size,
@@ -82,11 +85,13 @@ def get_project_costs(
 ) -> Any:
     """
     获取项目的成本记录列表
+    包含普通成本和财务修正成本，财务修正成本优先显示
     """
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
     
+    # 获取普通成本
     query = db.query(ProjectCost).filter(ProjectCost.project_id == project_id)
     
     if machine_id:
@@ -95,7 +100,62 @@ def get_project_costs(
         query = query.filter(ProjectCost.cost_type == cost_type)
     
     costs = query.order_by(desc(ProjectCost.cost_date)).all()
-    return costs
+    
+    # 获取财务修正成本
+    financial_query = db.query(FinancialProjectCost).filter(
+        FinancialProjectCost.project_id == project_id
+    )
+    
+    if machine_id:
+        financial_query = financial_query.filter(FinancialProjectCost.machine_id == machine_id)
+    if cost_type:
+        financial_query = financial_query.filter(FinancialProjectCost.cost_type == cost_type)
+    
+    financial_costs = financial_query.order_by(desc(FinancialProjectCost.cost_date)).all()
+    
+    # 将财务成本转换为ProjectCostResponse格式（标记为财务修正）
+    from app.schemas.project import ProjectCostResponse
+    from datetime import date
+    
+    result = []
+    
+    # 先添加财务修正成本（优先）
+    for fc in financial_costs:
+        # 将FinancialProjectCost转换为ProjectCostResponse格式
+        cost_dict = {
+            "id": fc.id,
+            "project_id": fc.project_id,
+            "machine_id": fc.machine_id,
+            "cost_type": fc.cost_type,
+            "cost_category": fc.cost_category,
+            "amount": float(fc.amount) if fc.amount else 0,
+            "tax_amount": float(fc.tax_amount) if fc.tax_amount else 0,
+            "cost_date": fc.cost_date,
+            "description": fc.description or f"{fc.cost_item}（财务修正）",
+            "source_type": "FINANCIAL_UPLOAD",
+            "source_no": fc.source_no,
+            "created_at": fc.created_at,
+            "updated_at": fc.updated_at,
+            "is_financial_correction": True,  # 标记为财务修正
+            "upload_batch_no": fc.upload_batch_no,
+        }
+        result.append(ProjectCostResponse(**cost_dict))
+    
+    # 添加普通成本（排除已被财务修正覆盖的类型）
+    financial_cost_types = {fc.cost_type for fc in financial_costs}
+    for cost in costs:
+        # 如果该成本类型已有财务修正数据，则跳过普通成本（财务数据优先）
+        if cost.cost_type not in financial_cost_types:
+            cost_response = ProjectCostResponse.model_validate(cost)
+            # 设置财务修正标记
+            cost_response.is_financial_correction = False
+            cost_response.upload_batch_no = None
+            result.append(cost_response)
+    
+    # 按日期倒序排序
+    result.sort(key=lambda x: x.cost_date, reverse=True)
+    
+    return result
 
 
 @router.post("/", response_model=ProjectCostResponse)

@@ -4,7 +4,7 @@
  * Core Functions: Sales strategy, Team management, Performance monitoring, Contract approval
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
   TrendingUp,
@@ -43,149 +43,22 @@ import {
 } from '../components/ui'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
-import { salesStatisticsApi, opportunityApi, contractApi } from '../services/api'
+import {
+  salesStatisticsApi,
+  salesTeamApi,
+  salesTargetApi,
+  salesReportApi,
+  opportunityApi,
+  contractApi,
+  invoiceApi,
+  paymentApi,
+} from '../services/api'
 import { ApiIntegrationError } from '../components/ui'
 
-// Mock data removed - 使用真实API
-const mockSalesFunnel = {
-  inquiry: { count: 120, amount: 15000000, conversion: 100 },
-  qualification: { count: 85, amount: 12000000, conversion: 70.8 },
-  proposal: { count: 52, amount: 8500000, conversion: 61.2 },
-  negotiation: { count: 28, amount: 5200000, conversion: 53.8 },
-  closed: { count: 15, amount: 3850000, conversion: 53.6 },
+const DEFAULT_STATS = {
+  monthlyTarget: 5000000,
+  yearTarget: 60000000,
 }
-
-// const mockTopCustomers = [ // 已移除，使用真实API
-const mockTopCustomers = [
-  {
-    id: 1,
-    name: '深圳XX科技有限公司',
-    totalAmount: 8500000,
-    thisYear: 3200000,
-    projectCount: 8,
-    status: 'active',
-    lastOrder: '2025-01-05',
-  },
-  {
-    id: 2,
-    name: '东莞XX电子有限公司',
-    totalAmount: 6200000,
-    thisYear: 1850000,
-    projectCount: 6,
-    status: 'active',
-    lastOrder: '2024-12-20',
-  },
-  {
-    id: 3,
-    name: '广州XX汽车零部件',
-    totalAmount: 5200000,
-    thisYear: 2100000,
-    projectCount: 5,
-    status: 'active',
-    lastOrder: '2025-01-08',
-  },
-  {
-    id: 4,
-    name: '惠州XX电池科技',
-    totalAmount: 4500000,
-    thisYear: 1200000,
-    projectCount: 4,
-    status: 'active',
-    lastOrder: '2024-12-15',
-  },
-]
-
-const mockPendingApprovals = [
-  {
-    id: 1,
-    type: 'contract',
-    title: 'BMS测试设备合同',
-    customer: '深圳XX科技',
-    amount: 850000,
-    submitter: '张销售',
-    submitTime: '2025-01-06 10:30',
-    priority: 'high',
-  },
-  {
-    id: 2,
-    type: 'quotation',
-    title: 'EOL设备报价单',
-    customer: '东莞XX电子',
-    amount: 620000,
-    submitter: '李销售',
-    submitTime: '2025-01-06 14:20',
-    priority: 'medium',
-  },
-  {
-    id: 3,
-    type: 'discount',
-    title: '价格优惠申请',
-    customer: '惠州XX电池',
-    amount: 450000,
-    discount: 5,
-    submitter: '王销售',
-    submitTime: '2025-01-06 16:45',
-    priority: 'high',
-  },
-]
-
-// const mockRecentActivities = [ // 已移除，使用真实API
-const mockRecentActivities = [
-  {
-    id: 1,
-    type: 'contract_signed',
-    action: '合同签署',
-    target: 'BMS测试设备合同',
-    operator: '张销售',
-    timestamp: '2025-01-06 14:30',
-    status: 'success',
-  },
-  {
-    id: 2,
-    type: 'payment_received',
-    action: '收到回款',
-    target: '深圳XX科技 - ¥85万',
-    operator: '财务部',
-    timestamp: '2025-01-06 13:45',
-    status: 'success',
-  },
-  {
-    id: 3,
-    type: 'opportunity_created',
-    action: '新增商机',
-    target: 'EOL测试设备 - 东莞XX电子',
-    operator: '李销售',
-    timestamp: '2025-01-06 12:20',
-    status: 'success',
-  },
-  {
-    id: 4,
-    type: 'quotation_submitted',
-    action: '提交报价',
-    target: 'ICT测试设备 - 惠州XX电池',
-    operator: '王销售',
-    timestamp: '2025-01-06 11:15',
-    status: 'pending',
-  },
-  {
-    id: 5,
-    type: 'customer_visit',
-    action: '客户拜访',
-    target: '广州XX汽车零部件',
-    operator: '刘销售',
-    timestamp: '2025-01-06 10:00',
-    status: 'success',
-  },
-  {
-    id: 6,
-    type: 'contract_approved',
-    action: '合同审批通过',
-    target: 'BMS老化测试设备',
-    operator: '销售总监',
-    timestamp: '2025-01-06 09:30',
-    status: 'success',
-  },
-]
 
 const formatCurrency = (value) => {
   if (value >= 10000) {
@@ -196,6 +69,104 @@ const formatCurrency = (value) => {
     currency: 'CNY',
     minimumFractionDigits: 0,
   }).format(value)
+}
+
+const toISODate = (value) => value.toISOString().split('T')[0]
+
+const getPeriodRange = (period) => {
+  const now = new Date()
+  if (period === 'quarter') {
+    const start = new Date(now.getFullYear(), now.getMonth() - 2, 1)
+    return { start, end: now }
+  }
+  if (period === 'year') {
+    const start = new Date(now.getFullYear(), 0, 1)
+    return { start, end: now }
+  }
+  const start = new Date(now.getFullYear(), now.getMonth(), 1)
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  return { start, end }
+}
+
+const transformTeamMember = (member) => ({
+  id: member.user_id,
+  name: member.user_name,
+  role: member.role,
+  monthlyAchieved: member.monthly_actual || member.contract_amount || 0,
+  monthlyTarget: member.monthly_target || 0,
+  achievementRate: Math.round(member.monthly_completion_rate || 0),
+  activeProjects: member.contract_count || 0,
+  newCustomers: member.new_customers || 0,
+})
+
+const transformApprovalItem = (contract) => ({
+  id: contract.id,
+  type: 'contract',
+  title: contract.contract_code || contract.contract_name || '合同审批',
+  customer: contract.customer_name || '未命名客户',
+  amount: Number(contract.contract_amount || 0),
+  submitter: contract.owner_name || '系统',
+  submitTime: contract.created_at || '',
+  priority: Number(contract.contract_amount || 0) > 500000 ? 'high' : 'medium',
+})
+
+const transformContributionCustomer = (item) => ({
+  id: item.customer_id || item.customer_name,
+  name: item.customer_name || '未命名客户',
+  totalAmount: item.total_amount || 0,
+  thisYear: item.total_amount || 0,
+  projectCount: item.contract_count || 0,
+})
+
+const buildRecentActivities = (opps, invoices, approvals) => {
+  const activities = []
+  opps.forEach((opp) => {
+    activities.push({
+      id: `opp-${opp.id}`,
+      type: 'opportunity_created',
+      action: '新增商机',
+      target: opp.opportunity_name || opp.name || opp.opportunity_code,
+      operator: opp.owner?.real_name || opp.owner_name || '销售团队',
+      timestamp: opp.created_at || opp.updated_at || new Date().toISOString(),
+      status: 'success',
+    })
+  })
+  invoices.forEach((invoice) => {
+    activities.push({
+      id: `invoice-${invoice.id}`,
+      type: invoice.payment_status === 'PAID' ? 'payment_received' : 'invoice_issued',
+      action: invoice.payment_status === 'PAID' ? '收到回款' : '发票开具',
+      target: invoice.invoice_code || `合同 ${invoice.contract_code || ''}`,
+      operator: invoice.approver_name || '财务部',
+      timestamp: invoice.paid_date || invoice.issue_date || invoice.created_at || new Date().toISOString(),
+      status: invoice.payment_status === 'PAID' ? 'success' : 'pending',
+    })
+  })
+  approvals.forEach((approval) => {
+    activities.push({
+      id: `approval-${approval.id}`,
+      type: 'contract_review',
+      action: '合同审批',
+      target: approval.title,
+      operator: approval.submitter,
+      timestamp: approval.submitTime || new Date().toISOString(),
+      status: 'pending',
+    })
+  })
+
+  return activities
+    .filter((item) => item.timestamp)
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    .slice(0, 6)
+}
+
+const formatTimelineLabel = (value) => {
+  if (!value) return '刚刚'
+  try {
+    return new Date(value).toLocaleString('zh-CN', { hour12: false })
+  } catch (err) {
+    return value
+  }
 }
 
 const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg }) => {
@@ -243,44 +214,183 @@ export default function SalesDirectorWorkstation() {
   const [overallStats, setOverallStats] = useState(null)
   const [teamPerformance, setTeamPerformance] = useState([])
   const [pendingApprovals, setPendingApprovals] = useState([])
+  const [topCustomers, setTopCustomers] = useState([])
+  const [funnelData, setFunnelData] = useState(null)
   const [recentActivities, setRecentActivities] = useState([])
   const [selectedPeriod, setSelectedPeriod] = useState('month')
 
-  // Load data from API
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
+  const loadDashboard = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
 
-        const [statsRes, teamRes, approvalsRes] = await Promise.all([
-          salesStatisticsApi.getSummary({ period: selectedPeriod }),
-          salesStatisticsApi.getSalesPerformance({ period: selectedPeriod }),
-          contractApi.list({ status: 'pending_approval' })
-        ])
-
-        if (statsRes.data) {
-          setOverallStats(statsRes.data)
-        }
-        if (teamRes.data?.items) {
-          setTeamPerformance(teamRes.data.items)
-        }
-        if (approvalsRes.data?.items) {
-          setPendingApprovals(approvalsRes.data.items)
-        }
-      } catch (err) {
-        console.error('Failed to load sales director data:', err)
-        setError(err)
-        setOverallStats(null)
-        setTeamPerformance([])
-        setPendingApprovals([])
-        setRecentActivities([])
-      } finally {
-        setLoading(false)
+      const range = getPeriodRange(selectedPeriod)
+      const rangeParams = {
+        start_date: toISODate(range.start),
+        end_date: toISODate(range.end),
       }
+      const yearStart = new Date(range.start.getFullYear(), 0, 1)
+      const yearParams = {
+        start_date: toISODate(yearStart),
+        end_date: toISODate(range.end),
+      }
+      const monthLabel = `${range.start.getFullYear()}-${String(range.start.getMonth() + 1).padStart(2, '0')}`
+
+      const [
+        monthlySummaryRes,
+        yearlySummaryRes,
+        funnelRes,
+        teamRes,
+        approvalsRes,
+        customersRes,
+        paymentStatsRes,
+        opportunitiesRes,
+        invoicesRes,
+        monthTargetsRes,
+        yearTargetsRes,
+      ] = await Promise.all([
+        salesStatisticsApi.summary(rangeParams),
+        salesStatisticsApi.summary(yearParams),
+        salesStatisticsApi.funnel(rangeParams),
+        salesTeamApi.getTeam({ page_size: 50, ...rangeParams }),
+        contractApi.list({ status: 'IN_REVIEW', page_size: 5 }),
+        salesReportApi.customerContribution({ top_n: 4, ...yearParams }),
+        paymentApi.getStatistics(yearParams),
+        opportunityApi.list({ page: 1, page_size: 5 }),
+        invoiceApi.list({ page: 1, page_size: 5 }),
+        salesTargetApi.list({
+          target_scope: 'DEPARTMENT',
+          target_period: 'MONTHLY',
+          period_value: monthLabel,
+          page_size: 1,
+        }),
+        salesTargetApi.list({
+          target_scope: 'DEPARTMENT',
+          target_period: 'YEARLY',
+          period_value: String(range.start.getFullYear()),
+          page_size: 1,
+        }),
+      ])
+
+      const extractData = (res) => res?.data?.data || res?.data || res || {}
+      const summaryMonth = extractData(monthlySummaryRes)
+      const summaryYear = extractData(yearlySummaryRes)
+      const funnelPayload = extractData(funnelRes) || {}
+      const teamMembers = teamRes?.data?.team_members || teamRes?.data?.data?.team_members || teamRes?.team_members || []
+      const approvals = approvalsRes?.data?.items || approvalsRes?.data || []
+      const customerContribution = extractData(customersRes)?.customers || []
+      const paymentSummary = extractData(paymentStatsRes)?.summary || {}
+      const opportunities = opportunitiesRes?.data?.items || opportunitiesRes?.data || []
+      const invoices = invoicesRes?.data?.items || invoicesRes?.data || []
+      const monthTarget = monthTargetsRes?.data?.items?.[0]
+      const yearTarget = yearTargetsRes?.data?.items?.[0]
+
+      const normalizedTeam = teamMembers
+        .map(transformTeamMember)
+        .sort((a, b) => (b.monthlyAchieved || 0) - (a.monthlyAchieved || 0))
+        .slice(0, 4)
+      setTeamPerformance(normalizedTeam)
+
+      const approvalsTransformed = approvals.map(transformApprovalItem)
+      setPendingApprovals(approvalsTransformed)
+
+      const customersTransformed = customerContribution.map(transformContributionCustomer)
+      setTopCustomers(customersTransformed)
+
+      const activities = buildRecentActivities(opportunities, invoices, approvalsTransformed)
+      setRecentActivities(activities)
+
+      const monthlyAchieved = summaryMonth?.total_contract_amount || 0
+      const monthlyTargetValue = monthTarget?.target_value || summaryMonth?.monthly_target || DEFAULT_STATS.monthlyTarget
+      const achievementRate = monthlyTargetValue > 0 ? (monthlyAchieved / monthlyTargetValue) * 100 : 0
+      const yearAchieved = summaryYear?.total_contract_amount || 0
+      const yearTargetValue = yearTarget?.target_value || summaryYear?.year_target || monthlyTargetValue * 12
+      const yearProgress = yearTargetValue > 0 ? (yearAchieved / yearTargetValue) * 100 : 0
+
+      const customerTotal = teamMembers.reduce((sum, member) => sum + (member.customer_total || 0), 0)
+      const newCustomers = teamMembers.reduce((sum, member) => sum + (member.new_customers || 0), 0)
+
+      setOverallStats({
+        monthlyTarget: monthlyTargetValue,
+        monthlyAchieved,
+        achievementRate,
+        customerCount: customerTotal,
+        newCustomers,
+        activeContracts: summaryMonth?.signed_contracts || 0,
+        pendingContracts: approvalsTransformed.length,
+        pendingPayment: paymentSummary.total_unpaid || 0,
+        overduePayment: paymentSummary.total_overdue || 0,
+        collectionRate: paymentSummary.collection_rate || 0,
+        yearTarget: yearTargetValue,
+        yearAchieved,
+        yearProgress,
+        activeOpportunities: summaryMonth?.total_opportunities || 0,
+        hotOpportunities: summaryMonth?.won_opportunities || 0,
+      })
+
+      setFunnelData({
+        inquiry: {
+          count: funnelPayload.leads || 0,
+          amount: funnelPayload.total_opportunity_amount || 0,
+          conversion: 100,
+        },
+        qualification: {
+          count: funnelPayload.opportunities || 0,
+          amount: funnelPayload.total_opportunity_amount || 0,
+          conversion: funnelPayload.conversion_rates?.lead_to_opp || 0,
+        },
+        proposal: {
+          count: funnelPayload.quotes || 0,
+          amount: funnelPayload.total_opportunity_amount || 0,
+          conversion: funnelPayload.conversion_rates?.opp_to_quote || 0,
+        },
+        negotiation: {
+          count: Math.max((funnelPayload.opportunities || 0) - (funnelPayload.contracts || 0), 0),
+          amount: funnelPayload.total_opportunity_amount || 0,
+          conversion: funnelPayload.conversion_rates?.quote_to_contract || 0,
+        },
+        closed: {
+          count: funnelPayload.contracts || 0,
+          amount: funnelPayload.total_contract_amount || 0,
+          conversion: funnelPayload.conversion_rates?.quote_to_contract || 0,
+        },
+      })
+    } catch (err) {
+      console.error('Failed to load sales director data:', err)
+      // 提取错误信息字符串，避免直接传递对象给 React 渲染
+      const errorMsg = err?.response?.data?.detail
+      let errorStr = '加载数据失败'
+      if (typeof errorMsg === 'string') {
+        errorStr = errorMsg
+      } else if (Array.isArray(errorMsg)) {
+        errorStr = errorMsg.map(e => e.msg || JSON.stringify(e)).join('; ')
+      } else if (err?.message) {
+        errorStr = err.message
+      }
+      setError({ message: errorStr, originalError: err })
+      setOverallStats(null)
+      setTeamPerformance([])
+      setPendingApprovals([])
+      setTopCustomers([])
+      setRecentActivities([])
+      setFunnelData(null)
+    } finally {
+      setLoading(false)
     }
-    fetchData()
   }, [selectedPeriod])
+
+  useEffect(() => {
+    loadDashboard()
+  }, [loadDashboard])
+
+  if (loading && !overallStats) {
+    return (
+      <div className="space-y-6 py-16 text-center text-slate-400">
+        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-4 text-primary" />
+        <p>正在加载销售总监工作台数据...</p>
+      </div>
+    )
+  }
 
   // Show error state
   if (error && !overallStats) {
@@ -290,23 +400,7 @@ export default function SalesDirectorWorkstation() {
         <ApiIntegrationError
           error={error}
           apiEndpoint="/api/v1/sales/statistics/summary"
-          onRetry={() => {
-            const fetchData = async () => {
-              try {
-                setLoading(true)
-                setError(null)
-                const statsRes = await salesStatisticsApi.getSummary({ period: selectedPeriod })
-                if (statsRes.data) {
-                  setOverallStats(statsRes.data)
-                }
-              } catch (err) {
-                setError(err)
-              } finally {
-                setLoading(false)
-              }
-            }
-            fetchData()
-          }}
+          onRetry={loadDashboard}
         />
       </div>
     )
@@ -418,12 +512,45 @@ export default function SalesDirectorWorkstation() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {/* Sales funnel - 需要从API获取数据 */}
-                  <div className="text-center py-8 text-slate-500">
-                    <p>销售漏斗数据需要从API获取</p>
+                {funnelData ? (
+                  <div className="space-y-4">
+                    {[
+                      { key: 'inquiry', label: '询价阶段', color: 'bg-blue-500' },
+                      { key: 'qualification', label: '需求确认', color: 'bg-cyan-500' },
+                      { key: 'proposal', label: '方案报价', color: 'bg-amber-500' },
+                      { key: 'negotiation', label: '商务谈判', color: 'bg-orange-500' },
+                      { key: 'closed', label: '签约成交', color: 'bg-emerald-500' },
+                    ].map((stage) => {
+                      const data = funnelData[stage.key] || { count: 0, amount: 0, conversion: 0 }
+                      return (
+                        <div key={stage.key} className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <div className={cn('w-2 h-2 rounded-full', stage.color)} />
+                              <span className="text-slate-300">{stage.label}</span>
+                              <Badge variant="outline" className="text-xs bg-slate-700/40">
+                                {data.count} 个
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-slate-400 text-xs">
+                                转化率: {data.conversion?.toFixed?.(1) ?? data.conversion}%
+                              </span>
+                              <span className="text-white font-medium">
+                                {formatCurrency(data.amount || 0)}
+                              </span>
+                            </div>
+                          </div>
+                          <Progress value={Number(data.conversion) || 0} className="h-2 bg-slate-700/50" />
+                        </div>
+                      )
+                    })}
                   </div>
-                </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <p>暂无漏斗数据</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -551,9 +678,9 @@ export default function SalesDirectorWorkstation() {
                         <p className="text-xs text-slate-400 mt-1">{item.customer}</p>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between text-xs mt-2">
+                  <div className="flex items-center justify-between text-xs mt-2">
                       <span className="text-slate-400">
-                        {item.submitter} · {item.submitTime.split(' ')[1]}
+                        {item.submitter} · {formatTimelineLabel(item.submitTime)}
                       </span>
                       <span className="font-medium text-amber-400">
                         {formatCurrency(item.amount)}
@@ -583,11 +710,36 @@ export default function SalesDirectorWorkstation() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {/* Top customers - 需要从API获取数据 */}
-                {}
-                <div className="text-center py-8 text-slate-500">
-                  <p>重点客户数据需要从API获取</p>
-                </div>
+                {topCustomers.length > 0 ? (
+                  topCustomers.map((customer) => (
+                    <div
+                      key={customer.id}
+                      className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="font-medium text-white text-sm">{customer.name}</p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            合同数 {customer.projectCount || 0}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-emerald-400 font-semibold">
+                            {formatCurrency(customer.totalAmount || 0)}
+                          </p>
+                          <p className="text-xs text-slate-500">贡献金额</p>
+                        </div>
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        最近贡献: {formatCurrency(customer.thisYear || customer.totalAmount || 0)}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <p>暂无重点客户数据</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -638,7 +790,40 @@ export default function SalesDirectorWorkstation() {
         </Card>
       </motion.div>
       )}
+
+      {recentActivities.length > 0 && (
+      <motion.div variants={fadeIn}>
+        <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Clock className="h-5 w-5 text-blue-400" />
+              关键活动动态
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {recentActivities.map((activity) => (
+                <div
+                  key={activity.id}
+                  className="flex items-center justify-between border border-slate-700/40 rounded-lg p-3 bg-slate-800/40"
+                >
+                  <div>
+                    <p className="text-sm text-white font-medium">{activity.action}</p>
+                    <p className="text-xs text-slate-400 mt-1">{activity.target}</p>
+                  </div>
+                  <div className="text-right">
+                    <Badge variant="outline" className="text-xs bg-slate-700/50 border-slate-600">
+                      {formatTimelineLabel(activity.timestamp)}
+                    </Badge>
+                    <p className="text-xs text-slate-500 mt-1">{activity.operator}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+      )}
     </motion.div>
   )
 }
-

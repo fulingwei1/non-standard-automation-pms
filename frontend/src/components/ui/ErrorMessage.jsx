@@ -86,9 +86,17 @@ export function ApiIntegrationError({
   onRetry,
   className,
 }) {
-  const errorMessage = error?.response?.data?.detail || 
-                      error?.message || 
-                      'API 调用失败'
+  // 处理 FastAPI 的验证错误格式 (detail 可能是数组)
+  const rawDetail = error?.response?.data?.detail
+  let errorMessage = 'API 调用失败'
+  if (typeof rawDetail === 'string') {
+    errorMessage = rawDetail
+  } else if (Array.isArray(rawDetail)) {
+    // FastAPI validation errors: [{type, loc, msg, input}, ...]
+    errorMessage = rawDetail.map(e => e.msg || e.message || JSON.stringify(e)).join('; ')
+  } else if (error?.message) {
+    errorMessage = error.message
+  }
   
   const statusCode = error?.response?.status
   const statusText = error?.response?.statusText

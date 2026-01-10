@@ -25,6 +25,8 @@ import MilestoneRateReport from './pages/MilestoneRateReport'
 import DelayReasonsReport from './pages/DelayReasonsReport'
 import NotificationCenter from './pages/NotificationCenter'
 import Timesheet from './pages/Timesheet'
+import TimesheetDashboard from './pages/TimesheetDashboard'
+import TimesheetBatchOperations from './pages/TimesheetBatchOperations'
 import Settings from './pages/Settings'
 import ScheduleBoard from './pages/ScheduleBoard'
 import MaterialAnalysis from './pages/MaterialAnalysis'
@@ -966,6 +968,8 @@ function App() {
           <Route path="/work-center" element={<WorkCenter />} />
           <Route path="/notifications" element={<NotificationCenter />} />
           <Route path="/timesheet" element={<Timesheet />} />
+          <Route path="/timesheet/dashboard" element={<TimesheetDashboard />} />
+          <Route path="/timesheet/batch" element={<TimesheetBatchOperations />} />
           <Route path="/work-log" element={<WorkLog />} />
           <Route path="/work-log/config" element={<WorkLogConfig />} />
           <Route path="/settings" element={<Settings />} />

@@ -470,12 +470,27 @@ export const salesStatisticsApi = {
 export const salesApi = {
     // 销售漏斗
     getFunnel: (params) => api.get('/sales/statistics/funnel', { params }),
-    // 待审批订单
-    getPendingApprovals: (params) => api.get('/sales/approvals/pending', { params }),
-    // Top客户
-    getTopCustomers: (params) => api.get('/sales/customers/top', { params }),
+    // 待审批合同（使用合同列表筛选）
+    getPendingApprovals: (params) => api.get('/sales/contracts', {
+        params: { status: 'IN_REVIEW', page_size: 10, ...params },
+    }),
+    // Top客户贡献
+    getTopCustomers: (params) => api.get('/sales/reports/customer-contribution', { params }),
     // 付款计划
-    getPaymentSchedule: (params) => api.get('/sales/payments/schedule', { params }),
+    getPaymentSchedule: (params = {}) => {
+        const { limit, ...rest } = params || {}
+        const query = {
+            status: 'PENDING',
+            page_size: limit || 10,
+            ...rest,
+        }
+        return api.get('/sales/payment-plans', { params: query })
+    },
+};
+
+export const salesReportApi = {
+    customerContribution: (params) => api.get('/sales/reports/customer-contribution', { params }),
+    o2cPipeline: (params) => api.get('/sales/reports/o2c-pipeline', { params }),
 };
 
 // Alert Management APIs
@@ -1683,6 +1698,68 @@ export const rdReportApi = {
     exportReport: (params) => api.get('/reports/rd-export', { params, responseType: 'blob' }),
 };
 
+// Timesheet APIs (工时管理 - 升级版)
+export const timesheetApi = {
+    // ========== 工时记录管理 ==========
+    list: (params) => api.get('/timesheets', { params }),
+    get: (id) => api.get(`/timesheets/${id}`),
+    create: (data) => api.post('/timesheets', data),
+    batchCreate: (data) => api.post('/timesheets/batch', data),
+    update: (id, data) => api.put(`/timesheets/${id}`, data),
+    delete: (id) => api.delete(`/timesheets/${id}`),
+    
+    // ========== 周工时表 ==========
+    getWeek: (params) => api.get('/timesheets/week', { params }),
+    submitWeek: (data) => api.post('/timesheets/week/submit', data),
+    
+    // ========== 提交与审批 ==========
+    submit: (data) => api.post('/timesheets/submit', data),
+    getPendingApproval: (params) => api.get('/timesheets/pending-approval', { params }),
+    approve: (id, data) => api.put(`/timesheets/${id}/approve`, data),
+    batchApprove: (data) => api.post('/timesheets/approve', data),
+    reject: (id, data) => api.post(`/timesheets/${id}/reject`, data),
+    
+    // ========== 统计汇总 ==========
+    getStatistics: (params) => api.get('/timesheets/statistics', { params }),
+    getMonthSummary: (params) => api.get('/timesheets/month-summary', { params }),
+    getMySummary: (params) => api.get('/timesheets/my-summary', { params }),
+    getDepartmentSummary: (deptId, params) => api.get(`/timesheets/departments/${deptId}/timesheet-summary`, { params }),
+    
+    // ========== 数据汇总 ==========
+    aggregate: (data) => api.post('/timesheets/aggregate', data),
+    
+    // ========== 报表导出 ==========
+    getHrReport: (params) => api.get('/timesheets/reports/hr', { 
+        params,
+        responseType: params.format === 'excel' ? 'blob' : 'json'
+    }),
+    getFinanceReport: (params) => api.get('/timesheets/reports/finance', { 
+        params,
+        responseType: params.format === 'excel' ? 'blob' : 'json'
+    }),
+    getRdReport: (params) => api.get('/timesheets/reports/rd', { 
+        params,
+        responseType: params.format === 'excel' ? 'blob' : 'json'
+    }),
+    getProjectReport: (params) => api.get('/timesheets/reports/project', { 
+        params,
+        responseType: params.format === 'excel' ? 'blob' : 'json'
+    }),
+    
+    // ========== 数据同步 ==========
+    sync: (params) => api.post('/timesheets/sync', null, { params }),
+    getSyncStatus: (timesheetId) => api.get(`/timesheets/sync-status/${timesheetId}`),
+    
+    // ========== 绩效统计 ==========
+    getPerformanceStats: (params) => api.get('/timesheets/performance', { params }),
+    getResourcePlanning: (params) => api.get('/timesheets/resource-planning', { params }),
+    getCostAnalysis: (params) => api.get('/timesheets/cost-analysis', { params }),
+    
+    // ========== 质量检查 ==========
+    getQualityCheck: (params) => api.get('/timesheets/quality-check', { params }),
+    detectAnomalies: (params) => api.get('/timesheets/anomalies', { params }),
+};
+
 // Assembly Kit Analysis APIs (装配齐套分析)
 export const assemblyKitApi = {
     // 看板数据
@@ -2055,4 +2132,62 @@ export const reportCenterApi = {
     getRdIntensity: (params) => api.get('/reports/rd-intensity', { params }),
     getRdPersonnel: (params) => api.get('/reports/rd-personnel', { params }),
     exportRdReport: (params) => api.get('/reports/rd-export', { params, responseType: 'blob' }),
+};
+
+// Presales Integration APIs - 售前系统集成
+export const presalesIntegrationApi = {
+    // 线索转项目
+    createProjectFromLead: (data) => api.post('/presales/from-lead', data),
+
+    // 中标率预测
+    predictWinRate: (data) => api.post('/presales/predict-win-rate', data),
+
+    // 资源投入分析
+    getLeadResourceInvestment: (leadId) => api.get(`/presales/lead/${leadId}/resource-investment`),
+
+    // 资源浪费分析
+    getResourceWasteAnalysis: (period) => api.get('/presales/resource-waste-analysis', { params: { period } }),
+
+    // 销售人员绩效
+    getSalespersonPerformance: (salespersonId, period) =>
+        api.get(`/presales/salesperson/${salespersonId}/performance`, { params: { period } }),
+    getSalespersonRanking: (rankingType, period, limit) =>
+        api.get('/presales/salesperson-ranking', { params: { ranking_type: rankingType, period, limit } }),
+
+    // 仪表板
+    getDashboard: () => api.get('/presales/dashboard'),
+};
+
+// 优势产品管理 API
+export const advantageProductApi = {
+    // 类别
+    getCategories: (includeInactive = false) =>
+        api.get('/advantage-products/categories', { params: { include_inactive: includeInactive } }),
+    createCategory: (data) => api.post('/advantage-products/categories', data),
+    updateCategory: (id, data) => api.put(`/advantage-products/categories/${id}`, data),
+
+    // 产品列表
+    getProducts: (params) => api.get('/advantage-products', { params }),
+    getProductsGrouped: (includeInactive = false) =>
+        api.get('/advantage-products/grouped', { params: { include_inactive: includeInactive } }),
+    getProductsSimple: (categoryId) =>
+        api.get('/advantage-products/simple', { params: { category_id: categoryId } }),
+
+    // 产品 CRUD
+    createProduct: (data) => api.post('/advantage-products', data),
+    updateProduct: (id, data) => api.put(`/advantage-products/${id}`, data),
+    deleteProduct: (id) => api.delete(`/advantage-products/${id}`),
+
+    // Excel 导入
+    importFromExcel: (file, clearExisting = true) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return api.post('/advantage-products/import', formData, {
+            params: { clear_existing: clearExisting },
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+    },
+
+    // 产品匹配检查
+    checkMatch: (productName) => api.post('/advantage-products/check-match', { product_name: productName }),
 };

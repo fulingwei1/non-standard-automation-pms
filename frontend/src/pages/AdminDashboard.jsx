@@ -56,11 +56,6 @@ import {
   Button,
   Badge,
   Progress,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Input,
 } from '../components/ui'
 import { cn } from '../lib/utils'
 import { fadeIn, staggerContainer } from '../lib/animations'
@@ -444,28 +439,46 @@ export default function AdminDashboard() {
         </Card>
       </motion.div>
 
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="bg-slate-800/50 border-slate-700/50">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-slate-700">
+      {/* Navigation Tabs */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 bg-slate-800/50 border border-slate-700/50 rounded-lg p-1">
+          <button
+            onClick={() => {
+              // 系统概览保持在当前页面，滚动到顶部
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+            className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all bg-slate-700 text-white hover:bg-slate-600"
+          >
             系统概览
-          </TabsTrigger>
-          <TabsTrigger value="users" className="data-[state=active]:bg-slate-700">
+          </button>
+          <button
+            onClick={() => navigate('/user-management')}
+            className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-300 hover:bg-slate-700 hover:text-white"
+          >
             用户管理
-          </TabsTrigger>
-          <TabsTrigger value="roles" className="data-[state=active]:bg-slate-700">
+          </button>
+          <button
+            onClick={() => navigate('/role-management')}
+            className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-300 hover:bg-slate-700 hover:text-white"
+          >
             角色权限
-          </TabsTrigger>
-          <TabsTrigger value="system" className="data-[state=active]:bg-slate-700">
+          </button>
+          <button
+            onClick={() => navigate('/scheduler-monitoring')}
+            className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-300 hover:bg-slate-700 hover:text-white"
+          >
             系统监控
-          </TabsTrigger>
-          <TabsTrigger value="activity" className="data-[state=active]:bg-slate-700">
+          </button>
+          <button
+            onClick={() => navigate('/scheduler-monitoring')}
+            className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-300 hover:bg-slate-700 hover:text-white"
+          >
             活动日志
-          </TabsTrigger>
-        </TabsList>
+          </button>
+        </div>
 
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-4">
+        {/* System Overview Content */}
+        <div className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* System Health */}
             <Card className="border-slate-700/50 bg-slate-800/50">
@@ -556,417 +569,8 @@ export default function AdminDashboard() {
               </Card>
             </div>
           </div>
-        </TabsContent>
-
-        {/* Users Tab */}
-        <TabsContent value="users" className="space-y-4">
-          <Card className="border-slate-700/50 bg-slate-800/50">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-white">用户管理</CardTitle>
-                <Button onClick={() => navigate('/user-management')}>
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  管理用户
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg border border-slate-700/50 bg-slate-900/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-slate-400">总用户数</span>
-                    <Users className="w-5 h-5 text-blue-400" />
-                  </div>
-                  <p className="text-2xl font-bold text-white">{stats.totalUsers}</p>
-                  <p className="text-xs text-slate-500 mt-1">本月新增: {stats.newUsersThisMonth}</p>
-                </div>
-                <div className="p-4 rounded-lg border border-slate-700/50 bg-slate-900/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-slate-400">已分配角色</span>
-                    <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                  </div>
-                  <p className="text-2xl font-bold text-white">{stats.usersWithRoles}</p>
-                  <p className="text-xs text-slate-500 mt-1">未分配: {stats.usersWithoutRoles} 人</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Roles Tab */}
-        <TabsContent value="roles" className="space-y-4">
-          <Card className="border-slate-700/50 bg-slate-800/50">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-white">角色权限管理</CardTitle>
-                <Button onClick={() => navigate('/role-management')}>
-                  <Shield className="w-4 h-4 mr-2" />
-                  管理角色
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-lg border border-slate-700/50 bg-slate-900/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-slate-400">总角色数</span>
-                    <Shield className="w-5 h-5 text-purple-400" />
-                  </div>
-                  <p className="text-2xl font-bold text-white">{stats.totalRoles}</p>
-                  <p className="text-xs text-slate-500 mt-1">系统角色: {stats.systemRoles}</p>
-                </div>
-                <div className="p-4 rounded-lg border border-slate-700/50 bg-slate-900/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-slate-400">自定义角色</span>
-                    <UserCog className="w-5 h-5 text-amber-400" />
-                  </div>
-                  <p className="text-2xl font-bold text-white">{stats.customRoles}</p>
-                  <p className="text-xs text-slate-500 mt-1">活跃角色: {stats.activeRoles}</p>
-                </div>
-                <div className="p-4 rounded-lg border border-slate-700/50 bg-slate-900/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-slate-400">权限总数</span>
-                    <Key className="w-5 h-5 text-cyan-400" />
-                  </div>
-                  <p className="text-2xl font-bold text-white">{stats.totalPermissions}</p>
-                  <p className="text-xs text-slate-500 mt-1">已分配: {stats.assignedPermissions}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-slate-700/50 bg-slate-800/50">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Settings className="w-5 h-5 text-emerald-400" />
-                菜单模块权限配置
-              </CardTitle>
-              <p className="text-sm text-slate-400">
-                管理员可通过勾选功能开关控制不同角色可见的菜单模块，本界面为 UI 演示，尚未与后台联动。
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="rounded-lg border border-slate-700/70 bg-slate-900/50 p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm text-white">角色列表</span>
-                    <Badge variant="outline" className="text-xs text-slate-300 border-slate-600">
-                      {rolePermissions.length} 个
-                    </Badge>
-                  </div>
-                  <div className="relative">
-                    <Input
-                      value={roleSearchKeyword}
-                      onChange={(event) => setRoleSearchKeyword(event.target.value)}
-                      placeholder="搜索角色 / 编码"
-                      className="bg-slate-900/70 border-slate-700/70 text-slate-100 pl-9 placeholder:text-slate-500"
-                    />
-                    <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                  <div className="mt-4 space-y-2 max-h-80 overflow-y-auto pr-1">
-                    {filteredRoles.length > 0 ? (
-                      filteredRoles.map((role) => {
-                        const active = role.roleCode === selectedRoleCode
-                        const modified = isRolePermissionsChanged(role)
-                        return (
-                          <button
-                            key={role.roleCode}
-                            onClick={() => handleRoleSelect(role.roleCode)}
-                            className={cn(
-                              'w-full text-left p-3 rounded-lg border transition-all',
-                              active
-                                ? 'border-emerald-500/60 bg-emerald-500/10 shadow-lg shadow-emerald-500/10'
-                                : 'border-slate-700/60 bg-slate-900/60 hover:border-slate-600'
-                            )}
-                          >
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm font-medium text-white">{role.role}</p>
-                              {modified && (
-                                <Badge variant="outline" className="text-[10px] text-amber-300 border-amber-400/60">
-                                  已修改
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-xs text-slate-400 mt-1">{role.description}</p>
-                            <div className="mt-2 flex items-center gap-2 text-[10px] text-slate-500">
-                              <span>编码: {role.roleCode}</span>
-                              <span>•</span>
-                              <span>模块 {role.permissions.length}</span>
-                            </div>
-                          </button>
-                        )
-                      })
-                    ) : (
-                      <div className="text-xs text-slate-500 text-center py-8 border border-dashed border-slate-700/60 rounded-lg">
-                        未找到匹配的角色
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="lg:col-span-2 rounded-lg border border-slate-700/70 bg-slate-900/50 p-4">
-                  {selectedRole ? (
-                    <>
-                      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                        <div>
-                          <p className="text-base font-semibold text-white flex items-center gap-2">
-                            {selectedRole.role}
-                            {selectedRoleChanged && (
-                              <Badge variant="outline" className="text-[10px] text-amber-300 border-amber-400/60">
-                                有未保存变更
-                              </Badge>
-                            )}
-                          </p>
-                          <p className="text-xs text-slate-400">{selectedRole.description}</p>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
-                          <Badge variant="outline" className="text-[10px] text-slate-300 border-slate-600">
-                            角色编码: {selectedRole.roleCode}
-                          </Badge>
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] text-emerald-300 border-emerald-500/40 bg-emerald-500/10"
-                          >
-                            可见模块: {selectedRole.permissions.length}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {permissionModules.map((module) => {
-                          const active = selectedRole.permissions.includes(module.code)
-                          return (
-                            <button
-                              key={module.code}
-                              type="button"
-                              onClick={() => handleTogglePermission(module.code)}
-                              className={cn(
-                                'text-left rounded-lg border p-3 transition-all',
-                                active
-                                  ? 'border-emerald-500/60 bg-emerald-500/10 shadow-lg shadow-emerald-500/10'
-                                  : 'border-slate-700/60 bg-slate-900/60 hover:border-slate-600'
-                              )}
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <div>
-                                  <p className="text-sm font-medium text-white">{module.name}</p>
-                                  <p className="text-xs text-slate-400 mt-1">{module.description}</p>
-                                </div>
-                                <Badge
-                                  variant={active ? 'default' : 'outline'}
-                                  className={cn(
-                                    'text-[10px]',
-                                    active
-                                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                                      : 'text-slate-300 border-slate-600'
-                                  )}
-                                >
-                                  {active ? '已开启' : '关闭'}
-                                </Badge>
-                              </div>
-                            </button>
-                          )
-                        })}
-                      </div>
-                      <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        {permissionNotice && (
-                          <div
-                            className={cn(
-                              'text-xs font-medium px-3 py-2 rounded-md border',
-                              permissionNotice.type === 'success' &&
-                                'text-emerald-300 border-emerald-500/40 bg-emerald-500/5',
-                              permissionNotice.type === 'info' &&
-                                'text-blue-300 border-blue-500/40 bg-blue-500/5',
-                              permissionNotice.type === 'warning' &&
-                                'text-amber-300 border-amber-500/40 bg-amber-500/5'
-                            )}
-                          >
-                            {permissionNotice.message}
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            onClick={handleResetPermissions}
-                            disabled={!hasPendingChanges || savingPermissions}
-                            className="text-sm"
-                          >
-                            <RefreshCw className="w-4 h-4 mr-2" />
-                            重置
-                          </Button>
-                          <Button
-                            onClick={handleSavePermissions}
-                            disabled={!hasPendingChanges || savingPermissions}
-                            className="text-sm"
-                          >
-                            <ShieldCheck className="w-4 h-4 mr-2" />
-                            {savingPermissions ? '保存中...' : '保存配置'}
-                          </Button>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="h-full flex items-center justify-center text-sm text-slate-400">
-                      暂无可配置的角色
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* System Monitoring Tab */}
-        <TabsContent value="system" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card className="border-slate-700/50 bg-slate-800/50">
-              <CardHeader>
-                <CardTitle className="text-white">系统资源</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-3 rounded-lg border border-slate-700/50 bg-slate-900/50">
-                  <div className="flex items-center gap-3">
-                    <HardDrive className="w-5 h-5 text-blue-400" />
-                    <div>
-                      <p className="text-sm font-medium text-white">存储空间</p>
-                      <p className="text-xs text-slate-400">已使用 {stats.storageUsed}%</p>
-                    </div>
-                  </div>
-                  <Badge variant={stats.storageUsed > 80 ? 'destructive' : 'default'}>
-                    {stats.storageUsed}%
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg border border-slate-700/50 bg-slate-900/50">
-                  <div className="flex items-center gap-3">
-                    <Database className="w-5 h-5 text-purple-400" />
-                    <div>
-                      <p className="text-sm font-medium text-white">数据库</p>
-                      <p className="text-xs text-slate-400">{stats.databaseSize} GB</p>
-                    </div>
-                  </div>
-                  <Badge variant="default">正常</Badge>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg border border-slate-700/50 bg-slate-900/50">
-                  <div className="flex items-center gap-3">
-                    <Cpu className="w-5 h-5 text-amber-400" />
-                    <div>
-                      <p className="text-sm font-medium text-white">API 响应时间</p>
-                      <p className="text-xs text-slate-400">平均 {stats.apiResponseTime} ms</p>
-                    </div>
-                  </div>
-                  <Badge variant={stats.apiResponseTime > 200 ? 'destructive' : 'default'}>
-                    {stats.apiResponseTime}ms
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-slate-700/50 bg-slate-800/50">
-              <CardHeader>
-                <CardTitle className="text-white">系统状态</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-3 rounded-lg border border-slate-700/50 bg-slate-900/50">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                    <div>
-                      <p className="text-sm font-medium text-white">系统可用性</p>
-                      <p className="text-xs text-slate-400">{stats.systemUptime}%</p>
-                    </div>
-                  </div>
-                  <Badge variant="default" className="bg-emerald-500/20 text-emerald-400">
-                    正常
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg border border-slate-700/50 bg-slate-900/50">
-                  <div className="flex items-center gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-400" />
-                    <div>
-                      <p className="text-sm font-medium text-white">错误率</p>
-                      <p className="text-xs text-slate-400">{stats.errorRate}%</p>
-                    </div>
-                  </div>
-                  <Badge variant={stats.errorRate > 1 ? 'destructive' : 'default'}>
-                    {stats.errorRate}%
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg border border-slate-700/50 bg-slate-900/50">
-                  <div className="flex items-center gap-3">
-                    <Server className="w-5 h-5 text-cyan-400" />
-                    <div>
-                      <p className="text-sm font-medium text-white">服务器状态</p>
-                      <p className="text-xs text-slate-400">运行正常</p>
-                    </div>
-                  </div>
-                  <Badge variant="default" className="bg-emerald-500/20 text-emerald-400">
-                    在线
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Activity Log Tab */}
-        <TabsContent value="activity" className="space-y-4">
-          <Card className="border-slate-700/50 bg-slate-800/50">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-white">最近活动</CardTitle>
-                <Button variant="outline" size="sm" disabled title="审计日志功能开发中">
-                  <Eye className="w-4 h-4 mr-2" />
-                  查看全部
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {/* 最近活动 - 需要从API获取数据 */}
-                {/* {mockRecentActivities.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-start gap-3 p-3 rounded-lg border border-slate-700/50 bg-slate-900/50"
-                  >
-                    <div className="p-2 rounded-lg bg-blue-500/10">
-                      {activity.type === 'user_created' && (
-                        <UserPlus className="w-4 h-4 text-blue-400" />
-                      )}
-                      {activity.type === 'role_assigned' && (
-                        <Shield className="w-4 h-4 text-purple-400" />
-                      )}
-                      {activity.type === 'permission_updated' && (
-                        <Key className="w-4 h-4 text-amber-400" />
-                      )}
-                      {activity.type === 'user_deactivated' && (
-                        <Lock className="w-4 h-4 text-red-400" />
-                      )}
-                      {activity.type === 'config_updated' && (
-                        <Settings className="w-4 h-4 text-cyan-400" />
-                      )}
-                      {activity.type === 'backup_completed' && (
-                        <Archive className="w-4 h-4 text-emerald-400" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-medium text-white">{activity.action}</p>
-                        <Badge variant="outline" className="text-xs">
-                          {activity.target}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-slate-400">
-                        <span>操作人: {activity.operator}</span>
-                        <span>•</span>
-                        <span>{activity.timestamp}</span>
-                      </div>
-                    </div>
-                    {activity.status === 'success' && (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                    )}
-                  </div>
-                ))} */}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </motion.div>
   )
 }

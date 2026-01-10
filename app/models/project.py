@@ -156,6 +156,15 @@ class Project(Base, TimestampMixin):
     # 预立项流程关联
     initiation_id = Column(Integer, ForeignKey("pmo_project_initiation.id"), comment="预立项申请ID")
 
+    # 售前评估关联
+    source_lead_id = Column(String(50), comment="来源线索号（如XS2501001）")
+    evaluation_score = Column(Numeric(5, 2), comment="评估总分")
+    predicted_win_rate = Column(Numeric(5, 4), comment="预测中标率（0-1）")
+    outcome = Column(String(20), comment="最终结果：PENDING/WON/LOST/ABANDONED")
+    loss_reason = Column(String(50), comment="丢标原因代码")
+    loss_reason_detail = Column(Text, comment="丢标原因详情")
+    salesperson_id = Column(Integer, ForeignKey("users.id"), comment="销售人员ID")
+
     created_by = Column(Integer, ForeignKey("users.id"), comment="创建人")
 
     # 关系
@@ -169,6 +178,7 @@ class Project(Base, TimestampMixin):
     department = relationship(Department)
     opportunity = relationship("Opportunity", foreign_keys=[opportunity_id])
     contract = relationship("Contract", foreign_keys=[contract_id])
+    salesperson = relationship("User", foreign_keys=[salesperson_id])
     initiation = relationship("PmoProjectInitiation", foreign_keys=[initiation_id])
     machines = relationship("Machine", back_populates="project", lazy="dynamic")
     stages = relationship("ProjectStage", back_populates="project", lazy="dynamic")
@@ -199,6 +209,9 @@ class Project(Base, TimestampMixin):
         Index("idx_projects_contract", "contract_id"),  # 合同关联
         Index("idx_projects_erp_sync", "erp_synced", "erp_sync_status"),  # ERP同步状态
         Index("idx_projects_initiation", "initiation_id"),  # 预立项关联
+        Index("idx_projects_source_lead", "source_lead_id"),  # 来源线索关联
+        Index("idx_projects_outcome", "outcome"),  # 线索结果
+        Index("idx_projects_salesperson", "salesperson_id"),  # 销售人员
     )
 
     def __repr__(self):

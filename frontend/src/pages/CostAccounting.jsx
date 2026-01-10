@@ -3,7 +3,8 @@
  * Features: Cost recording, Cost query, Cost statistics, Cost analysis
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Calculator,
@@ -186,12 +187,27 @@ const costCategoryConfig = {
 }
 
 export default function CostAccounting() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedProject, setSelectedProject] = useState('all')
   const [selectedCostType, setSelectedCostType] = useState('all')
   const [selectedDateRange, setSelectedDateRange] = useState('month')
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [selectedCost, setSelectedCost] = useState(null)
+
+  // 从 URL 查询参数读取筛选条件
+  useEffect(() => {
+    const projectId = searchParams.get('project_id')
+    const costType = searchParams.get('cost_type')
+    
+    if (projectId) {
+      setSelectedProject(projectId)
+    }
+    
+    if (costType) {
+      setSelectedCostType(costType)
+    }
+  }, [searchParams])
 
   // Filter costs
   const filteredCosts = useMemo(() => {

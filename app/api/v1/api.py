@@ -63,6 +63,8 @@ from app.api.v1.endpoints import (
     project_contributions,
     admin_stats,
     hr_management,
+    presales_integration,
+    advantage_products,
 )
 
 api_router = APIRouter()
@@ -132,3 +134,5 @@ api_router.include_router(project_workspace.router, prefix="", tags=["project-wo
 api_router.include_router(project_contributions.router, prefix="", tags=["project-contributions"])
 api_router.include_router(admin_stats.router, prefix="", tags=["admin-stats"])
 api_router.include_router(hr_management.router, prefix="/hr", tags=["hr-management"])
+api_router.include_router(presales_integration.router, prefix="/presales", tags=["presales-integration"])
+api_router.include_router(advantage_products.router, prefix="/advantage-products", tags=["advantage-products"])

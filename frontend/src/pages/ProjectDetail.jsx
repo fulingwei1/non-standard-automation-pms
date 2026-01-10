@@ -10,6 +10,7 @@ import {
   memberApi,
   costApi,
   documentApi,
+  financialCostApi,
 } from '../services/api'
 import { formatDate, formatCurrency, getStageName } from '../lib/utils'
 import { PageHeader } from '../components/layout/PageHeader'
@@ -24,6 +25,12 @@ import {
   Skeleton,
   UserAvatar,
   AvatarGroup,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from '../components/ui'
 import ProjectLeadsPanel from '../components/project/ProjectLeadsPanel'
 import GateCheckPanel from '../components/project/GateCheckPanel'
@@ -54,6 +61,8 @@ import {
   TrendingUp,
   AlertTriangle,
   FolderOpen,
+  Upload,
+  AlertCircle,
 } from 'lucide-react'
 
 // Tab data
@@ -64,7 +73,7 @@ const tabs = [
   { id: 'team', name: '项目团队', icon: Users },
   { id: 'workspace', name: '工作空间', icon: FolderOpen },
   { id: 'leads', name: '负责人', icon: UserCog },
-  { id: 'finance', name: '财务/成本', icon: DollarSign },
+  { id: 'finance', name: '财务成本', icon: DollarSign },
   { id: 'docs', name: '文档中心', icon: FileText },
   { id: 'timeline', name: '时间线', icon: Calendar }, // Sprint 3.3: 新增时间线标签
 ]
@@ -99,36 +108,131 @@ export default function ProjectDetail() {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const [
-          projRes,
-          stagesRes,
-          machinesRes,
-          membersRes,
-          milestonesRes,
-          costsRes,
-          docsRes,
-          logsRes,
-        ] = await Promise.all([
+        
+        // 使用 Promise.allSettled 而不是 Promise.all，这样单个失败不会导致全部失败
+        const results =         await Promise.allSettled([
           projectApi.get(id),
           stageApi.list(id),
           machineApi.list({ project_id: id }),
           memberApi.list(id),
           milestoneApi.list(id),
-          costApi.list(id),
+          costApi.list({ project_id: id }), // 修复：传递project_id作为查询参数
           documentApi.list(id),
           projectApi.getStatusLogs(id, { limit: 50 }), // Sprint 3.3: 加载状态日志
         ])
 
-        setProject(projRes.data)
-        setStages(stagesRes.data || [])
-        setMachines(machinesRes.data || [])
-        setMembers(membersRes.data || [])
-        setMilestones(milestonesRes.data || [])
-        setCosts(costsRes.data || [])
-        setDocuments(docsRes.data || [])
-        setStatusLogs(logsRes.data?.items || logsRes.data || []) // Sprint 3.3
+        // 处理项目详情（必须成功，否则显示错误）
+        const projRes = results[0]
+        if (projRes.status === 'fulfilled') {
+          // FastAPI直接返回对象，axios包装在response.data中
+          const responseData = projRes.value.data
+          console.log('[ProjectDetail] 项目详情API响应:', {
+            hasData: !!responseData,
+            dataType: typeof responseData,
+            isObject: typeof responseData === 'object',
+            keys: responseData && typeof responseData === 'object' ? Object.keys(responseData) : null,
+            projectId: responseData?.id,
+            projectCode: responseData?.project_code,
+            projectName: responseData?.project_name,
+          })
+          
+          // 尝试多种格式：可能是直接对象，也可能是嵌套在data中
+          const projectData = responseData?.data || responseData || null
+          if (projectData && typeof projectData === 'object' && projectData.id) {
+            console.log('[ProjectDetail] ✅ 项目数据解析成功:', {
+              id: projectData.id,
+              code: projectData.project_code,
+              name: projectData.project_name,
+            })
+            setProject(projectData)
+          } else {
+            console.error('[ProjectDetail] ❌ 项目数据格式错误:', {
+              projectData,
+              type: typeof projectData,
+              hasId: projectData?.id,
+            })
+            setProject(null)
+          }
+        } else {
+          console.error('[ProjectDetail] ❌ 获取项目详情失败:', {
+            reason: projRes.reason,
+            message: projRes.reason?.message,
+            response: projRes.reason?.response?.data,
+            status: projRes.reason?.response?.status,
+          })
+          setProject(null)
+          // 不在这里 return，继续处理其他数据
+        }
+
+        // 处理其他数据（允许失败，使用默认值）
+        const machinesRes = results[2]
+        if (machinesRes.status === 'fulfilled') {
+          const machinesData = machinesRes.value.data?.items || machinesRes.value.data || []
+          setMachines(Array.isArray(machinesData) ? machinesData : [])
+        } else {
+          console.warn('获取机台列表失败:', machinesRes.reason)
+          setMachines([])
+        }
+
+        const stagesRes = results[1]
+        if (stagesRes.status === 'fulfilled') {
+          setStages(Array.isArray(stagesRes.value.data) ? stagesRes.value.data : [])
+        } else {
+          console.warn('获取阶段列表失败:', stagesRes.reason)
+          setStages([])
+        }
+
+        const membersRes = results[3]
+        if (membersRes.status === 'fulfilled') {
+          setMembers(Array.isArray(membersRes.value.data) ? membersRes.value.data : [])
+        } else {
+          console.warn('获取成员列表失败:', membersRes.reason)
+          setMembers([])
+        }
+
+        const milestonesRes = results[4]
+        if (milestonesRes.status === 'fulfilled') {
+          setMilestones(Array.isArray(milestonesRes.value.data) ? milestonesRes.value.data : [])
+        } else {
+          console.warn('获取里程碑列表失败:', milestonesRes.reason)
+          setMilestones([])
+        }
+
+        const costsRes = results[5]
+        if (costsRes.status === 'fulfilled') {
+          // 成本API返回PaginatedResponse格式：{ items, total, page, page_size, pages }
+          const costsData = costsRes.value.data
+          const costsList = costsData?.items || (Array.isArray(costsData) ? costsData : [])
+          setCosts(Array.isArray(costsList) ? costsList : [])
+        } else {
+          console.warn('获取成本列表失败:', costsRes.reason)
+          setCosts([])
+        }
+
+        const docsRes = results[6]
+        if (docsRes.status === 'fulfilled') {
+          // 文档API返回PaginatedResponse格式：{ items, total, page, page_size, pages }
+          const docsData = docsRes.value.data
+          const docsList = docsData?.items || (Array.isArray(docsData) ? docsData : [])
+          setDocuments(Array.isArray(docsList) ? docsList : [])
+        } else {
+          console.warn('获取文档列表失败:', docsRes.reason)
+          setDocuments([])
+        }
+
+        const logsRes = results[7]
+        if (logsRes.status === 'fulfilled') {
+          const logsData = logsRes.value.data?.items || logsRes.value.data || []
+          setStatusLogs(Array.isArray(logsData) ? logsData : [])
+        } else {
+          console.warn('获取状态日志失败:', logsRes.reason)
+          setStatusLogs([])
+        }
       } catch (err) {
-        console.error('Failed to fetch project details:', err)
+        // 这个 catch 应该不会被执行，因为使用了 Promise.allSettled
+        // 但保留作为安全网
+        console.error('Unexpected error in fetchData:', err)
+        setProject(null)
       } finally {
         setLoading(false)
       }
@@ -347,7 +451,12 @@ export default function ProjectDetail() {
             project={project}
             onRefresh={() => {
               // 重新加载数据
-              projectApi.get(id).then((res) => setProject(res.data))
+              projectApi.get(id).then((res) => {
+                const projectData = res.data?.data || res.data || null
+                setProject(projectData)
+              }).catch((err) => {
+                console.error('Failed to refresh project:', err)
+              })
             }}
           />
           <Button variant="secondary" size="icon">
@@ -500,7 +609,12 @@ export default function ProjectDetail() {
                   currentStage={project.stage}
                   onAdvance={() => {
                     // 重新加载项目数据
-                    projectApi.get(id).then((res) => setProject(res.data))
+                    projectApi.get(id).then((res) => {
+                      const projectData = res.data?.data || res.data || null
+                      setProject(projectData)
+                    }).catch((err) => {
+                      console.error('Failed to refresh project:', err)
+                    })
                   }}
                 />
 
@@ -629,7 +743,11 @@ export default function ProjectDetail() {
               {machines.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {machines.map((machine) => (
-                    <Card key={machine.id} className="overflow-hidden">
+                    <Card 
+                      key={machine.id} 
+                      className="overflow-hidden cursor-pointer hover:bg-white/[0.04] transition-colors"
+                      onClick={() => navigate(`/projects/${id}/machines?machine_id=${machine.id}`)}
+                    >
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div className="p-2 rounded-lg bg-indigo-500/20">
@@ -1064,27 +1182,104 @@ export default function ProjectDetail() {
           {/* Finance Tab */}
           {activeTab === 'finance' && (
             <Card>
-              <CardContent>
-                {costs.length > 0 ? (
-                  <div className="space-y-4">
-                    {costs.map((cost) => (
-                      <div
-                        key={cost.id}
-                        className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02]"
-                      >
-                        <div>
-                          <p className="font-medium text-white">{cost.cost_type}</p>
-                          <p className="text-sm text-slate-500">{cost.description}</p>
-                        </div>
-                        <p className="text-lg font-semibold text-primary">
-                          {formatCurrency(cost.amount)}
-                        </p>
+              <CardContent className="space-y-4">
+                {/* 上传成本按钮 */}
+                <div className="flex justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate(`/financial-costs?project_id=${id}`)}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    上传成本数据
+                  </Button>
+                </div>
+
+                {(() => {
+                  // 成本类型中文映射
+                  const costTypeMap = {
+                    MATERIAL: '物料',
+                    LABOR: '人工',
+                    OUTSOURCE: '外协',
+                    OTHER: '其他',
+                  }
+
+                  // 按成本类型分组汇总，区分财务修正数据
+                  const costSummary = costs.reduce((acc, cost) => {
+                    const type = cost.cost_type || 'OTHER'
+                    if (!acc[type]) {
+                      acc[type] = {
+                        type,
+                        label: costTypeMap[type] || type,
+                        amount: 0,
+                        count: 0,
+                        financialCount: 0, // 财务修正数据数量
+                        hasFinancialCorrection: false, // 是否有财务修正数据
+                      }
+                    }
+                    acc[type].amount += parseFloat(cost.amount || 0)
+                    acc[type].count += 1
+                    if (cost.is_financial_correction) {
+                      acc[type].financialCount += 1
+                      acc[type].hasFinancialCorrection = true
+                    }
+                    return acc
+                  }, {})
+
+                  const costTypes = Object.values(costSummary)
+
+                  if (costTypes.length > 0) {
+                    return (
+                      <div className="space-y-4">
+                        {costTypes.map((summary) => (
+                          <div
+                            key={summary.type}
+                            onClick={() => {
+                              // 跳转到成本核算页面，并传递项目ID和成本类型作为查询参数
+                              navigate(`/costs?project_id=${id}&cost_type=${summary.type}`)
+                            }}
+                            className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors cursor-pointer"
+                          >
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="font-medium text-white">{summary.label}</p>
+                                {summary.hasFinancialCorrection && (
+                                  <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
+                                    <AlertCircle className="h-3 w-3 mr-1" />
+                                    财务修正
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-slate-500">
+                                {summary.count} 项记录
+                                {summary.financialCount > 0 && (
+                                  <span className="text-amber-400 ml-2">
+                                    （{summary.financialCount} 项财务修正）
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                            <p className="text-lg font-semibold text-primary">
+                              {formatCurrency(summary.amount)}
+                            </p>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-slate-500">暂无财务数据</div>
-                )}
+                    )
+                  } else {
+                    return (
+                      <div className="text-center py-12 space-y-4">
+                        <p className="text-slate-500">暂无财务数据</p>
+                        <Button
+                          variant="outline"
+                          onClick={() => navigate(`/financial-costs?project_id=${id}`)}
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          上传成本数据
+                        </Button>
+                      </div>
+                    )
+                  }
+                })()}
               </CardContent>
             </Card>
           )}
@@ -1104,8 +1299,8 @@ export default function ProjectDetail() {
                           <FileText className="h-5 w-5 text-blue-400" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-white truncate">{doc.document_name}</p>
-                          <p className="text-xs text-slate-500">{doc.document_type}</p>
+                          <p className="font-medium text-white truncate">{doc.doc_name || doc.document_name || doc.file_name || '未命名文档'}</p>
+                          <p className="text-xs text-slate-500">{doc.doc_type || doc.document_type || '未知类型'}</p>
                         </div>
                       </div>
                     ))}

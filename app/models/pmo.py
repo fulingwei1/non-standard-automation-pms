@@ -143,7 +143,7 @@ class PmoProjectInitiation(Base, TimestampMixin):
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
     application_no = Column(String(50), unique=True, nullable=False, comment='申请编号')
-    project_id = Column(Integer, ForeignKey('project.id'), nullable=True, comment='项目ID(审批通过后关联)')
+    project_id = Column(Integer, ForeignKey('projects.id'), nullable=True, comment='项目ID(审批通过后关联)')
     
     # 申请信息
     project_name = Column(String(200), nullable=False, comment='项目名称')
@@ -172,7 +172,7 @@ class PmoProjectInitiation(Base, TimestampMixin):
     risk_assessment = Column(Text, comment='初步风险评估')
     
     # 申请人
-    applicant_id = Column(Integer, ForeignKey('user.id'), nullable=False, comment='申请人ID')
+    applicant_id = Column(Integer, ForeignKey('users.id'), nullable=False, comment='申请人ID')
     applicant_name = Column(String(50), comment='申请人姓名')
     apply_time = Column(DateTime, default=datetime.now, comment='申请时间')
     
@@ -181,10 +181,10 @@ class PmoProjectInitiation(Base, TimestampMixin):
     
     # 审批信息
     review_result = Column(Text, comment='评审结论')
-    approved_pm_id = Column(Integer, ForeignKey('user.id'), comment='指定项目经理ID')
+    approved_pm_id = Column(Integer, ForeignKey('users.id'), comment='指定项目经理ID')
     approved_level = Column(String(5), comment='评定级别:A/B/C')
     approved_at = Column(DateTime, comment='审批时间')
-    approved_by = Column(Integer, ForeignKey('user.id'), comment='审批人')
+    approved_by = Column(Integer, ForeignKey('users.id'), comment='审批人')
     
     __table_args__ = (
         Index('idx_pmo_init_no', 'application_no'),
@@ -261,7 +261,7 @@ class PmoChangeRequest(Base, TimestampMixin):
     resource_impact = Column(Text, comment='资源影响')
     
     # 申请人
-    requestor_id = Column(Integer, ForeignKey('user.id'), nullable=False, comment='申请人ID')
+    requestor_id = Column(Integer, ForeignKey('users.id'), nullable=False, comment='申请人ID')
     requestor_name = Column(String(50), comment='申请人')
     request_time = Column(DateTime, default=datetime.now, comment='申请时间')
     
@@ -314,7 +314,7 @@ class PmoProjectRisk(Base, TimestampMixin):
     response_plan = Column(Text, comment='应对措施')
     
     # 责任人
-    owner_id = Column(Integer, ForeignKey('user.id'), comment='责任人ID')
+    owner_id = Column(Integer, ForeignKey('users.id'), comment='责任人ID')
     owner_name = Column(String(50), comment='责任人')
     
     # 状态
@@ -368,7 +368,7 @@ class PmoProjectCost(Base, TimestampMixin):
     # 备注
     remarks = Column(Text, comment='备注')
     
-    created_by = Column(Integer, ForeignKey('user.id'), comment='创建人ID')
+    created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
     
     __table_args__ = (
         Index('idx_pmo_cost_project', 'project_id'),
@@ -398,7 +398,7 @@ class PmoMeeting(Base, TimestampMixin):
     location = Column(String(100), comment='会议地点')
     
     # 人员
-    organizer_id = Column(Integer, ForeignKey('user.id'), comment='组织者ID')
+    organizer_id = Column(Integer, ForeignKey('users.id'), comment='组织者ID')
     organizer_name = Column(String(50), comment='组织者')
     attendees = Column(JSON, comment='参会人员')
     
@@ -414,7 +414,7 @@ class PmoMeeting(Base, TimestampMixin):
     # 状态
     status = Column(String(20), default='SCHEDULED', comment='状态:SCHEDULED/ONGOING/COMPLETED/CANCELLED')
     
-    created_by = Column(Integer, ForeignKey('user.id'), comment='创建人ID')
+    created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
     
     __table_args__ = (
         Index('idx_pmo_meeting_project', 'project_id'),
@@ -435,7 +435,7 @@ class PmoResourceAllocation(Base, TimestampMixin):
     task_id = Column(Integer, comment='任务ID')
     
     # 资源信息
-    resource_id = Column(Integer, ForeignKey('user.id'), nullable=False, comment='资源ID(人员ID)')
+    resource_id = Column(Integer, ForeignKey('users.id'), nullable=False, comment='资源ID(人员ID)')
     resource_name = Column(String(50), comment='资源名称')
     resource_dept = Column(String(50), comment='所属部门')
     resource_role = Column(String(50), comment='项目角色')
@@ -503,7 +503,7 @@ class PmoProjectClosure(Base, TimestampMixin):
     
     # 结项评审
     closure_date = Column(Date, comment='结项日期')
-    reviewed_by = Column(Integer, ForeignKey('user.id'), comment='评审人')
+    reviewed_by = Column(Integer, ForeignKey('users.id'), comment='评审人')
     review_date = Column(Date, comment='评审日期')
     review_result = Column(String(20), comment='评审结果:APPROVED/REJECTED')
     

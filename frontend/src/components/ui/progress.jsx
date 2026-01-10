@@ -3,7 +3,7 @@ import * as ProgressPrimitive from '@radix-ui/react-progress'
 import { cn } from '../../lib/utils'
 
 const Progress = React.forwardRef(
-  ({ className, value, showValue = false, size = 'default', color = 'primary', ...props }, ref) => {
+  ({ className, value, showValue = false, size = 'default', color = 'primary', indicatorClassName, ...props }, ref) => {
     const sizes = {
       sm: 'h-1.5',
       default: 'h-2',
@@ -32,7 +32,7 @@ const Progress = React.forwardRef(
           <ProgressPrimitive.Indicator
             className={cn(
               'h-full rounded-full transition-all duration-500 ease-out',
-              colors[color]
+              indicatorClassName || colors[color]
             )}
             style={{ width: `${value || 0}%` }}
           />

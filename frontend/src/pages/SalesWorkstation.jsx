@@ -42,7 +42,7 @@ import {
 } from '../components/ui'
 import { fadeIn, staggerContainer } from '../lib/animations'
 import { cn, formatDate } from '../lib/utils'
-import { SalesFunnel, CustomerCard, OpportunityCard, PaymentTimeline, PaymentStats } from '../components/sales'
+import { SalesFunnel, CustomerCard, OpportunityCard, PaymentTimeline, PaymentStats, AdvantageProducts } from '../components/sales'
 import {
   salesStatisticsApi,
   opportunityApi,
@@ -749,6 +749,27 @@ export default function SalesWorkstation() {
             </CardHeader>
             <CardContent>
               <PaymentStats payments={payments} />
+            </CardContent>
+          </Card>
+
+          {/* Advantage Products - 优势产品 */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">优势产品</CardTitle>
+                <Badge variant="secondary" className="text-xs">推荐</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <AdvantageProducts
+                compact
+                showSearch
+                maxHeight="320px"
+                onProductSelect={(product) => {
+                  console.log('Selected product:', product)
+                  // 可以复制产品信息或跳转到相关页面
+                }}
+              />
             </CardContent>
           </Card>
 

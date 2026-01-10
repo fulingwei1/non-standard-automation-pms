@@ -117,6 +117,7 @@ class TaskUnified(Base, TimestampMixin):
     # 状态与进度
     status = Column(String(20), default='PENDING', comment='状态')
     progress = Column(Integer, default=0, comment='进度百分比')
+    is_active = Column(Boolean, default=True, comment='是否活跃任务')
     
     # 优先级与紧急度
     priority = Column(String(20), default='MEDIUM', comment='优先级')
@@ -333,6 +334,24 @@ class TaskApprovalWorkflow(Base, TimestampMixin):
         {'comment': '任务审批工作流表'}
     )
 
+    @property
+    def decision(self) -> Optional[str]:
+        """向后兼容字段命名：decision -> approval_status"""
+        return self.approval_status
+
+    @decision.setter
+    def decision(self, value: str) -> None:
+        self.approval_status = value
+
+    @property
+    def comment(self) -> Optional[str]:
+        """兼容 comment 字段"""
+        return self.approval_note or self.rejection_reason
+
+    @comment.setter
+    def comment(self, value: Optional[str]) -> None:
+        self.approval_note = value
+
 
 # ==================== 任务完成证明 ====================
 
@@ -343,15 +362,22 @@ class TaskCompletionProof(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
     task_id = Column(Integer, ForeignKey('task_unified.id'), nullable=False, comment='任务ID')
 
-    proof_type = Column(String(50), nullable=False,
-                       comment='证明类型：DOCUMENT/PHOTO/VIDEO/TEST_REPORT/DATA')
-    file_category = Column(String(50),
-                          comment='文件分类：DRAWING/SPEC/CALCULATION/SITE_PHOTO/TEST_VIDEO等')
+    proof_type = Column(
+        String(50),
+        nullable=False,
+        default='DOCUMENT',
+        comment='证明类型：DOCUMENT/PHOTO/VIDEO/TEST_REPORT/DATA'
+    )
+    file_category = Column(
+        String(50),
+        default='GENERAL',
+        comment='文件分类：DRAWING/SPEC/CALCULATION/SITE_PHOTO/TEST_VIDEO等'
+    )
 
     file_path = Column(String(500), nullable=False, comment='文件路径')
-    file_name = Column(String(200), nullable=False, comment='文件名')
+    file_name = Column(String(200), nullable=False, default='auto-generated', comment='文件名')
     file_size = Column(Integer, comment='文件大小(字节)')
-    file_type = Column(String(50), comment='文件类型(扩展名)')
+    file_type = Column(String(50), default='unknown', comment='文件类型(扩展名)')
     description = Column(Text, comment='文件说明')
 
     uploaded_by = Column(Integer, ForeignKey('users.id'), nullable=False, comment='上传人ID')
@@ -366,4 +392,3 @@ class TaskCompletionProof(Base, TimestampMixin):
         Index('idx_tcp_uploaded_by', 'uploaded_by'),
         {'comment': '任务完成证明材料表'}
     )
-

@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Optional
 from contextlib import contextmanager
 
-from sqlalchemy import create_engine, Column, Integer, DateTime, event
+from sqlalchemy import create_engine, Column, Integer, DateTime, event, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from sqlalchemy.pool import StaticPool
 
@@ -18,6 +18,36 @@ Base = declarative_base()
 # 全局引擎和会话工厂
 _engine = None
 _SessionLocal = None
+
+
+def _ensure_sqlite_schema(engine):
+    """
+    通过轻量的DDL补丁，确保SQLite数据库包含关键字段。
+    避免由于历史数据库版本导致的列缺失。
+    """
+    inspector = inspect(engine)
+    tables = inspector.get_table_names()
+
+    if "project_statuses" in tables:
+        columns = [col["name"] for col in inspector.get_columns("project_statuses")]
+        if "updated_at" not in columns:
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        "ALTER TABLE project_statuses "
+                        "ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+                    )
+                )
+    if "task_unified" in tables:
+        columns = [col["name"] for col in inspector.get_columns("task_unified")]
+        if "is_active" not in columns:
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        "ALTER TABLE task_unified "
+                        "ADD COLUMN is_active BOOLEAN DEFAULT 1"
+                    )
+                )
 
 
 class TimestampMixin:
@@ -80,6 +110,8 @@ def get_engine(database_url: Optional[str] = None, echo: bool = False):
             cursor = dbapi_connection.cursor()
             cursor.execute("PRAGMA foreign_keys=ON")
             cursor.close()
+
+        _ensure_sqlite_schema(_engine)
     else:
         # MySQL配置
         _engine = create_engine(
