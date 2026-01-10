@@ -12,9 +12,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, or_, func
 
+import logging
 from app.api import deps
 from app.models.user import User
 from app.models.project import Customer, Project, ProjectPaymentPlan
+from app.services.notification_service import NotificationService, NotificationType, NotificationPriority
+
+logger = logging.getLogger(__name__)
 from app.models.business_support import (
     SalesOrder, SalesOrderItem, DeliveryOrder,
     AcceptanceTracking, AcceptanceTrackingRecord, Reconciliation,
@@ -748,12 +752,41 @@ async def send_project_notice(
         # 更新通知单发送状态
         sales_order.project_notice_sent = True
         sales_order.project_notice_date = datetime.now()
-        
+
         db.commit()
-        
-        # TODO: 实际发送通知给相关部门（PMC、生产、采购等）
-        # 这里可以集成通知系统或消息队列
-        
+
+        # 发送通知给相关部门（PMC、生产、采购等）
+        try:
+            notification_service = NotificationService()
+            # 获取需要通知的部门用户（PMC、生产、采购）
+            dept_keywords = ['PMC', '生产', '采购', '计划', '物料']
+            dept_users = db.query(User).filter(
+                User.is_active == True,
+                or_(*[User.department.like(f"%{kw}%") for kw in dept_keywords])
+            ).all()
+
+            notification_title = f"新项目通知 - {sales_order.order_no}"
+            notification_content = (
+                f"销售订单 {sales_order.order_no} 已分配项目号，请相关部门做好准备工作。\n"
+                f"客户：{sales_order.customer_name or '未知'}\n"
+                f"产品：{sales_order.product_name or '未知'}"
+            )
+
+            for user in dept_users:
+                notification_service.send_notification(
+                    db=db,
+                    recipient_id=user.id,
+                    notification_type=NotificationType.PROJECT_UPDATE,
+                    title=notification_title,
+                    content=notification_content,
+                    priority=NotificationPriority.HIGH,
+                    data={"order_id": order_id, "order_no": sales_order.order_no}
+                )
+            logger.info(f"项目通知单已发送给 {len(dept_users)} 个用户")
+        except Exception as notify_err:
+            # 通知发送失败不影响主流程
+            logger.warning(f"发送项目通知失败: {str(notify_err)}")
+
         return ResponseModel(
             code=200,
             message="项目通知单发送成功"
@@ -1759,9 +1792,49 @@ async def remind_acceptance_signature(
         
         db.commit()
         db.refresh(tracking)
-        
-        # TODO: 实际发送催签通知（邮件、短信、系统消息等）
-        
+
+        # 发送催签通知（邮件、短信、系统消息等）
+        try:
+            notification_service = NotificationService()
+
+            # 获取需要通知的人员（客户联系人、项目经理、销售人员）
+            notification_recipients = []
+
+            # 获取项目经理
+            if tracking.project_id:
+                project = db.query(Project).filter(Project.id == tracking.project_id).first()
+                if project and project.pm_id:
+                    notification_recipients.append(project.pm_id)
+
+            # 获取销售人员（当前操作人）
+            notification_recipients.append(current_user.id)
+
+            notification_title = f"验收单催签提醒 - {tracking.acceptance_order_no}"
+            notification_content = (
+                f"验收单 {tracking.acceptance_order_no} 第{tracking.reminder_count}次催签\n"
+                f"客户：{tracking.customer_name or '未知'}\n"
+                f"项目：{tracking.project_code or '未知'}\n"
+                f"催签内容：{reminder_data.reminder_content or '请尽快完成验收签收'}"
+            )
+
+            for recipient_id in set(notification_recipients):
+                notification_service.send_notification(
+                    db=db,
+                    recipient_id=recipient_id,
+                    notification_type=NotificationType.DEADLINE_REMINDER,
+                    title=notification_title,
+                    content=notification_content,
+                    priority=NotificationPriority.HIGH,
+                    data={
+                        "tracking_id": tracking_id,
+                        "acceptance_order_no": tracking.acceptance_order_no,
+                        "reminder_count": tracking.reminder_count
+                    }
+                )
+            logger.info(f"验收单催签通知已发送，验收单号: {tracking.acceptance_order_no}")
+        except Exception as notify_err:
+            logger.warning(f"发送催签通知失败: {str(notify_err)}")
+
         # 查询跟踪记录
         records_data = [
             {
@@ -2269,11 +2342,54 @@ async def send_reconciliation(
         # 更新状态
         reconciliation.status = "sent"
         reconciliation.sent_date = date.today()
-        
+
         db.commit()
-        
-        # TODO: 实际发送对账单（邮件、系统消息等）
-        
+
+        # 发送对账单通知（邮件、系统消息等）
+        try:
+            notification_service = NotificationService()
+
+            # 获取需要通知的人员（财务人员、销售人员）
+            notification_recipients = []
+
+            # 获取财务部门用户
+            finance_users = db.query(User).filter(
+                User.is_active == True,
+                or_(
+                    User.department.like("%财务%"),
+                    User.department.like("%Finance%")
+                )
+            ).all()
+            notification_recipients.extend([u.id for u in finance_users])
+
+            # 添加当前操作人
+            notification_recipients.append(current_user.id)
+
+            notification_title = f"对账单已发送 - {reconciliation.reconciliation_no}"
+            notification_content = (
+                f"对账单 {reconciliation.reconciliation_no} 已发送给客户\n"
+                f"客户：{reconciliation.customer_name or '未知'}\n"
+                f"对账期间：{reconciliation.period_start} 至 {reconciliation.period_end}\n"
+                f"对账金额：{reconciliation.total_amount or 0} 元"
+            )
+
+            for recipient_id in set(notification_recipients):
+                notification_service.send_notification(
+                    db=db,
+                    recipient_id=recipient_id,
+                    notification_type=NotificationType.SYSTEM_ANNOUNCEMENT,
+                    title=notification_title,
+                    content=notification_content,
+                    priority=NotificationPriority.NORMAL,
+                    data={
+                        "reconciliation_id": reconciliation_id,
+                        "reconciliation_no": reconciliation.reconciliation_no
+                    }
+                )
+            logger.info(f"对账单通知已发送，对账单号: {reconciliation.reconciliation_no}")
+        except Exception as notify_err:
+            logger.warning(f"发送对账单通知失败: {str(notify_err)}")
+
         return ResponseModel(
             code=200,
             message="发送对账单成功"

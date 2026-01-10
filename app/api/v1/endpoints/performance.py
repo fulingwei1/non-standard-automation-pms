@@ -17,6 +17,7 @@ from app.core.config import settings
 from app.core import security
 from app.models.user import User
 from app.models.project import Project
+from app.models.organization import Department, Employee
 from app.models.performance import (
     PerformancePeriod, PerformanceIndicator, PerformanceResult,
     PerformanceEvaluation, PerformanceAppeal, ProjectContribution,
@@ -338,12 +339,14 @@ def get_team_performance(
 ) -> Any:
     """
     团队绩效汇总（平均分/排名）
+    注：当前使用部门作为团队，team_id 对应 department.id
     """
-    # TODO: 获取团队信息
-    # team = db.query(Team).filter(Team.id == team_id).first()
-    # if not team:
-    #     raise HTTPException(status_code=404, detail="团队不存在")
-    
+    # 获取团队信息（使用部门作为团队）
+    department = db.query(Department).filter(Department.id == team_id).first()
+    if not department:
+        raise HTTPException(status_code=404, detail="团队不存在")
+    team_name = department.dept_name
+
     # 获取周期
     if period_id:
         period = db.query(PerformancePeriod).filter(PerformancePeriod.id == period_id).first()
@@ -351,30 +354,45 @@ def get_team_performance(
         period = db.query(PerformancePeriod).filter(
             PerformancePeriod.status == "FINALIZED"
         ).order_by(desc(PerformancePeriod.end_date)).first()
-    
+
     if not period:
         raise HTTPException(status_code=404, detail="未找到考核周期")
-    
-    # TODO: 获取团队成员
-    # team_members = db.query(User).filter(User.team_id == team_id).all()
-    # member_ids = [m.id for m in team_members]
-    
-    # 临时：使用部门ID作为团队ID
-    member_ids = [current_user.id]  # TODO: 从团队表获取
-    
+
+    # 获取团队成员（通过部门名称匹配用户）
+    team_members = db.query(User).filter(
+        User.department == department.dept_name,
+        User.is_active == True
+    ).all()
+    member_ids = [m.id for m in team_members] if team_members else []
+
+    # 如果没有成员，返回空结果
+    if not member_ids:
+        return TeamPerformanceResponse(
+            team_id=team_id,
+            team_name=team_name,
+            period_id=period.id,
+            period_name=period.period_name,
+            member_count=0,
+            avg_score=Decimal("0"),
+            max_score=Decimal("0"),
+            min_score=Decimal("0"),
+            level_distribution={},
+            members=[]
+        )
+
     # 获取团队成员绩效
     results = db.query(PerformanceResult).filter(
         PerformanceResult.period_id == period.id,
         PerformanceResult.user_id.in_(member_ids)
     ).all()
-    
+
     if not results:
         return TeamPerformanceResponse(
             team_id=team_id,
-            team_name="未知团队",  # TODO: 从团队表获取
+            team_name=team_name,
             period_id=period.id,
             period_name=period.period_name,
-            member_count=0,
+            member_count=len(member_ids),
             avg_score=Decimal("0"),
             max_score=Decimal("0"),
             min_score=Decimal("0"),
@@ -409,7 +427,7 @@ def get_team_performance(
     
     return TeamPerformanceResponse(
         team_id=team_id,
-        team_name="未知团队",  # TODO
+        team_name=team_name,
         period_id=period.id,
         period_name=period.period_name,
         member_count=len(results),
@@ -432,56 +450,73 @@ def get_department_performance(
     """
     部门绩效汇总（等级分布）
     """
-    # TODO: 获取部门信息
-    # department = db.query(Department).filter(Department.id == dept_id).first()
-    
+    # 获取部门信息
+    department = db.query(Department).filter(Department.id == dept_id).first()
+    if not department:
+        raise HTTPException(status_code=404, detail="部门不存在")
+    department_name = department.dept_name
+
     if period_id:
         period = db.query(PerformancePeriod).filter(PerformancePeriod.id == period_id).first()
     else:
         period = db.query(PerformancePeriod).filter(
             PerformancePeriod.status == "FINALIZED"
         ).order_by(desc(PerformancePeriod.end_date)).first()
-    
+
     if not period:
         raise HTTPException(status_code=404, detail="未找到考核周期")
-    
-    # TODO: 获取部门成员
-    # dept_members = db.query(User).filter(User.department_id == dept_id).all()
-    # member_ids = [m.id for m in dept_members]
-    member_ids = [current_user.id]  # TODO
-    
+
+    # 获取部门成员（通过部门名称匹配用户）
+    dept_members = db.query(User).filter(
+        User.department == department.dept_name,
+        User.is_active == True
+    ).all()
+    member_ids = [m.id for m in dept_members] if dept_members else []
+
+    # 优先从 PerformanceResult 按 department_id 查询，若无则按 user_id 查询
     results = db.query(PerformanceResult).filter(
         PerformanceResult.period_id == period.id,
         PerformanceResult.department_id == dept_id
     ).all()
-    
+
+    # 如果按 department_id 查不到，尝试按成员ID查询
+    if not results and member_ids:
+        results = db.query(PerformanceResult).filter(
+            PerformanceResult.period_id == period.id,
+            PerformanceResult.user_id.in_(member_ids)
+        ).all()
+
     if not results:
         return DepartmentPerformanceResponse(
             department_id=dept_id,
-            department_name="未知部门",  # TODO
+            department_name=department_name,
             period_id=period.id,
             period_name=period.period_name,
-            member_count=0,
+            member_count=len(member_ids),
             avg_score=Decimal("0"),
             level_distribution={},
             teams=[]
         )
-    
+
     scores = [float(r.total_score) if r.total_score else 0 for r in results]
     avg_score = Decimal(str(sum(scores) / len(scores))) if scores else Decimal("0")
-    
+
     # 等级分布
     level_distribution = {}
     for r in results:
         level = r.level or "QUALIFIED"
         level_distribution[level] = level_distribution.get(level, 0) + 1
-    
-    # TODO: 获取团队列表
-    teams = []
-    
+
+    # 获取子部门列表作为团队
+    child_depts = db.query(Department).filter(
+        Department.parent_id == dept_id,
+        Department.is_active == True
+    ).all()
+    teams = [{"team_id": d.id, "team_name": d.dept_name} for d in child_depts]
+
     return DepartmentPerformanceResponse(
         department_id=dept_id,
-        department_name="未知部门",  # TODO
+        department_name=department_name,
         period_id=period.id,
         period_name=period.period_name,
         member_count=len(results),
@@ -532,12 +567,105 @@ def get_performance_ranking(
             })
     
     elif ranking_type == "TEAM":
-        # TODO: 团队排行榜
-        pass
-    
+        # 团队排行榜（按部门汇总排名）
+        # 获取所有部门
+        departments = db.query(Department).filter(Department.is_active == True).all()
+        team_scores = []
+
+        for dept in departments:
+            # 获取该部门成员
+            dept_members = db.query(User).filter(
+                User.department == dept.dept_name,
+                User.is_active == True
+            ).all()
+            member_ids = [m.id for m in dept_members]
+
+            if not member_ids:
+                continue
+
+            # 获取成员绩效结果
+            results = db.query(PerformanceResult).filter(
+                PerformanceResult.period_id == period.id,
+                PerformanceResult.user_id.in_(member_ids)
+            ).all()
+
+            if results:
+                avg_score = sum(float(r.total_score) if r.total_score else 0 for r in results) / len(results)
+                team_scores.append({
+                    "dept_id": dept.id,
+                    "dept_name": dept.dept_name,
+                    "member_count": len(results),
+                    "avg_score": avg_score
+                })
+
+        # 按平均分排序
+        team_scores.sort(key=lambda x: x["avg_score"], reverse=True)
+
+        for idx, team in enumerate(team_scores, 1):
+            rankings.append({
+                "rank": idx,
+                "user_id": team["dept_id"],
+                "user_name": team["dept_name"],
+                "department_name": f"{team['member_count']}人",
+                "score": team["avg_score"],
+                "level": "TEAM"
+            })
+
     elif ranking_type == "DEPARTMENT":
-        # TODO: 部门排行榜
-        pass
+        # 部门排行榜（顶级部门汇总）
+        # 获取顶级部门（parent_id 为空）
+        top_depts = db.query(Department).filter(
+            Department.is_active == True,
+            or_(Department.parent_id == None, Department.level == 1)
+        ).all()
+        dept_scores = []
+
+        for dept in top_depts:
+            # 获取该部门及其子部门
+            all_dept_names = [dept.dept_name]
+            child_depts = db.query(Department).filter(
+                Department.parent_id == dept.id,
+                Department.is_active == True
+            ).all()
+            all_dept_names.extend([d.dept_name for d in child_depts])
+
+            # 获取所有相关成员
+            dept_members = db.query(User).filter(
+                User.department.in_(all_dept_names),
+                User.is_active == True
+            ).all()
+            member_ids = [m.id for m in dept_members]
+
+            if not member_ids:
+                continue
+
+            # 获取成员绩效结果
+            results = db.query(PerformanceResult).filter(
+                PerformanceResult.period_id == period.id,
+                PerformanceResult.user_id.in_(member_ids)
+            ).all()
+
+            if results:
+                avg_score = sum(float(r.total_score) if r.total_score else 0 for r in results) / len(results)
+                dept_scores.append({
+                    "dept_id": dept.id,
+                    "dept_name": dept.dept_name,
+                    "member_count": len(results),
+                    "avg_score": avg_score
+                })
+
+        # 按平均分排序
+        dept_scores.sort(key=lambda x: x["avg_score"], reverse=True)
+
+        for idx, dept in enumerate(dept_scores, 1):
+            rankings.append({
+                "rank": idx,
+                "user_id": dept["dept_id"],
+                "user_name": dept["dept_name"],
+                "department_name": f"{dept['member_count']}人",
+                "score": dept["avg_score"],
+                "level": "DEPARTMENT"
+            })
     
     return PerformanceRankingResponse(
         ranking_type=ranking_type,
