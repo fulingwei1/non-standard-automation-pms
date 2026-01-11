@@ -20,7 +20,7 @@ from app.api.v1.endpoints import (
     materials,
     purchase,
     bom,
-    progress,
+    # progress,  # 已拆分为progress包
     kit_rate,
     kit_check,
     shortage_alerts,
@@ -29,7 +29,7 @@ from app.api.v1.endpoints import (
     # sales,  # 已拆分为sales包
     # production,  # 已拆分为production包
     alerts,
-    ecn,
+    # ecn,  # 已拆分为ecn包
     outsourcing,
     acceptance,
     material_demands,
@@ -42,7 +42,7 @@ from app.api.v1.endpoints import (
     report_center,
     performance,
     business_support,
-    business_support_orders,
+    # business_support_orders,  # 已拆分为business_support_orders包
     service,
     installation_dispatch,
     rd_project,
@@ -95,7 +95,9 @@ api_router.include_router(purchase.router, prefix="/purchase-orders", tags=["pur
 api_router.include_router(bom.router, prefix="/bom", tags=["bom"])
 api_router.include_router(kit_rate.router, prefix="", tags=["kit-rate"])
 api_router.include_router(kit_check.router, prefix="", tags=["kit-check"])
-api_router.include_router(progress.router, prefix="", tags=["progress"])
+# 进度模块已拆分为子模块，从progress包导入
+from app.api.v1.endpoints.progress import router as progress_router
+api_router.include_router(progress_router, prefix="", tags=["progress"])
 api_router.include_router(shortage_alerts.router, prefix="/shortage-alerts", tags=["shortage-alerts"])
 api_router.include_router(shortage.router, prefix="", tags=["shortage"])
 # 销售模块已拆分为子模块，从sales包导入
@@ -106,7 +108,9 @@ api_router.include_router(notifications.router, prefix="/notifications", tags=["
 from app.api.v1.endpoints.production import router as production_router
 api_router.include_router(production_router, prefix="", tags=["production"])
 api_router.include_router(alerts.router, prefix="", tags=["alerts"])
-api_router.include_router(ecn.router, prefix="", tags=["ecn"])
+# ECN模块已拆分为子模块，从ecn包导入
+from app.api.v1.endpoints.ecn import router as ecn_router
+api_router.include_router(ecn_router, prefix="", tags=["ecn"])
 api_router.include_router(outsourcing.router, prefix="", tags=["outsourcing"])
 api_router.include_router(acceptance.router, prefix="", tags=["acceptance"])
 api_router.include_router(material_demands.router, prefix="", tags=["material-demands"])
@@ -119,7 +123,9 @@ api_router.include_router(performance.router, prefix="/performance", tags=["perf
 api_router.include_router(report_center.router, prefix="/reports", tags=["reports"])
 api_router.include_router(data_import_export.router, prefix="/import", tags=["data-import-export"])
 api_router.include_router(business_support.router, prefix="/business-support", tags=["business-support"])
-api_router.include_router(business_support_orders.router, prefix="/business-support", tags=["business-support"])
+# 商务支持订单模块已拆分为子模块，从business_support_orders包导入
+from app.api.v1.endpoints.business_support_orders import router as business_support_orders_router
+api_router.include_router(business_support_orders_router, prefix="/business-support", tags=["business-support"])
 api_router.include_router(installation_dispatch.router, prefix="/installation-dispatch", tags=["installation-dispatch"])
 api_router.include_router(service.router, prefix="/service", tags=["service"])
 api_router.include_router(rd_project.router, prefix="", tags=["rd-project"])

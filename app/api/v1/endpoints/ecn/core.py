@@ -1,0 +1,315 @@
+# -*- coding: utf-8 -*-
+"""
+ECN基础管理 API endpoints
+
+包含：ECN列表、详情、创建、更新、提交、取消
+"""
+
+from typing import Any, Optional
+from datetime import datetime
+from decimal import Decimal
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
+from sqlalchemy import or_, desc
+
+from app.api import deps
+from app.core import security
+from app.core.config import settings
+from app.models.user import User
+from app.models.project import Project, Machine
+from app.models.ecn import Ecn, EcnType, EcnEvaluation, EcnLog
+from app.services.ecn_notification_service import (
+    notify_ecn_submitted,
+    notify_evaluation_assigned,
+)
+from app.services.ecn_auto_assign_service import auto_assign_evaluation
+from app.schemas.ecn import (
+    EcnCreate, EcnUpdate, EcnSubmit, EcnResponse, EcnListResponse
+)
+from app.schemas.common import PaginatedResponse
+from .utils import generate_ecn_no, build_ecn_response, build_ecn_list_response
+
+router = APIRouter()
+
+
+@router.get("/ecns", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
+def read_ecns(
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    keyword: Optional[str] = Query(None, description="关键词搜索（ECN编号/标题）"),
+    project_id: Optional[int] = Query(None, description="项目ID筛选"),
+    machine_id: Optional[int] = Query(None, description="机台ID筛选"),
+    ecn_type: Optional[str] = Query(None, description="变更类型筛选"),
+    ecn_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
+    priority: Optional[str] = Query(None, description="优先级筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取ECN列表
+    """
+    query = db.query(Ecn)
+
+    # 关键词搜索
+    if keyword:
+        query = query.filter(
+            or_(
+                Ecn.ecn_no.like(f"%{keyword}%"),
+                Ecn.ecn_title.like(f"%{keyword}%"),
+            )
+        )
+
+    # 项目筛选
+    if project_id:
+        query = query.filter(Ecn.project_id == project_id)
+
+    # 机台筛选
+    if machine_id:
+        query = query.filter(Ecn.machine_id == machine_id)
+
+    # 变更类型筛选
+    if ecn_type:
+        query = query.filter(Ecn.ecn_type == ecn_type)
+
+    # 状态筛选
+    if ecn_status:
+        query = query.filter(Ecn.status == ecn_status)
+
+    # 优先级筛选
+    if priority:
+        query = query.filter(Ecn.priority == priority)
+
+    total = query.count()
+    offset = (page - 1) * page_size
+    ecns = query.order_by(desc(Ecn.created_at)).offset(offset).limit(page_size).all()
+
+    items = [build_ecn_list_response(db, ecn) for ecn in ecns]
+
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
+    )
+
+
+@router.get("/ecns/{ecn_id}", response_model=EcnResponse, status_code=status.HTTP_200_OK)
+def read_ecn(
+    ecn_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取ECN详情
+    """
+    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
+    if not ecn:
+        raise HTTPException(status_code=404, detail="ECN不存在")
+
+    return build_ecn_response(db, ecn)
+
+
+@router.post("/ecns", response_model=EcnResponse, status_code=status.HTTP_201_CREATED)
+def create_ecn(
+    *,
+    db: Session = Depends(deps.get_db),
+    ecn_in: EcnCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    创建ECN申请
+    """
+    # 验证项目是否存在
+    project = db.query(Project).filter(Project.id == ecn_in.project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="项目不存在")
+
+    # 验证机台（如果提供）
+    if ecn_in.machine_id:
+        machine = db.query(Machine).filter(Machine.id == ecn_in.machine_id).first()
+        if not machine or machine.project_id != ecn_in.project_id:
+            raise HTTPException(status_code=400, detail="机台不存在或不属于该项目")
+
+    ecn_no = generate_ecn_no(db)
+
+    ecn = Ecn(
+        ecn_no=ecn_no,
+        ecn_title=ecn_in.ecn_title,
+        ecn_type=ecn_in.ecn_type,
+        source_type=ecn_in.source_type,
+        source_no=ecn_in.source_no,
+        source_id=ecn_in.source_id,
+        project_id=ecn_in.project_id,
+        machine_id=ecn_in.machine_id,
+        change_reason=ecn_in.change_reason,
+        change_description=ecn_in.change_description,
+        change_scope=ecn_in.change_scope,
+        priority=ecn_in.priority,
+        urgency=ecn_in.urgency,
+        cost_impact=ecn_in.cost_impact or Decimal("0"),
+        schedule_impact_days=ecn_in.schedule_impact_days or 0,
+        status="DRAFT",
+        applicant_id=current_user.id,
+        applicant_dept=current_user.department,
+    )
+
+    db.add(ecn)
+    db.commit()
+    db.refresh(ecn)
+
+    return build_ecn_response(db, ecn)
+
+
+@router.put("/ecns/{ecn_id}", response_model=EcnResponse, status_code=status.HTTP_200_OK)
+def update_ecn(
+    *,
+    db: Session = Depends(deps.get_db),
+    ecn_id: int,
+    ecn_in: EcnUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    更新ECN
+    """
+    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
+    if not ecn:
+        raise HTTPException(status_code=404, detail="ECN不存在")
+
+    if ecn.status != "DRAFT":
+        raise HTTPException(status_code=400, detail="只能修改草稿状态的ECN")
+
+    update_data = ecn_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(ecn, field, value)
+
+    db.add(ecn)
+    db.commit()
+    db.refresh(ecn)
+
+    return build_ecn_response(db, ecn)
+
+
+@router.put("/ecns/{ecn_id}/submit", response_model=EcnResponse, status_code=status.HTTP_200_OK)
+def submit_ecn(
+    *,
+    db: Session = Depends(deps.get_db),
+    ecn_id: int,
+    submit_in: EcnSubmit,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    提交ECN
+    """
+    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
+    if not ecn:
+        raise HTTPException(status_code=404, detail="ECN不存在")
+
+    if ecn.status != "DRAFT":
+        raise HTTPException(status_code=400, detail="只能提交草稿状态的ECN")
+
+    ecn.status = "SUBMITTED"
+    ecn.applied_at = datetime.now()
+    ecn.current_step = "EVALUATION"
+
+    # 记录日志
+    log = EcnLog(
+        ecn_id=ecn_id,
+        log_type="STATUS_CHANGE",
+        log_action="SUBMIT",
+        old_status="DRAFT",
+        new_status="SUBMITTED",
+        log_content=submit_in.remark or "提交ECN申请",
+        created_by=current_user.id
+    )
+    db.add(log)
+
+    # 自动触发评估流程：根据ECN类型获取需要评估的部门
+    ecn_type_config = db.query(EcnType).filter(EcnType.type_code == ecn.ecn_type).first()
+    if ecn_type_config and ecn_type_config.required_depts:
+        ecn.status = "EVALUATING"
+        preferred_evaluators = submit_in.preferred_evaluators or {}
+
+        for dept in ecn_type_config.required_depts:
+            # 创建评估记录（待评估）
+            evaluation = EcnEvaluation(
+                ecn_id=ecn_id,
+                eval_dept=dept,
+                status="PENDING"
+            )
+            db.add(evaluation)
+
+            # 分配评估任务：优先使用手动指定，否则自动分配
+            try:
+                evaluator_id = None
+
+                # 1. 优先使用手动指定的评估人员
+                if dept in preferred_evaluators:
+                    evaluator_id = preferred_evaluators[dept]
+                    # 验证用户是否存在且属于该部门
+                    evaluator = db.query(User).filter(
+                        User.id == evaluator_id,
+                        User.department == dept,
+                        User.is_active == True
+                    ).first()
+                    if not evaluator:
+                        evaluator_id = None  # 如果用户不存在或不属于该部门，使用自动分配
+
+                # 2. 如果没有手动指定或手动指定无效，则自动分配
+                if not evaluator_id:
+                    evaluator_id = auto_assign_evaluation(db, ecn, evaluation)
+
+                # 3. 如果分配成功，设置评估人并发送通知
+                if evaluator_id:
+                    evaluation.evaluator_id = evaluator_id
+                    # 发送通知
+                    notify_evaluation_assigned(db, ecn, evaluation, evaluator_id)
+            except Exception as e:
+                print(f"Failed to assign evaluation: {e}")
+
+    db.add(ecn)
+    db.commit()
+    db.refresh(ecn)
+
+    return build_ecn_response(db, ecn)
+
+
+@router.put("/ecns/{ecn_id}/cancel", response_model=EcnResponse, status_code=status.HTTP_200_OK)
+def cancel_ecn(
+    *,
+    db: Session = Depends(deps.get_db),
+    ecn_id: int,
+    cancel_reason: Optional[str] = Query(None, description="取消原因"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    取消ECN
+    """
+    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
+    if not ecn:
+        raise HTTPException(status_code=404, detail="ECN不存在")
+
+    if ecn.status in ["APPROVED", "EXECUTING", "COMPLETED", "CANCELLED"]:
+        raise HTTPException(status_code=400, detail="该状态的ECN不能取消")
+
+    old_status = ecn.status
+    ecn.status = "CANCELLED"
+
+    # 记录日志
+    log = EcnLog(
+        ecn_id=ecn_id,
+        log_type="STATUS_CHANGE",
+        log_action="CANCEL",
+        old_status=old_status,
+        new_status="CANCELLED",
+        log_content=cancel_reason or "取消ECN",
+        created_by=current_user.id
+    )
+    db.add(log)
+
+    db.add(ecn)
+    db.commit()
+    db.refresh(ecn)
+
+    return build_ecn_response(db, ecn)
