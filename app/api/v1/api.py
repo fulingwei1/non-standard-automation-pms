@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from app.api.v1.endpoints import (
-    projects,
+    # projects,  # 已拆分为projects包
     customers,
     machines,
     milestones,
@@ -27,7 +27,7 @@ from app.api.v1.endpoints import (
     shortage,
     notifications,
     # sales,  # 已拆分为sales包
-    production,
+    # production,  # 已拆分为production包
     alerts,
     ecn,
     outsourcing,
@@ -70,7 +70,9 @@ from app.api.v1.endpoints import (
 )
 
 api_router = APIRouter()
-api_router.include_router(projects.router, prefix="/projects", tags=["projects"])
+# 项目模块已拆分为子模块，从projects包导入
+from app.api.v1.endpoints.projects import router as projects_router
+api_router.include_router(projects_router, prefix="/projects", tags=["projects"])
 api_router.include_router(customers.router, prefix="/customers", tags=["customers"])
 api_router.include_router(suppliers.router, prefix="/suppliers", tags=["suppliers"])
 api_router.include_router(machines.router, prefix="/machines", tags=["machines"])
@@ -100,7 +102,9 @@ api_router.include_router(shortage.router, prefix="", tags=["shortage"])
 from app.api.v1.endpoints.sales import router as sales_router
 api_router.include_router(sales_router, prefix="/sales", tags=["sales"])
 api_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
-api_router.include_router(production.router, prefix="", tags=["production"])
+# 生产模块已拆分为子模块，从production包导入
+from app.api.v1.endpoints.production import router as production_router
+api_router.include_router(production_router, prefix="", tags=["production"])
 api_router.include_router(alerts.router, prefix="", tags=["alerts"])
 api_router.include_router(ecn.router, prefix="", tags=["ecn"])
 api_router.include_router(outsourcing.router, prefix="", tags=["outsourcing"])
