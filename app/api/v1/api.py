@@ -26,7 +26,7 @@ from app.api.v1.endpoints import (
     shortage_alerts,
     shortage,
     notifications,
-    sales,
+    # sales,  # 已拆分为sales包
     production,
     alerts,
     ecn,
@@ -65,6 +65,8 @@ from app.api.v1.endpoints import (
     hr_management,
     presales_integration,
     advantage_products,
+    procurement_analysis,
+    inventory_analysis,
 )
 
 api_router = APIRouter()
@@ -94,7 +96,9 @@ api_router.include_router(kit_check.router, prefix="", tags=["kit-check"])
 api_router.include_router(progress.router, prefix="", tags=["progress"])
 api_router.include_router(shortage_alerts.router, prefix="/shortage-alerts", tags=["shortage-alerts"])
 api_router.include_router(shortage.router, prefix="", tags=["shortage"])
-api_router.include_router(sales.router, prefix="/sales", tags=["sales"])
+# 销售模块已拆分为子模块，从sales包导入
+from app.api.v1.endpoints.sales import router as sales_router
+api_router.include_router(sales_router, prefix="/sales", tags=["sales"])
 api_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
 api_router.include_router(production.router, prefix="", tags=["production"])
 api_router.include_router(alerts.router, prefix="", tags=["alerts"])
@@ -136,3 +140,5 @@ api_router.include_router(admin_stats.router, prefix="", tags=["admin-stats"])
 api_router.include_router(hr_management.router, prefix="/hr", tags=["hr-management"])
 api_router.include_router(presales_integration.router, prefix="/presales", tags=["presales-integration"])
 api_router.include_router(advantage_products.router, prefix="/advantage-products", tags=["advantage-products"])
+api_router.include_router(procurement_analysis.router, prefix="/procurement-analysis", tags=["procurement-analysis"])
+api_router.include_router(inventory_analysis.router, prefix="/inventory-analysis", tags=["inventory-analysis"])

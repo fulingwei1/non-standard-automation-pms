@@ -17,6 +17,7 @@ from app.core.config import settings
 from app.core import security
 from app.models.user import User
 from app.models.project import Project
+from app.models.organization import Department, Employee
 from app.models.performance import (
     PerformancePeriod, PerformanceIndicator, PerformanceResult,
     PerformanceEvaluation, PerformanceAppeal, ProjectContribution,
@@ -41,6 +42,155 @@ from app.services.performance_service import PerformanceService
 from app.services.performance_integration_service import PerformanceIntegrationService
 
 router = APIRouter()
+
+
+def _check_performance_view_permission(current_user: User, target_user_id: int, db: Session) -> bool:
+    """
+    检查用户是否有权限查看指定用户的绩效
+
+    规则：
+    1. 可以查看自己的绩效
+    2. 部门经理可以查看本部门员工的绩效
+    3. 项目经理可以查看项目成员的绩效
+    4. 管理员可以查看所有人的绩效
+
+    Returns:
+        bool: 是否有权限查看
+    """
+    if current_user.is_superuser:
+        return True
+
+    # 查看自己的绩效
+    if current_user.id == target_user_id:
+        return True
+
+    # 检查是否是部门经理
+    target_user = db.query(User).filter(User.id == target_user_id).first()
+    if not target_user:
+        return False
+
+    # 检查是否有管理角色
+    manager_roles = ['dept_manager', 'department_manager', '部门经理',
+                     'pm', 'project_manager', '项目经理',
+                     'admin', 'super_admin', '管理员']
+
+    has_manager_role = False
+    for user_role in (current_user.roles or []):
+        role_code = user_role.role.role_code.lower() if user_role.role.role_code else ''
+        role_name = user_role.role.role_name.lower() if user_role.role.role_name else ''
+        if role_code in manager_roles or role_name in manager_roles:
+            has_manager_role = True
+            break
+
+    if not has_manager_role:
+        return False
+
+    # 检查是否是同一部门
+    if target_user.department_id and current_user.department_id == target_user.department_id:
+        return True
+
+    # 检查是否管理同一项目
+    from app.models.project import Project
+    user_projects = db.query(Project).filter(Project.pm_id == current_user.id).all()
+    project_ids = [p.id for p in user_projects]
+
+    target_projects = db.query(Project).filter(Project.id.in_(project_ids)).all()
+    for project in target_projects:
+        # 检查目标用户是否是项目成员
+        from app.models.progress import Task
+        member_task = db.query(Task).filter(
+            Task.project_id == project.id,
+            Task.owner_id == target_user_id
+        ).first()
+        if member_task:
+            return True
+
+    return False
+
+
+def _get_team_members(db: Session, team_id: int) -> List[int]:
+    """
+    获取团队成员ID列表
+
+    Args:
+        db: 数据库会话
+        team_id: 团队ID（暂时使用department_id作为team_id）
+
+    Returns:
+        List[int]: 成员ID列表
+    """
+    # 临时使用部门作为团队
+    from app.models.organization import Department
+    users = db.query(User).filter(
+        User.department_id == team_id,
+        User.is_active == True
+    ).all()
+    return [u.id for u in users]
+
+
+def _get_department_members(db: Session, dept_id: int) -> List[int]:
+    """
+    获取部门成员ID列表
+
+    Args:
+        db: 数据库会话
+        dept_id: 部门ID
+
+    Returns:
+        List[int]: 成员ID列表
+    """
+    users = db.query(User).filter(
+        User.department_id == dept_id,
+        User.is_active == True
+    ).all()
+    return [u.id for u in users]
+
+
+def _get_evaluator_type(user: User, db: Session) -> str:
+    """
+    判断评价人类型（部门经理/项目经理）
+
+    Args:
+        user: 用户对象
+        db: 数据库会话
+
+    Returns:
+        str: 评价人类型（DEPT_MANAGER/PROJECT_MANAGER/BOTH）
+    """
+    is_dept_manager = False
+    is_project_manager = False
+
+    for user_role in (user.roles or []):
+        role_code = user_role.role.role_code.lower() if user_role.role.role_code else ''
+        role_name = user_role.role.role_name.lower() if user_role.role.role_name else ''
+
+        if role_code in ['dept_manager', 'department_manager', '部门经理'] or role_name in ['dept_manager', 'department_manager', '部门经理']:
+            is_dept_manager = True
+        if role_code in ['pm', 'project_manager', '项目经理'] or role_name in ['pm', 'project_manager', '项目经理']:
+            is_project_manager = True
+
+    if is_dept_manager and is_project_manager:
+        return 'BOTH'
+    elif is_dept_manager:
+        return 'DEPT_MANAGER'
+    elif is_project_manager:
+        return 'PROJECT_MANAGER'
+    else:
+        return 'OTHER'
+
+
+def _get_team_name(db: Session, team_id: int) -> str:
+    """获取团队名称"""
+    from app.models.organization import Department
+    dept = db.query(Department).filter(Department.id == team_id).first()
+    return dept.name if dept else f"团队{team_id}"
+
+
+def _get_department_name(db: Session, dept_id: int) -> str:
+    """获取部门名称"""
+    from app.models.organization import Department
+    dept = db.query(Department).filter(Department.id == dept_id).first()
+    return dept.name if dept else f"部门{dept_id}"
 
 
 # ==================== 个人绩效 ====================
@@ -158,8 +308,10 @@ def get_user_performance(
     """
     查看指定人员绩效（权限控制）
     """
-    # TODO: 检查权限（只能查看自己或下属的绩效）
-    
+    # 检查权限（只能查看自己或下属的绩效）
+    if not _check_performance_view_permission(current_user, user_id, db):
+        raise HTTPException(status_code=403, detail="您没有权限查看此用户的绩效")
+
     target_user = db.query(User).filter(User.id == user_id).first()
     if not target_user:
         raise HTTPException(status_code=404, detail="用户不存在")
@@ -265,8 +417,10 @@ def get_performance_trends(
     """
     绩效趋势分析（多期对比）
     """
-    # TODO: 权限检查
-    
+    # 检查权限（只能查看自己或下属的绩效）
+    if not _check_performance_view_permission(current_user, user_id, db):
+        raise HTTPException(status_code=403, detail="您没有权限查看此用户的绩效")
+
     target_user = db.query(User).filter(User.id == user_id).first()
     if not target_user:
         raise HTTPException(status_code=404, detail="用户不存在")
@@ -338,12 +492,14 @@ def get_team_performance(
 ) -> Any:
     """
     团队绩效汇总（平均分/排名）
+    注：当前使用部门作为团队，team_id 对应 department.id
     """
-    # TODO: 获取团队信息
-    # team = db.query(Team).filter(Team.id == team_id).first()
-    # if not team:
-    #     raise HTTPException(status_code=404, detail="团队不存在")
-    
+    # 获取团队名称
+    team_name = _get_team_name(db, team_id)
+
+    # 获取团队成员
+    member_ids = _get_team_members(db, team_id)
+
     # 获取周期
     if period_id:
         period = db.query(PerformancePeriod).filter(PerformancePeriod.id == period_id).first()
@@ -352,29 +508,19 @@ def get_team_performance(
             PerformancePeriod.status == "FINALIZED"
         ).order_by(desc(PerformancePeriod.end_date)).first()
     
-    if not period:
-        raise HTTPException(status_code=404, detail="未找到考核周期")
-    
-    # TODO: 获取团队成员
-    # team_members = db.query(User).filter(User.team_id == team_id).all()
-    # member_ids = [m.id for m in team_members]
-    
-    # 临时：使用部门ID作为团队ID
-    member_ids = [current_user.id]  # TODO: 从团队表获取
-    
     # 获取团队成员绩效
     results = db.query(PerformanceResult).filter(
         PerformanceResult.period_id == period.id,
         PerformanceResult.user_id.in_(member_ids)
     ).all()
-    
+
     if not results:
         return TeamPerformanceResponse(
             team_id=team_id,
-            team_name="未知团队",  # TODO: 从团队表获取
+            team_name=team_name,
             period_id=period.id,
             period_name=period.period_name,
-            member_count=0,
+            member_count=len(member_ids),
             avg_score=Decimal("0"),
             max_score=Decimal("0"),
             min_score=Decimal("0"),
@@ -409,7 +555,7 @@ def get_team_performance(
     
     return TeamPerformanceResponse(
         team_id=team_id,
-        team_name="未知团队",  # TODO
+        team_name=team_name,
         period_id=period.id,
         period_name=period.period_name,
         member_count=len(results),
@@ -432,56 +578,58 @@ def get_department_performance(
     """
     部门绩效汇总（等级分布）
     """
-    # TODO: 获取部门信息
-    # department = db.query(Department).filter(Department.id == dept_id).first()
-    
+    # 获取部门名称
+    department_name = _get_department_name(db, dept_id)
+
+    # 获取部门成员
+    member_ids = _get_department_members(db, dept_id)
+
     if period_id:
         period = db.query(PerformancePeriod).filter(PerformancePeriod.id == period_id).first()
     else:
         period = db.query(PerformancePeriod).filter(
             PerformancePeriod.status == "FINALIZED"
         ).order_by(desc(PerformancePeriod.end_date)).first()
-    
+
     if not period:
         raise HTTPException(status_code=404, detail="未找到考核周期")
-    
-    # TODO: 获取部门成员
-    # dept_members = db.query(User).filter(User.department_id == dept_id).all()
-    # member_ids = [m.id for m in dept_members]
-    member_ids = [current_user.id]  # TODO
-    
+
     results = db.query(PerformanceResult).filter(
         PerformanceResult.period_id == period.id,
         PerformanceResult.department_id == dept_id
     ).all()
-    
+
     if not results:
         return DepartmentPerformanceResponse(
             department_id=dept_id,
-            department_name="未知部门",  # TODO
+            department_name=department_name,
             period_id=period.id,
             period_name=period.period_name,
-            member_count=0,
+            member_count=len(member_ids),
             avg_score=Decimal("0"),
             level_distribution={},
             teams=[]
         )
-    
+
     scores = [float(r.total_score) if r.total_score else 0 for r in results]
     avg_score = Decimal(str(sum(scores) / len(scores))) if scores else Decimal("0")
-    
+
     # 等级分布
     level_distribution = {}
     for r in results:
         level = r.level or "QUALIFIED"
         level_distribution[level] = level_distribution.get(level, 0) + 1
-    
-    # TODO: 获取团队列表
-    teams = []
-    
+
+    # 获取团队列表（使用子部门）
+    from app.models.organization import Department
+    sub_teams = db.query(Department).filter(
+        Department.parent_id == dept_id
+    ).all()
+    teams = [{"team_id": t.id, "team_name": t.name} for t in sub_teams]
+
     return DepartmentPerformanceResponse(
         department_id=dept_id,
-        department_name="未知部门",  # TODO
+        department_name=department_name,
         period_id=period.id,
         period_name=period.period_name,
         member_count=len(results),
@@ -532,12 +680,64 @@ def get_performance_ranking(
             })
     
     elif ranking_type == "TEAM":
-        # TODO: 团队排行榜
-        pass
-    
+        # 团队排行榜：按部门统计平均分
+        from app.models.organization import Department
+        departments = db.query(Department).all()
+
+        for dept in departments:
+            dept_results = db.query(PerformanceResult).filter(
+                PerformanceResult.period_id == period.id,
+                PerformanceResult.department_id == dept.id
+            ).all()
+
+            if dept_results:
+                avg_score = sum(float(r.total_score or 0) for r in dept_results) / len(dept_results)
+                rankings.append({
+                    "rank": 0,  # 稍后填充
+                    "entity_id": dept.id,
+                    "entity_name": dept.name,
+                    "score": round(avg_score, 2),
+                    "member_count": len(dept_results)
+                })
+
+        # 排序并填充排名
+        rankings.sort(key=lambda x: x["score"], reverse=True)
+        for idx, r in enumerate(rankings, 1):
+            r["rank"] = idx
+
     elif ranking_type == "DEPARTMENT":
-        # TODO: 部门排行榜
-        pass
+        # 部门排行榜：与团队排行榜类似，但包含更多信息
+        from app.models.organization import Department
+        departments = db.query(Department).all()
+
+        for dept in departments:
+            dept_results = db.query(PerformanceResult).filter(
+                PerformanceResult.period_id == period.id,
+                PerformanceResult.department_id == dept.id
+            ).all()
+
+            if dept_results:
+                avg_score = sum(float(r.total_score or 0) for r in dept_results) / len(dept_results)
+
+                # 等级分布
+                level_dist = {}
+                for r in dept_results:
+                    level = r.level or "QUALIFIED"
+                    level_dist[level] = level_dist.get(level, 0) + 1
+
+                rankings.append({
+                    "rank": 0,  # 稍后填充
+                    "entity_id": dept.id,
+                    "entity_name": dept.name,
+                    "score": round(avg_score, 2),
+                    "member_count": len(dept_results),
+                    "level_distribution": level_dist
+                })
+
+        # 排序并填充排名
+        rankings.sort(key=lambda x: x["score"], reverse=True)
+        for idx, r in enumerate(rankings, 1):
+            r["rank"] = idx
     
     return PerformanceRankingResponse(
         ranking_type=ranking_type,
@@ -625,27 +825,78 @@ def get_project_progress_report(
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     if not report_date:
         report_date = datetime.now().date()
-    
-    # TODO: 从进度跟踪模块获取数据
+
+    # 从进度跟踪模块获取数据
+    from app.models.progress import Task
+    project_tasks = db.query(Task).filter(Task.project_id == project_id).all()
+
+    total_tasks = len(project_tasks)
+    completed_tasks = len([t for t in project_tasks if t.status == "DONE"])
+    overall_progress = int(project.progress or 0)
+
+    # 检查是否按计划进行
+    on_schedule = True
+    delayed_tasks = [t for t in project_tasks if t.plan_end and t.plan_end < datetime.now().date() and t.status not in ["DONE", "CANCELLED"]]
+    if delayed_tasks:
+        on_schedule = False
+
     progress_summary = {
-        "overall_progress": 0,
-        "completed_tasks": 0,
-        "total_tasks": 0,
-        "on_schedule": True
+        "overall_progress": overall_progress,
+        "completed_tasks": completed_tasks,
+        "total_tasks": total_tasks,
+        "on_schedule": on_schedule
     }
-    
-    # TODO: 获取成员贡献
+
+    # 获取成员贡献
     member_contributions = []
-    
-    # TODO: 获取关键成果
+    from collections import defaultdict
+    member_task_count = defaultdict(int)
+    member_hours = defaultdict(float)
+
+    for task in project_tasks:
+        if task.owner_id:
+            member_task_count[task.owner_id] += 1
+            # 假设每个任务平均工时为 4 小时
+            member_hours[task.owner_id] += 4
+
+    for user_id, task_count in member_task_count.items():
+        user = db.query(User).filter(User.id == user_id).first()
+        if user:
+            member_contributions.append({
+                "user_id": user_id,
+                "user_name": user.real_name or user.username,
+                "task_count": task_count,
+                "estimated_hours": member_hours[user_id]
+            })
+
+    member_contributions.sort(key=lambda x: x["task_count"], reverse=True)
+
+    # 获取关键成果（最近完成的任务）
     key_achievements = []
-    
-    # TODO: 获取风险和问题
+    completed = [t for t in project_tasks if t.status == "DONE"]
+    completed.sort(key=lambda x: x.updated_at or x.created_at or datetime.now(), reverse=True)
+    for task in completed[:5]:
+        key_achievements.append({
+            "task_name": task.task_name,
+            "completed_date": task.updated_at.isoformat() if task.updated_at else None,
+            "description": task.description[:100] if task.description else ""
+        })
+
+    # 获取风险和问题（逾期任务）
     risks_and_issues = []
-    
+    for task in delayed_tasks[:10]:
+        risks_and_issues.append({
+            "type": "DELAYED_TASK",
+            "description": f"任务 '{task.task_name}' 已逾期",
+            "severity": "HIGH" if (datetime.now().date() - task.plan_end).days > 7 else "MEDIUM",
+            "task_id": task.id,
+            "task_name": task.task_name,
+            "due_date": task.plan_end.isoformat()
+        })
+
     return ProjectProgressReportResponse(
         project_id=project_id,
         project_name=project.project_name,
@@ -1148,8 +1399,8 @@ def submit_evaluation(
             detail="您已完成该评价"
         )
 
-    # TODO: 判断评价人类型（部门经理/项目经理）
-    evaluator_type = 'DEPT_MANAGER'  # TODO: 从用户角色判断
+    # 判断评价人类型（部门经理/项目经理）
+    evaluator_type = _get_evaluator_type(current_user, db)
 
     if existing_eval:
         # 更新评价

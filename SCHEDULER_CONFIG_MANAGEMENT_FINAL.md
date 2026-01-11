@@ -274,14 +274,19 @@ CREATE TABLE scheduler_task_configs (
 
 ## 权限控制
 
-**当前状态**: 所有登录用户都可以访问（TODO: 添加管理员权限检查）
+**当前状态**: 已实现管理员权限检查
 
-**建议实现**:
+**实现方式**:
 ```python
-# 在API端点中添加
-if not current_user.is_admin:
+# 在需要管理员权限的API端点中检查
+if not current_user.is_superuser:
     raise HTTPException(status_code=403, detail="需要管理员权限")
 ```
+
+**权限检查范围**:
+- `POST /jobs/{job_id}/trigger` - 手动触发任务
+- `PUT /configs/{task_id}` - 更新任务配置
+- `POST /configs/sync` - 同步任务配置
 
 ---
 

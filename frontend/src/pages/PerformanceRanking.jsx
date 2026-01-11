@@ -37,6 +37,10 @@ import { performanceApi, pmoApi } from "../services/api";
 // Mock data - 已移除，使用真实API
 // Mock data - 已移除，使用真实API
 export default function PerformanceRanking() {
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
   const [selectedPeriod, setSelectedPeriod] = useState("current");
   const [loading, setLoading] = useState(true);
   const [employeeRanking, setEmployeeRanking] = useState(mockEmployeeRanking);

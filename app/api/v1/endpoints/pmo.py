@@ -644,9 +644,34 @@ def phase_advance(
     if advance_request.actual_start_date:
         phase.actual_start_date = advance_request.actual_start_date
         phase.status = 'IN_PROGRESS'
-    
-    # TODO: 可以添加推进到下一阶段的逻辑
-    
+
+    # 推进到下一阶段的逻辑：如果当前阶段已完成，自动创建下一阶段
+    if phase.status == 'COMPLETED':
+        # 查找当前项目的所有阶段
+        all_phases = db.query(PmoProjectPhase).filter(
+            PmoProjectPhase.project_id == phase.project_id
+        ).order_by(PmoProjectPhase.phase_order).all()
+
+        # 找到当前阶段的顺序
+        current_order = None
+        for p in all_phases:
+            if p.id == phase.id:
+                current_order = p.phase_order
+                break
+
+        # 查找下一个阶段
+        next_phase = None
+        for p in all_phases:
+            if p.phase_order == current_order + 1:
+                next_phase = p
+                break
+
+        # 如果存在下一阶段且状态为PENDING，则更新为IN_PROGRESS
+        if next_phase and next_phase.status == 'PENDING':
+            next_phase.status = 'IN_PROGRESS'
+            next_phase.actual_start_date = datetime.now().date()
+            db.add(next_phase)
+
     db.add(phase)
     db.commit()
     db.refresh(phase)
@@ -1655,11 +1680,32 @@ def get_resource_overview(
     allocated_resources = len([r[0] for r in allocated_resource_ids])
     
     available_resources = total_resources - allocated_resources
-    
-    # 统计超负荷资源（从workload模块计算，这里简化处理）
-    # TODO: 可以调用workload模块的API或复用其逻辑
+
+    # 统计超负荷资源（使用workload模块的计算逻辑）
+    # 计算每个资源的分配工时，超过标准工作负荷的视为超负荷
     overloaded_resources = 0
-    
+    standard_workload = 160  # 假设每月标准工时为160小时
+
+    from collections import defaultdict
+    resource_workload = defaultdict(float)
+
+    # 统计每个资源的分配工时
+    allocations = db.query(PmoResourceAllocation).filter(
+        PmoResourceAllocation.status.in_(['PLANNED', 'ACTIVE'])
+    ).all()
+
+    for alloc in allocations:
+        # 计算该分配的预估工时（使用分配比例）
+        if alloc.allocation_percent:
+            # 假设每个项目的标准工时为160小时
+            estimated_hours = (alloc.allocation_percent / 100) * standard_workload
+            resource_workload[alloc.resource_id] += estimated_hours
+
+    # 统计超负荷资源数量
+    for resource_id, total_hours in resource_workload.items():
+        if total_hours > standard_workload:
+            overloaded_resources += 1
+
     # 按部门统计
     from app.models.organization import Department
     by_department = []

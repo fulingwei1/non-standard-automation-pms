@@ -81,66 +81,66 @@ def _build_shortage_daily_report(report: ShortageDailyReport) -> Dict[str, Any]:
 
 def generate_report_no(db: Session) -> str:
     """生成缺料上报单号：SR-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_report = (
-        db.query(ShortageReport)
-        .filter(ShortageReport.report_no.like(f"SR-{today}-%"))
-        .order_by(desc(ShortageReport.report_no))
-        .first()
+    from app.utils.number_generator import generate_sequential_no
+    from app.models.shortage import ShortageReport
+    
+    return generate_sequential_no(
+        db=db,
+        model_class=ShortageReport,
+        no_field='report_no',
+        prefix='SR',
+        date_format='%y%m%d',
+        separator='-',
+        seq_length=3
     )
-    if max_report:
-        seq = int(max_report.report_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"SR-{today}-{seq:03d}"
 
 
 def generate_arrival_no(db: Session) -> str:
     """生成到货跟踪单号：ARR-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_arrival = (
-        db.query(MaterialArrival)
-        .filter(MaterialArrival.arrival_no.like(f"ARR-{today}-%"))
-        .order_by(desc(MaterialArrival.arrival_no))
-        .first()
+    from app.utils.number_generator import generate_sequential_no
+    from app.models.shortage import MaterialArrival
+    
+    return generate_sequential_no(
+        db=db,
+        model_class=MaterialArrival,
+        no_field='arrival_no',
+        prefix='ARR',
+        date_format='%y%m%d',
+        separator='-',
+        seq_length=3
     )
-    if max_arrival:
-        seq = int(max_arrival.arrival_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"ARR-{today}-{seq:03d}"
 
 
 def generate_substitution_no(db: Session) -> str:
     """生成替代单号：SUB-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_sub = (
-        db.query(MaterialSubstitution)
-        .filter(MaterialSubstitution.substitution_no.like(f"SUB-{today}-%"))
-        .order_by(desc(MaterialSubstitution.substitution_no))
-        .first()
+    from app.utils.number_generator import generate_sequential_no
+    from app.models.shortage import MaterialSubstitution
+    
+    return generate_sequential_no(
+        db=db,
+        model_class=MaterialSubstitution,
+        no_field='substitution_no',
+        prefix='SUB',
+        date_format='%y%m%d',
+        separator='-',
+        seq_length=3
     )
-    if max_sub:
-        seq = int(max_sub.substitution_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"SUB-{today}-{seq:03d}"
 
 
 def generate_transfer_no(db: Session) -> str:
     """生成调拨单号：TRF-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_transfer = (
-        db.query(MaterialTransfer)
-        .filter(MaterialTransfer.transfer_no.like(f"TRF-{today}-%"))
-        .order_by(desc(MaterialTransfer.transfer_no))
-        .first()
+    from app.utils.number_generator import generate_sequential_no
+    from app.models.shortage import MaterialTransfer
+    
+    return generate_sequential_no(
+        db=db,
+        model_class=MaterialTransfer,
+        no_field='transfer_no',
+        prefix='TRF',
+        date_format='%y%m%d',
+        separator='-',
+        seq_length=3
     )
-    if max_transfer:
-        seq = int(max_transfer.transfer_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"TRF-{today}-{seq:03d}"
 
 
 # ==================== 缺料上报 ====================

@@ -64,6 +64,10 @@ const reportTypes = [
 ];
 
 export default function FinancialReports() {
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
   const [selectedPeriod, setSelectedPeriod] = useState("month"); // month, quarter, year
   const [selectedReport, setSelectedReport] = useState("profit-loss");
   const [dateRange, setDateRange] = useState("2024-07");

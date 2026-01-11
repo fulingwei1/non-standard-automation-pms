@@ -42,34 +42,34 @@ router = APIRouter()
 
 def generate_ticket_no(db: Session) -> str:
     """生成服务工单号：SRV-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_ticket = (
-        db.query(ServiceTicket)
-        .filter(ServiceTicket.ticket_no.like(f"SRV-{today}-%"))
-        .order_by(desc(ServiceTicket.ticket_no))
-        .first()
+    from app.utils.number_generator import generate_sequential_no
+    from app.models.service import ServiceTicket
+    
+    return generate_sequential_no(
+        db=db,
+        model_class=ServiceTicket,
+        no_field='ticket_no',
+        prefix='SRV',
+        date_format='%y%m%d',
+        separator='-',
+        seq_length=3
     )
-    if max_ticket:
-        seq = int(max_ticket.ticket_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"SRV-{today}-{seq:03d}"
 
 
 def generate_record_no(db: Session) -> str:
     """生成服务记录号：REC-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_record = (
-        db.query(ServiceRecord)
-        .filter(ServiceRecord.record_no.like(f"REC-{today}-%"))
-        .order_by(desc(ServiceRecord.record_no))
-        .first()
+    from app.utils.number_generator import generate_sequential_no
+    from app.models.service import ServiceRecord
+    
+    return generate_sequential_no(
+        db=db,
+        model_class=ServiceRecord,
+        no_field='record_no',
+        prefix='REC',
+        date_format='%y%m%d',
+        separator='-',
+        seq_length=3
     )
-    if max_record:
-        seq = int(max_record.record_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"REC-{today}-{seq:03d}"
 
 
 def generate_communication_no(db: Session) -> str:

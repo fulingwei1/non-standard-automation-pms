@@ -1226,7 +1226,11 @@ def get_alert_trends(
     - 按状态统计趋势
     """
     from datetime import timedelta
-    from calendar import monthrange
+    from app.services.alert_trend_service import (
+        build_trend_statistics,
+        build_summary_statistics,
+        generate_date_range
+    )
     
     # 默认时间范围：最近30天
     if not end_date:
@@ -1248,82 +1252,14 @@ def get_alert_trends(
     
     alerts = query.all()
     
-    # 按日期统计（根据 period 参数分组）
-    date_trends = {}
-    level_trends = {}  # {date: {level: count}}
-    type_trends = {}   # {date: {type: count}}
-    status_trends = {} # {date: {status: count}}
+    # 构建趋势统计
+    trend_stats = build_trend_statistics(alerts, period)
+    date_trends = trend_stats['date_trends']
+    level_trends = trend_stats['level_trends']
+    type_trends = trend_stats['type_trends']
+    status_trends = trend_stats['status_trends']
     
-    def get_period_key(dt: datetime) -> str:
-        """根据 period 参数生成分组键"""
-        if period == "DAILY":
-            return dt.date().isoformat()
-        elif period == "WEEKLY":
-            # 获取该日期所在周的周一
-            days_since_monday = dt.weekday()
-            monday = dt.date() - timedelta(days=days_since_monday)
-            return monday.isoformat()
-        elif period == "MONTHLY":
-            return dt.date().replace(day=1).isoformat()
-        else:
-            return dt.date().isoformat()
-    
-    for alert in alerts:
-        if not alert.triggered_at:
-            continue
-        
-        period_key = get_period_key(alert.triggered_at)
-        
-        # 总数趋势
-        date_trends[period_key] = date_trends.get(period_key, 0) + 1
-        
-        # 按级别统计趋势
-        if period_key not in level_trends:
-            level_trends[period_key] = {}
-        level = alert.alert_level or "UNKNOWN"
-        level_trends[period_key][level] = level_trends[period_key].get(level, 0) + 1
-        
-        # 按类型统计趋势
-        if period_key not in type_trends:
-            type_trends[period_key] = {}
-        rule_type = alert.rule_type or "UNKNOWN"
-        type_trends[period_key][rule_type] = type_trends[period_key].get(rule_type, 0) + 1
-        
-        # 按状态统计趋势
-        if period_key not in status_trends:
-            status_trends[period_key] = {}
-        status = alert.status or "UNKNOWN"
-        status_trends[period_key][status] = status_trends[period_key].get(status, 0) + 1
-    
-    # 生成完整的时间序列（填充缺失的日期）
-    def generate_date_range(start: date, end: date, period: str) -> List[str]:
-        """生成日期范围"""
-        dates = []
-        current = start
-        while current <= end:
-            if period == "DAILY":
-                dates.append(current.isoformat())
-                current += timedelta(days=1)
-            elif period == "WEEKLY":
-                # 获取该周的周一
-                days_since_monday = current.weekday()
-                monday = current - timedelta(days=days_since_monday)
-                if monday.isoformat() not in dates:
-                    dates.append(monday.isoformat())
-                # 跳到下一周
-                current += timedelta(days=7 - days_since_monday)
-            elif period == "MONTHLY":
-                # 获取该月的第一天
-                first_day = current.replace(day=1)
-                if first_day.isoformat() not in dates:
-                    dates.append(first_day.isoformat())
-                # 跳到下个月
-                if current.month == 12:
-                    current = current.replace(year=current.year + 1, month=1, day=1)
-                else:
-                    current = current.replace(month=current.month + 1, day=1)
-        return sorted(dates)
-    
+    # 生成完整的时间序列
     date_range = generate_date_range(start_date, end_date, period)
     
     # 构建趋势数据数组
@@ -1338,19 +1274,7 @@ def get_alert_trends(
         })
     
     # 汇总统计
-    total_by_level = {}
-    total_by_type = {}
-    total_by_status = {}
-    
-    for alert in alerts:
-        level = alert.alert_level or "UNKNOWN"
-        total_by_level[level] = total_by_level.get(level, 0) + 1
-        
-        rule_type = alert.rule_type or "UNKNOWN"
-        total_by_type[rule_type] = total_by_type.get(rule_type, 0) + 1
-        
-        status = alert.status or "UNKNOWN"
-        total_by_status[status] = total_by_status.get(status, 0) + 1
+    summary_stats = build_summary_statistics(alerts)
     
     return {
         "period": period,
@@ -1359,9 +1283,9 @@ def get_alert_trends(
         "trends": trends_data,
         "summary": {
             "total": len(alerts),
-            "by_level": total_by_level,
-            "by_type": total_by_type,
-            "by_status": total_by_status,
+            "by_level": summary_stats['by_level'],
+            "by_type": summary_stats['by_type'],
+            "by_status": summary_stats['by_status'],
         }
     }
 

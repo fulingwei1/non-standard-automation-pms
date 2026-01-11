@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status, Body, File
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, or_, and_, func
+from uuid import uuid4
 import io
 import pandas as pd
 import json
@@ -2006,6 +2007,105 @@ def get_issue_cause_analysis(
     }
 
 
+@router.get("/statistics/snapshots", response_model=IssueStatisticsSnapshotListResponse)
+def get_issue_statistics_snapshots(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("issue:read")),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+) -> Any:
+    """获取问题统计快照列表"""
+    query = db.query(IssueStatisticsSnapshot)
+    total = query.count()
+
+    snapshots = (
+        query.order_by(
+            desc(IssueStatisticsSnapshot.snapshot_date),
+            desc(IssueStatisticsSnapshot.id),
+        )
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+
+    items: List[IssueStatisticsSnapshotResponse] = []
+    for snapshot in snapshots:
+        status_distribution = snapshot.status_distribution or {
+            "OPEN": snapshot.open_issues or 0,
+            "IN_PROGRESS": snapshot.processing_issues or 0,
+            "RESOLVED": snapshot.resolved_issues or 0,
+            "CLOSED": snapshot.closed_issues or 0,
+            "CANCELLED": snapshot.cancelled_issues or 0,
+            "DEFERRED": snapshot.deferred_issues or 0,
+        }
+        severity_distribution = snapshot.severity_distribution or {
+            "CRITICAL": snapshot.critical_issues or 0,
+            "MAJOR": snapshot.major_issues or 0,
+            "MINOR": snapshot.minor_issues or 0,
+        }
+        priority_distribution = snapshot.priority_distribution or {
+            "URGENT": snapshot.urgent_issues or 0,
+            "HIGH": snapshot.high_priority_issues or 0,
+            "MEDIUM": snapshot.medium_priority_issues or 0,
+            "LOW": snapshot.low_priority_issues or 0,
+        }
+        category_distribution = snapshot.category_distribution or {
+            "PROJECT": snapshot.project_issues or 0,
+            "TASK": snapshot.task_issues or 0,
+            "ACCEPTANCE": snapshot.acceptance_issues or 0,
+        }
+
+        item = IssueStatisticsSnapshotResponse(
+            id=snapshot.id,
+            snapshot_date=snapshot.snapshot_date,
+            total_issues=snapshot.total_issues or 0,
+            open_issues=snapshot.open_issues or 0,
+            processing_issues=snapshot.processing_issues or 0,
+            resolved_issues=snapshot.resolved_issues or 0,
+            closed_issues=snapshot.closed_issues or 0,
+            cancelled_issues=snapshot.cancelled_issues or 0,
+            deferred_issues=snapshot.deferred_issues or 0,
+            critical_issues=snapshot.critical_issues or 0,
+            major_issues=snapshot.major_issues or 0,
+            minor_issues=snapshot.minor_issues or 0,
+            urgent_issues=snapshot.urgent_issues or 0,
+            high_priority_issues=snapshot.high_priority_issues or 0,
+            medium_priority_issues=snapshot.medium_priority_issues or 0,
+            low_priority_issues=snapshot.low_priority_issues or 0,
+            defect_issues=snapshot.defect_issues or 0,
+            risk_issues=snapshot.risk_issues or 0,
+            blocker_issues=snapshot.blocker_issues or 0,
+            blocking_issues=snapshot.blocking_issues or 0,
+            overdue_issues=snapshot.overdue_issues or 0,
+            project_issues=snapshot.project_issues or 0,
+            task_issues=snapshot.task_issues or 0,
+            acceptance_issues=snapshot.acceptance_issues or 0,
+            avg_response_time=snapshot.avg_response_time,
+            avg_resolve_time=snapshot.avg_resolve_time,
+            avg_verify_time=getattr(snapshot, "avg_verify_time", None),
+            status_distribution=status_distribution,
+            severity_distribution=severity_distribution,
+            priority_distribution=priority_distribution,
+            category_distribution=category_distribution,
+            project_distribution=snapshot.project_distribution or {},
+            new_issues_today=snapshot.new_issues_today or 0,
+            resolved_today=snapshot.resolved_today or 0,
+            closed_today=snapshot.closed_today or 0,
+            created_at=snapshot.created_at,
+            updated_at=snapshot.updated_at,
+        )
+        items.append(item)
+
+    pages = (total + page_size - 1) // page_size if page_size else 0
+    return IssueStatisticsSnapshotListResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=pages,
+    )
+
+
 # ==================== 问题模板管理 ====================
 
 @template_router.get("/", response_model=IssueTemplateListResponse)
@@ -2122,15 +2222,15 @@ def create_issue_template(
     current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """创建问题模板"""
-    # 验证模板编码唯一性
-    existing = db.query(IssueTemplate).filter(IssueTemplate.template_code == template_in.template_code).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="模板编码已存在")
+    base_code = template_in.template_code or f"TEMPLATE-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    candidate_code = base_code
+    while db.query(IssueTemplate.id).filter(IssueTemplate.template_code == candidate_code).first():
+        candidate_code = f"{base_code}-{uuid4().hex[:4].upper()}"
     
     # 创建模板
     template = IssueTemplate(
         template_name=template_in.template_name,
-        template_code=template_in.template_code,
+        template_code=candidate_code,
         category=template_in.category,
         issue_type=template_in.issue_type,
         default_severity=template_in.default_severity,
@@ -2139,7 +2239,9 @@ def create_issue_template(
         title_template=template_in.title_template,
         description_template=template_in.description_template,
         solution_template=template_in.solution_template,
-        default_tags=str(template_in.default_tags) if template_in.default_tags else None,
+        default_tags=json.dumps(template_in.default_tags, ensure_ascii=False)
+        if template_in.default_tags is not None
+        else None,
         default_impact_scope=template_in.default_impact_scope,
         default_is_blocking=template_in.default_is_blocking,
         is_active=template_in.is_active if template_in.is_active is not None else True,
@@ -2177,7 +2279,10 @@ def update_issue_template(
     
     # 处理JSON字段
     if 'default_tags' in update_data:
-        update_data['default_tags'] = str(update_data['default_tags'])
+        tags_value = update_data['default_tags']
+        update_data['default_tags'] = (
+            json.dumps(tags_value, ensure_ascii=False) if tags_value is not None else None
+        )
     
     # 更新字段
     for field, value in update_data.items():

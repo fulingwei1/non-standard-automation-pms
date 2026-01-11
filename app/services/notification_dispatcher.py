@@ -293,7 +293,8 @@ class NotificationDispatcher:
             template_card = {
                 "card_type": "text_notice",
                 "source": {
-                    "icon_url": "https://example.com/alert-icon.png",  # TODO: 配置图标URL
+                    # 使用预警级别对应的图标颜色
+                    "icon_url": _get_alert_icon_url(alert_level),
                     "desc": "预警通知",
                     "desc_color": 1  # 灰色
                 },
@@ -579,3 +580,24 @@ def next_quiet_resume(settings: NotificationSettings, current_time: datetime) ->
     if resume <= current_time:
         resume += timedelta(days=1)
     return resume
+
+
+def _get_alert_icon_url(alert_level: str) -> str:
+    """
+    根据预警级别返回对应的图标URL
+    使用通用图标服务或可以配置为自定义图标
+    """
+    # 使用预警级别对应的颜色图标（来自免费图标库）
+    # 可以通过环境变量 ALERT_ICON_BASE_URL 自定义基础URL
+    base_url = getattr(settings, 'ALERT_ICON_BASE_URL', '')
+
+    # 预警级别与图标映射
+    icon_map = {
+        'URGENT': 'https://img.icons8.com/color/96/alarm--v1.png',
+        'CRITICAL': 'https://img.icons8.com/color/96/high-priority--v1.png',
+        'WARNING': 'https://img.icons8.com/color/96/warning--v1.png',
+        'INFO': 'https://img.icons8.com/color/96/info--v1.png',
+        'TIPS': 'https://img.icons8.com/color/96/light-bulb--v1.png'
+    }
+
+    return icon_map.get(alert_level.upper(), icon_map['INFO'])

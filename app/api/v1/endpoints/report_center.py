@@ -18,7 +18,7 @@ from app.api import deps
 from app.core.config import settings
 from app.core import security
 from app.models.user import User, Role
-from app.models.project import Project, Machine
+from app.models.project import Project, Machine, ProjectPaymentPlan
 from app.models.rd_project import RdProject, RdCost, RdCostType
 from app.models.timesheet import Timesheet
 from app.models.sales import Contract
@@ -886,8 +886,12 @@ def get_rd_intensity_report(
             func.extract('year', RdCost.cost_date) == year
         ).scalar() or Decimal("0")
         
-        # TODO: 从项目模块获取营业收入（需要扩展）
-        revenue = Decimal("0")  # 需要从项目/合同模块获取
+        # 从项目收款计划获取营业收入（按实际收款日期统计）
+        revenue = db.query(func.sum(ProjectPaymentPlan.actual_amount)).filter(
+            func.extract('year', ProjectPaymentPlan.actual_date) == year,
+            ProjectPaymentPlan.status.in_(['COMPLETED', 'PARTIAL']),
+            ProjectPaymentPlan.actual_amount.isnot(None)
+        ).scalar() or Decimal("0")
         
         intensity = (float(rd_costs) / float(revenue) * 100) if revenue > 0 else 0.0
         
@@ -978,153 +982,16 @@ def export_rd_report(
     """
     导出研发费用报表
     """
-    from app.services.report_export_service import report_export_service, ReportGenerator
+    from app.services.report_export_service import report_export_service
+    from app.services.rd_report_data_service import get_rd_report_data
 
-    # 根据报表类型获取数据
-    report_data = {}
-    report_title = ""
-
-    if report_type == 'auxiliary-ledger':
-        # 研发费用辅助账
-        query = db.query(RdCost).join(RdProject).filter(
-            func.extract('year', RdCost.cost_date) == year
-        )
-        if project_id:
-            query = query.filter(RdCost.rd_project_id == project_id)
-
-        costs = query.order_by(RdCost.rd_project_id, RdCost.cost_date, RdCost.cost_type_id).all()
-
-        details = []
-        for cost in costs:
-            project = db.query(RdProject).filter(RdProject.id == cost.rd_project_id).first()
-            cost_type = db.query(RdCostType).filter(RdCostType.id == cost.cost_type_id).first()
-            details.append({
-                "项目名称": project.project_name if project else "",
-                "费用类型": cost_type.type_name if cost_type else "",
-                "费用日期": str(cost.cost_date) if cost.cost_date else "",
-                "费用单号": cost.cost_no or "",
-                "费用说明": cost.cost_description or "",
-                "费用金额": float(cost.cost_amount or 0),
-                "可加计扣除": float(cost.deductible_amount or 0),
-            })
-
-        report_data = {"details": details}
-        report_title = f"{year}年研发费用辅助账"
-
-    elif report_type == 'deduction-detail':
-        # 研发费用加计扣除明细
-        query = db.query(RdCost).join(RdProject).filter(
-            func.extract('year', RdCost.cost_date) == year,
-            RdCost.deductible_amount > 0
-        )
-        if project_id:
-            query = query.filter(RdCost.rd_project_id == project_id)
-
-        costs = query.order_by(RdCost.rd_project_id, RdCost.cost_type_id).all()
-
-        details = []
-        for cost in costs:
-            project = db.query(RdProject).filter(RdProject.id == cost.rd_project_id).first()
-            cost_type = db.query(RdCostType).filter(RdCostType.id == cost.cost_type_id).first()
-            details.append({
-                "项目名称": project.project_name if project else "",
-                "费用类型": cost_type.type_name if cost_type else "",
-                "费用说明": cost.cost_description or "",
-                "费用金额": float(cost.cost_amount or 0),
-                "可加计扣除": float(cost.deductible_amount or 0),
-            })
-
-        total_deductible = sum(float(c.deductible_amount or 0) for c in costs)
-
-        report_data = {
-            "summary": {"年度": year, "总可加计扣除": f"¥{total_deductible:,.2f}"},
-            "details": details
-        }
-        report_title = f"{year}年研发费用加计扣除明细"
-
-    elif report_type == 'high-tech':
-        # 高新企业研发费用表
-        costs = db.query(RdCost).join(RdProject).filter(
-            func.extract('year', RdCost.cost_date) == year
-        ).all()
-
-        by_type = {}
-        total_cost = 0
-
-        for cost in costs:
-            cost_type = db.query(RdCostType).filter(RdCostType.id == cost.cost_type_id).first()
-            type_name = cost_type.type_name if cost_type else "其他"
-            if type_name not in by_type:
-                by_type[type_name] = 0
-            by_type[type_name] += float(cost.cost_amount or 0)
-            total_cost += float(cost.cost_amount or 0)
-
-        details = [{"费用类型": k, "金额": f"¥{v:,.2f}"} for k, v in by_type.items()]
-
-        report_data = {
-            "summary": {"年度": year, "研发费用总计": f"¥{total_cost:,.2f}"},
-            "details": details
-        }
-        report_title = f"{year}年高新企业研发费用表"
-
-    elif report_type == 'intensity':
-        # 研发投入强度报表（简化版，需要营业收入数据）
-        rd_costs = db.query(func.sum(RdCost.cost_amount)).filter(
-            func.extract('year', RdCost.cost_date) == year
-        ).scalar() or 0
-
-        details = [{
-            "年度": year,
-            "研发费用": f"¥{float(rd_costs):,.2f}",
-            "营业收入": "待从销售模块获取",
-            "研发投入强度": "待计算",
-        }]
-
-        report_data = {"details": details}
-        report_title = f"{year}年研发投入强度报表"
-
-    elif report_type == 'personnel':
-        # 研发人员统计
-        rd_projects = db.query(RdProject).filter(
-            func.extract('year', RdProject.start_date) <= year,
-            func.extract('year', RdProject.end_date) >= year
-        ).all()
-
-        rd_user_ids = set()
-        for project in rd_projects:
-            if project.linked_project_id:
-                timesheets = db.query(Timesheet).filter(
-                    Timesheet.project_id == project.linked_project_id,
-                    func.extract('year', Timesheet.work_date) == year,
-                    Timesheet.status == 'APPROVED'
-                ).all()
-                rd_user_ids.update([ts.user_id for ts in timesheets])
-
-        details = []
-        for user_id in rd_user_ids:
-            user = db.query(User).filter(User.id == user_id).first()
-            if user:
-                details.append({
-                    "姓名": user.real_name or user.username,
-                    "部门": user.department or "",
-                    "岗位": user.position or "",
-                })
-
-        all_users = db.query(User).filter(User.is_active == True).count()
-
-        report_data = {
-            "summary": {
-                "年度": year,
-                "总人数": all_users,
-                "研发人员数": len(rd_user_ids),
-                "研发人员占比": f"{len(rd_user_ids) / all_users * 100:.1f}%" if all_users > 0 else "0%"
-            },
-            "details": details
-        }
-        report_title = f"{year}年研发人员统计"
-
-    else:
-        raise HTTPException(status_code=400, detail=f"不支持的报表类型: {report_type}")
+    # 获取报表数据
+    try:
+        report_result = get_rd_report_data(db, report_type, year, project_id)
+        report_data = {k: v for k, v in report_result.items() if k != 'title'}
+        report_title = report_result.get('title', f"{year}年研发费用报表")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     # 导出文件
     try:

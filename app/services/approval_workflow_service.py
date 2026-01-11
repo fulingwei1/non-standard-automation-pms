@@ -135,19 +135,75 @@ class ApprovalWorkflowService:
             return workflows[0]
         
         # 如果有多个，根据路由规则选择
-        # 这里简化处理：优先选择默认工作流（routing_rules为空或包含"default": true）
-        # 实际可以根据金额、类型等更复杂的规则选择
-        if routing_params:
-            # TODO: 实现更复杂的路由规则匹配
-            # 例如：根据金额选择不同的工作流
-            # amount = routing_params.get('amount', 0)
-            # if amount > 1000000:
-            #     # 选择需要总经理审批的工作流
-            #     pass
-            pass
-        
-        # 默认选择第一个
-        return workflows[0]
+        # 按优先级排序：有具体路由规则的工作流优先于默认工作流
+        workflows_with_rules = [w for w in workflows if w.routing_rules]
+        default_workflows = [w for w in workflows if not w.routing_rules]
+
+        selected_workflow = None
+
+        if routing_params and workflows_with_rules:
+            # 根据路由参数匹配最合适的工作流
+            amount = routing_params.get('amount', 0)
+            urgency = routing_params.get('urgency', 'normal')  # normal/urgent/critical
+            customer_type = routing_params.get('customer_type', '')
+            project_type = routing_params.get('project_type', '')
+
+            # 评分系统：根据匹配度评分
+            best_score = -1
+            best_workflow = None
+
+            for workflow in workflows_with_rules:
+                rules = workflow.routing_rules or {}
+                score = 0
+
+                # 金额匹配：检查金额是否在规则范围内
+                if 'min_amount' in rules:
+                    min_amount = rules.get('min_amount', 0)
+                    max_amount = rules.get('max_amount', float('inf'))
+                    if min_amount <= amount <= max_amount:
+                        score += 10  # 金额匹配优先级最高
+                    elif amount > max_amount:
+                        score += 5  # 金额超过范围也可以作为备选
+
+                # 紧急程度匹配
+                if 'urgency' in rules:
+                    if rules['urgency'] == urgency:
+                        score += 5
+
+                # 客户类型匹配
+                if 'customer_types' in rules and customer_type:
+                    if customer_type in rules.get('customer_types', []):
+                        score += 3
+
+                # 项目类型匹配
+                if 'project_types' in rules and project_type:
+                    if project_type in rules.get('project_types', []):
+                        score += 3
+
+                # 默认标记
+                if rules.get('default', False):
+                    score += 1
+
+                if score > best_score:
+                    best_score = score
+                    best_workflow = workflow
+
+            selected_workflow = best_workflow
+
+        # 如果没有匹配到，使用默认工作流
+        if not selected_workflow:
+            # 查找标记为默认的工作流
+            for workflow in default_workflows:
+                rules = workflow.routing_rules or {}
+                if rules.get('default', False) or not rules:
+                    selected_workflow = workflow
+                    break
+
+            # 如果还没有，选择第一个有规则的或第一个默认的
+            if not selected_workflow:
+                selected_workflow = workflows_with_rules[0] if workflows_with_rules else workflows[0]
+
+        return selected_workflow
     
     def get_current_step(self, record_id: int) -> Optional[Dict[str, Any]]:
         """
@@ -225,10 +281,14 @@ class ApprovalWorkflowService:
         
         if not step:
             raise ValueError("当前审批步骤不存在")
-        
-        # 验证审批人（简化：检查是否是指定审批人或角色匹配）
-        # TODO: 实现更严格的审批人验证
-        
+
+        # 验证审批人权限
+        if not self._validate_approver(step, approver_id):
+            approver = self.db.query(User).filter(User.id == approver_id).first()
+            approver_name = approver.real_name if approver else str(approver_id)
+            required = step.approver_role or f"指定审批人({step.approver_id})"
+            raise ValueError(f"用户 {approver_name} 无权限审批此步骤，需要: {required}")
+
         # 创建审批历史
         history = ApprovalHistory(
             approval_record_id=record.id,
@@ -462,3 +522,62 @@ class ApprovalWorkflowService:
                 ApprovalRecord.entity_id == entity_id
             )
         ).order_by(ApprovalRecord.created_at.desc()).first()
+
+    def _validate_approver(
+        self,
+        step: ApprovalWorkflowStep,
+        approver_id: int
+    ) -> bool:
+        """
+        验证审批人是否有权限审批当前步骤
+
+        Args:
+            step: 审批步骤配置
+            approver_id: 审批人ID
+
+        Returns:
+            bool: 是否有权限
+        """
+        approver = self.db.query(User).filter(User.id == approver_id).first()
+        if not approver or not approver.is_active:
+            return False
+
+        # 超级管理员可以审批所有步骤
+        if approver.is_superuser:
+            return True
+
+        # 1. 检查是否是指定审批人
+        if step.approver_id and step.approver_id == approver_id:
+            return True
+
+        # 2. 检查角色匹配
+        if step.approver_role:
+            # 查询用户的角色
+            from app.models.user import UserRole, Role
+
+            user_roles = self.db.query(UserRole).filter(
+                UserRole.user_id == approver_id
+            ).all()
+
+            role_codes = [ur.role.role_code for ur in user_roles if ur.role]
+
+            # 检查是否有所需角色
+            if step.approver_role in role_codes:
+                return True
+
+        # 3. 检查是否有委托权限（检查审批历史中是否有委托给当前用户的记录）
+        # 如果原审批人将步骤委托给了当前用户
+        if step.approver_id and step.approver_id != approver_id:
+            delegation_history = self.db.query(ApprovalHistory).filter(
+                and_(
+                    ApprovalHistory.step_order == step.step_order,
+                    ApprovalHistory.action == ApprovalActionEnum.DELEGATE,
+                    ApprovalHistory.approver_id == step.approver_id,
+                    ApprovalHistory.delegate_to_id == approver_id
+                )
+            ).first()
+
+            if delegation_history:
+                return True
+
+        return False

@@ -11,29 +11,17 @@ def generate_project_code(db: Session) -> str:
     格式：PJ + 年月日(6位) + 序号(3位)
     示例：PJ250901001
     """
-    today = datetime.now()
-    date_str = today.strftime("%y%m%d")
-    prefix = f"PJ{date_str}"
+    from app.utils.number_generator import generate_sequential_no
     
-    # 查询当天最大序号
-    max_project = (
-        db.query(Project)
-        .filter(Project.project_code.like(f"{prefix}%"))
-        .order_by(desc(Project.project_code))
-        .first()
+    return generate_sequential_no(
+        db=db,
+        model_class=Project,
+        no_field='project_code',
+        prefix='PJ',
+        date_format='%y%m%d',
+        separator='',  # 无分隔符
+        seq_length=3
     )
-    
-    if max_project:
-        try:
-            # 提取序号部分（最后3位）
-            seq_str = max_project.project_code[-3:]
-            seq = int(seq_str) + 1
-        except (ValueError, IndexError):
-            seq = 1
-    else:
-        seq = 1
-    
-    return f"{prefix}{seq:03d}"
 
 
 def init_project_stages(db: Session, project_id: int):

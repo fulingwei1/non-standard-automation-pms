@@ -240,12 +240,14 @@ POST /api/v1/scheduler/configs/sync
 
 ## 权限控制
 
-**当前实现**: 所有登录用户都可以访问（TODO: 添加管理员权限检查）
+**当前实现**: 已实现管理员权限检查（`is_superuser`）
 
-**建议**: 
-- 配置管理页面：仅管理员可访问
-- 配置查看：所有用户可查看
-- 配置修改：仅管理员可修改
+**权限策略**:
+- 配置查看（GET端点）：所有登录用户可访问
+- 配置修改（PUT/POST端点）：仅超级管理员可操作
+  - `POST /jobs/{job_id}/trigger` - 手动触发任务
+  - `PUT /configs/{task_id}` - 更新任务配置
+  - `POST /configs/sync` - 同步任务配置
 
 ---
 
