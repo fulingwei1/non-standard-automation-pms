@@ -3419,21 +3419,43 @@ def check_equipment_maintenance_reminder():
                     priority = "HIGH"
                 else:
                     priority = "NORMAL"
-                
-                # 获取设备所属车间的负责人（这里简化处理，可以后续优化）
-                # 暂时发送给系统管理员或设备管理员
-                # TODO: 根据实际业务逻辑确定接收人
-                recipients = db.query(User).filter(
-                    User.is_active == True,
-                    # 可以添加角色筛选，例如：设备管理员
-                ).limit(5).all()
-                
+
+                # 获取设备保养提醒接收人
+                # 优先查找设备管理员、生产经理等相关角色
+                from app.services.sales_reminder_service import create_notification, find_users_by_role
+
+                recipients = []
+
+                # 1. 查找设备管理员
+                equipment_admins = find_users_by_role(db, "设备管理")
+                recipients.extend(equipment_admins)
+
+                # 2. 查找生产经理
+                production_managers = find_users_by_role(db, "生产经理")
+                recipients.extend(production_managers)
+
+                # 3. 如果仍未找到，查找系统管理员
+                if not recipients:
+                    from app.models.user import User
+                    admins = db.query(User).filter(
+                        User.is_active == True,
+                        User.is_superuser == True
+                    ).all()
+                    recipients.extend(admins)
+
+                # 去重
+                seen_ids = set()
+                unique_recipients = []
+                for r in recipients:
+                    if r.id not in seen_ids:
+                        seen_ids.add(r.id)
+                        unique_recipients.append(r)
+                recipients = unique_recipients
+
                 if not recipients:
                     # 如果没有找到接收人，跳过
                     continue
-                
-                from app.services.sales_reminder_service import create_notification
-                
+
                 for recipient in recipients:
                     create_notification(
                         db=db,
