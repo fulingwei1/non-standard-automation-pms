@@ -59,18 +59,18 @@ router = APIRouter()
 
 def generate_ecn_no(db: Session) -> str:
     """生成ECN编号：ECN-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_ecn = (
-        db.query(Ecn)
-        .filter(Ecn.ecn_no.like(f"ECN-{today}-%"))
-        .order_by(desc(Ecn.ecn_no))
-        .first()
+    from app.utils.number_generator import generate_sequential_no
+    from app.models.ecn import Ecn
+    
+    return generate_sequential_no(
+        db=db,
+        model_class=Ecn,
+        no_field='ecn_no',
+        prefix='ECN',
+        date_format='%y%m%d',
+        separator='-',
+        seq_length=3
     )
-    if max_ecn:
-        seq = int(max_ecn.ecn_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"ECN-{today}-{seq:03d}"
 
 
 # ==================== ECN 基础管理 ====================

@@ -71,50 +71,50 @@ router = APIRouter()
 
 def generate_plan_no(db: Session) -> str:
     """生成生产计划编号：PP-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_plan = (
-        db.query(ProductionPlan)
-        .filter(ProductionPlan.plan_no.like(f"PP-{today}-%"))
-        .order_by(desc(ProductionPlan.plan_no))
-        .first()
+    from app.utils.number_generator import generate_sequential_no
+    from app.models.production import ProductionPlan
+    
+    return generate_sequential_no(
+        db=db,
+        model_class=ProductionPlan,
+        no_field='plan_no',
+        prefix='PP',
+        date_format='%y%m%d',
+        separator='-',
+        seq_length=3
     )
-    if max_plan:
-        seq = int(max_plan.plan_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"PP-{today}-{seq:03d}"
 
 
 def generate_work_order_no(db: Session) -> str:
     """生成工单编号：WO-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_order = (
-        db.query(WorkOrder)
-        .filter(WorkOrder.work_order_no.like(f"WO-{today}-%"))
-        .order_by(desc(WorkOrder.work_order_no))
-        .first()
+    from app.utils.number_generator import generate_sequential_no
+    from app.models.production import WorkOrder
+    
+    return generate_sequential_no(
+        db=db,
+        model_class=WorkOrder,
+        no_field='work_order_no',
+        prefix='WO',
+        date_format='%y%m%d',
+        separator='-',
+        seq_length=3
     )
-    if max_order:
-        seq = int(max_order.work_order_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"WO-{today}-{seq:03d}"
 
 
 def generate_report_no(db: Session) -> str:
     """生成报工单号：WR-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_report = (
-        db.query(WorkReport)
-        .filter(WorkReport.report_no.like(f"WR-{today}-%"))
-        .order_by(desc(WorkReport.report_no))
-        .first()
+    from app.utils.number_generator import generate_sequential_no
+    from app.models.production import WorkReport
+    
+    return generate_sequential_no(
+        db=db,
+        model_class=WorkReport,
+        no_field='report_no',
+        prefix='WR',
+        date_format='%y%m%d',
+        separator='-',
+        seq_length=3
     )
-    if max_report:
-        seq = int(max_report.report_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"WR-{today}-{seq:03d}"
 
 
 # ==================== 车间管理 ====================
@@ -2196,7 +2196,12 @@ def read_work_orders(
         if order.assigned_to:
             worker = db.query(Worker).filter(Worker.id == order.assigned_to).first()
             assigned_worker_name = worker.worker_name if worker else None
-        
+
+        process_name = None
+        if order.process_id:
+            process = db.query(ProcessDict).filter(ProcessDict.id == order.process_id).first()
+            process_name = process.process_name if process else None
+
         items.append(WorkOrderResponse(
             id=order.id,
             work_order_no=order.work_order_no,
@@ -2208,7 +2213,7 @@ def read_work_orders(
             machine_name=machine_name,
             production_plan_id=order.production_plan_id,
             process_id=order.process_id,
-            process_name=None,  # TODO: 从ProcessDict获取
+            process_name=process_name,
             workshop_id=order.workshop_id,
             workshop_name=workshop_name,
             workstation_id=order.workstation_id,
@@ -3273,7 +3278,12 @@ def read_production_exceptions(
         if exc.handler_id:
             handler = db.query(User).filter(User.id == exc.handler_id).first()
             handler_name = handler.real_name or handler.username if handler else None
-        
+
+        equipment_name = None
+        if exc.equipment_id:
+            equipment = db.query(Equipment).filter(Equipment.id == exc.equipment_id).first()
+            equipment_name = equipment.equipment_name if equipment else None
+
         items.append(ProductionExceptionResponse(
             id=exc.id,
             exception_no=exc.exception_no,
@@ -3288,7 +3298,7 @@ def read_production_exceptions(
             workshop_id=exc.workshop_id,
             workshop_name=workshop_name,
             equipment_id=exc.equipment_id,
-            equipment_name=None,  # TODO: 从Equipment获取
+            equipment_name=equipment_name,
             reporter_id=exc.reporter_id,
             reporter_name=reporter_name,
             report_time=exc.report_time,

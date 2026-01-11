@@ -35,18 +35,17 @@ router = APIRouter()
 
 def generate_task_code(db: Session) -> str:
     """生成任务编号：TASK-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_task = (
-        db.query(TaskUnified)
-        .filter(TaskUnified.task_code.like(f"TASK-{today}-%"))
-        .order_by(desc(TaskUnified.task_code))
-        .first()
+    from app.utils.number_generator import generate_sequential_no
+    
+    return generate_sequential_no(
+        db=db,
+        model_class=TaskUnified,
+        no_field='task_code',
+        prefix='TASK',
+        date_format='%y%m%d',
+        separator='-',
+        seq_length=3
     )
-    if max_task:
-        seq = int(max_task.task_code.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"TASK-{today}-{seq:03d}"
 
 
 def log_task_operation(

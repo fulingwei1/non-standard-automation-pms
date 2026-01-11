@@ -2121,109 +2121,16 @@ def generate_shortage_daily_report(target_date: Optional[date] = None):
     
     try:
         with get_db_session() as db:
-            from sqlalchemy import func
-            from app.models.shortage import (
-                ShortageDailyReport, ShortageAlert, ShortageReport,
-                MaterialArrival, KitCheck
-            )
+            from app.models.shortage import ShortageDailyReport
+            from app.services.shortage_report_service import build_daily_report_data
             
             if target_date is None:
                 target_date = date.today() - timedelta(days=1)
             
-            # 预警统计
-            new_alerts = db.query(func.count(ShortageAlert.id)).filter(
-                func.date(ShortageAlert.created_at) == target_date
-            ).scalar() or 0
-            resolved_alerts = db.query(func.count(ShortageAlert.id)).filter(
-                ShortageAlert.resolve_time.isnot(None),
-                func.date(ShortageAlert.resolve_time) == target_date
-            ).scalar() or 0
-            pending_alerts = db.query(func.count(ShortageAlert.id)).filter(
-                ShortageAlert.status.in_(["pending", "handling", "escalated"])
-            ).scalar() or 0
-            overdue_alerts = db.query(func.count(ShortageAlert.id)).filter(
-                ShortageAlert.is_overdue == True
-            ).scalar() or 0
+            # 构建日报数据
+            report_data = build_daily_report_data(db, target_date)
             
-            level_counts = {}
-            for level in ['level1', 'level2', 'level3', 'level4']:
-                level_counts[level] = db.query(func.count(ShortageAlert.id)).filter(
-                    ShortageAlert.alert_level == level
-                ).scalar() or 0
-            
-            # 上报统计
-            new_reports = db.query(func.count(ShortageReport.id)).filter(
-                func.date(ShortageReport.report_time) == target_date
-            ).scalar() or 0
-            resolved_reports = db.query(func.count(ShortageReport.id)).filter(
-                ShortageReport.resolved_at.isnot(None),
-                func.date(ShortageReport.resolved_at) == target_date
-            ).scalar() or 0
-            
-            # 齐套统计
-            kit_checks = db.query(KitCheck).filter(
-                func.date(KitCheck.check_time) == target_date
-            ).all()
-            total_work_orders = len(kit_checks)
-            kit_complete_count = len([k for k in kit_checks if (k.kit_status or '').lower() == 'complete'])
-            kit_rate = round(
-                sum(float(k.kit_rate or 0) for k in kit_checks) / total_work_orders,
-                2
-            ) if total_work_orders else 0.0
-            
-            # 到货统计
-            expected_arrivals = db.query(func.count(MaterialArrival.id)).filter(
-                MaterialArrival.expected_date == target_date
-            ).scalar() or 0
-            actual_arrivals = db.query(func.count(MaterialArrival.id)).filter(
-                MaterialArrival.actual_date == target_date
-            ).scalar() or 0
-            delayed_arrivals = db.query(func.count(MaterialArrival.id)).filter(
-                MaterialArrival.actual_date == target_date,
-                MaterialArrival.is_delayed == True
-            ).scalar() or 0
-            on_time_rate = round(
-                ((actual_arrivals - delayed_arrivals) / actual_arrivals) * 100,
-                2
-            ) if actual_arrivals else 0.0
-            
-            # 响应与解决耗时
-            alerts_for_response = db.query(ShortageAlert).filter(
-                func.date(ShortageAlert.created_at) == target_date
-            ).all()
-            response_minutes = [
-                (alert.handle_start_time - alert.created_at).total_seconds() / 60.0
-                for alert in alerts_for_response
-                if alert.handle_start_time and alert.created_at
-            ]
-            avg_response_minutes = int(round(
-                sum(response_minutes) / len(response_minutes), 0
-            )) if response_minutes else 0
-            
-            resolved_alerts_list = db.query(ShortageAlert).filter(
-                ShortageAlert.resolve_time.isnot(None),
-                func.date(ShortageAlert.resolve_time) == target_date
-            ).all()
-            resolve_hours = [
-                (alert.resolve_time - alert.created_at).total_seconds() / 3600.0
-                for alert in resolved_alerts_list
-                if alert.resolve_time and alert.created_at
-            ]
-            avg_resolve_hours = round(
-                sum(resolve_hours) / len(resolve_hours), 2
-            ) if resolve_hours else 0.0
-            
-            # 停工影响
-            stoppage_alerts = db.query(ShortageAlert).filter(
-                func.date(ShortageAlert.created_at) == target_date,
-                ShortageAlert.impact_type == 'stop'
-            ).all()
-            stoppage_count = len(stoppage_alerts)
-            stoppage_hours = round(
-                sum((alert.estimated_delay_days or 0) * 24 for alert in stoppage_alerts),
-                2
-            )
-            
+            # 获取或创建日报记录
             report = db.query(ShortageDailyReport).filter(
                 ShortageDailyReport.report_date == target_date
             ).first()
@@ -2231,27 +2138,28 @@ def generate_shortage_daily_report(target_date: Optional[date] = None):
                 report = ShortageDailyReport(report_date=target_date)
                 db.add(report)
             
-            report.new_alerts = new_alerts
-            report.resolved_alerts = resolved_alerts
-            report.pending_alerts = pending_alerts
-            report.overdue_alerts = overdue_alerts
-            report.level1_count = level_counts['level1']
-            report.level2_count = level_counts['level2']
-            report.level3_count = level_counts['level3']
-            report.level4_count = level_counts['level4']
-            report.new_reports = new_reports
-            report.resolved_reports = resolved_reports
-            report.total_work_orders = total_work_orders
-            report.kit_complete_count = kit_complete_count
-            report.kit_rate = kit_rate
-            report.expected_arrivals = expected_arrivals
-            report.actual_arrivals = actual_arrivals
-            report.delayed_arrivals = delayed_arrivals
-            report.on_time_rate = on_time_rate
-            report.avg_response_minutes = avg_response_minutes
-            report.avg_resolve_hours = avg_resolve_hours
-            report.stoppage_count = stoppage_count
-            report.stoppage_hours = stoppage_hours
+            # 更新日报数据
+            report.new_alerts = report_data['new_alerts']
+            report.resolved_alerts = report_data['resolved_alerts']
+            report.pending_alerts = report_data['pending_alerts']
+            report.overdue_alerts = report_data['overdue_alerts']
+            report.level1_count = report_data['level_counts']['level1']
+            report.level2_count = report_data['level_counts']['level2']
+            report.level3_count = report_data['level_counts']['level3']
+            report.level4_count = report_data['level_counts']['level4']
+            report.new_reports = report_data['new_reports']
+            report.resolved_reports = report_data['resolved_reports']
+            report.total_work_orders = report_data['total_work_orders']
+            report.kit_complete_count = report_data['kit_complete_count']
+            report.kit_rate = report_data['kit_rate']
+            report.expected_arrivals = report_data['expected_arrivals']
+            report.actual_arrivals = report_data['actual_arrivals']
+            report.delayed_arrivals = report_data['delayed_arrivals']
+            report.on_time_rate = report_data['on_time_rate']
+            report.avg_response_minutes = report_data['avg_response_minutes']
+            report.avg_resolve_hours = report_data['avg_resolve_hours']
+            report.stoppage_count = report_data['stoppage_count']
+            report.stoppage_hours = report_data['stoppage_hours']
             
             db.commit()
             
@@ -2260,8 +2168,8 @@ def generate_shortage_daily_report(target_date: Optional[date] = None):
             
             return {
                 'date': target_date.isoformat(),
-                'new_alerts': new_alerts,
-                'new_reports': new_reports
+                'new_alerts': report_data['new_alerts'],
+                'new_reports': report_data['new_reports']
             }
     except Exception as e:
         logger.error(f"[{datetime.now()}] 缺料日报自动生成失败: {str(e)}")
@@ -2279,10 +2187,14 @@ def generate_job_duty_tasks():
     """
     try:
         with get_db_session() as db:
-            from app.models.task_center import JobDutyTemplate, TaskUnified
-            from app.models.user import User
-            from datetime import timedelta
-            import calendar
+            from app.models.task_center import JobDutyTemplate
+            from app.services.job_duty_task_service import (
+                should_generate_task,
+                find_template_users,
+                create_task_from_template,
+                check_task_exists
+            )
+            from app.api.v1.endpoints.task_center import generate_task_code
             
             today = date.today()
             generated_count = 0
@@ -2294,130 +2206,25 @@ def generate_job_duty_tasks():
             ).all()
             
             for template in templates:
-                should_generate = False
-                target_date = today
-                
-                # 根据频率判断是否需要生成任务
-                if template.frequency == 'DAILY':
-                    # 每天生成
-                    should_generate = True
-                    target_date = today + timedelta(days=template.generate_before_days or 0)
-                
-                elif template.frequency == 'WEEKLY':
-                    # 每周生成（检查是否是目标星期几）
-                    if template.day_of_week:
-                        # 计算本周的目标日期
-                        days_until_target = (template.day_of_week - today.weekday() - 1) % 7
-                        if days_until_target == 0:  # 今天就是目标日期
-                            should_generate = True
-                            target_date = today + timedelta(days=template.generate_before_days or 0)
-                        elif 0 < days_until_target <= (template.generate_before_days or 3):
-                            # 在提前生成范围内
-                            should_generate = True
-                            target_date = today + timedelta(days=days_until_target)
-                
-                elif template.frequency == 'MONTHLY':
-                    # 每月生成（检查是否是目标日期）
-                    if template.day_of_month:
-                        # 计算本月的目标日期
-                        last_day = calendar.monthrange(today.year, today.month)[1]
-                        target_day = min(template.day_of_month, last_day)
-                        target_date_in_month = date(today.year, today.month, target_day)
-                        
-                        days_until_target = (target_date_in_month - today).days
-                        if days_until_target == 0:  # 今天就是目标日期
-                            should_generate = True
-                            target_date = today + timedelta(days=template.generate_before_days or 0)
-                        elif 0 < days_until_target <= (template.generate_before_days or 3):
-                            # 在提前生成范围内
-                            should_generate = True
-                            target_date = target_date_in_month
-                
-                elif template.frequency == 'YEARLY':
-                    # 每年生成（检查是否是目标月份和日期）
-                    if template.month_of_year and template.day_of_month:
-                        target_date_in_year = date(today.year, template.month_of_year, 
-                                                  min(template.day_of_month, 
-                                                      calendar.monthrange(today.year, template.month_of_year)[1]))
-                        days_until_target = (target_date_in_year - today).days
-                        if days_until_target == 0:  # 今天就是目标日期
-                            should_generate = True
-                            target_date = today + timedelta(days=template.generate_before_days or 0)
-                        elif 0 < days_until_target <= (template.generate_before_days or 3):
-                            # 在提前生成范围内
-                            should_generate = True
-                            target_date = target_date_in_year
-                
+                # 判断是否需要生成任务
+                should_generate, target_date = should_generate_task(template, today)
                 if not should_generate:
                     continue
                 
                 # 检查是否已经生成过该日期的任务（避免重复生成）
-                existing_task = db.query(TaskUnified).filter(
-                    TaskUnified.task_type == 'JOB_DUTY',
-                    TaskUnified.source_type == 'JOB_DUTY_TEMPLATE',
-                    TaskUnified.source_id == template.id,
-                    TaskUnified.plan_start_date == target_date
-                ).first()
-                
-                if existing_task:
+                if check_task_exists(db, template, target_date):
                     continue
                 
                 # 查找该岗位的所有用户
-                # 注意：这里需要根据实际的用户-岗位关联表来查询
-                # 假设User表有position_id字段，或者通过其他方式关联
-                # 这里简化处理，假设可以通过部门ID查找用户
-                users = []
-                if hasattr(User, 'position_id'):
-                    users = db.query(User).filter(
-                        User.position_id == template.position_id,
-                        User.is_active == True
-                    ).all()
-                elif template.department_id:
-                    # 如果有部门ID，可以通过部门查找用户
-                    if hasattr(User, 'department_id'):
-                        users = db.query(User).filter(
-                            User.department_id == template.department_id,
-                            User.is_active == True
-                        ).all()
-                
-                # 如果找不到用户，跳过
+                users = find_template_users(db, template)
                 if not users:
                     continue
                 
                 # 为每个用户生成任务
                 for user in users:
-                    # 计算截止日期
-                    deadline = target_date + timedelta(days=template.deadline_offset_days or 0)
-                    
-                    # 生成任务编号
-                    from app.api.v1.endpoints.task_center import generate_task_code
-                    task_code = generate_task_code(db)
-                    
-                    task = TaskUnified(
-                        task_code=task_code,
-                        title=f"{template.duty_name}",
-                        description=template.duty_description,
-                        task_type='JOB_DUTY',
-                        assignee_id=user.id,
-                        assignee_name=user.real_name or user.username,
-                        assigner_id=None,  # 系统自动生成
-                        assigner_name='系统',
-                        plan_start_date=target_date,
-                        plan_end_date=target_date,
-                        deadline=deadline,
-                        estimated_hours=template.estimated_hours,
-                        priority=template.default_priority or 'MEDIUM',
-                        is_urgent=False,
-                        tags=['岗位职责'],
-                        category='JOB_DUTY',
-                        reminder_enabled=True,
-                        reminder_before_hours=24,
-                        status='PENDING',
-                        source_type='JOB_DUTY_TEMPLATE',
-                        source_id=template.id,
-                        created_by=None  # 系统生成
+                    task = create_task_from_template(
+                        db, template, user, target_date, generate_task_code
                     )
-                    
                     db.add(task)
                     generated_count += 1
             

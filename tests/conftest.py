@@ -7,7 +7,7 @@ sys.modules["redis"] = redis_mock
 sys.modules["redis.exceptions"] = MagicMock()
 
 import uuid
-from typing import Callable, Dict, Generator
+from typing import Callable, Dict, Generator, Iterable, Tuple
 
 import pytest
 from fastapi.testclient import TestClient
@@ -15,10 +15,16 @@ from sqlalchemy.orm import Session
 
 from app.main import app
 from app.core.config import settings
-from app.core.security import get_password_hash
+from app.core.security import get_password_hash, verify_password
 from app.models.base import SessionLocal
 from app.models.organization import Employee
-from app.models.user import User, Role
+from app.models.user import (
+    User,
+    Role,
+    Permission,
+    RolePermission,
+    UserRole,
+)
 from app.models.project import Customer, Project, ProjectMember
 from app.models.task_center import TaskUnified, TaskApprovalWorkflow
 
@@ -112,25 +118,98 @@ ENGINEER_CREDENTIALS: Dict[str, str] = {"username": "engineer_test", "password":
 PM_CREDENTIALS: Dict[str, str] = {"username": "pm_test", "password": "pm123"}
 REGULAR_USER_CREDENTIALS: Dict[str, str] = {"username": "regular_user", "password": "regular123"}
 
+ENGINEER_PERMISSION_SPECS: Tuple[Tuple[str, str], ...] = (
+    ("engineer:read", "工程师进度查看"),
+    ("engineer:create", "工程师任务创建"),
+)
 
-def _get_or_create_employee(db: Session, code: str, name: str, department: str) -> Employee:
+
+def _ensure_permission(db: Session, code: str, name: str) -> Permission:
+    permission = db.query(Permission).filter(Permission.permission_code == code).first()
+    if permission:
+        return permission
+
+    permission = Permission(
+        permission_code=code,
+        permission_name=name,
+        module="engineer",
+        action="access",
+        description=f"测试自动创建 - {name}",
+        is_active=True,
+    )
+    db.add(permission)
+    db.commit()
+    db.refresh(permission)
+    return permission
+
+
+
+
+def _get_or_create_employee(
+    db: Session,
+    code: str,
+    name: str,
+    department: str,
+    role: str = "ENGINEER",
+) -> Employee:
     employee = db.query(Employee).filter(Employee.employee_code == code).first()
-    if not employee:
-        employee = Employee(
-            employee_code=code,
-            name=name,
-            department=department,
-            role="ENGINEER",
-            phone="18800000000",
-        )
-        db.add(employee)
-        db.flush()
+    if employee:
+        updated = False
+        if not employee.is_active:
+            employee.is_active = True
+            updated = True
+        if employee.employment_status != "active":
+            employee.employment_status = "active"
+            updated = True
+        if department and employee.department != department:
+            employee.department = department
+            updated = True
+        if role and employee.role != role:
+            employee.role = role
+            updated = True
+        if updated:
+            db.commit()
+            db.refresh(employee)
+        return employee
+
+    employee = Employee(
+        employee_code=code,
+        name=name,
+        department=department,
+        role=role or "ENGINEER",
+        phone="18800000000",
+    )
+    db.add(employee)
+    db.flush()
     return employee
 
 
-def _get_or_create_user(db: Session, username: str, password: str, real_name: str, department: str) -> User:
+def _get_or_create_user(
+    db: Session,
+    username: str,
+    password: str,
+    real_name: str,
+    department: str,
+    employee_role: str = "ENGINEER",
+) -> User:
     user = db.query(User).filter(User.username == username).first()
     if user:
+        updated = False
+        if not user.is_active:
+            user.is_active = True
+            updated = True
+        if real_name and user.real_name != real_name:
+            user.real_name = real_name
+            updated = True
+        if department and user.department != department:
+            user.department = department
+            updated = True
+        if not user.password_hash or not verify_password(password, user.password_hash):
+            user.password_hash = get_password_hash(password)
+            updated = True
+        if updated:
+            db.commit()
+            db.refresh(user)
         return user
 
     employee = _get_or_create_employee(
@@ -138,6 +217,7 @@ def _get_or_create_user(db: Session, username: str, password: str, real_name: st
         code=f"{username.upper()}-EMP",
         name=real_name,
         department=department,
+        role=employee_role,
     )
 
     user = User(
@@ -173,40 +253,85 @@ def _ensure_role(db: Session, role_code: str, role_name: str) -> Role:
     return role
 
 
+def _ensure_role_permissions(
+    db: Session, role: Role, permission_specs: Iterable[Tuple[str, str]]
+) -> None:
+    changed = False
+    for code, name in permission_specs:
+        permission = _ensure_permission(db, code, name)
+        exists = (
+            db.query(RolePermission)
+            .filter(
+                RolePermission.role_id == role.id,
+                RolePermission.permission_id == permission.id,
+            )
+            .first()
+        )
+        if not exists:
+            db.add(RolePermission(role_id=role.id, permission_id=permission.id))
+            changed = True
+    if changed:
+        db.commit()
+
+
+def _assign_role_to_user(db: Session, user: User, role: Role) -> None:
+    exists = (
+        db.query(UserRole)
+        .filter(UserRole.user_id == user.id, UserRole.role_id == role.id)
+        .first()
+    )
+    if exists:
+        return
+    db.add(UserRole(user_id=user.id, role_id=role.id))
+    db.commit()
+
+
 @pytest.fixture(scope="function")
 def engineer_user(db_session: Session) -> User:
     """确保存在用于工程师接口测试的用户"""
-    return _get_or_create_user(
+    user = _get_or_create_user(
         db_session,
         username=ENGINEER_CREDENTIALS["username"],
         password=ENGINEER_CREDENTIALS["password"],
         real_name="工程师一号",
         department="工程部",
+        employee_role="ENGINEER",
     )
+    engineer_role = _ensure_role(db_session, "ENGINEER", "工程师")
+    _ensure_role_permissions(db_session, engineer_role, ENGINEER_PERMISSION_SPECS)
+    _assign_role_to_user(db_session, user, engineer_role)
+    return user
 
 
 @pytest.fixture(scope="function")
 def pm_user(db_session: Session) -> User:
     """确保存在用于PM审批的用户"""
-    return _get_or_create_user(
+    user = _get_or_create_user(
         db_session,
         username=PM_CREDENTIALS["username"],
         password=PM_CREDENTIALS["password"],
         real_name="项目经理",
         department="项目管理部",
+        employee_role="PM",
     )
+    pm_role = _ensure_role(db_session, "PM", "项目经理")
+    _ensure_role_permissions(db_session, pm_role, ENGINEER_PERMISSION_SPECS)
+    _assign_role_to_user(db_session, user, pm_role)
+    return user
 
 
 @pytest.fixture(scope="function")
 def regular_user(db_session: Session) -> User:
     """确保存在普通权限的业务用户"""
-    return _get_or_create_user(
+    user = _get_or_create_user(
         db_session,
         username=REGULAR_USER_CREDENTIALS["username"],
         password=REGULAR_USER_CREDENTIALS["password"],
         real_name="普通业务用户",
         department="综合管理部",
+        employee_role="BUSINESS_USER",
     )
+    return user
 
 
 def _ensure_customer(db: Session) -> Customer:

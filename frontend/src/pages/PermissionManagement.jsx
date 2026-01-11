@@ -52,7 +52,6 @@ export default function PermissionManagement() {
   const [permissionRoles, setPermissionRoles] = useState([]);
 
   const token = localStorage.getItem("token");
-  const isDemoAccount = token && token.startsWith("demo_token_");
 
   // 加载权限列表
   const loadPermissions = async () => {

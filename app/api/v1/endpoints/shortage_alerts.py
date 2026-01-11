@@ -1940,7 +1940,7 @@ def approve_material_transfer(
             title=f"物料调拨申请已批准: {transfer.material_name}",
             content=f"调拨单号: {transfer.transfer_no}\n审批人: {current_user.real_name or current_user.username}",
             priority=NotificationPriority.NORMAL,
-            link=f"/shortage-alerts/transfers/{transfer.id}"
+            link="/shortage-alerts/transfers/{transfer_id}".format(transfer_id=transfer.id),
         )
     except Exception:
         pass
@@ -1957,7 +1957,7 @@ def approve_material_transfer(
                     title=f"物料调出申请已批准: {transfer.material_name}",
                     content=f"调拨单号: {transfer.transfer_no}\n调入项目: {transfer.to_project_id}",
                     priority=NotificationPriority.HIGH,
-                    link=f"/shortage-alerts/transfers/{transfer.id}"
+                    link="/shortage-alerts/transfers/{transfer_id}".format(transfer_id=transfer.id)
                 )
         except Exception:
             pass
@@ -2018,7 +2018,7 @@ def execute_material_transfer(
             title=f"物料调拨已完成: {transfer.material_name}",
             content=f"调拨单号: {transfer.transfer_no}\n实际调拨数量: {transfer.actual_qty}",
             priority=NotificationPriority.NORMAL,
-            link=f="/shortage-alerts/transfers/{transfer.id}"
+            link="/shortage-alerts/transfers/{transfer_id}".format(transfer_id=transfer.id)
         )
     except Exception:
         pass
@@ -2153,10 +2153,9 @@ def reject_material_transfer(
             title=f"物料调拨申请已驳回: {transfer.material_name}",
             content=f"调拨单号: {transfer.transfer_no}\n驳回原因: {rejection_reason}",
             priority=NotificationPriority.HIGH,
-            link=f"/shortage-alerts/transfers/{transfer.id}"
+            link="/shortage-alerts/transfers/{transfer_id}".format(transfer_id=transfer.id)
         )
     except Exception:
         pass
 
     return read_material_transfer(transfer_id, db, current_user)
-

@@ -84,14 +84,14 @@ export default function ManufacturingDirectorDashboard() {
   const [productionStats, setProductionStats] = useState(null);
   const [serviceStats, setServiceStats] = useState(null);
   const [warehouseStats, setWarehouseStats] = useState(null);
-  const [shippingStats, setShippingStats] = useState(
-  const [pendingApprovals, setPendingApprovals] = useState([]);
+  const [shippingStats, setShippingStats] = useState({
     pendingShipments: 0,
     shippedToday: 0,
     onTimeShippingRate: 0,
     inTransit: 0,
     avgShippingTime: 0,
   });
+  const [pendingApprovals, setPendingApprovals] = useState([]);
   const [workshopCards, setWorkshopCards] = useState([]);
   const [dailyError, setDailyError] = useState(null);
   const [productionDaily, setProductionDaily] = useState(null);

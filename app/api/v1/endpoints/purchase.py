@@ -43,22 +43,17 @@ router = APIRouter()
 
 def generate_order_no(db: Session) -> str:
     """生成采购订单编号：PO-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    # 查询今天最大的序号
-    max_order = (
-        db.query(PurchaseOrder)
-        .filter(PurchaseOrder.order_no.like(f"PO-{today}-%"))
-        .order_by(desc(PurchaseOrder.order_no))
-        .first()
+    from app.utils.number_generator import generate_sequential_no
+    
+    return generate_sequential_no(
+        db=db,
+        model_class=PurchaseOrder,
+        no_field='order_no',
+        prefix='PO',
+        date_format='%y%m%d',
+        separator='-',
+        seq_length=3
     )
-    
-    if max_order:
-        # 提取序号并加1
-        seq = int(max_order.order_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    
-    return f"PO-{today}-{seq:03d}"
 
 
 def auto_create_purchase_orders_from_request(

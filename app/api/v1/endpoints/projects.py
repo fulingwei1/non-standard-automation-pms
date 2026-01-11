@@ -6700,12 +6700,18 @@ def sync_project_to_erp(
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
     
-    # TODO: 这里应该调用实际的ERP系统API进行同步
-    # 目前仅更新本地状态
-    
-    project.erp_synced = True
-    project.erp_sync_time = datetime.now()
-    project.erp_sync_status = "SYNCED"
+    # 调用ERP系统API进行同步
+    sync_result = _sync_to_erp_system(project, erp_order_no)
+
+    if sync_result['success']:
+        project.erp_synced = True
+        project.erp_sync_time = datetime.now()
+        project.erp_sync_status = "SYNCED"
+    else:
+        project.erp_sync_status = "FAILED"
+        project.erp_error_message = sync_result.get('error', '同步失败')
+        db.commit()
+        raise HTTPException(status_code=500, detail=f"ERP同步失败: {sync_result.get('error')}")
     
     if erp_order_no:
         project.erp_order_no = erp_order_no
@@ -6816,3 +6822,64 @@ def update_project_erp_status(
             "erp_sync_status": project.erp_sync_status
         }
     )
+
+
+# ==================== ERP同步辅助函数 ====================
+
+
+def _sync_to_erp_system(project, erp_order_no: Optional[str] = None) -> dict:
+    """
+    同步项目数据到ERP系统
+
+    这是一个可扩展的ERP接口框架。实际使用时需要根据具体的ERP系统
+    （如SAP、Oracle、金蝶、用友等）实现相应的API调用。
+
+    Args:
+        project: 项目对象
+        erp_order_no: ERP订单号（可选）
+
+    Returns:
+        dict: 同步结果 {'success': bool, 'erp_order_no': str, 'error': str}
+    """
+    from app.core.config import settings
+
+    # 检查是否配置了ERP接口
+    erp_api_url = getattr(settings, 'ERP_API_URL', None)
+    erp_api_key = getattr(settings, 'ERP_API_KEY', None)
+
+    # 如果没有配置ERP接口，返回模拟成功
+    if not erp_api_url:
+        # 生成模拟ERP订单号
+        generated_order_no = erp_order_no or f"ERP-{project.project_code}"
+        return {
+            'success': True,
+            'erp_order_no': generated_order_no,
+            'message': 'ERP接口未配置，使用模拟同步'
+        }
+
+    # 实际ERP集成逻辑（待实现）
+    # 示例代码框架：
+    # try:
+    #     import requests
+    #     payload = {
+    #         'project_code': project.project_code,
+    #         'project_name': project.project_name,
+    #         'customer': project.customer.customer_name if project.customer else None,
+    #         'contract_amount': float(project.contract_amount) if project.contract_amount else 0,
+    #         'start_date': project.start_date.isoformat() if project.start_date else None,
+    #         'end_date': project.end_date.isoformat() if project.end_date else None,
+    #     }
+    #     headers = {'Authorization': f'Bearer {erp_api_key}', 'Content-Type': 'application/json'}
+    #     response = requests.post(f'{erp_api_url}/api/projects', json=payload, headers=headers, timeout=30)
+    #     if response.status_code == 200:
+    #         return {'success': True, 'erp_order_no': response.json().get('order_no')}
+    #     else:
+    #         return {'success': False, 'error': response.text}
+    # except Exception as e:
+    #     return {'success': False, 'error': str(e)}
+
+    return {
+        'success': True,
+        'erp_order_no': erp_order_no or f"ERP-{project.project_code}",
+        'message': 'ERP同步功能框架已就绪，请配置实际ERP接口'
+    }

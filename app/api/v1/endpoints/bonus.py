@@ -1189,31 +1189,28 @@ def distribute_bonus_from_sheet(
     
     只有线下确认完成（财务、人力、总经理都确认）的明细表才能发放
     """
+    from app.services.bonus_distribution_service import (
+        validate_sheet_for_distribution,
+        create_calculation_from_team_allocation,
+        create_distribution_record,
+        check_distribution_exists
+    )
+    from app.services.bonus_calculator import BonusCalculator
+    
     sheet = db.query(BonusAllocationSheet).filter(BonusAllocationSheet.id == sheet_id).first()
     if not sheet:
         raise HTTPException(status_code=404, detail="分配明细表不存在")
     
-    if sheet.status == 'DISTRIBUTED':
-        raise HTTPException(status_code=400, detail="该明细表已发放")
-    
-    # 检查线下确认状态
-    if not (sheet.finance_confirmed and sheet.hr_confirmed and sheet.manager_confirmed):
-        raise HTTPException(
-            status_code=400,
-            detail="线下确认未完成，无法发放。请先完成财务部、人力资源部、总经理的确认"
-        )
-    
-    if not sheet.parse_result or 'valid_rows' not in sheet.parse_result:
-        raise HTTPException(status_code=400, detail="明细表数据无效，请重新上传")
+    # 验证明细表
+    is_valid, error_msg = validate_sheet_for_distribution(sheet)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=error_msg)
     
     valid_rows = sheet.parse_result['valid_rows']
-    if not valid_rows:
-        raise HTTPException(status_code=400, detail="明细表中没有有效数据")
     
     # 批量创建发放记录
     distributions = []
     errors = []
-    from app.services.bonus_calculator import BonusCalculator
     calculator = BonusCalculator(db)
     
     for row_data in valid_rows:
@@ -1224,49 +1221,15 @@ def distribute_bonus_from_sheet(
             
             # 如果使用团队奖金分配ID，先创建个人计算记录
             if team_allocation_id:
-                allocation = db.query(TeamBonusAllocation).filter(
-                    TeamBonusAllocation.id == team_allocation_id
-                ).first()
-                if not allocation:
-                    errors.append(f"团队奖金分配ID {team_allocation_id} 不存在")
+                try:
+                    calculation = create_calculation_from_team_allocation(
+                        db, team_allocation_id, row_data['user_id'],
+                        Decimal(str(row_data['calculated_amount'])), calculator
+                    )
+                    calculation_id = calculation.id
+                except ValueError as e:
+                    errors.append(str(e))
                     continue
-                
-                # 获取分配明细中的规则信息
-                allocation_detail = allocation.allocation_detail or {}
-                bonus_type = allocation_detail.get('bonus_type', 'PROJECT_BASED')
-                rule_id = allocation_detail.get('rule_id')
-                
-                if not rule_id:
-                    errors.append(f"团队奖金分配ID {team_allocation_id} 缺少规则ID")
-                    continue
-                
-                rule = db.query(BonusRule).filter(BonusRule.id == rule_id).first()
-                if not rule:
-                    errors.append(f"规则ID {rule_id} 不存在")
-                    continue
-                
-                # 创建个人计算记录
-                calculation = BonusCalculation(
-                    calculation_code=calculator.generate_calculation_code(),
-                    rule_id=rule_id,
-                    project_id=allocation.project_id,
-                    user_id=row_data['user_id'],
-                    calculated_amount=Decimal(str(row_data['calculated_amount'])),
-                    calculation_detail={
-                        "from_team_allocation": True,
-                        "team_allocation_id": team_allocation_id,
-                        "allocation_detail": allocation_detail
-                    },
-                    calculation_basis={
-                        "type": "from_team_allocation",
-                        "team_allocation_id": team_allocation_id,
-                        "user_id": row_data['user_id']
-                    },
-                    status='APPROVED'  # 从Excel导入的视为已审批
-                )
-                db.add(calculation)
-                db.flush()  # 获取calculation.id
-                calculation_id = calculation.id
             else:
                 # 使用已有的计算记录
                 calculation = db.query(BonusCalculation).filter(
@@ -1276,33 +1239,16 @@ def distribute_bonus_from_sheet(
                     errors.append(f"计算记录ID {calculation_id} 不存在")
                     continue
             
-            # 检查是否已发放（基于计算记录ID和用户ID）
-            existing = db.query(BonusDistribution).filter(
-                BonusDistribution.calculation_id == calculation_id,
-                BonusDistribution.user_id == row_data['user_id'],
-                BonusDistribution.status == 'PAID'
-            ).first()
-            if existing:
+            # 检查是否已发放
+            if check_distribution_exists(db, calculation_id, row_data['user_id']):
                 errors.append(f"计算记录ID {calculation_id} 对用户ID {row_data['user_id']} 已发放")
                 continue
             
             # 创建发放记录
-            distribution = BonusDistribution(
-                distribution_code=generate_distribution_code(),
-                calculation_id=calculation_id,
-                user_id=row_data['user_id'],
-                distributed_amount=Decimal(str(row_data['distributed_amount'])),
-                distribution_date=datetime.strptime(row_data['distribution_date'], '%Y-%m-%d').date(),
-                payment_method=row_data.get('payment_method'),
-                voucher_no=row_data.get('voucher_no'),
-                payment_account=row_data.get('payment_account'),
-                payment_remark=row_data.get('payment_remark'),
-                status='PAID',  # 直接标记为已发放
-                paid_by=current_user.id,
-                paid_at=datetime.now()
+            distribution = create_distribution_record(
+                db, calculation_id, row_data['user_id'], row_data,
+                current_user.id, generate_distribution_code
             )
-            
-            db.add(distribution)
             distributions.append(distribution)
             
             # 更新计算记录状态

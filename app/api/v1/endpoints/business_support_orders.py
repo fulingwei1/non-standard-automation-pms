@@ -43,6 +43,148 @@ from app.schemas.common import PaginatedResponse, ResponseModel
 router = APIRouter()
 
 
+def _send_department_notification(
+    db: Session,
+    user_id: int,
+    notification_type: str,
+    title: str,
+    content: str,
+    source_type: str,
+    source_id: int,
+    priority: str = "NORMAL",
+    extra_data: Optional[dict] = None
+) -> None:
+    """
+    发送部门通知
+
+    Args:
+        db: 数据库会话
+        user_id: 接收通知的用户ID
+        notification_type: 通知类型
+        title: 通知标题
+        content: 通知内容
+        source_type: 来源类型
+        source_id: 来源ID
+        priority: 优先级
+        extra_data: 额外数据
+    """
+    try:
+        from app.models.notification import Notification
+
+        notification = Notification(
+            user_id=user_id,
+            notification_type=notification_type,
+            title=title,
+            content=content,
+            source_type=source_type,
+            source_id=source_id,
+            link_url=f"/{source_type.lower()}?id={source_id}",
+            priority=priority,
+            extra_data=extra_data or {}
+        )
+        db.add(notification)
+        db.commit()
+    except Exception as e:
+        # 记录日志但不影响主流程
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"发送通知失败: {str(e)}")
+
+
+def _send_project_department_notifications(
+    db: Session,
+    project_id: int,
+    notification_type: str,
+    title: str,
+    content: str,
+    source_type: str,
+    source_id: int,
+    priority: str = "NORMAL",
+    extra_data: Optional[dict] = None
+) -> None:
+    """
+    发送项目相关部门通知（PMC、生产、采购等）
+
+    Args:
+        db: 数据库会话
+        project_id: 项目ID
+        notification_type: 通知类型
+        title: 通知标题
+        content: 通知内容
+        source_type: 来源类型
+        source_id: 来源ID
+        priority: 优先级
+        extra_data: 额外数据
+    """
+    # 获取项目成员
+    from app.models.project import ProjectMember
+    project_members = db.query(ProjectMember).filter(
+        ProjectMember.project_id == project_id,
+        ProjectMember.is_active == True
+    ).all()
+
+    # 根据角色分类发送通知
+    from app.models.user import UserRole, Role
+    from app.models.organization import Department
+
+    # 获取相关部门的ID
+    dept_mapping = {
+        'PMC': ['pmc', '生产管理中心'],
+        'PRODUCTION': ['production', 'production_dept', '生产部', '生产制造部'],
+        'PURCHASE': ['purchase', 'procurement', '采购部', '采购中心'],
+        'TECHNICAL': ['technical', 'rd', '技术部', '研发部'],
+        'QUALITY': ['quality', 'qa', '质量部', '品管部']
+    }
+
+    notified_users = set()
+
+    # 通知项目成员
+    for member in project_members:
+        user = db.query(User).filter(User.id == member.user_id).first()
+        if user and user.id not in notified_users:
+            _send_department_notification(
+                db=db,
+                user_id=user.id,
+                notification_type=notification_type,
+                title=title,
+                content=content,
+                source_type=source_type,
+                source_id=source_id,
+                priority=priority,
+                extra_data=extra_data
+            )
+            notified_users.add(user.id)
+
+    # 通知相关部门的其他成员
+    for dept_type, role_codes in dept_mapping.items():
+        dept = db.query(Department).filter(
+            Department.name.ilike(f'%{role_codes[0]}%')
+        ).first()
+
+        if dept:
+            dept_users = db.query(User).filter(
+                User.department_id == dept.id,
+                User.is_active == True
+            ).all()
+
+            for user in dept_users:
+                if user.id not in notified_users:
+                    # 添加部门特定信息
+                    dept_content = f"{content}\n\n（发送至{dept.name}）"
+                    _send_department_notification(
+                        db=db,
+                        user_id=user.id,
+                        notification_type=notification_type,
+                        title=title,
+                        content=dept_content,
+                        source_type=source_type,
+                        source_id=source_id,
+                        priority=priority,
+                        extra_data=extra_data
+                    )
+                    notified_users.add(user.id)
+
+
 # ==================== 编码生成函数 ====================
 
 
@@ -748,12 +890,31 @@ async def send_project_notice(
         # 更新通知单发送状态
         sales_order.project_notice_sent = True
         sales_order.project_notice_date = datetime.now()
-        
+
         db.commit()
-        
-        # TODO: 实际发送通知给相关部门（PMC、生产、采购等）
-        # 这里可以集成通知系统或消息队列
-        
+
+        # 实际发送通知给相关部门（PMC、生产、采购等）
+        project = db.query(Project).filter(Project.id == sales_order.project_id).first()
+        if project:
+            title = f"项目通知单已发送：{project.project_name}"
+            content = f"销售订单 {sales_order.order_no} 的项目通知单已发送。\n\n项目名称：{project.project_name}\n客户名称：{sales_order.customer_name}\n订单金额：¥{sales_order.total_amount or 0}\n交货日期：{sales_order.delivery_date or '未设置'}\n\n请相关部门做好准备工作。"
+
+            _send_project_department_notifications(
+                db=db,
+                project_id=project.id,
+                notification_type="SALES_ORDER_NOTICE",
+                title=title,
+                content=content,
+                source_type="SALES_ORDER",
+                source_id=sales_order.id,
+                priority="HIGH",
+                extra_data={
+                    "order_no": sales_order.order_no,
+                    "project_id": project.id,
+                    "project_name": project.project_name
+                }
+            )
+
         return ResponseModel(
             code=200,
             message="项目通知单发送成功"
@@ -1759,9 +1920,59 @@ async def remind_acceptance_signature(
         
         db.commit()
         db.refresh(tracking)
-        
-        # TODO: 实际发送催签通知（邮件、短信、系统消息等）
-        
+
+        # 实际发送催签通知（邮件、短信、系统消息等）
+        # 获取验收单信息
+        acceptance_order = db.query(AcceptanceOrder).filter(
+            AcceptanceOrder.id == tracking.acceptance_order_id
+        ).first()
+
+        if acceptance_order:
+            # 获取项目信息
+            project = None
+            if acceptance_order.project_id:
+                project = db.query(Project).filter(
+                    Project.id == acceptance_order.project_id
+                ).first()
+
+            # 通知项目经理和销售人员
+            notified_users = set()
+
+            # 通知项目经理
+            if project and project.pm_id:
+                title = f"验收单催签提醒：{acceptance_order.order_no}"
+                content = f"验收单 {acceptance_order.order_no} 需要催签。\n\n项目名称：{project.project_name if project else ''}\n验收类型：{acceptance_order.acceptance_type}\n客户名称：{acceptance_order.customer_name}\n计划验收日期：{acceptance_order.plan_accept_date.strftime('%Y-%m-%d') if acceptance_order.plan_accept_date else '未设置'}\n已催签{tracking.reminder_count or 0}次\n\n请及时跟进。"
+
+                _send_department_notification(
+                    db=db,
+                    user_id=project.pm_id,
+                    notification_type="ACCEPTANCE_REMINDER",
+                    title=title,
+                    content=content,
+                    source_type="ACCEPTANCE_TRACKING",
+                    source_id=tracking.id,
+                    priority="HIGH",
+                    extra_data={
+                        "order_no": acceptance_order.order_no,
+                        "reminder_count": tracking.reminder_count
+                    }
+                )
+                notified_users.add(project.pm_id)
+
+            # 通知销售人员
+            if acceptance_order.sales_id and acceptance_order.sales_id not in notified_users:
+                _send_department_notification(
+                    db=db,
+                    user_id=acceptance_order.sales_id,
+                    notification_type="ACCEPTANCE_REMINDER",
+                    title=f"验收单催签提醒：{acceptance_order.order_no}",
+                    content=f"验收单 {acceptance_order.order_no} 需要催签，已催签{tracking.reminder_count or 0}次。",
+                    source_type="ACCEPTANCE_TRACKING",
+                    source_id=tracking.id,
+                    priority="HIGH"
+                )
+                notified_users.add(acceptance_order.sales_id)
+
         # 查询跟踪记录
         records_data = [
             {
@@ -2272,11 +2483,62 @@ async def send_reconciliation(
         
         db.commit()
         
-        # TODO: 实际发送对账单（邮件、系统消息等）
-        
+        # 实际发送对账单通知（邮件、系统消息等）
+        # 查找财务部门和销售部门的相关人员发送通知
+        from app.models.notification import Notification
+
+        # 查找财务部门用户
+        finance_users = db.query(User).filter(
+            User.department.like("%财务%"),
+            User.is_active == True
+        ).all()
+
+        # 查找销售部门用户
+        sales_users = db.query(User).filter(
+            User.department.like("%销售%"),
+            User.is_active == True
+        ).all()
+
+        # 合并去重
+        notified_user_ids = set()
+        for user in finance_users + sales_users:
+            notified_user_ids.add(user.id)
+
+        # 发送系统通知
+        notification_title = f"客户对账单已发送 - {reconciliation.customer_name}"
+        notification_content = (
+            f"对账单号: {reconciliation.reconciliation_no}\n"
+            f"客户名称: {reconciliation.customer_name}\n"
+            f"对账期间: {reconciliation.period_start} 至 {reconciliation.period_end}\n"
+            f"本期销售额: {float(reconciliation.period_sales):,.2f} 元\n"
+            f"本期回款: {float(reconciliation.period_receipt):,.2f} 元\n"
+            f"期末应收余额: {float(reconciliation.closing_balance):,.2f} 元\n"
+            f"发送日期: {reconciliation.sent_date}"
+        )
+
+        for user_id in notified_user_ids:
+            _send_department_notification(
+                db=db,
+                user_id=user_id,
+                notification_type="RECONCILIATION_SENT",
+                title=notification_title,
+                content=notification_content,
+                source_type="RECONCILIATION",
+                source_id=reconciliation.id,
+                priority="NORMAL",
+                extra_data={
+                    "reconciliation_no": reconciliation.reconciliation_no,
+                    "customer_id": reconciliation.customer_id,
+                    "customer_name": reconciliation.customer_name,
+                    "period_start": str(reconciliation.period_start),
+                    "period_end": str(reconciliation.period_end),
+                    "closing_balance": float(reconciliation.closing_balance)
+                }
+            )
+
         return ResponseModel(
             code=200,
-            message="发送对账单成功"
+            message=f"发送对账单成功，已通知 {len(notified_user_ids)} 位相关人员"
         )
     except HTTPException:
         raise

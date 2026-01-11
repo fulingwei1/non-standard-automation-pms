@@ -643,26 +643,17 @@ def validate_g4_contract_to_project(contract: Contract, deliverables: List[Contr
 
 def generate_lead_code(db: Session) -> str:
     """生成线索编码：L2507-001"""
-    today = datetime.now()
-    month_str = today.strftime("%y%m")
-    prefix = f"L{month_str}-"
+    from app.utils.number_generator import generate_monthly_no
+    from app.models.sales import Lead
     
-    max_lead = (
-        db.query(Lead)
-        .filter(Lead.lead_code.like(f"{prefix}%"))
-        .order_by(desc(Lead.lead_code))
-        .first()
+    return generate_monthly_no(
+        db=db,
+        model_class=Lead,
+        no_field='lead_code',
+        prefix='L',
+        separator='-',
+        seq_length=3
     )
-    
-    if max_lead:
-        try:
-            seq = int(max_lead.lead_code.split("-")[-1]) + 1
-        except:
-            seq = 1
-    else:
-        seq = 1
-    
-    return f"{prefix}{seq:03d}"
 
 
 def generate_opportunity_code(db: Session) -> str:

@@ -27,6 +27,8 @@ import TimesheetBatchOperations from "../pages/TimesheetBatchOperations";
 import Settings from "../pages/Settings";
 import ScheduleBoard from "../pages/ScheduleBoard";
 import MaterialAnalysis from "../pages/MaterialAnalysis";
+import ProcurementAnalysis from "../pages/ProcurementAnalysis";
+import InventoryAnalysis from "../pages/InventoryAnalysis";
 import PurchaseOrders from "../pages/PurchaseOrders";
 import PurchaseRequestList from "../pages/PurchaseRequestList";
 import PurchaseRequestNew from "../pages/PurchaseRequestNew";
@@ -722,6 +724,22 @@ export function AppRoutes() {
         element={
           <ProcurementProtectedRoute>
             <MaterialAnalysis />
+          </ProcurementProtectedRoute>
+        }
+      />
+      <Route
+        path="/procurement-analysis"
+        element={
+          <ProcurementProtectedRoute>
+            <ProcurementAnalysis />
+          </ProcurementProtectedRoute>
+        }
+      />
+      <Route
+        path="/inventory-analysis"
+        element={
+          <ProcurementProtectedRoute>
+            <InventoryAnalysis />
           </ProcurementProtectedRoute>
         }
       />
