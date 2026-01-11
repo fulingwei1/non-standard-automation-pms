@@ -14,7 +14,66 @@ from sqlalchemy import and_, or_
 from app.models.notification import Notification
 from app.models.project import ProjectMilestone, ProjectPaymentPlan
 from app.models.sales import Contract, Invoice, ReceivableDispute
-from app.models.user import User
+from app.models.user import User, UserRole, Role
+
+
+def find_users_by_role(db: Session, role_name: str) -> List[User]:
+    """
+    根据角色名称查找用户
+    支持模糊匹配角色名称
+    """
+    if not role_name:
+        return []
+
+    # 查找匹配的角色
+    roles = db.query(Role).filter(
+        Role.is_active == True,
+        or_(
+            Role.role_name == role_name,
+            Role.role_name.like(f"%{role_name}%"),
+            Role.role_code.like(f"%{role_name}%")
+        )
+    ).all()
+
+    if not roles:
+        return []
+
+    role_ids = [r.id for r in roles]
+
+    # 查找拥有这些角色的用户
+    user_roles = db.query(UserRole).filter(
+        UserRole.role_id.in_(role_ids)
+    ).all()
+
+    user_ids = list(set([ur.user_id for ur in user_roles]))
+
+    if not user_ids:
+        return []
+
+    users = db.query(User).filter(
+        User.id.in_(user_ids),
+        User.is_active == True
+    ).all()
+
+    return users
+
+
+def find_users_by_department(db: Session, dept_name: str) -> List[User]:
+    """
+    根据部门名称查找用户
+    支持模糊匹配部门名称
+    """
+    if not dept_name:
+        return []
+
+    users = db.query(User).filter(
+        User.is_active == True,
+        or_(
+            User.department == dept_name,
+            User.department.like(f"%{dept_name}%")
+        )
+    ).all()
+    return users
 
 
 def create_notification(
@@ -255,9 +314,17 @@ def notify_payment_overdue(db: Session) -> int:
         # 项目经理
         if plan.project and plan.project.pm_id:
             user_ids.add(plan.project.pm_id)
-        
-        # TODO: 添加财务和销售经理的查找逻辑
-        
+
+        # 添加财务人员
+        finance_users = find_users_by_role(db, "财务")
+        for user in finance_users:
+            user_ids.add(user.id)
+
+        # 添加销售经理
+        sales_managers = find_users_by_role(db, "销售经理")
+        for user in sales_managers:
+            user_ids.add(user.id)
+
         for user_id in user_ids:
             # 检查今天是否已发送过提醒
             existing = db.query(Notification).filter(
@@ -746,49 +813,56 @@ def notify_approval_pending(db: Session, timeout_hours: int = 24) -> int:
             continue
         
         # 获取审批人（优先使用指定审批人，否则根据角色查找）
-        approver_id = step.approver_id
-        if not approver_id:
-            # TODO: 根据角色查找审批人
+        approver_ids = []
+        if step.approver_id:
+            approver_ids = [step.approver_id]
+        elif step.approver_role:
+            # 根据角色查找审批人
+            role_users = find_users_by_role(db, step.approver_role)
+            approver_ids = [u.id for u in role_users]
+
+        if not approver_ids:
             continue
-        
-        # 检查今天是否已发送过提醒
-        existing = db.query(Notification).filter(
-            and_(
-                Notification.user_id == approver_id,
-                Notification.source_type == record.entity_type.lower(),
-                Notification.source_id == record.entity_id,
-                Notification.notification_type == "APPROVAL_PENDING",
-                Notification.created_at >= datetime.combine(now.date(), datetime.min.time())
-            )
-        ).first()
-        
-        if not existing:
-            hours_pending = (now - record.created_at).total_seconds() / 3600
-            entity_name = {
-                "QUOTE": "报价",
-                "CONTRACT": "合同",
-                "INVOICE": "发票"
-            }.get(record.entity_type, "事项")
-            
-            create_notification(
-                db=db,
-                user_id=approver_id,
-                notification_type="APPROVAL_PENDING",
-                title=f"审批待处理：{entity_name}审批",
-                content=f"{entity_name}审批已待处理 {int(hours_pending)} 小时，请及时处理。",
-                source_type=record.entity_type.lower(),
-                source_id=record.entity_id,
-                link_url=f"/sales/{record.entity_type.lower()}s/{record.entity_id}/approval-status",
-                priority="HIGH" if hours_pending >= 48 else "NORMAL",
-                extra_data={
-                    "entity_type": record.entity_type,
-                    "entity_id": record.entity_id,
-                    "approval_record_id": record.id,
-                    "hours_pending": int(hours_pending),
-                    "step_name": step.step_name
-                }
-            )
-            count += 1
+
+        hours_pending = (now - record.created_at).total_seconds() / 3600
+        entity_name = {
+            "QUOTE": "报价",
+            "CONTRACT": "合同",
+            "INVOICE": "发票"
+        }.get(record.entity_type, "事项")
+
+        for approver_id in approver_ids:
+            # 检查今天是否已发送过提醒
+            existing = db.query(Notification).filter(
+                and_(
+                    Notification.user_id == approver_id,
+                    Notification.source_type == record.entity_type.lower(),
+                    Notification.source_id == record.entity_id,
+                    Notification.notification_type == "APPROVAL_PENDING",
+                    Notification.created_at >= datetime.combine(now.date(), datetime.min.time())
+                )
+            ).first()
+
+            if not existing:
+                create_notification(
+                    db=db,
+                    user_id=approver_id,
+                    notification_type="APPROVAL_PENDING",
+                    title=f"审批待处理：{entity_name}审批",
+                    content=f"{entity_name}审批已待处理 {int(hours_pending)} 小时，请及时处理。",
+                    source_type=record.entity_type.lower(),
+                    source_id=record.entity_id,
+                    link_url=f"/sales/{record.entity_type.lower()}s/{record.entity_id}/approval-status",
+                    priority="HIGH" if hours_pending >= 48 else "NORMAL",
+                    extra_data={
+                        "entity_type": record.entity_type,
+                        "entity_id": record.entity_id,
+                        "approval_record_id": record.id,
+                        "hours_pending": int(hours_pending),
+                        "step_name": step.step_name
+                    }
+                )
+                count += 1
     
     return count
 

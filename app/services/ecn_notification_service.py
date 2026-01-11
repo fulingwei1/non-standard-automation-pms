@@ -7,6 +7,7 @@ ECN通知服务
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from app.models.notification import Notification
 from app.models.ecn import Ecn, EcnEvaluation, EcnApproval, EcnTask
@@ -364,27 +365,24 @@ def notify_approval_assigned(
     # 抄送项目相关人员（如果ECN关联了项目，且审批人员不是项目成员）
     if ecn.project_id:
         from app.models.project import ProjectMember
-        
-        # 检查审批人员是否是项目成员
-        is_project_member = db.query(ProjectMember).filter(
-            ProjectMember.project_id == ecn.project_id,
-            ProjectMember.user_id == approver_id,
-            ProjectMember.is_active == True
-        ).first()
-        
+
         # 查找项目成员（排除审批人员，避免重复通知）
         project_members = db.query(ProjectMember).filter(
             ProjectMember.project_id == ecn.project_id,
             ProjectMember.is_active == True,
-            ProjectMember.user_id != approver_id
+            ~ProjectMember.user_id.in_(approver_ids)
         ).all()
-        
+
         project_user_ids = [pm.user_id for pm in project_members]
-        
+
         if project_user_ids:
+            # 获取审批人员名称列表
+            approvers = db.query(User).filter(User.id.in_(approver_ids)).all()
+            approver_names = ", ".join([a.real_name or a.username for a in approvers])
+
             title_cc = f"ECN审批任务分配（抄送）：{ecn.ecn_no}"
-            content_cc = f"ECN {ecn.ecn_no} 的第{approval.approval_level}级审批（{approval.approval_role}）任务已分配给{approver.real_name or approver.username}。\n\nECN标题：{ecn.ecn_title}\n审批层级：第{approval.approval_level}级\n审批角色：{approval.approval_role}\n截止日期：{approval.due_date.strftime('%Y-%m-%d') if approval.due_date else '未设置'}\n\n请关注项目变更审批情况。"
-            
+            content_cc = f"ECN {ecn.ecn_no} 的第{approval.approval_level}级审批（{approval.approval_role}）任务已分配给{approver_names}。\n\nECN标题：{ecn.ecn_title}\n审批层级：第{approval.approval_level}级\n审批角色：{approval.approval_role}\n截止日期：{approval.due_date.strftime('%Y-%m-%d') if approval.due_date else '未设置'}\n\n请关注项目变更审批情况。"
+
             for user_id in project_user_ids:
                 create_ecn_notification(
                     db=db,
@@ -400,12 +398,12 @@ def notify_approval_assigned(
                         "approval_level": approval.approval_level,
                         "approval_role": approval.approval_role,
                         "approval_id": approval.id,
-                        "approver_id": approver_id,
+                        "approver_ids": approver_ids,
                         "due_date": approval.due_date.isoformat() if approval.due_date else None,
                         "is_cc": True  # 标记为抄送
                     }
                 )
-    
+
     db.commit()
 
 
@@ -563,27 +561,24 @@ def notify_task_assigned(
     # 抄送项目相关人员（如果ECN关联了项目，且执行人员不是项目成员）
     if ecn.project_id:
         from app.models.project import ProjectMember
-        
-        # 检查执行人员是否是项目成员
-        is_project_member = db.query(ProjectMember).filter(
-            ProjectMember.project_id == ecn.project_id,
-            ProjectMember.user_id == assignee_id,
-            ProjectMember.is_active == True
-        ).first()
-        
+
         # 查找项目成员（排除执行人员，避免重复通知）
         project_members = db.query(ProjectMember).filter(
             ProjectMember.project_id == ecn.project_id,
             ProjectMember.is_active == True,
-            ProjectMember.user_id != assignee_id
+            ~ProjectMember.user_id.in_(assignee_ids)
         ).all()
-        
+
         project_user_ids = [pm.user_id for pm in project_members]
-        
+
         if project_user_ids:
+            # 获取执行人员名称列表
+            assignees = db.query(User).filter(User.id.in_(assignee_ids)).all()
+            assignee_names = ", ".join([a.real_name or a.username for a in assignees])
+
             title_cc = f"ECN执行任务分配（抄送）：{ecn.ecn_no}"
-            content_cc = f"ECN {ecn.ecn_no} 的执行任务「{task.task_name}」已分配给{assignee.real_name or assignee.username}。\n\nECN标题：{ecn.ecn_title}\n任务名称：{task.task_name}\n任务类型：{task.task_type}\n责任部门：{task.task_dept}\n计划完成：{task.planned_end.strftime('%Y-%m-%d') if task.planned_end else '未设置'}\n\n请关注项目变更执行情况。"
-            
+            content_cc = f"ECN {ecn.ecn_no} 的执行任务「{task.task_name}」已分配给{assignee_names}。\n\nECN标题：{ecn.ecn_title}\n任务名称：{task.task_name}\n任务类型：{task.task_type}\n责任部门：{task.task_dept}\n计划完成：{task.planned_end.strftime('%Y-%m-%d') if task.planned_end else '未设置'}\n\n请关注项目变更执行情况。"
+
             for user_id in project_user_ids:
                 create_ecn_notification(
                     db=db,
@@ -600,12 +595,12 @@ def notify_task_assigned(
                         "task_name": task.task_name,
                         "task_type": task.task_type,
                         "task_dept": task.task_dept,
-                        "assignee_id": assignee_id,
+                        "assignee_ids": assignee_ids,
                         "planned_end": task.planned_end.isoformat() if task.planned_end else None,
                         "is_cc": True  # 标记为抄送
                     }
                 )
-    
+
     db.commit()
 
 

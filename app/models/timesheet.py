@@ -280,7 +280,7 @@ class TimesheetApprovalLog(Base):
     __table_args__ = (
         Index('idx_approval_timesheet', 'timesheet_id'),
         Index('idx_approval_batch', 'batch_id'),
-        Index('idx_approval_approver', 'approver_id'),
+        Index('idx_timesheet_approval_approver', 'approver_id'),
         {'comment': '工时审批记录表'}
     )
 

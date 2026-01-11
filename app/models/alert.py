@@ -183,7 +183,7 @@ class AlertNotification(Base, TimestampMixin):
 
     __table_args__ = (
         Index('idx_notification_alert', 'alert_id'),
-        Index('idx_notification_user', 'notify_user_id'),
+        Index('idx_alert_notification_user', 'notify_user_id'),
         Index('idx_notification_status', 'status'),
     )
 

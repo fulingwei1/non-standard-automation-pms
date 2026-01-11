@@ -18,7 +18,8 @@ from app.core.config import settings
 from app.core import security
 from app.models.user import User
 from app.models.project import Project
-from app.models.organization import Department
+from app.models.organization import Department, Employee
+from app.models.rd_project import RdProject
 from app.models.timesheet import (
     Timesheet, TimesheetBatch, TimesheetSummary,
     OvertimeApplication, TimesheetApprovalLog, TimesheetRule
@@ -31,6 +32,72 @@ from app.schemas.timesheet import (
 )
 
 router = APIRouter()
+
+
+def check_timesheet_approval_permission(
+    db: Session,
+    timesheet: Timesheet,
+    current_user: User
+) -> bool:
+    """
+    检查用户是否有权审批指定的工时记录
+
+    审批权限规则：
+    1. 超级管理员可以审批所有工时
+    2. 项目经理可以审批其项目的工时
+    3. 研发项目负责人可以审批其研发项目的工时
+    4. 部门经理可以审批其部门成员的工时
+
+    Args:
+        db: 数据库会话
+        timesheet: 工时记录
+        current_user: 当前用户
+
+    Returns:
+        bool: 是否有审批权限
+    """
+    # 1. 超级管理员可以审批所有工时
+    if hasattr(current_user, 'is_superuser') and current_user.is_superuser:
+        return True
+
+    # 2. 检查是否是项目经理（非标项目）
+    if timesheet.project_id:
+        project = db.query(Project).filter(Project.id == timesheet.project_id).first()
+        if project and project.pm_id == current_user.id:
+            return True
+
+    # 3. 检查是否是研发项目负责人
+    if timesheet.rd_project_id:
+        rd_project = db.query(RdProject).filter(RdProject.id == timesheet.rd_project_id).first()
+        if rd_project and rd_project.project_manager_id == current_user.id:
+            return True
+
+    # 4. 检查是否是部门经理
+    if timesheet.department_id:
+        department = db.query(Department).filter(Department.id == timesheet.department_id).first()
+        if department and department.manager_id:
+            # 需要通过 employee_id 关联到 user
+            # 查找当前用户对应的 employee
+            if hasattr(current_user, 'employee_id') and current_user.employee_id:
+                if department.manager_id == current_user.employee_id:
+                    return True
+
+    # 5. 如果工时记录有提交人的部门信息，检查当前用户是否是该部门经理
+    if timesheet.user_id:
+        # 获取工时提交人
+        timesheet_user = db.query(User).filter(User.id == timesheet.user_id).first()
+        if timesheet_user and hasattr(timesheet_user, 'employee_id') and timesheet_user.employee_id:
+            # 获取提交人的员工信息
+            employee = db.query(Employee).filter(Employee.id == timesheet_user.employee_id).first()
+            if employee and employee.department:
+                # 查找该部门
+                dept = db.query(Department).filter(Department.dept_name == employee.department).first()
+                if dept and dept.manager_id:
+                    # 检查当前用户是否是该部门经理
+                    if hasattr(current_user, 'employee_id') and current_user.employee_id == dept.manager_id:
+                        return True
+
+    return False
 
 
 # ==================== 工时记录管理 ====================
@@ -496,6 +563,15 @@ def approve_timesheets(
         raise HTTPException(status_code=403, detail="您没有权限审批这些工时记录")
 
     for ts in timesheets:
+        if check_timesheet_approval_permission(db, ts, current_user):
+            approved_timesheets.append(ts)
+        else:
+            no_permission_ids.append(ts.id)
+
+    if not approved_timesheets:
+        raise HTTPException(status_code=403, detail="无权审批所选的工时记录")
+
+    for ts in approved_timesheets:
         ts.status = "APPROVED"
         ts.approver_id = current_user.id
         ts.approver_name = current_user.real_name or current_user.username
@@ -518,7 +594,7 @@ def approve_timesheets(
     try:
         from app.services.timesheet_sync_service import TimesheetSyncService
         sync_service = TimesheetSyncService(db)
-        for ts in timesheets:
+        for ts in approved_timesheets:
             try:
                 sync_service.sync_all_on_approval(ts.id)
             except Exception as e:
@@ -529,8 +605,13 @@ def approve_timesheets(
         import logging
         logger = logging.getLogger(__name__)
         logger.warning(f"批量同步失败: {str(e)}")
-    
-    return ResponseModel(message=f"已审批通过 {len(timesheets)} 条工时记录")
+
+    # 返回审批结果，包含跳过的记录信息
+    message = f"已审批通过 {len(approved_timesheets)} 条工时记录"
+    if no_permission_ids:
+        message += f"，{len(no_permission_ids)} 条记录因无权限被跳过"
+
+    return ResponseModel(message=message)
 
 
 @router.put("/batch-approve", response_model=ResponseModel, status_code=status.HTTP_200_OK)
@@ -775,6 +856,7 @@ def get_pending_approval_timesheets(
 ) -> Any:
     """
     待审核列表（审核人视角）
+    只返回当前用户有权审批的工时记录
     """
     # 过滤出用户有权限审批的工时记录
     # 项目经理只能看到本项目的工时，部门经理只能看到本部门的工时
@@ -814,7 +896,7 @@ def get_pending_approval_timesheets(
         query = query.filter(Timesheet.user_id == user_id)
     if project_id:
         query = query.filter(Timesheet.project_id == project_id)
-    
+
     total = query.count()
     offset = (page - 1) * page_size
     timesheets = query.order_by(Timesheet.work_date.desc()).offset(offset).limit(page_size).all()

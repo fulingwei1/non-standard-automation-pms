@@ -13,7 +13,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Optional
 
 from app.core.config import settings
 from app.utils.scheduler_config import SCHEDULER_TASKS

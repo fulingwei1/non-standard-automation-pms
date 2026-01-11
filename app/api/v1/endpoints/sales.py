@@ -6,10 +6,13 @@
 import csv
 import io
 import calendar
+import logging
 from collections import defaultdict
 from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
@@ -3116,8 +3119,9 @@ def create_invoice(
             invoice.status = InvoiceStatus.IN_REVIEW
         except Exception as e:
             # 如果启动审批失败，记录日志但不阻止发票创建
-            # TODO: 添加日志记录
-            pass
+            logger.warning(
+                f"发票审批流程启动失败: invoice_id={invoice.id}, error={str(e)}"
+            )
     
     db.commit()
     db.refresh(invoice)

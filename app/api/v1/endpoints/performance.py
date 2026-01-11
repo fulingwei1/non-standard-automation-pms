@@ -17,6 +17,7 @@ from app.core.config import settings
 from app.core import security
 from app.models.user import User
 from app.models.project import Project
+from app.models.organization import Department, Employee
 from app.models.performance import (
     PerformancePeriod, PerformanceIndicator, PerformanceResult,
     PerformanceEvaluation, PerformanceAppeal, ProjectContribution,
@@ -491,6 +492,7 @@ def get_team_performance(
 ) -> Any:
     """
     团队绩效汇总（平均分/排名）
+    注：当前使用部门作为团队，team_id 对应 department.id
     """
     # 获取团队名称
     team_name = _get_team_name(db, team_id)
@@ -511,14 +513,14 @@ def get_team_performance(
         PerformanceResult.period_id == period.id,
         PerformanceResult.user_id.in_(member_ids)
     ).all()
-    
+
     if not results:
         return TeamPerformanceResponse(
             team_id=team_id,
             team_name=team_name,
             period_id=period.id,
             period_name=period.period_name,
-            member_count=0,
+            member_count=len(member_ids),
             avg_score=Decimal("0"),
             max_score=Decimal("0"),
             min_score=Decimal("0"),
@@ -603,15 +605,15 @@ def get_department_performance(
             department_name=department_name,
             period_id=period.id,
             period_name=period.period_name,
-            member_count=0,
+            member_count=len(member_ids),
             avg_score=Decimal("0"),
             level_distribution={},
             teams=[]
         )
-    
+
     scores = [float(r.total_score) if r.total_score else 0 for r in results]
     avg_score = Decimal(str(sum(scores) / len(scores))) if scores else Decimal("0")
-    
+
     # 等级分布
     level_distribution = {}
     for r in results:

@@ -12,9 +12,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, or_, func
 
+import logging
 from app.api import deps
 from app.models.user import User
 from app.models.project import Customer, Project, ProjectPaymentPlan
+from app.services.notification_service import NotificationService, NotificationType, NotificationPriority
+
+logger = logging.getLogger(__name__)
 from app.models.business_support import (
     SalesOrder, SalesOrderItem, DeliveryOrder,
     AcceptanceTracking, AcceptanceTrackingRecord, Reconciliation,
@@ -2480,7 +2484,7 @@ async def send_reconciliation(
         # 更新状态
         reconciliation.status = "sent"
         reconciliation.sent_date = date.today()
-        
+
         db.commit()
         
         # 实际发送对账单通知（邮件、系统消息等）
