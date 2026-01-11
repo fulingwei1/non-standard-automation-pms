@@ -287,7 +287,7 @@ class QuoteCostTemplate(Base, TimestampMixin):
     __table_args__ = (
         Index("idx_template_type", "template_type"),
         Index("idx_equipment_type", "equipment_type"),
-        Index("idx_is_active", "is_active"),
+        Index("idx_quote_is_active", "is_active"),
         {"comment": "报价成本模板表"}
     )
     
@@ -334,8 +334,8 @@ class QuoteCostApproval(Base, TimestampMixin):
     approver = relationship("User", foreign_keys=[approved_by])
     
     __table_args__ = (
-        Index("idx_quote_id", "quote_id"),
-        Index("idx_approval_status", "approval_status"),
+        Index("idx_cost_approval_quote_id", "quote_id"),
+        Index("idx_cost_approval_status", "approval_status"),
         {"comment": "报价成本审批表"}
     )
     
@@ -373,8 +373,8 @@ class QuoteCostHistory(Base):
     changer = relationship("User", foreign_keys=[changed_by])
     
     __table_args__ = (
-        Index("idx_quote_id", "quote_id"),
-        Index("idx_created_at", "created_at"),
+        Index("idx_cost_history_quote_id", "quote_id"),
+        Index("idx_cost_history_created_at", "created_at"),
         {"comment": "报价成本历史记录表"}
     )
     
@@ -436,9 +436,9 @@ class PurchaseMaterialCost(Base, TimestampMixin):
     __table_args__ = (
         Index("idx_material_code", "material_code"),
         Index("idx_material_name", "material_name"),
-        Index("idx_material_type", "material_type"),
+        Index("idx_purchase_material_type", "material_type"),
         Index("idx_is_standard", "is_standard_part"),
-        Index("idx_is_active", "is_active"),
+        Index("idx_purchase_material_is_active", "is_active"),
         Index("idx_match_priority", "match_priority"),
         {"comment": "采购物料成本清单表"}
     )

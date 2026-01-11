@@ -414,3 +414,129 @@ def regular_user_token(client: TestClient, regular_user: User) -> str:
 def db(db_session: Session) -> Session:
     """兼容旧测试中引用的 db fixture"""
     return db_session
+
+
+# ---------------------------------------------------------------------------
+# Factory-based fixtures (使用 factory_boy)
+# ---------------------------------------------------------------------------
+
+from tests.factories import (
+    UserFactory,
+    AdminUserFactory,
+    EmployeeFactory,
+    CustomerFactory,
+    ProjectFactory,
+    ProjectWithCustomerFactory,
+    SupplierFactory,
+    MaterialFactory,
+    BomHeaderFactory,
+    PurchaseOrderFactory,
+    LeadFactory,
+    OpportunityFactory,
+    QuoteFactory,
+    ContractFactory,
+    ProjectBudgetFactory,
+    create_test_user,
+    create_test_project,
+    create_complete_project_setup,
+)
+
+
+@pytest.fixture(scope="function")
+def test_employee() -> Employee:
+    """创建测试员工"""
+    return EmployeeFactory()
+
+
+@pytest.fixture(scope="function")
+def test_user() -> User:
+    """创建测试用户"""
+    return UserFactory()
+
+
+@pytest.fixture(scope="function")
+def test_admin() -> User:
+    """创建测试管理员"""
+    return AdminUserFactory()
+
+
+@pytest.fixture(scope="function")
+def test_customer() -> Customer:
+    """创建测试客户"""
+    return CustomerFactory()
+
+
+@pytest.fixture(scope="function")
+def test_project() -> Project:
+    """创建测试项目（不带客户关联）"""
+    return ProjectFactory()
+
+
+@pytest.fixture(scope="function")
+def test_project_with_customer() -> Project:
+    """创建测试项目（带客户关联）"""
+    return ProjectWithCustomerFactory()
+
+
+@pytest.fixture(scope="function")
+def test_supplier():
+    """创建测试供应商"""
+    return SupplierFactory()
+
+
+@pytest.fixture(scope="function")
+def test_material():
+    """创建测试物料"""
+    return MaterialFactory()
+
+
+@pytest.fixture(scope="function")
+def test_materials():
+    """创建多个测试物料"""
+    return MaterialFactory.create_batch(5)
+
+
+@pytest.fixture(scope="function")
+def test_purchase_order():
+    """创建测试采购订单"""
+    return PurchaseOrderFactory()
+
+
+@pytest.fixture(scope="function")
+def test_lead():
+    """创建测试销售线索"""
+    return LeadFactory()
+
+
+@pytest.fixture(scope="function")
+def test_opportunity():
+    """创建测试商机"""
+    return OpportunityFactory()
+
+
+@pytest.fixture(scope="function")
+def test_quote():
+    """创建测试报价单"""
+    return QuoteFactory()
+
+
+@pytest.fixture(scope="function")
+def test_contract():
+    """创建测试合同"""
+    return ContractFactory()
+
+
+@pytest.fixture(scope="function")
+def test_budget():
+    """创建测试预算"""
+    return ProjectBudgetFactory()
+
+
+@pytest.fixture(scope="function")
+def complete_project_setup():
+    """
+    创建完整的项目测试数据集
+
+    包含：客户、项目、供应商、物料、BOM
+    """
+    return create_complete_project_setup()

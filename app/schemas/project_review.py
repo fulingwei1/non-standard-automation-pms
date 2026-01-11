@@ -3,7 +3,7 @@
 项目复盘模块 Schema
 """
 
-from typing import Optional, List
+from typing import Optional, List, Dict
 from pydantic import BaseModel, Field
 from datetime import date, datetime
 from decimal import Decimal

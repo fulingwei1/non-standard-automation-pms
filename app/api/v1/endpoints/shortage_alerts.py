@@ -2018,7 +2018,7 @@ def execute_material_transfer(
             title=f"物料调拨已完成: {transfer.material_name}",
             content=f"调拨单号: {transfer.transfer_no}\n实际调拨数量: {transfer.actual_qty}",
             priority=NotificationPriority.NORMAL,
-            link=f="/shortage-alerts/transfers/{transfer.id}"
+            link=f"/shortage-alerts/transfers/{transfer.id}"
         )
     except Exception:
         pass

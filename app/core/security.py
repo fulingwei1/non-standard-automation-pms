@@ -5,7 +5,7 @@
 
 from datetime import datetime, timedelta
 from threading import Lock
-from typing import Optional
+from typing import Optional, Any
 import secrets
 import logging
 
