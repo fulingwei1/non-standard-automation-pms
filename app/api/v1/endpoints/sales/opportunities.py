@@ -480,3 +480,86 @@ def get_opportunity_funnel(
             "total_amount": total_amount
         }
     )
+
+
+@router.get("/opportunities/{opp_id}/win-probability", response_model=ResponseModel)
+def get_opportunity_win_probability(
+    *,
+    db: Session = Depends(deps.get_db),
+    opp_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 6.3: 商机赢单概率预测
+    基于商机阶段、金额、历史赢单率
+    """
+    from app.services.sales_prediction_service import SalesPredictionService
+
+    service = SalesPredictionService(db)
+    probability = service.predict_win_probability(opportunity_id=opp_id)
+
+    return ResponseModel(
+        code=200,
+        message="success",
+        data=probability
+    )
+
+
+@router.get("/opportunities/export")
+def export_opportunities(
+    *,
+    db: Session = Depends(deps.get_db),
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
+    stage: Optional[str] = Query(None, description="阶段筛选"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    owner_id: Optional[int] = Query(None, description="负责人ID筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 4.2: 导出商机列表（Excel）
+    """
+    from app.services.excel_export_service import ExcelExportService, create_excel_response
+
+    query = db.query(Opportunity)
+    if keyword:
+        query = query.filter(or_(Opportunity.opp_code.contains(keyword), Opportunity.opp_name.contains(keyword), Opportunity.customer.has(Customer.customer_name.contains(keyword))))
+    if stage:
+        query = query.filter(Opportunity.stage == stage)
+    if status:
+        query = query.filter(Opportunity.status == status)
+    if owner_id:
+        query = query.filter(Opportunity.owner_id == owner_id)
+
+    opportunities = query.order_by(Opportunity.created_at.desc()).all()
+    export_service = ExcelExportService()
+    columns = [
+        {"key": "opp_code", "label": "商机编码", "width": 15},
+        {"key": "opp_name", "label": "商机名称", "width": 30},
+        {"key": "customer_name", "label": "客户名称", "width": 25},
+        {"key": "stage", "label": "阶段", "width": 15},
+        {"key": "est_amount", "label": "预估金额", "width": 15, "format": export_service.format_currency},
+        {"key": "est_margin", "label": "预估毛利率", "width": 12, "format": export_service.format_percentage},
+        {"key": "score", "label": "评分", "width": 8},
+        {"key": "risk_level", "label": "风险等级", "width": 10},
+        {"key": "owner_name", "label": "负责人", "width": 12},
+        {"key": "gate_status", "label": "阶段门状态", "width": 15},
+        {"key": "created_at", "label": "创建时间", "width": 18, "format": export_service.format_date},
+    ]
+
+    data = [{
+        "opp_code": opp.opp_code,
+        "opp_name": opp.opp_name,
+        "customer_name": opp.customer.customer_name if opp.customer else '',
+        "stage": opp.stage,
+        "est_amount": float(opp.est_amount) if opp.est_amount else 0,
+        "est_margin": float(opp.est_margin) if opp.est_margin else 0,
+        "score": opp.score or 0,
+        "risk_level": opp.risk_level or '',
+        "owner_name": opp.owner.real_name if opp.owner else '',
+        "gate_status": opp.gate_status,
+        "created_at": opp.created_at,
+    } for opp in opportunities]
+
+    excel_data = export_service.export_to_excel(data=data, columns=columns, sheet_name="商机列表", title="商机列表")
+    filename = f"商机列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    return create_excel_response(excel_data, filename)
