@@ -143,22 +143,28 @@ class CacheService:
     def delete(self, key: str) -> bool:
         """
         删除缓存值
-        
+
         Args:
             key: 缓存键
-            
+
         Returns:
             bool: 是否删除成功
         """
+        deleted = False
         if self.use_redis:
             try:
                 self.redis_client.delete(key)
+                deleted = True
             except Exception:
                 pass
-        
+
         if key in self.memory_cache:
             del self.memory_cache[key]
-        
+            deleted = True
+
+        if deleted:
+            self.stats["deletes"] += 1
+
         return True
     
     def delete_pattern(self, pattern: str) -> int:

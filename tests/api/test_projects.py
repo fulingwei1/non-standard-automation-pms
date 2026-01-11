@@ -13,10 +13,10 @@ from app.core.config import settings
 
 
 def _generate_project_code() -> str:
-    """生成符合旧格式的唯一项目编码：PJ + YYMMDD + 3位序号"""
+    """生成唯一项目编码：PJ + YYMMDD + 4位UUID序列"""
     today_part = datetime.now().strftime("%y%m%d")
-    seq_part = uuid.uuid4().int % 1000
-    return f"PJ{today_part}{seq_part:03d}"
+    unique_part = uuid.uuid4().hex[:4].upper()
+    return f"PJ{today_part}{unique_part}"
 
 
 class TestProjectCRUD:
