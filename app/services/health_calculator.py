@@ -158,7 +158,7 @@ class HealthCalculator:
         # 查询项目的阻塞类型问题，状态为开放或处理中
         blocking_issues = self.db.query(Issue).filter(
             Issue.project_id == project.id,
-            Issue.issue_type == IssueTypeEnum.BLOCKER.value,
+            Issue.issue_type == IssueTypeEnum.BLOCKER,
             Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.PROCESSING.value])
         ).count()
         
@@ -428,7 +428,7 @@ class HealthCalculator:
                 ).count(),
                 'blocking_issues': self.db.query(Issue).filter(
                     Issue.project_id == project.id,
-                    Issue.issue_type == IssueTypeEnum.BLOCKER.value,
+                    Issue.issue_type == IssueTypeEnum.BLOCKER,
                     Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.PROCESSING.value])
                 ).count(),
                 'overdue_milestones': self.db.query(ProjectMilestone).filter(
