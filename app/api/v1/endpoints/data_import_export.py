@@ -147,6 +147,177 @@ def _validate_import_row(row, row_num, template_type, errors, pd):
     return validator() if validator else True
 
 
+# ==================== 业务验证器（带数据库校验）====================
+
+def _validate_project_data(row_data, idx, db, row_errors):
+    """验证项目导入数据（含数据库校验）"""
+    project_code = (row_data.get('project_code') or '').strip()
+    project_name = (row_data.get('project_name') or '').strip()
+
+    if not project_code:
+        row_errors.append({"field": "project_code", "message": "项目编码不能为空"})
+    if not project_name:
+        row_errors.append({"field": "project_name", "message": "项目名称不能为空"})
+
+    # 检查项目编码是否已存在
+    if project_code:
+        existing = db.query(Project).filter(Project.project_code == project_code).first()
+        if existing:
+            row_errors.append({"field": "project_code", "message": f"项目编码 {project_code} 已存在"})
+
+    # 验证日期格式和逻辑
+    _validate_date_fields(row_data, row_errors)
+    _validate_amount_fields(row_data, row_errors)
+
+
+def _validate_date_fields(row_data, row_errors):
+    """验证日期字段"""
+    for date_field in ['planned_start_date', 'planned_end_date']:
+        if row_data.get(date_field):
+            try:
+                datetime.strptime(str(row_data[date_field]), '%Y-%m-%d')
+            except:
+                row_errors.append({"field": date_field, "message": "日期格式错误，应为YYYY-MM-DD"})
+
+    if row_data.get('planned_start_date') and row_data.get('planned_end_date'):
+        try:
+            start_date = datetime.strptime(str(row_data['planned_start_date']), '%Y-%m-%d').date()
+            end_date = datetime.strptime(str(row_data['planned_end_date']), '%Y-%m-%d').date()
+            if start_date > end_date:
+                row_errors.append({"field": "planned_end_date", "message": "计划结束日期不能早于计划开始日期"})
+        except:
+            pass
+
+
+def _validate_amount_fields(row_data, row_errors):
+    """验证金额字段"""
+    for amount_field in ['contract_amount', 'budget_amount']:
+        if row_data.get(amount_field):
+            try:
+                float(row_data[amount_field])
+            except:
+                row_errors.append({"field": amount_field, "message": f"{amount_field} 必须是数字"})
+
+
+def _validate_user_data(row_data, row_errors):
+    """验证用户导入数据"""
+    name = (row_data.get('name') or '').strip()
+    if not name:
+        row_errors.append({"field": "name", "message": "姓名不能为空"})
+
+
+def _validate_timesheet_data(row_data, row_errors):
+    """验证工时导入数据"""
+    work_date = row_data.get('work_date')
+    user_name = (row_data.get('user_name') or '').strip()
+    hours = row_data.get('hours')
+
+    if not work_date:
+        row_errors.append({"field": "work_date", "message": "工作日期不能为空"})
+    else:
+        try:
+            datetime.strptime(str(work_date), '%Y-%m-%d')
+        except:
+            row_errors.append({"field": "work_date", "message": "日期格式错误，应为YYYY-MM-DD"})
+
+    if not user_name:
+        row_errors.append({"field": "user_name", "message": "人员姓名不能为空"})
+
+    if hours is None:
+        row_errors.append({"field": "hours", "message": "工时不能为空"})
+    else:
+        try:
+            h = float(hours)
+            if h <= 0 or h > 24:
+                row_errors.append({"field": "hours", "message": "工时必须在0-24之间"})
+        except:
+            row_errors.append({"field": "hours", "message": "工时格式错误"})
+
+
+def _validate_task_data(row_data, db, row_errors):
+    """验证任务导入数据"""
+    task_name = (row_data.get('task_name') or '').strip()
+    project_code = (row_data.get('project_code') or '').strip()
+
+    if not task_name:
+        row_errors.append({"field": "task_name", "message": "任务名称不能为空"})
+    if not project_code:
+        row_errors.append({"field": "project_code", "message": "项目编码不能为空"})
+    elif project_code:
+        project = db.query(Project).filter(Project.project_code == project_code).first()
+        if not project:
+            row_errors.append({"field": "project_code", "message": f"项目 {project_code} 不存在"})
+
+
+def _validate_material_data(row_data, db, row_errors):
+    """验证物料导入数据"""
+    material_code = (row_data.get('material_code') or '').strip()
+    material_name = (row_data.get('material_name') or '').strip()
+
+    if not material_code:
+        row_errors.append({"field": "material_code", "message": "物料编码不能为空"})
+    if not material_name:
+        row_errors.append({"field": "material_name", "message": "物料名称不能为空"})
+
+    if material_code:
+        from app.models.material import Material
+        existing = db.query(Material).filter(Material.material_code == material_code).first()
+        if existing:
+            row_errors.append({"field": "material_code", "message": f"物料编码 {material_code} 已存在"})
+
+
+def _validate_bom_data(row_data, db, row_errors):
+    """验证BOM导入数据"""
+    bom_code = (row_data.get('bom_code') or '').strip()
+    project_code = (row_data.get('project_code') or '').strip()
+    material_code = (row_data.get('material_code') or '').strip()
+    quantity = row_data.get('quantity')
+
+    if not bom_code:
+        row_errors.append({"field": "bom_code", "message": "BOM编码不能为空"})
+    if not project_code:
+        row_errors.append({"field": "project_code", "message": "项目编码不能为空"})
+    if not material_code:
+        row_errors.append({"field": "material_code", "message": "物料编码不能为空"})
+    if quantity is None:
+        row_errors.append({"field": "quantity", "message": "用量不能为空"})
+    else:
+        try:
+            q = float(quantity)
+            if q <= 0:
+                row_errors.append({"field": "quantity", "message": "用量必须大于0"})
+        except:
+            row_errors.append({"field": "quantity", "message": "用量格式错误"})
+
+    if project_code:
+        project = db.query(Project).filter(Project.project_code == project_code).first()
+        if not project:
+            row_errors.append({"field": "project_code", "message": f"项目 {project_code} 不存在"})
+
+    if material_code:
+        from app.models.material import Material
+        material = db.query(Material).filter(Material.material_code == material_code).first()
+        if not material:
+            row_errors.append({"field": "material_code", "message": f"物料 {material_code} 不存在"})
+
+
+def _validate_row_data(row_data, idx, db, template_type):
+    """统一验证入口，根据模板类型调用对应验证器"""
+    row_errors = []
+    validators = {
+        "PROJECT": lambda: _validate_project_data(row_data, idx, db, row_errors),
+        "USER": lambda: _validate_user_data(row_data, row_errors),
+        "TIMESHEET": lambda: _validate_timesheet_data(row_data, row_errors),
+        "TASK": lambda: _validate_task_data(row_data, db, row_errors),
+        "MATERIAL": lambda: _validate_material_data(row_data, db, row_errors),
+        "BOM": lambda: _validate_bom_data(row_data, db, row_errors),
+    }
+    validator = validators.get(template_type)
+    if validator:
+        validator()
+    return row_errors
+
+
 @router.get("/templates", response_model=ImportTemplateTypeResponse, status_code=status.HTTP_200_OK)
 def get_import_template_types(
     *,
@@ -337,145 +508,8 @@ def validate_import_data(
     template_type = validate_in.template_type.upper()
 
     for idx, row_data in enumerate(validate_in.data, start=1):
-        row_errors = []
-
-        if template_type == "PROJECT":
-            # 验证必填字段
-            project_code = row_data.get('project_code', '').strip() if row_data.get('project_code') else ''
-            project_name = row_data.get('project_name', '').strip() if row_data.get('project_name') else ''
-
-            if not project_code:
-                row_errors.append({"field": "project_code", "message": "项目编码不能为空"})
-            if not project_name:
-                row_errors.append({"field": "project_name", "message": "项目名称不能为空"})
-
-            # 检查项目编码是否已存在
-            if project_code:
-                existing = db.query(Project).filter(Project.project_code == project_code).first()
-                if existing:
-                    row_errors.append({"field": "project_code", "message": f"项目编码 {project_code} 已存在"})
-
-            # 验证日期格式
-            for date_field in ['planned_start_date', 'planned_end_date']:
-                if row_data.get(date_field):
-                    try:
-                        datetime.strptime(str(row_data[date_field]), '%Y-%m-%d')
-                    except:
-                        row_errors.append({"field": date_field, "message": "日期格式错误，应为YYYY-MM-DD"})
-
-            # 验证日期逻辑
-            if row_data.get('planned_start_date') and row_data.get('planned_end_date'):
-                try:
-                    start_date = datetime.strptime(str(row_data['planned_start_date']), '%Y-%m-%d').date()
-                    end_date = datetime.strptime(str(row_data['planned_end_date']), '%Y-%m-%d').date()
-                    if start_date > end_date:
-                        row_errors.append({"field": "planned_end_date", "message": "计划结束日期不能早于计划开始日期"})
-                except:
-                    pass
-
-            # 验证金额格式
-            for amount_field in ['contract_amount', 'budget_amount']:
-                if row_data.get(amount_field):
-                    try:
-                        float(row_data[amount_field])
-                    except:
-                        row_errors.append({"field": amount_field, "message": f"{amount_field} 必须是数字"})
-
-        elif template_type == "USER":
-            name = row_data.get('name', '').strip() if row_data.get('name') else ''
-            if not name:
-                row_errors.append({"field": "name", "message": "姓名不能为空"})
-
-        elif template_type == "TIMESHEET":
-            work_date = row_data.get('work_date')
-            user_name = row_data.get('user_name', '').strip() if row_data.get('user_name') else ''
-            hours = row_data.get('hours')
-
-            if not work_date:
-                row_errors.append({"field": "work_date", "message": "工作日期不能为空"})
-            else:
-                try:
-                    datetime.strptime(str(work_date), '%Y-%m-%d')
-                except:
-                    row_errors.append({"field": "work_date", "message": "日期格式错误，应为YYYY-MM-DD"})
-
-            if not user_name:
-                row_errors.append({"field": "user_name", "message": "人员姓名不能为空"})
-
-            if hours is None:
-                row_errors.append({"field": "hours", "message": "工时不能为空"})
-            else:
-                try:
-                    h = float(hours)
-                    if h <= 0 or h > 24:
-                        row_errors.append({"field": "hours", "message": "工时必须在0-24之间"})
-                except:
-                    row_errors.append({"field": "hours", "message": "工时格式错误"})
-
-        elif template_type == "TASK":
-            task_name = row_data.get('task_name', '').strip() if row_data.get('task_name') else ''
-            project_code = row_data.get('project_code', '').strip() if row_data.get('project_code') else ''
-
-            if not task_name:
-                row_errors.append({"field": "task_name", "message": "任务名称不能为空"})
-            if not project_code:
-                row_errors.append({"field": "project_code", "message": "项目编码不能为空"})
-
-            # 检查项目是否存在
-            if project_code:
-                project = db.query(Project).filter(Project.project_code == project_code).first()
-                if not project:
-                    row_errors.append({"field": "project_code", "message": f"项目 {project_code} 不存在"})
-
-        elif template_type == "MATERIAL":
-            material_code = row_data.get('material_code', '').strip() if row_data.get('material_code') else ''
-            material_name = row_data.get('material_name', '').strip() if row_data.get('material_name') else ''
-
-            if not material_code:
-                row_errors.append({"field": "material_code", "message": "物料编码不能为空"})
-            if not material_name:
-                row_errors.append({"field": "material_name", "message": "物料名称不能为空"})
-
-            # 检查物料编码是否已存在
-            if material_code:
-                from app.models.material import Material
-                existing = db.query(Material).filter(Material.material_code == material_code).first()
-                if existing:
-                    row_errors.append({"field": "material_code", "message": f"物料编码 {material_code} 已存在"})
-
-        elif template_type == "BOM":
-            bom_code = row_data.get('bom_code', '').strip() if row_data.get('bom_code') else ''
-            project_code = row_data.get('project_code', '').strip() if row_data.get('project_code') else ''
-            material_code = row_data.get('material_code', '').strip() if row_data.get('material_code') else ''
-            quantity = row_data.get('quantity')
-
-            if not bom_code:
-                row_errors.append({"field": "bom_code", "message": "BOM编码不能为空"})
-            if not project_code:
-                row_errors.append({"field": "project_code", "message": "项目编码不能为空"})
-            if not material_code:
-                row_errors.append({"field": "material_code", "message": "物料编码不能为空"})
-            if quantity is None:
-                row_errors.append({"field": "quantity", "message": "用量不能为空"})
-            else:
-                try:
-                    q = float(quantity)
-                    if q <= 0:
-                        row_errors.append({"field": "quantity", "message": "用量必须大于0"})
-                except:
-                    row_errors.append({"field": "quantity", "message": "用量格式错误"})
-
-            # 检查项目和物料是否存在
-            if project_code:
-                project = db.query(Project).filter(Project.project_code == project_code).first()
-                if not project:
-                    row_errors.append({"field": "project_code", "message": f"项目 {project_code} 不存在"})
-
-            if material_code:
-                from app.models.material import Material
-                material = db.query(Material).filter(Material.material_code == material_code).first()
-                if not material:
-                    row_errors.append({"field": "material_code", "message": f"物料 {material_code} 不存在"})
+        # 使用统一验证器进行数据验证
+        row_errors = _validate_row_data(row_data, idx, db, template_type)
 
         if row_errors:
             errors.append({
