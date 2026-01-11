@@ -30,7 +30,7 @@ class TestBudgetCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/budget/?page=1&page_size=10",
+            f"{settings.API_V1_PREFIX}/budgets/?page=1&page_size=10",
             headers=headers
         )
 
@@ -72,7 +72,7 @@ class TestBudgetCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/budget/",
+            f"{settings.API_V1_PREFIX}/budgets/",
             json=budget_data,
             headers=headers
         )
@@ -97,7 +97,7 @@ class TestBudgetCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/budget/",
+            f"{settings.API_V1_PREFIX}/budgets/",
             json=budget_data,
             headers=headers
         )
@@ -115,7 +115,7 @@ class TestBudgetCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/budget/{budget.id}",
+            f"{settings.API_V1_PREFIX}/budgets/{budget.id}",
             headers=headers
         )
 
@@ -131,7 +131,7 @@ class TestBudgetCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/budget/999999",
+            f"{settings.API_V1_PREFIX}/budgets/999999",
             headers=headers
         )
 
@@ -148,7 +148,7 @@ class TestBudgetCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/budget/projects/{project.id}/budgets",
+            f"{settings.API_V1_PREFIX}/budgets/projects/{project.id}/budgets",
             headers=headers
         )
 
@@ -178,7 +178,7 @@ class TestBudgetUpdate:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/budget/{budget.id}",
+            f"{settings.API_V1_PREFIX}/budgets/{budget.id}",
             json=update_data,
             headers=headers
         )
@@ -205,7 +205,7 @@ class TestBudgetUpdate:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/budget/{budget.id}",
+            f"{settings.API_V1_PREFIX}/budgets/{budget.id}",
             json=update_data,
             headers=headers
         )
@@ -231,7 +231,7 @@ class TestBudgetApproval:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.post(
-            f"{settings.API_V1_PREFIX}/budget/{budget.id}/submit",
+            f"{settings.API_V1_PREFIX}/budgets/{budget.id}/submit",
             headers=headers
         )
 
@@ -253,7 +253,7 @@ class TestBudgetApproval:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.post(
-            f"{settings.API_V1_PREFIX}/budget/{budget.id}/submit",
+            f"{settings.API_V1_PREFIX}/budgets/{budget.id}/submit",
             headers=headers
         )
 
@@ -278,7 +278,7 @@ class TestBudgetApproval:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/budget/{budget.id}/approve",
+            f"{settings.API_V1_PREFIX}/budgets/{budget.id}/approve",
             json=approve_data,
             headers=headers
         )
@@ -306,7 +306,7 @@ class TestBudgetApproval:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/budget/{budget.id}/approve",
+            f"{settings.API_V1_PREFIX}/budgets/{budget.id}/approve",
             json=reject_data,
             headers=headers
         )
@@ -337,7 +337,7 @@ class TestBudgetDelete:
         }
 
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/budget/",
+            f"{settings.API_V1_PREFIX}/budgets/",
             json=budget_data,
             headers=headers
         )
@@ -349,7 +349,7 @@ class TestBudgetDelete:
 
         # 删除预算
         delete_response = client.delete(
-            f"{settings.API_V1_PREFIX}/budget/{budget_id}",
+            f"{settings.API_V1_PREFIX}/budgets/{budget_id}",
             headers=headers
         )
 
@@ -369,7 +369,7 @@ class TestBudgetDelete:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/budget/{budget.id}",
+            f"{settings.API_V1_PREFIX}/budgets/{budget.id}",
             headers=headers
         )
 
@@ -390,7 +390,7 @@ class TestBudgetItems:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/budget/{budget.id}/items",
+            f"{settings.API_V1_PREFIX}/budgets/{budget.id}/items",
             headers=headers
         )
 
@@ -418,7 +418,7 @@ class TestBudgetItems:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/budget/{budget.id}/items",
+            f"{settings.API_V1_PREFIX}/budgets/{budget.id}/items",
             json=item_data,
             headers=headers
         )
@@ -448,7 +448,7 @@ class TestBudgetItems:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/budget/{budget.id}/items",
+            f"{settings.API_V1_PREFIX}/budgets/{budget.id}/items",
             json=item_data,
             headers=headers
         )
@@ -473,7 +473,7 @@ class TestBudgetItems:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/budget/items/{item.id}",
+            f"{settings.API_V1_PREFIX}/budgets/items/{item.id}",
             json=update_data,
             headers=headers
         )
@@ -494,7 +494,7 @@ class TestBudgetItems:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/budget/items/{item.id}",
+            f"{settings.API_V1_PREFIX}/budgets/items/{item.id}",
             headers=headers
         )
 
@@ -511,7 +511,7 @@ class TestAllocationRules:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/budget/allocation-rules",
+            f"{settings.API_V1_PREFIX}/budgets/allocation-rules",
             headers=headers
         )
 
@@ -534,7 +534,7 @@ class TestAllocationRules:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/budget/allocation-rules",
+            f"{settings.API_V1_PREFIX}/budgets/allocation-rules",
             json=rule_data,
             headers=headers
         )
@@ -550,7 +550,7 @@ class TestAllocationRules:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/budget/allocation-rules/999999",
+            f"{settings.API_V1_PREFIX}/budgets/allocation-rules/999999",
             headers=headers
         )
 
@@ -571,7 +571,7 @@ class TestAllocationRules:
         }
 
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/budget/allocation-rules",
+            f"{settings.API_V1_PREFIX}/budgets/allocation-rules",
             json=rule_data,
             headers=headers
         )
@@ -583,7 +583,7 @@ class TestAllocationRules:
 
         # 删除规则
         delete_response = client.delete(
-            f"{settings.API_V1_PREFIX}/budget/allocation-rules/{rule_id}",
+            f"{settings.API_V1_PREFIX}/budgets/allocation-rules/{rule_id}",
             headers=headers
         )
 

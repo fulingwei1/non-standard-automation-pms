@@ -32,7 +32,7 @@ class TestPurchaseOrderCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/?page=1&page_size=10",
+            f"{settings.API_V1_PREFIX}/purchase-orders/?page=1&page_size=10",
             headers=headers
         )
 
@@ -85,7 +85,7 @@ class TestPurchaseOrderCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase/",
+            f"{settings.API_V1_PREFIX}/purchase-orders/",
             json=order_data,
             headers=headers
         )
@@ -119,7 +119,7 @@ class TestPurchaseOrderCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase/",
+            f"{settings.API_V1_PREFIX}/purchase-orders/",
             json=order_data,
             headers=headers
         )
@@ -140,7 +140,7 @@ class TestPurchaseOrderCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/{order.id}",
+            f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}",
             headers=headers
         )
 
@@ -156,7 +156,7 @@ class TestPurchaseOrderCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/999999",
+            f"{settings.API_V1_PREFIX}/purchase-orders/999999",
             headers=headers
         )
 
@@ -175,7 +175,7 @@ class TestPurchaseOrderCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/{order.id}/items",
+            f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}/items",
             headers=headers
         )
 
@@ -193,7 +193,7 @@ class TestPurchaseOrderFilters:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/?keyword=PO",
+            f"{settings.API_V1_PREFIX}/purchase-orders/?keyword=PO",
             headers=headers
         )
 
@@ -212,7 +212,7 @@ class TestPurchaseOrderFilters:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/?supplier_id={supplier.id}",
+            f"{settings.API_V1_PREFIX}/purchase-orders/?supplier_id={supplier.id}",
             headers=headers
         )
 
@@ -225,7 +225,7 @@ class TestPurchaseOrderFilters:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/?status=DRAFT",
+            f"{settings.API_V1_PREFIX}/purchase-orders/?status=DRAFT",
             headers=headers
         )
 
@@ -254,7 +254,7 @@ class TestPurchaseOrderUpdate:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/purchase/{order.id}",
+            f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}",
             json=update_data,
             headers=headers
         )
@@ -282,7 +282,7 @@ class TestPurchaseOrderUpdate:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/purchase/{order.id}",
+            f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}",
             json=update_data,
             headers=headers
         )
@@ -313,7 +313,7 @@ class TestPurchaseOrderApproval:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.put(
-            f"{settings.API_V1_PREFIX}/purchase/{order.id}/submit",
+            f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}/submit",
             headers=headers
         )
 
@@ -343,7 +343,7 @@ class TestPurchaseOrderApproval:
 
         # 创建订单需要至少一个明细，所以这里会失败
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase/",
+            f"{settings.API_V1_PREFIX}/purchase-orders/",
             json=order_data,
             headers=headers
         )
@@ -366,7 +366,7 @@ class TestPurchaseOrderApproval:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.put(
-            f"{settings.API_V1_PREFIX}/purchase/{order.id}/approve?approved=true",
+            f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}/approve?approved=true",
             headers=headers
         )
 
@@ -387,7 +387,7 @@ class TestPurchaseOrderApproval:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.put(
-            f"{settings.API_V1_PREFIX}/purchase/{order.id}/approve"
+            f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}/approve"
             f"?approved=false&approval_note=测试驳回",
             headers=headers
         )
@@ -405,7 +405,7 @@ class TestPurchaseRequest:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/requests?page=1&page_size=10",
+            f"{settings.API_V1_PREFIX}/purchase-orders/requests?page=1&page_size=10",
             headers=headers
         )
 
@@ -444,7 +444,7 @@ class TestPurchaseRequest:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase/requests",
+            f"{settings.API_V1_PREFIX}/purchase-orders/requests",
             json=request_data,
             headers=headers
         )
@@ -467,7 +467,7 @@ class TestPurchaseRequest:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/requests/{request.id}",
+            f"{settings.API_V1_PREFIX}/purchase-orders/requests/{request.id}",
             headers=headers
         )
 
@@ -494,7 +494,7 @@ class TestPurchaseRequest:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.put(
-            f"{settings.API_V1_PREFIX}/purchase/requests/{request.id}/submit",
+            f"{settings.API_V1_PREFIX}/purchase-orders/requests/{request.id}/submit",
             headers=headers
         )
 
@@ -515,7 +515,7 @@ class TestPurchaseRequest:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.put(
-            f"{settings.API_V1_PREFIX}/purchase/requests/{request.id}/approve"
+            f"{settings.API_V1_PREFIX}/purchase-orders/requests/{request.id}/approve"
             f"?approved=true",
             headers=headers
         )
@@ -551,7 +551,7 @@ class TestPurchaseRequest:
         }
 
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase/requests",
+            f"{settings.API_V1_PREFIX}/purchase-orders/requests",
             json=request_data,
             headers=headers
         )
@@ -563,7 +563,7 @@ class TestPurchaseRequest:
 
         # 删除申请
         delete_response = client.delete(
-            f"{settings.API_V1_PREFIX}/purchase/requests/{request_id}",
+            f"{settings.API_V1_PREFIX}/purchase-orders/requests/{request_id}",
             headers=headers
         )
 
@@ -580,7 +580,7 @@ class TestGoodsReceipt:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/goods-receipts/?page=1&page_size=10",
+            f"{settings.API_V1_PREFIX}/purchase-orders/goods-receipts/?page=1&page_size=10",
             headers=headers
         )
 
@@ -624,7 +624,7 @@ class TestGoodsReceipt:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase/goods-receipts/",
+            f"{settings.API_V1_PREFIX}/purchase-orders/goods-receipts/",
             json=receipt_data,
             headers=headers
         )
@@ -651,7 +651,7 @@ class TestGoodsReceipt:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.put(
-            f"{settings.API_V1_PREFIX}/purchase/goods-receipts/{receipt.id}/items/{item.id}/inspect"
+            f"{settings.API_V1_PREFIX}/purchase-orders/goods-receipts/{receipt.id}/items/{item.id}/inspect"
             f"?inspect_qty=10&qualified_qty=9",
             headers=headers
         )
@@ -669,7 +669,7 @@ class TestPurchaseFromBOM:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase/from-bom?bom_id=999999",
+            f"{settings.API_V1_PREFIX}/purchase-orders/from-bom?bom_id=999999",
             headers=headers
         )
 

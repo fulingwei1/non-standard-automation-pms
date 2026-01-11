@@ -9,8 +9,8 @@ from typing import Dict, List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from app.models.project import Project, ProjectCost, ProjectBudget
-from app.models.budget import ProjectBudgetItem
+from app.models.project import Project, ProjectCost
+from app.models.budget import ProjectBudget, ProjectBudgetItem
 
 
 class BudgetAnalysisService:

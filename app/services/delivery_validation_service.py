@@ -10,7 +10,7 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.models.material import Material, Supplier, BomItem
-from app.models.sales import QuoteItem, QuoteVersion
+from app.models.sales import Quote, QuoteItem, QuoteVersion
 from app.models.project import Project
 from app.core.config import settings
 
