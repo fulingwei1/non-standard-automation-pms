@@ -412,3 +412,58 @@ def mark_lead_invalid(
         db.commit()
 
     return ResponseModel(code=200, message="线索已标记为无效")
+
+
+@router.get("/leads/export")
+def export_leads(
+    *,
+    db: Session = Depends(deps.get_db),
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    owner_id: Optional[int] = Query(None, description="负责人ID筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    Issue 4.2: 导出线索列表（Excel）
+    """
+    from app.services.excel_export_service import ExcelExportService, create_excel_response
+
+    query = db.query(Lead)
+    if keyword:
+        query = query.filter(or_(Lead.lead_code.contains(keyword), Lead.customer_name.contains(keyword), Lead.contact_name.contains(keyword)))
+    if status:
+        query = query.filter(Lead.status == status)
+    if owner_id:
+        query = query.filter(Lead.owner_id == owner_id)
+
+    leads = query.order_by(Lead.created_at.desc()).all()
+    export_service = ExcelExportService()
+    columns = [
+        {"key": "lead_code", "label": "线索编码", "width": 15},
+        {"key": "source", "label": "来源", "width": 15},
+        {"key": "customer_name", "label": "客户名称", "width": 25},
+        {"key": "industry", "label": "行业", "width": 15},
+        {"key": "contact_name", "label": "联系人", "width": 15},
+        {"key": "contact_phone", "label": "联系电话", "width": 15},
+        {"key": "status", "label": "状态", "width": 12},
+        {"key": "owner_name", "label": "负责人", "width": 12},
+        {"key": "next_action_at", "label": "下次行动时间", "width": 18, "format": export_service.format_date},
+        {"key": "created_at", "label": "创建时间", "width": 18, "format": export_service.format_date},
+    ]
+
+    data = [{
+        "lead_code": lead.lead_code,
+        "source": lead.source or '',
+        "customer_name": lead.customer_name or '',
+        "industry": lead.industry or '',
+        "contact_name": lead.contact_name or '',
+        "contact_phone": lead.contact_phone or '',
+        "status": lead.status,
+        "owner_name": lead.owner.real_name if lead.owner else '',
+        "next_action_at": lead.next_action_at,
+        "created_at": lead.created_at,
+    } for lead in leads]
+
+    excel_data = export_service.export_to_excel(data=data, columns=columns, sheet_name="线索列表", title="线索列表")
+    filename = f"线索列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    return create_excel_response(excel_data, filename)
