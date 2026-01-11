@@ -35,6 +35,118 @@ router = APIRouter()
 
 # ==================== 数据导入 ====================
 
+# ==================== 导入验证器 ====================
+
+def _validate_project_row(row, row_num, errors):
+    """验证项目导入行"""
+    is_valid = True
+    project_code = str(row.get('项目编码*', row.get('项目编码', ''))).strip()
+    project_name = str(row.get('项目名称*', row.get('项目名称', ''))).strip()
+
+    if not project_code:
+        errors.append({"row": row_num, "field": "项目编码", "message": "项目编码不能为空"})
+        is_valid = False
+    if not project_name:
+        errors.append({"row": row_num, "field": "项目名称", "message": "项目名称不能为空"})
+        is_valid = False
+    return is_valid
+
+
+def _validate_user_row(row, row_num, errors):
+    """验证用户导入行"""
+    name = str(row.get('姓名', row.get('名字', ''))).strip()
+    if not name:
+        errors.append({"row": row_num, "field": "姓名", "message": "姓名不能为空"})
+        return False
+    return True
+
+
+def _validate_timesheet_row(row, row_num, errors, pd):
+    """验证工时导入行"""
+    is_valid = True
+    work_date = row.get('工作日期*') or row.get('工作日期')
+    user_name = str(row.get('人员姓名*', row.get('人员姓名', ''))).strip()
+    hours = row.get('工时(小时)*') or row.get('工时(小时)') or row.get('工时')
+
+    if pd.isna(work_date) or not work_date:
+        errors.append({"row": row_num, "field": "工作日期", "message": "工作日期不能为空"})
+        is_valid = False
+    if not user_name:
+        errors.append({"row": row_num, "field": "人员姓名", "message": "人员姓名不能为空"})
+        is_valid = False
+    if pd.isna(hours):
+        errors.append({"row": row_num, "field": "工时", "message": "工时不能为空"})
+        is_valid = False
+    return is_valid
+
+
+def _validate_task_row(row, row_num, errors):
+    """验证任务导入行"""
+    is_valid = True
+    task_name = str(row.get('任务名称*', row.get('任务名称', ''))).strip()
+    project_code = str(row.get('项目编码*', row.get('项目编码', ''))).strip()
+
+    if not task_name:
+        errors.append({"row": row_num, "field": "任务名称", "message": "任务名称不能为空"})
+        is_valid = False
+    if not project_code:
+        errors.append({"row": row_num, "field": "项目编码", "message": "项目编码不能为空"})
+        is_valid = False
+    return is_valid
+
+
+def _validate_material_row(row, row_num, errors):
+    """验证物料导入行"""
+    is_valid = True
+    material_code = str(row.get('物料编码*', row.get('物料编码', ''))).strip()
+    material_name = str(row.get('物料名称*', row.get('物料名称', ''))).strip()
+
+    if not material_code:
+        errors.append({"row": row_num, "field": "物料编码", "message": "物料编码不能为空"})
+        is_valid = False
+    if not material_name:
+        errors.append({"row": row_num, "field": "物料名称", "message": "物料名称不能为空"})
+        is_valid = False
+    return is_valid
+
+
+def _validate_bom_row(row, row_num, errors, pd):
+    """验证BOM导入行"""
+    is_valid = True
+    bom_code = str(row.get('BOM编码*', row.get('BOM编码', ''))).strip()
+    project_code = str(row.get('项目编码*', row.get('项目编码', ''))).strip()
+    material_code = str(row.get('物料编码*', row.get('物料编码', ''))).strip()
+    quantity = row.get('用量*') or row.get('用量')
+
+    if not bom_code:
+        errors.append({"row": row_num, "field": "BOM编码", "message": "BOM编码不能为空"})
+        is_valid = False
+    if not project_code:
+        errors.append({"row": row_num, "field": "项目编码", "message": "项目编码不能为空"})
+        is_valid = False
+    if not material_code:
+        errors.append({"row": row_num, "field": "物料编码", "message": "物料编码不能为空"})
+        is_valid = False
+    if pd.isna(quantity):
+        errors.append({"row": row_num, "field": "用量", "message": "用量不能为空"})
+        is_valid = False
+    return is_valid
+
+
+def _validate_import_row(row, row_num, template_type, errors, pd):
+    """根据模板类型验证导入行"""
+    validators = {
+        "PROJECT": lambda: _validate_project_row(row, row_num, errors),
+        "USER": lambda: _validate_user_row(row, row_num, errors),
+        "TIMESHEET": lambda: _validate_timesheet_row(row, row_num, errors, pd),
+        "TASK": lambda: _validate_task_row(row, row_num, errors),
+        "MATERIAL": lambda: _validate_material_row(row, row_num, errors),
+        "BOM": lambda: _validate_bom_row(row, row_num, errors, pd),
+    }
+    validator = validators.get(template_type)
+    return validator() if validator else True
+
+
 @router.get("/templates", response_model=ImportTemplateTypeResponse, status_code=status.HTTP_200_OK)
 def get_import_template_types(
     *,
@@ -173,87 +285,13 @@ def preview_import_data(
         preview_rows = min(10, total_rows)
         preview_data = df.head(preview_rows).to_dict('records')
 
-        # 根据类型进行简单验证
+        # 根据类型进行验证
         errors = []
         valid_rows = 0
 
         for idx, row in df.iterrows():
-            is_valid = True
             row_num = idx + 2
-
-            if template_type_upper == "PROJECT":
-                project_code = str(row.get('项目编码*', row.get('项目编码', ''))).strip()
-                project_name = str(row.get('项目名称*', row.get('项目名称', ''))).strip()
-
-                if not project_code:
-                    errors.append({"row": row_num, "field": "项目编码", "message": "项目编码不能为空"})
-                    is_valid = False
-                if not project_name:
-                    errors.append({"row": row_num, "field": "项目名称", "message": "项目名称不能为空"})
-                    is_valid = False
-
-            elif template_type_upper == "USER":
-                name = str(row.get('姓名', row.get('名字', ''))).strip()
-                if not name:
-                    errors.append({"row": row_num, "field": "姓名", "message": "姓名不能为空"})
-                    is_valid = False
-
-            elif template_type_upper == "TIMESHEET":
-                work_date = row.get('工作日期*') or row.get('工作日期')
-                user_name = str(row.get('人员姓名*', row.get('人员姓名', ''))).strip()
-                hours = row.get('工时(小时)*') or row.get('工时(小时)') or row.get('工时')
-
-                if pd.isna(work_date) or not work_date:
-                    errors.append({"row": row_num, "field": "工作日期", "message": "工作日期不能为空"})
-                    is_valid = False
-                if not user_name:
-                    errors.append({"row": row_num, "field": "人员姓名", "message": "人员姓名不能为空"})
-                    is_valid = False
-                if pd.isna(hours):
-                    errors.append({"row": row_num, "field": "工时", "message": "工时不能为空"})
-                    is_valid = False
-
-            elif template_type_upper == "TASK":
-                task_name = str(row.get('任务名称*', row.get('任务名称', ''))).strip()
-                project_code = str(row.get('项目编码*', row.get('项目编码', ''))).strip()
-
-                if not task_name:
-                    errors.append({"row": row_num, "field": "任务名称", "message": "任务名称不能为空"})
-                    is_valid = False
-                if not project_code:
-                    errors.append({"row": row_num, "field": "项目编码", "message": "项目编码不能为空"})
-                    is_valid = False
-
-            elif template_type_upper == "MATERIAL":
-                material_code = str(row.get('物料编码*', row.get('物料编码', ''))).strip()
-                material_name = str(row.get('物料名称*', row.get('物料名称', ''))).strip()
-
-                if not material_code:
-                    errors.append({"row": row_num, "field": "物料编码", "message": "物料编码不能为空"})
-                    is_valid = False
-                if not material_name:
-                    errors.append({"row": row_num, "field": "物料名称", "message": "物料名称不能为空"})
-                    is_valid = False
-
-            elif template_type_upper == "BOM":
-                bom_code = str(row.get('BOM编码*', row.get('BOM编码', ''))).strip()
-                project_code = str(row.get('项目编码*', row.get('项目编码', ''))).strip()
-                material_code = str(row.get('物料编码*', row.get('物料编码', ''))).strip()
-                quantity = row.get('用量*') or row.get('用量')
-
-                if not bom_code:
-                    errors.append({"row": row_num, "field": "BOM编码", "message": "BOM编码不能为空"})
-                    is_valid = False
-                if not project_code:
-                    errors.append({"row": row_num, "field": "项目编码", "message": "项目编码不能为空"})
-                    is_valid = False
-                if not material_code:
-                    errors.append({"row": row_num, "field": "物料编码", "message": "物料编码不能为空"})
-                    is_valid = False
-                if pd.isna(quantity):
-                    errors.append({"row": row_num, "field": "用量", "message": "用量不能为空"})
-                    is_valid = False
-
+            is_valid = _validate_import_row(row, row_num, template_type_upper, errors, pd)
             if is_valid:
                 valid_rows += 1
 
