@@ -8,6 +8,7 @@ from datetime import datetime
 import json
 from pathlib import Path
 import io
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from fastapi.responses import StreamingResponse, FileResponse
@@ -993,11 +994,12 @@ def export_bom_to_excel(
     
     # 生成文件名
     filename = f"BOM_{bom.bom_no}_v{bom.version}_{datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx"
-    
+    encoded_filename = quote(filename)
+
     return StreamingResponse(
         io.BytesIO(output.read()),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"}
     )
 
 
@@ -1055,7 +1057,7 @@ def download_bom_import_template(
     return StreamingResponse(
         io.BytesIO(output.read()),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=BOM导入模板.xlsx"}
+        headers={"Content-Disposition": "attachment; filename*=UTF-8''BOM%E5%AF%BC%E5%85%A5%E6%A8%A1%E6%9D%BF.xlsx"}
     )
 
 
