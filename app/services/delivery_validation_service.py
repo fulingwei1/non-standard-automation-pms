@@ -117,8 +117,8 @@ class DeliveryValidationService:
                 "item_type": item.item_type,
                 "lead_time_days": lead_time,
                 "remark": remark,
-                "quantity": item.quantity or 0,
-                "is_critical": item.is_critical or False
+                "quantity": getattr(item, 'quantity', 0) or 0,
+                "is_critical": getattr(item, 'is_critical', False) or False
             })
 
         # 获取最长的交期（关键物料优先）
@@ -282,10 +282,15 @@ class DeliveryValidationService:
                 })
 
         # 3. 估算项目周期并对比
+        # Quote doesn't have project_type directly, get it from the related opportunity
+        project_type = None
+        if hasattr(quote, 'opportunity') and quote.opportunity:
+            project_type = getattr(quote.opportunity, 'project_type', None)
+
         project_cycle = DeliveryValidationService.estimate_project_cycle(
             db,
             contract_amount=float(version.total_price or 0),
-            project_type=quote.project_type,
+            project_type=project_type,
             complexity_level="MEDIUM"
         )
 
@@ -323,7 +328,7 @@ class DeliveryValidationService:
         # 4. 检查关键物料是否都有交期
         critical_items_without_leadtime = [
             item.item_name for item in items
-            if item.is_critical and not item.lead_time_days
+            if getattr(item, 'is_critical', False) and not getattr(item, 'lead_time_days', None)
         ]
 
         if critical_items_without_leadtime:

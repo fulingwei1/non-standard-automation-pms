@@ -16,10 +16,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func
 
 from app.models.project import Project, ProjectMilestone, ProjectStatusLog
-from app.models.issue import Issue
+from app.models.issue import Issue, IssueTypeEnum
 from app.models.alert import AlertRecord, AlertRule
 from app.models.shortage import ShortageReport
-from app.models.enums import ProjectHealthEnum, IssueStatusEnum, IssueTypeEnum, AlertLevelEnum
+from app.models.enums import ProjectHealthEnum, IssueStatusEnum, AlertLevelEnum
 from app.models.progress import Task
 
 
