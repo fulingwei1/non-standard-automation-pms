@@ -2196,7 +2196,12 @@ def read_work_orders(
         if order.assigned_to:
             worker = db.query(Worker).filter(Worker.id == order.assigned_to).first()
             assigned_worker_name = worker.worker_name if worker else None
-        
+
+        process_name = None
+        if order.process_id:
+            process = db.query(ProcessDict).filter(ProcessDict.id == order.process_id).first()
+            process_name = process.process_name if process else None
+
         items.append(WorkOrderResponse(
             id=order.id,
             work_order_no=order.work_order_no,
@@ -2208,7 +2213,7 @@ def read_work_orders(
             machine_name=machine_name,
             production_plan_id=order.production_plan_id,
             process_id=order.process_id,
-            process_name=None,  # TODO: 从ProcessDict获取
+            process_name=process_name,
             workshop_id=order.workshop_id,
             workshop_name=workshop_name,
             workstation_id=order.workstation_id,
@@ -3273,7 +3278,12 @@ def read_production_exceptions(
         if exc.handler_id:
             handler = db.query(User).filter(User.id == exc.handler_id).first()
             handler_name = handler.real_name or handler.username if handler else None
-        
+
+        equipment_name = None
+        if exc.equipment_id:
+            equipment = db.query(Equipment).filter(Equipment.id == exc.equipment_id).first()
+            equipment_name = equipment.equipment_name if equipment else None
+
         items.append(ProductionExceptionResponse(
             id=exc.id,
             exception_no=exc.exception_no,
@@ -3288,7 +3298,7 @@ def read_production_exceptions(
             workshop_id=exc.workshop_id,
             workshop_name=workshop_name,
             equipment_id=exc.equipment_id,
-            equipment_name=None,  # TODO: 从Equipment获取
+            equipment_name=equipment_name,
             reporter_id=exc.reporter_id,
             reporter_name=reporter_name,
             report_time=exc.report_time,
