@@ -58,6 +58,10 @@ import { adminApi } from "../services/api";
 // Mock data - 已移除，使用真实API
 // Mock data - 已移除，使用真实API
 export default function OfficeSuppliesManagement() {
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
   const [searchText, setSearchText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");

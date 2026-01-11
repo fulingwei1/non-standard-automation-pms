@@ -63,6 +63,10 @@ const getScoreColor = (actual, target) => {
 };
 
 export default function PerformanceResults() {
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
   const [selectedPeriod, setSelectedPeriod] = useState("current");
   const [loading, setLoading] = useState(true);
   const [currentResult, setCurrentResult] = useState(mockCurrentResult);

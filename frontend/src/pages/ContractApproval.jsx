@@ -3,8 +3,12 @@
  * Features: Pending approvals, Approval history, Contract review, Approval actions
  */
 
-import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useMemo } from "react"
+import { api } from '../services/api'
+;
+import { motion, AnimatePresence } from "framer-motion"
+import { api } from '../services/api'
+;
 import {
   FileCheck,
   Search,
@@ -25,8 +29,12 @@ import {
   MessageSquare,
   History,
   Shield,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
+} from "lucide-react"
+import { api } from '../services/api'
+;
+import { PageHeader } from "../components/layout"
+import { api } from '../services/api'
+;
 import {
   Card,
   CardContent,
@@ -46,9 +54,15 @@ import {
   TabsList,
   TabsTrigger,
   Textarea,
-} from "../components/ui";
-import { cn } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
+} from "../components/ui"
+import { api } from '../services/api'
+;
+import { cn } from "../lib/utils"
+import { api } from '../services/api'
+;
+import { fadeIn, staggerContainer } from "../lib/animations"
+import { api } from '../services/api'
+;
 
 // Mock approval data
 const formatCurrency = (value) => {

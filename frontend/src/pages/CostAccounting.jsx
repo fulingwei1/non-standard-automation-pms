@@ -3,9 +3,15 @@
  * Features: Cost recording, Cost query, Cost statistics, Cost analysis
  */
 
-import { useState, useMemo, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useMemo, useEffect } from "react"
+import { api } from '../services/api'
+;
+import { useSearchParams } from "react-router-dom"
+import { api } from '../services/api'
+;
+import { motion, AnimatePresence } from "framer-motion"
+import { api } from '../services/api'
+;
 import {
   Calculator,
   Search,
@@ -31,8 +37,12 @@ import {
   Package,
   Users,
   Wrench,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
+} from "lucide-react"
+import { api } from '../services/api'
+;
+import { PageHeader } from "../components/layout"
+import { api } from '../services/api'
+;
 import {
   Card,
   CardContent,
@@ -52,9 +62,15 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "../components/ui";
-import { cn, formatCurrency } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
+} from "../components/ui"
+import { api } from '../services/api'
+;
+import { cn, formatCurrency } from "../lib/utils"
+import { api } from '../services/api'
+;
+import { fadeIn, staggerContainer } from "../lib/animations"
+import { api } from '../services/api'
+;
 
 // Mock cost data
 // Mock data - 已移除，使用真实API

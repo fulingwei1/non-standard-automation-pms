@@ -2,8 +2,12 @@
  * Customer List Page - CRM customer management for sales
  */
 
-import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useMemo } from "react"
+import { api } from '../services/api'
+;
+import { motion, AnimatePresence } from "framer-motion"
+import { api } from '../services/api'
+;
 import {
   Building2,
   Search,
@@ -30,8 +34,12 @@ import {
   DollarSign,
   History,
   MessageSquare,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
+} from "lucide-react"
+import { api } from '../services/api'
+;
+import { PageHeader } from "../components/layout"
+import { api } from '../services/api'
+;
 import {
   Card,
   CardContent,
@@ -52,10 +60,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "../components/ui";
-import { cn } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
-import { CustomerCard } from "../components/sales";
+} from "../components/ui"
+import { api } from '../services/api'
+;
+import { cn } from "../lib/utils"
+import { api } from '../services/api'
+;
+import { fadeIn, staggerContainer } from "../lib/animations"
+import { api } from '../services/api'
+;
+import { CustomerCard } from "../components/sales"
+import { api } from '../services/api'
+;
 
 // Mock customer data
 // Mock data - 已移除，使用真实API

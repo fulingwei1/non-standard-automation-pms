@@ -752,6 +752,10 @@ function KnowledgeSection() {
 }
 
 export default function Settings() {
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
   // Get section from URL query parameter
   const urlParams = new URLSearchParams(window.location.search);
   const sectionFromUrl = urlParams.get("section");
