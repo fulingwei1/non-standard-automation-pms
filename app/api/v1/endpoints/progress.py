@@ -774,10 +774,13 @@ def init_wbs_from_template(
             status="TODO"
         )
         
-        # 如果启用自动分配负责人，根据角色分配（这里简化处理，实际需要根据角色查找用户）
+        # 如果启用自动分配负责人，根据角色分配
         if init_request.assign_owners and template_task.default_owner_role:
-            # TODO: 根据角色查找用户并分配
-            pass
+            from app.services.sales_reminder_service import find_users_by_role
+            role_users = find_users_by_role(db, template_task.default_owner_role)
+            if role_users:
+                # 选择第一个匹配的用户作为负责人
+                task.owner_id = role_users[0].id
         
         db.add(task)
         db.flush()  # 获取task.id
