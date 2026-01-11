@@ -209,6 +209,128 @@ def create_budget(
     return ProjectBudgetResponse(**budget_dict)
 
 
+# ==================== 成本分摊规则管理 ====================
+# NOTE: These routes MUST be defined BEFORE /{budget_id} routes to avoid path conflicts
+
+@router.get("/allocation-rules", response_model=PaginatedResponse[ProjectCostAllocationRuleResponse])
+def list_allocation_rules(
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    is_active: Optional[bool] = Query(None, description="是否启用筛选"),
+    current_user: User = Depends(security.require_permission("budget:read")),
+) -> Any:
+    """
+    获取成本分摊规则列表
+    """
+    query = db.query(ProjectCostAllocationRule)
+
+    if is_active is not None:
+        query = query.filter(ProjectCostAllocationRule.is_active == is_active)
+
+    total = query.count()
+    offset = (page - 1) * page_size
+    rules = query.order_by(desc(ProjectCostAllocationRule.created_at)).offset(offset).limit(page_size).all()
+
+    items = [ProjectCostAllocationRuleResponse(**{c.name: getattr(rule, c.name) for c in rule.__table__.columns})
+             for rule in rules]
+
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
+    )
+
+
+@router.post("/allocation-rules", response_model=ProjectCostAllocationRuleResponse, status_code=status.HTTP_201_CREATED)
+def create_allocation_rule(
+    *,
+    db: Session = Depends(deps.get_db),
+    rule_in: ProjectCostAllocationRuleCreate,
+    current_user: User = Depends(security.require_permission("budget:read")),
+) -> Any:
+    """
+    创建成本分摊规则
+    """
+    rule_data = rule_in.model_dump()
+    rule_data['created_by'] = current_user.id
+
+    rule = ProjectCostAllocationRule(**rule_data)
+    db.add(rule)
+    db.commit()
+    db.refresh(rule)
+
+    return ProjectCostAllocationRuleResponse(**{c.name: getattr(rule, c.name) for c in rule.__table__.columns})
+
+
+@router.get("/allocation-rules/{rule_id}", response_model=ProjectCostAllocationRuleResponse)
+def get_allocation_rule(
+    *,
+    db: Session = Depends(deps.get_db),
+    rule_id: int,
+    current_user: User = Depends(security.require_permission("budget:read")),
+) -> Any:
+    """
+    获取成本分摊规则详情
+    """
+    rule = db.query(ProjectCostAllocationRule).filter(ProjectCostAllocationRule.id == rule_id).first()
+    if not rule:
+        raise HTTPException(status_code=404, detail="分摊规则不存在")
+
+    return ProjectCostAllocationRuleResponse(**{c.name: getattr(rule, c.name) for c in rule.__table__.columns})
+
+
+@router.put("/allocation-rules/{rule_id}", response_model=ProjectCostAllocationRuleResponse)
+def update_allocation_rule(
+    *,
+    db: Session = Depends(deps.get_db),
+    rule_id: int,
+    rule_in: ProjectCostAllocationRuleUpdate,
+    current_user: User = Depends(security.require_permission("budget:read")),
+) -> Any:
+    """
+    更新成本分摊规则
+    """
+    rule = db.query(ProjectCostAllocationRule).filter(ProjectCostAllocationRule.id == rule_id).first()
+    if not rule:
+        raise HTTPException(status_code=404, detail="分摊规则不存在")
+
+    update_data = rule_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        if hasattr(rule, field):
+            setattr(rule, field, value)
+
+    db.add(rule)
+    db.commit()
+    db.refresh(rule)
+
+    return ProjectCostAllocationRuleResponse(**{c.name: getattr(rule, c.name) for c in rule.__table__.columns})
+
+
+@router.delete("/allocation-rules/{rule_id}", status_code=status.HTTP_200_OK)
+def delete_allocation_rule(
+    *,
+    db: Session = Depends(deps.get_db),
+    rule_id: int,
+    current_user: User = Depends(security.require_permission("budget:read")),
+) -> Any:
+    """
+    删除成本分摊规则
+    """
+    rule = db.query(ProjectCostAllocationRule).filter(ProjectCostAllocationRule.id == rule_id).first()
+    if not rule:
+        raise HTTPException(status_code=404, detail="分摊规则不存在")
+
+    db.delete(rule)
+    db.commit()
+
+    return ResponseModel(code=200, message="分摊规则已删除")
+
+
+# ==================== 预算详情/更新/删除 (带budget_id参数) ====================
+
 @router.get("/{budget_id}", response_model=ProjectBudgetResponse)
 def get_budget(
     *,
@@ -511,123 +633,4 @@ def delete_budget_item(
     db.commit()
     
     return ResponseModel(code=200, message="预算明细已删除")
-
-
-# ==================== 成本分摊规则管理 ====================
-
-@router.get("/allocation-rules", response_model=PaginatedResponse[ProjectCostAllocationRuleResponse])
-def list_allocation_rules(
-    db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
-    is_active: Optional[bool] = Query(None, description="是否启用筛选"),
-    current_user: User = Depends(security.require_permission("budget:read")),
-) -> Any:
-    """
-    获取成本分摊规则列表
-    """
-    query = db.query(ProjectCostAllocationRule)
-    
-    if is_active is not None:
-        query = query.filter(ProjectCostAllocationRule.is_active == is_active)
-    
-    total = query.count()
-    offset = (page - 1) * page_size
-    rules = query.order_by(desc(ProjectCostAllocationRule.created_at)).offset(offset).limit(page_size).all()
-    
-    items = [ProjectCostAllocationRuleResponse(**{c.name: getattr(rule, c.name) for c in rule.__table__.columns}) 
-             for rule in rules]
-    
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
-
-
-@router.post("/allocation-rules", response_model=ProjectCostAllocationRuleResponse, status_code=status.HTTP_201_CREATED)
-def create_allocation_rule(
-    *,
-    db: Session = Depends(deps.get_db),
-    rule_in: ProjectCostAllocationRuleCreate,
-    current_user: User = Depends(security.require_permission("budget:read")),
-) -> Any:
-    """
-    创建成本分摊规则
-    """
-    rule_data = rule_in.model_dump()
-    rule_data['created_by'] = current_user.id
-    
-    rule = ProjectCostAllocationRule(**rule_data)
-    db.add(rule)
-    db.commit()
-    db.refresh(rule)
-    
-    return ProjectCostAllocationRuleResponse(**{c.name: getattr(rule, c.name) for c in rule.__table__.columns})
-
-
-@router.get("/allocation-rules/{rule_id}", response_model=ProjectCostAllocationRuleResponse)
-def get_allocation_rule(
-    *,
-    db: Session = Depends(deps.get_db),
-    rule_id: int,
-    current_user: User = Depends(security.require_permission("budget:read")),
-) -> Any:
-    """
-    获取成本分摊规则详情
-    """
-    rule = db.query(ProjectCostAllocationRule).filter(ProjectCostAllocationRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="分摊规则不存在")
-    
-    return ProjectCostAllocationRuleResponse(**{c.name: getattr(rule, c.name) for c in rule.__table__.columns})
-
-
-@router.put("/allocation-rules/{rule_id}", response_model=ProjectCostAllocationRuleResponse)
-def update_allocation_rule(
-    *,
-    db: Session = Depends(deps.get_db),
-    rule_id: int,
-    rule_in: ProjectCostAllocationRuleUpdate,
-    current_user: User = Depends(security.require_permission("budget:read")),
-) -> Any:
-    """
-    更新成本分摊规则
-    """
-    rule = db.query(ProjectCostAllocationRule).filter(ProjectCostAllocationRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="分摊规则不存在")
-    
-    update_data = rule_in.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        if hasattr(rule, field):
-            setattr(rule, field, value)
-    
-    db.add(rule)
-    db.commit()
-    db.refresh(rule)
-    
-    return ProjectCostAllocationRuleResponse(**{c.name: getattr(rule, c.name) for c in rule.__table__.columns})
-
-
-@router.delete("/allocation-rules/{rule_id}", status_code=status.HTTP_200_OK)
-def delete_allocation_rule(
-    *,
-    db: Session = Depends(deps.get_db),
-    rule_id: int,
-    current_user: User = Depends(security.require_permission("budget:read")),
-) -> Any:
-    """
-    删除成本分摊规则
-    """
-    rule = db.query(ProjectCostAllocationRule).filter(ProjectCostAllocationRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="分摊规则不存在")
-    
-    db.delete(rule)
-    db.commit()
-    
-    return ResponseModel(code=200, message="分摊规则已删除")
 
