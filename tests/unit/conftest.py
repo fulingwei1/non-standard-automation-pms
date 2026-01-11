@@ -36,15 +36,29 @@ def db_engine():
 
     with engine.begin() as conn:
         conn.execute(text("PRAGMA foreign_keys=OFF"))
-        conn.execute(text("DELETE FROM task_unified"))
-        conn.execute(text("DELETE FROM projects"))
-        conn.execute(text("DELETE FROM project_stages"))
-        conn.execute(
-            text(
-                "DELETE FROM sqlite_sequence "
-                "WHERE name IN ('task_unified', 'projects', 'project_stages')"
+        # Clean up test tables
+        try:
+            conn.execute(text("DELETE FROM task_unified"))
+        except Exception:
+            pass  # Table may not exist
+        try:
+            conn.execute(text("DELETE FROM projects"))
+        except Exception:
+            pass
+        try:
+            conn.execute(text("DELETE FROM project_stages"))
+        except Exception:
+            pass
+        # Reset auto-increment counters if sqlite_sequence table exists
+        try:
+            conn.execute(
+                text(
+                    "DELETE FROM sqlite_sequence "
+                    "WHERE name IN ('task_unified', 'projects', 'project_stages')"
+                )
             )
-        )
+        except Exception:
+            pass  # sqlite_sequence may not exist if no AUTOINCREMENT columns were used
         conn.execute(text("PRAGMA foreign_keys=ON"))
 
     yield engine
