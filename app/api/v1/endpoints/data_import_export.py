@@ -614,45 +614,29 @@ def upload_and_import_data(
 
 # ==================== 数据导出 ====================
 
-@router.post("/export/project_list", response_class=StreamingResponse)
-def export_project_list(
-    *,
-    db: Session = Depends(deps.get_db),
-    export_in: ExportProjectListRequest,
-    current_user: User = Depends(security.require_permission("data_import_export:manage")),
-) -> Any:
-    """
-    导出项目列表（Excel）
-    """
-    # 检查Excel库是否可用
-    try:
-        import pandas as pd
-        import openpyxl
-        import io
-    except ImportError:
-        raise HTTPException(
-            status_code=500,
-            detail="Excel处理库未安装，请安装pandas和openpyxl"
-        )
-    
-    # 构建查询
-    from app.models.project import Project
-    from app.services.data_scope_service import DataScopeService
-    from sqlalchemy import desc, or_
-    
-    query = db.query(Project).filter(Project.is_active == True)
-    
-    # 应用过滤条件
-    filters = export_in.filters or {}
+# 阶段名称映射
+STAGE_NAMES = {
+    'S1': '需求进入', 'S2': '方案设计', 'S3': '采购备料', 'S4': '加工制造',
+    'S5': '装配调试', 'S6': '出厂验收(FAT)', 'S7': '包装发运', 'S8': '现场安装(SAT)', 'S9': '质保结项'
+}
+
+# 健康度名称映射
+HEALTH_NAMES = {
+    'H1': '正常(绿色)', 'H2': '有风险(黄色)', 'H3': '阻塞(红色)', 'H4': '已完结(灰色)'
+}
+
+
+def _apply_project_filters(query, filters: dict):
+    """应用项目过滤条件"""
+    from sqlalchemy import or_
+
     if filters.get('keyword'):
         keyword = filters['keyword']
-        query = query.filter(
-            or_(
-                Project.project_name.contains(keyword),
-                Project.project_code.contains(keyword),
-                Project.contract_no.contains(keyword),
-            )
-        )
+        query = query.filter(or_(
+            Project.project_name.contains(keyword),
+            Project.project_code.contains(keyword),
+            Project.contract_no.contains(keyword),
+        ))
     if filters.get('customer_id'):
         query = query.filter(Project.customer_id == filters['customer_id'])
     if filters.get('stage'):
@@ -665,25 +649,11 @@ def export_project_list(
         query = query.filter(Project.pm_id == filters['pm_id'])
     if filters.get('project_type'):
         query = query.filter(Project.project_type == filters['project_type'])
-    
-    # 应用数据权限过滤
-    query = DataScopeService.filter_projects_by_scope(db, query, current_user)
-    
-    # 获取项目列表
-    projects = query.order_by(desc(Project.created_at)).all()
-    
-    # 阶段名称映射
-    stage_names = {
-        'S1': '需求进入', 'S2': '方案设计', 'S3': '采购备料', 'S4': '加工制造',
-        'S5': '装配调试', 'S6': '出厂验收(FAT)', 'S7': '包装发运', 'S8': '现场安装(SAT)', 'S9': '质保结项'
-    }
-    
-    # 健康度名称映射
-    health_names = {
-        'H1': '正常(绿色)', 'H2': '有风险(黄色)', 'H3': '阻塞(红色)', 'H4': '已完结(灰色)'
-    }
-    
-    # 构建DataFrame
+    return query
+
+
+def _build_project_export_data(projects) -> list:
+    """构建项目导出数据"""
     data = []
     for project in projects:
         data.append({
@@ -695,10 +665,10 @@ def export_project_list(
             '项目经理': project.pm_name or '',
             '项目类型': project.project_type or '',
             '阶段': project.stage or '',
-            '阶段名称': stage_names.get(project.stage, project.stage or ''),
+            '阶段名称': STAGE_NAMES.get(project.stage, project.stage or ''),
             '状态': project.status or '',
             '健康度': project.health or '',
-            '健康度名称': health_names.get(project.health, project.health or '') if project.health else '',
+            '健康度名称': HEALTH_NAMES.get(project.health, project.health or '') if project.health else '',
             '进度(%)': float(project.progress_pct or 0),
             '计划开始日期': project.planned_start_date.strftime('%Y-%m-%d') if project.planned_start_date else '',
             '计划结束日期': project.planned_end_date.strftime('%Y-%m-%d') if project.planned_end_date else '',
@@ -707,62 +677,66 @@ def export_project_list(
             '创建时间': project.created_at.strftime('%Y-%m-%d %H:%M:%S') if project.created_at else '',
             '更新时间': project.updated_at.strftime('%Y-%m-%d %H:%M:%S') if project.updated_at else '',
         })
-    
-    df = pd.DataFrame(data)
-    
-    # 创建Excel文件
+    return data
+
+
+def _create_styled_excel(df, sheet_name: str, column_widths: dict):
+    """创建带样式的Excel文件"""
+    from openpyxl.styles import Font, PatternFill, Alignment
+
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, sheet_name='项目列表', index=False)
-        
-        # 设置列宽
-        worksheet = writer.sheets['项目列表']
-        column_widths = {
-            'A': 15,  # 项目编码
-            'B': 30,  # 项目名称
-            'C': 20,  # 客户名称
-            'D': 15,  # 合同编号
-            'E': 12,  # 合同金额
-            'F': 12,  # 项目经理
-            'G': 12,  # 项目类型
-            'H': 8,   # 阶段
-            'I': 15,  # 阶段名称
-            'J': 10,  # 状态
-            'K': 8,   # 健康度
-            'L': 15,  # 健康度名称
-            'M': 10,  # 进度(%)
-            'N': 12,  # 计划开始日期
-            'O': 12,  # 计划结束日期
-            'P': 12,  # 实际开始日期
-            'Q': 12,  # 实际结束日期
-            'R': 18,  # 创建时间
-            'S': 18,  # 更新时间
-        }
+        df.to_excel(writer, sheet_name=sheet_name, index=False)
+        worksheet = writer.sheets[sheet_name]
+
         for col, width in column_widths.items():
             worksheet.column_dimensions[col].width = width
-        
-        # 设置表头样式
-        from openpyxl.styles import Font, PatternFill, Alignment
+
         header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
         header_font = Font(bold=True, color="FFFFFF")
-        
         for cell in worksheet[1]:
             cell.fill = header_fill
             cell.font = header_font
             cell.alignment = Alignment(horizontal="center", vertical="center")
-    
+
     output.seek(0)
-    
-    # 生成文件名
-    from datetime import datetime
+    return output
+
+
+@router.post("/export/project_list", response_class=StreamingResponse)
+def export_project_list(
+    *,
+    db: Session = Depends(deps.get_db),
+    export_in: ExportProjectListRequest,
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
+) -> Any:
+    """导出项目列表（Excel）"""
+    from app.services.data_scope_service import DataScopeService
+    from sqlalchemy import desc
+
+    # 构建查询并应用过滤
+    query = db.query(Project).filter(Project.is_active == True)
+    query = _apply_project_filters(query, export_in.filters or {})
+    query = DataScopeService.filter_projects_by_scope(db, query, current_user)
+    projects = query.order_by(desc(Project.created_at)).all()
+
+    # 构建导出数据
+    data = _build_project_export_data(projects)
+    df = pd.DataFrame(data)
+
+    # 创建Excel
+    column_widths = {
+        'A': 15, 'B': 30, 'C': 20, 'D': 15, 'E': 12, 'F': 12, 'G': 12,
+        'H': 8, 'I': 15, 'J': 10, 'K': 8, 'L': 15, 'M': 10, 'N': 12,
+        'O': 12, 'P': 12, 'Q': 12, 'R': 18, 'S': 18
+    }
+    output = _create_styled_excel(df, '项目列表', column_widths)
+
     filename = f"项目列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-    
     return StreamingResponse(
         io.BytesIO(output.read()),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={
-            "Content-Disposition": f"attachment; filename*=UTF-8''{filename}"
-        }
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"}
     )
 
 
