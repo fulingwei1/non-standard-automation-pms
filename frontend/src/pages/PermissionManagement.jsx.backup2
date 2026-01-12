@@ -54,6 +54,8 @@ export default function PermissionManagement() {
   const token = localStorage.getItem("token");
 
   // 检查是否是演示账号
+  const isDemoAccount = token?.startsWith("demo_token_");
+
   // 加载权限列表
   const loadPermissions = async () => {
     setLoading(true);
@@ -64,7 +66,9 @@ export default function PermissionManagement() {
       console.log(
         "[权限管理] Token检查:",
         token
-          ? `真实token (${token.substring(0, 30)}...)`
+          ? token.startsWith("demo_token_")
+            ? "演示账号token"
+            : `真实token (${token.substring(0, 30)}...)`
           : "❌ 未找到token",
       );
 
@@ -75,6 +79,21 @@ export default function PermissionManagement() {
         return;
       }
 
+      if (token.startsWith("demo_token_")) {
+        console.warn("[权限管理] ⚠️ 这是演示账号token，不会发送到后端");
+        // 不直接返回，而是设置一个状态来显示友好的提示界面
+        setPermissions([]);
+        setLoading(false);
+        return;
+      }
+
+      console.log("[权限管理] ✅ Token存在，发送请求...");
+      let response;
+      if (filterModule !== "all") {
+        // 如果指定了模块，需要传递module参数
+        response = await roleApi.permissions({ module: filterModule });
+      } else {
+        response = await roleApi.permissions();
       }
       console.log(
         "[权限管理] ✅ 成功获取权限列表:",
@@ -131,11 +150,18 @@ export default function PermissionManagement() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    
+    if (token && token.startsWith("demo_token_")) {
+      console.log("[权限管理] 演示账号，跳过数据加载");
+      return;
+    }
     loadPermissions();
     loadRoles();
   }, [filterModule]);
 
+  // 获取所有模块列表
+  const modules = Array.from(
+    new Set(permissions.map((p) => p.module).filter(Boolean)),
+  ).sort();
 
   // 按模块分组权限
   const groupedPermissions = permissions.reduce((acc, permission) => {
@@ -330,7 +356,7 @@ export default function PermissionManagement() {
       </Card>
 
       {}
-      
+      {isDemoAccount && (
         <Card className="border-amber-500/50 bg-amber-500/10">
           <CardContent className="pt-6">
             <div className="flex items-start gap-4">
@@ -342,6 +368,52 @@ export default function PermissionManagement() {
                   演示账号限制
                 </h3>
                 <p className="text-slate-300 mb-4">
+                  权限管理功能需要连接真实的后端服务，演示账号无法访问此功能。
+                  如需使用权限管理功能，请使用真实账号登录。
+                </p>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => {
+                      localStorage.removeItem("token");
+                      localStorage.removeItem("user");
+                      window.location.href = "/";
+                    }}
+                    className="bg-amber-500 hover:bg-amber-600 text-white"
+                  >
+                    切换到真实账号登录
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => window.history.back()}
+                    className="border-slate-600 text-slate-300 hover:bg-slate-800"
+                  >
+                    返回上一页
+                  </Button>
+                </div>
+                <div className="mt-4 p-3 bg-slate-800/50 rounded-lg">
+                  <p className="text-xs text-slate-400 mb-1">💡 提示：</p>
+                  <p className="text-xs text-slate-400">
+                    真实账号需要后端服务支持。请使用数据库中的真实用户账号登录（如：admin/admin）。
+                    如果后端服务未启动或数据库中没有用户，请联系系统管理员。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 权限列表 */}
+      {loading ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-8 text-slate-400">加载中...</div>
+          </CardContent>
+        </Card>
+      ) : isDemoAccount ? null : Object.keys(filteredPermissions).length ===
+        0 ? (
+        <Card>
+          <CardContent className="pt-6">
             <div className="text-center py-8 text-slate-400">
               {searchKeyword ? "未找到匹配的权限" : "暂无权限数据"}
             </div>
