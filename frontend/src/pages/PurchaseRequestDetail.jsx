@@ -73,7 +73,7 @@ export default function PurchaseRequestDetail() {
   const [approveData, setApproveData] = useState({ approved: true, note: "" });
   const [generating, setGenerating] = useState(false);
 
-  // Check if demo account  // Load request data
+  // Load request data
   useEffect(() => {
     const loadRequest = async () => {
       try {

@@ -54,8 +54,6 @@ import { toast } from "../components/ui/toast";
 import { LoadingCard } from "../components/common";
 import { ErrorMessage } from "../components/common";
 
-// Mock data - 已移除，使用真实API
-// Mock data - 已移除，使用真实API
 export default function PurchaseRequestNew() {
   const navigate = useNavigate();
   const { id } = useParams();

@@ -64,9 +64,7 @@ const STATUS_CONFIG = {
   CLOSED: { label: "已关闭", color: "bg-slate-500", icon: Package },
 };
 
-// Mock data - 已移除，使用真实API
-
-function RequestCard({
+export default function PurchaseRequestList() {
   request,
   onView,
   onEdit,

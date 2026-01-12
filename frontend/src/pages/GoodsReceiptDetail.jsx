@@ -1,27 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  ArrowLeft,
-  CheckCircle2,
-  XCircle,
-  Package,
-  Edit,
-  ClipboardCheck,
-  Truck,
-} from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle, ClipboardCheck } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Textarea } from "../components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -46,7 +36,7 @@ import {
   DialogBody,
   DialogFooter,
 } from "../components/ui/dialog";
-import { cn, formatCurrency, formatDate } from "../lib/utils";
+import { formatDate } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
 import { purchaseApi } from "../services/api";
 import { toast } from "../components/ui/toast";
@@ -87,9 +77,9 @@ export default function GoodsReceiptDetail() {
 
   useEffect(() => {
     loadReceipt();
-  }, [id]);
+  }, [loadReceipt]);
 
-  const loadReceipt = async () => {
+  const loadReceipt = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -106,7 +96,7 @@ export default function GoodsReceiptDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   const handleOpenInspect = (item) => {
     setInspectingItem(item);
