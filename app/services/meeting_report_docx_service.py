@@ -194,7 +194,7 @@ class MeetingReportDocxService:
                 heading_style = doc.styles[f'Heading {i}']
                 heading_style.font.name = '微软雅黑'
                 heading_style._element.rPr.rFonts.set(qn('w:eastAsia'), '微软雅黑')
-        except:
+        except (KeyError, AttributeError):
             # 如果设置失败，使用默认字体
             pass
     

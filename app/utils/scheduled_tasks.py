@@ -2,11 +2,14 @@
 """
 定时任务
 """
-
+import logging
 from typing import List, Optional
 from sqlalchemy import or_, func
 from sqlalchemy.orm import Session
 from datetime import datetime, date
+
+# 模块级 logger
+logger = logging.getLogger(__name__)
 
 from app.models.base import get_db_session
 from app.models.project import Project, ProjectMilestone, ProjectCost
@@ -85,10 +88,10 @@ def sales_reminder_scan():
         try:
             stats = scan_and_notify_all(db)
             logger.info(f"销售提醒扫描完成: {stats}")
-            print(f"[{datetime.now()}] 销售提醒扫描完成: {stats}")
+            logger.info("销售提醒扫描完成: {stats}")
         except Exception as e:
             logger.error(f"销售提醒扫描失败: {str(e)}")
-            print(f"[{datetime.now()}] 销售提醒扫描失败: {str(e)}")
+            logger.error("销售提醒扫描失败: %s", e)
             import traceback
             traceback.print_exc()
 
@@ -185,7 +188,7 @@ def daily_spec_match_check():
         
         db.commit()
         
-        print(f"[{datetime.now()}] 规格匹配检查完成: 检查 {total_checked} 项, 发现 {total_mismatched} 项不匹配")
+        logger.info("规格匹配检查完成: 检查 {total_checked} 项, 发现 {total_mismatched} 项不匹配")
         
         return {
             'checked': total_checked,
@@ -206,12 +209,11 @@ def calculate_project_health():
             calculator = HealthCalculator(db)
             result = calculator.batch_calculate()
             
-            print(f"[{datetime.now()}] 健康度计算完成: 总计 {result['total']} 个项目, "
-                  f"更新 {result['updated']} 个, 未变化 {result['unchanged']} 个")
+            logger.info("健康度计算完成: 总计 {result['total']} 个项目,  更新 {result['updated']} 个, 未变化 {result['unchanged']} 个")
             
             return result
     except Exception as e:
-        print(f"[{datetime.now()}] 健康度计算失败: {str(e)}")
+        logger.error("健康度计算失败: %s", e)
         import traceback
         traceback.print_exc()
         return {'error': str(e)}
@@ -265,14 +267,14 @@ def daily_health_snapshot():
             
             db.commit()
             
-            print(f"[{datetime.now()}] 健康度快照生成完成: 生成 {snapshot_count} 个快照")
+            logger.info("健康度快照生成完成: 生成 {snapshot_count} 个快照")
             
             return {
                 'snapshot_count': snapshot_count,
                 'timestamp': datetime.now().isoformat()
             }
     except Exception as e:
-        print(f"[{datetime.now()}] 健康度快照生成失败: {str(e)}")
+        logger.error("健康度快照生成失败: %s", e)
         import traceback
         traceback.print_exc()
         return {'error': str(e)}
@@ -755,7 +757,7 @@ def check_milestone_alerts():
             db.commit()
             
             logger.info(f"[{datetime.now()}] 里程碑预警检查完成: 即将到期 {len(upcoming_milestones)} 个, 已逾期 {len(overdue_milestones)} 个, 生成 {alert_count} 个预警")
-            print(f"[{datetime.now()}] 里程碑预警检查完成: 即将到期 {len(upcoming_milestones)} 个, 已逾期 {len(overdue_milestones)} 个, 生成 {alert_count} 个预警")
+            logger.info("里程碑预警检查完成: 即将到期 {len(upcoming_milestones)} 个, 已逾期 {len(overdue_milestones)} 个, 生成 {alert_count} 个预警")
             
             return {
                 'upcoming_count': len(upcoming_milestones),
@@ -812,7 +814,7 @@ def check_milestone_status_and_adjust_payments():
                     logger.error(f"调整里程碑 {milestone.id} 关联的收款计划失败: {e}", exc_info=True)
             
             logger.info(f"[{datetime.now()}] 里程碑状态监控完成: 检查 {len(changed_milestones)} 个里程碑, 调整 {adjusted_count} 个收款计划")
-            print(f"[{datetime.now()}] 里程碑状态监控完成: 检查 {len(changed_milestones)} 个里程碑, 调整 {adjusted_count} 个收款计划")
+            logger.info("里程碑状态监控完成: 检查 {len(changed_milestones)} 个里程碑, 调整 {adjusted_count} 个收款计划")
             
             return {
                 'checked_milestones': len(changed_milestones),
@@ -930,7 +932,7 @@ def check_cost_overrun_alerts():
             db.commit()
             
             logger.info(f"[{datetime.now()}] 成本超支预警检查完成: 检查 {len(active_projects)} 个项目, 发现 {len(overrun_projects)} 个超支项目, 生成 {alert_count} 个预警")
-            print(f"[{datetime.now()}] 成本超支预警检查完成: 检查 {len(active_projects)} 个项目, 发现 {len(overrun_projects)} 个超支项目, 生成 {alert_count} 个预警")
+            logger.info("成本超支预警检查完成: 检查 {len(active_projects)} 个项目, 发现 {len(overrun_projects)} 个超支项目, 生成 {alert_count} 个预警")
             
             return {
                 'checked_count': len(active_projects),
@@ -1044,7 +1046,7 @@ def generate_shortage_alerts():
             db.commit()
             
             logger.info(f"[{datetime.now()}] 缺料预警生成完成: 检查 {len(shortages)} 个缺料记录, 生成 {alert_count} 个预警")
-            print(f"[{datetime.now()}] 缺料预警生成完成: 检查 {len(shortages)} 个缺料记录, 生成 {alert_count} 个预警")
+            logger.info("缺料预警生成完成: 检查 {len(shortages)} 个缺料记录, 生成 {alert_count} 个预警")
             
             return {
                 'checked_count': len(shortages),
@@ -1151,7 +1153,7 @@ def check_task_delay_alerts():
             db.commit()
             
             logger.info(f"[{datetime.now()}] 任务延期预警检查完成: 发现 {len(overdue_tasks)} 个延期任务, 生成 {alert_count} 个预警")
-            print(f"[{datetime.now()}] 任务延期预警检查完成: 发现 {len(overdue_tasks)} 个延期任务, 生成 {alert_count} 个预警")
+            logger.info("任务延期预警检查完成: 发现 {len(overdue_tasks)} 个延期任务, 生成 {alert_count} 个预警")
             
             return {
                 'overdue_count': len(overdue_tasks),
@@ -1251,7 +1253,7 @@ def check_production_plan_alerts():
             db.commit()
             
             logger.info(f"[{datetime.now()}] 生产计划预警检查完成: 检查 {len(active_plans)} 个计划, 生成 {alert_count} 个预警")
-            print(f"[{datetime.now()}] 生产计划预警检查完成: 检查 {len(active_plans)} 个计划, 生成 {alert_count} 个预警")
+            logger.info("生产计划预警检查完成: 检查 {len(active_plans)} 个计划, 生成 {alert_count} 个预警")
             
             return {
                 'checked_count': len(active_plans),
@@ -1368,7 +1370,7 @@ def check_work_report_timeout():
             db.commit()
             
             logger.info(f"[{datetime.now()}] 报工超时提醒检查完成: 检查 {len(active_orders)} 个工单, 生成 {alert_count} 个预警")
-            print(f"[{datetime.now()}] 报工超时提醒检查完成: 检查 {len(active_orders)} 个工单, 生成 {alert_count} 个预警")
+            logger.info("报工超时提醒检查完成: 检查 {len(active_orders)} 个工单, 生成 {alert_count} 个预警")
             
             return {
                 'checked_count': len(active_orders),
@@ -1427,7 +1429,7 @@ def calculate_progress_summary():
             db.commit()
             
             logger.info(f"[{datetime.now()}] 进度汇总计算完成: 更新 {updated_count} 个项目进度")
-            print(f"[{datetime.now()}] 进度汇总计算完成: 更新 {updated_count} 个项目进度")
+            logger.info("进度汇总计算完成: 更新 {updated_count} 个项目进度")
             
             return {
                 'updated_count': updated_count,
@@ -1533,7 +1535,7 @@ def daily_kit_check():
             db.commit()
             
             logger.info(f"[{datetime.now()}] 每日齐套检查完成: 检查 {len(upcoming_orders)} 个工单, 生成 {alert_count} 个预警")
-            print(f"[{datetime.now()}] 每日齐套检查完成: 检查 {len(upcoming_orders)} 个工单, 生成 {alert_count} 个预警")
+            logger.info("每日齐套检查完成: 检查 {len(upcoming_orders)} 个工单, 生成 {alert_count} 个预警")
             
             return {
                 'checked_count': len(upcoming_orders),
@@ -1629,7 +1631,7 @@ def check_delivery_delay():
             db.commit()
             
             logger.info(f"[{datetime.now()}] 到货延迟检查完成: 发现 {len(delayed_orders)} 个延迟订单, 生成 {alert_count} 个预警")
-            print(f"[{datetime.now()}] 到货延迟检查完成: 发现 {len(delayed_orders)} 个延迟订单, 生成 {alert_count} 个预警")
+            logger.info("到货延迟检查完成: 发现 {len(delayed_orders)} 个延迟订单, 生成 {alert_count} 个预警")
             
             return {
                 'delayed_count': len(delayed_orders),
@@ -1728,7 +1730,7 @@ def check_task_deadline_reminder():
             db.commit()
             
             logger.info(f"[{datetime.now()}] 任务到期提醒检查完成: 发现 {len(upcoming_tasks)} 个即将到期任务, 生成 {alert_count} 个提醒")
-            print(f"[{datetime.now()}] 任务到期提醒检查完成: 发现 {len(upcoming_tasks)} 个即将到期任务, 生成 {alert_count} 个提醒")
+            logger.info("任务到期提醒检查完成: 发现 {len(upcoming_tasks)} 个即将到期任务, 生成 {alert_count} 个提醒")
             
             return {
                 'upcoming_count': len(upcoming_tasks),
@@ -1840,7 +1842,7 @@ def check_outsourcing_delivery_alerts():
             db.commit()
             
             logger.info(f"[{datetime.now()}] 外协交期预警检查完成: 检查 {len(active_orders)} 个订单, 生成 {alert_count} 个预警")
-            print(f"[{datetime.now()}] 外协交期预警检查完成: 检查 {len(active_orders)} 个订单, 生成 {alert_count} 个预警")
+            logger.info("外协交期预警检查完成: 检查 {len(active_orders)} 个订单, 生成 {alert_count} 个预警")
             
             return {
                 'checked_count': len(active_orders),
@@ -1956,7 +1958,7 @@ def check_milestone_risk_alerts():
             db.commit()
             
             logger.info(f"[{datetime.now()}] 里程碑风险预警检查完成: 检查 {len(upcoming_milestones)} 个里程碑, 生成 {alert_count} 个预警")
-            print(f"[{datetime.now()}] 里程碑风险预警检查完成: 检查 {len(upcoming_milestones)} 个里程碑, 生成 {alert_count} 个预警")
+            logger.info("里程碑风险预警检查完成: 检查 {len(upcoming_milestones)} 个里程碑, 生成 {alert_count} 个预警")
             
             return {
                 'checked_count': len(upcoming_milestones),
@@ -2098,7 +2100,7 @@ def generate_production_daily_reports(target_date: Optional[date] = None):
             db.commit()
             
             logger.info(f"[{datetime.now()}] 生产日报自动生成: {generated} 条记录, 日期 {target_date}")
-            print(f"[{datetime.now()}] 生产日报自动生成完成: {generated} 条记录, 日期 {target_date}")
+            logger.info("生产日报自动生成完成: {generated} 条记录, 日期 {target_date}")
             
             return {
                 'generated': generated,
@@ -2164,7 +2166,7 @@ def generate_shortage_daily_report(target_date: Optional[date] = None):
             db.commit()
             
             logger.info(f"[{datetime.now()}] 缺料日报自动生成: 日期 {target_date}")
-            print(f"[{datetime.now()}] 缺料日报自动生成完成: 日期 {target_date}")
+            logger.info("缺料日报自动生成完成: 日期 {target_date}")
             
             return {
                 'date': target_date.isoformat(),
@@ -2230,14 +2232,14 @@ def generate_job_duty_tasks():
             
             db.commit()
             
-            print(f"[{datetime.now()}] 岗位职责任务生成完成: 生成 {generated_count} 个任务")
+            logger.info("岗位职责任务生成完成: 生成 {generated_count} 个任务")
             
             return {
                 'generated_count': generated_count,
                 'timestamp': datetime.now().isoformat()
             }
     except Exception as e:
-        print(f"[{datetime.now()}] 岗位职责任务生成失败: {str(e)}")
+        logger.error("岗位职责任务生成失败: %s", e)
         import traceback
         traceback.print_exc()
         return {'error': str(e)}
@@ -2364,7 +2366,7 @@ def check_workload_overload_alerts():
             db.commit()
             
             logger.info(f"[{datetime.now()}] 负荷超限预警检查完成: 检查 {len(users)} 个用户, 发现 {len(overloaded_users)} 个超负荷用户, 生成 {alert_count} 个预警")
-            print(f"[{datetime.now()}] 负荷超限预警检查完成: 检查 {len(users)} 个用户, 发现 {len(overloaded_users)} 个超负荷用户, 生成 {alert_count} 个预警")
+            logger.info("负荷超限预警检查完成: 检查 {len(users)} 个用户, 发现 {len(overloaded_users)} 个超负荷用户, 生成 {alert_count} 个预警")
             
             return {
                 'checked_count': len(users),
@@ -2405,12 +2407,12 @@ def calculate_monthly_labor_cost_task():
             result = LaborCostService.calculate_monthly_labor_cost(db, year, month)
             
             logger.info(f"[{datetime.now()}] 月度工时成本计算完成（{year}年{month}月）: {result.get('message', '')}")
-            print(f"[{datetime.now()}] 月度工时成本计算完成（{year}年{month}月）: {result.get('message', '')}")
+            logger.info("月度工时成本计算完成（{year}年{month}月）: {result.get('message', '')}")
             
             return result
         except Exception as e:
             logger.error(f"[{datetime.now()}] 月度工时成本计算失败: {str(e)}")
-            print(f"[{datetime.now()}] 月度工时成本计算失败: {str(e)}")
+            logger.error("月度工时成本计算失败: %s", e)
             import traceback
             traceback.print_exc()
             return {'error': str(e)}
@@ -2432,7 +2434,7 @@ def daily_timesheet_reminder_task():
         with get_db_session() as db:
             count = notify_timesheet_missing(db)
             logger.info(f"[{datetime.now()}] 每日工时填报提醒完成: 发送 {count} 条提醒")
-            print(f"[{datetime.now()}] 每日工时填报提醒完成: 发送 {count} 条提醒")
+            logger.info("每日工时填报提醒完成: 发送 {count} 条提醒")
             
             return {
                 'reminder_count': count,
@@ -2459,7 +2461,7 @@ def weekly_timesheet_reminder_task():
         with get_db_session() as db:
             count = notify_weekly_timesheet_missing(db)
             logger.info(f"[{datetime.now()}] 每周工时填报提醒完成: 发送 {count} 条提醒")
-            print(f"[{datetime.now()}] 每周工时填报提醒完成: 发送 {count} 条提醒")
+            logger.info("每周工时填报提醒完成: 发送 {count} 条提醒")
             
             return {
                 'reminder_count': count,
@@ -2486,7 +2488,7 @@ def timesheet_anomaly_alert_task():
         with get_db_session() as db:
             count = notify_timesheet_anomaly(db, days=1)
             logger.info(f"[{datetime.now()}] 异常工时预警完成: 发送 {count} 条提醒")
-            print(f"[{datetime.now()}] 异常工时预警完成: 发送 {count} 条提醒")
+            logger.info("异常工时预警完成: 发送 {count} 条提醒")
             
             return {
                 'alert_count': count,
@@ -2513,7 +2515,7 @@ def timesheet_approval_timeout_reminder_task():
         with get_db_session() as db:
             count = notify_approval_timeout(db, timeout_hours=24)
             logger.info(f"[{datetime.now()}] 工时审批超时提醒完成: 发送 {count} 条提醒")
-            print(f"[{datetime.now()}] 工时审批超时提醒完成: 发送 {count} 条提醒")
+            logger.info("工时审批超时提醒完成: 发送 {count} 条提醒")
             
             return {
                 'reminder_count': count,
@@ -2540,7 +2542,7 @@ def timesheet_sync_failure_alert_task():
         with get_db_session() as db:
             count = notify_sync_failure(db)
             logger.info(f"[{datetime.now()}] 工时数据同步失败提醒完成: 发送 {count} 条提醒")
-            print(f"[{datetime.now()}] 工时数据同步失败提醒完成: 发送 {count} 条提醒")
+            logger.info("工时数据同步失败提醒完成: 发送 {count} 条提醒")
             
             return {
                 'alert_count': count,
@@ -2576,12 +2578,12 @@ def daily_timesheet_aggregation_task():
             result = service.aggregate_monthly_timesheet(year, month)
             
             logger.info(f"[{datetime.now()}] 每日工时汇总完成（{year}年{month}月）: {result.get('message', '')}")
-            print(f"[{datetime.now()}] 每日工时汇总完成（{year}年{month}月）")
+            logger.info("每日工时汇总完成（{year}年{month}月）")
             
             return result
         except Exception as e:
             logger.error(f"[{datetime.now()}] 每日工时汇总失败: {str(e)}")
-            print(f"[{datetime.now()}] 每日工时汇总失败: {str(e)}")
+            logger.error("每日工时汇总失败: %s", e)
             import traceback
             traceback.print_exc()
             return {'error': str(e)}
@@ -2620,7 +2622,7 @@ def weekly_timesheet_aggregation_task():
             return result
         except Exception as e:
             logger.error(f"[{datetime.now()}] 每周工时汇总失败: {str(e)}")
-            print(f"[{datetime.now()}] 每周工时汇总失败: {str(e)}")
+            logger.error("每周工时汇总失败: %s", e)
             import traceback
             traceback.print_exc()
             return {'error': str(e)}
@@ -2653,12 +2655,12 @@ def monthly_timesheet_aggregation_task():
             result = service.aggregate_monthly_timesheet(year, month)
             
             logger.info(f"[{datetime.now()}] 月度工时汇总完成（{year}年{month}月）: {result.get('message', '')}")
-            print(f"[{datetime.now()}] 月度工时汇总完成（{year}年{month}月）")
+            logger.info("月度工时汇总完成（{year}年{month}月）")
             
             return result
         except Exception as e:
             logger.error(f"[{datetime.now()}] 月度工时汇总失败: {str(e)}")
-            print(f"[{datetime.now()}] 月度工时汇总失败: {str(e)}")
+            logger.error("月度工时汇总失败: %s", e)
             import traceback
             traceback.print_exc()
             return {'error': str(e)}
@@ -2717,12 +2719,7 @@ def generate_monthly_reports_task():
             hr_sync_result = sync_service.sync_to_hr(year=year, month=month)
             
             logger.info(
-                f"[{datetime.now()}] 月度报表生成完成（{year}年{month}月）: "
-                f"财务{finance_sync_count}条，研发{rd_sync_count}条"
-            )
-            print(
-                f"[{datetime.now()}] 月度报表生成完成（{year}年{month}月）: "
-                f"财务{finance_sync_count}条，研发{rd_sync_count}条"
+                f"月度报表生成完成（{year}年{month}月）: 财务{finance_sync_count}条，研发{rd_sync_count}条"
             )
             
             return {
@@ -2734,7 +2731,7 @@ def generate_monthly_reports_task():
             }
         except Exception as e:
             logger.error(f"[{datetime.now()}] 月度报表生成失败: {str(e)}")
-            print(f"[{datetime.now()}] 月度报表生成失败: {str(e)}")
+            logger.error("月度报表生成失败: %s", e)
             import traceback
             traceback.print_exc()
             return {'error': str(e)}
@@ -2758,7 +2755,7 @@ def check_payment_reminder():
             count = notify_payment_plan_upcoming(db, days_before=7)
             
             logger.info(f"[{datetime.now()}] 收款提醒服务完成: 发送 {count} 条提醒")
-            print(f"[{datetime.now()}] 收款提醒服务完成: 发送 {count} 条提醒")
+            logger.info("收款提醒服务完成: 发送 {count} 条提醒")
             
             return {
                 'reminder_count': count,
@@ -2880,7 +2877,7 @@ def check_overdue_receivable_alerts():
             db.commit()
             
             logger.info(f"[{datetime.now()}] 逾期应收预警检查完成: 检查 {len(overdue_invoices)} 张发票, 生成 {alert_count} 个预警")
-            print(f"[{datetime.now()}] 逾期应收预警检查完成: 检查 {len(overdue_invoices)} 张发票, 生成 {alert_count} 个预警")
+            logger.info("逾期应收预警检查完成: 检查 {len(overdue_invoices)} 张发票, 生成 {alert_count} 个预警")
             
             return {
                 'checked_count': len(overdue_invoices),
@@ -2983,7 +2980,7 @@ def check_opportunity_stage_timeout():
             db.commit()
             
             logger.info(f"[{datetime.now()}] 商机阶段超时提醒完成: 检查 {len(opportunities)} 个商机, 发送 {reminder_count} 条提醒")
-            print(f"[{datetime.now()}] 商机阶段超时提醒完成: 检查 {len(opportunities)} 个商机, 发送 {reminder_count} 条提醒")
+            logger.info("商机阶段超时提醒完成: 检查 {len(opportunities)} 个商机, 发送 {reminder_count} 条提醒")
             
             return {
                 'checked_count': len(opportunities),
@@ -3081,7 +3078,7 @@ def check_presale_workorder_timeout():
             db.commit()
             
             logger.info(f"[{datetime.now()}] 售前工单超时提醒完成: 检查 {len(tickets)} 个工单, 发送 {reminder_count} 条提醒")
-            print(f"[{datetime.now()}] 售前工单超时提醒完成: 检查 {len(tickets)} 个工单, 发送 {reminder_count} 条提醒")
+            logger.info("售前工单超时提醒完成: 检查 {len(tickets)} 个工单, 发送 {reminder_count} 条提醒")
             
             return {
                 'checked_count': len(tickets),
@@ -3157,7 +3154,7 @@ def check_issue_timeout_escalation():
             
             if escalated_count > 0:
                 logger.info(f"[{datetime.now()}] 问题超时升级服务完成: 升级 {escalated_count} 个问题")
-                print(f"[{datetime.now()}] 问题超时升级服务完成: 升级 {escalated_count} 个问题")
+                logger.info("问题超时升级服务完成: 升级 {escalated_count} 个问题")
             
             return {
                 'checked_count': len(issues),
@@ -3265,7 +3262,7 @@ def check_equipment_maintenance_reminder():
             db.commit()
             
             logger.info(f"[{datetime.now()}] 设备保养提醒服务完成: 检查 {len(equipment_list)} 台设备, 发送 {reminder_count} 条提醒")
-            print(f"[{datetime.now()}] 设备保养提醒服务完成: 检查 {len(equipment_list)} 台设备, 发送 {reminder_count} 条提醒")
+            logger.info("设备保养提醒服务完成: 检查 {len(equipment_list)} 台设备, 发送 {reminder_count} 条提醒")
             
             return {
                 'checked_count': len(equipment_list),
@@ -3359,13 +3356,7 @@ def retry_failed_notifications():
             db.commit()
             
             logger.info(
-                f"[{datetime.now()}] 通知重试完成: "
-                f"重试 {retry_count} 个, 成功 {success_count} 个, "
-                f"失败 {failed_count} 个, 放弃 {abandoned_count} 个"
-            )
-            print(
-                f"[{datetime.now()}] 通知重试完成: "
-                f"重试 {retry_count} 个, 成功 {success_count} 个, "
+                f"通知重试完成: 重试 {retry_count} 个, 成功 {success_count} 个, "
                 f"失败 {failed_count} 个, 放弃 {abandoned_count} 个"
             )
             
@@ -3587,13 +3578,8 @@ def calculate_response_metrics():
             db.commit()
             
             logger.info(
-                f"[{datetime.now()}] 响应时效指标计算完成（{yesterday}）: "
-                f"预警数={len(alerts)}, 平均响应时间={float(avg_response_time):.2f}小时, "
-                f"平均解决时间={float(avg_resolve_time):.2f}小时"
-            )
-            print(
-                f"[{datetime.now()}] 响应时效指标计算完成（{yesterday}）: "
-                f"预警数={len(alerts)}, 平均响应时间={float(avg_response_time):.2f}小时, "
+                f"响应时效指标计算完成（{yesterday}）: 预警数={len(alerts)}, "
+                f"平均响应时间={float(avg_response_time):.2f}小时, "
                 f"平均解决时间={float(avg_resolve_time):.2f}小时"
             )
             
@@ -3697,12 +3683,7 @@ def check_contract_expiry_reminder():
             db.commit()
 
             logger.info(
-                f"[{datetime.now()}] 合同到期提醒检查完成: "
-                f"检查合同数={len(active_contracts)}, 生成提醒数={reminders_created}"
-            )
-            print(
-                f"[{datetime.now()}] 合同到期提醒检查完成: "
-                f"检查合同数={len(active_contracts)}, 生成提醒数={reminders_created}"
+                f"合同到期提醒检查完成: 检查合同数={len(active_contracts)}, 生成提醒数={reminders_created}"
             )
 
             return {
@@ -3793,12 +3774,7 @@ def check_employee_confirmation_reminder():
             db.commit()
 
             logger.info(
-                f"[{datetime.now()}] 员工转正提醒检查完成: "
-                f"检查员工数={len(probation_employees)}, 生成提醒数={reminders_created}"
-            )
-            print(
-                f"[{datetime.now()}] 员工转正提醒检查完成: "
-                f"检查员工数={len(probation_employees)}, 生成提醒数={reminders_created}"
+                f"员工转正提醒检查完成: 检查员工数={len(probation_employees)}, 生成提醒数={reminders_created}"
             )
 
             return {

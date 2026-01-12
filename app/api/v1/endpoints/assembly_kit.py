@@ -5,11 +5,15 @@
 基于装配工艺路径的智能齐套分析系统
 """
 
+import json
+import logging
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import List, Optional, Dict, Any
-import json
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, or_
 
@@ -843,7 +847,7 @@ async def execute_kit_analysis(
                 )
             except Exception as e:
                 # 预警发送失败不影响分析结果
-                print(f"发送企业微信预警失败: {e}")
+                logger.error(f"发送企业微信预警失败: {e}")
 
     db.commit()
     db.refresh(readiness)

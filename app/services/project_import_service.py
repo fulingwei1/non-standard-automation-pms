@@ -5,7 +5,7 @@
 
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 import io
 
 import pandas as pd
@@ -161,10 +161,10 @@ def parse_date_value(value: Any) -> Optional[date]:
     """
     if pd.isna(value):
         return None
-    
+
     try:
         return pd.to_datetime(value).date()
-    except:
+    except (ValueError, TypeError, pd.errors.ParserError):
         return None
 
 
@@ -177,10 +177,10 @@ def parse_decimal_value(value: Any) -> Optional[Decimal]:
     """
     if pd.isna(value):
         return None
-    
+
     try:
         return Decimal(str(value))
-    except:
+    except (ValueError, TypeError, InvalidOperation):
         return None
 
 

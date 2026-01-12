@@ -237,9 +237,9 @@ def get_user_hourly_rate(
     if work_date:
         try:
             work_date_obj = datetime.strptime(work_date, "%Y-%m-%d").date()
-        except:
+        except ValueError:
             raise HTTPException(status_code=400, detail="日期格式错误，应为YYYY-MM-DD")
-    
+
     hourly_rate = HourlyRateService.get_user_hourly_rate(db, user_id, work_date_obj)
     
     return ResponseModel(
@@ -272,9 +272,9 @@ def get_users_hourly_rates(
     if work_date:
         try:
             work_date_obj = datetime.strptime(work_date, "%Y-%m-%d").date()
-        except:
+        except ValueError:
             raise HTTPException(status_code=400, detail="日期格式错误，应为YYYY-MM-DD")
-    
+
     hourly_rates = HourlyRateService.get_users_hourly_rates(db, user_ids, work_date_obj)
     
     return ResponseModel(
@@ -311,14 +311,14 @@ def get_hourly_rate_history(
     if start_date:
         try:
             start_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
-        except:
+        except ValueError:
             raise HTTPException(status_code=400, detail="开始日期格式错误，应为YYYY-MM-DD")
-    
+
     end_date_obj = None
     if end_date:
         try:
             end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
-        except:
+        except ValueError:
             raise HTTPException(status_code=400, detail="结束日期格式错误，应为YYYY-MM-DD")
     
     history = HourlyRateService.get_hourly_rate_history(

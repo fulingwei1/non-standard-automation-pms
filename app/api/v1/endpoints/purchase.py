@@ -2,12 +2,15 @@
 """
 采购管理 API endpoints
 """
+import logging
 from typing import Any, List, Optional
 from datetime import date, datetime
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
+from sqlalchemy.orm import Session, selectinload, joinedload
 from sqlalchemy import desc, or_, func
 
 from app.api import deps
@@ -68,11 +71,13 @@ def auto_create_purchase_orders_from_request(
     """
     if request.auto_po_created and not force:
         raise HTTPException(status_code=400, detail="采购申请已自动生成采购订单")
-    
+
     if not request.supplier_id:
         raise HTTPException(status_code=400, detail="请先为采购申请指定供应商")
 
-    request_items = request.items.order_by(PurchaseRequestItem.id).all()
+    # 预加载items
+    db.refresh(request, attribute_names=['items'])
+    request_items = sorted(request.items, key=lambda x: x.id or 0)
     if not request_items:
         raise HTTPException(status_code=400, detail="采购申请没有物料明细，无法创建采购订单")
 
@@ -258,13 +263,23 @@ def read_purchase_order(
     """
     获取采购订单详情
     """
-    order = db.query(PurchaseOrder).filter(PurchaseOrder.id == order_id).first()
+    order = (
+        db.query(PurchaseOrder)
+        .options(
+            selectinload(PurchaseOrder.items),
+            joinedload(PurchaseOrder.supplier),
+            joinedload(PurchaseOrder.project),
+            joinedload(PurchaseOrder.source_request)
+        )
+        .filter(PurchaseOrder.id == order_id)
+        .first()
+    )
     if not order:
         raise HTTPException(status_code=404, detail="采购订单不存在")
-    
-    # 获取订单明细
+
+    # 获取订单明细（已预加载）
     items = []
-    for item in order.items.order_by(PurchaseOrderItem.item_no).all():
+    for item in sorted(order.items, key=lambda x: x.item_no or 0):
         items.append(PurchaseOrderItemResponse(
             id=item.id,
             item_no=item.item_no,
@@ -515,7 +530,7 @@ def approve_purchase_order(
             db.commit()
         except Exception as e:
             # 成本归集失败不影响审批流程，只记录错误
-            print(f"Failed to collect cost from purchase order {order_id}: {e}")
+            logger.error(f"Failed to collect cost from purchase order {order_id}: {e}")
     
     return ResponseModel(
         code=200,
@@ -754,13 +769,22 @@ def get_goods_receipt_detail(
     """
     获取收货单详情
     """
-    receipt = db.query(GoodsReceipt).filter(GoodsReceipt.id == receipt_id).first()
+    receipt = (
+        db.query(GoodsReceipt)
+        .options(
+            selectinload(GoodsReceipt.items),
+            joinedload(GoodsReceipt.order),
+            joinedload(GoodsReceipt.supplier)
+        )
+        .filter(GoodsReceipt.id == receipt_id)
+        .first()
+    )
     if not receipt:
         raise HTTPException(status_code=404, detail="收货单不存在")
-    
-    # 获取收货明细
+
+    # 获取收货明细（已预加载）
     items = []
-    for item in receipt.items.all():
+    for item in receipt.items:
         items.append(GoodsReceiptItemResponse(
             id=item.id,
             material_code=item.material_code,
@@ -799,12 +823,17 @@ def get_goods_receipt_items(
     """
     获取收货单明细列表
     """
-    receipt = db.query(GoodsReceipt).filter(GoodsReceipt.id == receipt_id).first()
+    receipt = (
+        db.query(GoodsReceipt)
+        .options(selectinload(GoodsReceipt.items))
+        .filter(GoodsReceipt.id == receipt_id)
+        .first()
+    )
     if not receipt:
         raise HTTPException(status_code=404, detail="收货单不存在")
-    
+
     items = []
-    for item in receipt.items.all():
+    for item in receipt.items:
         items.append(GoodsReceiptItemResponse(
             id=item.id,
             material_code=item.material_code,
@@ -1096,13 +1125,24 @@ def read_purchase_request(
     """
     获取采购申请详情
     """
-    request = db.query(PurchaseRequest).filter(PurchaseRequest.id == request_id).first()
+    request = (
+        db.query(PurchaseRequest)
+        .options(
+            selectinload(PurchaseRequest.items),
+            joinedload(PurchaseRequest.project),
+            joinedload(PurchaseRequest.machine),
+            joinedload(PurchaseRequest.supplier),
+            joinedload(PurchaseRequest.requester)
+        )
+        .filter(PurchaseRequest.id == request_id)
+        .first()
+    )
     if not request:
         raise HTTPException(status_code=404, detail="采购申请不存在")
-    
-    # 获取明细
+
+    # 获取明细（已预加载）
     items = []
-    for item in request.items.all():
+    for item in request.items:
         items.append(PurchaseRequestItemResponse(
             id=item.id,
             bom_item_id=item.bom_item_id,

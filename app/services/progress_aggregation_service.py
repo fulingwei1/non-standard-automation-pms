@@ -4,10 +4,13 @@
 任务进度 → 阶段进度 → 项目进度 的实时聚合
 """
 
+import logging
 from datetime import datetime
 from typing import Optional, Dict, Any
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_
+from sqlalchemy import func, and_, case
 
 from app.models.task_center import TaskUnified
 from app.models.project import Project, ProjectStage
@@ -42,20 +45,27 @@ def aggregate_task_progress(db: Session, task_id: int) -> dict:
     project_id = task.project_id
     result['project_id'] = project_id
 
-    # 2. 计算项目整体进度（所有任务的加权平均）
-    project_tasks = db.query(TaskUnified).filter(
-        and_(
-            TaskUnified.project_id == project_id,
-            TaskUnified.is_active == True,
-            TaskUnified.status.notin_(['CANCELLED'])  # 排除已取消任务
-        )
-    ).all()
+    # 2. 计算项目整体进度（使用聚合函数优化）
+    base_filter = and_(
+        TaskUnified.project_id == project_id,
+        TaskUnified.is_active == True,
+        TaskUnified.status.notin_(['CANCELLED'])
+    )
 
-    if project_tasks:
-        # 加权平均（默认权重为1）
-        total_weight = len(project_tasks)
-        weighted_progress = sum(t.progress for t in project_tasks)
-        project_progress = round(weighted_progress / total_weight, 2) if total_weight > 0 else 0
+    total_tasks_result = (
+        db.query(func.count(TaskUnified.id))
+        .filter(base_filter)
+        .scalar()
+    )
+
+    if total_tasks_result:
+        # 使用SQL聚合计算加权平均
+        weighted_progress_result = (
+            db.query(func.sum(TaskUnified.progress))
+            .filter(base_filter)
+            .scalar()
+        )
+        project_progress = round(float(weighted_progress_result or 0) / total_tasks_result, 2)
 
         # 更新项目进度
         project = db.query(Project).filter(Project.id == project_id).first()
@@ -72,21 +82,27 @@ def aggregate_task_progress(db: Session, task_id: int) -> dict:
         stage_code = task.stage
         result['stage_code'] = stage_code
 
-        # 获取该阶段的所有任务
-        stage_tasks = db.query(TaskUnified).filter(
-            and_(
-                TaskUnified.project_id == project_id,
-                TaskUnified.stage == stage_code,
-                TaskUnified.is_active == True,
-                TaskUnified.status.notin_(['CANCELLED'])
-            )
-        ).all()
+        # 获取该阶段的所有任务（使用聚合函数优化）
+        stage_filter = and_(
+            TaskUnified.project_id == project_id,
+            TaskUnified.stage == stage_code,
+            TaskUnified.is_active == True,
+            TaskUnified.status.notin_(['CANCELLED'])
+        )
 
-        if stage_tasks:
-            # 加权平均
-            total_weight = len(stage_tasks)
-            weighted_progress = sum(t.progress for t in stage_tasks)
-            stage_progress = round(weighted_progress / total_weight, 2) if total_weight > 0 else 0
+        total_stage_tasks_result = (
+            db.query(func.count(TaskUnified.id))
+            .filter(stage_filter)
+            .scalar()
+        )
+
+        if total_stage_tasks_result:
+            weighted_stage_progress_result = (
+                db.query(func.sum(TaskUnified.progress))
+                .filter(stage_filter)
+                .scalar()
+            )
+            stage_progress = round(float(weighted_stage_progress_result or 0) / total_stage_tasks_result, 2)
 
             # 更新阶段进度
             project_stage = db.query(ProjectStage).filter(
@@ -123,19 +139,34 @@ def _check_and_update_health(db: Session, project_id: int):
     if not project:
         return
 
-    # 统计任务情况
-    tasks = db.query(TaskUnified).filter(
-        and_(
-            TaskUnified.project_id == project_id,
-            TaskUnified.is_active == True,
-            TaskUnified.status.notin_(['CANCELLED', 'COMPLETED'])
-        )
-    ).all()
+    # 使用聚合查询统计任务情况
+    active_filter = and_(
+        TaskUnified.project_id == project_id,
+        TaskUnified.is_active == True,
+        TaskUnified.status.notin_(['CANCELLED', 'COMPLETED'])
+    )
 
-    delayed_count = sum(1 for t in tasks if t.is_delayed)
-    overdue_count = sum(1 for t in tasks if t.deadline and t.deadline < datetime.now())
+    total_tasks = (
+        db.query(func.count(TaskUnified.id))
+        .filter(active_filter)
+        .scalar()
+    ) or 0
 
-    total_tasks = len(tasks)
+    # 统计延期和逾期任务
+    delayed_count = (
+        db.query(func.count(TaskUnified.id))
+        .filter(and_(active_filter, TaskUnified.is_delayed == True))
+        .scalar()
+    ) or 0
+
+    overdue_count = (
+        db.query(func.count(TaskUnified.id))
+        .filter(and_(
+            active_filter,
+            TaskUnified.deadline < datetime.now()
+        ))
+        .scalar()
+    ) or 0
 
     # 健康度判断逻辑
     if total_tasks == 0:
@@ -198,7 +229,7 @@ def create_progress_log(
     except Exception as e:
         # 如果 ProgressLog 表不存在或其他错误，记录日志但不影响主流程
         db.rollback()
-        print(f"Warning: Could not create progress log: {e}")
+        logger.warning(f"Could not create progress log: {e}")
         return None
 
 
@@ -213,18 +244,53 @@ def get_project_progress_summary(db: Session, project_id: int) -> dict:
     Returns:
         dict: 进度汇总信息
     """
-    # 统计任务
-    tasks = db.query(TaskUnified).filter(TaskUnified.project_id == project_id).all()
+    # 使用聚合查询优化
+    base_filter = TaskUnified.project_id == project_id
 
-    total_tasks = len([t for t in tasks if t.status != 'CANCELLED'])
-    completed_tasks = len([t for t in tasks if t.status == 'COMPLETED'])
-    in_progress_tasks = len([t for t in tasks if t.status == 'IN_PROGRESS'])
-    delayed_tasks = len([t for t in tasks if t.is_delayed])
-    overdue_tasks = len([t for t in tasks if t.deadline and t.deadline < datetime.now()
-                        and t.status not in ['COMPLETED', 'CANCELLED']])
+    # 统计任务总数
+    total_tasks = (
+        db.query(func.count(TaskUnified.id))
+        .filter(and_(base_filter, TaskUnified.status != 'CANCELLED'))
+        .scalar()
+    ) or 0
+
+    # 按状态聚合
+    status_counts = (
+        db.query(TaskUnified.status, func.count(TaskUnified.id).label('count'))
+        .filter(base_filter)
+        .group_by(TaskUnified.status)
+        .all()
+    )
+    status_dict = {status: count for status, count in status_counts}
+
+    completed_tasks = status_dict.get('COMPLETED', 0)
+    in_progress_tasks = status_dict.get('IN_PROGRESS', 0)
+
+    # 统计延期任务
+    delayed_tasks = (
+        db.query(func.count(TaskUnified.id))
+        .filter(and_(base_filter, TaskUnified.is_delayed == True))
+        .scalar()
+    ) or 0
+
+    # 统计逾期任务
+    overdue_tasks = (
+        db.query(func.count(TaskUnified.id))
+        .filter(and_(
+            base_filter,
+            TaskUnified.deadline < datetime.now(),
+            TaskUnified.status.notin_(['COMPLETED', 'CANCELLED'])
+        ))
+        .scalar()
+    ) or 0
 
     # 计算整体进度
-    overall_progress = sum(t.progress for t in tasks) / len(tasks) if tasks else 0
+    overall_progress_result = (
+        db.query(func.avg(TaskUnified.progress))
+        .filter(base_filter)
+        .scalar()
+    )
+    overall_progress = float(overall_progress_result or 0)
 
     return {
         'project_id': project_id,
@@ -258,50 +324,88 @@ class ProgressAggregationService:
         Returns:
             dict: 聚合后的进度指标
         """
-        tasks = db.query(TaskUnified).filter(TaskUnified.project_id == project_id).all()
+        # 使用聚合函数优化查询
+        base_filter = and_(
+            TaskUnified.project_id == project_id,
+            TaskUnified.is_active == True,
+            TaskUnified.status.notin_(['CANCELLED'])
+        )
 
-        # 仅统计处于激活状态且未取消的任务
-        active_tasks = [
-            task for task in tasks
-            if getattr(task, "is_active", True) and (task.status or "").upper() != "CANCELLED"
-        ]
+        # 统计任务总数
+        total_tasks = (
+            db.query(func.count(TaskUnified.id))
+            .filter(base_filter)
+            .scalar()
+        ) or 0
 
-        total_tasks = len(active_tasks)
-        completed_tasks = len([t for t in active_tasks if (t.status or "").upper() == "COMPLETED"])
-        in_progress_tasks = len([
-            t for t in active_tasks if (t.status or "").upper() in {"IN_PROGRESS", "ACCEPTED"}
-        ])
-        pending_approval_tasks = len([
-            t for t in active_tasks if (t.status or "").upper() == "PENDING_APPROVAL"
-        ])
+        # 按状态聚合
+        status_counts = (
+            db.query(TaskUnified.status, func.count(TaskUnified.id).label('count'))
+            .filter(base_filter)
+            .group_by(TaskUnified.status)
+            .all()
+        )
+        status_dict = {status.upper(): count for status, count in status_counts}
 
-        total_hours = 0.0
-        weighted_progress = 0.0
+        completed_tasks = status_dict.get('COMPLETED', 0)
+        in_progress_tasks = status_dict.get('IN_PROGRESS', 0) + status_dict.get('ACCEPTED', 0)
+        pending_approval_tasks = status_dict.get('PENDING_APPROVAL', 0)
 
-        for task in active_tasks:
-            progress = float(task.progress or 0)
-            if task.estimated_hours and float(task.estimated_hours) > 0:
-                weight = float(task.estimated_hours)
-            else:
-                # 没有预估工时时按1小时处理，避免除零
-                weight = 1.0
-            total_hours += weight
-            weighted_progress += progress * weight
+        # 计算加权平均进度（按预估工时加权）
+        # 使用SQL的CASE WHEN来处理estimated_hours为空的情况
+        total_hours_result = (
+            db.query(
+                func.sum(
+                    case(
+                        (TaskUnified.estimated_hours.isnot(None), TaskUnified.estimated_hours),
+                        else_=1.0
+                    )
+                ).label('total_weight')
+            )
+            .filter(base_filter)
+            .scalar()
+        ) or 0.0
+
+        weighted_progress_result = (
+            db.query(
+                func.sum(
+                    TaskUnified.progress *
+                    case(
+                        (TaskUnified.estimated_hours.isnot(None), TaskUnified.estimated_hours),
+                        else_=1.0
+                    )
+                ).label('weighted_sum')
+                ).scalar()
+            ) or 0.0
 
         if total_hours > 0:
-            overall_progress = weighted_progress / total_hours
+            overall_progress = weighted_progress_result / total_hours
         elif total_tasks > 0:
             # 所有任务都缺少工时估计时，退化为简单平均
-            overall_progress = sum(float(t.progress or 0) for t in active_tasks) / total_tasks
+            avg_progress_result = (
+                db.query(func.avg(TaskUnified.progress))
+                .filter(base_filter)
+                .scalar()
+            )
+            overall_progress = float(avg_progress_result or 0)
         else:
             overall_progress = 0.0
 
-        delayed_tasks = len([t for t in active_tasks if getattr(t, "is_delayed", False)])
-        overdue_tasks = len([
-            t for t in active_tasks
-            if t.deadline and t.deadline < datetime.now()
-            and (t.status or "").upper() not in {"COMPLETED", "CANCELLED"}
-        ])
+        # 统计延期和逾期任务
+        delayed_tasks = (
+            db.query(func.count(TaskUnified.id))
+            .filter(and_(base_filter, TaskUnified.is_delayed == True))
+            .scalar()
+        ) or 0
+
+        overdue_tasks = (
+            db.query(func.count(TaskUnified.id))
+            .filter(and_(
+                base_filter,
+                TaskUnified.deadline < datetime.now()
+            ))
+            .scalar()
+        ) or 0
 
         return {
             "project_id": project_id,

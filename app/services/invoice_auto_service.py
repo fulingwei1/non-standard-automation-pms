@@ -221,7 +221,7 @@ class InvoiceAutoService:
         if max_request:
             try:
                 seq = int(max_request.request_no.split("-")[-1]) + 1
-            except:
+            except (ValueError, TypeError, IndexError):
                 seq = 1
         else:
             seq = 1
@@ -320,7 +320,7 @@ class InvoiceAutoService:
         if max_invoice:
             try:
                 seq = int(max_invoice.invoice_code.split("-")[-1]) + 1
-            except:
+            except (ValueError, TypeError, IndexError):
                 seq = 1
         else:
             seq = 1
@@ -478,7 +478,7 @@ class InvoiceAutoService:
                     log_list = json.loads(order.conditions)
                     if not isinstance(log_list, list):
                         log_list = []
-                except:
+                except (json.JSONDecodeError, TypeError):
                     log_list = []
             else:
                 log_list = []

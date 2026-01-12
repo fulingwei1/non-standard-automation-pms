@@ -102,12 +102,7 @@ def check_alert_timeout_escalation():
             
             if escalated_count > 0:
                 logger.info(
-                    f"[{datetime.now()}] 预警超时升级服务完成: "
-                    f"检查 {len(pending_alerts)} 个预警, 升级 {escalated_count} 个"
-                )
-                print(
-                    f"[{datetime.now()}] 预警超时升级服务完成: "
-                    f"检查 {len(pending_alerts)} 个预警, 升级 {escalated_count} 个"
+                    f"预警超时升级服务完成: 检查 {len(pending_alerts)} 个预警, 升级 {escalated_count} 个"
                 )
             
             return {

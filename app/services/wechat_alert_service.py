@@ -5,7 +5,10 @@
 """
 
 import json
+import logging
 from typing import Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
@@ -219,7 +222,7 @@ class WeChatAlertService:
         # 解析通知角色（JSON格式）
         try:
             notify_roles = json.loads(rule.notify_roles) if isinstance(rule.notify_roles, str) else rule.notify_roles
-        except:
+        except (json.JSONDecodeError, TypeError):
             notify_roles = []
         
         if not notify_roles:
@@ -250,7 +253,7 @@ class WeChatAlertService:
         
         # 检查企业微信是否启用
         if not settings.WECHAT_ENABLED:
-            print(f"[企业微信] 企业微信功能未启用，跳过发送")
+            logger.debug("企业微信功能未启用，跳过发送")
             return False
         
         # 获取用户的企业微信ID
@@ -259,7 +262,7 @@ class WeChatAlertService:
             # 尝试从其他字段获取（如username、real_name等）
             wechat_userid = getattr(user, 'username', None)
             if not wechat_userid:
-                print(f"[企业微信] 用户 {user.id} 未绑定企业微信ID，跳过发送")
+                logger.debug(f"用户 {user.id} 未绑定企业微信ID，跳过发送")
                 return False
         
         try:
@@ -273,18 +276,18 @@ class WeChatAlertService:
                 success = client.send_message([wechat_userid], message)
             
             if success:
-                print(f"[企业微信] 消息发送成功: {user.username} (wechat_userid: {wechat_userid})")
+                logger.info(f"企业微信消息发送成功: {user.username} (wechat_userid: {wechat_userid})")
             else:
-                print(f"[企业微信] 消息发送失败: {user.username}")
+                logger.warning(f"企业微信消息发送失败: {user.username}")
             
             return success
             
         except ValueError as e:
             # 配置不完整
-            print(f"[企业微信] 配置不完整: {str(e)}")
+            logger.warning(f"企业微信配置不完整: {e}")
             return False
         except Exception as e:
-            print(f"[企业微信] 发送消息失败: {user.username}, 错误: {str(e)}")
+            logger.error(f"企业微信发送消息失败: {user.username}, 错误: {e}")
             return False
     
     @classmethod
@@ -318,7 +321,7 @@ class WeChatAlertService:
                 else:
                     fail_count += 1
             except Exception as e:
-                print(f"[企业微信] 发送预警失败: {e}")
+                logger.error(f"企业微信发送预警失败: {e}")
                 fail_count += 1
         
         return {

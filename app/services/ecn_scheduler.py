@@ -4,8 +4,11 @@ ECN定时任务服务
 功能：超时检查、自动提醒、状态更新
 """
 
+import logging
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
@@ -183,7 +186,7 @@ def send_overdue_notifications(alerts: List[Dict[str, Any]]) -> None:
                 if user_ids:
                     notify_overdue_alert(db, alert, user_ids)
             except Exception as e:
-                print(f"Failed to send overdue notification for alert {alert.get('ecn_no')}: {e}")
+                logger.error(f"Failed to send overdue notification for alert {alert.get('ecn_no')}: {e}")
 
 
 def run_ecn_scheduler() -> None:
@@ -195,11 +198,11 @@ def run_ecn_scheduler() -> None:
         alerts = check_all_overdue()
         if alerts:
             send_overdue_notifications(alerts)
-            print(f"[ECN定时任务] 发现{len(alerts)}个超时事项")
+            logger.info(f"ECN定时任务: 发现{len(alerts)}个超时事项")
         else:
-            print("[ECN定时任务] 无超时事项")
+            logger.debug("ECN定时任务: 无超时事项")
     except Exception as e:
-        print(f"[ECN定时任务] 执行失败: {str(e)}")
+        logger.error(f"ECN定时任务执行失败: {e}")
 
 
 if __name__ == "__main__":

@@ -284,7 +284,7 @@ def add_shortage_alert_follow_up(
             parsed = json.loads(alert.remark)
             if isinstance(parsed, list):
                 follow_ups = parsed
-        except:
+        except (json.JSONDecodeError, TypeError):
             # 如果不是JSON，保留原备注作为第一条记录
             if alert.remark.strip():
                 follow_ups.append({
@@ -344,7 +344,7 @@ def get_shortage_alert_follow_ups(
             parsed = json.loads(alert.remark)
             if isinstance(parsed, list):
                 follow_ups = parsed
-        except:
+        except (json.JSONDecodeError, TypeError):
             # 如果不是JSON，返回原备注作为单条记录
             if alert.remark.strip():
                 follow_ups.append({

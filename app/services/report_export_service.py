@@ -52,7 +52,8 @@ class ReportExportService:
                     pdfmetrics.registerFont(TTFont('ChineseFont', font_path))
                     self.chinese_font = 'ChineseFont'
                     return
-                except:
+                except Exception:
+                    # Font registration may fail due to IOError, TTFError, etc.
                     continue
 
         self.chinese_font = 'Helvetica'

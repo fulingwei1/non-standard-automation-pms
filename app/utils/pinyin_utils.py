@@ -80,29 +80,23 @@ def generate_unique_username(name: str, db: Session, existing_usernames: Optiona
     return username
 
 
-def generate_initial_password(username: str, id_card: str = None, employee_code: str = None) -> str:
+def generate_initial_password(username: str = None, id_card: str = None, employee_code: str = None) -> str:
     """
-    生成初始密码
-    规则：用户名 + 身份证后4位（优先）或工号后4位（回退）
+    生成安全的随机初始密码
+
+    安全改进：使用 secrets.token_urlsafe 生成密码，不再使用可预测的规则
 
     Args:
-        username: 用户名（拼音）
-        id_card: 身份证号，如 "310101199001011234"
-        employee_code: 员工编码（回退选项），如 "EMP0001"
+        username: 已废弃，保留参数以兼容旧代码
+        id_card: 已废弃，保留参数以兼容旧代码
+        employee_code: 已废弃，保留参数以兼容旧代码
 
     Returns:
-        初始密码，如 "yaohong1234"（身份证后4位）或 "yaohong0001"（工号后4位）
+        16字符的安全随机密码，如 "Xa3b_cD5eF2gH7jK"
     """
-    # 优先使用身份证后4位
-    if id_card and len(id_card) >= 4:
-        suffix = id_card[-4:]
-    # 回退使用工号后4位
-    elif employee_code and len(employee_code) >= 4:
-        suffix = employee_code[-4:]
-    else:
-        suffix = "0000"
-
-    return f"{username}{suffix}"
+    import secrets
+    # 生成 12 字节的随机数据，base64url 编码后为 16 字符
+    return secrets.token_urlsafe(12)
 
 
 def batch_generate_pinyin_for_employees(db: Session) -> int:

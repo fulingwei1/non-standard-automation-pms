@@ -5,11 +5,14 @@ ECN基础管理 API endpoints
 包含：ECN列表、详情、创建、更新、提交、取消
 """
 
+import logging
 from typing import Any, Optional
 from datetime import datetime
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, desc
 
@@ -266,7 +269,7 @@ def submit_ecn(
                     # 发送通知
                     notify_evaluation_assigned(db, ecn, evaluation, evaluator_id)
             except Exception as e:
-                print(f"Failed to assign evaluation: {e}")
+                logger.error(f"Failed to assign evaluation: {e}")
 
     db.add(ecn)
     db.commit()

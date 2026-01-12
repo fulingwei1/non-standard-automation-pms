@@ -6,7 +6,7 @@
 from typing import Dict, Any, Optional, List
 from datetime import date
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 
 from app.models.project import Project, ProjectCost, ProjectMilestone, ProjectStatusLog
 from app.models.progress import Task
@@ -72,27 +72,46 @@ def calculate_progress_stats(project: Project, today: date) -> Dict[str, Any]:
 def calculate_cost_stats(db: Session, project_id: int, budget_amount: float) -> Dict[str, Any]:
     """
     计算成本统计
-    
+
     Returns:
         dict: 成本统计数据
     """
-    costs = db.query(ProjectCost).filter(ProjectCost.project_id == project_id).all()
-    
-    total_cost = sum(float(cost.amount or 0) for cost in costs)
-    cost_by_type = {}
-    cost_by_category = {}
-    
-    for cost in costs:
-        cost_type = cost.cost_type or "其他"
-        cost_category = cost.cost_category or "其他"
-        amount = float(cost.amount or 0)
-        
-        cost_by_type[cost_type] = cost_by_type.get(cost_type, 0) + amount
-        cost_by_category[cost_category] = cost_by_category.get(cost_category, 0) + amount
-    
+    # 使用聚合函数优化查询
+    from sqlalchemy import case, literal_column
+
+    total_cost_result = (
+        db.query(func.sum(ProjectCost.amount).label('total'))
+        .filter(ProjectCost.project_id == project_id)
+        .first()
+    )
+    total_cost = float(total_cost_result.total or 0)
+
+    # 按类型和类别聚合
+    cost_by_type_result = (
+        db.query(
+            ProjectCost.cost_type,
+            func.sum(ProjectCost.amount).label('amount')
+        )
+        .filter(ProjectCost.project_id == project_id)
+        .group_by(ProjectCost.cost_type)
+        .all()
+    )
+    cost_by_type = {ct or "其他": float(amount or 0) for ct, amount in cost_by_type_result}
+
+    cost_by_category_result = (
+        db.query(
+            ProjectCost.cost_category,
+            func.sum(ProjectCost.amount).label('amount')
+        )
+        .filter(ProjectCost.project_id == project_id)
+        .group_by(ProjectCost.cost_category)
+        .all()
+    )
+    cost_by_category = {cc or "其他": float(amount or 0) for cc, amount in cost_by_category_result}
+
     cost_variance = budget_amount - total_cost if budget_amount > 0 else 0
     cost_variance_rate = (cost_variance / budget_amount * 100) if budget_amount > 0 else 0
-    
+
     return {
         "total_cost": total_cost,
         "budget_amount": budget_amount,
@@ -107,20 +126,40 @@ def calculate_cost_stats(db: Session, project_id: int, budget_amount: float) -> 
 def calculate_task_stats(db: Session, project_id: int) -> Dict[str, Any]:
     """
     计算任务统计
-    
+
     Returns:
         dict: 任务统计数据
     """
-    tasks = db.query(Task).filter(Task.project_id == project_id).all()
-    
-    task_total = len(tasks)
-    task_completed = len([t for t in tasks if t.status == "COMPLETED"])
-    task_in_progress = len([t for t in tasks if t.status == "IN_PROGRESS"])
-    task_pending = len([t for t in tasks if t.status in ["PENDING", "ACCEPTED"]])
-    task_blocked = len([t for t in tasks if t.status == "BLOCKED"])
-    
-    task_avg_progress = sum(float(t.progress_pct or 0) for t in tasks) / task_total if task_total > 0 else 0
-    
+    # 使用聚合函数优化查询
+    task_total_result = (
+        db.query(func.count(Task.id).label('total'))
+        .filter(Task.project_id == project_id)
+        .first()
+    )
+    task_total = task_total_result.total or 0
+
+    # 按状态聚合
+    status_counts = (
+        db.query(Task.status, func.count(Task.id).label('count'))
+        .filter(Task.project_id == project_id)
+        .group_by(Task.status)
+        .all()
+    )
+    status_dict = {status: count for status, count in status_counts}
+
+    task_completed = status_dict.get("COMPLETED", 0)
+    task_in_progress = status_dict.get("IN_PROGRESS", 0)
+    task_pending = status_dict.get("PENDING", 0) + status_dict.get("ACCEPTED", 0)
+    task_blocked = status_dict.get("BLOCKED", 0)
+
+    # 计算平均进度
+    avg_progress_result = (
+        db.query(func.avg(Task.progress_pct).label('avg'))
+        .filter(Task.project_id == project_id)
+        .first()
+    )
+    task_avg_progress = float(avg_progress_result.avg or 0)
+
     return {
         "total": task_total,
         "completed": task_completed,
@@ -135,23 +174,47 @@ def calculate_task_stats(db: Session, project_id: int) -> Dict[str, Any]:
 def calculate_milestone_stats(db: Session, project_id: int, today: date) -> Dict[str, Any]:
     """
     计算里程碑统计
-    
+
     Returns:
         dict: 里程碑统计数据
     """
-    milestones = db.query(ProjectMilestone).filter(ProjectMilestone.project_id == project_id).all()
-    
-    milestone_total = len(milestones)
-    milestone_completed = len([m for m in milestones if m.status == "COMPLETED"])
-    milestone_overdue = len([
-        m for m in milestones 
-        if m.status != "COMPLETED" and m.planned_date and m.planned_date < today
-    ])
-    milestone_upcoming = len([
-        m for m in milestones 
-        if m.status != "COMPLETED" and m.planned_date and m.planned_date >= today
-    ])
-    
+    # 使用聚合函数优化查询
+    milestone_total_result = (
+        db.query(func.count(ProjectMilestone.id).label('total'))
+        .filter(ProjectMilestone.project_id == project_id)
+        .first()
+    )
+    milestone_total = milestone_total_result.total or 0
+
+    milestone_completed = (
+        db.query(func.count(ProjectMilestone.id))
+        .filter(
+            ProjectMilestone.project_id == project_id,
+            ProjectMilestone.status == "COMPLETED"
+        )
+        .scalar()
+    ) or 0
+
+    milestone_overdue = (
+        db.query(func.count(ProjectMilestone.id))
+        .filter(
+            ProjectMilestone.project_id == project_id,
+            ProjectMilestone.status != "COMPLETED",
+            ProjectMilestone.planned_date < today
+        )
+        .scalar()
+    ) or 0
+
+    milestone_upcoming = (
+        db.query(func.count(ProjectMilestone.id))
+        .filter(
+            ProjectMilestone.project_id == project_id,
+            ProjectMilestone.status != "COMPLETED",
+            ProjectMilestone.planned_date >= today
+        )
+        .scalar()
+    ) or 0
+
     return {
         "total": milestone_total,
         "completed": milestone_completed,
@@ -164,86 +227,105 @@ def calculate_milestone_stats(db: Session, project_id: int, today: date) -> Dict
 def calculate_risk_stats(db: Session, project_id: int) -> Optional[Dict[str, Any]]:
     """
     计算风险统计
-    
+
     Returns:
         Optional[dict]: 风险统计数据，如果模型不存在则返回None
     """
     try:
         from app.models.pmo import PmoProjectRisk
+    except ImportError:
+        # 模型未定义，返回 None
+        return None
+
+    try:
         risks = db.query(PmoProjectRisk).filter(PmoProjectRisk.project_id == project_id).all()
-        
+
         risk_total = len(risks)
         risk_high = len([r for r in risks if r.risk_level == "HIGH" and r.status != "CLOSED"])
         risk_critical = len([r for r in risks if r.risk_level == "CRITICAL" and r.status != "CLOSED"])
         risk_open = len([r for r in risks if r.status != "CLOSED"])
-        
+
         return {
             "total": risk_total,
             "open": risk_open,
             "high": risk_high,
             "critical": risk_critical,
         }
-    except:
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"计算风险统计失败: {e}")
         return None
 
 
 def calculate_issue_stats(db: Session, project_id: int) -> Optional[Dict[str, Any]]:
     """
     计算问题统计
-    
+
     Returns:
         Optional[dict]: 问题统计数据，如果模型不存在则返回None
     """
     try:
         from app.models.issue import Issue
+    except ImportError:
+        return None
+
+    try:
         issues = db.query(Issue).filter(Issue.project_id == project_id).all()
-        
+
         issue_total = len(issues)
         issue_open = len([i for i in issues if i.status == "OPEN"])
         issue_processing = len([i for i in issues if i.status == "PROCESSING"])
         issue_blocking = len([i for i in issues if i.is_blocking])
-        
+
         return {
             "total": issue_total,
             "open": issue_open,
             "processing": issue_processing,
             "blocking": issue_blocking,
         }
-    except:
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"计算问题统计失败: {e}")
         return None
 
 
 def calculate_resource_usage(db: Session, project_id: int) -> Optional[Dict[str, Any]]:
     """
     计算资源使用
-    
+
     Returns:
         Optional[dict]: 资源使用数据，如果模型不存在则返回None
     """
     try:
         from app.models.pmo import PmoResourceAllocation
+    except ImportError:
+        return None
+
+    try:
         allocations = db.query(PmoResourceAllocation).filter(
             PmoResourceAllocation.project_id == project_id
         ).all()
-        
+
         if not allocations:
             return None
-        
+
         resource_usage = {
             "total_allocations": len(allocations),
             "by_department": {},
             "by_role": {},
         }
-        
+
         for alloc in allocations:
             dept = alloc.department_name or "未分配"
             role = alloc.role or "未分配"
-            
+
             resource_usage["by_department"][dept] = resource_usage["by_department"].get(dept, 0) + 1
             resource_usage["by_role"][role] = resource_usage["by_role"].get(role, 0) + 1
-        
+
         return resource_usage
-    except:
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"计算资源使用失败: {e}")
         return None
 
 

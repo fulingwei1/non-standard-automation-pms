@@ -6,7 +6,7 @@
 """
 
 from fastapi import APIRouter
-from . import wbs_templates, tasks, reports, summary, batch, statistics, baselines, forecast
+from . import wbs_templates, tasks, reports, summary, batch, statistics, baselines, forecast, auto_processing
 
 # 创建主路由
 router = APIRouter()
@@ -37,3 +37,6 @@ router.include_router(baselines.router, tags=["progress-baselines"])
 
 # 智能化进度预测与依赖巡检路由
 router.include_router(forecast.router, tags=["progress-forecast"])
+
+# 自动化处理路由（预测应用、依赖修复等）
+router.include_router(auto_processing.router, tags=["progress-auto-processing"])

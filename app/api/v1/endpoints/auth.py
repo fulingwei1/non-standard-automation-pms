@@ -5,7 +5,7 @@
 from datetime import datetime, timedelta
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -15,12 +15,15 @@ from app.core.config import settings
 from app.models.user import User
 from app.schemas.auth import Token, UserResponse, PasswordChange
 from app.schemas.common import ResponseModel
+from app.core.rate_limit import limiter
 
 router = APIRouter()
 
 
 @router.post("/login", response_model=Token, status_code=status.HTTP_200_OK)
+@limiter.limit("5/minute")  # 每分钟最多5次登录尝试，防止暴力破解
 def login(
+    request: Request,  # slowapi 需要 Request 参数
     db: Session = Depends(deps.get_db), form_data: OAuth2PasswordRequestForm = Depends()
 ) -> Any:
     """

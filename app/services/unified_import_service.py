@@ -6,7 +6,7 @@
 
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import date, datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 import io
 
 import pandas as pd
@@ -104,7 +104,7 @@ class UnifiedImportService:
         if pd.notna(val):
             try:
                 return int(val)
-            except:
+            except (ValueError, TypeError):
                 pass
         return None
 
@@ -172,7 +172,7 @@ class UnifiedImportService:
                 # 解析日期和工时
                 try:
                     work_date = UnifiedImportService._parse_work_date(work_date_val)
-                except:
+                except (ValueError, TypeError, pd.errors.ParserError):
                     failed_rows.append({"row_index": row_idx, "error": "工作日期格式错误"})
                     continue
 
@@ -181,7 +181,7 @@ class UnifiedImportService:
                     if hours is None:
                         failed_rows.append({"row_index": row_idx, "error": "工时必须在0-24之间"})
                         continue
-                except:
+                except (ValueError, TypeError):
                     failed_rows.append({"row_index": row_idx, "error": "工时格式错误"})
                     continue
 
@@ -308,12 +308,12 @@ class UnifiedImportService:
                 if pd.notna(row.get('计划开始日期')):
                     try:
                         plan_start = pd.to_datetime(row.get('计划开始日期')).date()
-                    except:
+                    except (ValueError, TypeError, pd.errors.ParserError):
                         pass
                 if pd.notna(row.get('计划结束日期')):
                     try:
                         plan_end = pd.to_datetime(row.get('计划结束日期')).date()
-                    except:
+                    except (ValueError, TypeError, pd.errors.ParserError):
                         pass
 
                 # 解析权重
@@ -321,7 +321,7 @@ class UnifiedImportService:
                 if pd.notna(row.get('权重(%)')):
                     try:
                         weight = Decimal(str(row.get('权重(%)'))) / Decimal('100')
-                    except:
+                    except (ValueError, TypeError, InvalidOperation):
                         pass
 
                 task_description = str(row.get('任务描述', '') or '').strip()
@@ -423,14 +423,14 @@ class UnifiedImportService:
                 if pd.notna(row.get('参考价格')):
                     try:
                         standard_price = Decimal(str(row.get('参考价格')))
-                    except:
+                    except (ValueError, TypeError, InvalidOperation):
                         pass
 
                 safety_stock = Decimal('0')
                 if pd.notna(row.get('安全库存')):
                     try:
                         safety_stock = Decimal(str(row.get('安全库存')))
-                    except:
+                    except (ValueError, TypeError, InvalidOperation):
                         pass
 
                 # 查找或创建供应商
@@ -549,7 +549,7 @@ class UnifiedImportService:
                             "error": "用量必须大于0"
                         })
                         continue
-                except:
+                except (ValueError, TypeError, InvalidOperation):
                     failed_rows.append({
                         "row_index": index + 2,
                         "error": "用量格式错误"

@@ -5,10 +5,13 @@ ECN审批管理 API endpoints
 包含：审批列表、创建审批、审批通过/驳回、审批矩阵
 """
 
+import logging
 from typing import Any, List, Optional
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -100,7 +103,7 @@ def create_ecn_approval(
         if ecn and approval.approver_id:
             notify_approval_assigned(db, ecn, approval, approval.approver_id)
     except Exception as e:
-        print(f"Failed to send approval assigned notification: {e}")
+        logger.error(f"Failed to send approval assigned notification: {e}")
 
     return _build_approval_response(db, approval)
 
@@ -218,7 +221,7 @@ def approve_ecn(
                     )
                 except Exception as e:
                     # 成本归集失败不影响审批流程，只记录错误
-                    print(f"Failed to collect cost from ECN {ecn.id}: {e}")
+                    logger.error(f"Failed to collect cost from ECN {ecn.id}: {e}")
 
     db.add(approval)
     db.commit()
@@ -228,7 +231,7 @@ def approve_ecn(
     try:
         notify_approval_result(db, ecn, approval, "APPROVED")
     except Exception as e:
-        print(f"Failed to send approval result notification: {e}")
+        logger.error(f"Failed to send approval result notification: {e}")
 
     return _build_approval_response(db, approval)
 
@@ -287,7 +290,7 @@ def reject_ecn(
     try:
         notify_approval_result(db, ecn, approval, "REJECTED")
     except Exception as e:
-        print(f"Failed to send approval result notification: {e}")
+        logger.error(f"Failed to send approval result notification: {e}")
 
     return _build_approval_response(db, approval)
 

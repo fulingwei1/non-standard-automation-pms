@@ -5,11 +5,14 @@ ECN模块集成/同步 API endpoints
 包含：同步到BOM、同步到项目、同步到采购、批量操作
 """
 
+import logging
 from typing import Any, List
 from datetime import datetime, timedelta
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Body, status
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
@@ -440,7 +443,7 @@ def batch_create_ecn_tasks(
                 if assignee_id:
                     task.assignee_id = assignee_id
             except Exception as e:
-                print(f"Failed to auto assign task: {e}")
+                logger.error(f"Failed to auto assign task: {e}")
 
         db.add(task)
         created_tasks.append(task)
@@ -450,7 +453,7 @@ def batch_create_ecn_tasks(
             try:
                 notify_task_assigned(db, ecn, task, task.assignee_id)
             except Exception as e:
-                print(f"Failed to send task assigned notification: {e}")
+                logger.error(f"Failed to send task assigned notification: {e}")
 
     # 如果ECN状态是已审批，自动更新为执行中
     if ecn.status == "APPROVED":

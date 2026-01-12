@@ -3,9 +3,12 @@
 技术规格要求提取器
 """
 
+import logging
 import re
 from pathlib import Path
 from typing import List, Dict, Any, Optional
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 
 from app.models.technical_spec import TechnicalSpecRequirement
@@ -61,8 +64,7 @@ class SpecExtractor:
                     return requirements
             except Exception as e:
                 # 自动提取失败，记录错误但不抛出异常，允许手动录入
-                print(f"自动提取失败: {str(e)}")
-                pass
+                logger.warning(f"自动提取失败: {e}")
         
         # 返回空列表，表示需要手动录入
         return []

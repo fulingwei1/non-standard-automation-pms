@@ -24,7 +24,7 @@ def parse_month_string(month: Optional[str]) -> Tuple[int, int]:
         try:
             year, month_num = map(int, month.split("-"))
             return year, month_num
-        except:
+        except (ValueError, TypeError):
             from fastapi import HTTPException
             raise HTTPException(status_code=400, detail="月份格式错误，应为YYYY-MM")
     else:

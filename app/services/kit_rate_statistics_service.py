@@ -134,7 +134,7 @@ def calculate_workshop_kit_statistics(
                 fulfilled_items += kit_data.get("fulfilled_items", 0)
                 shortage_items += kit_data.get("shortage_items", 0)
                 in_transit_items += kit_data.get("in_transit_items", 0)
-            except:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 continue
         
         avg_kit_rate = total_kit_rate / project_count if project_count > 0 else 0.0
@@ -179,10 +179,10 @@ def calculate_daily_kit_statistics(
             try:
                 all_bom_items = get_project_bom_items(db, project.id)
                 kit_data = calculate_kit_rate(db, all_bom_items, "quantity")
-                
+
                 total_kit_rate += kit_data.get("kit_rate", 0.0)
                 project_count += 1
-            except:
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
                 continue
         
         avg_kit_rate = total_kit_rate / project_count if project_count > 0 else 0.0

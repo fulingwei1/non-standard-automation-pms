@@ -176,7 +176,7 @@ def _validate_date_fields(row_data, row_errors):
         if row_data.get(date_field):
             try:
                 datetime.strptime(str(row_data[date_field]), '%Y-%m-%d')
-            except:
+            except ValueError:
                 row_errors.append({"field": date_field, "message": "日期格式错误，应为YYYY-MM-DD"})
 
     if row_data.get('planned_start_date') and row_data.get('planned_end_date'):
@@ -185,7 +185,7 @@ def _validate_date_fields(row_data, row_errors):
             end_date = datetime.strptime(str(row_data['planned_end_date']), '%Y-%m-%d').date()
             if start_date > end_date:
                 row_errors.append({"field": "planned_end_date", "message": "计划结束日期不能早于计划开始日期"})
-        except:
+        except ValueError:
             pass
 
 
@@ -195,7 +195,7 @@ def _validate_amount_fields(row_data, row_errors):
         if row_data.get(amount_field):
             try:
                 float(row_data[amount_field])
-            except:
+            except (ValueError, TypeError):
                 row_errors.append({"field": amount_field, "message": f"{amount_field} 必须是数字"})
 
 
@@ -217,7 +217,7 @@ def _validate_timesheet_data(row_data, row_errors):
     else:
         try:
             datetime.strptime(str(work_date), '%Y-%m-%d')
-        except:
+        except ValueError:
             row_errors.append({"field": "work_date", "message": "日期格式错误，应为YYYY-MM-DD"})
 
     if not user_name:
@@ -230,7 +230,7 @@ def _validate_timesheet_data(row_data, row_errors):
             h = float(hours)
             if h <= 0 or h > 24:
                 row_errors.append({"field": "hours", "message": "工时必须在0-24之间"})
-        except:
+        except (ValueError, TypeError):
             row_errors.append({"field": "hours", "message": "工时格式错误"})
 
 
@@ -286,7 +286,7 @@ def _validate_bom_data(row_data, db, row_errors):
             q = float(quantity)
             if q <= 0:
                 row_errors.append({"field": "quantity", "message": "用量必须大于0"})
-        except:
+        except (ValueError, TypeError):
             row_errors.append({"field": "quantity", "message": "用量格式错误"})
 
     if project_code:

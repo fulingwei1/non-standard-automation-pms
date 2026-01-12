@@ -1,6 +1,6 @@
 from typing import Any, List, Optional, Dict
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 import io
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
@@ -384,7 +384,7 @@ def _clean_phone(phone) -> Optional[str]:
     if 'e' in phone_str.lower() or '.' in phone_str:
         try:
             phone_str = str(int(float(phone)))
-        except:
+        except (ValueError, TypeError, OverflowError):
             pass
     return phone_str.strip()
 
@@ -643,7 +643,7 @@ def _parse_date(date_val) -> Optional[datetime]:
         for fmt in ['%Y/%m/%d', '%Y-%m-%d', '%Y.%m.%d', '%Y年%m月%d日']:
             try:
                 return datetime.strptime(date_str, fmt).date()
-            except:
+            except ValueError:
                 pass
     return None
 
@@ -664,7 +664,7 @@ def _clean_decimal(val) -> Optional[Decimal]:
         return None
     try:
         return Decimal(str(val))
-    except:
+    except (ValueError, TypeError, InvalidOperation):
         return None
 
 

@@ -1246,14 +1246,24 @@ def download_rd_project_document(
     
     if not document:
         raise HTTPException(status_code=404, detail="文档不存在")
-    
-    file_path = Path(settings.UPLOAD_DIR) / document.file_path
-    
-    if not file_path.exists():
+
+    upload_dir = Path(settings.UPLOAD_DIR)
+    file_path = upload_dir / document.file_path
+
+    # 安全检查：解析为规范路径，防止路径遍历攻击
+    resolved_path = file_path.resolve()
+    upload_dir_resolved = upload_dir.resolve()
+
+    try:
+        resolved_path.relative_to(upload_dir_resolved)
+    except ValueError:
+        raise HTTPException(status_code=403, detail="访问被拒绝：文件路径不合法")
+
+    if not resolved_path.exists():
         raise HTTPException(status_code=404, detail="文件不存在")
-    
+
     return FileResponse(
-        path=str(file_path),
+        path=str(resolved_path),
         filename=document.file_name,
         media_type='application/octet-stream'
     )

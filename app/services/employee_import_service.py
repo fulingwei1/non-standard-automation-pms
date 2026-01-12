@@ -127,7 +127,7 @@ def clean_phone(phone) -> Optional[str]:
         try:
             phone_int = int(float(phone_str))
             phone_str = str(phone_int)
-        except:
+        except (ValueError, TypeError, OverflowError):
             pass
     return phone_str.strip() if phone_str.strip() else None
 

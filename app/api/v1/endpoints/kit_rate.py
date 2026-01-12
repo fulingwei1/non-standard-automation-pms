@@ -644,7 +644,7 @@ def get_kit_rate_trend(
                 )
                 total_kit_rate += kit_rate_data["kit_rate"]
                 project_count += 1
-            except:
+            except (ValueError, TypeError, KeyError) as e:
                 pass
         
         avg_kit_rate = total_kit_rate / project_count if project_count > 0 else 0.0

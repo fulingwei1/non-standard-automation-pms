@@ -107,23 +107,25 @@ def count_active_bidding(db: Session) -> int:
 def calculate_acceptance_rate(db: Session) -> Decimal:
     """
     计算验收按期率
-    
+
     Returns:
         Decimal: 验收率
     """
-    total_acceptance = db.query(AcceptanceOrder).count()
-    
-    if total_acceptance > 0:
-        try:
+    try:
+        total_acceptance = db.query(AcceptanceOrder).count()
+
+        if total_acceptance > 0:
             on_time_acceptance = (
                 db.query(AcceptanceOrder)
                 .filter(AcceptanceOrder.status == "COMPLETED")
                 .count()
             )
             return Decimal(on_time_acceptance) / Decimal(total_acceptance) * 100
-        except:
-            return Decimal("92")
-    else:
+        else:
+            return Decimal("0")
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"计算验收按期率失败: {e}")
         return Decimal("0")
 
 

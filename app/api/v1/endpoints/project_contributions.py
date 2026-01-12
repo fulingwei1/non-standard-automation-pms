@@ -4,8 +4,12 @@
 支持查询、评分、报告生成
 """
 
+import logging
 from typing import Any, List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -195,7 +199,7 @@ def calculate_contributions(
             calculated_count += 1
         except Exception as e:
             # 记录错误但继续处理其他成员
-            print(f"Error calculating contribution for user {member.user_id}: {e}")
+            logger.error(f"Error calculating contribution for user {member.user_id}: {e}")
     
     return ResponseModel(
         code=200,

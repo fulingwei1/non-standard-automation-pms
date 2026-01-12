@@ -188,7 +188,7 @@ def generate_order_no(db: Session) -> str:
     if max_order:
         try:
             seq = int(max_order.order_no.split("-")[-1]) + 1
-        except:
+        except (ValueError, TypeError, IndexError):
             seq = 1
     else:
         seq = 1
@@ -212,7 +212,7 @@ def generate_delivery_no(db: Session) -> str:
     if max_delivery:
         try:
             seq = int(max_delivery.delivery_no.split("-")[-1]) + 1
-        except:
+        except (ValueError, TypeError, IndexError):
             seq = 1
     else:
         seq = 1
@@ -299,7 +299,7 @@ def generate_reconciliation_no(db: Session) -> str:
     if max_reconciliation:
         try:
             seq = int(max_reconciliation.reconciliation_no.split("-")[-1]) + 1
-        except:
+        except (ValueError, TypeError, IndexError):
             seq = 1
     else:
         seq = 1

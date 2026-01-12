@@ -4,11 +4,14 @@
 包含：外协供应商、外协订单、交付与质检、进度与付款
 """
 
+import logging
 from typing import Any, List, Optional
 from datetime import date, datetime
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, desc
 
@@ -599,7 +602,7 @@ def approve_outsourcing_order(
             db.commit()
         except Exception as e:
             # 成本归集失败不影响审批流程，只记录错误
-            print(f"Failed to collect cost from outsourcing order {order_id}: {e}")
+            logger.error(f"Failed to collect cost from outsourcing order {order_id}: {e}")
     
     db.refresh(order)
     

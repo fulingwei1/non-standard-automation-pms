@@ -4,9 +4,13 @@
 包含：我的项目、任务管理、进度更新、完成证明、延期报告
 """
 
+import logging
 from datetime import datetime, date
 from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, func, or_
 
@@ -885,7 +889,7 @@ def delete_completion_proof(
         try:
             os.remove(proof.file_path)
         except Exception as e:
-            print(f"Warning: Could not delete file {proof.file_path}: {e}")
+            logger.warning(f"Could not delete file {proof.file_path}: {e}")
 
     # 删除数据库记录
     db.delete(proof)

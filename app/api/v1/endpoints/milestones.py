@@ -254,7 +254,7 @@ def complete_milestone(
                 if max_invoice:
                     try:
                         seq = int(max_invoice.invoice_code.split("-")[-1]) + 1
-                    except:
+                    except (ValueError, TypeError, IndexError):
                         seq = 1
                 else:
                     seq = 1

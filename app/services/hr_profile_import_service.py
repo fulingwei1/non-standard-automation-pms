@@ -5,7 +5,7 @@ HR档案导入服务
 
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from sqlalchemy.orm import Session
 import pandas as pd
 
@@ -32,7 +32,7 @@ def clean_phone(phone) -> Optional[str]:
         try:
             phone_int = int(float(phone_str))
             phone_str = str(phone_int)
-        except:
+        except (ValueError, TypeError, OverflowError):
             pass
     return phone_str.strip() if phone_str.strip() else None
 
@@ -46,10 +46,10 @@ def parse_date(date_val) -> Optional[datetime]:
     if isinstance(date_val, str):
         try:
             return datetime.strptime(date_val, '%Y-%m-%d').date()
-        except:
+        except ValueError:
             try:
                 return datetime.strptime(date_val, '%Y/%m/%d').date()
-            except:
+            except ValueError:
                 return None
     return None
 
@@ -60,7 +60,7 @@ def clean_decimal(val) -> Optional[Decimal]:
         return None
     try:
         return Decimal(str(val))
-    except:
+    except (ValueError, TypeError, InvalidOperation):
         return None
 
 

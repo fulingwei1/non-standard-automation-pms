@@ -7,6 +7,7 @@
 from typing import List, Optional, Dict, Any
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+import json
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 
@@ -275,7 +276,7 @@ class ProgressIntegrationService:
                     )
                     if not all_approved:
                         missing_items.append('交付物未全部审批')
-            except:
+            except (json.JSONDecodeError, TypeError, KeyError):
                 # JSON解析失败，跳过检查
                 pass
         

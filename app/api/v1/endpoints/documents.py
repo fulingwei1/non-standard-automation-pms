@@ -14,6 +14,7 @@ from app.models.user import User
 from app.models.project import ProjectDocument, Project, Machine
 from app.schemas.project import ProjectDocumentCreate, ProjectDocumentResponse, ProjectDocumentUpdate
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.utils.permission_helpers import check_project_access_or_raise
 
 router = APIRouter()
 
@@ -103,6 +104,11 @@ def read_document(
     document = db.query(ProjectDocument).filter(ProjectDocument.id == doc_id).first()
     if not document:
         raise HTTPException(status_code=404, detail="文档记录不存在")
+
+    # IDOR 防护：验证用户对该文档所属项目的访问权限
+    if document.project_id:
+        check_project_access_or_raise(db, current_user, document.project_id)
+
     return document
 
 
@@ -195,7 +201,11 @@ def update_document(
     document = db.query(ProjectDocument).filter(ProjectDocument.id == doc_id).first()
     if not document:
         raise HTTPException(status_code=404, detail="文档记录不存在")
-    
+
+    # IDOR 防护：验证用户对该文档所属项目的访问权限
+    if document.project_id:
+        check_project_access_or_raise(db, current_user, document.project_id)
+
     update_data = doc_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         if hasattr(document, field):
@@ -220,18 +230,33 @@ def download_document(
     document = db.query(ProjectDocument).filter(ProjectDocument.id == doc_id).first()
     if not document:
         raise HTTPException(status_code=404, detail="文档记录不存在")
-    
+
+    # IDOR 防护：验证用户对该文档所属项目的访问权限
+    if document.project_id:
+        check_project_access_or_raise(db, current_user, document.project_id)
+
     file_path = Path(document.file_path)
-    
+
     # 如果是相对路径，转换为绝对路径
     if not file_path.is_absolute():
         file_path = DOCUMENT_UPLOAD_DIR / file_path
-    
-    if not file_path.exists():
+
+    # 安全检查：解析为规范路径，防止路径遍历攻击（如 ../../../etc/passwd）
+    resolved_path = file_path.resolve()
+    upload_dir_resolved = DOCUMENT_UPLOAD_DIR.resolve()
+
+    # 验证文件路径在允许的上传目录内
+    try:
+        resolved_path.relative_to(upload_dir_resolved)
+    except ValueError:
+        # 路径不在上传目录内，可能是路径遍历攻击
+        raise HTTPException(status_code=403, detail="访问被拒绝：文件路径不合法")
+
+    if not resolved_path.exists():
         raise HTTPException(status_code=404, detail="文件不存在")
-    
+
     return FileResponse(
-        path=str(file_path),
+        path=str(resolved_path),
         filename=document.file_name,
         media_type='application/octet-stream'
     )
@@ -285,6 +310,10 @@ def delete_document(
     document = db.query(ProjectDocument).filter(ProjectDocument.id == doc_id).first()
     if not document:
         raise HTTPException(status_code=404, detail="文档记录不存在")
+
+    # IDOR 防护：验证用户对该文档所属项目的访问权限
+    if document.project_id:
+        check_project_access_or_raise(db, current_user, document.project_id)
 
     db.delete(document)
     db.commit()

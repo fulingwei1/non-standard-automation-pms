@@ -12,7 +12,7 @@ from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from fastapi.responses import StreamingResponse, FileResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload, joinedload
 from sqlalchemy import desc, or_, func
 
 from app.api import deps
@@ -63,7 +63,7 @@ def generate_bom_no(db: Session, project_id: int) -> str:
         # 提取序号并加1
         try:
             seq = int(max_bom.bom_no.split("-")[-1]) + 1
-        except:
+        except (ValueError, TypeError, IndexError):
             seq = 1
     else:
         seq = 1
@@ -87,16 +87,21 @@ def get_machine_bom_list(
     
     bom_headers = (
         db.query(BomHeader)
+        .options(
+            selectinload(BomHeader.items),
+            joinedload(BomHeader.project),
+            joinedload(BomHeader.machine)
+        )
         .filter(BomHeader.machine_id == machine_id)
         .order_by(desc(BomHeader.created_at))
         .all()
     )
-    
+
     result = []
     for bom in bom_headers:
-        # 获取BOM明细
+        # 获取BOM明细（已预加载）
         items = []
-        for item in bom.items.order_by(BomItem.item_no).all():
+        for item in sorted(bom.items, key=lambda x: x.item_no or 0):
             items.append(BomItemResponse(
                 id=item.id,
                 item_no=item.item_no,
@@ -237,13 +242,22 @@ def get_bom_detail(
     """
     获取BOM详情
     """
-    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
+    bom = (
+        db.query(BomHeader)
+        .options(
+            selectinload(BomHeader.items),
+            joinedload(BomHeader.project),
+            joinedload(BomHeader.machine)
+        )
+        .filter(BomHeader.id == bom_id)
+        .first()
+    )
     if not bom:
         raise HTTPException(status_code=404, detail="BOM不存在")
-    
-    # 获取BOM明细
+
+    # 获取BOM明细（已预加载）
     items = []
-    for item in bom.items.order_by(BomItem.item_no).all():
+    for item in sorted(bom.items, key=lambda x: x.item_no or 0):
         items.append(BomItemResponse(
             id=item.id,
             item_no=item.item_no,
@@ -321,12 +335,17 @@ def get_bom_items(
     """
     获取BOM明细列表
     """
-    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
+    bom = (
+        db.query(BomHeader)
+        .options(selectinload(BomHeader.items))
+        .filter(BomHeader.id == bom_id)
+        .first()
+    )
     if not bom:
         raise HTTPException(status_code=404, detail="BOM不存在")
-    
+
     items = []
-    for item in bom.items.order_by(BomItem.item_no).all():
+    for item in sorted(bom.items, key=lambda x: x.item_no or 0):
         items.append(BomItemResponse(
             id=item.id,
             item_no=item.item_no,

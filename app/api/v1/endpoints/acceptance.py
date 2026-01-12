@@ -2224,9 +2224,14 @@ def download_acceptance_report(
     
     if not report.file_path:
         raise HTTPException(status_code=404, detail="报告文件不存在")
-    
-    file_path = os.path.join(settings.UPLOAD_DIR, report.file_path)
-    
+
+    # 安全检查：解析为规范路径，防止路径遍历攻击
+    upload_dir = os.path.abspath(settings.UPLOAD_DIR)
+    file_path = os.path.abspath(os.path.join(settings.UPLOAD_DIR, report.file_path))
+
+    if not file_path.startswith(upload_dir + os.sep):
+        raise HTTPException(status_code=403, detail="访问被拒绝：文件路径不合法")
+
     if not os.path.exists(file_path):
         # 如果文件不存在，返回报告内容作为文本
         content = report.report_content or "报告内容为空"
@@ -2237,7 +2242,7 @@ def download_acceptance_report(
                 "Content-Disposition": f"attachment; filename={report.report_no}.txt"
             }
         )
-    
+
     filename = os.path.basename(file_path)
     # 根据文件扩展名设置媒体类型
     if filename.endswith(".pdf"):
@@ -2246,7 +2251,7 @@ def download_acceptance_report(
         media_type = "text/plain"
     else:
         media_type = "application/octet-stream"
-    
+
     return FileResponse(
         path=file_path,
         filename=filename,
@@ -2378,15 +2383,20 @@ def download_customer_signed_document(
     
     if not order.customer_signed_file_path:
         raise HTTPException(status_code=404, detail="客户签署文件不存在")
-    
-    file_path = os.path.join(settings.UPLOAD_DIR, order.customer_signed_file_path)
-    
+
+    # 安全检查：解析为规范路径，防止路径遍历攻击
+    upload_dir = os.path.abspath(settings.UPLOAD_DIR)
+    file_path = os.path.abspath(os.path.join(settings.UPLOAD_DIR, order.customer_signed_file_path))
+
+    if not file_path.startswith(upload_dir + os.sep):
+        raise HTTPException(status_code=403, detail="访问被拒绝：文件路径不合法")
+
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="文件不存在")
-    
+
     filename = os.path.basename(file_path)
     media_type = "application/pdf" if filename.endswith(".pdf") else "application/octet-stream"
-    
+
     return FileResponse(
         path=file_path,
         filename=filename,

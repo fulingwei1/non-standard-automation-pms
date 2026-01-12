@@ -39,7 +39,7 @@ async def get_sales_daily_report(
         if report_date:
             try:
                 report_dt = datetime.strptime(report_date, "%Y-%m-%d").date()
-            except:
+            except ValueError:
                 raise HTTPException(status_code=400, detail="日期格式错误，应为YYYY-MM-DD")
         else:
             report_dt = date.today()
@@ -299,7 +299,7 @@ async def get_sales_weekly_report(
         if week:
             try:
                 year, week_num, week_start, week_end = _parse_week_string(week)
-            except:
+            except (ValueError, TypeError):
                 raise HTTPException(status_code=400, detail="周格式错误，应为YYYY-WW")
         else:
             year, week_num, week_start, week_end = _get_current_week_range()
@@ -417,7 +417,7 @@ async def get_payment_report(
             try:
                 start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
                 end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
-            except:
+            except ValueError:
                 raise HTTPException(status_code=400, detail="日期格式错误，应为YYYY-MM-DD")
         else:
             # 默认本月
@@ -540,7 +540,7 @@ async def get_contract_report(
             try:
                 start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
                 end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
-            except:
+            except ValueError:
                 raise HTTPException(status_code=400, detail="日期格式错误，应为YYYY-MM-DD")
         else:
             # 默认本月
@@ -648,7 +648,7 @@ async def get_invoice_report(
             try:
                 start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
                 end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
-            except:
+            except ValueError:
                 raise HTTPException(status_code=400, detail="日期格式错误，应为YYYY-MM-DD")
         else:
             # 默认本月

@@ -7,6 +7,7 @@ from typing import Dict, Any, List, Optional
 from datetime import date, datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
+from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from app.models.project import Project
 
@@ -147,7 +148,7 @@ def calculate_monthly_statistics(
             )
             .all()
         )
-    except:
+    except (OperationalError, ProgrammingError):
         # 如果extract不支持，使用字符串格式化（SQLite）
         month_stats = (
             month_query.with_entities(

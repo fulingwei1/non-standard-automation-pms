@@ -62,7 +62,7 @@ def generate_bidding_no(db: Session) -> str:
     if max_bidding:
         try:
             seq = int(max_bidding.bidding_no.split("-")[-1]) + 1
-        except:
+        except (ValueError, TypeError, IndexError):
             seq = 1
     else:
         seq = 1
@@ -86,7 +86,7 @@ def generate_archive_no(db: Session) -> str:
     if max_archive:
         try:
             seq = int(max_archive.archive_no.split("-")[-1]) + 1
-        except:
+        except (ValueError, TypeError, IndexError):
             seq = 1
     else:
         seq = 1
@@ -1108,7 +1108,7 @@ async def get_performance_metrics(
         if month:
             try:
                 year, month_num = map(int, month.split("-"))
-            except:
+            except (ValueError, TypeError):
                 raise HTTPException(status_code=400, detail="月份格式错误，应为YYYY-MM")
         else:
             today = date.today()

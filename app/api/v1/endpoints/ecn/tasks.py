@@ -5,10 +5,13 @@ ECN任务管理 API endpoints
 包含：任务列表、创建任务、更新进度、完成任务
 """
 
+import logging
 from typing import Any, List
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
@@ -133,7 +136,7 @@ def create_ecn_task(
         if assignee_id:
             task.assignee_id = assignee_id
     except Exception as e:
-        print(f"Failed to assign task: {e}")
+        logger.error(f"Failed to assign task: {e}")
 
     # 如果ECN状态是已审批，自动更新为执行中
     if ecn.status == "APPROVED":
@@ -151,7 +154,7 @@ def create_ecn_task(
         if task.assignee_id:
             notify_task_assigned(db, ecn, task, task.assignee_id)
     except Exception as e:
-        print(f"Failed to send task assigned notification: {e}")
+        logger.error(f"Failed to send task assigned notification: {e}")
 
     return _build_task_response(db, task)
 
@@ -255,7 +258,7 @@ def complete_ecn_task(
         if ecn:
             notify_task_completed(db, ecn, task)
     except Exception as e:
-        print(f"Failed to send task completed notification: {e}")
+        logger.error(f"Failed to send task completed notification: {e}")
 
     return _build_task_response(db, task)
 

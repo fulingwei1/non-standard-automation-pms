@@ -5,11 +5,14 @@ ECN评估管理 API endpoints
 包含：评估列表、创建评估、提交评估、评估汇总
 """
 
+import logging
 from typing import Any, List
 from datetime import datetime, timedelta
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, status
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -121,7 +124,7 @@ def create_ecn_evaluation(
         if ecn:
             notify_evaluation_assigned(db, ecn, evaluation, current_user.id)
     except Exception as e:
-        print(f"Failed to send evaluation assigned notification: {e}")
+        logger.error(f"Failed to send evaluation assigned notification: {e}")
 
     return _build_evaluation_response(db, evaluation)
 
@@ -225,7 +228,7 @@ def submit_ecn_evaluation(
                                             approval.approver_id = approver_id
                                             notify_approval_assigned(db, ecn, approval, approver_id)
                                     except Exception as e:
-                                        print(f"Failed to assign approval: {e}")
+                                        logger.error(f"Failed to assign approval: {e}")
                         elif rule.condition_type == "SCHEDULE":
                             if rule.condition_min and rule.condition_max:
                                 if rule.condition_min <= schedule_impact <= rule.condition_max:
@@ -245,7 +248,7 @@ def submit_ecn_evaluation(
                                             approval.approver_id = approver_id
                                             notify_approval_assigned(db, ecn, approval, approver_id)
                                     except Exception as e:
-                                        print(f"Failed to auto assign approval: {e}")
+                                        logger.error(f"Failed to auto assign approval: {e}")
 
                     # 如果没有匹配的规则，使用默认审批流程
                     if not approval_rules:
@@ -266,7 +269,7 @@ def submit_ecn_evaluation(
                                 approval.approver_id = approver_id
                                 notify_approval_assigned(db, ecn, approval, approver_id)
                         except Exception as e:
-                            print(f"Failed to auto assign approval: {e}")
+                            logger.error(f"Failed to auto assign approval: {e}")
 
     db.add(eval)
     db.add(ecn)
@@ -277,7 +280,7 @@ def submit_ecn_evaluation(
     try:
         notify_evaluation_completed(db, ecn, eval)
     except Exception as e:
-        print(f"Failed to send evaluation completed notification: {e}")
+        logger.error(f"Failed to send evaluation completed notification: {e}")
 
     return _build_evaluation_response(db, eval)
 

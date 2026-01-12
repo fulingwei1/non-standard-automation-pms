@@ -244,7 +244,7 @@ class PaymentAdjustmentService:
                     history_list = json.loads(plan.remark)
                     if not isinstance(history_list, list):
                         history_list = []
-                except:
+                except (json.JSONDecodeError, TypeError):
                     history_list = []
             else:
                 history_list = []
@@ -373,7 +373,7 @@ class PaymentAdjustmentService:
             history_list = json.loads(plan.remark)
             if isinstance(history_list, list):
                 return history_list
-        except:
+        except (json.JSONDecodeError, TypeError):
             pass
         
         # 如果不是JSON格式，返回空列表
