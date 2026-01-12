@@ -5,7 +5,7 @@ import io
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 import pandas as pd
 
 from app.api import deps
@@ -735,7 +735,7 @@ def get_hr_statistics(
     # 按部门统计
     dept_stats = db.query(
         EmployeeHrProfile.dept_level1,
-        db.func.count(EmployeeHrProfile.id)
+        func.count(EmployeeHrProfile.id)
     ).join(Employee).filter(Employee.is_active == True).group_by(
         EmployeeHrProfile.dept_level1
     ).all()
@@ -743,7 +743,7 @@ def get_hr_statistics(
     # 按在职状态统计
     status_stats = db.query(
         Employee.employment_status,
-        db.func.count(Employee.id)
+        func.count(Employee.id)
     ).group_by(Employee.employment_status).all()
 
     # 试用期员工数
