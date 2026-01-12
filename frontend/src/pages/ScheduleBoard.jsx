@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Calendar,
   Clock,
@@ -9,9 +9,7 @@ import {
   Filter,
   Users,
   Package,
-  Wrench,
   Zap,
-  MoreHorizontal,
   ExternalLink,
   ZoomIn,
   ZoomOut,
@@ -794,6 +792,21 @@ export default function ScheduleBoard() {
     { stage: "S6", name: "FAT验收" },
   ];
 
+  const getStageName = (stage) => {
+    const stageNames = {
+      S1: "需求进入",
+      S2: "方案设计",
+      S3: "采购备料",
+      S4: "加工制造",
+      S5: "装配调试",
+      S6: "FAT验收",
+      S7: "包装发运",
+      S8: "SAT验收",
+      S9: "质保结项",
+    };
+    return stageNames[stage] || stage;
+  };
+
   useEffect(() => {
     const fetchProjects = async () => {
       try {
@@ -881,21 +894,6 @@ export default function ScheduleBoard() {
     };
     fetchProjects();
   }, []);
-
-  const getStageName = (stage) => {
-    const stageNames = {
-      S1: "需求进入",
-      S2: "方案设计",
-      S3: "采购备料",
-      S4: "加工制造",
-      S5: "装配调试",
-      S6: "FAT验收",
-      S7: "包装发运",
-      S8: "SAT验收",
-      S9: "质保结项",
-    };
-    return stageNames[stage] || stage;
-  };
 
   const totalProjects = projects.length;
   const atRiskProjects = projects.filter((p) => p.health === "H2").length;
