@@ -1286,30 +1286,6 @@ def get_knowledge_base_statistics(
         "total_views": int(total_views),
     }
 
-@router.get("/knowledge-base/statistics", response_model=dict, status_code=status.HTTP_200_OK)
-def get_knowledge_base_statistics(
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
-) -> Any:
-    """
-    获取知识库统计
-    """
-    total = db.query(KnowledgeBase).count()
-    published = db.query(KnowledgeBase).filter(KnowledgeBase.status == "已发布").count()
-    faq = db.query(KnowledgeBase).filter(KnowledgeBase.is_faq == True).count()
-    featured = db.query(KnowledgeBase).filter(KnowledgeBase.is_featured == True).count()
-    
-    # 总浏览量
-    total_views = db.query(func.sum(KnowledgeBase.view_count)).scalar() or 0
-    
-    return {
-        "total": total,
-        "published": published,
-        "faq": faq,
-        "featured": featured,
-        "total_views": int(total_views),
-    }
-
 
 @router.get("/knowledge-base", response_model=PaginatedResponse[KnowledgeBaseResponse], status_code=status.HTTP_200_OK)
 def read_knowledge_base(
