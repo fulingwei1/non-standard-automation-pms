@@ -1,16 +1,10 @@
 # 前端 Mock 数据修复报告
 
-生成时间: Mon Jan 12 08:47:11 CST 2026
+生成时间: Mon Jan 12 09:00:36 CST 2026
 
-总计待修复文件: 14
+总计待修复文件: 13
 
 ---
-
-## AlertCenter.jsx
-路径: `src/pages/AlertCenter.jsx`
-- isDemoAccount: 0
-- demo_token_: 0
-- const mock*: 1
 
 ## ChairmanWorkstation.jsx
 路径: `src/pages/ChairmanWorkstation.jsx`
@@ -70,7 +64,7 @@
 路径: `src/pages/ProjectReviewList.jsx`
 - isDemoAccount: 0
 - demo_token_: 0
-- const mock*: 2
+- const mock*: 1
 
 ## SalesManagerWorkstation.jsx
 路径: `src/pages/SalesManagerWorkstation.jsx`
@@ -96,4 +90,4 @@
 
 - isDemoAccount 检查: 3 处
 - demo_token_ 检查: 4 处
-- mock 数据定义: 21 处
+- mock 数据定义: 19 处
