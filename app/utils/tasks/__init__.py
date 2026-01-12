@@ -4,12 +4,15 @@
 
 本模块提供所有定时任务函数，按功能分类：
 - base.py: 基础设施和辅助函数
+- spec_tasks.py: 规格匹配定时任务
+- health_tasks.py: 项目健康度定时任务
 - issue_tasks.py: 问题管理定时任务
 - milestone_tasks.py: 里程碑和成本预警任务
 - timesheet_tasks.py: 工时提醒和汇总任务
 - alert_tasks.py: P0预警服务任务
 - sales_tasks.py: 销售/财务相关任务
 - notification_tasks.py: 通知和杂项任务
+- production_tasks.py: 生产日报和资源负荷任务
 
 原 scheduled_tasks.py 已拆分到以上模块，此文件统一导出所有任务函数。
 """
@@ -19,6 +22,17 @@ from .base import (
     send_notification_for_alert,
     generate_alert_no,
     logger,
+)
+
+# 规格匹配任务
+from .spec_tasks import (
+    daily_spec_match_check,
+)
+
+# 项目健康度任务
+from .health_tasks import (
+    calculate_project_health,
+    daily_health_snapshot,
 )
 
 # 问题管理任务
@@ -85,11 +99,24 @@ from .notification_tasks import (
     check_employee_confirmation_reminder,
 )
 
+# 生产和资源任务
+from .production_tasks import (
+    generate_production_daily_reports,
+    generate_shortage_daily_report,
+    generate_job_duty_tasks,
+    check_workload_overload_alerts,
+)
+
 __all__ = [
     # 基础模块
     'send_notification_for_alert',
     'generate_alert_no',
     'logger',
+    # 规格匹配任务
+    'daily_spec_match_check',
+    # 项目健康度任务
+    'calculate_project_health',
+    'daily_health_snapshot',
     # 问题管理任务
     'check_overdue_issues',
     'check_blocking_issues',
@@ -136,4 +163,9 @@ __all__ = [
     'calculate_response_metrics',
     'check_equipment_maintenance_reminder',
     'check_employee_confirmation_reminder',
+    # 生产和资源任务
+    'generate_production_daily_reports',
+    'generate_shortage_daily_report',
+    'generate_job_duty_tasks',
+    'check_workload_overload_alerts',
 ]
