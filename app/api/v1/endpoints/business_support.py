@@ -1096,6 +1096,94 @@ async def get_active_bidding(
         raise HTTPException(status_code=500, detail=f"获取进行中的投标列表失败: {str(e)}")
 
 
+# ==================== 绩效指标辅助函数 ====================
+
+def _parse_month_date_range(month: Optional[str]) -> tuple:
+    """解析月份参数，返回(year, month_num, month_start, month_end, month_str)"""
+    if month:
+        try:
+            year, month_num = map(int, month.split("-"))
+        except:
+            raise HTTPException(status_code=400, detail="月份格式错误，应为YYYY-MM")
+    else:
+        today = date.today()
+        year = today.year
+        month_num = today.month
+
+    month_start = date(year, month_num, 1)
+    if month_num == 12:
+        month_end = date(year + 1, 1, 1) - timedelta(days=1)
+    else:
+        month_end = date(year, month_num + 1, 1) - timedelta(days=1)
+    month_str = f"{year}-{month_num:02d}"
+    return year, month_num, month_start, month_end, month_str
+
+
+def _calculate_payment_rate(db: Session, month_start: date, month_end: date) -> Decimal:
+    """计算回款完成率"""
+    from sqlalchemy import text
+    params = {"start_date": month_start.strftime("%Y-%m-%d"), "end_date": month_end.strftime("%Y-%m-%d")}
+
+    planned_result = db.execute(text("""
+        SELECT COALESCE(SUM(planned_amount), 0) as planned
+        FROM project_payment_plans
+        WHERE planned_date >= :start_date AND planned_date <= :end_date
+    """), params).fetchone()
+    planned_amount = Decimal(str(planned_result[0])) if planned_result and planned_result[0] else Decimal("0")
+
+    actual_result = db.execute(text("""
+        SELECT COALESCE(SUM(actual_amount), 0) as actual
+        FROM project_payment_plans
+        WHERE planned_date >= :start_date AND planned_date <= :end_date AND actual_amount > 0
+    """), params).fetchone()
+    actual_amount = Decimal(str(actual_result[0])) if actual_result and actual_result[0] else Decimal("0")
+
+    return (actual_amount / planned_amount * 100) if planned_amount > 0 else Decimal("0")
+
+
+def _calculate_invoice_rate(db: Session, month_start: date, month_end: date) -> Decimal:
+    """计算开票及时率"""
+    from sqlalchemy import text
+    params = {"start_date": month_start.strftime("%Y-%m-%d"), "end_date": month_end.strftime("%Y-%m-%d")}
+
+    total_result = db.execute(text("""
+        SELECT COUNT(*) as count
+        FROM project_payment_plans
+        WHERE planned_date >= :start_date AND planned_date <= :end_date
+        AND status IN ('PENDING', 'PARTIAL', 'INVOICED')
+    """), params).fetchone()
+    total_needed = total_result[0] if total_result else 0
+
+    on_time_invoices = (
+        db.query(Invoice)
+        .join(Contract, Invoice.contract_id == Contract.id)
+        .filter(Invoice.issue_date >= month_start, Invoice.issue_date <= month_end, Invoice.status == "ISSUED")
+        .count()
+    )
+
+    return (Decimal(on_time_invoices) / Decimal(total_needed) * 100) if total_needed > 0 else Decimal("0")
+
+
+def _calculate_document_flow_count(db: Session, month_start: date, month_end: date) -> int:
+    """计算文件流转数"""
+    start_dt = datetime.combine(month_start, datetime.min.time())
+    end_dt = datetime.combine(month_end, datetime.max.time())
+
+    count = db.query(DocumentArchive).filter(
+        DocumentArchive.created_at >= start_dt, DocumentArchive.created_at <= end_dt
+    ).count()
+    count += db.query(ContractReview).filter(
+        ContractReview.created_at >= start_dt, ContractReview.created_at <= end_dt
+    ).count()
+    count += db.query(ContractSealRecord).filter(
+        ContractSealRecord.created_at >= start_dt, ContractSealRecord.created_at <= end_dt
+    ).count()
+    count += db.query(PaymentReminder).filter(
+        PaymentReminder.created_at >= start_dt, PaymentReminder.created_at <= end_dt
+    ).count()
+    return count
+
+
 @router.get("/dashboard/performance", response_model=ResponseModel[PerformanceMetricsResponse], summary="获取本月绩效指标")
 async def get_performance_metrics(
     month: Optional[str] = Query(None, description="统计月份（YYYY-MM格式），不提供则使用当前月份"),
@@ -1104,129 +1192,21 @@ async def get_performance_metrics(
 ):
     """获取本月绩效指标（用于工作台右侧展示）"""
     try:
-        # 确定统计月份
-        if month:
-            try:
-                year, month_num = map(int, month.split("-"))
-            except:
-                raise HTTPException(status_code=400, detail="月份格式错误，应为YYYY-MM")
-        else:
-            today = date.today()
-            year = today.year
-            month_num = today.month
-        
-        month_start = date(year, month_num, 1)
-        # 计算下个月第一天，然后减一天得到本月最后一天
-        if month_num == 12:
-            month_end = date(year + 1, 1, 1) - timedelta(days=1)
-        else:
-            month_end = date(year, month_num + 1, 1) - timedelta(days=1)
-        
-        month_str = f"{year}-{month_num:02d}"
-        
-        # 1. 新签合同数（本月签订的合同）
-        new_contracts = (
-            db.query(Contract)
-            .filter(
-                Contract.signed_date >= month_start,
-                Contract.signed_date <= month_end,
-                Contract.status.in_(["SIGNED", "EXECUTING"])
-            )
-            .count()
-        )
-        
-        # 2. 回款完成率（本月实际回款/计划回款）
-        from sqlalchemy import text
-        # 本月计划回款金额
-        planned_result = db.execute(text("""
-            SELECT COALESCE(SUM(planned_amount), 0) as planned
-            FROM project_payment_plans
-            WHERE planned_date >= :start_date
-            AND planned_date <= :end_date
-        """), {"start_date": month_start.strftime("%Y-%m-%d"), "end_date": month_end.strftime("%Y-%m-%d")}).fetchone()
-        planned_amount = Decimal(str(planned_result[0])) if planned_result and planned_result[0] else Decimal("0")
-        
-        # 本月实际回款金额（从回款记录表查询，如果有的话）
-        # 这里简化处理，从project_payment_plans表的actual_amount字段计算
-        actual_result = db.execute(text("""
-            SELECT COALESCE(SUM(actual_amount), 0) as actual
-            FROM project_payment_plans
-            WHERE planned_date >= :start_date
-            AND planned_date <= :end_date
-            AND actual_amount > 0
-        """), {"start_date": month_start.strftime("%Y-%m-%d"), "end_date": month_end.strftime("%Y-%m-%d")}).fetchone()
-        actual_amount = Decimal(str(actual_result[0])) if actual_result and actual_result[0] else Decimal("0")
-        
-        payment_completion_rate = (actual_amount / planned_amount * 100) if planned_amount > 0 else Decimal("0")
-        
-        # 3. 开票及时率（按时开票数/应开票数）
-        # 应开票数：本月计划回款中需要开票的数量
-        # 按时开票数：在计划日期前或当天开票的数量
-        # 这里简化处理，使用发票表的issue_date和状态
-        total_invoices_needed = db.execute(text("""
-            SELECT COUNT(*) as count
-            FROM project_payment_plans
-            WHERE planned_date >= :start_date
-            AND planned_date <= :end_date
-            AND status IN ('PENDING', 'PARTIAL', 'INVOICED')
-        """), {"start_date": month_start.strftime("%Y-%m-%d"), "end_date": month_end.strftime("%Y-%m-%d")}).fetchone()
-        total_needed = total_invoices_needed[0] if total_invoices_needed else 0
-        
-        # 本月已开票数（在计划日期前或当天开票）
-        on_time_invoices = (
-            db.query(Invoice)
-            .join(Contract, Invoice.contract_id == Contract.id)
-            .filter(
-                Invoice.issue_date >= month_start,
-                Invoice.issue_date <= month_end,
-                Invoice.status == "ISSUED"
-            )
-            .count()
-        )
-        
-        invoice_timeliness_rate = (Decimal(on_time_invoices) / Decimal(total_needed) * 100) if total_needed > 0 else Decimal("0")
-        
-        # 4. 文件流转数（本月处理的文件数）
-        # 包括：文件归档、合同审核、合同盖章、回款催收等
-        document_flow_count = (
-            db.query(DocumentArchive)
-            .filter(
-                DocumentArchive.created_at >= datetime.combine(month_start, datetime.min.time()),
-                DocumentArchive.created_at <= datetime.combine(month_end, datetime.max.time())
-            )
-            .count()
-        )
-        
-        # 加上合同审核记录
-        document_flow_count += (
-            db.query(ContractReview)
-            .filter(
-                ContractReview.created_at >= datetime.combine(month_start, datetime.min.time()),
-                ContractReview.created_at <= datetime.combine(month_end, datetime.max.time())
-            )
-            .count()
-        )
-        
-        # 加上合同盖章记录
-        document_flow_count += (
-            db.query(ContractSealRecord)
-            .filter(
-                ContractSealRecord.created_at >= datetime.combine(month_start, datetime.min.time()),
-                ContractSealRecord.created_at <= datetime.combine(month_end, datetime.max.time())
-            )
-            .count()
-        )
-        
-        # 加上回款催收记录
-        document_flow_count += (
-            db.query(PaymentReminder)
-            .filter(
-                PaymentReminder.created_at >= datetime.combine(month_start, datetime.min.time()),
-                PaymentReminder.created_at <= datetime.combine(month_end, datetime.max.time())
-            )
-            .count()
-        )
-        
+        # 解析月份参数
+        _, _, month_start, month_end, month_str = _parse_month_date_range(month)
+
+        # 1. 新签合同数
+        new_contracts = db.query(Contract).filter(
+            Contract.signed_date >= month_start,
+            Contract.signed_date <= month_end,
+            Contract.status.in_(["SIGNED", "EXECUTING"])
+        ).count()
+
+        # 2-4. 计算各项指标
+        payment_completion_rate = _calculate_payment_rate(db, month_start, month_end)
+        invoice_timeliness_rate = _calculate_invoice_rate(db, month_start, month_end)
+        document_flow_count = _calculate_document_flow_count(db, month_start, month_end)
+
         performance_data = PerformanceMetricsResponse(
             new_contracts_count=new_contracts,
             payment_completion_rate=payment_completion_rate,
@@ -1234,12 +1214,8 @@ async def get_performance_metrics(
             document_flow_count=document_flow_count,
             month=month_str
         )
-        
-        return ResponseModel(
-            code=200,
-            message="获取本月绩效指标成功",
-            data=performance_data
-        )
+
+        return ResponseModel(code=200, message="获取本月绩效指标成功", data=performance_data)
     except HTTPException:
         raise
     except Exception as e:

@@ -779,37 +779,15 @@ def export_project_detail(
     )
 
 
-@router.post("/export/task_list", response_class=StreamingResponse)
-def export_task_list(
-    *,
-    db: Session = Depends(deps.get_db),
-    export_in: ExportTaskListRequest,
-    current_user: User = Depends(security.require_permission("data_import_export:manage")),
-) -> Any:
-    """
-    导出任务列表（Excel）
-    """
-    # 检查Excel库是否可用
-    try:
-        import pandas as pd
-        import openpyxl
-        import io
-    except ImportError:
-        raise HTTPException(
-            status_code=500,
-            detail="Excel处理库未安装，请安装pandas和openpyxl"
-        )
-    
-    # 导入Task模型
-    from app.models.progress import Task
-    from app.services.data_scope_service import DataScopeService
-    from sqlalchemy import desc, or_
-    
-    # 构建查询
-    query = db.query(Task)
-    
-    # 应用过滤条件
-    filters = export_in.filters or {}
+# 任务状态名称映射
+TASK_STATUS_NAMES = {
+    'TODO': '待办', 'IN_PROGRESS': '进行中', 'BLOCKED': '阻塞',
+    'DONE': '已完成', 'CANCELLED': '已取消'
+}
+
+
+def _apply_task_export_filters(query, filters: dict, Task):
+    """应用任务导出过滤条件"""
     if filters.get('project_id'):
         query = query.filter(Task.project_id == filters['project_id'])
     if filters.get('machine_id'):
@@ -821,149 +799,54 @@ def export_task_list(
     if filters.get('owner_id'):
         query = query.filter(Task.owner_id == filters['owner_id'])
     if filters.get('keyword'):
-        keyword = filters['keyword']
-        query = query.filter(Task.task_name.contains(keyword))
-    
-    # 应用数据权限过滤（通过项目范围限制任务）
-    scoped_project_query = db.query(Project.id)
-    if filters.get('project_id'):
-        scoped_project_query = scoped_project_query.filter(Project.id == filters['project_id'])
-    scoped_project_query = DataScopeService.filter_projects_by_scope(
-        db,
-        scoped_project_query,
-        current_user
-    )
-    allowed_projects_subquery = scoped_project_query.subquery()
-    query = query.filter(Task.project_id.in_(allowed_projects_subquery))
-    
-    # 获取任务列表
-    tasks = query.order_by(desc(Task.created_at)).all()
-    
-    # 状态名称映射
-    status_names = {
-        'TODO': '待办',
-        'IN_PROGRESS': '进行中',
-        'BLOCKED': '阻塞',
-        'DONE': '已完成',
-        'CANCELLED': '已取消'
-    }
-    
-    # 构建DataFrame
+        query = query.filter(Task.task_name.contains(filters['keyword']))
+    return query
+
+
+def _build_task_export_data(db, tasks, Project, User) -> list:
+    """构建任务导出数据"""
     data = []
     for task in tasks:
         project = db.query(Project).filter(Project.id == task.project_id).first()
         owner = db.query(User).filter(User.id == task.owner_id).first() if task.owner_id else None
-        
         data.append({
-            '任务ID': task.id,
-            '任务名称': task.task_name or '',
+            '任务ID': task.id, '任务名称': task.task_name or '',
             '项目编码': project.project_code if project else '',
             '项目名称': project.project_name if project else '',
-            '阶段': task.stage or '',
-            '状态': task.status or '',
-            '状态名称': status_names.get(task.status, task.status or ''),
+            '阶段': task.stage or '', '状态': task.status or '',
+            '状态名称': TASK_STATUS_NAMES.get(task.status, task.status or ''),
             '负责人': owner.real_name or owner.username if owner else '',
             '计划开始日期': task.plan_start.strftime('%Y-%m-%d') if task.plan_start else '',
             '计划结束日期': task.plan_end.strftime('%Y-%m-%d') if task.plan_end else '',
             '实际开始日期': task.actual_start.strftime('%Y-%m-%d') if task.actual_start else '',
             '实际结束日期': task.actual_end.strftime('%Y-%m-%d') if task.actual_end else '',
-            '进度(%)': task.progress_percent or 0,
-            '权重': float(task.weight or 0),
+            '进度(%)': task.progress_percent or 0, '权重': float(task.weight or 0),
             '阻塞原因': task.block_reason or '',
             '创建时间': task.created_at.strftime('%Y-%m-%d %H:%M:%S') if task.created_at else '',
             '更新时间': task.updated_at.strftime('%Y-%m-%d %H:%M:%S') if task.updated_at else '',
         })
-    
-    df = pd.DataFrame(data)
-    
-    # 创建Excel文件
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, sheet_name='任务列表', index=False)
-        
-        # 设置列宽
-        worksheet = writer.sheets['任务列表']
-        column_widths = {
-            'A': 10,  # 任务ID
-            'B': 30,  # 任务名称
-            'C': 15,  # 项目编码
-            'D': 30,  # 项目名称
-            'E': 8,   # 阶段
-            'F': 12,  # 状态
-            'G': 12,  # 状态名称
-            'H': 12,  # 负责人
-            'I': 12,  # 计划开始日期
-            'J': 12,  # 计划结束日期
-            'K': 12,  # 实际开始日期
-            'L': 12,  # 实际结束日期
-            'M': 10,  # 进度(%)
-            'N': 8,   # 权重
-            'O': 40,  # 阻塞原因
-            'P': 18,  # 创建时间
-            'Q': 18,  # 更新时间
-        }
-        for col, width in column_widths.items():
-            worksheet.column_dimensions[col].width = width
-        
-        # 设置表头样式
-        from openpyxl.styles import Font, PatternFill, Alignment
-        header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
-        header_font = Font(bold=True, color="FFFFFF")
-        
-        for cell in worksheet[1]:
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = Alignment(horizontal="center", vertical="center")
-    
-    output.seek(0)
-    
-    # 生成文件名
-    filename = f"任务列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-    
-    return StreamingResponse(
-        io.BytesIO(output.read()),
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={
-            "Content-Disposition": f"attachment; filename*=UTF-8''{filename}"
-        }
-    )
+    return data
 
 
-@router.post("/export/timesheet", response_class=StreamingResponse)
-def export_timesheet(
-    *,
-    db: Session = Depends(deps.get_db),
-    export_in: ExportTimesheetRequest,
-    current_user: User = Depends(security.require_permission("data_import_export:manage")),
-) -> Any:
-    """
-    导出工时数据（按日期范围，Excel）
-    """
-    # 检查Excel库是否可用
-    try:
-        import pandas as pd
-        import openpyxl
-        import io
-    except ImportError:
-        raise HTTPException(
-            status_code=500,
-            detail="Excel处理库未安装，请安装pandas和openpyxl"
-        )
-    
-    # 导入Timesheet模型
-    from app.models.timesheet import Timesheet
-    from sqlalchemy import desc, and_
-    
-    # 构建查询
-    query = db.query(Timesheet).filter(
-        and_(
-            Timesheet.work_date >= export_in.start_date,
-            Timesheet.work_date <= export_in.end_date
-        )
-    )
-    
-    # 应用过滤条件
-    filters = export_in.filters or {}
+# 工时状态和加班类型名称映射
+TIMESHEET_STATUS_NAMES = {
+    'DRAFT': '草稿', 'SUBMITTED': '已提交', 'APPROVED': '已通过',
+    'REJECTED': '已驳回', 'CANCELLED': '已取消'
+}
+
+OVERTIME_TYPE_NAMES = {
+    'NORMAL': '正常工时', 'OVERTIME': '加班',
+    'WEEKEND': '周末加班', 'HOLIDAY': '节假日加班'
+}
+
+
+def _apply_timesheet_export_filters(query, filters: dict, start_date, end_date, Timesheet):
+    """应用工时导出过滤条件"""
+    from sqlalchemy import and_
+    query = query.filter(and_(
+        Timesheet.work_date >= start_date,
+        Timesheet.work_date <= end_date
+    ))
     if filters.get('user_id'):
         query = query.filter(Timesheet.user_id == filters['user_id'])
     if filters.get('project_id'):
@@ -972,27 +855,11 @@ def export_timesheet(
         query = query.filter(Timesheet.department_id == filters['department_id'])
     if filters.get('status'):
         query = query.filter(Timesheet.status == filters['status'])
-    
-    # 获取工时记录
-    timesheets = query.order_by(Timesheet.work_date, Timesheet.user_id).all()
-    
-    # 状态名称映射
-    status_names = {
-        'DRAFT': '草稿',
-        'SUBMITTED': '已提交',
-        'APPROVED': '已通过',
-        'REJECTED': '已驳回',
-        'CANCELLED': '已取消'
-    }
-    
-    overtime_type_names = {
-        'NORMAL': '正常工时',
-        'OVERTIME': '加班',
-        'WEEKEND': '周末加班',
-        'HOLIDAY': '节假日加班'
-    }
-    
-    # 构建DataFrame
+    return query
+
+
+def _build_timesheet_export_data(timesheets) -> list:
+    """构建工时导出数据"""
     data = []
     for ts in timesheets:
         data.append({
@@ -1004,73 +871,97 @@ def export_timesheet(
             '任务名称': ts.task_name or '',
             '工时(小时)': float(ts.hours or 0),
             '加班类型': ts.overtime_type or '',
-            '加班类型名称': overtime_type_names.get(ts.overtime_type, ts.overtime_type or ''),
+            '加班类型名称': OVERTIME_TYPE_NAMES.get(ts.overtime_type, ts.overtime_type or ''),
             '工作内容': ts.work_content or '',
             '工作成果': ts.work_result or '',
             '更新前进度(%)': ts.progress_before or 0,
             '更新后进度(%)': ts.progress_after or 0,
             '状态': ts.status or '',
-            '状态名称': status_names.get(ts.status, ts.status or ''),
+            '状态名称': TIMESHEET_STATUS_NAMES.get(ts.status, ts.status or ''),
             '提交时间': ts.submit_time.strftime('%Y-%m-%d %H:%M:%S') if ts.submit_time else '',
             '审核人': ts.approver_name or '',
             '审核时间': ts.approve_time.strftime('%Y-%m-%d %H:%M:%S') if ts.approve_time else '',
             '审核意见': ts.approve_comment or '',
         })
-    
+    return data
+
+
+@router.post("/export/task_list", response_class=StreamingResponse)
+def export_task_list(
+    *,
+    db: Session = Depends(deps.get_db),
+    export_in: ExportTaskListRequest,
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
+) -> Any:
+    """导出任务列表（Excel）"""
+    from app.models.progress import Task
+    from app.services.data_scope_service import DataScopeService
+    from sqlalchemy import desc
+
+    # 构建查询并应用过滤
+    filters = export_in.filters or {}
+    query = db.query(Task)
+    query = _apply_task_export_filters(query, filters, Task)
+
+    # 应用数据权限过滤
+    scoped_project_query = db.query(Project.id)
+    if filters.get('project_id'):
+        scoped_project_query = scoped_project_query.filter(Project.id == filters['project_id'])
+    scoped_project_query = DataScopeService.filter_projects_by_scope(db, scoped_project_query, current_user)
+    query = query.filter(Task.project_id.in_(scoped_project_query.subquery()))
+
+    tasks = query.order_by(desc(Task.created_at)).all()
+    data = _build_task_export_data(db, tasks, Project, User)
     df = pd.DataFrame(data)
-    
-    # 创建Excel文件
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, sheet_name='工时数据', index=False)
-        
-        # 设置列宽
-        worksheet = writer.sheets['工时数据']
-        column_widths = {
-            'A': 12,  # 工作日期
-            'B': 12,  # 人员姓名
-            'C': 15,  # 部门
-            'D': 15,  # 项目编码
-            'E': 30,  # 项目名称
-            'F': 30,  # 任务名称
-            'G': 12,  # 工时(小时)
-            'H': 12,  # 加班类型
-            'I': 15,  # 加班类型名称
-            'J': 40,  # 工作内容
-            'K': 40,  # 工作成果
-            'L': 12,  # 更新前进度(%)
-            'M': 12,  # 更新后进度(%)
-            'N': 12,  # 状态
-            'O': 12,  # 状态名称
-            'P': 18,  # 提交时间
-            'Q': 12,  # 审核人
-            'R': 18,  # 审核时间
-            'S': 40,  # 审核意见
-        }
-        for col, width in column_widths.items():
-            worksheet.column_dimensions[col].width = width
-        
-        # 设置表头样式
-        from openpyxl.styles import Font, PatternFill, Alignment
-        header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
-        header_font = Font(bold=True, color="FFFFFF")
-        
-        for cell in worksheet[1]:
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = Alignment(horizontal="center", vertical="center")
-    
-    output.seek(0)
-    
-    # 生成文件名
-    filename = f"工时数据_{export_in.start_date.strftime('%Y%m%d')}_{export_in.end_date.strftime('%Y%m%d')}.xlsx"
-    
+
+    column_widths = {
+        'A': 10, 'B': 30, 'C': 15, 'D': 30, 'E': 8, 'F': 12, 'G': 12, 'H': 12,
+        'I': 12, 'J': 12, 'K': 12, 'L': 12, 'M': 10, 'N': 8, 'O': 40, 'P': 18, 'Q': 18
+    }
+    output = _create_styled_excel(df, '任务列表', column_widths)
+
+    filename = f"任务列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     return StreamingResponse(
         io.BytesIO(output.read()),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={
-            "Content-Disposition": f"attachment; filename*=UTF-8''{filename}"
-        }
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"}
+    )
+
+
+@router.post("/export/timesheet", response_class=StreamingResponse)
+def export_timesheet(
+    *,
+    db: Session = Depends(deps.get_db),
+    export_in: ExportTimesheetRequest,
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
+) -> Any:
+    """导出工时数据（按日期范围，Excel）"""
+    from app.models.timesheet import Timesheet
+
+    # 构建查询并应用过滤
+    query = db.query(Timesheet)
+    query = _apply_timesheet_export_filters(
+        query, export_in.filters or {}, export_in.start_date, export_in.end_date, Timesheet
+    )
+    timesheets = query.order_by(Timesheet.work_date, Timesheet.user_id).all()
+
+    # 构建导出数据
+    data = _build_timesheet_export_data(timesheets)
+    df = pd.DataFrame(data)
+
+    # 创建Excel
+    column_widths = {
+        'A': 12, 'B': 12, 'C': 15, 'D': 15, 'E': 30, 'F': 30, 'G': 12, 'H': 12,
+        'I': 15, 'J': 40, 'K': 40, 'L': 12, 'M': 12, 'N': 12, 'O': 12, 'P': 18,
+        'Q': 12, 'R': 18, 'S': 40
+    }
+    output = _create_styled_excel(df, '工时数据', column_widths)
+
+    filename = f"工时数据_{export_in.start_date.strftime('%Y%m%d')}_{export_in.end_date.strftime('%Y%m%d')}.xlsx"
+    return StreamingResponse(
+        io.BytesIO(output.read()),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"}
     )
 
 

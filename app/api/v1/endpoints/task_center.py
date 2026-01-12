@@ -173,6 +173,89 @@ def get_task_overview(
 
 # ==================== 我的任务列表 ====================
 
+def _apply_task_filters(query, user_id: int, status: str, task_type: str, priority: str,
+                        is_urgent: bool, is_overdue: bool, project_id: int, keyword: str):
+    """应用任务筛选条件"""
+    query = query.filter(TaskUnified.assignee_id == user_id)
+
+    if status:
+        query = query.filter(TaskUnified.status == status)
+    if task_type:
+        query = query.filter(TaskUnified.task_type == task_type)
+    if priority:
+        query = query.filter(TaskUnified.priority == priority)
+    if is_urgent is not None:
+        query = query.filter(TaskUnified.is_urgent == is_urgent)
+
+    if is_overdue is not None:
+        today_str = datetime.now().date().strftime("%Y-%m-%d")
+        if is_overdue:
+            query = query.filter(
+                TaskUnified.deadline.isnot(None),
+                func.date(TaskUnified.deadline) < today_str,
+                TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"])
+            )
+        else:
+            query = query.filter(or_(
+                TaskUnified.deadline.is_(None),
+                func.date(TaskUnified.deadline) >= today_str,
+                ~TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"])
+            ))
+
+    if project_id:
+        query = query.filter(TaskUnified.project_id == project_id)
+    if keyword:
+        query = query.filter(or_(
+            TaskUnified.title.like(f"%{keyword}%"),
+            TaskUnified.description.like(f"%{keyword}%")
+        ))
+    return query
+
+
+def _apply_task_sorting(query, sort_by: str, sort_order: str):
+    """应用任务排序"""
+    if sort_by == "deadline":
+        order_by = TaskUnified.deadline
+    elif sort_by == "priority":
+        order_by = case(
+            (TaskUnified.priority == "URGENT", 1),
+            (TaskUnified.priority == "HIGH", 2),
+            (TaskUnified.priority == "MEDIUM", 3),
+            (TaskUnified.priority == "LOW", 4),
+            else_=5
+        )
+    else:
+        order_by = TaskUnified.created_at
+
+    return query.order_by(desc(order_by) if sort_order == "desc" else order_by)
+
+
+def _build_task_response(task, today) -> TaskUnifiedResponse:
+    """构建单个任务响应"""
+    is_overdue = False
+    if task.deadline and task.status in ["PENDING", "ACCEPTED", "IN_PROGRESS"]:
+        deadline_date = task.deadline.date() if isinstance(task.deadline, datetime) else task.deadline
+        if deadline_date < today:
+            is_overdue = True
+
+    return TaskUnifiedResponse(
+        id=task.id, task_code=task.task_code, title=task.title, description=task.description,
+        task_type=task.task_type, source_type=task.source_type, source_id=task.source_id,
+        source_name=task.source_name, project_id=task.project_id, project_name=task.project_name,
+        assignee_id=task.assignee_id, assignee_name=task.assignee_name,
+        assigner_id=task.assigner_id, assigner_name=task.assigner_name,
+        plan_start_date=task.plan_start_date, plan_end_date=task.plan_end_date,
+        actual_start_date=task.actual_start_date, actual_end_date=task.actual_end_date,
+        deadline=task.deadline, estimated_hours=task.estimated_hours,
+        actual_hours=task.actual_hours or Decimal("0"), status=task.status,
+        progress=task.progress or 0, priority=task.priority,
+        is_urgent=task.is_urgent or False, is_transferred=task.is_transferred or False,
+        transfer_from_name=task.transfer_from_name, tags=task.tags if task.tags else [],
+        category=task.category, is_overdue=is_overdue,
+        created_at=task.created_at, updated_at=task.updated_at
+    )
+
+
 @router.get("/my-tasks", response_model=TaskUnifiedListResponse, status_code=status.HTTP_200_OK)
 def get_my_tasks(
     *,
@@ -190,137 +273,23 @@ def get_my_tasks(
     sort_order: str = Query("asc", description="排序方向：asc/desc"),
     current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
-    """
-    我的任务列表（聚合所有来源）
-    """
-    user_id = current_user.id
-    query = db.query(TaskUnified).filter(TaskUnified.assignee_id == user_id)
-    
-    # 状态筛选
-    if status:
-        query = query.filter(TaskUnified.status == status)
-    
-    # 任务类型筛选
-    if task_type:
-        query = query.filter(TaskUnified.task_type == task_type)
-    
-    # 优先级筛选
-    if priority:
-        query = query.filter(TaskUnified.priority == priority)
-    
-    # 紧急任务筛选
-    if is_urgent is not None:
-        query = query.filter(TaskUnified.is_urgent == is_urgent)
-    
-    # 逾期任务筛选
-    if is_overdue is not None:
-        today = datetime.now().date()
-        today_str = today.strftime("%Y-%m-%d")
-        if is_overdue:
-            query = query.filter(
-                TaskUnified.deadline.isnot(None),
-                func.date(TaskUnified.deadline) < today_str,
-                TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"])
-            )
-        else:
-            query = query.filter(
-                or_(
-                    TaskUnified.deadline.is_(None),
-                    func.date(TaskUnified.deadline) >= today_str,
-                    ~TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"])
-                )
-            )
-    
-    # 项目筛选
-    if project_id:
-        query = query.filter(TaskUnified.project_id == project_id)
-    
-    # 关键词搜索
-    if keyword:
-        query = query.filter(
-            or_(
-                TaskUnified.title.like(f"%{keyword}%"),
-                TaskUnified.description.like(f"%{keyword}%")
-            )
-        )
-    
-    # 排序
-    if sort_by == "deadline":
-        order_by = TaskUnified.deadline
-    elif sort_by == "priority":
-        priority_order = case(
-            (TaskUnified.priority == "URGENT", 1),
-            (TaskUnified.priority == "HIGH", 2),
-            (TaskUnified.priority == "MEDIUM", 3),
-            (TaskUnified.priority == "LOW", 4),
-            else_=5
-        )
-        order_by = priority_order
-    else:
-        order_by = TaskUnified.created_at
-    
-    if sort_order == "desc":
-        query = query.order_by(desc(order_by))
-    else:
-        query = query.order_by(order_by)
-    
-    # 总数
-    total = query.count()
-    
+    """我的任务列表（聚合所有来源）"""
+    # 应用筛选和排序
+    query = db.query(TaskUnified)
+    query = _apply_task_filters(query, current_user.id, status, task_type, priority,
+                                is_urgent, is_overdue, project_id, keyword)
+    query = _apply_task_sorting(query, sort_by, sort_order)
+
     # 分页
-    offset = (page - 1) * page_size
-    tasks = query.offset(offset).limit(page_size).all()
-    
+    total = query.count()
+    tasks = query.offset((page - 1) * page_size).limit(page_size).all()
+
     # 构建响应
-    items = []
     today = datetime.now().date()
-    for task in tasks:
-        is_overdue = False
-        if task.deadline and task.status in ["PENDING", "ACCEPTED", "IN_PROGRESS"]:
-            deadline_date = task.deadline.date() if isinstance(task.deadline, datetime) else task.deadline
-            if deadline_date < today:
-                is_overdue = True
-        
-        items.append(TaskUnifiedResponse(
-            id=task.id,
-            task_code=task.task_code,
-            title=task.title,
-            description=task.description,
-            task_type=task.task_type,
-            source_type=task.source_type,
-            source_id=task.source_id,
-            source_name=task.source_name,
-            project_id=task.project_id,
-            project_name=task.project_name,
-            assignee_id=task.assignee_id,
-            assignee_name=task.assignee_name,
-            assigner_id=task.assigner_id,
-            assigner_name=task.assigner_name,
-            plan_start_date=task.plan_start_date,
-            plan_end_date=task.plan_end_date,
-            actual_start_date=task.actual_start_date,
-            actual_end_date=task.actual_end_date,
-            deadline=task.deadline,
-            estimated_hours=task.estimated_hours,
-            actual_hours=task.actual_hours or Decimal("0"),
-            status=task.status,
-            progress=task.progress or 0,
-            priority=task.priority,
-            is_urgent=task.is_urgent or False,
-            is_transferred=task.is_transferred or False,
-            transfer_from_name=task.transfer_from_name,
-            tags=task.tags if task.tags else [],
-            category=task.category,
-            is_overdue=is_overdue,
-            created_at=task.created_at,
-            updated_at=task.updated_at
-        ))
-    
+    items = [_build_task_response(task, today) for task in tasks]
+
     return TaskUnifiedListResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
+        items=items, total=total, page=page, page_size=page_size,
         pages=(total + page_size - 1) // page_size
     )
 
