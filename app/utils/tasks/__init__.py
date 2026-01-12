@@ -2,15 +2,16 @@
 """
 定时任务模块
 
-本模块提供所有定时任务函数，包括：
-- 基础设施和辅助函数
-- 问题管理定时任务
-- 里程碑和成本预警任务
-- 工时提醒和汇总任务
-- 销售/财务相关任务
-- 其他杂项任务
+本模块提供所有定时任务函数，按功能分类：
+- base.py: 基础设施和辅助函数
+- issue_tasks.py: 问题管理定时任务
+- milestone_tasks.py: 里程碑和成本预警任务
+- timesheet_tasks.py: 工时提醒和汇总任务
+- alert_tasks.py: P0预警服务任务
+- sales_tasks.py: 销售/财务相关任务
+- notification_tasks.py: 通知和杂项任务
 
-原 scheduled_tasks.py 已拆分为多个子模块，此文件统一导出所有任务函数。
+原 scheduled_tasks.py 已拆分到以上模块，此文件统一导出所有任务函数。
 """
 
 # 基础模块
@@ -51,6 +52,39 @@ from .timesheet_tasks import (
     calculate_monthly_labor_cost_task,
 )
 
+# P0预警任务
+from .alert_tasks import (
+    generate_shortage_alerts,
+    check_task_delay_alerts,
+    check_production_plan_alerts,
+    check_work_report_timeout,
+    calculate_progress_summary,
+    daily_kit_check,
+    check_delivery_delay,
+    check_task_deadline_reminder,
+    check_outsourcing_delivery_alerts,
+)
+
+# 销售/财务任务
+from .sales_tasks import (
+    sales_reminder_scan,
+    check_payment_reminder,
+    check_overdue_receivable_alerts,
+    check_opportunity_stage_timeout,
+    check_presale_workorder_timeout,
+    check_contract_expiry_reminder,
+)
+
+# 通知和杂项任务
+from .notification_tasks import (
+    check_alert_escalation,
+    retry_failed_notifications,
+    send_alert_notifications,
+    calculate_response_metrics,
+    check_equipment_maintenance_reminder,
+    check_employee_confirmation_reminder,
+)
+
 __all__ = [
     # 基础模块
     'send_notification_for_alert',
@@ -78,4 +112,28 @@ __all__ = [
     'monthly_timesheet_aggregation_task',
     'generate_monthly_reports_task',
     'calculate_monthly_labor_cost_task',
+    # P0预警任务
+    'generate_shortage_alerts',
+    'check_task_delay_alerts',
+    'check_production_plan_alerts',
+    'check_work_report_timeout',
+    'calculate_progress_summary',
+    'daily_kit_check',
+    'check_delivery_delay',
+    'check_task_deadline_reminder',
+    'check_outsourcing_delivery_alerts',
+    # 销售/财务任务
+    'sales_reminder_scan',
+    'check_payment_reminder',
+    'check_overdue_receivable_alerts',
+    'check_opportunity_stage_timeout',
+    'check_presale_workorder_timeout',
+    'check_contract_expiry_reminder',
+    # 通知和杂项任务
+    'check_alert_escalation',
+    'retry_failed_notifications',
+    'send_alert_notifications',
+    'calculate_response_metrics',
+    'check_equipment_maintenance_reminder',
+    'check_employee_confirmation_reminder',
 ]
