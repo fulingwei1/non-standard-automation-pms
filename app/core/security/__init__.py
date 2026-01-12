@@ -1,22 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-安全认证模块 - 兼容层
+安全认证模块
 
-此文件为向后兼容保留，所有功能已拆分到 security/ 包中：
-- security/auth.py: 基础认证（密码、JWT、Token黑名单）
-- security/deps.py: 依赖注入（数据库会话、当前用户）
-- security/permissions.py: 通用权限检查
-- security/module_access.py: 模块访问权限（采购、财务、生产、HR等）
-- security/sales_permissions.py: 销售权限（数据范围、CRUD、评估、审批）
-- security/project_permissions.py: 项目权限（项目访问、研发、工时、文档）
-
-新代码建议直接从 app.core.security 包导入：
-    from app.core.security import get_current_user, require_permission
+本模块提供完整的认证和权限管理功能，包括：
+- 基础认证（密码验证、JWT令牌）
+- 依赖注入（数据库会话、当前用户）
+- 通用权限检查
+- 模块访问权限（采购、财务、生产、HR等）
+- 销售权限（数据范围、CRUD权限、评估、审批）
+- 项目权限（项目访问、研发项目、工时审批、设备文档）
 """
 
-# 从新模块重新导出所有内容，保持向后兼容
-from .security import (
-    # 基础认证
+# 基础认证
+from .auth import (
     pwd_context,
     oauth2_scheme,
     verify_password,
@@ -24,14 +20,23 @@ from .security import (
     create_access_token,
     revoke_token,
     is_token_revoked,
-    # 依赖注入
+)
+
+# 依赖注入
+from .deps import (
     get_db,
     get_current_user,
     get_current_active_user,
-    # 通用权限
+)
+
+# 通用权限
+from .permissions import (
     check_permission,
     require_permission,
-    # 模块访问权限
+)
+
+# 模块访问权限
+from .module_access import (
     has_procurement_access,
     require_procurement_access,
     has_shortage_report_access,
@@ -44,7 +49,10 @@ from .security import (
     require_hr_access,
     has_scheduler_admin_access,
     require_scheduler_admin_access,
-    # 销售权限
+)
+
+# 销售权限
+from .sales_permissions import (
     get_sales_data_scope,
     filter_sales_data_by_scope,
     filter_sales_finance_data_by_scope,
@@ -59,7 +67,10 @@ from .security import (
     has_sales_approval_access,
     check_sales_approval_permission,
     require_sales_approval_permission,
-    # 项目权限
+)
+
+# 项目权限
+from .project_permissions import (
     check_project_access,
     require_project_access,
     RD_PROJECT_ROLES,
@@ -71,7 +82,7 @@ from .security import (
     has_machine_document_upload_permission,
 )
 
-# 导出列表（与 security/__init__.py 保持一致）
+# 导出列表
 __all__ = [
     # 基础认证
     "pwd_context",
