@@ -45,6 +45,113 @@ def calculate_workdays(start_date: date, end_date: date) -> int:
     return workdays
 
 
+def _get_default_date_range() -> tuple:
+    """获取默认日期范围（当前月）"""
+    today = date.today()
+    start = date(today.year, today.month, 1)
+    if today.month == 12:
+        end = date(today.year + 1, 1, 1) - timedelta(days=1)
+    else:
+        end = date(today.year, today.month + 1, 1) - timedelta(days=1)
+    return start, end
+
+
+def _calculate_user_assigned_hours(db: Session, user_id: int, start_date: date, end_date: date) -> float:
+    """计算用户在指定时间范围内的已分配工时"""
+    assigned_hours = 0.0
+
+    # 从任务计算工时
+    tasks = db.query(Task).filter(
+        Task.owner_id == user_id,
+        Task.plan_start <= end_date,
+        Task.plan_end >= start_date,
+        Task.status != 'CANCELLED'
+    ).all()
+
+    for task in tasks:
+        if task.plan_start and task.plan_end:
+            days = (task.plan_end - task.plan_start).days + 1
+            assigned_hours += days * 8.0
+
+    # 从PMO资源分配计算工时
+    allocations = db.query(PmoResourceAllocation).filter(
+        PmoResourceAllocation.resource_id == user_id,
+        PmoResourceAllocation.start_date <= end_date,
+        PmoResourceAllocation.end_date >= start_date,
+        PmoResourceAllocation.status != 'CANCELLED'
+    ).all()
+
+    for alloc in allocations:
+        if alloc.planned_hours:
+            assigned_hours += float(alloc.planned_hours)
+
+    return assigned_hours
+
+
+def _get_user_skills(db: Session, user: User) -> list:
+    """获取用户的技能列表"""
+    skills = []
+    try:
+        from app.models.production import Worker, WorkerSkill, ProcessDict
+
+        worker = db.query(Worker).filter(
+            Worker.user_id == user.id,
+            Worker.is_active == True
+        ).first()
+
+        if worker:
+            worker_skills = db.query(WorkerSkill).filter(
+                WorkerSkill.worker_id == worker.id
+            ).all()
+
+            for ws in worker_skills:
+                process = db.query(ProcessDict).filter(
+                    ProcessDict.id == ws.process_id
+                ).first()
+
+                if process:
+                    is_valid = True
+                    if ws.expiry_date:
+                        is_valid = ws.expiry_date >= date.today()
+
+                    skills.append({
+                        "skill_id": ws.id,
+                        "process_id": process.id,
+                        "process_code": process.process_code,
+                        "process_name": process.process_name,
+                        "process_type": process.process_type,
+                        "skill_level": ws.skill_level,
+                        "certified_date": ws.certified_date.isoformat() if ws.certified_date else None,
+                        "expiry_date": ws.expiry_date.isoformat() if ws.expiry_date else None,
+                        "is_valid": is_valid
+                    })
+        else:
+            # 从用户职位推断技能
+            if user.position:
+                skills.append({
+                    "skill_id": None, "process_id": None, "process_code": None,
+                    "process_name": user.position, "process_type": "GENERAL",
+                    "skill_level": "INTERMEDIATE", "certified_date": None,
+                    "expiry_date": None, "is_valid": True
+                })
+            if user.department:
+                skills.append({
+                    "skill_id": None, "process_id": None, "process_code": None,
+                    "process_name": f"{user.department}通用技能", "process_type": "DEPARTMENT",
+                    "skill_level": "INTERMEDIATE", "certified_date": None,
+                    "expiry_date": None, "is_valid": True
+                })
+    except Exception:
+        if user.position:
+            skills.append({
+                "skill_id": None, "process_id": None, "process_code": None,
+                "process_name": user.position, "process_type": "GENERAL",
+                "skill_level": "INTERMEDIATE", "certified_date": None,
+                "expiry_date": None, "is_valid": True
+            })
+    return skills
+
+
 @router.get("/workload/user/{user_id}", response_model=UserWorkloadResponse)
 def get_user_workload(
     user_id: int,
@@ -390,168 +497,46 @@ def get_available_resources(
 ) -> Any:
     """
     查询可用资源（负荷低于阈值的人员）
-    
+
     - **dept_id**: 部门ID筛选
     - **skill**: 技能筛选
     - **start_date**: 开始日期
     - **end_date**: 结束日期
     - **min_hours**: 最小可用工时（默认8小时）
     """
-    # 默认使用当前月
-    today = date.today()
-    if not start_date:
-        start_date = date(today.year, today.month, 1)
-    if not end_date:
-        if today.month == 12:
-            end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
-    
+    # 使用默认日期范围
+    if not start_date or not end_date:
+        default_start, default_end = _get_default_date_range()
+        start_date = start_date or default_start
+        end_date = end_date or default_end
+
     # 获取用户列表
     query_users = db.query(User).filter(User.is_active == True)
-    
     if dept_id:
         dept = db.query(Department).filter(Department.id == dept_id).first()
         if dept:
             query_users = query_users.filter(User.department == dept.name)
-    
+
     users = query_users.all()
-    
     workdays = calculate_workdays(start_date, end_date)
     standard_hours = workdays * 8.0
-    
     available_resources = []
-    
+
     for user in users:
-        # 计算分配工时
-        tasks = db.query(Task).filter(
-            Task.owner_id == user.id,
-            Task.plan_start <= end_date,
-            Task.plan_end >= start_date,
-            Task.status != 'CANCELLED'
-        ).all()
-        
-        assigned_hours = 0.0
-        for task in tasks:
-            if task.plan_start and task.plan_end:
-                days = (task.plan_end - task.plan_start).days + 1
-                hours = days * 8.0
-            else:
-                hours = 0.0
-            assigned_hours += hours
-        
-        allocations = db.query(PmoResourceAllocation).filter(
-            PmoResourceAllocation.resource_id == user.id,
-            PmoResourceAllocation.start_date <= end_date,
-            PmoResourceAllocation.end_date >= start_date,
-            PmoResourceAllocation.status != 'CANCELLED'
-        ).all()
-        
-        for alloc in allocations:
-            if alloc.planned_hours:
-                assigned_hours += float(alloc.planned_hours)
-        
-        # 计算可用工时
+        assigned_hours = _calculate_user_assigned_hours(db, user.id, start_date, end_date)
         available_hours = max(0, standard_hours - assigned_hours)
 
-        # 只返回可用工时大于等于min_hours的用户
         if available_hours >= min_hours:
-            # 获取技能（从WorkerSkill表获取）
-            skills = []
-            try:
-                from app.models.production import Worker, WorkerSkill, ProcessDict
-
-                # 通过User ID查找Worker
-                worker = db.query(Worker).filter(
-                    Worker.user_id == user.id,
-                    Worker.is_active == True
-                ).first()
-
-                if worker:
-                    # 获取该工人的技能列表
-                    worker_skills = db.query(WorkerSkill).filter(
-                        WorkerSkill.worker_id == worker.id
-                    ).all()
-
-                    for ws in worker_skills:
-                        # 获取工序信息
-                        process = db.query(ProcessDict).filter(
-                            ProcessDict.id == ws.process_id
-                        ).first()
-
-                        if process:
-                            # 检查技能是否在有效期内
-                            is_valid = True
-                            if ws.expiry_date:
-                                is_valid = ws.expiry_date >= date.today()
-
-                            skills.append({
-                                "skill_id": ws.id,
-                                "process_id": process.id,
-                                "process_code": process.process_code,
-                                "process_name": process.process_name,
-                                "process_type": process.process_type,
-                                "skill_level": ws.skill_level,
-                                "certified_date": ws.certified_date.isoformat() if ws.certified_date else None,
-                                "expiry_date": ws.expiry_date.isoformat() if ws.expiry_date else None,
-                                "is_valid": is_valid
-                            })
-                else:
-                    # 如果没有Worker记录，从User的职位推断技能
-                    if user.position:
-                        skills.append({
-                            "skill_id": None,
-                            "process_id": None,
-                            "process_code": None,
-                            "process_name": user.position,
-                            "process_type": "GENERAL",
-                            "skill_level": "INTERMEDIATE",
-                            "certified_date": None,
-                            "expiry_date": None,
-                            "is_valid": True
-                        })
-
-                    # 从部门推断通用技能
-                    if user.department:
-                        skills.append({
-                            "skill_id": None,
-                            "process_id": None,
-                            "process_code": None,
-                            "process_name": f"{user.department}通用技能",
-                            "process_type": "DEPARTMENT",
-                            "skill_level": "INTERMEDIATE",
-                            "certified_date": None,
-                            "expiry_date": None,
-                            "is_valid": True
-                        })
-            except Exception as e:
-                # 如果查询失败，至少返回基础技能
-                if user.position:
-                    skills.append({
-                        "skill_id": None,
-                        "process_id": None,
-                        "process_code": None,
-                        "process_name": user.position,
-                        "process_type": "GENERAL",
-                        "skill_level": "INTERMEDIATE",
-                        "certified_date": None,
-                        "expiry_date": None,
-                        "is_valid": True
-                    })
-
-            role = None
-            if hasattr(user, 'position'):
-                role = user.position
-            
+            skills = _get_user_skills(db, user)
             available_resources.append(AvailableResourceItem(
                 user_id=user.id,
                 user_name=user.real_name or user.username,
                 dept_name=user.department,
-                role=role,
+                role=getattr(user, 'position', None),
                 available_hours=round(available_hours, 2),
                 skills=skills
             ))
-    
+
     return AvailableResourceResponse(items=available_resources)
 
 
