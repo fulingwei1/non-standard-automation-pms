@@ -4,7 +4,7 @@
 """
 
 import json
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
@@ -24,6 +24,7 @@ from app.models.business_support import (
     AcceptanceTracking, AcceptanceTrackingRecord, Reconciliation,
     BiddingProject, InvoiceRequest, CustomerSupplierRegistration
 )
+from sqlalchemy import text
 from app.models.acceptance import AcceptanceOrder
 from app.models.sales import Invoice, Contract
 from app.models.enums import InvoiceStatusEnum
@@ -45,6 +46,82 @@ from app.schemas.business_support import (
 from app.schemas.common import PaginatedResponse, ResponseModel
 
 router = APIRouter()
+
+
+def _calculate_customer_open_receivables(db: Session, customer_id: int) -> Decimal:
+    """
+    计算客户的未结应收余额
+
+    Args:
+        db: 数据库会话
+        customer_id: 客户ID
+
+    Returns:
+        未结应收余额
+    """
+    try:
+        result = db.execute(text("""
+            SELECT COALESCE(SUM(planned_amount - actual_amount), 0) as open_balance
+            FROM project_payment_plans ppp
+            JOIN projects p ON ppp.project_id = p.id
+            WHERE p.customer_id = :customer_id
+            AND ppp.status IN ('PENDING', 'INVOICED', 'PARTIAL')
+            AND (ppp.actual_amount IS NULL OR ppp.actual_amount < ppp.planned_amount)
+        """), {"customer_id": customer_id})
+        return Decimal(str(result.scalar() or 0))
+    except Exception as e:
+        logger.error(f"计算客户应收余额失败: {str(e)}")
+        return Decimal("0")
+
+
+def _check_credit_balance(
+    db: Session,
+    delivery_order: DeliveryOrder,
+    customer: Customer
+) -> Tuple[bool, str, Decimal, Decimal]:
+    """
+    检查客户余额是否充足
+
+    Args:
+        db: 数据库会话
+        delivery_order: 发货单
+        customer: 客户信息
+
+    Returns:
+        (是否通过, 警告消息, 当前应收余额, 本次发货后余额)
+    """
+    # 计算当前应收余额
+    current_receivables = _calculate_customer_open_receivables(db, customer.id)
+    credit_limit = customer.credit_limit or Decimal("0")
+
+    # 本次发货金额
+    delivery_amount = delivery_order.delivery_amount or Decimal("0")
+
+    # 发货后余额
+    after_delivery_balance = current_receivables + delivery_amount
+
+    # 检查是否超出信用额度
+    if credit_limit > 0 and after_delivery_balance > credit_limit:
+        exceeded = after_delivery_balance - credit_limit
+        return (
+            False,
+            f"Credit balance is too low. Current receivables: ¥{current_receivables:,.2f}, "
+            f"Credit limit: ¥{credit_limit:,.2f}, After delivery: ¥{after_delivery_balance:,.2f}, "
+            f"Exceeded by: ¥{exceeded:,.2f}",
+            current_receivables,
+            after_delivery_balance
+        )
+
+    # 检查余额是否接近信用额度（预警阈值 90%）
+    if credit_limit > 0 and after_delivery_balance > credit_limit * Decimal("0.9"):
+        warning = (
+            f"Credit balance warning. Current receivables: ¥{current_receivables:,.2f}, "
+            f"Credit limit: ¥{credit_limit:,.2f}, After delivery: ¥{after_delivery_balance:,.2f} "
+            f"({(after_delivery_balance / credit_limit * 100):.1f}% used)"
+        )
+        return (True, warning, current_receivables, after_delivery_balance)
+
+    return (True, "", current_receivables, after_delivery_balance)
 
 
 def _send_department_notification(
@@ -1053,6 +1130,28 @@ async def create_delivery_order(
         if existing:
             raise HTTPException(status_code=400, detail="送货单号已存在")
         
+        # 检查客户余额并给出警告（如果余额不足或接近额度）
+        warning_message = ""
+        customer = db.query(Customer).filter(Customer.id == sales_order.customer_id).first()
+        if customer and customer.credit_limit and customer.credit_limit > 0:
+            current_receivables = _calculate_customer_open_receivables(db, customer.id)
+            delivery_amount = delivery_data.delivery_amount or Decimal("0")
+            after_delivery = current_receivables + delivery_amount
+
+            if after_delivery > customer.credit_limit:
+                exceeded = after_delivery - customer.credit_limit
+                warning_message = (
+                    f"警告: 客户余额不足。当前应收: ¥{current_receivables:,.2f}, "
+                    f"信用额度: ¥{customer.credit_limit:,.2f}, 发货后: ¥{after_delivery:,.2f}, "
+                    f"超出: ¥{exceeded:,.2f}。审批时将需要特殊审批。"
+                )
+            elif after_delivery > customer.credit_limit * Decimal("0.9"):
+                warning_message = (
+                    f"注意: 客户余额接近信用额度。当前应收: ¥{current_receivables:,.2f}, "
+                    f"信用额度: ¥{customer.credit_limit:,.2f}, 发货后: ¥{after_delivery:,.2f} "
+                    f"({after_delivery / customer.credit_limit * 100:.1f}%已使用)"
+                )
+
         # 创建发货单
         delivery_order = DeliveryOrder(
             delivery_no=delivery_no,
@@ -1076,14 +1175,14 @@ async def create_delivery_order(
             delivery_status="draft",
             remark=delivery_data.remark
         )
-        
+
         db.add(delivery_order)
         db.commit()
         db.refresh(delivery_order)
-        
+
         return ResponseModel(
             code=200,
-            message="创建发货单成功",
+            message=f"创建发货单成功{f'. {warning_message}' if warning_message else ''}",
             data=DeliveryOrderResponse(
                 id=delivery_order.id,
                 delivery_no=delivery_order.delivery_no,
@@ -1199,20 +1298,48 @@ async def approve_delivery_order(
         delivery_order = db.query(DeliveryOrder).filter(DeliveryOrder.id == delivery_id).first()
         if not delivery_order:
             raise HTTPException(status_code=404, detail="发货单不存在")
-        
+
         if delivery_order.approval_status != "pending":
             raise HTTPException(status_code=400, detail="发货单已审批，无法重复审批")
-        
+
+        # 如果审批通过，检查客户余额
+        if approval_data.approved:
+            # 检查是否已经特殊审批（如果已标记为特殊审批，跳过余额检查）
+            if not delivery_order.special_approval:
+                # 获取客户信息
+                customer = db.query(Customer).filter(Customer.id == delivery_order.customer_id).first()
+                if customer:
+                    # 检查余额
+                    passed, warning_msg, current_balance, after_balance = _check_credit_balance(
+                        db, delivery_order, customer
+                    )
+
+                    if not passed:
+                        # 余额不足，需要特殊审批
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"{warning_msg} Please request special approval before proceeding."
+                        )
+
+                    # 记录警告信息（如果有）
+                    if warning_msg and "warning" in warning_msg.lower():
+                        logger.warning(f"发货单 {delivery_order.delivery_no} 余额警告: {warning_msg}")
+                        # 可选：将警告信息添加到审批评论中
+                        if not approval_data.approval_comment:
+                            approval_data.approval_comment = warning_msg
+                        else:
+                            approval_data.approval_comment = f"{approval_data.approval_comment}\n\n{warning_msg}"
+
         # 更新审批状态
         delivery_order.approval_status = "approved" if approval_data.approved else "rejected"
         delivery_order.approval_comment = approval_data.approval_comment
         delivery_order.approved_by = current_user.id
         delivery_order.approved_at = datetime.now()
-        
+
         # 如果审批通过，更新发货状态
         if approval_data.approved:
             delivery_order.delivery_status = "approved"
-        
+
         db.commit()
         db.refresh(delivery_order)
         

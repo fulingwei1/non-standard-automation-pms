@@ -26,7 +26,26 @@ export default function ProjectBoard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [projects, setProjects] = useState([]);
-  const [user] = useState(mockUser);
+
+  // 获取当前用户信息
+  const user = useMemo(() => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        return JSON.parse(userStr);
+      } catch (e) {
+        console.error("Failed to parse user data:", e);
+      }
+    }
+    // 默认返回 admin 用户
+    return {
+      id: 1,
+      name: "Admin",
+      role: "admin",
+      department: "系统管理",
+      position: "系统管理员",
+    };
+  }, []);
 
   // 筛选状态
   const [viewMode, setViewMode] = useState("kanban");

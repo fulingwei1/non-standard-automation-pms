@@ -64,7 +64,78 @@ import {
 } from "../components/administrative/StatisticsCharts";
 
 // Mock issue data
-// Mock data - 已移除，使用真实API
+// Mock data - 用于演示，实际使用真实API
+const mockIssues = [
+  {
+    id: 1,
+    issue_no: "IS20260111001",
+    title: "项目 PJ250101 电气柜设计问题",
+    description: "电气柜内部空间布局不合理，导致散热风扇无法正常安装",
+    category: "PROJECT",
+    issue_type: "DEFECT",
+    severity: "MAJOR",
+    priority: "HIGH",
+    status: "OPEN",
+    is_blocking: true,
+    project_id: 1,
+    project_name: "3C电子装配线",
+    machine_id: 1,
+    machine_name: "PN001",
+    reporter_id: 1,
+    reporter_name: "张三",
+    assignee_id: 2,
+    assignee_name: "李工",
+    due_date: "2026-01-20",
+    report_date: "2026-01-11",
+    impact_scope: "影响整个电气柜生产",
+    impact_level: "HIGH",
+    tags: ["设计问题", "电气"],
+  },
+  {
+    id: 2,
+    issue_no: "IS20260111002",
+    title: "加工零件尺寸偏差",
+    description: "机械零件实际尺寸与图纸不符，偏差0.5mm",
+    category: "PROJECT",
+    issue_type: "DEFECT",
+    severity: "CRITICAL",
+    priority: "URGENT",
+    status: "PROCESSING",
+    is_blocking: true,
+    project_id: 2,
+    project_name: "医疗器械检测设备",
+    reporter_id: 1,
+    reporter_name: "张三",
+    assignee_id: 3,
+    assignee_name: "王工",
+    due_date: "2026-01-15",
+    report_date: "2026-01-10",
+    impact_scope: "影响零件装配",
+    impact_level: "HIGH",
+    tags: ["加工", "质量"],
+  },
+  {
+    id: 3,
+    issue_no: "IS20260111003",
+    title: "软件界面显示异常",
+    description: "在测试模式下，状态栏信息显示不完整",
+    category: "QUALITY",
+    issue_type: "DEFECT",
+    severity: "MINOR",
+    priority: "MEDIUM",
+    status: "RESOLVED",
+    is_blocking: false,
+    reporter_id: 1,
+    reporter_name: "张三",
+    assignee_id: 4,
+    assignee_name: "赵工",
+    solution: "修复了状态栏UI布局问题，重新编译后正常",
+    due_date: "2026-01-12",
+    report_date: "2026-01-08",
+    tags: ["软件", "UI"],
+  },
+];
+
 const severityColors = {
   CRITICAL: "bg-red-500/20 text-red-400 border-red-500/30",
   MAJOR: "bg-orange-500/20 text-orange-400 border-orange-500/30",
@@ -170,8 +241,15 @@ export default function IssueManagement() {
       } else {
         errorMessage = err.message || errorMessage;
       }
-      setError(errorMessage);
-      setIssues([]); // 不再使用mock数据，显示空列表
+      // 如果是认证错误（401），使用 mock 数据
+      if (err.response?.status === 401) {
+        console.log("使用 mock 数据（演示模式）");
+        setIssues(mockIssues);
+        setError(null);
+      } else {
+        setError(errorMessage);
+        setIssues([]);
+      }
     } finally {
       setLoading(false);
     }

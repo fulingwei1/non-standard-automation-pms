@@ -160,11 +160,6 @@ export default function AlertCenter() {
       setProjects(transformedProjects);
     } catch (error) {
       console.error("Failed to load projects:", error);
-      const mockProjects = [
-        { id: 1, name: "XX测试设备项目" },
-        { id: 2, name: "YY检测设备项目" },
-        { id: 3, name: "ZZ包装线项目" },
-      ];
       setProjects(mockProjects);
     }
   };

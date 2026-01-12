@@ -71,7 +71,6 @@ export default function FinancialReports() {
   const [selectedPeriod, setSelectedPeriod] = useState("month"); // month, quarter, year
   const [selectedReport, setSelectedReport] = useState("profit-loss");
   const [dateRange, setDateRange] = useState("2024-07");
-  const [loading, setLoading] = useState(false);
 
   // State with mock data as default
   const [monthlyFinancials, setMonthlyFinancials] = useState(

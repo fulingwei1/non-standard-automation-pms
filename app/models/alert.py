@@ -146,6 +146,12 @@ class AlertRecord(Base, TimestampMixin):
         Index('idx_alert_status', 'status'),
         Index('idx_alert_level', 'alert_level'),
         Index('idx_alert_time', 'triggered_at'),
+        # 复合索引优化
+        Index('idx_alert_status_level', 'status', 'alert_level'),
+        Index('idx_alert_project_status', 'project_id', 'status'),
+        Index('idx_alert_project_time', 'project_id', 'triggered_at'),
+        # 覆盖索引（减少回表查询）
+        Index('idx_alert_cover_status', 'status', 'triggered_at', 'alert_level', 'alert_title'),
     )
 
     def __repr__(self):
@@ -268,6 +274,10 @@ class ExceptionEvent(Base, TimestampMixin):
         Index('idx_event_severity', 'severity'),
         Index('idx_event_status', 'status'),
         Index('idx_event_responsible', 'responsible_user_id'),
+        # 复合索引优化
+        Index('idx_event_status_overdue', 'status', 'is_overdue'),
+        Index('idx_event_responsible_status', 'responsible_user_id', 'status'),
+        Index('idx_event_project_severity', 'project_id', 'severity'),
     )
 
     def __repr__(self):

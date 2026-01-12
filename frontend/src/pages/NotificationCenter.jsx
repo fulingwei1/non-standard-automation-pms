@@ -301,6 +301,32 @@ export default function NotificationCenter() {
     }
   };
 
+  const handleClearAll = async () => {
+    if (notifications.length === 0) {
+      return;
+    }
+    
+    if (!confirm("确定要清空所有通知吗？此操作不可恢复。")) {
+      return;
+    }
+    
+    try {
+      // 批量删除所有通知（并行执行以提高效率）
+      await Promise.all(
+        notifications.map(notification => notificationApi.delete(notification.id))
+      );
+      
+      // 刷新列表
+      await loadNotifications();
+      await loadUnreadCount();
+      
+      alert(`已成功清空 ${notifications.length} 条通知`);
+    } catch (err) {
+      console.error("Failed to clear all notifications:", err);
+      alert("清空通知失败: " + (err.message || "未知错误"));
+    }
+  };
+
   // Show error state
   if (error && notifications.length === 0) {
     return (

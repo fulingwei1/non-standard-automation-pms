@@ -4,11 +4,8 @@
  */
 
 import { useState, useMemo } from "react"
-import { api } from '../services/api'
-;
 import { motion, AnimatePresence } from "framer-motion"
-import { api } from '../services/api'
-;
+import api from '../services/api'
 import {
   FileCheck,
   Search,
@@ -30,11 +27,7 @@ import {
   History,
   Shield,
 } from "lucide-react"
-import { api } from '../services/api'
-;
 import { PageHeader } from "../components/layout"
-import { api } from '../services/api'
-;
 import {
   Card,
   CardContent,
@@ -55,14 +48,8 @@ import {
   TabsTrigger,
   Textarea,
 } from "../components/ui"
-import { api } from '../services/api'
-;
 import { cn } from "../lib/utils"
-import { api } from '../services/api'
-;
 import { fadeIn, staggerContainer } from "../lib/animations"
-import { api } from '../services/api'
-;
 
 // Mock approval data
 const formatCurrency = (value) => {

@@ -714,7 +714,7 @@ export default function CustomerServiceDashboard() {
                   <div className="flex items-center justify-between text-xs text-slate-500">
                     <span>{issue.id}</span>
                     <div className="flex items-center gap-2">
-                      <span>跟进 {issue.followUpCount} 次</span>
+                      <span>跟进 {issue.follow_up_count || 0} 次</span>
                       {issue.status === "open" && (
                         <Button
                           variant="ghost"
@@ -960,33 +960,7 @@ function CreateIssueDialog({ onClose, onSubmit }) {
     tags: [],
   });
 
-  const mockProjects = [
-    {
-      id: 1,
-      code: "PJ250106002",
-      name: "EOL功能测试设备",
-      customer: "东莞XX电子",
-    },
-    {
-      id: 2,
-      code: "PJ250103003",
-      name: "ICT在线测试设备",
-      customer: "惠州XX电池",
-    },
-    {
-      id: 3,
-      code: "PJ250101001",
-      name: "BMS老化测试设备",
-      customer: "深圳XX科技",
-    },
-  ];
 
-  const mockMachines = formData.project_id
-    ? [
-        { id: 1, code: "PN001", name: "设备1号" },
-        { id: 2, code: "PN002", name: "设备2号" },
-      ]
-    : [];
 
   const mockUsers = [
     { id: 1, name: "李工程师", role: "机械工程师" },

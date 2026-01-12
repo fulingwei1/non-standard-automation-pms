@@ -191,14 +191,10 @@ export default function Login({ onLoginSuccess }) {
                           ? "procurement_engineer"
                           : roleName.includes("采购") && roleName.includes("员")
                             ? "buyer"
-                            : // 最后转换为下划线格式
-                              roleName
-                                .toLowerCase()
-                                .replace(/\s+/g, "_")
-                                .replace(/-/g, "_")
+                            : roleName.toLowerCase().replace(/\s+/g, "_").replace(/-/g, "_"));
           } else if (userData.is_superuser) {
             // 如果没有角色信息但 is_superuser 为 true，默认使用 super_admin
-            userRole = "super_admin"
+            userRole = "super_admin";
           }
 
           const frontendUser = {

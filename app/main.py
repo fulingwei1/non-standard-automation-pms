@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from app.core.config import settings
 
 app = FastAPI(
@@ -39,6 +40,9 @@ if settings.CORS_ORIGINS:
         allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
         allow_headers=["*"],
     )
+
+# 启用Gzip压缩（响应大小 > 1000字节时压缩）
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 from app.api.v1.api import api_router
 

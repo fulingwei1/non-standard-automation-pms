@@ -11,6 +11,7 @@ from sqlalchemy import or_, and_
 from app.models.user import User, Role
 from app.models.project import Project, ProjectMember
 from app.models.enums import DataScopeEnum
+from app.services.cache_service import DepartmentCache, UserProjectCache
 
 
 class DataScopeService:
@@ -45,16 +46,38 @@ class DataScopeService:
 
     @staticmethod
     def get_user_project_ids(db: Session, user_id: int) -> Set[int]:
-        """获取用户参与的项目ID列表"""
-        members = (
-            db.query(ProjectMember.project_id)
-            .filter(
+        """
+        获取用户参与的项目ID列表（带缓存）
+        
+        Args:
+            db: 数据库会话
+            user_id: 用户ID
+            
+        Returns:
+            项目ID集合
+        """
+        # 先尝试从缓存获取
+        cached_ids = UserProjectCache.get(user_id)
+        if cached_ids is not None:
+            return cached_ids
+        
+        # 缓存未命中，查询数据库
+        from sqlalchemy import select
+        
+        stmt = (
+            select(ProjectMember.project_id)
+            .where(
                 ProjectMember.user_id == user_id,
                 ProjectMember.is_active == True
             )
-            .all()
         )
-        return {m[0] for m in members}
+        result = db.execute(stmt)
+        project_ids = {row[0] for row in result}
+        
+        # 存入缓存
+        UserProjectCache.set(user_id, project_ids)
+        
+        return project_ids
 
     @staticmethod
     def filter_projects_by_scope(
@@ -85,15 +108,25 @@ class DataScopeService:
             return query
         elif data_scope == DataScopeEnum.DEPT.value:
             # 同部门可见
-            # 通过部门名称匹配部门ID
-            from app.models.organization import Department
+            # 优化：使用部门ID缓存
             dept_name = user.department
             if dept_name:
-                # 通过部门名称查找部门ID
-                dept = db.query(Department).filter(Department.dept_name == dept_name).first()
-                if dept:
+                # 先从缓存获取部门ID
+                dept_id = DepartmentCache.get(dept_name)
+                if dept_id is None:
+                    # 缓存未命中，查询数据库
+                    from app.models.organization import Department
+                    dept = db.query(Department.id).filter(
+                        Department.dept_name == dept_name
+                    ).first()
+                    if dept:
+                        dept_id = dept[0]
+                        # 存入缓存
+                        DepartmentCache.set(dept_name, dept_id)
+                
+                if dept_id:
                     # 查询同部门的项目
-                    dept_ids = [dept.id]
+                    dept_ids = [dept_id]
                     # 可以扩展为包含子部门
                     return query.filter(Project.dept_id.in_(dept_ids))
             

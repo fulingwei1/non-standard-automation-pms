@@ -3,15 +3,10 @@
  */
 
 import { useState, useMemo } from "react"
-import { api } from '../services/api'
-;
 import { motion, AnimatePresence } from "framer-motion"
-import { api } from '../services/api'
-;
 import {
   Building2,
   Search,
-  Filter,
   Plus,
   LayoutGrid,
   List,
@@ -35,11 +30,7 @@ import {
   History,
   MessageSquare,
 } from "lucide-react"
-import { api } from '../services/api'
-;
 import { PageHeader } from "../components/layout"
-import { api } from '../services/api'
-;
 import {
   Card,
   CardContent,
@@ -61,20 +52,122 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "../components/ui"
-import { api } from '../services/api'
-;
 import { cn } from "../lib/utils"
-import { api } from '../services/api'
-;
 import { fadeIn, staggerContainer } from "../lib/animations"
-import { api } from '../services/api'
-;
 import { CustomerCard } from "../components/sales"
-import { api } from '../services/api'
-;
 
-// Mock customer data
-// Mock data - 已移除，使用真实API
+// Mock customer data for UI preview before backend integration
+const mockCustomers = [
+  {
+    id: 1,
+    name: "宁德时代新能源科技股份有限公司",
+    shortName: "宁德时代",
+    grade: "A",
+    status: "active",
+    industry: "新能源电池",
+    location: "福建宁德",
+    contactPerson: "李晓明",
+    phone: "138-0000-1111",
+    email: "lixm@catl.com",
+    totalAmount: 12800000,
+    pendingAmount: 2500000,
+    projectCount: 8,
+    lastContact: "2026-01-10",
+    isWarning: false,
+    tags: ["重点客户", "战略合作"],
+  },
+  {
+    id: 2,
+    name: "比亚迪电子有限公司",
+    shortName: "比亚迪电子",
+    grade: "A",
+    status: "potential",
+    industry: "消费电子",
+    location: "广东深圳",
+    contactPerson: "王丽",
+    phone: "139-0000-2222",
+    email: "wangli@byd.com",
+    totalAmount: 9600000,
+    pendingAmount: 0,
+    projectCount: 5,
+    lastContact: "2026-01-08",
+    isWarning: false,
+    tags: ["新能源", "重点拓展"],
+  },
+  {
+    id: 3,
+    name: "立讯精密工业股份有限公司",
+    shortName: "立讯精密",
+    grade: "B",
+    status: "active",
+    industry: "电子制造",
+    location: "广东东莞",
+    contactPerson: "陈飞",
+    phone: "137-0000-3333",
+    email: "chenfei@luxshare.com",
+    totalAmount: 6800000,
+    pendingAmount: 1200000,
+    projectCount: 4,
+    lastContact: "2026-01-06",
+    isWarning: true,
+    tags: ["产能提升", "定制化"],
+  },
+  {
+    id: 4,
+    name: "欣旺达电子股份有限公司",
+    shortName: "欣旺达",
+    grade: "B",
+    status: "dormant",
+    industry: "储能系统",
+    location: "广东深圳",
+    contactPerson: "赵倩",
+    phone: "136-0000-4444",
+    email: "zhaoqian@sunwoda.com",
+    totalAmount: 4200000,
+    pendingAmount: 800000,
+    projectCount: 3,
+    lastContact: "2025-12-28",
+    isWarning: true,
+    tags: ["储能", "需跟进"],
+  },
+  {
+    id: 5,
+    name: "蓝思科技股份有限公司",
+    shortName: "蓝思科技",
+    grade: "C",
+    status: "lost",
+    industry: "智能制造",
+    location: "湖南长沙",
+    contactPerson: "周强",
+    phone: "135-0000-5555",
+    email: "zhouqiang@lens.com",
+    totalAmount: 2100000,
+    pendingAmount: 0,
+    projectCount: 2,
+    lastContact: "2025-11-30",
+    isWarning: false,
+    tags: ["流失客户"],
+  },
+  {
+    id: 6,
+    name: "歌尔股份有限公司",
+    shortName: "歌尔股份",
+    grade: "B",
+    status: "potential",
+    industry: "消费电子",
+    location: "山东潍坊",
+    contactPerson: "孙蕾",
+    phone: "134-0000-6666",
+    email: "sunlei@goertek.com",
+    totalAmount: 5800000,
+    pendingAmount: 400000,
+    projectCount: 4,
+    lastContact: "2026-01-03",
+    isWarning: false,
+    tags: ["声学", "重点跟进"],
+  },
+];
+
 const gradeOptions = [
   { value: "all", label: "全部等级" },
   { value: "A", label: "A级客户" },

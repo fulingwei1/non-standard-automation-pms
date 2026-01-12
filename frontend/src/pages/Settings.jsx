@@ -48,7 +48,25 @@ const settingsSections = [
 // Mock user data
 // Mock data - 已移除，使用真实API
 function ProfileSection() {
-  const [user, setUser] = useState(mockUser);
+  const [user, setUser] = useState(() => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        return JSON.parse(userStr);
+      } catch (e) {
+        console.error("Failed to parse user data:", e);
+      }
+    }
+    // 默认返回 admin 用户
+    return {
+      id: 1,
+      name: "Admin",
+      role: "admin",
+      department: "系统管理",
+      position: "系统管理员",
+      avatar: "",
+    };
+  });
   const [isEditing, setIsEditing] = useState(false);
 
   return (

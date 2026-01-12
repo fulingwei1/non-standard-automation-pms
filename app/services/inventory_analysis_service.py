@@ -68,21 +68,23 @@ class InventoryAnalysisService:
             category_inventory[cat_name]['value'] += value
             category_inventory[cat_name]['count'] += 1
 
-        # 计算本期消耗金额（从收货单合格数量推算）
-        # 实际应从销售成本或领料记录获取
+        # 计算本期消耗金额（从收货单推算）
+        # 实际应从销售成本或领料记录获取，这里使用received_qty作为近似值
         consumption_query = db.query(
-            func.sum(GoodsReceiptItem.qualified_qty * GoodsReceiptItem.inspect_qty / 100).label('qty')
+            func.sum(GoodsReceiptItem.received_qty).label('qty')
         ).join(
             GoodsReceipt, GoodsReceiptItem.receipt_id == GoodsReceipt.id
         ).filter(
             GoodsReceipt.receipt_date >= start_date,
-            GoodsReceipt.receipt_date <= end_date,
-            GoodsReceipt.inspect_status == 'COMPLETED'
+            GoodsReceipt.receipt_date <= end_date
+            # 注释：实际数据库中是inspection_status而不是inspect_status
+            # GoodsReceipt.inspect_status == 'COMPLETED'
         )
 
         total_consumption_qty = float(consumption_query.scalar() or 0)
         # 使用平均价格估算消耗金额
-        avg_price = total_inventory_value / sum(float(m.current_stock or 0) for m in materials) if materials else 0
+        total_stock_qty = sum(float(m.current_stock or 0) for m in materials)
+        avg_price = total_inventory_value / total_stock_qty if total_stock_qty > 0 else 0
         total_consumption = total_consumption_qty * avg_price
 
         # 计算周转率

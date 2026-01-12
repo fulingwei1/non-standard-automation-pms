@@ -77,9 +77,9 @@ const ROLE_OPTIONS = [
 export default function ProjectStaffingNeed() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [needs, setNeeds] = useState(mockNeeds);
-  const [projects, setProjects] = useState(mockProjects);
-  const [tags, setTags] = useState(mockTags);
+  const [needs, setNeeds] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [tags, setTags] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [showDialog, setShowDialog] = useState(false);

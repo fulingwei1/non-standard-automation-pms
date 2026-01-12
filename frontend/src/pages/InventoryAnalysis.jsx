@@ -27,7 +27,7 @@ import {
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { api } from "../services/api";
+import api from "../services/api";
 
 export default function InventoryAnalysis() {
   const [activeTab, setActiveTab] = useState("turnover-rate");

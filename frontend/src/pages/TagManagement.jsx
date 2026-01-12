@@ -55,7 +55,11 @@ const TAG_TYPES = [
 // Mock data - 已移除，使用真实API
 export default function TagManagement() {
   const [activeType, setActiveType] = useState("SKILL");
-  const [tags, setTags] = useState(mockTags);
+  const [tags, setTags] = useState(() => {
+    const initialTags = {};
+    TAG_TYPES.forEach((t) => (initialTags[t.key] = []));
+    return initialTags;
+  });
   const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [showDialog, setShowDialog] = useState(false);

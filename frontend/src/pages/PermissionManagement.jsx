@@ -53,6 +53,9 @@ export default function PermissionManagement() {
 
   const token = localStorage.getItem("token");
 
+  // 检查是否是演示账号
+  const isDemoAccount = token?.startsWith("demo_token_");
+
   // 加载权限列表
   const loadPermissions = async () => {
     setLoading(true);

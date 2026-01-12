@@ -484,6 +484,12 @@ class ProjectMember(Base, TimestampMixin):
         Index("idx_project_members_machine", "machine_id"),
         Index("idx_project_members_lead", "lead_member_id"),
         UniqueConstraint("project_id", "user_id", "role_code"),
+        # 复合索引优化
+        Index("idx_project_members_user_active", "user_id", "is_active"),
+        Index("idx_project_members_project_active", "project_id", "is_active"),
+        Index("idx_project_members_machine_active", "machine_id", "is_active"),
+        # 覆盖索引（减少回表查询）
+        Index("idx_project_members_cover_user", "user_id", "is_active", "project_id"),
     )
 
 

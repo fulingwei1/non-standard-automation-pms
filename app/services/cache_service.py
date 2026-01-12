@@ -1,321 +1,373 @@
 # -*- coding: utf-8 -*-
 """
-项目数据缓存服务
-
-Issue 5.3: 实现项目数据的缓存机制，提升系统响应速度
+缓存服务
+提供通用的缓存功能，支持 TTL 和手动失效
 """
 
-from typing import Optional, Any, Dict
-from datetime import datetime, timedelta
-import json
-import hashlib
-import logging
-
-# 尝试导入Redis（可选）
-try:
-    import redis
-    REDIS_AVAILABLE = True
-except ImportError:
-    REDIS_AVAILABLE = False
-
-logger = logging.getLogger(__name__)
+import time
+from typing import Any, Dict, Optional, Set, List
+from functools import lru_cache
+from threading import Lock
 
 
 class CacheService:
-    """项目数据缓存服务"""
+    """
+    通用缓存服务
     
-    def __init__(self, redis_client: Optional[Any] = None):
-        """
-        初始化缓存服务
-        
-        Args:
-            redis_client: Redis客户端（可选，如果不提供则尝试从工具获取）
-        """
-        # Sprint 5.3: 完善Redis配置 - 优先使用传入的客户端，否则尝试从工具获取
-        if redis_client is None:
-            try:
-                from app.utils.redis_client import get_redis_client
-                redis_client = get_redis_client()
-            except Exception as e:
-                logger.warning(f"无法获取Redis客户端: {e}，将使用内存缓存")
-                redis_client = None
-        
-        self.redis_client = redis_client
-        self.memory_cache: Dict[str, tuple] = {}  # 内存缓存：{key: (value, expire_at)}
-        self.use_redis = REDIS_AVAILABLE and redis_client is not None
-        
-        # Sprint 5.3: 缓存统计
-        self.stats = {
-            "hits": 0,
-            "misses": 0,
-            "sets": 0,
-            "deletes": 0,
-            "errors": 0
-        }
+    支持的缓存类型：
+    - 内存缓存（本模块实现）
+    - LRU 缓存（使用 functools.lru_cache）
+    """
     
-    def _generate_cache_key(self, prefix: str, **kwargs) -> str:
-        """
-        生成缓存键
-        
-        Args:
-            prefix: 键前缀
-            **kwargs: 键参数
-            
-        Returns:
-            str: 缓存键
-        """
-        # 将参数排序后序列化，确保相同参数生成相同键
-        params_str = json.dumps(kwargs, sort_keys=True, default=str)
-        params_hash = hashlib.md5(params_str.encode()).hexdigest()[:8]
-        return f"{prefix}:{params_hash}"
+    _instance = None
+    _lock = Lock()
     
-    def get(self, key: str) -> Optional[Any]:
+    def __new__(cls):
+        """单例模式"""
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+                    cls._instance._memory_cache: Dict[str, Dict[str, Any]] = {}
+        return cls._instance
+    
+    def get(self, key: str, default: Any = None) -> Any:
         """
         获取缓存值
         
         Args:
             key: 缓存键
+            default: 默认值（缓存不存在时返回）
             
         Returns:
-            Any: 缓存值，如果不存在或已过期则返回None
+            缓存值或默认值
         """
-        if self.use_redis:
-            try:
-                value = self.redis_client.get(key)
-                if value:
-                    self.stats["hits"] += 1
-                    return json.loads(value)
-                else:
-                    self.stats["misses"] += 1
-            except Exception as e:
-                # Redis失败时降级到内存缓存
-                logger.warning(f"Redis获取失败，降级到内存缓存: {e}")
-                self.stats["errors"] += 1
-        
-        # 内存缓存
-        if key in self.memory_cache:
-            value, expire_at = self.memory_cache[key]
-            if expire_at is None or datetime.now() < expire_at:
-                self.stats["hits"] += 1
-                return value
+        cached = self._memory_cache.get(key)
+        if cached:
+            # 检查是否过期
+            if time.time() < cached['expiry']:
+                return cached['value']
             else:
-                # 已过期，删除
-                del self.memory_cache[key]
-                self.stats["misses"] += 1
-        else:
-            self.stats["misses"] += 1
-        
-        return None
+                # 过期删除
+                del self._memory_cache[key]
+        return default
     
-    def set(self, key: str, value: Any, expire_seconds: int = 300) -> bool:
+    def set(self, key: str, value: Any, ttl: int = 300) -> None:
         """
         设置缓存值
         
         Args:
             key: 缓存键
             value: 缓存值
-            expire_seconds: 过期时间（秒），默认5分钟
-            
-        Returns:
-            bool: 是否设置成功
+            ttl: 生存时间（秒），默认 300 秒
         """
-        expire_at = datetime.now() + timedelta(seconds=expire_seconds) if expire_seconds > 0 else None
-        
-        if self.use_redis:
-            try:
-                self.redis_client.setex(
-                    key,
-                    expire_seconds,
-                    json.dumps(value, default=str)
-                )
-                self.stats["sets"] += 1
-                return True
-            except Exception as e:
-                # Redis失败时降级到内存缓存
-                logger.warning(f"Redis设置失败，降级到内存缓存: {e}")
-                self.stats["errors"] += 1
-        
-        # 内存缓存
-        self.memory_cache[key] = (value, expire_at)
-        self.stats["sets"] += 1
-        return True
+        self._memory_cache[key] = {
+            'value': value,
+            'expiry': time.time() + ttl,
+        }
     
     def delete(self, key: str) -> bool:
         """
-        删除缓存值
-
+        删除缓存
+        
         Args:
             key: 缓存键
-
-        Returns:
-            bool: 是否删除成功
-        """
-        deleted = False
-        if self.use_redis:
-            try:
-                self.redis_client.delete(key)
-                deleted = True
-            except Exception:
-                pass
-
-        if key in self.memory_cache:
-            del self.memory_cache[key]
-            deleted = True
-
-        if deleted:
-            self.stats["deletes"] += 1
-
-        return True
-    
-    def delete_pattern(self, pattern: str) -> int:
-        """
-        按模式删除缓存（支持通配符）
-        
-        Args:
-            pattern: 模式（如 "project:*"）
             
         Returns:
-            int: 删除的缓存数量
+            是否删除成功
         """
-        deleted_count = 0
-        
-        if self.use_redis:
-            try:
-                keys = self.redis_client.keys(pattern)
-                if keys:
-                    deleted_count = self.redis_client.delete(*keys)
-            except Exception:
-                pass
-        
-        # 内存缓存（简单实现，不支持通配符）
-        keys_to_delete = [k for k in self.memory_cache.keys() if k.startswith(pattern.replace("*", ""))]
-        for key in keys_to_delete:
-            del self.memory_cache[key]
-            deleted_count += 1
-        
-        return deleted_count
+        if key in self._memory_cache:
+            del self._memory_cache[key]
+            return True
+        return False
     
-    def clear(self) -> bool:
+    def clear(self) -> None:
+        """清空所有缓存"""
+        self._memory_cache.clear()
+    
+    def clear_prefix(self, prefix: str) -> int:
         """
-        清空所有缓存
+        清除指定前缀的所有缓存
         
+        Args:
+            prefix: 缓存键前缀
+            
         Returns:
-            bool: 是否清空成功
+            清除的缓存数量
         """
-        if self.use_redis:
-            try:
-                self.redis_client.flushdb()
-            except Exception:
-                pass
-        
-        self.memory_cache.clear()
-        return True
-    
-    # ==================== 项目相关缓存方法 ====================
-    
-    def get_project_detail(self, project_id: int) -> Optional[Dict[str, Any]]:
-        """获取项目详情缓存"""
-        key = f"project:detail:{project_id}"
-        return self.get(key)
-    
-    def set_project_detail(self, project_id: int, data: Dict[str, Any], expire_seconds: int = 600) -> bool:
-        """设置项目详情缓存（默认10分钟）"""
-        key = f"project:detail:{project_id}"
-        return self.set(key, data, expire_seconds)
-    
-    def invalidate_project_detail(self, project_id: int) -> bool:
-        """使项目详情缓存失效"""
-        key = f"project:detail:{project_id}"
-        return self.delete(key)
-    
-    def get_project_list(self, **filters) -> Optional[Dict[str, Any]]:
-        """获取项目列表缓存"""
-        key = self._generate_cache_key("project:list", **filters)
-        return self.get(key)
-    
-    def set_project_list(self, data: Dict[str, Any], expire_seconds: int = 300, **filters) -> bool:
-        """设置项目列表缓存（默认5分钟）"""
-        key = self._generate_cache_key("project:list", **filters)
-        return self.set(key, data, expire_seconds)
-    
-    def invalidate_project_list(self) -> int:
-        """使所有项目列表缓存失效"""
-        return self.delete_pattern("project:list:*")
-    
-    def get_project_statistics(self, **filters) -> Optional[Dict[str, Any]]:
-        """获取项目统计缓存"""
-        key = self._generate_cache_key("project:statistics", **filters)
-        return self.get(key)
-    
-    def set_project_statistics(self, data: Dict[str, Any], expire_seconds: int = 600, **filters) -> bool:
-        """设置项目统计缓存（默认10分钟）"""
-        key = self._generate_cache_key("project:statistics", **filters)
-        return self.set(key, data, expire_seconds)
-    
-    def invalidate_project_statistics(self) -> int:
-        """使所有项目统计缓存失效"""
-        return self.delete_pattern("project:statistics:*")
-    
-    def invalidate_all_project_cache(self) -> int:
-        """使所有项目相关缓存失效"""
-        return self.delete_pattern("project:*")
-    
-    # ==================== Sprint 5.3: 缓存统计和监控 ====================
+        keys_to_delete = [k for k in self._memory_cache.keys() if k.startswith(prefix)]
+        for key in keys_to_delete:
+            del self._memory_cache[key]
+        return len(keys_to_delete)
     
     def get_stats(self) -> Dict[str, Any]:
         """
         获取缓存统计信息
         
         Returns:
-            dict: 缓存统计信息
+            缓存统计信息
         """
-        total_requests = self.stats["hits"] + self.stats["misses"]
-        hit_rate = (self.stats["hits"] / total_requests * 100) if total_requests > 0 else 0
+        total_keys = len(self._memory_cache)
+        expired_keys = sum(
+            1 for cached in self._memory_cache.values()
+            if time.time() >= cached['expiry']
+        )
+        valid_keys = total_keys - expired_keys
         
         return {
-            "hits": self.stats["hits"],
-            "misses": self.stats["misses"],
-            "sets": self.stats["sets"],
-            "deletes": self.stats["deletes"],
-            "errors": self.stats["errors"],
-            "total_requests": total_requests,
-            "hit_rate": round(hit_rate, 2),
-            "cache_type": "redis" if self.use_redis else "memory",
-            "memory_cache_size": len(self.memory_cache),
+            'total_keys': total_keys,
+            'valid_keys': valid_keys,
+            'expired_keys': expired_keys,
+            'memory_usage_mb': len(str(self._memory_cache)) / (1024 * 1024),
         }
+
+
+class DepartmentCache:
+    """部门ID缓存（优化 DataScopeService 性能）"""
     
-    def reset_stats(self) -> None:
-        """重置缓存统计"""
-        self.stats = {
-            "hits": 0,
-            "misses": 0,
-            "sets": 0,
-            "deletes": 0,
-            "errors": 0
-        }
+    _cache: Dict[str, int] = {}
+    _lock = Lock()
+    _default_ttl = 3600  # 1 小时
     
-    def get_redis_info(self) -> Optional[Dict[str, Any]]:
+    @classmethod
+    def get(cls, dept_name: str) -> Optional[int]:
         """
-        获取Redis信息（如果使用Redis）
+        获取部门ID
+        
+        Args:
+            dept_name: 部门名称
+            
+        Returns:
+            部门ID，如果不存在返回 None
+        """
+        return cls._cache.get(dept_name)
+    
+    @classmethod
+    def set(cls, dept_name: str, dept_id: int) -> None:
+        """
+        设置部门ID缓存
+        
+        Args:
+            dept_name: 部门名称
+            dept_id: 部门ID
+        """
+        with cls._lock:
+            cls._cache[dept_name] = dept_id
+    
+    @classmethod
+    def delete(cls, dept_name: str) -> None:
+        """
+        删除部门ID缓存
+        
+        Args:
+            dept_name: 部门名称
+        """
+        with cls._lock:
+            if dept_name in cls._cache:
+                del cls._cache[dept_name]
+    
+    @classmethod
+    def clear(cls) -> None:
+        """清空所有部门缓存"""
+        with cls._lock:
+            cls._cache.clear()
+    
+    @classmethod
+    def get_size(cls) -> int:
+        """
+        获取缓存大小
         
         Returns:
-            dict: Redis信息，如果不使用Redis则返回None
+            缓存的部门数量
         """
-        if not self.use_redis:
-            return None
+        return len(cls._cache)
+
+
+class UserProjectCache:
+    """
+    用户项目缓存
+    
+    缓存用户参与的项目列表，减少频繁的数据库查询
+    """
+    
+    _cache: Dict[int, Dict[str, Any]] = {}
+    _lock = Lock()
+    _default_ttl = 300  # 5 分钟
+    
+    @classmethod
+    def get(cls, user_id: int) -> Optional[Set[int]]:
+        """
+        获取用户的项目ID列表
         
-        try:
-            info = self.redis_client.info()
-            return {
-                "connected_clients": info.get("connected_clients", 0),
-                "used_memory_human": info.get("used_memory_human", "0B"),
-                "used_memory_peak_human": info.get("used_memory_peak_human", "0B"),
-                "keyspace_hits": info.get("keyspace_hits", 0),
-                "keyspace_misses": info.get("keyspace_misses", 0),
-                "total_keys": sum([
-                    int(count) for count in info.get("db0", {}).get("keys", "0").split(",")
-                ]) if "db0" in info else 0,
+        Args:
+            user_id: 用户ID
+            
+        Returns:
+            项目ID集合，如果不存在或已过期返回 None
+        """
+        cached = cls._cache.get(user_id)
+        if cached:
+            # 检查是否过期
+            if time.time() < cached['expiry']:
+                return cached['project_ids']
+            else:
+                # 过期删除
+                with cls._lock:
+                    if user_id in cls._cache:
+                        del cls._cache[user_id]
+        return None
+    
+    @classmethod
+    def set(cls, user_id: int, project_ids: Set[int], ttl: int = None) -> None:
+        """
+        设置用户的项目ID列表缓存
+        
+        Args:
+            user_id: 用户ID
+            project_ids: 项目ID集合
+            ttl: 生存时间（秒），默认使用 _default_ttl
+        """
+        if ttl is None:
+            ttl = cls._default_ttl
+        
+        with cls._lock:
+            cls._cache[user_id] = {
+                'project_ids': project_ids,
+                'expiry': time.time() + ttl,
             }
-        except Exception as e:
-            logger.error(f"获取Redis信息失败: {e}")
-            return None
+    
+    @classmethod
+    def delete(cls, user_id: int) -> None:
+        """
+        删除用户的项目缓存
+        
+        Args:
+            user_id: 用户ID
+        """
+        with cls._lock:
+            if user_id in cls._cache:
+                del cls._cache[user_id]
+    
+    @classmethod
+    def clear(cls) -> None:
+        """清空所有用户项目缓存"""
+        with cls._lock:
+            cls._cache.clear()
+    
+    @classmethod
+    def clear_by_project(cls, project_id: int) -> int:
+        """
+        清除包含指定项目的所有用户缓存
+        
+        Args:
+            project_id: 项目ID
+            
+        Returns:
+            清除的缓存数量
+        """
+        with cls._lock:
+            keys_to_delete = [
+                user_id for user_id, cached in cls._cache.items()
+                if project_id in cached.get('project_ids', set())
+            ]
+            for user_id in keys_to_delete:
+                del cls._cache[user_id]
+            return len(keys_to_delete)
+    
+    @classmethod
+    def get_stats(cls) -> Dict[str, Any]:
+        """
+        获取缓存统计信息
+        
+        Returns:
+            缓存统计信息
+        """
+        total_users = len(cls._cache)
+        expired_users = sum(
+            1 for cached in cls._cache.values()
+            if time.time() >= cached['expiry']
+        )
+        valid_users = total_users - expired_users
+        
+        total_projects = sum(
+            len(cached.get('project_ids', set()))
+            for cached in cls._cache.values()
+        )
+        
+        return {
+            'total_users': total_users,
+            'valid_users': valid_users,
+            'expired_users': expired_users,
+            'total_projects': total_projects,
+        }
+
+
+class UserPermissionCache:
+    """
+    用户权限缓存
+    
+    缓存用户的权限列表，减少频繁的数据库查询
+    """
+    
+    _default_ttl = 600  # 10 分钟
+    
+    @staticmethod
+    @lru_cache(maxsize=1000)
+    def get_user_permissions(user_id: int) -> Set[str]:
+        """
+        获取用户权限集合（带 LRU 缓存）
+        
+        注意：这是一个装饰器缓存，需要手动失效
+        
+        Args:
+            user_id: 用户ID
+            
+        Returns:
+            权限编码集合
+        """
+        # 这里应该从数据库查询
+        # 实际实现在 service 层
+        return set()
+    
+    @classmethod
+    def invalidate_user(cls, user_id: int) -> None:
+        """
+        使指定用户的缓存失效
+        
+        Args:
+            user_id: 用户ID
+        """
+        # 清除 lru_cache
+        if hasattr(cls.get_user_permissions, 'cache_clear'):
+            # lru_cache 无法针对特定 key 失效
+            # 只能全部清除
+            cls.get_user_permissions.cache_clear()
+    
+    @classmethod
+    def invalidate_all(cls) -> None:
+        """使所有缓存失效"""
+        if hasattr(cls.get_user_permissions, 'cache_clear'):
+            cls.get_user_permissions.cache_clear()
+    
+    @classmethod
+    def get_stats(cls) -> Dict[str, Any]:
+        """
+        获取缓存统计信息
+        
+        Returns:
+            缓存统计信息
+        """
+        cache_info = getattr(cls.get_user_permissions, 'cache_info', None)
+        if cache_info:
+            return {
+                'hits': cache_info.hits,
+                'misses': cache_info.misses,
+                'maxsize': cache_info.maxsize,
+                'currsize': cache_info.currsize,
+            }
+        return {
+            'hits': 0,
+            'misses': 0,
+            'maxsize': 0,
+            'currsize': 0,
+        }

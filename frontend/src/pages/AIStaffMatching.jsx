@@ -67,10 +67,10 @@ const PRIORITY_CONFIG = {
 export default function AIStaffMatching() {
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("matching");
-  const [staffingNeeds, setStaffingNeeds] = useState(mockStaffingNeeds);
+  const [staffingNeeds, setStaffingNeeds] = useState([]);
   const [selectedNeedId, setSelectedNeedId] = useState(null);
   const [matchingResult, setMatchingResult] = useState(null);
-  const [matchingHistory, setMatchingHistory] = useState(mockMatchingHistory);
+  const [matchingHistory, setMatchingHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [matching, setMatching] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -140,28 +140,34 @@ export default function AIStaffMatching() {
       if (response.data) {
         setMatchingResult(response.data);
       } else {
-        // 使用模拟数据
+        // API 返回空数据，设置空结果
         setMatchingResult({
-          ...mockMatchingResult,
+          request_id: Date.now().toString(),
           staffing_need_id: selectedNeed.id,
           project_name: selectedNeed.project_name,
           role_name: selectedNeed.role_name,
           priority: selectedNeed.priority,
           priority_threshold:
             PRIORITY_CONFIG[selectedNeed.priority]?.threshold || 65,
+          total_candidates: 0,
+          qualified_count: 0,
+          candidates: [],
         });
       }
     } catch (error) {
       console.error("匹配失败:", error);
-      // 使用模拟数据
+      // API 调用失败，设置空结果
       setMatchingResult({
-        ...mockMatchingResult,
+        request_id: Date.now().toString(),
         staffing_need_id: selectedNeed.id,
         project_name: selectedNeed.project_name,
         role_name: selectedNeed.role_name,
         priority: selectedNeed.priority,
         priority_threshold:
           PRIORITY_CONFIG[selectedNeed.priority]?.threshold || 65,
+        total_candidates: 0,
+        qualified_count: 0,
+        candidates: [],
       });
     } finally {
       setMatching(false);

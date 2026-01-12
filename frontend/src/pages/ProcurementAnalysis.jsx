@@ -13,11 +13,8 @@ import {
   Clock,
   AlertTriangle,
   BarChart3,
-  LineChart,
-  PieChart,
   Download,
   Calendar,
-  Filter,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -30,7 +27,7 @@ import {
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { api, procurementApi } from "../services/api";
+import api from "../services/api";
 
 export default function ProcurementAnalysis() {
   const [activeTab, setActiveTab] = useState("cost-trend");
@@ -463,7 +460,7 @@ export default function ProcurementAnalysis() {
                         <div className="text-2xl font-bold text-white mt-1">
                           {priceFluctuationData.summary.high_volatility_count || 0}
                         </div>
-                        <div className="text-xs text-slate-500 mt-1">波动率 > 20%</div>
+                        <div className="text-xs text-slate-500 mt-1">波动率 &gt; 20%</div>
                       </div>
                       <AlertTriangle className="w-10 h-10 text-amber-500" />
                     </div>

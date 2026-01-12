@@ -6,7 +6,10 @@
 """
 
 from fastapi import APIRouter
-from . import leads, opportunities, quotes, cost_management, assessments, statistics, templates, contracts, payments, receivables, invoices, workflows, disputes, requirements, team, targets
+from . import leads, opportunities
+
+# 导入旧的 sales.py 文件中的 router，包含统计等端点
+from ..sales import router as legacy_sales_router
 
 # 创建主路由
 router = APIRouter()
@@ -14,17 +17,21 @@ router = APIRouter()
 # 聚合所有子路由（保持原有路由路径）
 router.include_router(leads.router, tags=["sales-leads"])
 router.include_router(opportunities.router, tags=["sales-opportunities"])
-router.include_router(quotes.router, tags=["sales-quotes"])
-router.include_router(cost_management.router, tags=["sales-cost-management"])
-router.include_router(assessments.router, tags=["sales-assessments"])
-router.include_router(statistics.router, tags=["sales-statistics"])
-router.include_router(templates.router, tags=["sales-templates"])
-router.include_router(contracts.router, tags=["sales-contracts"])
-router.include_router(payments.router, tags=["sales-payments"])
-router.include_router(receivables.router, tags=["sales-receivables"])
-router.include_router(invoices.router, tags=["sales-invoices"])
-router.include_router(workflows.router, tags=["sales-workflows"])
-router.include_router(disputes.router, tags=["sales-disputes"])
-router.include_router(requirements.router, tags=["sales-requirements"])
-router.include_router(team.router, tags=["sales-team"])
-router.include_router(targets.router, tags=["sales-targets"])
+
+# 包含原有的销售 API 端点（统计、团队、目标等）
+# 这些端点尚未拆分，暂时包含进来
+for route in legacy_sales_router.routes:
+    router.add_route(
+        route.path,
+        route.endpoint,
+        methods=route.methods,
+        name=route.name,
+        include_in_schema=route.include_in_schema,
+    )
+
+# TODO: 继续添加其他模块路由
+# router.include_router(quotes.router, tags=["sales-quotes"])
+# router.include_router(contracts.router, tags=["sales-contracts"])
+# router.include_router(invoices.router, tags=["sales-invoices"])
+# router.include_router(payments.router, tags=["sales-payments"])
+# ... 其他模块

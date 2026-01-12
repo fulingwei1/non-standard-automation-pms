@@ -3,7 +3,7 @@
 用户与权限模型
 """
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, JSON
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, JSON, Index
 from sqlalchemy.orm import relationship
 
 from .base import Base, TimestampMixin
@@ -42,6 +42,12 @@ class User(Base, TimestampMixin):
         "Project", back_populates="manager", foreign_keys="Project.pm_id"
     )
 
+    __table_args__ = (
+        Index("idx_user_active", "is_active"),
+        Index("idx_user_department", "department"),
+        Index("idx_user_email", "email"),
+    )
+
     def __repr__(self):
         return f"<User {self.username}>"
 
@@ -66,6 +72,12 @@ class Role(Base, TimestampMixin):
     # 关系
     users = relationship("UserRole", back_populates="role", lazy="dynamic")
     permissions = relationship("RolePermission", back_populates="role", lazy="dynamic")
+
+    __table_args__ = (
+        Index("idx_role_active", "is_active"),
+        Index("idx_role_system", "is_system"),
+        Index("idx_role_data_scope", "data_scope"),
+    )
 
     def __repr__(self):
         return f"<Role {self.role_code}>"
@@ -93,6 +105,11 @@ class Permission(Base, TimestampMixin):
     # 关系
     roles = relationship("RolePermission", back_populates="permission", lazy="dynamic")
 
+    __table_args__ = (
+        Index("idx_permission_active", "is_active"),
+        Index("idx_permission_module", "module"),
+    )
+
     def __repr__(self):
         return f"<Permission {self.permission_code}>"
 
@@ -112,6 +129,11 @@ class RolePermission(Base):
     role = relationship("Role", back_populates="permissions")
     permission = relationship("Permission", back_populates="roles")
 
+    __table_args__ = (
+        Index("idx_role_permissions_role", "role_id"),
+        Index("idx_role_permissions_permission", "permission_id"),
+    )
+
 
 class UserRole(Base):
     """用户角色关联表"""
@@ -125,6 +147,11 @@ class UserRole(Base):
     # 关系
     user = relationship("User", back_populates="roles")
     role = relationship("Role", back_populates="users")
+
+    __table_args__ = (
+        Index("idx_user_roles_user", "user_id"),
+        Index("idx_user_roles_role", "role_id"),
+    )
 
 
 class PermissionAudit(Base, TimestampMixin):

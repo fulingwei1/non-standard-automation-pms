@@ -107,60 +107,12 @@ export default function ProjectReviewList() {
   }, [page, projectId, status, reviewType, startDate, endDate]);
 
   // Mock data for when API fails
-  
+  const mockProjectList = [
     { id: 1, project_code: "PJ250108001", project_name: "BMS老化测试设备" },
     { id: 2, project_code: "PJ250105002", project_name: "EOL功能测试设备" },
-    { id: 3, project_code: "PJ250106003", project_name: "ICT测试设备" },
+    { id: 3, project_code: "PJ250106003", project_name: "ICT测试设备" }
   ];
 
-  
-    {
-      id: 1,
-      project_id: 1,
-      project_code: "PJ250108001",
-      project_name: "BMS老化测试设备",
-      title: "BMS老化测试设备项目结项复盘",
-      review_type: "POST_MORTEM",
-      status: "PUBLISHED",
-      review_date: "2026-01-05",
-      reviewer_name: "张经理",
-      summary:
-        "项目整体顺利完成，提前2天交付。主要经验：供应商选择准确，技术方案验证充分。",
-      lessons_count: 5,
-      best_practices_count: 3,
-      created_at: "2026-01-05",
-    },
-    {
-      id: 2,
-      project_id: 2,
-      project_code: "PJ250105002",
-      project_name: "EOL功能测试设备",
-      title: "EOL功能测试设备中期复盘",
-      review_type: "MID_TERM",
-      status: "DRAFT",
-      review_date: "2026-01-06",
-      reviewer_name: "李经理",
-      summary: "项目进行中，目前进度正常。需关注关键物料交期风险。",
-      lessons_count: 2,
-      best_practices_count: 1,
-      created_at: "2026-01-06",
-    },
-    {
-      id: 3,
-      project_id: 3,
-      project_code: "PJ250106003",
-      project_name: "ICT测试设备",
-      title: "ICT测试设备季度复盘",
-      review_type: "QUARTERLY",
-      status: "ARCHIVED",
-      review_date: "2025-12-30",
-      reviewer_name: "王经理",
-      summary: "季度工作回顾，识别出设计变更流程需优化。",
-      lessons_count: 4,
-      best_practices_count: 2,
-      created_at: "2025-12-30",
-    },
-  ];
 
   const fetchProjectList = async () => {
     try {
