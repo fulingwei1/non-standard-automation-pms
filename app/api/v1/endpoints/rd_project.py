@@ -48,6 +48,7 @@ from app.schemas.project import (
     ProjectDocumentCreate, ProjectDocumentUpdate, ProjectDocumentResponse
 )
 from app.schemas.common import ResponseModel, PaginatedResponse
+from app.services.hourly_rate_service import HourlyRateService
 
 router = APIRouter()
 
@@ -695,11 +696,11 @@ def calculate_labor_cost(
     for ts in timesheets:
         total_hours += Decimal(str(ts.hours or 0))
     
-    # 获取时薪（如果未提供，使用默认值或从用户配置获取）
+    # 获取时薪（如果未提供，从用户配置或系统配置获取）
     hourly_rate = calc_request.hourly_rate
     if not hourly_rate:
-        # TODO: 从用户配置或系统配置获取默认时薪
-        hourly_rate = Decimal(100)  # 默认时薪
+        # 使用HourlyRateService按优先级获取时薪：用户配置 > 角色配置 > 默认配置
+        hourly_rate = HourlyRateService.get_user_hourly_rate(db, calc_request.user_id)
     
     # 计算费用金额
     cost_amount = total_hours * hourly_rate
