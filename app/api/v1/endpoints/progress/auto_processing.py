@@ -54,24 +54,26 @@ def auto_apply_forecast(
     
     # 导入预测函数
     from app.api.v1.endpoints.progress.utils import _build_project_forecast
-    
+    from app.models.progress import Task
+    from sqlalchemy.orm import joinedload
+
     # 获取所有任务
     tasks = (
-        db.query(Project)
-        .join(Project.tasks)
-        .filter(Project.id == project_id)
+        db.query(Task)
+        .options(joinedload(Task.progress_logs))
+        .filter(Task.project_id == project_id)
         .all()
     )
-    
+
     if not tasks:
         return {
             "success": False,
             "message": "项目没有任务",
             "data": None
         }
-    
+
     # 计算进度预测
-    forecast = _build_project_forecast(project, tasks[0].tasks if tasks else [])
+    forecast = _build_project_forecast(project, tasks)
     
     # 应用预测
     service = ProgressAutoService(db)
@@ -126,9 +128,10 @@ def auto_fix_dependencies(
     
     # 获取依赖分析结果
     from app.api.v1.endpoints.progress.utils import _analyze_dependency_graph
-    
-    tasks = db.query(Project.tasks).filter(Project.id == project_id).all()
-    task_map = {subtask.id: subtask for task in tasks for subtask in task.tasks}
+    from app.models.progress import Task
+
+    tasks = db.query(Task).filter(Task.project_id == project_id).all()
+    task_map = {task.id: task for task in tasks}
     
     if task_map:
         from app.models.progress import TaskDependency
@@ -240,8 +243,7 @@ def preview_auto_processing(
     project_id: int,
     auto_block: bool = Query(False, description="是否自动阻塞延迟任务"),
     delay_threshold: int = Query(7, ge=1, description="延迟阈值"),
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user)
+    db: Session = Depends(deps.get_db)
 ) -> Any:
     """
     预览自动处理结果（不实际执行修改）
@@ -260,25 +262,28 @@ def preview_auto_processing(
     
     # 计算预测
     from app.api.v1.endpoints.progress.utils import _build_project_forecast, _analyze_dependency_graph
-    
+    from app.models.progress import Task
+    from sqlalchemy.orm import joinedload
+
     tasks = (
-        db.query(Project.tasks)
-        .filter(Project.id == project_id)
+        db.query(Task)
+        .options(joinedload(Task.progress_logs))
+        .filter(Task.project_id == project_id)
         .all()
     )
-    
+
     if not tasks:
         return {
             "success": False,
             "message": "项目没有任务",
             "data": None
         }
-    
+
     # 进度预测
-    forecast = _build_project_forecast(project, tasks[0].tasks if tasks else [])
-    
+    forecast = _build_project_forecast(project, tasks)
+
     # 依赖分析
-    task_map = {subtask.id: subtask for task in tasks for subtask in task.tasks}
+    task_map = {task.id: task for task in tasks}
     if task_map:
         from app.models.progress import TaskDependency
         dependencies = (

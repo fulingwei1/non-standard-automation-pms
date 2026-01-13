@@ -23,6 +23,11 @@ import {
   BarChart3,
   CheckCircle2,
   Clock,
+  Crown,
+  Zap,
+  GitBranch,
+  ShoppingCart,
+  Hammer,
 } from "lucide-react";
 
 // Stagger animation variants
@@ -147,6 +152,80 @@ export default function Dashboard() {
     },
   ];
 
+  // 角色卡片配置
+  const roleCards = [
+    {
+      title: "董事长",
+      icon: Crown,
+      path: "/chairman-dashboard",
+      color: "from-purple-500/20 to-purple-600/10",
+      iconColor: "text-purple-400",
+      ringColor: "ring-purple-500/20",
+      hoverColor: "hover:bg-purple-500/10",
+      description: "董事长决策分析",
+    },
+    {
+      title: "总经理",
+      icon: Zap,
+      path: "/gm-dashboard",
+      color: "from-orange-500/20 to-orange-600/10",
+      iconColor: "text-orange-400",
+      ringColor: "ring-orange-500/20",
+      hoverColor: "hover:bg-orange-500/10",
+      description: "经营管理概览",
+    },
+    {
+      title: "项目经理",
+      icon: GitBranch,
+      path: "/pmo/dashboard",
+      color: "from-blue-500/20 to-blue-600/10",
+      iconColor: "text-blue-400",
+      ringColor: "ring-blue-500/20",
+      hoverColor: "hover:bg-blue-500/10",
+      description: "项目管理办公室",
+    },
+    {
+      title: "销售总监",
+      icon: TrendingUp,
+      path: "/sales-director-dashboard",
+      color: "from-rose-500/20 to-rose-600/10",
+      iconColor: "text-rose-400",
+      ringColor: "ring-rose-500/20",
+      hoverColor: "hover:bg-rose-500/10",
+      description: "销售管理概览",
+    },
+    {
+      title: "销售经理",
+      icon: Briefcase,
+      path: "/sales-manager-dashboard",
+      color: "from-pink-500/20 to-pink-600/10",
+      iconColor: "text-pink-400",
+      ringColor: "ring-pink-500/20",
+      hoverColor: "hover:bg-pink-500/10",
+      description: "销售执行与跟踪",
+    },
+    {
+      title: "P&C (采购控制)",
+      icon: ShoppingCart,
+      path: "/procurement-manager-dashboard",
+      color: "from-green-500/20 to-green-600/10",
+      iconColor: "text-green-400",
+      ringColor: "ring-green-500/20",
+      hoverColor: "hover:bg-green-500/10",
+      description: "采购与物料管理",
+    },
+    {
+      title: "机械部经理",
+      icon: Hammer,
+      path: "/mech-manager-dashboard",
+      color: "from-orange-500/20 to-orange-600/10",
+      iconColor: "text-orange-400",
+      ringColor: "ring-orange-500/20",
+      hoverColor: "hover:bg-orange-500/10",
+      description: "机械部门管理",
+    },
+  ];
+
   return (
     <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
       <motion.div variants={staggerChild}>
@@ -171,6 +250,62 @@ export default function Dashboard() {
                 </Card>
               ))
           : statCards.map((stat, i) => <StatCard key={i} {...stat} />)}
+      </motion.div>
+
+      {/* Role Selection Grid */}
+      <motion.div variants={staggerChild} className="mb-8">
+        <h3 className="text-lg font-semibold text-white mb-4">快速导航</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {roleCards.map((role, index) => {
+            const RoleIcon = role.icon;
+            return (
+              <motion.div
+                key={index}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                variants={staggerChild}
+              >
+                <Link to={role.path}>
+                  <Card
+                    hover={true}
+                    className={cn(
+                      "h-full",
+                      "bg-gradient-to-br",
+                      role.color,
+                      "border-white/5 group",
+                    )}
+                  >
+                    <CardContent className="flex flex-col items-center justify-center p-6 text-center">
+                      <div
+                        className={cn(
+                          "p-3 rounded-xl mb-3",
+                          "bg-gradient-to-br",
+                          role.color,
+                          "ring-1",
+                          role.ringColor,
+                          "group-hover:scale-110 transition-transform",
+                        )}
+                      >
+                        <RoleIcon
+                          className={cn("h-6 w-6", role.iconColor)}
+                        />
+                      </div>
+                      <h4 className="text-base font-semibold text-white mb-1">
+                        {role.title}
+                      </h4>
+                      <p className="text-xs text-slate-400">
+                        {role.description}
+                      </p>
+                      <div className="mt-3 flex items-center justify-center">
+                        <ArrowRight className="h-4 w-4 text-slate-500 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </motion.div>
+            );
+          })}
+        </div>
       </motion.div>
 
       {/* Main Content Grid */}

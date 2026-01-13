@@ -97,7 +97,7 @@ api_router.include_router(kit_rate.router, prefix="", tags=["kit-rate"])
 api_router.include_router(kit_check.router, prefix="", tags=["kit-check"])
 # 进度模块已拆分为子模块，从progress包导入
 from app.api.v1.endpoints.progress import router as progress_router
-api_router.include_router(progress_router, prefix="", tags=["progress"])
+api_router.include_router(progress_router, prefix="/progress", tags=["progress"])
 api_router.include_router(shortage_alerts.router, prefix="/shortage-alerts", tags=["shortage-alerts"])
 api_router.include_router(shortage.router, prefix="", tags=["shortage"])
 # 销售模块已拆分为子模块，从sales包导入

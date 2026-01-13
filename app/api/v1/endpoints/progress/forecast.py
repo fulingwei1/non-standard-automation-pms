@@ -36,7 +36,6 @@ router = APIRouter()
 def get_project_progress_forecast(
     project_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """聚合项目任务的进度预测信息"""
     project = db.query(Project).filter(Project.id == project_id).first()
@@ -62,7 +61,6 @@ def get_project_progress_forecast(
 def check_project_dependencies(
     project_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """执行任务依赖巡检，定位循环依赖、缺失依赖或计划冲突"""
     project = db.query(Project).filter(Project.id == project_id).first()

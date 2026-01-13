@@ -5,6 +5,7 @@
 
 from typing import Any, List, Optional
 from datetime import datetime
+import json
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, or_
@@ -14,6 +15,7 @@ from app.core.config import settings
 from app.core import security
 from app.models.user import User
 from app.models.sales import Lead, LeadFollowUp
+from app.models.advantage_product import AdvantageProduct
 from app.models.enums import LeadStatusEnum
 from app.schemas.sales import (
     LeadCreate, LeadUpdate, LeadResponse,
@@ -67,13 +69,33 @@ def read_leads(
     offset = (page - 1) * page_size
     leads = query.order_by(desc(Lead.created_at)).offset(offset).limit(page_size).all()
 
-    # 填充负责人名称
+    # 填充负责人名称和优势产品信息
     lead_responses = []
     for lead in leads:
         lead_dict = {
             **{c.name: getattr(lead, c.name) for c in lead.__table__.columns},
             "owner_name": lead.owner.real_name if lead.owner else None,
         }
+
+        # 获取优势产品详情（简化版，只在列表中显示产品数量）
+        if lead.selected_advantage_products:
+            try:
+                product_ids = json.loads(lead.selected_advantage_products)
+                products = db.query(AdvantageProduct).filter(
+                    AdvantageProduct.id.in_(product_ids)
+                ).all()
+                lead_dict["advantage_products"] = [
+                    {
+                        "id": p.id,
+                        "product_code": p.product_code,
+                        "product_name": p.product_name,
+                        "category_id": p.category_id,
+                    }
+                    for p in products
+                ]
+            except (json.JSONDecodeError, Exception):
+                lead_dict["advantage_products"] = []
+
         lead_responses.append(LeadResponse(**lead_dict))
 
     return PaginatedResponse(
@@ -109,15 +131,58 @@ def create_lead(
     if not lead_data.get("owner_id"):
         lead_data["owner_id"] = current_user.id
 
+    # 处理优势产品选择
+    selected_products = lead_data.pop("selected_advantage_products", None)
+    if selected_products and len(selected_products) > 0:
+        # 验证产品ID是否存在
+        products = db.query(AdvantageProduct).filter(
+            AdvantageProduct.id.in_(selected_products),
+            AdvantageProduct.is_active == True
+        ).all()
+
+        if len(products) != len(selected_products):
+            raise HTTPException(status_code=400, detail="部分优势产品ID不存在或已禁用")
+
+        # 存储为JSON数组
+        lead_data["selected_advantage_products"] = json.dumps(selected_products)
+        lead_data["is_advantage_product"] = True
+        lead_data["product_match_type"] = "ADVANTAGE"
+    else:
+        # 如果没有选择优势产品，设置为未知
+        lead_data["selected_advantage_products"] = None
+        lead_data["is_advantage_product"] = False
+        lead_data["product_match_type"] = "UNKNOWN"
+
     lead = Lead(**lead_data)
     db.add(lead)
     db.commit()
     db.refresh(lead)
 
+    # 构造响应，包含优势产品详情
     lead_dict = {
         **{c.name: getattr(lead, c.name) for c in lead.__table__.columns},
         "owner_name": lead.owner.real_name if lead.owner else None,
     }
+
+    # 获取优势产品详情
+    if lead.selected_advantage_products:
+        try:
+            product_ids = json.loads(lead.selected_advantage_products)
+            products = db.query(AdvantageProduct).filter(
+                AdvantageProduct.id.in_(product_ids)
+            ).all()
+            lead_dict["advantage_products"] = [
+                {
+                    "id": p.id,
+                    "product_code": p.product_code,
+                    "product_name": p.product_name,
+                    "category_id": p.category_id,
+                }
+                for p in products
+            ]
+        except (json.JSONDecodeError, Exception):
+            lead_dict["advantage_products"] = []
+
     return LeadResponse(**lead_dict)
 
 
@@ -139,6 +204,26 @@ def read_lead(
         **{c.name: getattr(lead, c.name) for c in lead.__table__.columns},
         "owner_name": lead.owner.real_name if lead.owner else None,
     }
+
+    # 获取优势产品详情
+    if lead.selected_advantage_products:
+        try:
+            product_ids = json.loads(lead.selected_advantage_products)
+            products = db.query(AdvantageProduct).filter(
+                AdvantageProduct.id.in_(product_ids)
+            ).all()
+            lead_dict["advantage_products"] = [
+                {
+                    "id": p.id,
+                    "product_code": p.product_code,
+                    "product_name": p.product_name,
+                    "category_id": p.category_id,
+                }
+                for p in products
+            ]
+        except (json.JSONDecodeError, Exception):
+            lead_dict["advantage_products"] = []
+
     return LeadResponse(**lead_dict)
 
 

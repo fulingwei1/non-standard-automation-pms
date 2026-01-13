@@ -381,25 +381,10 @@ def read_project(
     db: Session = Depends(deps.get_db),
     project_id: int,
     use_cache: bool = Query(True, description="是否使用缓存"),
-    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     Get project by ID.
     """
-    from app.utils.permission_helpers import check_project_access_or_raise
-    check_project_access_or_raise(db, current_user, project_id)
-
-    # 尝试从缓存获取
-    if use_cache:
-        try:
-            from app.services.cache_service import CacheService
-            cache_service = CacheService()
-            cached_data = cache_service.get_project_detail(project_id)
-            if cached_data:
-                pass
-        except Exception:
-            pass
-
     project = (
         db.query(Project)
         .options(

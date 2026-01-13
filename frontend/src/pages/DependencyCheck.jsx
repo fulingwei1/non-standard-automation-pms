@@ -38,7 +38,7 @@ export default function DependencyCheck({ projectId }) {
   const { id: routeId } = useParams();
   const id = projectId || routeId;
   const navigate = useNavigate();
-  
+
   // 状态管理
   const [loading, setLoading] = useState(true);
   const [project, setProject] = useState(null);
@@ -47,27 +47,32 @@ export default function DependencyCheck({ projectId }) {
   const [processing, setProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  
+
   // 自动修复选项
   const [autoFixTiming, setAutoFixTiming] = useState(false);
   const [autoFixMissing, setAutoFixMissing] = useState(true);
-  
+
   // 对话框状态
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  
+
   // 初始化加载数据
   useEffect(() => {
-    if (id) {
-      fetchProject();
-      fetchDependencyCheck();
+    console.log("[DependencyCheck] useEffect triggered - id:", id, "projectId:", projectId, "routeId:", routeId);
+    if (!id) {
+      console.error("[DependencyCheck] No project ID available");
+      setErrorMessage("项目ID不可用");
+      setLoading(false);
+      return;
     }
-  }, [id]);
+    fetchProject();
+    fetchDependencyCheck();
+  }, [id, projectId]);  // 包括projectId，确保当prop变化时重新加载
   
   const fetchProject = async () => {
     try {
       const res = await fetch(`/api/v1/projects/${id}`).then(r => r.json());
-      setProject(res.data);
+      setProject(res.data?.data || res.data);
     } catch (error) {
       console.error("Failed to fetch project:", error);
     }
@@ -77,10 +82,25 @@ export default function DependencyCheck({ projectId }) {
     try {
       setLoading(true);
       setErrorMessage("");
+      console.log("[DependencyCheck] Fetching dependency check for project:", id);
       const res = await progressApi.analytics.checkDependencies(id);
-      setDependencyData(res.data);
+      console.log("[DependencyCheck] API response:", res);
+      console.log("[DependencyCheck] Response data:", res.data);
+      console.log("[DependencyCheck] Response data?.data:", res.data?.data);
+
+      const data = res.data?.data || res.data;
+      console.log("[DependencyCheck] Final data to set:", data);
+
+      if (!data) {
+        throw new Error("API returned no data");
+      }
+
+      setDependencyData(data);
+      console.log("[DependencyCheck] Dependency data set successfully");
     } catch (error) {
-      console.error("Failed to fetch dependency data:", error);
+      console.error("[DependencyCheck] Failed to fetch dependency data:", error);
+      console.error("[DependencyCheck] Error message:", error.message);
+      console.error("[DependencyCheck] Error response:", error.response?.data);
       setErrorMessage("依赖检查数据加载失败，请稍后重试。");
     } finally {
       setLoading(false);
@@ -90,28 +110,29 @@ export default function DependencyCheck({ projectId }) {
   const handlePreview = async () => {
     try {
       setProcessing(true);
-      
+
       // 先获取依赖检查结果
       const checkRes = await progressApi.analytics.checkDependencies(id);
-      
+      const depData = checkRes.data?.data || checkRes.data;
+
       // 构建预览数据
       const preview = {
-        has_cycle: checkRes.data?.has_cycle || false,
-        cycle_count: checkRes.data?.cycle_paths?.length || 0,
-        cycle_paths: checkRes.data?.cycle_paths || [],
-        issue_count: checkRes.data?.issues?.length || 0,
-        issues: checkRes.data?.issues || [],
+        has_cycle: depData?.has_cycle || false,
+        cycle_count: depData?.cycle_paths?.length || 0,
+        cycle_paths: depData?.cycle_paths || [],
+        issue_count: depData?.issues?.length || 0,
+        issues: depData?.issues || [],
         preview_actions: {
-          will_fix_timing: checkRes.data?.issues?.filter(i => 
+          will_fix_timing: depData?.issues?.filter(i =>
             i.issue_type === "TIMING_CONFLICT" && autoFixTiming
           ).length || 0,
-          will_remove_missing: checkRes.data?.issues?.filter(i => 
+          will_remove_missing: depData?.issues?.filter(i =>
             i.issue_type === "MISSING_PREDECESSOR" && autoFixMissing
           ).length || 0,
-          will_skip_cycles: checkRes.data?.cycle_paths?.length || 0,
+          will_skip_cycles: depData?.cycle_paths?.length || 0,
           will_send_notifications: (
-            checkRes.data?.has_cycle ||
-            checkRes.data?.issues?.some(i => 
+            depData?.has_cycle ||
+            depData?.issues?.some(i =>
               i.severity === "HIGH" || i.severity === "URGENT"
             )
           )
@@ -134,8 +155,8 @@ export default function DependencyCheck({ projectId }) {
       setShowConfirmDialog(false);
       setErrorMessage("");
       setSuccessMessage("");
-      
-      const res = await progressApi.analytics.autoProcess.fixDependencies(id, {
+
+      const res = await progressApi.autoProcess.fixDependencies(id, {
         auto_fix_timing: autoFixTiming,
         auto_fix_missing: autoFixMissing
       });

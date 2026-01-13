@@ -39,7 +39,7 @@ export default function ProgressForecast({ projectId }) {
   const { id: routeId } = useParams();
   const id = projectId || routeId;
   const navigate = useNavigate();
-  
+
   // 状态管理
   const [loading, setLoading] = useState(true);
   const [project, setProject] = useState(null);
@@ -48,40 +48,60 @@ export default function ProgressForecast({ projectId }) {
   const [processing, setProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  
+
   // 自动处理选项
   const [autoBlock, setAutoBlock] = useState(false);
   const [delayThreshold, setDelayThreshold] = useState(7);
-  
+
   // 对话框状态
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  
+
   // 初始化加载数据
   useEffect(() => {
-    if (id) {
-      fetchProject();
-      fetchForecast();
+    console.log("[ProgressForecast] useEffect triggered - id:", id, "projectId:", projectId, "routeId:", routeId);
+    if (!id) {
+      console.error("[ProgressForecast] No project ID available");
+      setErrorMessage("项目ID不可用");
+      setLoading(false);
+      return;
     }
-  }, [id]);
+    fetchProject();
+    fetchForecast();
+  }, [id, projectId]);  // 包括projectId，确保当prop变化时重新加载
   
   const fetchProject = async () => {
     try {
       const res = await fetch(`/api/v1/projects/${id}`).then(r => r.json());
-      setProject(res.data);
+      setProject(res.data?.data || res.data);
     } catch (error) {
       console.error("Failed to fetch project:", error);
     }
   };
-  
+
   const fetchForecast = async () => {
     try {
       setLoading(true);
       setErrorMessage("");
+      console.log("[ProgressForecast] Fetching forecast for project:", id);
       const res = await progressApi.analytics.getForecast(id);
-      setForecastData(res.data);
+      console.log("[ProgressForecast] API response:", res);
+      console.log("[ProgressForecast] Response data:", res.data);
+      console.log("[ProgressForecast] Response data?.data:", res.data?.data);
+
+      const data = res.data?.data || res.data;
+      console.log("[ProgressForecast] Final data to set:", data);
+
+      if (!data) {
+        throw new Error("API returned no data");
+      }
+
+      setForecastData(data);
+      console.log("[ProgressForecast] Forecast data set successfully");
     } catch (error) {
-      console.error("Failed to fetch forecast data:", error);
+      console.error("[ProgressForecast] Failed to fetch forecast data:", error);
+      console.error("[ProgressForecast] Error message:", error.message);
+      console.error("[ProgressForecast] Error response:", error.response?.data);
       setErrorMessage("进度预测数据加载失败，请稍后重试。");
     } finally {
       setLoading(false);
@@ -91,11 +111,11 @@ export default function ProgressForecast({ projectId }) {
   const handlePreview = async () => {
     try {
       setProcessing(true);
-      const res = await progressApi.analytics.autoProcess.preview(id, {
+      const res = await progressApi.autoProcess.preview(id, {
         auto_block: autoBlock,
         delay_threshold: delayThreshold
       });
-      setPreviewData(res.data);
+      setPreviewData(res.data?.data || res.data);
       setShowPreviewDialog(true);
     } catch (error) {
       console.error("Failed to preview auto process:", error);
@@ -111,8 +131,8 @@ export default function ProgressForecast({ projectId }) {
       setShowConfirmDialog(false);
       setErrorMessage("");
       setSuccessMessage("");
-      
-      await progressApi.analytics.autoProcess.applyForecast(id, {
+
+      await progressApi.autoProcess.applyForecast(id, {
         auto_block: autoBlock,
         delay_threshold: delayThreshold
       });
@@ -146,9 +166,9 @@ export default function ProgressForecast({ projectId }) {
         auto_fix_missing: true,
         send_notifications: true
       };
-      
-      const res = await progressApi.analytics.autoProcess.runCompleteProcess(id, options);
-      
+
+      const res = await progressApi.autoProcess.runCompleteProcess(id, options);
+
       if (res.data?.success) {
         setSuccessMessage("自动处理流程执行成功！");
         

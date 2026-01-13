@@ -189,7 +189,7 @@ export default function AuditLogs() {
                   <SelectValue placeholder="全部" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全部</SelectItem>
+                  <SelectItem value="all">全部</SelectItem>
                   <SelectItem value="user">用户</SelectItem>
                   <SelectItem value="role">角色</SelectItem>
                   <SelectItem value="permission">权限</SelectItem>

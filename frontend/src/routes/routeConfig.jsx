@@ -28,7 +28,7 @@ import TimesheetDashboard from "../pages/TimesheetDashboard";
 import TimesheetBatchOperations from "../pages/TimesheetBatchOperations";
 import Settings from "../pages/Settings";
 import ScheduleBoard from "../pages/ScheduleBoard";
-import MaterialAnalysis from "../pages/MaterialAnalysis";
+import MaterialReadiness from "../pages/MaterialReadiness";
 import ProcurementAnalysis from "../pages/ProcurementAnalysis";
 import InventoryAnalysis from "../pages/InventoryAnalysis";
 import PurchaseOrders from "../pages/PurchaseOrders";
@@ -232,7 +232,6 @@ import TransferDetail from "../pages/TransferDetail";
 import SubstitutionNew from "../pages/SubstitutionNew";
 import TransferNew from "../pages/TransferNew";
 import ArrivalNew from "../pages/ArrivalNew";
-import KitCheck from "../pages/KitCheck";
 import AlertCenter from "../pages/AlertCenter";
 import AlertDetail from "../pages/AlertDetail";
 import AlertRuleConfig from "../pages/AlertRuleConfig";
@@ -259,6 +258,11 @@ import HourlyRateManagement from "../pages/HourlyRateManagement";
 import HRManagement from "../pages/HRManagement";
 import PresalesIntegration from "../pages/PresalesIntegration";
 import ProjectRoles from "../pages/ProjectRoles";
+import EngineerPerformanceDashboard from "../pages/EngineerPerformanceDashboard";
+import EngineerPerformanceRanking from "../pages/EngineerPerformanceRanking";
+import EngineerPerformanceDetail from "../pages/EngineerPerformanceDetail";
+import EngineerCollaboration from "../pages/EngineerCollaboration";
+import EngineerKnowledge from "../pages/EngineerKnowledge";
 
 /**
  * 应用路由配置组件
@@ -535,6 +539,28 @@ export function AppRoutes() {
         element={<QualificationAssessmentList />}
       />
 
+      {/* Engineer Performance Evaluation */}
+      <Route
+        path="/engineer-performance"
+        element={<EngineerPerformanceDashboard />}
+      />
+      <Route
+        path="/engineer-performance/ranking"
+        element={<EngineerPerformanceRanking />}
+      />
+      <Route
+        path="/engineer-performance/engineer/:userId"
+        element={<EngineerPerformanceDetail />}
+      />
+      <Route
+        path="/engineer-performance/collaboration"
+        element={<EngineerCollaboration />}
+      />
+      <Route
+        path="/engineer-performance/knowledge"
+        element={<EngineerKnowledge />}
+      />
+
       {/* Sales Routes */}
       <Route path="/sales-dashboard" element={<SalesWorkstation />} />
       <Route
@@ -737,10 +763,10 @@ export function AppRoutes() {
         }
       />
       <Route
-        path="/material-analysis"
+        path="/material-readiness"
         element={
           <ProcurementProtectedRoute>
-            <MaterialAnalysis />
+            <MaterialReadiness />
           </ProcurementProtectedRoute>
         }
       />
@@ -901,14 +927,6 @@ export function AppRoutes() {
         element={
           <ProcurementProtectedRoute>
             <ArrivalNew />
-          </ProcurementProtectedRoute>
-        }
-      />
-      <Route
-        path="/kit-check"
-        element={
-          <ProcurementProtectedRoute>
-            <KitCheck />
           </ProcurementProtectedRoute>
         }
       />

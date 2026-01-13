@@ -343,7 +343,7 @@ export default function SalesTarget() {
                   <SelectValue placeholder="目标范围" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全部范围</SelectItem>
+                  <SelectItem value="all">全部范围</SelectItem>
                   <SelectItem value="PERSONAL">个人目标</SelectItem>
                   <SelectItem value="TEAM">团队目标</SelectItem>
                   <SelectItem value="DEPARTMENT">部门目标</SelectItem>
@@ -359,7 +359,7 @@ export default function SalesTarget() {
                   <SelectValue placeholder="目标类型" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全部类型</SelectItem>
+                  <SelectItem value="all">全部类型</SelectItem>
                   <SelectItem value="LEAD_COUNT">线索数量</SelectItem>
                   <SelectItem value="OPPORTUNITY_COUNT">商机数量</SelectItem>
                   <SelectItem value="CONTRACT_AMOUNT">合同金额</SelectItem>
@@ -379,7 +379,7 @@ export default function SalesTarget() {
                   <SelectValue placeholder="目标周期" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全部周期</SelectItem>
+                  <SelectItem value="all">全部周期</SelectItem>
                   <SelectItem value="MONTHLY">月度</SelectItem>
                   <SelectItem value="QUARTERLY">季度</SelectItem>
                   <SelectItem value="YEARLY">年度</SelectItem>
@@ -395,7 +395,7 @@ export default function SalesTarget() {
                   <SelectValue placeholder="状态" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全部状态</SelectItem>
+                  <SelectItem value="all">全部状态</SelectItem>
                   <SelectItem value="ACTIVE">进行中</SelectItem>
                   <SelectItem value="COMPLETED">已完成</SelectItem>
                   <SelectItem value="CANCELLED">已取消</SelectItem>

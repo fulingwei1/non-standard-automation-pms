@@ -106,11 +106,7 @@ export default function EmployeeQualificationForm() {
       }
     } catch (error) {
       console.error("加载员工列表失败:", error);
-      // 使用模拟数据作为降级方案
-      setEmployees([
-        { id: 1, name: "张三", employee_code: "E001" },
-        { id: 2, name: "李四", employee_code: "E002" },
-      ]);
+      setEmployees([]);
     }
   };
 

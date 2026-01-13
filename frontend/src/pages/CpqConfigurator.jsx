@@ -361,7 +361,7 @@ export default function CpqConfigurator() {
                       <SelectValue placeholder="选择规则集" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">不使用规则集</SelectItem>
+                      <SelectItem value="none">不使用规则集</SelectItem>
                       {ruleSets.map((ruleSet) => (
                         <SelectItem
                           key={ruleSet.id}
@@ -386,7 +386,7 @@ export default function CpqConfigurator() {
                       <SelectValue placeholder="选择模板" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">不使用模板</SelectItem>
+                      <SelectItem value="none">不使用模板</SelectItem>
                       {templates.map((template) => (
                         <SelectItem
                           key={template.id}

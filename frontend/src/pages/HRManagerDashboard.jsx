@@ -2613,58 +2613,7 @@ function HrTransactionsTab() {
       setTransactions(response.data?.items || []);
     } catch (err) {
       console.error("加载人事事务失败:", err);
-      // 使用模拟数据
-      setTransactions([
-        {
-          id: 1,
-          employee_id: 1,
-          transaction_type: "onboarding",
-          transaction_date: "2025-01-08",
-          status: "completed",
-          employee: { name: "张三", employee_code: "EMP001" },
-          initial_position: "软件工程师",
-          initial_department: "技术部",
-        },
-        {
-          id: 2,
-          employee_id: 2,
-          transaction_type: "confirmation",
-          transaction_date: "2025-01-10",
-          status: "pending",
-          employee: { name: "李四", employee_code: "EMP002" },
-          confirmation_date: "2025-01-15",
-        },
-        {
-          id: 3,
-          employee_id: 3,
-          transaction_type: "salary_adjustment",
-          transaction_date: "2025-01-05",
-          status: "approved",
-          employee: { name: "王五", employee_code: "EMP003" },
-          from_salary: 15000,
-          to_salary: 18000,
-        },
-        {
-          id: 4,
-          employee_id: 4,
-          transaction_type: "resignation",
-          transaction_date: "2025-01-07",
-          status: "completed",
-          employee: { name: "赵六", employee_code: "EMP004" },
-          resignation_reason: "个人原因",
-          last_working_date: "2025-02-07",
-        },
-        {
-          id: 5,
-          employee_id: 5,
-          transaction_type: "promotion",
-          transaction_date: "2025-01-06",
-          status: "pending",
-          employee: { name: "钱七", employee_code: "EMP005" },
-          from_level: "P5",
-          to_level: "P6",
-        },
-      ]);
+      setTransactions([]);
     } finally {
       setLoading(false);
     }
@@ -2676,24 +2625,7 @@ function HrTransactionsTab() {
       setStatistics(response.data);
     } catch (err) {
       console.error("加载统计数据失败:", err);
-      // 使用模拟数据
-      setStatistics({
-        total: 15,
-        by_type: {
-          onboarding: 5,
-          resignation: 2,
-          confirmation: 4,
-          transfer: 1,
-          promotion: 2,
-          salary_adjustment: 1,
-        },
-        by_status: {
-          pending: 3,
-          approved: 4,
-          completed: 7,
-          rejected: 1,
-        },
-      });
+      setStatistics({});
     }
   };
 
@@ -3027,53 +2959,7 @@ function HrContractsTab() {
       setContracts(response.data?.items || []);
     } catch (err) {
       console.error("加载合同数据失败:", err);
-      // 使用模拟数据
-      setContracts([
-        {
-          id: 1,
-          employee_id: 1,
-          contract_no: "HT2024001",
-          contract_type: "fixed_term",
-          start_date: "2024-01-01",
-          end_date: "2027-01-01",
-          status: "active",
-          employee: { name: "张三", employee_code: "EMP001" },
-          base_salary: 15000,
-        },
-        {
-          id: 2,
-          employee_id: 2,
-          contract_no: "HT2024002",
-          contract_type: "fixed_term",
-          start_date: "2024-03-01",
-          end_date: "2025-03-01",
-          status: "active",
-          employee: { name: "李四", employee_code: "EMP002" },
-          base_salary: 12000,
-        },
-        {
-          id: 3,
-          employee_id: 3,
-          contract_no: "HT2023005",
-          contract_type: "indefinite",
-          start_date: "2023-06-01",
-          end_date: null,
-          status: "active",
-          employee: { name: "王五", employee_code: "EMP003" },
-          base_salary: 20000,
-        },
-        {
-          id: 4,
-          employee_id: 4,
-          contract_no: "HT2024010",
-          contract_type: "intern",
-          start_date: "2024-09-01",
-          end_date: "2025-03-01",
-          status: "active",
-          employee: { name: "赵六", employee_code: "EMP004" },
-          base_salary: 5000,
-        },
-      ]);
+      setContracts([]);
     } finally {
       setLoading(false);
     }
@@ -3085,31 +2971,7 @@ function HrContractsTab() {
       setReminders(response.data?.items || []);
     } catch (err) {
       console.error("加载提醒数据失败:", err);
-      // 使用模拟数据
-      setReminders([
-        {
-          id: 1,
-          contract_id: 2,
-          employee_id: 2,
-          reminder_type: "two_months",
-          reminder_date: "2025-01-01",
-          contract_end_date: "2025-03-01",
-          days_until_expiry: 51,
-          status: "pending",
-          employee: { name: "李四", employee_code: "EMP002" },
-        },
-        {
-          id: 2,
-          contract_id: 5,
-          employee_id: 5,
-          reminder_type: "one_month",
-          reminder_date: "2025-01-08",
-          contract_end_date: "2025-02-08",
-          days_until_expiry: 30,
-          status: "pending",
-          employee: { name: "钱七", employee_code: "EMP005" },
-        },
-      ]);
+      setReminders([]);
     }
   };
 

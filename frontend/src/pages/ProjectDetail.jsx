@@ -32,14 +32,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from "../components/ui";
-import ProjectLeadsPanel from "../components/project/ProjectLeadsPanel";
 import GateCheckPanel from "../components/project/GateCheckPanel";
-import ProjectTimeline from "../components/project/ProjectTimeline";
 import QuickActionPanel from "../components/project/QuickActionPanel";
 import ProjectBonusPanel from "../components/project/ProjectBonusPanel";
 import ProjectMeetingPanel from "../components/project/ProjectMeetingPanel";
 import ProjectIssuePanel from "../components/project/ProjectIssuePanel";
 import SolutionLibrary from "../components/project/SolutionLibrary";
+import StageGantt from "../components/project/StageGantt";
 import ProgressForecast from "./ProgressForecast";
 import DependencyCheck from "./DependencyCheck";
 import { projectWorkspaceApi } from "../services/api";
@@ -76,15 +75,9 @@ import {
 const tabs = [
   { id: "overview", name: "概览", icon: Activity },
   { id: "stages", name: "进度计划", icon: Clock },
-  { id: "progress-forecast", name: "进度预测", icon: TrendingUp },  // 新增
-  { id: "dependency-check", name: "依赖巡检", icon: Network },  // 新增
   { id: "machines", name: "设备列表", icon: Box },
-  { id: "team", name: "项目团队", icon: Users },
   { id: "workspace", name: "工作空间", icon: FolderOpen },
-  { id: "leads", name: "负责人", icon: UserCog },
   { id: "finance", name: "财务成本", icon: DollarSign },
-  { id: "docs", name: "文档中心", icon: FileText },
-  { id: "timeline", name: "时间线", icon: Calendar },
 ];
 
 // Animation variants
@@ -112,6 +105,7 @@ export default function ProjectDetail() {
   const [workspaceError, setWorkspaceError] = useState(null); // 工作空间加载错误
   const [demoMode, setDemoMode] = useState(false); // 演示模式
   const [activeTab, setActiveTab] = useState("overview");
+  const [stagesSubTab, setStagesSubTab] = useState("timeline"); // 进度计划子标签：timeline/forecast/dependency
 
   useEffect(() => {
     const fetchData = async () => {
@@ -285,140 +279,21 @@ export default function ProjectDetail() {
         health: "H1",
         progress_pct: 65.5,
         contract_amount: 1500000,
-        pm_name: "张经理",
+        pm_name: "",
       },
-      team: [
-        {
-          user_id: 1,
-          user_name: "张三",
-          role_code: "PM",
-          allocation_pct: 100,
-          start_date: "2025-01-01",
-          end_date: "2025-06-30",
-        },
-        {
-          user_id: 2,
-          user_name: "李四",
-          role_code: "ENGINEER",
-          allocation_pct: 80,
-          start_date: "2025-01-15",
-          end_date: "2025-05-30",
-        },
-        {
-          user_id: 3,
-          user_name: "王五",
-          role_code: "DESIGNER",
-          allocation_pct: 60,
-          start_date: "2025-02-01",
-          end_date: "2025-04-30",
-        },
-        {
-          user_id: 4,
-          user_name: "赵六",
-          role_code: "QA",
-          allocation_pct: 50,
-          start_date: "2025-03-01",
-          end_date: "2025-05-30",
-        },
-      ],
-      tasks: [
-        {
-          id: 1,
-          title: "机械结构设计",
-          status: "COMPLETED",
-          assignee_name: "王五",
-          progress: 100,
-        },
-        {
-          id: 2,
-          title: "电气控制系统开发",
-          status: "IN_PROGRESS",
-          assignee_name: "李四",
-          progress: 75,
-        },
-        {
-          id: 3,
-          title: "软件功能测试",
-          status: "IN_PROGRESS",
-          assignee_name: "赵六",
-          progress: 40,
-        },
-        {
-          id: 4,
-          title: "设备组装调试",
-          status: "PENDING",
-          assignee_name: "李四",
-          progress: 0,
-        },
-      ],
+      team: [],
+      tasks: [],
       meetings: {
-        meetings: [
-          {
-            id: 1,
-            meeting_name: "项目启动会",
-            meeting_date: "2025-01-10",
-            rhythm_level: "WEEKLY",
-            status: "COMPLETED",
-            organizer_name: "张三",
-            minutes:
-              "会议纪要内容：\n1. 项目目标确认\n2. 团队成员介绍\n3. 项目计划讨论\n4. 下一步行动项：\n   - 完成需求分析（负责人：李四，截止日期：2025-01-20）\n   - 准备技术方案（负责人：王五，截止日期：2025-01-25）",
-            has_minutes: true,
-          },
-          {
-            id: 2,
-            meeting_name: "周例会",
-            meeting_date: "2025-01-17",
-            rhythm_level: "WEEKLY",
-            status: "COMPLETED",
-            organizer_name: "张三",
-            minutes:
-              "本周进展：\n1. 机械设计已完成80%\n2. 电气控制方案已确定\n3. 下周计划：开始软件开发",
-            has_minutes: true,
-          },
-        ],
+        meetings: [],
         statistics: {
-          total_meetings: 8,
-          completed_meetings: 6,
-          completion_rate: 75,
-          total_action_items: 12,
+          total_meetings: 0,
+          completed_meetings: 0,
+          completion_rate: 0,
+          total_action_items: 0,
         },
       },
       issues: {
-        issues: [
-          {
-            id: 1,
-            issue_no: "ISS001",
-            title: "传感器精度不足",
-            status: "RESOLVED",
-            severity: "MEDIUM",
-            priority: "HIGH",
-            has_solution: true,
-            assignee_name: "李四",
-            report_date: "2025-01-15",
-          },
-          {
-            id: 2,
-            issue_no: "ISS002",
-            title: "机械结构需要优化",
-            status: "IN_PROGRESS",
-            severity: "LOW",
-            priority: "MEDIUM",
-            has_solution: false,
-            assignee_name: "王五",
-            report_date: "2025-01-20",
-          },
-          {
-            id: 3,
-            issue_no: "ISS003",
-            title: "软件兼容性问题",
-            status: "OPEN",
-            severity: "HIGH",
-            priority: "HIGH",
-            has_solution: false,
-            assignee_name: "赵六",
-            report_date: "2025-01-22",
-          },
-        ],
+        issues: [],
       },
       documents: [
         {
@@ -859,129 +734,66 @@ export default function ProjectDetail() {
 
           {/* Stages Tab */}
           {activeTab === "stages" && (
-            <Card>
-              <CardContent>
-                <div className="relative">
-                  {/* Timeline line */}
-                  <div className="absolute left-[19px] top-0 bottom-0 w-0.5 bg-white/10" />
+            <div className="space-y-6">
+              {/* 进度计划子标签导航 */}
+              <div className="flex gap-2 border-b border-white/10">
+                <button
+                  onClick={() => setStagesSubTab("timeline")}
+                  className={cn(
+                    "px-4 py-2 text-sm font-medium border-b-2 transition-colors",
+                    stagesSubTab === "timeline"
+                      ? "border-primary text-primary"
+                      : "border-transparent text-slate-400 hover:text-white"
+                  )}
+                >
+                  <Clock className="inline-block w-4 h-4 mr-2" />
+                  阶段时间线
+                </button>
+                <button
+                  onClick={() => setStagesSubTab("forecast")}
+                  className={cn(
+                    "px-4 py-2 text-sm font-medium border-b-2 transition-colors",
+                    stagesSubTab === "forecast"
+                      ? "border-primary text-primary"
+                      : "border-transparent text-slate-400 hover:text-white"
+                  )}
+                >
+                  <TrendingUp className="inline-block w-4 h-4 mr-2" />
+                  进度预测
+                </button>
+                <button
+                  onClick={() => setStagesSubTab("dependency")}
+                  className={cn(
+                    "px-4 py-2 text-sm font-medium border-b-2 transition-colors",
+                    stagesSubTab === "dependency"
+                      ? "border-primary text-primary"
+                      : "border-transparent text-slate-400 hover:text-white"
+                  )}
+                >
+                  <Network className="inline-block w-4 h-4 mr-2" />
+                  依赖巡检
+                </button>
+              </div>
 
-                  <div className="space-y-4">
-                    {stages.map((stage, idx) => (
-                      <div key={stage.id} className="relative flex gap-4">
-                        {/* Dot */}
-                        <div
-                          className={cn(
-                            "relative z-10 w-10 h-10 rounded-full flex items-center justify-center",
-                            stage.status === "COMPLETED"
-                              ? "bg-primary"
-                              : stage.status === "IN_PROGRESS"
-                                ? "bg-primary/30 border-2 border-primary"
-                                : "bg-white/5 border border-white/10",
-                          )}
-                        >
-                          {stage.status === "COMPLETED" ? (
-                            <CheckCircle2 className="h-5 w-5 text-white" />
-                          ) : (
-                            <span className="text-sm font-medium">
-                              {stage.stage_code}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Content */}
-                        <div
-                          className={cn(
-                            "flex-1 p-4 rounded-xl",
-                            "bg-white/[0.03] border border-white/5",
-                            stage.status === "IN_PROGRESS" &&
-                              "border-primary/30",
-                          )}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-semibold text-white">
-                              {stage.stage_name}
-                            </h4>
-                            <span className="text-xs text-slate-500">
-                              {stage.planned_start_date &&
-                                formatDate(stage.planned_start_date)}{" "}
-                              ~{" "}
-                              {stage.planned_end_date &&
-                                formatDate(stage.planned_end_date)}
-                            </span>
-                          </div>
-                          {stage.description && (
-                            <p className="text-sm text-slate-400 mb-3">
-                              {stage.description}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-4">
-                            <div className="flex-1">
-                              <Progress
-                                value={stage.progress_pct || 0}
-                                size="sm"
-                              />
-                            </div>
-                            <span className="text-sm font-medium text-white">
-                              {stage.progress_pct || 0}%
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              {/* 新增：进度预测和依赖检查入口 */}
-              <div className="space-y-4 mb-6 mt-6">
+              {/* 阶段甘特图 */}
+              {stagesSubTab === "timeline" && (
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className="font-semibold text-slate-900 mb-1">
-                          智能化进度管理
-                        </h3>
-                        <p className="text-sm text-slate-600">
-                          使用AI预测和依赖巡检来优化项目进度
-                        </p>
-                      </div>
-                      <Badge variant="secondary" className="bg-blue-50 text-blue-700">
-                        新功能
-                      </Badge>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Button
-                        variant="outline"
-                        className="h-32 flex flex-col items-center justify-center gap-3"
-                        onClick={() => navigate(`/projects/${id}/progress-forecast`)}
-                      >
-                        <TrendingUp className="w-8 h-8 text-blue-500" />
-                        <div>
-                          <div className="font-medium text-slate-900">进度预测</div>
-                          <div className="text-sm text-slate-600">
-                            AI预测项目完成时间
-                          </div>
-                        </div>
-                      </Button>
-                      
-                      <Button
-                        variant="outline"
-                        className="h-32 flex flex-col items-center justify-center gap-3"
-                        onClick={() => navigate(`/projects/${id}/dependency-check`)}
-                      >
-                        <Network className="w-8 h-8 text-purple-500" />
-                        <div>
-                          <div className="font-medium text-slate-900">依赖巡检</div>
-                          <div className="text-sm text-slate-600">
-                            检查循环依赖和时序冲突
-                          </div>
-                        </div>
-                      </Button>
-                    </div>
+                    <StageGantt stages={stages} />
                   </CardContent>
                 </Card>
-              </div>
-              </CardContent>
-            </Card>
+              )}
+
+              {/* 进度预测 */}
+              {stagesSubTab === "forecast" && (
+                <ProgressForecast projectId={id} />
+              )}
+
+              {/* 依赖巡检 */}
+              {stagesSubTab === "dependency" && (
+                <DependencyCheck projectId={id} />
+              )}
+            </div>
           )}
 
           {/* Machines Tab */}
@@ -1413,138 +1225,6 @@ export default function ProjectDetail() {
               </div>
             ))}
 
-          {activeTab === "team" && (
-            <div className="space-y-6">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold">项目团队</h3>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        // TODO: 打开添加成员对话框
-                        console.log("Add member");
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      添加成员
-                    </Button>
-                  </div>
-                  {members.length > 0 ? (
-                    <div className="space-y-4">
-                      {members.map((member) => (
-                        <div
-                          key={member.id}
-                          className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors border border-white/5"
-                        >
-                          <div className="flex items-center gap-4 flex-1">
-                            <UserAvatar
-                              user={{
-                                name:
-                                  member.real_name ||
-                                  member.name ||
-                                  member.member_name,
-                              }}
-                              size="lg"
-                            />
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <p className="font-medium text-white">
-                                  {member.real_name ||
-                                    member.name ||
-                                    member.member_name}
-                                </p>
-                                <Badge variant="outline">
-                                  {member.role_code ||
-                                    member.role ||
-                                    "团队成员"}
-                                </Badge>
-                                {member.commitment_level && (
-                                  <Badge variant="secondary">
-                                    {member.commitment_level}
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-4 text-sm text-slate-400">
-                                <span>
-                                  投入: {member.allocation_pct || 100}%
-                                </span>
-                                {member.start_date && member.end_date && (
-                                  <span>
-                                    {formatDate(member.start_date)} ~{" "}
-                                    {formatDate(member.end_date)}
-                                  </span>
-                                )}
-                                {member.reporting_to_pm !== false && (
-                                  <Badge variant="outline" className="text-xs">
-                                    向PM汇报
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={async () => {
-                                // 检查冲突
-                                try {
-                                  const response =
-                                    await memberApi.checkConflicts(
-                                      id,
-                                      member.user_id,
-                                      {
-                                        start_date: member.start_date,
-                                        end_date: member.end_date,
-                                      },
-                                    );
-                                  if (response.data.has_conflict) {
-                                    alert(
-                                      `发现时间冲突：${response.data.conflict_count} 个冲突项目`,
-                                    );
-                                  } else {
-                                    alert("未发现时间冲突");
-                                  }
-                                } catch (err) {
-                                  console.error(
-                                    "Failed to check conflicts:",
-                                    err,
-                                  );
-                                }
-                              }}
-                            >
-                              <AlertTriangle className="h-4 w-4" />
-                              检查冲突
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                navigate(`/projects/${id}/workspace`)
-                              }
-                            >
-                              查看详情
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 text-slate-500">
-                      暂无团队成员
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Leads Tab - 项目负责人配置 */}
-          {activeTab === "leads" && (
-            <ProjectLeadsPanel projectId={parseInt(id)} />
-          )}
-
           {/* Finance Tab */}
           {activeTab === "finance" && (
             <Card>
@@ -1656,63 +1336,6 @@ export default function ProjectDetail() {
                 })()}
               </CardContent>
             </Card>
-          )}
-
-          {/* Documents Tab */}
-          {activeTab === "docs" && (
-            <Card>
-              <CardContent>
-                {documents.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {documents.map((doc) => (
-                      <div
-                        key={doc.id}
-                        className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors cursor-pointer"
-                      >
-                        <div className="p-2 rounded-lg bg-blue-500/20">
-                          <FileText className="h-5 w-5 text-blue-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-white truncate">
-                            {doc.doc_name ||
-                              doc.document_name ||
-                              doc.file_name ||
-                              "未命名文档"}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {doc.doc_type || doc.document_type || "未知类型"}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-slate-500">
-                    暂无文档
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Sprint 3.3: Timeline Tab */}
-          {activeTab === "timeline" && (
-            <ProjectTimeline
-              projectId={parseInt(id)}
-              statusLogs={statusLogs}
-              milestones={milestones}
-              documents={documents}
-            />
-          )}
-
-          {/* Progress Forecast Tab - 新增 */}
-          {activeTab === "progress-forecast" && (
-            <ProgressForecast projectId={id} />
-          )}
-
-          {/* Dependency Check Tab - 新增 */}
-          {activeTab === "dependency-check" && (
-            <DependencyCheck projectId={id} />
           )}
 
         </motion.div>

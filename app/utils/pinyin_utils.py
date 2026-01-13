@@ -127,16 +127,3 @@ def batch_generate_pinyin_for_employees(db: Session) -> int:
     return updated_count
 
 
-# 测试函数
-if __name__ == "__main__":
-    # 测试拼音转换
-    test_names = ["姚洪", "张三", "李四", "王五"]
-    for name in test_names:
-        pinyin = name_to_pinyin(name)
-        initials = name_to_pinyin_initials(name)
-        print(f"{name} -> {pinyin} (首字母: {initials})")
-
-    # 测试密码生成
-    print("\n密码生成测试:")
-    print(f"yaohong + EMP0001 -> {generate_initial_password('yaohong', 'EMP0001')}")
-    print(f"zhangsan + EMP0123 -> {generate_initial_password('zhangsan', 'EMP0123')}")

@@ -122,40 +122,65 @@ const defaultNavGroups = [
         icon: "LayoutDashboard",
       },
       { name: "运营大屏", path: "/operation", icon: "BarChart3" },
+      {
+        name: "工作中心",
+        path: "/work-center",
+        icon: "LayoutDashboard",
+        badge: null,
+      },
+      { name: "预警中心", path: "/alerts", icon: "AlertTriangle", badge: "3" },
+      { name: "问题管理", path: "/issues", icon: "AlertCircle" },
+      { name: "通知中心", path: "/notifications", icon: "Bell", badge: "5" },
+      {
+        name: "审批中心",
+        path: "/approvals",
+        icon: "ClipboardCheck",
+        badge: "2",
+      },
     ],
   },
   {
     label: "项目管理",
     items: [
+      { name: "PMO 驾驶舱", path: "/pmo/dashboard", icon: "LayoutDashboard" },
       { name: "项目看板", path: "/board", icon: "Kanban" },
-      { name: "项目列表", path: "/projects", icon: "Briefcase" },
       { name: "排期看板", path: "/schedule", icon: "Calendar" },
       { name: "任务中心", path: "/tasks", icon: "ListTodo" },
-    ],
-  },
-  {
-    label: "PMO 项目管理部",
-    items: [
-      { name: "PMO 驾驶舱", path: "/pmo/dashboard", icon: "LayoutDashboard" },
       { name: "立项管理", path: "/pmo/initiations", icon: "FileText" },
-      { name: "阶段管理", path: "/pmo/phases", icon: "Target" },
-      { name: "风险管理", path: "/pmo/risks", icon: "AlertTriangle" },
-      { name: "风险预警墙", path: "/pmo/risk-wall", icon: "AlertTriangle" },
+      { name: "风险预警", path: "/pmo/risk-wall", icon: "AlertTriangle" },
       { name: "项目结项", path: "/pmo/closure", icon: "CheckCircle2" },
       { name: "项目复盘", path: "/projects/reviews", icon: "FileText" },
       {
-        name: "经验教训库",
-        path: "/projects/lessons-learned",
-        icon: "BookOpen",
-      },
-      {
-        name: "最佳实践推荐",
+        name: "最佳实践",
         path: "/projects/best-practices/recommend",
         icon: "Sparkles",
       },
       { name: "资源总览", path: "/pmo/resource-overview", icon: "Users" },
-      { name: "会议管理", path: "/pmo/meetings", icon: "Calendar" },
       { name: "项目周报", path: "/pmo/weekly-report", icon: "BarChart3" },
+    ],
+  },
+  {
+    label: "采购管理",
+    items: [
+      { name: "采购订单", path: "/purchases", icon: "ShoppingCart" },
+      {
+        name: "物料成本",
+        path: "/sales/purchase-material-costs",
+        icon: "DollarSign",
+      },
+      { name: "缺料管理", path: "/shortage", icon: "Package" },
+      { name: "齐套管理", path: "/material-readiness", icon: "Package" },
+    ],
+  },
+  {
+    label: "质量验收",
+    items: [
+      { name: "验收管理", path: "/acceptance", icon: "ClipboardList" },
+      {
+        name: "安装调试",
+        path: "/installation-dispatch",
+        icon: "Settings",
+      },
     ],
   },
   {
@@ -172,51 +197,15 @@ const defaultNavGroups = [
     ],
   },
   {
-    label: "运营管理",
+    label: "财务管理",
     items: [
-      { name: "采购订单", path: "/purchases", icon: "ShoppingCart" },
-      {
-        name: "物料成本管理",
-        path: "/sales/purchase-material-costs",
-        icon: "DollarSign",
-      },
-      { name: "缺料管理", path: "/shortage", icon: "Package" },
-      { name: "齐套检查", path: "/kit-check", icon: "CheckCircle2" },
-      { name: "齐套分析", path: "/material-analysis", icon: "Package" },
-      { name: "预警中心", path: "/alerts", icon: "AlertTriangle", badge: "3" },
-      { name: "问题管理", path: "/issues", icon: "AlertCircle" },
-      { name: "问题模板管理", path: "/issue-templates", icon: "FileText" },
+      { name: "财务成本", path: "/financial-costs", icon: "DollarSign" },
     ],
-  },
-  {
-    label: "质量验收",
-    items: [
-      { name: "验收管理", path: "/acceptance", icon: "ClipboardList" },
-      {
-        name: "安装调试派工",
-        path: "/installation-dispatch",
-        icon: "Settings",
-      },
-      {
-        name: "审批中心",
-        path: "/approvals",
-        icon: "ClipboardCheck",
-        badge: "2",
-      },
-      { name: "问题管理", path: "/issues", icon: "AlertCircle" },
-      { name: "问题模板管理", path: "/issue-templates", icon: "FileText" },
-    ],
+    roles: ["finance", "accounting", "财务", "会计", "admin", "super_admin"], // 财务部可见
   },
   {
     label: "个人中心",
     items: [
-      {
-        name: "工作中心",
-        path: "/work-center",
-        icon: "LayoutDashboard",
-        badge: null,
-      },
-      { name: "通知中心", path: "/notifications", icon: "Bell", badge: "5" },
       { name: "工时填报", path: "/timesheet", icon: "Clock" },
       { name: "工作日志", path: "/work-log", icon: "ClipboardList" },
       { name: "知识管理", path: "/knowledge-base", icon: "BookOpen" },
@@ -224,27 +213,15 @@ const defaultNavGroups = [
     ],
   },
   {
-    label: "财务管理",
-    items: [
-      { name: "财务成本上传", path: "/financial-costs", icon: "DollarSign" },
-    ],
-    roles: ["finance", "accounting", "财务", "会计", "admin", "super_admin"], // 财务部可见
-  },
-  {
     label: "系统管理",
     items: [
       { name: "用户管理", path: "/user-management", icon: "Users" },
       { name: "角色管理", path: "/role-management", icon: "Shield" },
       { name: "权限管理", path: "/permission-management", icon: "Key" },
-      { name: "项目角色类型", path: "/project-role-types", icon: "UserCog" },
+      { name: "项目角色", path: "/project-role-types", icon: "UserCog" },
+      { name: "问题模板", path: "/issue-templates", icon: "FileText" },
       { name: "调度器监控", path: "/scheduler-monitoring", icon: "Activity" },
-      { name: "定时服务配置", path: "/scheduler-config", icon: "Cog" },
-    ],
-    roles: ["admin", "super_admin"], // 仅管理员可见
-  },
-  {
-    label: "主数据管理",
-    items: [
+      { name: "定时配置", path: "/scheduler-config", icon: "Cog" },
       { name: "客户管理", path: "/customer-management", icon: "Building2" },
       { name: "供应商管理", path: "/supplier-management-data", icon: "Truck" },
       { name: "部门管理", path: "/department-management", icon: "Building2" },
@@ -269,7 +246,6 @@ const engineerNavGroups = [
     items: [
       { name: "项目进度", path: "/sales-projects", icon: "Briefcase" },
       { name: "项目看板", path: "/board", icon: "Kanban" },
-      { name: "项目列表", path: "/projects", icon: "Briefcase" },
     ],
   },
   {
@@ -282,13 +258,6 @@ const engineerNavGroups = [
   {
     label: "个人中心",
     items: [
-      {
-        name: "工作中心",
-        path: "/work-center",
-        icon: "LayoutDashboard",
-        badge: null,
-      },
-      { name: "通知中心", path: "/notifications", icon: "Bell", badge: "5" },
       { name: "我的绩效", path: "/personal/my-performance", icon: "Award" },
       { name: "我的奖金", path: "/personal/my-bonus", icon: "DollarSign" },
       { name: "月度总结", path: "/personal/monthly-summary", icon: "FileText" },
@@ -385,7 +354,7 @@ const buyerNavGroups = [
     items: [
       { name: "采购订单", path: "/purchases", icon: "ShoppingCart" },
       {
-        name: "物料成本管理",
+        name: "物料成本",
         path: "/sales/purchase-material-costs",
         icon: "DollarSign",
       },
@@ -433,7 +402,6 @@ const generalManagerNavGroups = [
     label: "项目管理",
     items: [
       { name: "项目看板", path: "/board", icon: "Kanban" },
-      { name: "项目列表", path: "/projects", icon: "Briefcase" },
       { name: "排期看板", path: "/schedule", icon: "Calendar" },
     ],
   },
@@ -451,7 +419,7 @@ const generalManagerNavGroups = [
     ],
   },
   {
-    label: "运营管理",
+    label: "采购管理",
     items: [
       { name: "采购订单", path: "/purchases", icon: "ShoppingCart" },
       { name: "缺料管理", path: "/shortage", icon: "Package" },
@@ -498,7 +466,6 @@ const chairmanNavGroups = [
     label: "全面监控",
     items: [
       { name: "项目看板", path: "/board", icon: "Kanban" },
-      { name: "项目列表", path: "/projects", icon: "Briefcase" },
       { name: "运营大屏", path: "/operation", icon: "BarChart3" },
       {
         name: "销售业绩",
@@ -598,7 +565,7 @@ const productionManagerNavGroups = [
     ],
   },
   {
-    label: "运营管理",
+    label: "采购管理",
     items: [
       { name: "采购订单", path: "/purchases", icon: "ShoppingCart" },
       { name: "缺料管理", path: "/shortage", icon: "Package" },
@@ -644,7 +611,6 @@ const assemblerNavGroups = [
     items: [
       { name: "项目进度", path: "/sales-projects", icon: "Briefcase" },
       { name: "项目看板", path: "/board", icon: "Kanban" },
-      { name: "项目列表", path: "/projects", icon: "Briefcase" },
     ],
   },
   {
@@ -701,7 +667,6 @@ const salesNavGroups = [
     items: [
       { name: "项目进度", path: "/sales-projects", icon: "Briefcase" },
       { name: "项目看板", path: "/board", icon: "Kanban" },
-      { name: "项目列表", path: "/projects", icon: "Briefcase" },
     ],
   },
   {
@@ -809,7 +774,7 @@ const procurementNavGroups = [
     label: "成本控制",
     items: [
       {
-        name: "物料成本管理",
+        name: "物料成本",
         path: "/sales/purchase-material-costs",
         icon: "DollarSign",
       },
@@ -1093,7 +1058,7 @@ function getNavGroupsForRole(role, isSuperuser = false) {
               icon: "LayoutDashboard",
             },
             {
-              name: "财务成本上传",
+              name: "财务成本",
               path: "/financial-costs",
               icon: "DollarSign",
             },
@@ -1175,7 +1140,7 @@ function getNavGroupsForRole(role, isSuperuser = false) {
           ],
         },
         {
-          label: "运营管理",
+          label: "采购管理",
           items: [
             { name: "采购订单", path: "/purchases", icon: "ShoppingCart" },
             { name: "齐套分析", path: "/material-analysis", icon: "Package" },
@@ -1315,7 +1280,6 @@ function getNavGroupsForRole(role, isSuperuser = false) {
           items: [
             { name: "项目进度", path: "/sales-projects", icon: "Briefcase" },
             { name: "项目看板", path: "/board", icon: "Kanban" },
-            { name: "项目列表", path: "/projects", icon: "Briefcase" },
           ],
         },
         {

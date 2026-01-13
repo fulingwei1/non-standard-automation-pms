@@ -238,7 +238,7 @@ export default function HourlyRateManagement() {
                   <SelectValue placeholder="全部" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全部</SelectItem>
+                  <SelectItem value="all">全部</SelectItem>
                   <SelectItem value="DEFAULT">默认</SelectItem>
                   <SelectItem value="USER">用户</SelectItem>
                   <SelectItem value="ROLE">角色</SelectItem>

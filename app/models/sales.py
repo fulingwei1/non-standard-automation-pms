@@ -43,6 +43,11 @@ class Lead(Base, TimestampMixin):
     status = Column(String(20), default=LeadStatusEnum.NEW, comment="状态")
     next_action_at = Column(DateTime, comment="下次行动时间")
 
+    # 优势产品相关字段
+    selected_advantage_products = Column(Text, comment="选择的优势产品ID列表(JSON Array)")
+    product_match_type = Column(String(20), default="UNKNOWN", comment="产品匹配类型: ADVANTAGE/NEW/UNKNOWN")
+    is_advantage_product = Column(Boolean, default=False, comment="是否优势产品")
+
     # 技术评估扩展字段
     requirement_detail_id = Column(Integer, ForeignKey("lead_requirement_details.id"), comment="需求详情ID")
     assessment_id = Column(Integer, ForeignKey("technical_assessments.id"), comment="技术评估ID")
@@ -61,6 +66,8 @@ class Lead(Base, TimestampMixin):
     __table_args__ = (
         Index('idx_lead_assessment', 'assessment_id'),
         Index('idx_lead_assignee', 'assignee_id'),
+        Index('idx_leads_advantage_product', 'is_advantage_product'),
+        Index('idx_leads_product_match_type', 'product_match_type'),
     )
 
     def __repr__(self):

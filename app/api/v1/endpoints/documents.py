@@ -33,7 +33,7 @@ def read_documents(
     doc_type: Optional[str] = Query(None, description="文档类型筛选"),
     doc_category: Optional[str] = Query(None, description="文档分类筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
-    current_user: User = Depends(security.require_permission("document:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     获取文档记录列表（支持分页、筛选）

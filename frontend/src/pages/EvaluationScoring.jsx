@@ -36,70 +36,26 @@ const EvaluationScoring = () => {
   // 任务数据（从 API 获取或使用传递过来的数据）
   const [task, setTask] = useState(
     taskFromState || {
-      id: 1,
-      employeeId: 101,
-      employeeName: "张三",
-      department: "技术开发部",
-      position: "高级工程师",
-      period: "2025-01",
-      submitDate: "2025-01-28",
-      evaluationType: "dept",
+      id: null,
+      employeeId: null,
+      employeeName: "",
+      department: "",
+      position: "",
+      period: "",
+      submitDate: "",
+      evaluationType: "",
       projectName: null,
-      weight: 50,
+      weight: 0,
       status: "PENDING",
-      deadline: "2025-02-05",
+      deadline: "",
       workSummary: {
-        workContent: `本月主要负责项目A的核心功能开发工作，具体完成内容如下：
-
-1. 用户认证模块开发
-   - 完成JWT认证机制实现
-   - 支持多种登录方式（账号密码、手机验证码、第三方登录）
-   - 实现权限验证中间件
-
-2. 权限管理系统
-   - 设计并实现RBAC权限模型
-   - 完成角色管理、权限分配功能
-   - 实现细粒度的数据权限控制
-
-3. 性能优化
-   - 优化数据库查询，减少N+1问题
-   - 引入Redis缓存机制
-   - 前端组件懒加载优化
-
-本月共计完成15个功能点，提交代码3500+行，代码审查通过率98%。`,
-
-        selfEvaluation: `本月工作完成度较高，所有计划任务均按时交付。在技术攻关方面，成功解决了权限系统的复杂场景问题。
-
-优点：
-- 技术能力强，能够独立完成复杂功能开发
-- 代码质量高，注重代码规范和可维护性
-- 主动学习新技术，引入Redis缓存提升性能
-
-不足：
-- 在跨模块协作时，有时沟通不够及时
-- 文档编写有待加强
-
-总体自评：90分`,
-
-        highlights: `成功优化了系统性能，用户登录响应时间从800ms降低到150ms，提升了40%的性能。
-
-引入的RBAC权限模型设计合理，获得了产品经理和技术团队的一致好评，为后续扩展打下良好基础。`,
-
-        problems: `在与前端团队协作时，由于API文档更新不及时，导致前端开发进度受到一定影响。后续已改进，建立了API文档自动生成机制。
-
-另外，在性能优化过程中，遇到Redis集群配置问题，花费了较多时间排查，需要加强运维知识学习。`,
-
-        nextMonthPlan: `1. 完成支付模块的开发和测试
-2. 优化数据库索引，进一步提升查询性能
-3. 学习微服务架构，为系统拆分做准备
-4. 加强与前端团队的沟通协作
-5. 完善技术文档，建立知识库`,
+        workContent: "",
+        selfEvaluation: "",
+        highlights: "",
+        problems: "",
+        nextMonthPlan: "",
       },
-      historicalScores: [
-        { period: "2024-12", score: 92, level: "A" },
-        { period: "2024-11", score: 88, level: "B" },
-        { period: "2024-10", score: 90, level: "A" },
-      ],
+      historicalScores: [],
     },
   );
 

@@ -135,116 +135,7 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
       setRoleOverview(response.data || []);
     } catch (error) {
       console.error("加载项目角色概览失败:", error);
-      // Mock data for demo
-      setRoleOverview([
-        {
-          role_type: {
-            id: 1,
-            role_code: "PM",
-            role_name: "项目经理",
-            role_category: "MANAGEMENT",
-            can_have_team: true,
-          },
-          config: { is_enabled: true, is_required: true },
-          lead: {
-            id: 1,
-            user_id: 1,
-            user: { id: 1, real_name: "张三", username: "zhangsan" },
-            allocation_pct: 100,
-            team_members: [],
-          },
-          is_enabled: true,
-          is_required: true,
-          has_lead: true,
-        },
-        {
-          role_type: {
-            id: 2,
-            role_code: "TECH_LEAD",
-            role_name: "技术负责人",
-            role_category: "TECHNICAL",
-            can_have_team: true,
-          },
-          config: { is_enabled: true, is_required: false },
-          lead: {
-            id: 2,
-            user_id: 2,
-            user: { id: 2, real_name: "李四", username: "lisi" },
-            allocation_pct: 80,
-            team_members: [
-              { id: 3, user: { real_name: "王五" }, allocation_pct: 100 },
-            ],
-          },
-          is_enabled: true,
-          is_required: false,
-          has_lead: true,
-        },
-        {
-          role_type: {
-            id: 3,
-            role_code: "ME_LEAD",
-            role_name: "机械负责人",
-            role_category: "TECHNICAL",
-            can_have_team: true,
-          },
-          config: { is_enabled: true, is_required: false },
-          lead: null,
-          is_enabled: true,
-          is_required: false,
-          has_lead: false,
-        },
-        {
-          role_type: {
-            id: 6,
-            role_code: "PROC_LEAD",
-            role_name: "采购负责人",
-            role_category: "SUPPORT",
-            can_have_team: false,
-          },
-          config: { is_enabled: true, is_required: false },
-          lead: null,
-          is_enabled: true,
-          is_required: false,
-          has_lead: false,
-        },
-        {
-          role_type: {
-            id: 7,
-            role_code: "CS_LEAD",
-            role_name: "客服负责人",
-            role_category: "SUPPORT",
-            can_have_team: true,
-          },
-          config: { is_enabled: true, is_required: false },
-          lead: {
-            id: 4,
-            user_id: 3,
-            user: { id: 3, real_name: "赵六", username: "zhaoliu" },
-            allocation_pct: 50,
-            team_members: [
-              { id: 5, user: { real_name: "小陈" }, allocation_pct: 100 },
-              { id: 6, user: { real_name: "小刘" }, allocation_pct: 100 },
-            ],
-          },
-          is_enabled: true,
-          is_required: false,
-          has_lead: true,
-        },
-        {
-          role_type: {
-            id: 8,
-            role_code: "QA_LEAD",
-            role_name: "质量负责人",
-            role_category: "SUPPORT",
-            can_have_team: false,
-          },
-          config: { is_enabled: false, is_required: false },
-          lead: null,
-          is_enabled: false,
-          is_required: false,
-          has_lead: false,
-        },
-      ]);
+      setRoleOverview([]);
     } finally {
       setLoading(false);
     }
@@ -261,25 +152,7 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
       setUsers(response.data?.items || []);
     } catch (error) {
       console.error("加载用户列表失败:", error);
-      // Mock users
-      setUsers([
-        {
-          id: 1,
-          real_name: "张三",
-          username: "zhangsan",
-          department: "项目部",
-        },
-        { id: 2, real_name: "李四", username: "lisi", department: "技术部" },
-        { id: 3, real_name: "王五", username: "wangwu", department: "技术部" },
-        { id: 4, real_name: "赵六", username: "zhaoliu", department: "客服部" },
-        {
-          id: 5,
-          real_name: "小陈",
-          username: "xiaochen",
-          department: "客服部",
-        },
-        { id: 6, real_name: "小刘", username: "xiaoliu", department: "客服部" },
-      ]);
+      setUsers([]);
     }
   };
 

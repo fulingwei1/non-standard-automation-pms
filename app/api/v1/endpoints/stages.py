@@ -31,7 +31,6 @@ def read_stages(
     limit: int = 100,
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
-    current_user: User = Depends(security.require_permission("stage:read")),
 ) -> Any:
     """
     获取项目阶段列表
@@ -53,7 +52,6 @@ def get_project_stages(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.require_permission("stage:read")),
 ) -> Any:
     """
     获取项目的阶段列表

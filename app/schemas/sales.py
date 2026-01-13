@@ -29,6 +29,10 @@ class LeadCreate(BaseModel):
     owner_id: Optional[int] = Field(default=None, description="负责人ID")
     status: Optional[str] = Field(default="NEW", description="状态")
     next_action_at: Optional[datetime] = Field(default=None, description="下次行动时间")
+    selected_advantage_products: Optional[List[int]] = Field(
+        default=None,
+        description="选择的优势产品ID列表"
+    )
 
 
 class LeadUpdate(BaseModel):
@@ -43,6 +47,7 @@ class LeadUpdate(BaseModel):
     owner_id: Optional[int] = None
     status: Optional[str] = None
     next_action_at: Optional[datetime] = None
+    selected_advantage_products: Optional[List[int]] = None
 
 
 class LeadResponse(TimestampSchema):
@@ -60,6 +65,12 @@ class LeadResponse(TimestampSchema):
     status: str = "NEW"
     next_action_at: Optional[datetime] = None
     owner_name: Optional[str] = None
+    # 优势产品相关字段
+    selected_advantage_products: Optional[str] = None
+    product_match_type: Optional[str] = None
+    is_advantage_product: bool = False
+    # 扩展字段（从advantage_products表join获取）
+    advantage_products: Optional[List[Dict[str, Any]]] = None
 
 
 class LeadFollowUpCreate(BaseModel):

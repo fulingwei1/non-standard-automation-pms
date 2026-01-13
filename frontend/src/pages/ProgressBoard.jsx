@@ -47,28 +47,29 @@ export default function ProgressBoard() {
   const fetchProject = async () => {
     try {
       const res = await projectApi.get(id);
-      setProject(res.data || res);
+      setProject(res.data?.data || res.data || res);
     } catch (error) {
       console.error("Failed to fetch project:", error);
     }
   };
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       setErrorMessage("");
       const res = await progressApi.reports.getBoard(id);
-      setBoardData(res.data || res || {});
+      setBoardData(res.data?.data || res.data || res || {});
       const [forecastRes, dependencyRes] = await Promise.all([
         progressApi.analytics
           .getForecast(id)
-          .then((response) => response.data || response)
+          .then((response) => response.data?.data || response.data || response)
           .catch((err) => {
             console.warn("Failed to fetch forecast data:", err);
             return null;
           }),
         progressApi.analytics
           .checkDependencies(id)
-          .then((response) => response.data || response)
+          .then((response) => response.data?.data || response.data || response)
           .catch((err) => {
             console.warn("Failed to fetch dependency data:", err);
             return null;
