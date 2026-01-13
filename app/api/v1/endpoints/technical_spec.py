@@ -13,6 +13,7 @@ from app.models.technical_spec import TechnicalSpecRequirement, SpecMatchRecord
 from app.models.user import User
 from app.models.project import Project
 from app.models.material import BomItem
+from app.models.purchase import PurchaseOrderItem
 from app.schemas.technical_spec import (
     TechnicalSpecRequirementCreate,
     TechnicalSpecRequirementUpdate,
@@ -343,6 +344,17 @@ def check_spec_match(
     )
 
 
+def _get_match_target_name(db: Session, match_type: str, match_target_id: int) -> Optional[str]:
+    """根据匹配类型获取目标名称"""
+    if match_type == 'BOM':
+        bom_item = db.query(BomItem).filter(BomItem.id == match_target_id).first()
+        return bom_item.material_name if bom_item else None
+    elif match_type == 'PURCHASE_ORDER':
+        po_item = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.id == match_target_id).first()
+        return po_item.material_name if po_item else None
+    return None
+
+
 @router.get("/match/records", response_model=SpecMatchRecordListResponse)
 def list_match_records(
     db: Session = Depends(deps.get_db),
@@ -395,7 +407,7 @@ def list_match_records(
                 created_at=record.spec_requirement.created_at,
                 updated_at=record.spec_requirement.updated_at,
             ) if record.spec_requirement else None,
-            match_target_name=None,  # TODO: 根据match_type获取目标名称
+            match_target_name=_get_match_target_name(db, record.match_type, record.match_target_id),
             created_at=record.created_at,
             updated_at=record.updated_at,
         ))
