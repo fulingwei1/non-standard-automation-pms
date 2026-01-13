@@ -1074,8 +1074,38 @@ def apply_template(
     
     # 如果模板有成本模板，创建成本明细
     if template.cost_template:
-        # TODO: 解析cost_template JSON并创建PresaleSolutionCost记录
-        pass
+        # 解析cost_template JSON - 支持列表格式或包含items键的字典格式
+        cost_items = template.cost_template
+        if isinstance(cost_items, dict):
+            cost_items = cost_items.get('items', [])
+
+        if isinstance(cost_items, list):
+            for idx, item in enumerate(cost_items):
+                if not isinstance(item, dict):
+                    continue
+
+                # 计算金额（如果未提供）
+                quantity = Decimal(str(item.get('quantity', 0) or 0))
+                unit_price = Decimal(str(item.get('unit_price', 0) or 0))
+                amount = item.get('amount')
+                if amount is None:
+                    amount = quantity * unit_price
+                else:
+                    amount = Decimal(str(amount))
+
+                cost_record = PresaleSolutionCost(
+                    solution_id=solution.id,
+                    category=item.get('category', '其他'),
+                    item_name=item.get('item_name', '未命名项目'),
+                    specification=item.get('specification'),
+                    unit=item.get('unit'),
+                    quantity=quantity if quantity else None,
+                    unit_price=unit_price if unit_price else None,
+                    amount=amount if amount else None,
+                    remark=item.get('remark'),
+                    sort_order=item.get('sort_order', idx)
+                )
+                db.add(cost_record)
     
     # 更新模板使用次数
     template.use_count = (template.use_count or 0) + 1
