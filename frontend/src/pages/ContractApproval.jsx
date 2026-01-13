@@ -3,12 +3,8 @@
  * Features: Pending approvals, Approval history, Contract review, Approval actions
  */
 
-import { useState, useMemo } from "react"
-import { api } from '../services/api'
-;
-import { motion, AnimatePresence } from "framer-motion"
-import { api } from '../services/api'
-;
+import { useState, useMemo, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FileCheck,
   Search,
@@ -29,12 +25,9 @@ import {
   MessageSquare,
   History,
   Shield,
-} from "lucide-react"
-import { api } from '../services/api'
-;
-import { PageHeader } from "../components/layout"
-import { api } from '../services/api'
-;
+  Loader2,
+} from "lucide-react";
+import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
@@ -54,15 +47,10 @@ import {
   TabsList,
   TabsTrigger,
   Textarea,
-} from "../components/ui"
-import { api } from '../services/api'
-;
-import { cn } from "../lib/utils"
-import { api } from '../services/api'
-;
-import { fadeIn, staggerContainer } from "../lib/animations"
-import { api } from '../services/api'
-;
+} from "../components/ui";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
+import { contractApi } from "../services/api";
 
 // Mock approval data
 const formatCurrency = (value) => {
@@ -109,10 +97,35 @@ export default function ContractApproval() {
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [approvalComments, setApprovalComments] = useState("");
   const [activeTab, setActiveTab] = useState("pending");
-
-  // Mock data - 已移除，使用真实API
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [pendingApprovals, setPendingApprovals] = useState([]);
   const [approvalHistory, setApprovalHistory] = useState([]);
+
+  // Fetch approval data from API
+  useEffect(() => {
+    const fetchApprovals = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Fetch pending contracts (awaiting approval)
+        const pendingRes = await contractApi.list({ approval_status: "pending" });
+        const pendingData = pendingRes.data?.items || pendingRes.data || [];
+        setPendingApprovals(Array.isArray(pendingData) ? pendingData : []);
+
+        // Fetch approved/rejected contracts (history)
+        const historyRes = await contractApi.list({ approval_status: "completed" });
+        const historyData = historyRes.data?.items || historyRes.data || [];
+        setApprovalHistory(Array.isArray(historyData) ? historyData : []);
+      } catch (err) {
+        console.error("Failed to load contract approvals:", err);
+        setError("加载合同审批数据失败");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchApprovals();
+  }, []);
 
   const filteredApprovals = useMemo(() => {
     const approvals =

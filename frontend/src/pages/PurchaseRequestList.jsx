@@ -64,7 +64,7 @@ const STATUS_CONFIG = {
   CLOSED: { label: "已关闭", color: "bg-slate-500", icon: Package },
 };
 
-export default function PurchaseRequestList() {
+function PurchaseRequestCard({
   request,
   onView,
   onEdit,

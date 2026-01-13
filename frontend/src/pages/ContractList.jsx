@@ -85,26 +85,30 @@ const paymentTypeLabels = {
 
 export default function ContractList() {
   const [loading, setLoading] = useState(true);
-  const [contracts, setContracts] = useState(mockContracts);
+  const [contracts, setContracts] = useState([]);
+  const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState("list");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedContract, setSelectedContract] = useState(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
-  // Load data from API with fallback to mock data
+  // Load data from API
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setError(null);
       try {
         const res = await contractApi.list();
-        if (res.data?.items || res.data) {
-          setContracts(res.data?.items || res.data);
-        }
+        const data = res.data?.items || res.data || [];
+        setContracts(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.log("Contract API unavailable, using mock data");
+        console.error("Contract API error:", err);
+        setError("加载合同数据失败，请稍后重试");
+        setContracts([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchData();
   }, []);
@@ -266,7 +270,32 @@ export default function ContractList() {
         </span>
       </motion.div>
 
+      {/* Loading State */}
+      {loading && (
+        <motion.div variants={fadeIn} className="flex justify-center py-20">
+          <div className="flex items-center gap-3 text-slate-400">
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span>加载中...</span>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <motion.div variants={fadeIn}>
+          <Card className="bg-red-500/10 border-red-500/20">
+            <CardContent className="p-6 text-center">
+              <AlertTriangle className="w-12 h-12 mx-auto text-red-400 mb-4" />
+              <h3 className="text-lg font-medium text-white mb-2">加载失败</h3>
+              <p className="text-slate-400 mb-4">{error}</p>
+              <Button onClick={() => window.location.reload()}>重新加载</Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
       {/* Content */}
+      {!loading && !error && (
       <motion.div variants={fadeIn}>
         <Card>
           <CardContent className="p-0">
@@ -403,6 +432,7 @@ export default function ContractList() {
           </div>
         )}
       </motion.div>
+      )}
 
       {/* Contract Detail Panel */}
       <AnimatePresence>

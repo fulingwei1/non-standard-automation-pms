@@ -152,3 +152,7 @@ api_router.include_router(presales_integration.router, prefix="/presales", tags=
 api_router.include_router(advantage_products.router, prefix="/advantage-products", tags=["advantage-products"])
 api_router.include_router(procurement_analysis.router, prefix="/procurement-analysis", tags=["procurement-analysis"])
 api_router.include_router(inventory_analysis.router, prefix="/inventory-analysis", tags=["inventory-analysis"])
+
+# 工程师绩效评价模块
+from app.api.v1.endpoints.engineer_performance import router as engineer_performance_router
+api_router.include_router(engineer_performance_router, prefix="", tags=["engineer-performance"])

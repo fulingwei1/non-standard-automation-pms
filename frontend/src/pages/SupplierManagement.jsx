@@ -3,7 +3,7 @@
  * Supplier evaluation, performance tracking, and relationship management
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Building2,
@@ -314,11 +314,32 @@ const SupplierCard = ({ supplier, onView }) => {
 };
 
 export default function SupplierManagement() {
-  const [suppliers, setSuppliers] = useState(mockSuppliers);
+  const [suppliers, setSuppliers] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [filterLevel, setFilterLevel] = useState("all");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Load suppliers from API
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await supplierApi.list();
+        const data = response.data?.items || response.data || [];
+        setSuppliers(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Failed to load suppliers:", err);
+        setError("加载供应商数据失败");
+        setSuppliers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSuppliers();
+  }, []);
 
   const filteredSuppliers = useMemo(() => {
     return suppliers.filter((s) => {

@@ -296,11 +296,12 @@ class KnowledgeBaseCreate(BaseModel):
     """创建知识库文章"""
     title: str = Field(..., description="文章标题")
     category: str = Field(..., description="分类")
-    content: str = Field(..., description="文章内容")
+    content: Optional[str] = Field(None, description="文章内容")
     tags: Optional[List[str]] = Field(None, description="标签列表")
     is_faq: Optional[bool] = Field(False, description="是否FAQ")
     is_featured: Optional[bool] = Field(False, description="是否精选")
     status: Optional[str] = Field("DRAFT", description="状态")
+    allow_download: Optional[bool] = Field(True, description="是否允许他人下载")
 
 
 class KnowledgeBaseUpdate(BaseModel):
@@ -312,6 +313,7 @@ class KnowledgeBaseUpdate(BaseModel):
     is_faq: Optional[bool] = None
     is_featured: Optional[bool] = None
     status: Optional[str] = None
+    allow_download: Optional[bool] = None
 
 
 class KnowledgeBaseResponse(BaseModel):
@@ -320,7 +322,7 @@ class KnowledgeBaseResponse(BaseModel):
     article_no: str
     title: str
     category: str
-    content: str
+    content: Optional[str] = None
     tags: Optional[List[str]] = None
     is_faq: bool
     is_featured: bool
@@ -328,8 +330,16 @@ class KnowledgeBaseResponse(BaseModel):
     view_count: int
     like_count: int
     helpful_count: int
+    download_count: int = 0
+    adopt_count: int = 0
+    allow_download: bool = True
     author_id: int
     author_name: Optional[str] = None
+    # 文件信息
+    file_path: Optional[str] = None
+    file_name: Optional[str] = None
+    file_size: Optional[int] = None
+    file_type: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

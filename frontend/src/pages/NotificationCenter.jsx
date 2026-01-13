@@ -301,6 +301,20 @@ export default function NotificationCenter() {
     }
   };
 
+  const handleClearAll = async () => {
+    if (!window.confirm("确定要清空所有通知吗？此操作不可撤销。")) {
+      return;
+    }
+    try {
+      // Delete all notifications one by one
+      await Promise.all(notifications.map((n) => notificationApi.delete(n.id)));
+      await loadNotifications();
+      await loadUnreadCount();
+    } catch (err) {
+      console.error("Failed to clear all notifications:", err);
+    }
+  };
+
   // Show error state
   if (error && notifications.length === 0) {
     return (

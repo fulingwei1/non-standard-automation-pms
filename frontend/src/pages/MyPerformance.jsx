@@ -13,6 +13,9 @@ import { OverviewTab } from "../components/performance/OverviewTab";
 import { HistoryTab } from "../components/performance/HistoryTab";
 import { DetailsTab } from "../components/performance/DetailsTab";
 
+// Fallback mock data
+const mockMonthlyHistory = [];
+
 const performanceOverview = {
   currentPeriod: {
     year: 2025,

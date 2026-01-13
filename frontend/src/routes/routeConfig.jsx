@@ -18,6 +18,8 @@ import ProjectGantt from "../pages/ProjectGantt";
 import WBSTemplateManagement from "../pages/WBSTemplateManagement";
 import ProgressReport from "../pages/ProgressReport";
 import ProgressBoard from "../pages/ProgressBoard";
+import ProgressForecast from "../pages/ProgressForecast";
+import DependencyCheck from "../pages/DependencyCheck";
 import MilestoneRateReport from "../pages/MilestoneRateReport";
 import DelayReasonsReport from "../pages/DelayReasonsReport";
 import NotificationCenter from "../pages/NotificationCenter";
@@ -202,7 +204,6 @@ import AIStaffMatching from "../pages/AIStaffMatching";
 import WorkCenter from "../pages/WorkCenter";
 import WorkLog from "../pages/WorkLog";
 import WorkLogConfig from "../pages/WorkLogConfig";
-import PunchIn from "../pages/PunchIn";
 import UserManagement from "../pages/UserManagement";
 import RoleManagement from "../pages/RoleManagement";
 import PermissionManagement from "../pages/PermissionManagement";
@@ -342,6 +343,22 @@ export function AppRoutes() {
         element={<ProgressReport />}
       />
       <Route path="/projects/:id/progress-board" element={<ProgressBoard />} />
+      <Route
+        path="/projects/:id/progress-forecast"
+        element={
+          <ProjectReviewProtectedRoute>
+            <ProgressForecast />
+          </ProjectReviewProtectedRoute>
+        }
+      />
+      <Route
+        path="/projects/:id/dependency-check"
+        element={
+          <ProjectReviewProtectedRoute>
+            <DependencyCheck />
+          </ProjectReviewProtectedRoute>
+        }
+      />
       <Route
         path="/projects/:id/milestone-rate"
         element={<MilestoneRateReport />}
@@ -1073,7 +1090,6 @@ export function AppRoutes() {
       <Route path="/work-log" element={<WorkLog />} />
       <Route path="/work-log/config" element={<WorkLogConfig />} />
       <Route path="/settings" element={<Settings />} />
-      <Route path="/punch-in" element={<PunchIn />} />
 
       {/* System Management */}
       <Route path="/user-management" element={<UserManagement />} />

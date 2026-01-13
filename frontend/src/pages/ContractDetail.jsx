@@ -177,27 +177,49 @@ const MilestoneTimeline = ({ milestones }) => {
   );
 };
 
+// 空合同数据模板
+const emptyContract = {
+  id: "",
+  contractNo: "",
+  contractName: "",
+  customerName: "",
+  status: "draft",
+  contractAmount: 0,
+  signedDate: null,
+  startDate: null,
+  endDate: null,
+  paymentTerms: [],
+  deliverables: [],
+  milestones: [],
+  documents: [],
+  notes: "",
+};
+
 export default function ContractDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [contract, setContract] = useState(mockContractDetail);
+  const [error, setError] = useState(null);
+  const [contract, setContract] = useState(emptyContract);
   const [activeTab, setActiveTab] = useState("overview"); // overview | payments | deliverables | milestones | documents | notes
   const [showEditDialog, setShowEditDialog] = useState(false);
 
-  // Load contract data from API with fallback to mock data
+  // Load contract data from API
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setError(null);
       try {
         const res = await contractApi.get(id);
         if (res.data) {
-          setContract(res.data);
+          setContract({ ...emptyContract, ...res.data });
         }
       } catch (err) {
-        console.log("Contract detail API unavailable, using mock data");
+        console.error("Contract detail API error:", err);
+        setError("加载合同详情失败");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     if (id) {
       fetchData();

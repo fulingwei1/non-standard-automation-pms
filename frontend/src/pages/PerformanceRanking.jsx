@@ -33,39 +33,30 @@ import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { performanceApi, pmoApi } from "../services/api";
 
-// Mock data
-// Mock data - 已移除，使用真实API
-// Mock data - 已移除，使用真实API
 export default function PerformanceRanking() {
-  const [data, setData] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-
   const [selectedPeriod, setSelectedPeriod] = useState("current");
   const [loading, setLoading] = useState(true);
-  const [employeeRanking, setEmployeeRanking] = useState(mockEmployeeRanking);
-  const [departmentRanking, setDepartmentRanking] = useState(
-    mockDepartmentRanking,
-  );
+  const [error, setError] = useState(null);
+  const [employeeRanking, setEmployeeRanking] = useState([]);
+  const [departmentRanking, setDepartmentRanking] = useState([]);
 
   // Fetch ranking data
   useEffect(() => {
     const fetchRankings = async () => {
       setLoading(true);
+      setError(null);
       try {
         const myPerfRes = await performanceApi.getMyPerformance();
         if (myPerfRes.data) {
-          if (myPerfRes.data.employee_ranking?.length > 0) {
-            setEmployeeRanking(myPerfRes.data.employee_ranking);
-          }
-          if (myPerfRes.data.department_ranking?.length > 0) {
-            setDepartmentRanking(myPerfRes.data.department_ranking);
-          }
+          setEmployeeRanking(myPerfRes.data.employee_ranking || []);
+          setDepartmentRanking(myPerfRes.data.department_ranking || []);
         }
       } catch (err) {
-        console.log("Performance ranking API unavailable, using mock data");
+        console.error("Failed to load performance ranking:", err);
+        setError("加载绩效排名失败");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchRankings();
   }, []);

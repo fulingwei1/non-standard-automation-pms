@@ -79,8 +79,9 @@ const getDefaultDateRange = () => {
   };
 };
 
-// Mock team data (演示环境备用数据)
-// Mock data - 已移除，使用真实API
+// Fallback empty data (演示环境备用数据已移除)
+const mockTeamMembers = []; // 空数组作为fallback，不再使用mock数据
+
 const formatCurrency = (value) => {
   if (value >= 10000) {
     return `¥${(value / 10000).toFixed(1)}万`;

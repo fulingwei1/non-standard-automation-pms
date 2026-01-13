@@ -22,7 +22,7 @@ router = APIRouter()
 
 @router.post(
     "/projects/{project_id}/auto-apply-forecast",
-    status_code=200,
+    response_model=None,
     summary="自动应用进度预测到任务"
 )
 def auto_apply_forecast(
@@ -94,7 +94,7 @@ def auto_apply_forecast(
 
 @router.post(
     "/projects/{project_id}/auto-fix-dependencies",
-    status_code=200,
+    response_model=None,
     summary="自动修复依赖问题"
 )
 def auto_fix_dependencies(
@@ -128,7 +128,7 @@ def auto_fix_dependencies(
     from app.api.v1.endpoints.progress.utils import _analyze_dependency_graph
     
     tasks = db.query(Project.tasks).filter(Project.id == project_id).all()
-    task_map = {task.id: task for task in tasks[0].tasks if tasks else []}
+    task_map = {subtask.id: subtask for task in tasks for subtask in task.tasks}
     
     if task_map:
         from app.models.progress import TaskDependency
@@ -170,12 +170,12 @@ def auto_fix_dependencies(
 
 @router.post(
     "/projects/{project_id}/auto-process-complete",
-    status_code=200,
+    response_model=None,
     summary="执行完整的自动处理流程"
 )
 def run_complete_auto_processing(
     project_id: int,
-    options: Dict[str, any] = Body({
+    options: Dict[str, Any] = Body({
         "auto_block": False,
         "delay_threshold": 7,
         "auto_fix_timing": False,
@@ -278,7 +278,7 @@ def preview_auto_processing(
     forecast = _build_project_forecast(project, tasks[0].tasks if tasks else [])
     
     # 依赖分析
-    task_map = {task.id: task for task in tasks[0].tasks if tasks else []}
+    task_map = {subtask.id: subtask for task in tasks for subtask in task.tasks}
     if task_map:
         from app.models.progress import TaskDependency
         dependencies = (
@@ -337,12 +337,12 @@ def preview_auto_processing(
 
 @router.post(
     "/projects/batch/auto-process",
-    status_code=200,
+    response_model=None,
     summary="批量执行自动处理"
 )
 def batch_auto_process(
     project_ids: list[int] = Body(..., description="项目ID列表"),
-    options: Dict[str, any] = Body({
+    options: Dict[str, Any] = Body({
         "auto_block": False,
         "delay_threshold": 7,
         "auto_fix_timing": False,

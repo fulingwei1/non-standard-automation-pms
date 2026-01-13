@@ -64,29 +64,23 @@ const reportTypes = [
 ];
 
 export default function FinancialReports() {
-  const [data, setData] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-
   const [selectedPeriod, setSelectedPeriod] = useState("month"); // month, quarter, year
   const [selectedReport, setSelectedReport] = useState("profit-loss");
   const [dateRange, setDateRange] = useState("2024-07");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // State with mock data as default
-  const [monthlyFinancials, setMonthlyFinancials] = useState(
-    mockMonthlyFinancials,
-  );
-  const [costBreakdown, setCostBreakdown] = useState(mockCostBreakdown);
-  const [projectProfitability, setProjectProfitability] = useState(
-    mockProjectProfitability,
-  );
-  const [cashFlowData, setCashFlowData] = useState(mockCashFlow);
+  // State initialized with empty data
+  const [monthlyFinancials, setMonthlyFinancials] = useState([]);
+  const [costBreakdown, setCostBreakdown] = useState({});
+  const [projectProfitability, setProjectProfitability] = useState([]);
+  const [cashFlowData, setCashFlowData] = useState([]);
 
   // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setError(null);
       try {
         const [summaryRes, costRes, projectRes, cashFlowRes] =
           await Promise.allSettled([
@@ -100,21 +94,26 @@ export default function FinancialReports() {
           ]);
 
         if (summaryRes.status === "fulfilled" && summaryRes.value.data) {
-          setMonthlyFinancials(summaryRes.value.data);
+          const data = summaryRes.value.data;
+          setMonthlyFinancials(Array.isArray(data) ? data : []);
         }
         if (costRes.status === "fulfilled" && costRes.value.data) {
-          setCostBreakdown(costRes.value.data);
+          setCostBreakdown(costRes.value.data || {});
         }
         if (projectRes.status === "fulfilled" && projectRes.value.data) {
-          setProjectProfitability(projectRes.value.data);
+          const data = projectRes.value.data;
+          setProjectProfitability(Array.isArray(data) ? data : []);
         }
         if (cashFlowRes.status === "fulfilled" && cashFlowRes.value.data) {
-          setCashFlowData(cashFlowRes.value.data);
+          const data = cashFlowRes.value.data;
+          setCashFlowData(Array.isArray(data) ? data : []);
         }
       } catch (err) {
-        console.log("Financial reports API unavailable, using mock data");
+        console.error("Failed to load financial reports:", err);
+        setError("加载财务报表失败");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchData();
   }, [selectedPeriod, dateRange]);

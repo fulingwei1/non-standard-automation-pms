@@ -3,7 +3,7 @@
  * Features: Settlement creation, Settlement query, Settlement approval, Settlement statistics
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Receipt,
@@ -52,8 +52,8 @@ import {
 } from "../components/ui";
 import { cn, formatCurrency, formatDate } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
+import { settlementApi } from "../services/api";
 
-// Mock settlement data
 // Mock data - 已移除，使用真实API
 const statusConfig = {
   DRAFT: {
@@ -83,10 +83,32 @@ export default function ProjectSettlement() {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedSettlement, setSelectedSettlement] = useState(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [settlements, setSettlements] = useState([]);
+
+  // Fetch settlements from API
+  useEffect(() => {
+    const fetchSettlements = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await settlementApi.list();
+        const data = res.data?.items || res.data || [];
+        setSettlements(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Failed to load settlements:", err);
+        setError("加载结算数据失败");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSettlements();
+  }, []);
 
   // Filter settlements
   const filteredSettlements = useMemo(() => {
-    return mockSettlements.filter((settlement) => {
+    return settlements.filter((settlement) => {
       const matchesSearch =
         !searchTerm ||
         settlement.settlementNo
@@ -105,7 +127,7 @@ export default function ProjectSettlement() {
 
       return matchesSearch && matchesStatus;
     });
-  }, [searchTerm, selectedStatus]);
+  }, [settlements, searchTerm, selectedStatus]);
 
   // Statistics
   const stats = useMemo(() => {

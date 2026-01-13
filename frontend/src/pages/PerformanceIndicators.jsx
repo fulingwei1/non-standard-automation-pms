@@ -58,22 +58,26 @@ export default function PerformanceIndicators() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingIndicator, setEditingIndicator] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [indicators, setIndicators] = useState(mockIndicators);
+  const [error, setError] = useState(null);
+  const [indicators, setIndicators] = useState([]);
 
   // Fetch indicators from API
   useEffect(() => {
     const fetchIndicators = async () => {
       setLoading(true);
+      setError(null);
       try {
         // Try to fetch weight config which contains indicator settings
         const weightRes = await performanceApi.getWeightConfig();
-        if (weightRes.data?.indicators?.length > 0) {
-          setIndicators(weightRes.data.indicators);
-        }
+        const indicatorData = weightRes.data?.indicators || [];
+        setIndicators(Array.isArray(indicatorData) ? indicatorData : []);
       } catch (err) {
-        console.log("Weight config API unavailable, using mock data");
+        console.error("Failed to load performance indicators:", err);
+        setError("加载绩效指标失败");
+        setIndicators([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchIndicators();
   }, []);

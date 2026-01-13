@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     # 应用信息
     APP_NAME: str = "非标自动化项目管理系统"
     APP_VERSION: str = "1.0.0"
-    DEBUG: bool = False
+    DEBUG: bool = True
 
     # API配置
     API_V1_PREFIX: str = "/api/v1"

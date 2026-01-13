@@ -17,16 +17,31 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-// 模拟用户数据（后续从 auth context 获取）
-// Mock data - 已移除，使用真实API
-// Mock data removed - using real API only
+// 从 localStorage 获取用户信息
+const getStoredUser = () => {
+  try {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      return JSON.parse(storedUser);
+    }
+  } catch (e) {
+    console.error("Failed to parse user from localStorage:", e);
+  }
+  // 默认用户数据
+  return {
+    id: 1,
+    name: "当前用户",
+    role: "project_manager",
+    department: "项目管理部",
+  };
+};
 
 export default function ProjectBoard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [projects, setProjects] = useState([]);
-  const [user] = useState(mockUser);
+  const [user] = useState(getStoredUser);
 
   // 筛选状态
   const [viewMode, setViewMode] = useState("kanban");

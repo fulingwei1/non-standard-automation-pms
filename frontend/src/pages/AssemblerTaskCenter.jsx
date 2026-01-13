@@ -1000,7 +1000,7 @@ function AssemblyTaskCard({ task, onAction }) {
 
 // ============ 主组件 ============
 export default function AssemblerTaskCenter() {
-  const [tasks, setTasks] = useState(mockAssemblyTasks);
+  const [tasks, setTasks] = useState([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [shortageDialog, setShortageDialog] = useState({
     open: false,

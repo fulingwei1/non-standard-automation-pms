@@ -2,12 +2,33 @@
 """
 认证相关 Schema
 """
-
+import re
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, field_validator
 from datetime import datetime
 
 from .common import BaseSchema, TimestampSchema
+
+
+def validate_password_strength(password: str) -> str:
+    """
+    验证密码强度
+
+    要求：
+    - 最少 8 位
+    - 至少包含一个大写字母
+    - 至少包含一个小写字母
+    - 至少包含一个数字
+    """
+    if len(password) < 8:
+        raise ValueError("密码长度至少8位")
+    if not re.search(r"[A-Z]", password):
+        raise ValueError("密码必须包含至少一个大写字母")
+    if not re.search(r"[a-z]", password):
+        raise ValueError("密码必须包含至少一个小写字母")
+    if not re.search(r"\d", password):
+        raise ValueError("密码必须包含至少一个数字")
+    return password
 
 
 class Token(BaseModel):
@@ -60,7 +81,12 @@ class UserUpdate(BaseModel):
 class PasswordChange(BaseModel):
     """修改密码"""
     old_password: str = Field(min_length=6, description="原密码")
-    new_password: str = Field(min_length=6, description="新密码")
+    new_password: str = Field(min_length=8, description="新密码（至少8位，包含大小写字母和数字）")
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, v: str) -> str:
+        return validate_password_strength(v)
 
 
 class UserResponse(TimestampSchema):

@@ -107,13 +107,13 @@ export default function ProjectReviewList() {
   }, [page, projectId, status, reviewType, startDate, endDate]);
 
   // Mock data for when API fails
-  
+  const mockProjectList = [
     { id: 1, project_code: "PJ250108001", project_name: "BMS老化测试设备" },
     { id: 2, project_code: "PJ250105002", project_name: "EOL功能测试设备" },
     { id: 3, project_code: "PJ250106003", project_name: "ICT测试设备" },
   ];
 
-  
+  const mockReviews = [
     {
       id: 1,
       project_id: 1,

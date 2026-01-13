@@ -42,21 +42,15 @@ import {
 } from "../components/administrative/StatisticsCharts";
 import { adminApi } from "../services/api";
 
-// Mock data
 // Mock data - 已移除，使用真实API
-// Mock data - 已移除，使用真实API
-export default function LeaveManagement() {
-  const [data, setData] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
 
+export default function LeaveManagement() {
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [loading, setLoading] = useState(false);
-  const [leaveApplications, setLeaveApplications] = useState(
-    mockLeaveApplications,
-  );
+  const [error, setError] = useState(null);
+  const [leaveApplications, setLeaveApplications] = useState([]);
 
   // Fetch data from API
   useEffect(() => {

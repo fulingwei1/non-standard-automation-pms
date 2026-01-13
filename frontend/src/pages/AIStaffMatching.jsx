@@ -67,10 +67,10 @@ const PRIORITY_CONFIG = {
 export default function AIStaffMatching() {
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("matching");
-  const [staffingNeeds, setStaffingNeeds] = useState(mockStaffingNeeds);
+  const [staffingNeeds, setStaffingNeeds] = useState([]);
   const [selectedNeedId, setSelectedNeedId] = useState(null);
   const [matchingResult, setMatchingResult] = useState(null);
-  const [matchingHistory, setMatchingHistory] = useState(mockMatchingHistory);
+  const [matchingHistory, setMatchingHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [matching, setMatching] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);

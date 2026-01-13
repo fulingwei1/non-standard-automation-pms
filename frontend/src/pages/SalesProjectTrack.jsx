@@ -3,7 +3,7 @@
  * Features: Project overview, milestone tracking, acceptance coordination
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FolderKanban,
@@ -42,6 +42,7 @@ import {
 } from "../components/ui";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
+import { projectApi } from "../services/api";
 
 // Stage configuration
 const stageConfig = {
@@ -109,17 +110,39 @@ const healthConfig = {
   critical: { label: "阻塞", color: "bg-red-500", textColor: "text-red-400" },
 };
 
-// Mock project data for sales view
 // Mock data - 已移除，使用真实API
+
 export default function SalesProjectTrack() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStage, setSelectedStage] = useState("all");
   const [selectedHealth, setSelectedHealth] = useState("all");
   const [selectedProject, setSelectedProject] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [projects, setProjects] = useState([]);
+
+  // Fetch projects from API
+  useEffect(() => {
+    const fetchProjects = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await projectApi.list();
+        const data = res.data?.items || res.data || [];
+        setProjects(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Failed to load sales projects:", err);
+        setError("加载项目数据失败");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   // Filter projects
   const filteredProjects = useMemo(() => {
-    return mockProjects.filter((project) => {
+    return projects.filter((project) => {
       const matchesSearch =
         !searchTerm ||
         project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -133,23 +156,23 @@ export default function SalesProjectTrack() {
 
       return matchesSearch && matchesStage && matchesHealth;
     });
-  }, [searchTerm, selectedStage, selectedHealth]);
+  }, [projects, searchTerm, selectedStage, selectedHealth]);
 
   // Stats
   const stats = useMemo(() => {
     return {
-      total: mockProjects.length,
-      inProgress: mockProjects.filter((p) => !["warranty"].includes(p.stage))
+      total: projects.length,
+      inProgress: projects.filter((p) => !["warranty"].includes(p.stage))
         .length,
-      nearDelivery: mockProjects.filter((p) => {
+      nearDelivery: projects.filter((p) => {
         const delivery = new Date(p.expectedDelivery);
         const now = new Date();
         const diff = (delivery - now) / (1000 * 60 * 60 * 24);
         return diff <= 14 && diff > 0;
       }).length,
-      hasIssue: mockProjects.filter((p) => p.health !== "good").length,
+      hasIssue: projects.filter((p) => p.health !== "good").length,
     };
-  }, []);
+  }, [projects]);
 
   const handleProjectClick = (project) => {
     setSelectedProject(project);

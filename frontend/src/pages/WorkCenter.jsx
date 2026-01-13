@@ -71,13 +71,6 @@ export default function WorkCenter() {
       action: () => navigate("/tasks"),
     },
     {
-      title: "岗位打卡",
-      description: "记录上下班时间",
-      icon: Clock,
-      color: "bg-purple-500",
-      action: () => navigate("/punch-in"),
-    },
-    {
       title: "工时填报",
       description: "填写项目工时",
       icon: Timer,

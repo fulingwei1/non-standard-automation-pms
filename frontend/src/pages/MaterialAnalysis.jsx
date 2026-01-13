@@ -533,25 +533,12 @@ export default function MaterialAnalysis() {
         }
       }
 
-      // Always use mock data for demonstration (for development/testing)
-      // In production, you can change this to only use mock data when no real data is available
-      if (projectMaterialsData.length === 0) {
-        console.log(
-          "No project data loaded, using mock data for demonstration",
-        );
-        setProjectMaterials(mockProjectMaterials);
-      } else {
-        // For demonstration, merge real data with mock data, or use mock data only
-        // Uncomment the line below to use only mock data for demonstration
-        setProjectMaterials(mockProjectMaterials);
-        // Or use real data: setProjectMaterials(projectMaterialsData)
-      }
+      // Use real data from API
+      setProjectMaterials(projectMaterialsData);
     } catch (err) {
       console.error("Failed to load project materials:", err);
-      // Always use mock data on error for demonstration
-      console.log("Using mock data due to error for demonstration");
-      setProjectMaterials(mockProjectMaterials);
-      setError(null);
+      setError("加载物料数据失败");
+      setProjectMaterials([]);
     } finally {
       setLoading(false);
     }

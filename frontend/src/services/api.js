@@ -77,6 +77,7 @@ api.interceptors.response.use(
 );
 
 export default api;
+export { api };
 
 export const financialCostApi = {
   downloadTemplate: () =>
@@ -227,6 +228,17 @@ export const costApi = {
     api.get(`/costs/projects/${projectId}/costs`, { params }),
   getProjectSummary: (projectId) =>
     api.get(`/costs/projects/${projectId}/costs/summary`),
+};
+
+// 项目结算API
+export const settlementApi = {
+  list: (params) => api.get("/settlements", { params }),
+  get: (id) => api.get(`/settlements/${id}`),
+  create: (data) => api.post("/settlements", data),
+  update: (id, data) => api.put(`/settlements/${id}`, data),
+  confirm: (id) => api.put(`/settlements/${id}/confirm`),
+  approve: (id, data) => api.put(`/settlements/${id}/approve`, data),
+  getStatistics: (params) => api.get("/settlements/statistics", { params }),
 };
 
 export const documentApi = {
@@ -733,6 +745,41 @@ export const progressApi = {
     checkDependencies: (projectId) =>
       api.get(`/progress/projects/${projectId}/dependency-check`),
   },
+  // 新增：自动化处理API
+  autoProcess: {
+    applyForecast: (projectId, params) =>
+      api.post(`/progress/projects/${projectId}/auto-apply-forecast`, null, {
+        params: {
+          auto_block: params?.autoBlock,
+          delay_threshold: params?.delayThreshold || 7
+        }
+      }),
+    
+    fixDependencies: (projectId, params) =>
+      api.post(`/progress/projects/${projectId}/auto-fix-dependencies`, null, {
+        params: {
+          auto_fix_timing: params?.autoFixTiming,
+          auto_fix_missing: params?.autoFixMissing !== false // 默认为true
+        }
+      }),
+    
+    runCompleteProcess: (projectId, options) =>
+      api.post(`/progress/projects/${projectId}/auto-process-complete`, options),
+    
+    preview: (projectId, params) =>
+      api.get(`/progress/projects/${projectId}/auto-preview`, {
+        params: {
+          auto_block: params?.autoBlock || false,
+          delay_threshold: params?.delayThreshold || 7
+        }
+      }),
+    
+    batchProcess: (projectIds, options) =>
+      api.post(`/progress/projects/batch/auto-process`, {
+        project_ids: projectIds,
+        options: options
+      })
+  },
   // WBS Templates
   wbsTemplates: {
     list: (params) => api.get("/wbs-templates", { params }),
@@ -813,6 +860,18 @@ export const serviceApi = {
     publish: (id) => api.put(`/knowledge-base/${id}/publish`),
     archive: (id) => api.put(`/knowledge-base/${id}/archive`),
     statistics: () => api.get("/knowledge-base/statistics"),
+    // 文件上传（最大 200MB）
+    upload: (formData) => api.post("/knowledge-base/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+    // 文件下载
+    downloadUrl: (id) => `${api.defaults.baseURL}/knowledge-base/${id}/download`,
+    // 获取上传配额使用情况
+    getQuota: () => api.get("/knowledge-base/quota"),
+    // 点赞
+    like: (id) => api.post(`/knowledge-base/${id}/like`),
+    // 标记采用（表示文档被实际应用到工作中）
+    adopt: (id) => api.post(`/knowledge-base/${id}/adopt`),
   },
 };
 
@@ -993,6 +1052,9 @@ export const purchaseApi = {
     trend: (params) => api.get("/kit-rate/trend", { params }),
   },
 };
+
+// Alias for procurement
+export const procurementApi = purchaseApi;
 
 // PMO Management APIs
 export const pmoApi = {
@@ -2469,6 +2531,16 @@ export const adminApi = {
     cancel: (id) => api.put(`/admin/meeting-rooms/${id}/cancel`),
     getAvailable: (date, time) =>
       api.get("/admin/meeting-rooms/available", { params: { date, time } }),
+  },
+
+  // 固定资产管理
+  assets: {
+    list: (params) => api.get("/admin/assets", { params }),
+    get: (id) => api.get(`/admin/assets/${id}`),
+    create: (data) => api.post("/admin/assets", data),
+    update: (id, data) => api.put(`/admin/assets/${id}`, data),
+    delete: (id) => api.delete(`/admin/assets/${id}`),
+    getStatistics: (params) => api.get("/admin/assets/statistics", { params }),
   },
 
   // 仪表板

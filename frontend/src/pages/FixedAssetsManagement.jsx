@@ -3,7 +3,7 @@
  * Features: Asset inventory, depreciation calculation, maintenance tracking, asset allocation
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -43,39 +43,63 @@ import {
   CategoryBreakdownCard,
   TrendComparisonCard,
 } from "../components/administrative/StatisticsCharts";
+import { adminApi } from "../services/api";
 
-// Mock data
 // Mock data - 已移除，使用真实API
+
 export default function FixedAssetsManagement() {
   const [searchText, setSearchText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [assets, setAssets] = useState([]);
+
+  // Fetch assets from API
+  useEffect(() => {
+    const fetchAssets = async () => {
+      setLoading(true);
+      try {
+        const res = await adminApi.assets.list();
+        if (res.data?.items) {
+          setAssets(res.data.items);
+        } else if (Array.isArray(res.data)) {
+          setAssets(res.data);
+        }
+      } catch (err) {
+        console.log("Assets API unavailable");
+        setError("加载固定资产数据失败");
+      }
+      setLoading(false);
+    };
+    fetchAssets();
+  }, []);
 
   const filteredAssets = useMemo(() => {
-    return mockAssets.filter((asset) => {
+    return assets.filter((asset) => {
       const matchSearch =
-        asset.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        asset.assetNo.includes(searchText);
+        asset.name?.toLowerCase().includes(searchText.toLowerCase()) ||
+        asset.assetNo?.includes(searchText);
       const matchCategory =
         categoryFilter === "all" || asset.category === categoryFilter;
       const matchStatus =
         statusFilter === "all" || asset.status === statusFilter;
       return matchSearch && matchCategory && matchStatus;
     });
-  }, [searchText, categoryFilter, statusFilter]);
+  }, [assets, searchText, categoryFilter, statusFilter]);
 
   const stats = useMemo(() => {
-    const total = mockAssets.length;
-    const totalValue = mockAssets.reduce((sum, a) => sum + a.currentValue, 0);
-    const totalDepreciation = mockAssets.reduce(
-      (sum, a) => sum + a.depreciation,
+    const total = assets.length;
+    const totalValue = assets.reduce((sum, a) => sum + (a.currentValue || 0), 0);
+    const totalDepreciation = assets.reduce(
+      (sum, a) => sum + (a.depreciation || 0),
       0,
     );
-    const maintenance = mockAssets.filter(
+    const maintenance = assets.filter(
       (a) => a.status === "maintenance",
     ).length;
     return { total, totalValue, totalDepreciation, maintenance };
-  }, []);
+  }, [assets]);
 
   return (
     <motion.div
@@ -179,14 +203,14 @@ export default function FixedAssetsManagement() {
                   data={[
                     {
                       label: "办公家具",
-                      value: mockAssets
+                      value: assets
                         .filter((a) => a.category === "办公家具")
                         .reduce((sum, a) => sum + a.currentValue, 0),
                       color: "#3b82f6",
                     },
                     {
                       label: "办公设备",
-                      value: mockAssets
+                      value: assets
                         .filter((a) => a.category === "办公设备")
                         .reduce((sum, a) => sum + a.currentValue, 0),
                       color: "#10b981",
@@ -370,7 +394,7 @@ export default function FixedAssetsManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockAssets.map((asset) => {
+                {assets.map((asset) => {
                   const yearsInUse = Math.floor(
                     (new Date() - new Date(asset.purchaseDate)) /
                       (365 * 24 * 60 * 60 * 1000),
@@ -438,7 +462,7 @@ export default function FixedAssetsManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockAssets
+                {assets
                   .filter((a) => a.status === "maintenance")
                   .map((asset) => (
                     <div
@@ -481,7 +505,7 @@ export default function FixedAssetsManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockAssets.map((asset) => (
+                {assets.map((asset) => (
                   <div
                     key={asset.id}
                     className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50"

@@ -243,7 +243,7 @@ const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg }) => {
 export default function FinanceManagerDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [financialStats, setFinancialStats] = useState(mockFinancialStats);
+  const [financialStats, setFinancialStats] = useState({});
   const [pendingPayments, setPendingPayments] = useState([]);
   const [projectCosts, setProjectCosts] = useState([]);
   const [selectedTab, setSelectedTab] = useState("overview");

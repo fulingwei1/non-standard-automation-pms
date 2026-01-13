@@ -40,6 +40,8 @@ import ProjectBonusPanel from "../components/project/ProjectBonusPanel";
 import ProjectMeetingPanel from "../components/project/ProjectMeetingPanel";
 import ProjectIssuePanel from "../components/project/ProjectIssuePanel";
 import SolutionLibrary from "../components/project/SolutionLibrary";
+import ProgressForecast from "./ProgressForecast";
+import DependencyCheck from "./DependencyCheck";
 import { projectWorkspaceApi } from "../services/api";
 import {
   ArrowLeft,
@@ -60,6 +62,11 @@ import {
   Target,
   TrendingUp,
   AlertTriangle,
+  Network,
+  ShieldAlert,
+  Zap,
+  Eye,
+  Play,
   FolderOpen,
   Upload,
   AlertCircle,
@@ -69,13 +76,15 @@ import {
 const tabs = [
   { id: "overview", name: "概览", icon: Activity },
   { id: "stages", name: "进度计划", icon: Clock },
+  { id: "progress-forecast", name: "进度预测", icon: TrendingUp },  // 新增
+  { id: "dependency-check", name: "依赖巡检", icon: Network },  // 新增
   { id: "machines", name: "设备列表", icon: Box },
   { id: "team", name: "项目团队", icon: Users },
   { id: "workspace", name: "工作空间", icon: FolderOpen },
   { id: "leads", name: "负责人", icon: UserCog },
   { id: "finance", name: "财务成本", icon: DollarSign },
   { id: "docs", name: "文档中心", icon: FileText },
-  { id: "timeline", name: "时间线", icon: Calendar }, // Sprint 3.3: 新增时间线标签
+  { id: "timeline", name: "时间线", icon: Calendar },
 ];
 
 // Animation variants
@@ -921,6 +930,56 @@ export default function ProjectDetail() {
                     ))}
                   </div>
                 </div>
+              {/* 新增：进度预测和依赖检查入口 */}
+              <div className="space-y-4 mb-6 mt-6">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="font-semibold text-slate-900 mb-1">
+                          智能化进度管理
+                        </h3>
+                        <p className="text-sm text-slate-600">
+                          使用AI预测和依赖巡检来优化项目进度
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="bg-blue-50 text-blue-700">
+                        新功能
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Button
+                        variant="outline"
+                        className="h-32 flex flex-col items-center justify-center gap-3"
+                        onClick={() => navigate(`/projects/${id}/progress-forecast`)}
+                      >
+                        <TrendingUp className="w-8 h-8 text-blue-500" />
+                        <div>
+                          <div className="font-medium text-slate-900">进度预测</div>
+                          <div className="text-sm text-slate-600">
+                            AI预测项目完成时间
+                          </div>
+                        </div>
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        className="h-32 flex flex-col items-center justify-center gap-3"
+                        onClick={() => navigate(`/projects/${id}/dependency-check`)}
+                      >
+                        <Network className="w-8 h-8 text-purple-500" />
+                        <div>
+                          <div className="font-medium text-slate-900">依赖巡检</div>
+                          <div className="text-sm text-slate-600">
+                            检查循环依赖和时序冲突
+                          </div>
+                        </div>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
               </CardContent>
             </Card>
           )}
@@ -1645,6 +1704,17 @@ export default function ProjectDetail() {
               documents={documents}
             />
           )}
+
+          {/* Progress Forecast Tab - 新增 */}
+          {activeTab === "progress-forecast" && (
+            <ProgressForecast projectId={id} />
+          )}
+
+          {/* Dependency Check Tab - 新增 */}
+          {activeTab === "dependency-check" && (
+            <DependencyCheck projectId={id} />
+          )}
+
         </motion.div>
       </AnimatePresence>
     </motion.div>

@@ -54,19 +54,15 @@ import {
 } from "../components/administrative/StatisticsCharts";
 import { adminApi } from "../services/api";
 
-// Mock data
 // Mock data - 已移除，使用真实API
-// Mock data - 已移除，使用真实API
-export default function OfficeSuppliesManagement() {
-  const [data, setData] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
 
+export default function OfficeSuppliesManagement() {
   const [searchText, setSearchText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(false);
-  const [supplies, setSupplies] = useState(mockSupplies);
+  const [error, setError] = useState(null);
+  const [supplies, setSupplies] = useState([]);
 
   // Fetch data from API
   useEffect(() => {

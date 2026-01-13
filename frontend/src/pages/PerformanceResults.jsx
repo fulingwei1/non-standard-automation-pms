@@ -62,39 +62,48 @@ const getScoreColor = (actual, target) => {
   return "text-red-400";
 };
 
-export default function PerformanceResults() {
-  const [data, setData] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+// 空的默认结果数据
+const emptyCurrentResult = {
+  period: "",
+  level: "B",
+  totalScore: 0,
+  indicators: [],
+  feedback: "",
+};
 
+export default function PerformanceResults() {
   const [selectedPeriod, setSelectedPeriod] = useState("current");
   const [loading, setLoading] = useState(true);
-  const [currentResult, setCurrentResult] = useState(mockCurrentResult);
-  const [historyResults, setHistoryResults] = useState(mockHistoryResults);
+  const [error, setError] = useState(null);
+  const [currentResult, setCurrentResult] = useState(emptyCurrentResult);
+  const [historyResults, setHistoryResults] = useState([]);
 
   // Fetch performance results
   useEffect(() => {
     const fetchResults = async () => {
       setLoading(true);
+      setError(null);
       try {
         const myPerfRes = await performanceApi.getMyPerformance();
         if (myPerfRes.data) {
           const perfData = myPerfRes.data;
           // Map API response to component data structure
           if (perfData.current_result) {
-            setCurrentResult((prev) => ({
-              ...prev,
+            setCurrentResult({
+              ...emptyCurrentResult,
               ...perfData.current_result,
-            }));
+            });
           }
           if (perfData.history?.length > 0) {
             setHistoryResults(perfData.history);
           }
         }
       } catch (err) {
-        console.log("Performance results API unavailable, using mock data");
+        console.error("Failed to load performance results:", err);
+        setError("加载绩效结果失败");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchResults();
   }, []);

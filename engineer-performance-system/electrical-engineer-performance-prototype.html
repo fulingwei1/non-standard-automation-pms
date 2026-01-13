@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电气工程师绩效评价系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .tab-active { background: #f59e0b; color: white; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .progress-bar { transition: width 0.3s ease; }
+        .plc-tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+        .siemens { background: #00848e; color: white; }
+        .mitsubishi { background: #cc0000; color: white; }
+        .omron { background: #005bac; color: white; }
+        .beckhoff { background: #f29400; color: white; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 顶部导航 -->
+    <header class="bg-white shadow-sm border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-xl font-bold text-gray-800">电气工程师绩效评价系统</h1>
+                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded">PLC / EPLAN</span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-1">
+                    <span class="plc-tag siemens">西门子</span>
+                    <span class="plc-tag mitsubishi">三菱</span>
+                    <span class="plc-tag omron">欧姆龙</span>
+                </div>
+                <div class="flex items-center space-x-2 ml-4">
+                    <div class="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center text-white text-sm">电</div>
+                    <span class="text-sm text-gray-700">电气部</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <!-- Tab 导航 -->
+        <div class="flex space-x-1 bg-white rounded-lg p-1 shadow-sm mb-6">
+            <button onclick="showTab('overview')" id="tab-overview" class="tab-btn tab-active flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span>部门总览</span>
+            </button>
+            <button onclick="showTab('individual')" id="tab-individual" class="tab-btn flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <span>个人绩效</span>
+            </button>
+            <button onclick="showTab('drawings')" id="tab-drawings" class="tab-btn flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span>图纸管理</span>
+            </button>
+            <button onclick="showTab('plclib')" id="tab-plclib" class="tab-btn flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                <span>PLC模块库</span>
+            </button>
+            <button onclick="showTab('config')" id="tab-config" class="tab-btn flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span>指标配置</span>
+            </button>
+        </div>
+
+        <!-- 部门总览 -->
+        <div id="content-overview" class="tab-content space-y-6">
+            <!-- 统计卡片 -->
+            <div class="grid grid-cols-5 gap-4">
+                <div class="card p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-500">部门平均分</span>
+                        <div class="p-1.5 rounded-lg bg-amber-50 text-amber-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800">82.5</div>
+                    <div class="text-xs text-green-500">↑ +1.5 vs上月</div>
+                </div>
+                <div class="card p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-500">图纸一次通过率</span>
+                        <div class="p-1.5 rounded-lg bg-green-50 text-green-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800">86.5%</div>
+                    <div class="text-xs text-gray-400">目标 ≥85%</div>
+                </div>
+                <div class="card p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-500">PLC一次调通率</span>
+                        <div class="p-1.5 rounded-lg bg-blue-50 text-blue-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800">82%</div>
+                    <div class="text-xs text-gray-400">目标 ≥80%</div>
+                </div>
+                <div class="card p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-500">标准件使用率</span>
+                        <div class="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800">72%</div>
+                    <div class="text-xs text-green-500">↑ +3% vs上月</div>
+                </div>
+                <div class="card p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-500">电气故障密度</span>
+                        <div class="p-1.5 rounded-lg bg-red-50 text-red-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800">0.15</div>
+                    <div class="text-xs text-green-500">优于目标(≤0.2)</div>
+                </div>
+            </div>
+
+            <!-- 排名列表 -->
+            <div class="card p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-800">2024年11月绩效排名</h2>
+                    <div class="flex items-center space-x-2">
+                        <select class="px-3 py-1.5 border rounded-lg text-sm">
+                            <option>全部PLC品牌</option>
+                            <option>西门子</option>
+                            <option>三菱</option>
+                            <option>欧姆龙</option>
+                        </select>
+                        <button class="flex items-center space-x-1 px-3 py-1.5 border rounded-lg text-sm hover:bg-gray-50">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            <span>导出</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <table class="w-full">
+                    <thead>
+                        <tr class="text-left text-sm text-gray-500 border-b">
+                            <th class="pb-3 w-12">排名</th>
+                            <th class="pb-3">姓名</th>
+                            <th class="pb-3">主要PLC</th>
+                            <th class="pb-3">技术能力</th>
+                            <th class="pb-3">项目执行</th>
+                            <th class="pb-3">成本控制</th>
+                            <th class="pb-3">知识沉淀</th>
+                            <th class="pb-3">团队协作</th>
+                            <th class="pb-3">综合得分</th>
+                            <th class="pb-3">趋势</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ranking-table"></tbody>
+                </table>
+            </div>
+
+            <!-- 图表区域 -->
+            <div class="grid grid-cols-2 gap-6">
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">PLC品牌使用分布</h3>
+                    <canvas id="plcBrandChart" height="200"></canvas>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">电气故障类型分布</h3>
+                    <canvas id="faultTypeChart" height="200"></canvas>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">各维度平均分</h3>
+                    <canvas id="radarChart" height="200"></canvas>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">月度趋势</h3>
+                    <canvas id="monthlyTrendChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 个人绩效 -->
+        <div id="content-individual" class="tab-content hidden space-y-6">
+            <!-- 工程师选择器 -->
+            <div class="card p-4 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center text-white text-lg font-semibold">王</div>
+                    <div>
+                        <select class="text-lg font-semibold text-gray-800 bg-transparent border-none focus:outline-none cursor-pointer">
+                            <option>王电气</option>
+                            <option>李工控</option>
+                            <option>张自动</option>
+                            <option>刘编程</option>
+                        </select>
+                        <div class="flex items-center space-x-2 text-sm text-gray-500">
+                            <span>高级电气工程师</span>
+                            <span>·</span>
+                            <span class="plc-tag siemens">西门子</span>
+                            <span class="plc-tag mitsubishi">三菱</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <select class="px-3 py-2 border rounded-lg text-sm">
+                        <option>2024年11月</option>
+                        <option>2024年10月</option>
+                        <option>2024Q4</option>
+                    </select>
+                    <button class="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm hover:bg-amber-600">生成报告</button>
+                </div>
+            </div>
+
+            <!-- 综合得分 -->
+            <div class="grid grid-cols-3 gap-6">
+                <div class="col-span-1 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-sm p-6 text-white">
+                    <div class="text-sm opacity-80 mb-1">综合得分</div>
+                    <div class="text-5xl font-bold mb-2">88.5</div>
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2 py-0.5 rounded text-xs bg-green-400 text-white">优秀</span>
+                        <span class="text-sm opacity-80">部门排名 #1/10</span>
+                    </div>
+                </div>
+                <div class="col-span-2 card p-6">
+                    <h3 class="text-sm font-medium text-gray-500 mb-3">五维能力图谱</h3>
+                    <canvas id="personalRadarChart" height="150"></canvas>
+                </div>
+            </div>
+
+            <!-- 详细指标 -->
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">关键指标明细</h3>
+                <div class="grid grid-cols-4 gap-4">
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-gray-500">图纸一次通过率</span>
+                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div class="text-2xl font-bold text-green-600">95%</div>
+                        <div class="text-xs text-gray-400">目标 ≥85%</div>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-gray-500">PLC一次调通率</span>
+                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div class="text-2xl font-bold text-green-600">90%</div>
+                        <div class="text-xs text-gray-400">目标 ≥80%</div>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-gray-500">调试效率</span>
+                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div class="text-2xl font-bold text-green-600">115%</div>
+                        <div class="text-xs text-gray-400">计划时间/实际时间</div>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-gray-500">任务按时完成率</span>
+                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div class="text-2xl font-bold text-green-600">92%</div>
+                        <div class="text-xs text-gray-400">目标 ≥90%</div>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-gray-500">标准件使用率</span>
+                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div class="text-2xl font-bold text-green-600">78%</div>
+                        <div class="text-xs text-gray-400">目标 ≥70%</div>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-gray-500">选型准确率</span>
+                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div class="text-2xl font-bold text-green-600">98%</div>
+                        <div class="text-xs text-gray-400">目标 ≥95%</div>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-gray-500">PLC模块贡献</span>
+                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div class="text-2xl font-bold text-green-600">5个</div>
+                        <div class="text-xs text-gray-400">被复用18次</div>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-gray-500">现场4h响应率</span>
+                            <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        </div>
+                        <div class="text-2xl font-bold text-yellow-600">88%</div>
+                        <div class="text-xs text-gray-400">目标 ≥90%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PLC程序记录 -->
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">PLC程序开发记录</h3>
+                <table class="w-full">
+                    <thead>
+                        <tr class="text-left text-sm text-gray-500 border-b">
+                            <th class="pb-3">项目</th>
+                            <th class="pb-3">程序名称</th>
+                            <th class="pb-3">PLC</th>
+                            <th class="pb-3">版本</th>
+                            <th class="pb-3">一次调通</th>
+                            <th class="pb-3">调试效率</th>
+                            <th class="pb-3">稳定性</th>
+                            <th class="pb-3">部署日期</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="py-3 text-amber-600">P2024-156</td>
+                            <td class="py-3 font-medium">XX检测主控</td>
+                            <td class="py-3"><span class="plc-tag siemens">S7-1500</span></td>
+                            <td class="py-3">V2.1</td>
+                            <td class="py-3"><span class="text-green-500">✓</span></td>
+                            <td class="py-3 text-green-600">120%</td>
+                            <td class="py-3 text-green-600">100%</td>
+                            <td class="py-3 text-gray-500">2024-11-15</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="py-3 text-amber-600">P2024-162</td>
+                            <td class="py-3 font-medium">YY组装线PLC</td>
+                            <td class="py-3"><span class="plc-tag mitsubishi">Q系列</span></td>
+                            <td class="py-3">V1.0</td>
+                            <td class="py-3"><span class="text-green-500">✓</span></td>
+                            <td class="py-3 text-green-600">105%</td>
+                            <td class="py-3 text-green-600">98%</td>
+                            <td class="py-3 text-gray-500">2024-11-08</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 text-amber-600">P2024-145</td>
+                            <td class="py-3 font-medium">ZZ测试台控制</td>
+                            <td class="py-3"><span class="plc-tag siemens">S7-1200</span></td>
+                            <td class="py-3">V1.3</td>
+                            <td class="py-3"><span class="text-red-500">✗</span></td>
+                            <td class="py-3 text-yellow-600">85%</td>
+                            <td class="py-3 text-green-600">96%</td>
+                            <td class="py-3 text-gray-500">2024-11-02</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 跨部门协作 -->
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">跨部门协作评价</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-4 border rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="font-medium text-gray-800">机械部评价</span>
+                            <span class="text-lg font-bold text-amber-600">4.5</span>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-500">接口配合</span>
+                                <div class="flex items-center">
+                                    <div class="w-32 h-2 bg-gray-200 rounded-full mr-2">
+                                        <div class="h-2 bg-amber-500 rounded-full" style="width: 90%"></div>
+                                    </div>
+                                    <span>4.5</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-500">图纸准确性</span>
+                                <div class="flex items-center">
+                                    <div class="w-32 h-2 bg-gray-200 rounded-full mr-2">
+                                        <div class="h-2 bg-green-500 rounded-full" style="width: 92%"></div>
+                                    </div>
+                                    <span>4.6</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-500">响应速度</span>
+                                <div class="flex items-center">
+                                    <div class="w-32 h-2 bg-gray-200 rounded-full mr-2">
+                                        <div class="h-2 bg-blue-500 rounded-full" style="width: 88%"></div>
+                                    </div>
+                                    <span>4.4</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 border rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="font-medium text-gray-800">测试部评价</span>
+                            <span class="text-lg font-bold text-amber-600">4.3</span>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-500">程序接口</span>
+                                <div class="flex items-center">
+                                    <div class="w-32 h-2 bg-gray-200 rounded-full mr-2">
+                                        <div class="h-2 bg-amber-500 rounded-full" style="width: 86%"></div>
+                                    </div>
+                                    <span>4.3</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-500">通讯配合</span>
+                                <div class="flex items-center">
+                                    <div class="w-32 h-2 bg-gray-200 rounded-full mr-2">
+                                        <div class="h-2 bg-green-500 rounded-full" style="width: 88%"></div>
+                                    </div>
+                                    <span>4.4</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-500">调试支持</span>
+                                <div class="flex items-center">
+                                    <div class="w-32 h-2 bg-gray-200 rounded-full mr-2">
+                                        <div class="h-2 bg-blue-500 rounded-full" style="width: 84%"></div>
+                                    </div>
+                                    <span>4.2</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 趋势图 -->
+            <div class="grid grid-cols-2 gap-6">
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">绩效趋势</h3>
+                    <canvas id="trendChart" height="180"></canvas>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">技术指标趋势</h3>
+                    <canvas id="techTrendChart" height="180"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图纸管理 -->
+        <div id="content-drawings" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-4 gap-4">
+                <div class="card p-4">
+                    <div class="text-sm text-gray-500 mb-1">本月图纸总数</div>
+                    <div class="text-3xl font-bold text-gray-800">156</div>
+                </div>
+                <div class="card p-4">
+                    <div class="text-sm text-gray-500 mb-1">一次通过</div>
+                    <div class="text-3xl font-bold text-green-600">135</div>
+                    <div class="text-xs text-gray-400">通过率 86.5%</div>
+                </div>
+                <div class="card p-4">
+                    <div class="text-sm text-gray-500 mb-1">待审核</div>
+                    <div class="text-3xl font-bold text-amber-600">12</div>
+                </div>
+                <div class="card p-4">
+                    <div class="text-sm text-gray-500 mb-1">需修改</div>
+                    <div class="text-3xl font-bold text-red-600">9</div>
+                </div>
+            </div>
+
+            <div class="card p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">图纸列表</h3>
+                    <div class="flex items-center space-x-2">
+                        <select class="px-3 py-1.5 border rounded-lg text-sm">
+                            <option>全部类型</option>
+                            <option>电气原理图</option>
+                            <option>电气布局图</option>
+                            <option>PLC程序</option>
+                            <option>HMI画面</option>
+                        </select>
+                        <select class="px-3 py-1.5 border rounded-lg text-sm">
+                            <option>全部状态</option>
+                            <option>待审核</option>
+                            <option>已通过</option>
+                            <option>需修改</option>
+                        </select>
+                    </div>
+                </div>
+                <table class="w-full">
+                    <thead>
+                        <tr class="text-left text-sm text-gray-500 border-b">
+                            <th class="pb-3">图纸编号</th>
+                            <th class="pb-3">图纸名称</th>
+                            <th class="pb-3">类型</th>
+                            <th class="pb-3">设计者</th>
+                            <th class="pb-3">版本</th>
+                            <th class="pb-3">状态</th>
+                            <th class="pb-3">审核次数</th>
+                            <th class="pb-3">提交日期</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="py-3 text-amber-600">ELE-156-001</td>
+                            <td class="py-3 font-medium">主电源柜原理图</td>
+                            <td class="py-3"><span class="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-700">电气原理图</span></td>
+                            <td class="py-3">王电气</td>
+                            <td class="py-3">V1.0</td>
+                            <td class="py-3"><span class="px-2 py-0.5 text-xs rounded bg-green-100 text-green-700">已通过</span></td>
+                            <td class="py-3 text-green-600">1次</td>
+                            <td class="py-3 text-gray-500">2024-11-15</td>
+                        </tr>
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="py-3 text-amber-600">ELE-156-002</td>
+                            <td class="py-3 font-medium">控制柜布局图</td>
+                            <td class="py-3"><span class="px-2 py-0.5 text-xs rounded bg-purple-100 text-purple-700">电气布局图</span></td>
+                            <td class="py-3">王电气</td>
+                            <td class="py-3">V1.1</td>
+                            <td class="py-3"><span class="px-2 py-0.5 text-xs rounded bg-green-100 text-green-700">已通过</span></td>
+                            <td class="py-3 text-yellow-600">2次</td>
+                            <td class="py-3 text-gray-500">2024-11-14</td>
+                        </tr>
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="py-3 text-amber-600">ELE-162-003</td>
+                            <td class="py-3 font-medium">伺服驱动接线图</td>
+                            <td class="py-3"><span class="px-2 py-0.5 text-xs rounded bg-green-100 text-green-700">接线图</span></td>
+                            <td class="py-3">李工控</td>
+                            <td class="py-3">V1.0</td>
+                            <td class="py-3"><span class="px-2 py-0.5 text-xs rounded bg-amber-100 text-amber-700">待审核</span></td>
+                            <td class="py-3">-</td>
+                            <td class="py-3 text-gray-500">2024-11-18</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-3 text-amber-600">ELE-162-004</td>
+                            <td class="py-3 font-medium">PLC IO分配表</td>
+                            <td class="py-3"><span class="px-2 py-0.5 text-xs rounded bg-indigo-100 text-indigo-700">PLC程序</span></td>
+                            <td class="py-3">张自动</td>
+                            <td class="py-3">V1.2</td>
+                            <td class="py-3"><span class="px-2 py-0.5 text-xs rounded bg-red-100 text-red-700">需修改</span></td>
+                            <td class="py-3 text-red-600">3次</td>
+                            <td class="py-3 text-gray-500">2024-11-12</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PLC模块库 -->
+        <div id="content-plclib" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-4 gap-4">
+                <div class="card p-4">
+                    <div class="text-sm text-gray-500 mb-1">模块总数</div>
+                    <div class="text-3xl font-bold text-gray-800">68</div>
+                </div>
+                <div class="card p-4">
+                    <div class="text-sm text-gray-500 mb-1">本月新增</div>
+                    <div class="text-3xl font-bold text-green-600">6</div>
+                </div>
+                <div class="card p-4">
+                    <div class="text-sm text-gray-500 mb-1">本月复用次数</div>
+                    <div class="text-3xl font-bold text-amber-600">45</div>
+                </div>
+                <div class="card p-4">
+                    <div class="text-sm text-gray-500 mb-1">贡献者</div>
+                    <div class="text-3xl font-bold text-blue-600">8人</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-6">
+                <div class="col-span-2 card p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">热门模块 TOP 10</h3>
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-sm text-gray-500 border-b">
+                                <th class="pb-3">模块名称</th>
+                                <th class="pb-3">类型</th>
+                                <th class="pb-3">PLC品牌</th>
+                                <th class="pb-3">贡献者</th>
+                                <th class="pb-3">复用次数</th>
+                                <th class="pb-3">评分</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b">
+                                <td class="py-3 font-medium">伺服定位FB</td>
+                                <td class="py-3"><span class="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-700">运动控制</span></td>
+                                <td class="py-3"><span class="plc-tag siemens">西门子</span></td>
+                                <td class="py-3">王电气</td>
+                                <td class="py-3 font-semibold text-amber-600">32</td>
+                                <td class="py-3">⭐ 4.9</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="py-3 font-medium">Modbus通讯FB</td>
+                                <td class="py-3"><span class="px-2 py-0.5 text-xs rounded bg-green-100 text-green-700">通讯</span></td>
+                                <td class="py-3"><span class="plc-tag siemens">西门子</span></td>
+                                <td class="py-3">李工控</td>
+                                <td class="py-3 font-semibold text-amber-600">28</td>
+                                <td class="py-3">⭐ 4.8</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="py-3 font-medium">报警处理模块</td>
+                                <td class="py-3"><span class="px-2 py-0.5 text-xs rounded bg-red-100 text-red-700">报警处理</span></td>
+                                <td class="py-3"><span class="plc-tag mitsubishi">三菱</span></td>
+                                <td class="py-3">张自动</td>
+                                <td class="py-3 font-semibold text-amber-600">25</td>
+                                <td class="py-3">⭐ 4.7</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="py-3 font-medium">配方管理FB</td>
+                                <td class="py-3"><span class="px-2 py-0.5 text-xs rounded bg-purple-100 text-purple-700">配方管理</span></td>
+                                <td class="py-3"><span class="plc-tag siemens">西门子</span></td>
+                                <td class="py-3">王电气</td>
+                                <td class="py-3 font-semibold text-amber-600">20</td>
+                                <td class="py-3">⭐ 4.6</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 font-medium">气缸控制FB</td>
+                                <td class="py-3"><span class="px-2 py-0.5 text-xs rounded bg-yellow-100 text-yellow-700">IO处理</span></td>
+                                <td class="py-3"><span class="plc-tag omron">欧姆龙</span></td>
+                                <td class="py-3">刘编程</td>
+                                <td class="py-3 font-semibold text-amber-600">18</td>
+                                <td class="py-3">⭐ 4.5</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">贡献者排行</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-xl">🥇</span>
+                                <span class="font-medium">王电气</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-semibold text-amber-600">12个</div>
+                                <div class="text-xs text-gray-400">复用52次</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-xl">🥈</span>
+                                <span class="font-medium">李工控</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-semibold text-gray-600">9个</div>
+                                <div class="text-xs text-gray-400">复用38次</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-xl">🥉</span>
+                                <span class="font-medium">张自动</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-semibold text-orange-600">7个</div>
+                                <div class="text-xs text-gray-400">复用25次</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-lg font-semibold text-gray-800 mt-6 mb-4">品牌分布</h3>
+                    <canvas id="plcBrandPieChart" height="160"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 指标配置 -->
+        <div id="content-config" class="tab-content hidden space-y-6">
+            <div class="card p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800">评价维度权重配置</h3>
+                    <button class="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm hover:bg-amber-600">保存配置</button>
+                </div>
+                
+                <div class="space-y-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-32">
+                            <div class="font-medium text-gray-800">技术能力</div>
+                            <div class="text-xs text-gray-400">图纸通过率、PLC调试、故障密度</div>
+                        </div>
+                        <input type="range" min="0" max="50" value="30" class="flex-1 h-2 bg-gray-200 rounded-lg">
+                        <span class="w-16 text-right text-lg font-semibold text-amber-600">30%</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-32">
+                            <div class="font-medium text-gray-800">项目执行</div>
+                            <div class="text-xs text-gray-400">按时完成、图纸交付、现场响应</div>
+                        </div>
+                        <input type="range" min="0" max="50" value="25" class="flex-1 h-2 bg-gray-200 rounded-lg">
+                        <span class="w-16 text-right text-lg font-semibold text-amber-600">25%</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-32">
+                            <div class="font-medium text-gray-800">成本控制</div>
+                            <div class="text-xs text-gray-400">标准件使用、选型准确、库存优先</div>
+                        </div>
+                        <input type="range" min="0" max="50" value="20" class="flex-1 h-2 bg-gray-200 rounded-lg">
+                        <span class="w-16 text-right text-lg font-semibold text-amber-600">20%</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-32">
+                            <div class="font-medium text-gray-800">知识沉淀</div>
+                            <div class="text-xs text-gray-400">PLC模块贡献、标准模板、技术文档</div>
+                        </div>
+                        <input type="range" min="0" max="50" value="15" class="flex-1 h-2 bg-gray-200 rounded-lg">
+                        <span class="w-16 text-right text-lg font-semibold text-amber-600">15%</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-32">
+                            <div class="font-medium text-gray-800">团队协作</div>
+                            <div class="text-xs text-gray-400">机械配合、测试配合、接口文档</div>
+                        </div>
+                        <input type="range" min="0" max="50" value="10" class="flex-1 h-2 bg-gray-200 rounded-lg">
+                        <span class="w-16 text-right text-lg font-semibold text-amber-600">10%</span>
+                    </div>
+                </div>
+                
+                <div class="mt-6 pt-4 border-t flex items-center justify-between">
+                    <span class="text-gray-500">权重总计</span>
+                    <span class="text-xl font-bold text-green-600">100%</span>
+                </div>
+            </div>
+
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-6">电气专用指标目标值</h3>
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span class="text-gray-700">图纸一次通过率</span>
+                        <div class="flex items-center space-x-2">
+                            <input type="number" value="85" class="w-20 px-2 py-1 border rounded text-right">
+                            <span class="text-gray-500 text-sm">%</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span class="text-gray-700">PLC一次调通率</span>
+                        <div class="flex items-center space-x-2">
+                            <input type="number" value="80" class="w-20 px-2 py-1 border rounded text-right">
+                            <span class="text-gray-500 text-sm">%</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span class="text-gray-700">调试效率</span>
+                        <div class="flex items-center space-x-2">
+                            <input type="number" value="90" class="w-20 px-2 py-1 border rounded text-right">
+                            <span class="text-gray-500 text-sm">%</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span class="text-gray-700">故障密度上限</span>
+                        <div class="flex items-center space-x-2">
+                            <input type="number" value="0.2" step="0.1" class="w-20 px-2 py-1 border rounded text-right">
+                            <span class="text-gray-500 text-sm">次/项目</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span class="text-gray-700">标准件使用率</span>
+                        <div class="flex items-center space-x-2">
+                            <input type="number" value="70" class="w-20 px-2 py-1 border rounded text-right">
+                            <span class="text-gray-500 text-sm">%</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span class="text-gray-700">选型准确率</span>
+                        <div class="flex items-center space-x-2">
+                            <input type="number" value="95" class="w-20 px-2 py-1 border rounded text-right">
+                            <span class="text-gray-500 text-sm">%</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span class="text-gray-700">现场4h响应率</span>
+                        <div class="flex items-center space-x-2">
+                            <input type="number" value="90" class="w-20 px-2 py-1 border rounded text-right">
+                            <span class="text-gray-500 text-sm">%</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span class="text-gray-700">PLC模块贡献</span>
+                        <div class="flex items-center space-x-2">
+                            <input type="number" value="2" class="w-20 px-2 py-1 border rounded text-right">
+                            <span class="text-gray-500 text-sm">个/季度</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟数据
+        const engineers = [
+            { id: 1, name: '王电气', plc: '西门子/三菱', score: 88.5, t1: 92, t2: 88, t3: 85, t4: 82, t5: 90, trend: 'up' },
+            { id: 2, name: '李工控', plc: '西门子', score: 85.2, t1: 88, t2: 84, t3: 82, t4: 80, t5: 88, trend: 'up' },
+            { id: 3, name: '张自动', plc: '三菱', score: 82.8, t1: 85, t2: 82, t3: 80, t4: 78, t5: 85, trend: 'stable' },
+            { id: 4, name: '刘编程', plc: '欧姆龙', score: 80.5, t1: 82, t2: 80, t3: 78, t4: 75, t5: 82, trend: 'up' },
+            { id: 5, name: '赵控制', plc: '西门子', score: 78.2, t1: 80, t2: 76, t3: 76, t4: 72, t5: 80, trend: 'down' },
+        ];
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('tab-active');
+                el.classList.add('text-gray-600', 'hover:bg-gray-100');
+            });
+            
+            document.getElementById('content-' + tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('tab-' + tabId);
+            activeBtn.classList.add('tab-active');
+            activeBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
+            
+            setTimeout(() => {
+                if (tabId === 'overview') initOverviewCharts();
+                if (tabId === 'individual') initIndividualCharts();
+                if (tabId === 'plclib') initPlcLibCharts();
+            }, 100);
+        }
+
+        function initRankingTable() {
+            const tbody = document.getElementById('ranking-table');
+            const plcColors = {
+                '西门子': 'siemens',
+                '三菱': 'mitsubishi',
+                '欧姆龙': 'omron'
+            };
+            tbody.innerHTML = engineers.map((eng, idx) => `
+                <tr class="border-b last:border-0 hover:bg-gray-50">
+                    <td class="py-3">
+                        <span class="w-6 h-6 rounded-full flex items-center justify-center text-sm ${
+                            idx === 0 ? 'bg-yellow-100 text-yellow-700' :
+                            idx === 1 ? 'bg-gray-100 text-gray-700' :
+                            idx === 2 ? 'bg-orange-100 text-orange-700' :
+                            'bg-gray-50 text-gray-500'
+                        }">${idx + 1}</span>
+                    </td>
+                    <td class="py-3 font-medium text-gray-800">${eng.name}</td>
+                    <td class="py-3">
+                        ${eng.plc.split('/').map(p => `<span class="plc-tag ${plcColors[p] || ''} mr-1">${p}</span>`).join('')}
+                    </td>
+                    <td class="py-3 text-gray-600">${eng.t1}</td>
+                    <td class="py-3 text-gray-600">${eng.t2}</td>
+                    <td class="py-3 text-gray-600">${eng.t3}</td>
+                    <td class="py-3 text-gray-600">${eng.t4}</td>
+                    <td class="py-3 text-gray-600">${eng.t5}</td>
+                    <td class="py-3">
+                        <span class="font-semibold ${eng.score >= 85 ? 'text-green-600' : eng.score >= 75 ? 'text-blue-600' : 'text-yellow-600'}">${eng.score}</span>
+                    </td>
+                    <td class="py-3">
+                        ${eng.trend === 'up' ? '<span class="text-green-500">↑</span>' :
+                          eng.trend === 'down' ? '<span class="text-red-500">↓</span>' :
+                          '<span class="text-gray-400">→</span>'}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function initOverviewCharts() {
+            const plcBrandCtx = document.getElementById('plcBrandChart');
+            if (plcBrandCtx && !plcBrandCtx.chart) {
+                plcBrandCtx.chart = new Chart(plcBrandCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['西门子', '三菱', '欧姆龙', '倍福', '其他'],
+                        datasets: [{
+                            data: [45, 28, 15, 8, 4],
+                            backgroundColor: ['#00848e', '#cc0000', '#005bac', '#f29400', '#6b7280']
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+            }
+
+            const faultTypeCtx = document.getElementById('faultTypeChart');
+            if (faultTypeCtx && !faultTypeCtx.chart) {
+                faultTypeCtx.chart = new Chart(faultTypeCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['程序Bug', '接线错误', '选型错误', '设计缺陷', '通讯故障', '其他'],
+                        datasets: [{
+                            label: '故障数量',
+                            data: [8, 5, 4, 3, 2, 1],
+                            backgroundColor: '#f59e0b'
+                        }]
+                    },
+                    options: { responsive: true, indexAxis: 'y' }
+                });
+            }
+
+            const radarCtx = document.getElementById('radarChart');
+            if (radarCtx && !radarCtx.chart) {
+                radarCtx.chart = new Chart(radarCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['技术能力', '项目执行', '成本控制', '知识沉淀', '团队协作'],
+                        datasets: [{
+                            label: '部门平均',
+                            data: [85, 82, 80, 76, 86],
+                            backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                            borderColor: '#f59e0b'
+                        }]
+                    },
+                    options: { responsive: true, scales: { r: { min: 0, max: 100 } } }
+                });
+            }
+
+            const monthlyTrendCtx = document.getElementById('monthlyTrendChart');
+            if (monthlyTrendCtx && !monthlyTrendCtx.chart) {
+                monthlyTrendCtx.chart = new Chart(monthlyTrendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['7月', '8月', '9月', '10月', '11月'],
+                        datasets: [
+                            { label: '部门平均分', data: [79, 80, 80.5, 81.5, 82.5], borderColor: '#f59e0b', tension: 0.3 },
+                            { label: '图纸通过率', data: [82, 83, 84, 85, 86.5], borderColor: '#22c55e', tension: 0.3 },
+                            { label: 'PLC调通率', data: [78, 79, 80, 81, 82], borderColor: '#3b82f6', tension: 0.3 }
+                        ]
+                    },
+                    options: { responsive: true }
+                });
+            }
+        }
+
+        function initIndividualCharts() {
+            const personalRadar = document.getElementById('personalRadarChart');
+            if (personalRadar && !personalRadar.chart) {
+                personalRadar.chart = new Chart(personalRadar, {
+                    type: 'radar',
+                    data: {
+                        labels: ['技术能力', '项目执行', '成本控制', '知识沉淀', '团队协作'],
+                        datasets: [{
+                            label: '王电气',
+                            data: [92, 88, 85, 82, 90],
+                            backgroundColor: 'rgba(245, 158, 11, 0.3)',
+                            borderColor: '#f59e0b'
+                        }]
+                    },
+                    options: { responsive: true, scales: { r: { min: 0, max: 100 } } }
+                });
+            }
+
+            const trendCtx = document.getElementById('trendChart');
+            if (trendCtx && !trendCtx.chart) {
+                trendCtx.chart = new Chart(trendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['7月', '8月', '9月', '10月', '11月'],
+                        datasets: [
+                            { label: '个人得分', data: [84, 85.5, 86.2, 87.5, 88.5], borderColor: '#f59e0b', tension: 0.3 },
+                            { label: '部门平均', data: [79, 80, 80.5, 81.5, 82.5], borderColor: '#9ca3af', borderDash: [5, 5], tension: 0.3 }
+                        ]
+                    },
+                    options: { responsive: true }
+                });
+            }
+
+            const techTrendCtx = document.getElementById('techTrendChart');
+            if (techTrendCtx && !techTrendCtx.chart) {
+                techTrendCtx.chart = new Chart(techTrendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['7月', '8月', '9月', '10月', '11月'],
+                        datasets: [
+                            { label: '图纸通过率', data: [90, 92, 93, 94, 95], borderColor: '#22c55e', tension: 0.3 },
+                            { label: 'PLC调通率', data: [85, 86, 88, 89, 90], borderColor: '#3b82f6', tension: 0.3 },
+                            { label: '调试效率', data: [100, 105, 110, 112, 115], borderColor: '#8b5cf6', tension: 0.3 }
+                        ]
+                    },
+                    options: { responsive: true }
+                });
+            }
+        }
+
+        function initPlcLibCharts() {
+            const plcBrandPie = document.getElementById('plcBrandPieChart');
+            if (plcBrandPie && !plcBrandPie.chart) {
+                plcBrandPie.chart = new Chart(plcBrandPie, {
+                    type: 'pie',
+                    data: {
+                        labels: ['西门子', '三菱', '欧姆龙', '其他'],
+                        datasets: [{
+                            data: [35, 18, 10, 5],
+                            backgroundColor: ['#00848e', '#cc0000', '#005bac', '#6b7280']
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+            }
+        }
+
+        initRankingTable();
+        initOverviewCharts();
+    </script>
+</body>
+</html>

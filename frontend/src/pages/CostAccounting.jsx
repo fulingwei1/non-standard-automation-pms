@@ -4,14 +4,8 @@
  */
 
 import { useState, useMemo, useEffect } from "react"
-import { api } from '../services/api'
-;
 import { useSearchParams } from "react-router-dom"
-import { api } from '../services/api'
-;
 import { motion, AnimatePresence } from "framer-motion"
-import { api } from '../services/api'
-;
 import {
   Calculator,
   Search,
@@ -38,11 +32,7 @@ import {
   Users,
   Wrench,
 } from "lucide-react"
-import { api } from '../services/api'
-;
 import { PageHeader } from "../components/layout"
-import { api } from '../services/api'
-;
 import {
   Card,
   CardContent,
@@ -63,14 +53,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from "../components/ui"
-import { api } from '../services/api'
-;
 import { cn, formatCurrency } from "../lib/utils"
-import { api } from '../services/api'
-;
 import { fadeIn, staggerContainer } from "../lib/animations"
-import { api } from '../services/api'
-;
 
 // Mock cost data
 // Mock data - 已移除，使用真实API

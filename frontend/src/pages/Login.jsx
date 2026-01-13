@@ -195,7 +195,7 @@ export default function Login({ onLoginSuccess }) {
                               roleName
                                 .toLowerCase()
                                 .replace(/\s+/g, "_")
-                                .replace(/-/g, "_")
+                                .replace(/-/g, "_"))
           } else if (userData.is_superuser) {
             // 如果没有角色信息但 is_superuser 为 true，默认使用 super_admin
             userRole = "super_admin"
@@ -567,8 +567,78 @@ export default function Login({ onLoginSuccess }) {
               </motion.button>
             </form>
 
+            {/* Quick Login Buttons */}
+            <div className="mt-8">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-white text-gray-500">快捷登录</span>
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                {/* 符凌维 - 副总经理 */}
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setUsername('fulingwei')
+                    setPassword('password123')
+                  }}
+                  className={cn(
+                    "flex items-center gap-3 p-3 rounded-xl",
+                    "bg-gradient-to-br from-amber-50 to-orange-50",
+                    "border border-amber-200 hover:border-amber-300",
+                    "transition-all duration-200",
+                    "group"
+                  )}
+                >
+                  <div className="p-2 rounded-lg bg-amber-100 group-hover:bg-amber-200 transition-colors">
+                    <Crown className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-gray-900">符凌维</p>
+                    <p className="text-xs text-gray-500">副总经理</p>
+                  </div>
+                </motion.button>
+
+                {/* 系统管理员 */}
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setUsername('admin')
+                    setPassword('password123')
+                  }}
+                  className={cn(
+                    "flex items-center gap-3 p-3 rounded-xl",
+                    "bg-gradient-to-br from-violet-50 to-indigo-50",
+                    "border border-violet-200 hover:border-violet-300",
+                    "transition-all duration-200",
+                    "group"
+                  )}
+                >
+                  <div className="p-2 rounded-lg bg-violet-100 group-hover:bg-violet-200 transition-colors">
+                    <Shield className="h-5 w-5 text-violet-600" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-gray-900">系统管理员</p>
+                    <p className="text-xs text-gray-500">Admin</p>
+                  </div>
+                </motion.button>
+              </div>
+
+              <p className="mt-3 text-xs text-gray-400 text-center">
+                点击上方按钮自动填充账号，然后点击登录
+              </p>
+            </div>
+
             {/* Footer */}
-            <p className="mt-8 text-xs text-gray-400 text-center">
+            <p className="mt-6 text-xs text-gray-400 text-center">
               © 2026 项目进度管理系统 · 安全登录
             </p>
           </motion.div>
