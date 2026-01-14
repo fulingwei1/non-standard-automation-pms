@@ -96,32 +96,18 @@ def create_machine(
 ) -> Any:
     """
     Create new machine.
-    
-    如果未提供设备编码，系统将根据项目编码自动生成 PJxxx-PNxxx 格式的编码
     """
-    from app.utils.number_generator import generate_machine_code
-    
     # Check if project exists
     project = db.query(Project).filter(Project.id == machine_in.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-
-    # 如果没有提供设备编码，自动生成
-    machine_data = machine_in.model_dump()
-    if not machine_data.get('machine_code'):
-        if not project.project_code:
-            raise HTTPException(
-                status_code=400,
-                detail="项目编码不存在，无法自动生成设备编码",
-            )
-        machine_data['machine_code'] = generate_machine_code(db, project.project_code)
 
     # Check if machine code exists in project
     existing = (
         db.query(Machine)
         .filter(
             Machine.project_id == machine_in.project_id,
-            Machine.machine_code == machine_data['machine_code'],
+            Machine.machine_code == machine_in.machine_code,
         )
         .first()
     )
@@ -131,7 +117,7 @@ def create_machine(
             detail="Machine with this code already exists in this project.",
         )
 
-    machine = Machine(**machine_data)
+    machine = Machine(**machine_in.model_dump())
     db.add(machine)
     db.commit()
     db.refresh(machine)
@@ -148,11 +134,7 @@ def create_project_machine(
 ) -> Any:
     """
     为项目创建机台
-    
-    如果未提供设备编码，系统将根据项目编码自动生成 PJxxx-PNxxx 格式的编码
     """
-    from app.utils.number_generator import generate_machine_code
-    
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
@@ -161,21 +143,12 @@ def create_project_machine(
     machine_data = machine_in.model_dump()
     machine_data['project_id'] = project_id
     
-    # 如果没有提供设备编码，自动生成
-    if not machine_data.get('machine_code'):
-        if not project.project_code:
-            raise HTTPException(
-                status_code=400,
-                detail="项目编码不存在，无法自动生成设备编码",
-            )
-        machine_data['machine_code'] = generate_machine_code(db, project.project_code)
-    
     # 检查机台编码是否已存在
     existing = (
         db.query(Machine)
         .filter(
             Machine.project_id == project_id,
-            Machine.machine_code == machine_data['machine_code'],
+            Machine.machine_code == machine_in.machine_code,
         )
         .first()
     )
