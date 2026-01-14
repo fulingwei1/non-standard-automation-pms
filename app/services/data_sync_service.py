@@ -10,8 +10,11 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
-from app.models.project import Project, ProjectPaymentPlan
+from app.models.project import Project, ProjectPaymentPlan, Customer
 from app.models.sales import Contract
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DataSyncService:
@@ -208,3 +211,125 @@ class DataSyncService:
             }
         
         return {"success": False, "message": "请提供 project_id 或 contract_id"}
+    
+    def sync_customer_to_projects(self, customer_id: int) -> Dict[str, Any]:
+        """
+        同步客户信息到所有关联的项目
+        
+        当客户信息变更时，自动更新所有关联项目的冗余客户信息字段
+        
+        Args:
+            customer_id: 客户ID
+            
+        Returns:
+            dict: 同步结果
+        """
+        customer = self.db.query(Customer).filter(Customer.id == customer_id).first()
+        if not customer:
+            return {"success": False, "message": "客户不存在"}
+        
+        # 查找所有关联的项目
+        projects = self.db.query(Project).filter(Project.customer_id == customer_id).all()
+        if not projects:
+            return {"success": True, "message": "该客户下没有关联项目", "updated_count": 0}
+        
+        updated_projects = []
+        updated_fields_list = []
+        
+        for project in projects:
+            updated_fields = []
+            
+            # 同步客户名称
+            if customer.customer_name and customer.customer_name != project.customer_name:
+                project.customer_name = customer.customer_name
+                updated_fields.append("customer_name")
+            
+            # 同步客户联系人
+            if customer.contact_person and customer.contact_person != project.customer_contact:
+                project.customer_contact = customer.contact_person
+                updated_fields.append("customer_contact")
+            
+            # 同步联系电话
+            if customer.contact_phone and customer.contact_phone != project.customer_phone:
+                project.customer_phone = customer.contact_phone
+                updated_fields.append("customer_phone")
+            
+            if updated_fields:
+                self.db.add(project)
+                updated_projects.append(project.id)
+                updated_fields_list.extend(updated_fields)
+        
+        if updated_projects:
+            # 注意：不在这里 commit，由调用方控制事务
+            return {
+                "success": True,
+                "message": f"已同步 {len(updated_projects)} 个项目的客户信息",
+                "updated_count": len(updated_projects),
+                "updated_projects": updated_projects,
+                "updated_fields": list(set(updated_fields_list))
+            }
+        
+        return {"success": True, "message": "所有项目的客户信息已是最新", "updated_count": 0}
+    
+    def sync_customer_to_contracts(self, customer_id: int) -> Dict[str, Any]:
+        """
+        同步客户信息到所有关联的合同
+        
+        当客户信息变更时，自动更新所有关联合同的冗余客户信息字段（如果有）
+        
+        Args:
+            customer_id: 客户ID
+            
+        Returns:
+            dict: 同步结果
+        """
+        customer = self.db.query(Customer).filter(Customer.id == customer_id).first()
+        if not customer:
+            return {"success": False, "message": "客户不存在"}
+        
+        # 查找所有关联的合同
+        contracts = self.db.query(Contract).filter(Contract.customer_id == customer_id).all()
+        if not contracts:
+            return {"success": True, "message": "该客户下没有关联合同", "updated_count": 0}
+        
+        updated_contracts = []
+        updated_fields_list = []
+        
+        for contract in contracts:
+            updated_fields = []
+            
+            # 检查合同是否有冗余的客户信息字段
+            # 如果合同模型有 customer_name 字段，则同步
+            if hasattr(contract, 'customer_name'):
+                if customer.customer_name and customer.customer_name != contract.customer_name:
+                    contract.customer_name = customer.customer_name
+                    updated_fields.append("customer_name")
+            
+            # 如果合同模型有 contact_person 字段，则同步
+            if hasattr(contract, 'contact_person'):
+                if customer.contact_person and customer.contact_person != contract.contact_person:
+                    contract.contact_person = customer.contact_person
+                    updated_fields.append("contact_person")
+            
+            # 如果合同模型有 contact_phone 字段，则同步
+            if hasattr(contract, 'contact_phone'):
+                if customer.contact_phone and customer.contact_phone != contract.contact_phone:
+                    contract.contact_phone = customer.contact_phone
+                    updated_fields.append("contact_phone")
+            
+            if updated_fields:
+                self.db.add(contract)
+                updated_contracts.append(contract.id)
+                updated_fields_list.extend(updated_fields)
+        
+        if updated_contracts:
+            # 注意：不在这里 commit，由调用方控制事务
+            return {
+                "success": True,
+                "message": f"已同步 {len(updated_contracts)} 个合同的客户信息",
+                "updated_count": len(updated_contracts),
+                "updated_contracts": updated_contracts,
+                "updated_fields": list(set(updated_fields_list))
+            }
+        
+        return {"success": True, "message": "所有合同的客户信息已是最新，或合同模型无冗余字段", "updated_count": 0}

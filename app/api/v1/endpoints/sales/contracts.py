@@ -138,9 +138,24 @@ def _generate_payment_plans_from_contract(db: Session, contract: Contract) -> Li
             if project.planned_end_date:
                 planned_date = project.planned_end_date + timedelta(days=365)
 
-        # 尝试查找关联的里程碑
+        # 尝试查找关联的里程碑（自动绑定）
         milestone_id = None
-        if config["payment_no"] == 2:  # 发货款
+        if config["payment_no"] == 1:  # 预付款
+            # 查找合同签订相关的里程碑（如果有）
+            milestone = db.query(ProjectMilestone).filter(
+                and_(
+                    ProjectMilestone.project_id == contract.project_id,
+                    or_(
+                        ProjectMilestone.milestone_name.like("%合同%"),
+                        ProjectMilestone.milestone_name.like("%签订%"),
+                        ProjectMilestone.milestone_name.like("%立项%"),
+                        ProjectMilestone.milestone_type == "GATE"
+                    )
+                )
+            ).order_by(ProjectMilestone.planned_date.asc()).first()
+            if milestone:
+                milestone_id = milestone.id
+        elif config["payment_no"] == 2:  # 发货款
             # 查找发货相关的里程碑
             milestone = db.query(ProjectMilestone).filter(
                 and_(
@@ -148,10 +163,11 @@ def _generate_payment_plans_from_contract(db: Session, contract: Contract) -> Li
                     or_(
                         ProjectMilestone.milestone_name.like("%发货%"),
                         ProjectMilestone.milestone_name.like("%发运%"),
+                        ProjectMilestone.milestone_name.like("%包装%"),
                         ProjectMilestone.milestone_type == "DELIVERY"
                     )
                 )
-            ).first()
+            ).order_by(ProjectMilestone.planned_date.asc()).first()
             if milestone:
                 milestone_id = milestone.id
         elif config["payment_no"] == 3:  # 验收款
@@ -162,10 +178,26 @@ def _generate_payment_plans_from_contract(db: Session, contract: Contract) -> Li
                     or_(
                         ProjectMilestone.milestone_name.like("%验收%"),
                         ProjectMilestone.milestone_name.like("%终验%"),
+                        ProjectMilestone.milestone_name.like("%FAT%"),
+                        ProjectMilestone.milestone_name.like("%SAT%"),
                         ProjectMilestone.milestone_type == "GATE"
                     )
                 )
-            ).first()
+            ).order_by(ProjectMilestone.planned_date.desc()).first()  # 取最晚的验收里程碑
+            if milestone:
+                milestone_id = milestone.id
+        elif config["payment_no"] == 4:  # 质保款
+            # 查找质保结束相关的里程碑
+            milestone = db.query(ProjectMilestone).filter(
+                and_(
+                    ProjectMilestone.project_id == contract.project_id,
+                    or_(
+                        ProjectMilestone.milestone_name.like("%质保%"),
+                        ProjectMilestone.milestone_name.like("%结项%"),
+                        ProjectMilestone.milestone_name.like("%完成%")
+                    )
+                )
+            ).order_by(ProjectMilestone.planned_date.desc()).first()
             if milestone:
                 milestone_id = milestone.id
 

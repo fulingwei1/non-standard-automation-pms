@@ -139,20 +139,58 @@ def update_customer(
     db: Session = Depends(deps.get_db),
     customer_id: int,
     customer_in: CustomerUpdate,
+    auto_sync: bool = Query(True, description="是否自动同步客户信息到项目和合同"),
     current_user: User = Depends(security.require_permission("customer:update")),
 ) -> Any:
     """
     更新客户信息
+    
+    支持自动同步客户信息到关联的项目和合同
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     customer = db.query(Customer).filter(Customer.id == customer_id).first()
     if not customer:
         raise HTTPException(status_code=404, detail="客户不存在")
 
+    # 记录需要同步的字段
     update_data = customer_in.model_dump(exclude_unset=True)
+    sync_fields = ["customer_name", "contact_person", "contact_phone"]
+    has_sync_fields = any(field in update_data for field in sync_fields)
+    
+    # 更新客户信息
     for field, value in update_data.items():
         setattr(customer, field, value)
 
     db.add(customer)
+    db.flush()  # 先flush，确保customer对象已更新
+    
+    # 如果启用了自动同步，且更新了需要同步的字段，则自动同步
+    if auto_sync and has_sync_fields:
+        try:
+            from app.services.data_sync_service import DataSyncService
+            sync_service = DataSyncService(db)
+            
+            # 同步到项目
+            project_sync_result = sync_service.sync_customer_to_projects(customer_id)
+            if project_sync_result.get("success") and project_sync_result.get("updated_count", 0) > 0:
+                logger.info(
+                    f"客户 {customer_id} 信息已自动同步到 {project_sync_result.get('updated_count')} 个项目: "
+                    f"{', '.join(project_sync_result.get('updated_fields', []))}"
+                )
+            
+            # 同步到合同
+            contract_sync_result = sync_service.sync_customer_to_contracts(customer_id)
+            if contract_sync_result.get("success") and contract_sync_result.get("updated_count", 0) > 0:
+                logger.info(
+                    f"客户 {customer_id} 信息已自动同步到 {contract_sync_result.get('updated_count')} 个合同: "
+                    f"{', '.join(contract_sync_result.get('updated_fields', []))}"
+                )
+        except Exception as e:
+            # 同步失败不影响客户更新，只记录错误日志
+            logger.error(f"客户信息自动同步失败: {str(e)}", exc_info=True)
+    
     db.commit()
     db.refresh(customer)
     return customer

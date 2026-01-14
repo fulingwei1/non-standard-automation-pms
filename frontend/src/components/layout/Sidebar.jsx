@@ -3,6 +3,9 @@ import { Link, useLocation } from "react-router-dom";
 import { roleApi } from "../../services/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../../lib/utils";
+import { useDebounce } from "../../hooks/useDebounce";
+import NavGroup from "./NavGroup";
+import NavItem from "./NavItem";
 import {
   getRoleInfo,
   getNavForRole,
@@ -24,6 +27,8 @@ import {
   Users,
   Settings,
   ChevronLeft,
+  ChevronDown,
+  ChevronUp,
   LogOut,
   Bell,
   Clock,
@@ -59,6 +64,8 @@ import {
   Heart,
   Key,
   Activity,
+  Search,
+  X,
 } from "lucide-react";
 
 // Icon mapping
@@ -137,15 +144,13 @@ const defaultNavGroups = [
         icon: "ClipboardCheck",
         badge: "2",
       },
+      { name: "知识管理", path: "/knowledge-base", icon: "BookOpen" },
     ],
   },
   {
     label: "项目管理",
     items: [
       { name: "PMO 驾驶舱", path: "/pmo/dashboard", icon: "LayoutDashboard" },
-      { name: "项目看板", path: "/board", icon: "Kanban" },
-      { name: "排期看板", path: "/schedule", icon: "Calendar" },
-      { name: "任务中心", path: "/tasks", icon: "ListTodo" },
       { name: "立项管理", path: "/pmo/initiations", icon: "FileText" },
       { name: "风险预警", path: "/pmo/risk-wall", icon: "AlertTriangle" },
       { name: "项目结项", path: "/pmo/closure", icon: "CheckCircle2" },
@@ -160,16 +165,34 @@ const defaultNavGroups = [
     ],
   },
   {
+    label: "进度跟踪",
+    items: [
+      { name: "任务中心", path: "/progress-tracking/tasks", icon: "ListTodo" },
+      { name: "项目看板", path: "/progress-tracking/board", icon: "Kanban" },
+      { name: "排期看板", path: "/progress-tracking/schedule", icon: "Calendar" },
+      { name: "进度报告", path: "/progress-tracking/reports", icon: "FileText" },
+      { name: "里程碑管理", path: "/progress-tracking/milestones", icon: "CheckCircle2" },
+      { name: "WBS管理", path: "/progress-tracking/wbs", icon: "Layers" },
+      { name: "甘特图", path: "/progress-tracking/gantt", icon: "BarChart3" },
+    ],
+  },
+  {
     label: "采购管理",
     items: [
       { name: "采购订单", path: "/purchases", icon: "ShoppingCart" },
-      {
-        name: "物料成本",
-        path: "/sales/purchase-material-costs",
-        icon: "DollarSign",
-      },
       { name: "缺料管理", path: "/shortage", icon: "Package" },
       { name: "齐套管理", path: "/material-readiness", icon: "Package" },
+    ],
+  },
+  {
+    label: "成本报价管理",
+    items: [
+      { name: "报价管理", path: "/cost-quotes/quotes", icon: "Calculator" },
+      { name: "报价成本", path: "/cost-quotes/quote-costs", icon: "DollarSign" },
+      { name: "物料成本", path: "/cost-quotes/material-costs", icon: "DollarSign" },
+      { name: "财务成本", path: "/cost-quotes/financial-costs", icon: "DollarSign" },
+      { name: "成本分析", path: "/cost-quotes/cost-analysis", icon: "BarChart3" },
+      { name: "模板与CPQ", path: "/cost-quotes/templates", icon: "Layers" },
     ],
   },
   {
@@ -181,6 +204,15 @@ const defaultNavGroups = [
         path: "/installation-dispatch",
         icon: "Settings",
       },
+    ],
+  },
+  {
+    label: "变更管理",
+    items: [
+      { name: "ECN管理", path: "/change-management/ecn", icon: "FileText" },
+      { name: "ECN类型", path: "/change-management/ecn-types", icon: "Layers" },
+      { name: "逾期预警", path: "/change-management/ecn/overdue-alerts", icon: "AlertTriangle" },
+      { name: "ECN统计", path: "/change-management/ecn/statistics", icon: "BarChart3" },
     ],
   },
   {
@@ -199,7 +231,7 @@ const defaultNavGroups = [
   {
     label: "财务管理",
     items: [
-      { name: "财务成本", path: "/financial-costs", icon: "DollarSign" },
+      // 财务成本已迁移到"成本报价管理"模块
     ],
     roles: ["finance", "accounting", "财务", "会计", "admin", "super_admin"], // 财务部可见
   },
@@ -208,7 +240,6 @@ const defaultNavGroups = [
     items: [
       { name: "工时填报", path: "/timesheet", icon: "Clock" },
       { name: "工作日志", path: "/work-log", icon: "ClipboardList" },
-      { name: "知识管理", path: "/knowledge-base", icon: "BookOpen" },
       { name: "个人设置", path: "/settings", icon: "Settings" },
     ],
   },
@@ -236,7 +267,7 @@ const engineerNavGroups = [
     label: "我的工作",
     items: [
       { name: "工作台", path: "/workstation", icon: "LayoutDashboard" },
-      { name: "任务中心", path: "/tasks", icon: "ListTodo" },
+      { name: "任务中心", path: "/progress-tracking/tasks", icon: "ListTodo" },
       { name: "问题管理", path: "/issues", icon: "AlertCircle" },
       { name: "工时填报", path: "/timesheet", icon: "Clock" },
     ],
@@ -245,7 +276,7 @@ const engineerNavGroups = [
     label: "项目跟踪",
     items: [
       { name: "项目进度", path: "/sales-projects", icon: "Briefcase" },
-      { name: "项目看板", path: "/board", icon: "Kanban" },
+      { name: "项目看板", path: "/progress-tracking/board", icon: "Kanban" },
     ],
   },
   {
@@ -284,8 +315,8 @@ const pmcNavGroups = [
   {
     label: "生产计划",
     items: [
-      { name: "项目看板", path: "/board", icon: "Kanban" },
-      { name: "排期看板", path: "/schedule", icon: "Calendar" },
+      { name: "项目看板", path: "/progress-tracking/board", icon: "Kanban" },
+      { name: "排期看板", path: "/progress-tracking/schedule", icon: "Calendar" },
       { name: "齐套分析", path: "/material-analysis", icon: "Package" },
     ],
   },
@@ -355,7 +386,7 @@ const buyerNavGroups = [
       { name: "采购订单", path: "/purchases", icon: "ShoppingCart" },
       {
         name: "物料成本",
-        path: "/sales/purchase-material-costs",
+        path: "/cost-quotes/material-costs",
         icon: "DollarSign",
       },
       { name: "供应商管理", path: "/suppliers", icon: "Building2" },
@@ -401,8 +432,8 @@ const generalManagerNavGroups = [
   {
     label: "项目管理",
     items: [
-      { name: "项目看板", path: "/board", icon: "Kanban" },
-      { name: "排期看板", path: "/schedule", icon: "Calendar" },
+      { name: "项目看板", path: "/progress-tracking/board", icon: "Kanban" },
+      { name: "排期看板", path: "/progress-tracking/schedule", icon: "Calendar" },
     ],
   },
   {
@@ -465,7 +496,7 @@ const chairmanNavGroups = [
   {
     label: "全面监控",
     items: [
-      { name: "项目看板", path: "/board", icon: "Kanban" },
+      { name: "项目看板", path: "/progress-tracking/board", icon: "Kanban" },
       { name: "运营大屏", path: "/operation", icon: "BarChart3" },
       {
         name: "销售业绩",
@@ -523,9 +554,9 @@ const deptManagerNavGroups = [
   {
     label: "项目管理",
     items: [
-      { name: "项目看板", path: "/board", icon: "Kanban" },
-      { name: "排期看板", path: "/schedule", icon: "Calendar" },
-      { name: "任务中心", path: "/tasks", icon: "ListTodo" },
+      { name: "项目看板", path: "/progress-tracking/board", icon: "Kanban" },
+      { name: "排期看板", path: "/progress-tracking/schedule", icon: "Calendar" },
+      { name: "任务中心", path: "/progress-tracking/tasks", icon: "ListTodo" },
     ],
   },
   {
@@ -560,8 +591,8 @@ const productionManagerNavGroups = [
         path: "/production-dashboard",
         icon: "LayoutDashboard",
       },
-      { name: "项目看板", path: "/board", icon: "Kanban" },
-      { name: "排期看板", path: "/schedule", icon: "Calendar" },
+      { name: "项目看板", path: "/progress-tracking/board", icon: "Kanban" },
+      { name: "排期看板", path: "/progress-tracking/schedule", icon: "Calendar" },
     ],
   },
   {
@@ -610,7 +641,7 @@ const assemblerNavGroups = [
     label: "项目跟踪",
     items: [
       { name: "项目进度", path: "/sales-projects", icon: "Briefcase" },
-      { name: "项目看板", path: "/board", icon: "Kanban" },
+      { name: "项目看板", path: "/progress-tracking/board", icon: "Kanban" },
     ],
   },
   {
@@ -654,9 +685,9 @@ const salesNavGroups = [
     label: "销售管理",
     items: [
       { name: "线索评估", path: "/lead-assessment", icon: "Target" },
-      { name: "报价管理", path: "/sales/quotes", icon: "Calculator" },
+      { name: "报价管理", path: "/cost-quotes/quotes", icon: "Calculator" },
       { name: "合同管理", path: "/sales/contracts", icon: "FileCheck" },
-      { name: "模板与CPQ", path: "/sales/templates", icon: "Layers" },
+      { name: "模板与CPQ", path: "/cost-quotes/templates", icon: "Layers" },
       { name: "技术评审", path: "/technical-reviews", icon: "FileCheck" },
       { name: "应收账款", path: "/sales/receivables", icon: "CreditCard" },
       { name: "回款跟踪", path: "/payments", icon: "CreditCard" },
@@ -675,7 +706,7 @@ const salesNavGroups = [
     label: "项目跟踪",
     items: [
       { name: "项目进度", path: "/sales-projects", icon: "Briefcase" },
-      { name: "项目看板", path: "/board", icon: "Kanban" },
+      { name: "项目看板", path: "/progress-tracking/board", icon: "Kanban" },
     ],
   },
   {
@@ -784,7 +815,7 @@ const procurementNavGroups = [
     items: [
       {
         name: "物料成本",
-        path: "/sales/purchase-material-costs",
+        path: "/cost-quotes/material-costs",
         icon: "DollarSign",
       },
       { name: "预算管理", path: "/budgets", icon: "CreditCard" },
@@ -828,8 +859,8 @@ const procurementManagerNavGroups = [
   {
     label: "项目管理",
     items: [
-      { name: "项目看板", path: "/board", icon: "Kanban" },
-      { name: "排期看板", path: "/schedule", icon: "Calendar" },
+      { name: "项目看板", path: "/progress-tracking/board", icon: "Kanban" },
+      { name: "排期看板", path: "/progress-tracking/schedule", icon: "Calendar" },
     ],
   },
   {
@@ -1076,7 +1107,7 @@ function getNavGroupsForRole(role, isSuperuser = false) {
             },
             {
               name: "财务成本",
-              path: "/financial-costs",
+              path: "/cost-quotes/financial-costs",
               icon: "DollarSign",
             },
             { name: "成本核算", path: "/costs", icon: "Calculator" },
@@ -1152,8 +1183,8 @@ function getNavGroupsForRole(role, isSuperuser = false) {
               path: "/production-dashboard",
               icon: "LayoutDashboard",
             },
-            { name: "项目看板", path: "/board", icon: "Kanban" },
-            { name: "排期看板", path: "/schedule", icon: "Calendar" },
+            { name: "项目看板", path: "/progress-tracking/board", icon: "Kanban" },
+            { name: "排期看板", path: "/progress-tracking/schedule", icon: "Calendar" },
           ],
         },
         {
@@ -1196,8 +1227,8 @@ function getNavGroupsForRole(role, isSuperuser = false) {
               path: "/customer-service-dashboard",
               icon: "LayoutDashboard",
             },
-            { name: "项目看板", path: "/board", icon: "Kanban" },
-            { name: "任务中心", path: "/tasks", icon: "ListTodo" },
+            { name: "项目看板", path: "/progress-tracking/board", icon: "Kanban" },
+            { name: "任务中心", path: "/progress-tracking/tasks", icon: "ListTodo" },
             { name: "问题管理", path: "/issues", icon: "AlertCircle" },
           ],
         },
@@ -1255,7 +1286,7 @@ function getNavGroupsForRole(role, isSuperuser = false) {
               path: "/service-knowledge-base",
               icon: "BookOpen",
             },
-            { name: "任务中心", path: "/tasks", icon: "ListTodo" },
+            { name: "任务中心", path: "/progress-tracking/tasks", icon: "ListTodo" },
             { name: "问题管理", path: "/issues", icon: "AlertCircle" },
             { name: "工时填报", path: "/timesheet", icon: "Clock" },
           ],
@@ -1288,7 +1319,7 @@ function getNavGroupsForRole(role, isSuperuser = false) {
         {
           label: "团队管理",
           items: [
-            { name: "任务中心", path: "/tasks", icon: "ListTodo" },
+            { name: "任务中心", path: "/progress-tracking/tasks", icon: "ListTodo" },
             { name: "问题管理", path: "/issues", icon: "AlertCircle" },
           ],
         },
@@ -1296,7 +1327,7 @@ function getNavGroupsForRole(role, isSuperuser = false) {
           label: "项目跟踪",
           items: [
             { name: "项目进度", path: "/sales-projects", icon: "Briefcase" },
-            { name: "项目看板", path: "/board", icon: "Kanban" },
+            { name: "项目看板", path: "/progress-tracking/board", icon: "Kanban" },
           ],
         },
         {
@@ -1331,6 +1362,31 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
   // State for dynamic menu from backend
   const [dynamicNavGroups, setDynamicNavGroups] = useState(null);
   const [menuLoading, setMenuLoading] = useState(false);
+
+  // Menu search state with debounce
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Module collapse state (stored in localStorage)
+  // Default: all groups expanded (false means not collapsed, i.e., expanded)
+  const [collapsedGroups, setCollapsedGroups] = useState(() => {
+    try {
+      const saved = localStorage.getItem("sidebar_collapsed_groups");
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  // Favorite menu items (stored in localStorage)
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const saved = localStorage.getItem("sidebar_favorites");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Get user role from localStorage if not provided - memoized
   const currentUser = useMemo(() => {
@@ -1395,6 +1451,66 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
     return filterNavItemsByRole(groups, role, isSuperuser);
   }, [role, isSuperuser, dynamicNavGroups]);
 
+  // Toggle group collapse
+  const toggleGroupCollapse = (groupLabel) => {
+    setCollapsedGroups((prev) => {
+      const newState = { ...prev, [groupLabel]: !prev[groupLabel] };
+      localStorage.setItem("sidebar_collapsed_groups", JSON.stringify(newState));
+      return newState;
+    });
+  };
+
+  // Toggle favorite
+  const toggleFavorite = (itemPath, itemName, itemIcon) => {
+    setFavorites((prev) => {
+      const isFavorite = prev.some((fav) => fav.path === itemPath);
+      let newFavorites;
+      if (isFavorite) {
+        newFavorites = prev.filter((fav) => fav.path !== itemPath);
+      } else {
+        newFavorites = [...prev, { path: itemPath, name: itemName, icon: itemIcon }];
+      }
+      localStorage.setItem("sidebar_favorites", JSON.stringify(newFavorites));
+      return newFavorites;
+    });
+  };
+
+  // Filter menu items based on search query (using debounced value)
+  const filteredNavGroups = useMemo(() => {
+    if (!debouncedSearchQuery.trim()) {
+      return navGroups;
+    }
+
+    const query = debouncedSearchQuery.toLowerCase();
+    return navGroups
+      .map((group) => {
+        const filteredItems = group.items.filter(
+          (item) =>
+            item.name.toLowerCase().includes(query) ||
+            item.path.toLowerCase().includes(query) ||
+            group.label.toLowerCase().includes(query),
+        );
+        return {
+          ...group,
+          items: filteredItems,
+        };
+      })
+      .filter((group) => group.items.length > 0);
+  }, [navGroups, debouncedSearchQuery]);
+
+  // Get favorite items as a group
+  const favoriteGroup = useMemo(() => {
+    if (favorites.length === 0) return null;
+    return {
+      label: "我的收藏",
+      items: favorites.map((fav) => ({
+        name: fav.name,
+        path: fav.path,
+        icon: fav.icon,
+      })),
+    };
+  }, [favorites]);
+
   return (
     <aside
       className={cn(
@@ -1451,98 +1567,91 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
         </div>
       )}
 
+      {/* Search box */}
+      {!collapsed && (
+        <div className="px-3 py-3 border-b border-white/5">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+            <input
+              type="text"
+              placeholder="搜索菜单..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={cn(
+                "w-full pl-9 pr-8 py-2 rounded-lg",
+                "bg-surface-100/50 border border-white/10",
+                "text-sm text-white placeholder:text-slate-500",
+                "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50",
+                "transition-all duration-200",
+              )}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-white/10 transition-colors"
+              >
+                <X className="h-4 w-4 text-slate-500" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto custom-scrollbar py-4 px-3">
-        {navGroups.map((group, gi) => (
-          <div key={gi} className="mb-6">
-            <AnimatePresence>
-              {!collapsed && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="px-3 mb-2 text-xs font-medium text-slate-500 uppercase tracking-wider"
-                >
-                  {group.label}
-                </motion.p>
-              )}
-            </AnimatePresence>
+        {/* Favorite items section */}
+        {!collapsed && favoriteGroup && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between px-3 mb-2">
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-xs font-medium text-slate-500 uppercase tracking-wider"
+              >
+                {favoriteGroup.label}
+              </motion.p>
+            </div>
             <div className="space-y-1">
-              {group.items.map((item) => {
-                const isActive = location.pathname === item.path;
-                const Icon = iconMap[item.icon] || Box;
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={cn(
-                      "relative flex items-center gap-3 px-3 py-2.5 rounded-xl",
-                      "text-sm font-medium transition-all duration-200",
-                      "group",
-                      isActive
-                        ? "text-white bg-white/[0.08]"
-                        : "text-slate-400 hover:text-white hover:bg-white/[0.04]",
-                      collapsed && "justify-center",
-                    )}
-                  >
-                    {/* Active indicator */}
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeNav"
-                        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-full bg-primary"
-                        transition={{ type: "spring", duration: 0.5 }}
-                      />
-                    )}
-
-                    <Icon
-                      className={cn(
-                        "h-5 w-5 flex-shrink-0",
-                        isActive
-                          ? "text-primary"
-                          : "text-slate-500 group-hover:text-slate-300",
-                      )}
-                    />
-
-                    <AnimatePresence>
-                      {!collapsed && (
-                        <motion.span
-                          initial={{ opacity: 0, width: 0 }}
-                          animate={{ opacity: 1, width: "auto" }}
-                          exit={{ opacity: 0, width: 0 }}
-                          className="whitespace-nowrap overflow-hidden"
-                        >
-                          {item.name}
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-
-                    {/* Badge */}
-                    {item.badge && !collapsed && (
-                      <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-red-500/20 text-red-400">
-                        {item.badge}
-                      </span>
-                    )}
-
-                    {/* Tooltip for collapsed state */}
-                    {collapsed && (
-                      <div
-                        className={cn(
-                          "absolute left-full ml-2 px-3 py-1.5 rounded-lg",
-                          "bg-surface-200 text-white text-sm whitespace-nowrap",
-                          "opacity-0 invisible group-hover:opacity-100 group-hover:visible",
-                          "transition-all duration-200 z-50",
-                        )}
-                      >
-                        {item.name}
-                        <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-surface-200 rotate-45" />
-                      </div>
-                    )}
-                  </Link>
-                );
-              })}
+              {favoriteGroup.items.map((item) => (
+                <NavItem
+                  key={item.path}
+                  item={item}
+                  iconMap={iconMap}
+                  collapsed={collapsed}
+                  isFavorite={true}
+                  onToggleFavorite={toggleFavorite}
+                  activePath={location.pathname}
+                />
+              ))}
             </div>
           </div>
-        ))}
+        )}
+
+        {/* Regular menu groups */}
+        {filteredNavGroups.map((group, gi) => {
+          // Default to expanded (false means not collapsed)
+          const isGroupCollapsed = collapsedGroups[group.label] === true;
+          return (
+            <NavGroup
+              key={gi}
+              group={group}
+              iconMap={iconMap}
+              collapsed={collapsed}
+              isGroupCollapsed={isGroupCollapsed}
+              favorites={favorites}
+              onToggleFavorite={toggleFavorite}
+              onToggleCollapse={toggleGroupCollapse}
+              activePath={location.pathname}
+            />
+          );
+        })}
+
+        {/* No results message */}
+        {!collapsed && debouncedSearchQuery && filteredNavGroups.length === 0 && (
+          <div className="px-3 py-8 text-center">
+            <p className="text-sm text-slate-500">未找到匹配的菜单项</p>
+          </div>
+        )}
       </nav>
 
       {/* Footer */}

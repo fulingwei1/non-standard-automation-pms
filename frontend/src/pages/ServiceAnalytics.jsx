@@ -439,7 +439,7 @@ export default function ServiceAnalytics() {
     }
   }, [period]);
 
-  const handleExport = () => {
+  const handleExport = (format = "csv") => {
     if (!analytics) {
       toast.error("暂无数据可导出");
       return;
@@ -489,81 +489,169 @@ export default function ServiceAnalytics() {
         })),
       };
 
-      // 转换为CSV格式
-      const csvRows = [];
+      if (format === "excel") {
+        // Excel格式导出（使用HTML table方式）
+        const htmlContent = generateExcelHTML(exportData);
+        const blob = new Blob([htmlContent], {
+          type: "application/vnd.ms-excel",
+        });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute(
+          "download",
+          `服务数据分析报表_${period}_${new Date().toISOString().split("T")[0]}.xls`,
+        );
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        toast.success("Excel报表导出成功");
+      } else {
+        // CSV格式导出
+        const csvRows = [];
 
-      // 概览数据
-      csvRows.push("=== 概览数据 ===");
-      csvRows.push("项目,数值");
-      Object.entries(exportData.概览).forEach(([key, value]) => {
-        csvRows.push(`"${key}","${value}"`);
-      });
-      csvRows.push("");
-
-      // 工单趋势
-      if (exportData.工单趋势.length > 0) {
-        csvRows.push("=== 工单趋势 ===");
-        csvRows.push("月份,工单数,已解决");
-        exportData.工单趋势.forEach((t) => {
-          csvRows.push(`"${t.月份}",${t.工单数},${t.已解决}`);
+        // 概览数据
+        csvRows.push("=== 概览数据 ===");
+        csvRows.push("项目,数值");
+        Object.entries(exportData.概览).forEach(([key, value]) => {
+          csvRows.push(`"${key}","${value}"`);
         });
         csvRows.push("");
-      }
 
-      // 服务类型分布
-      if (exportData.服务类型分布.length > 0) {
-        csvRows.push("=== 服务类型分布 ===");
-        csvRows.push("类型,数量,占比");
-        exportData.服务类型分布.forEach((d) => {
-          csvRows.push(`"${d.类型}",${d.数量},"${d.占比}"`);
+        // 工单趋势
+        if (exportData.工单趋势.length > 0) {
+          csvRows.push("=== 工单趋势 ===");
+          csvRows.push("月份,工单数,已解决");
+          exportData.工单趋势.forEach((t) => {
+            csvRows.push(`"${t.月份}",${t.工单数},${t.已解决}`);
+          });
+          csvRows.push("");
+        }
+
+        // 服务类型分布
+        if (exportData.服务类型分布.length > 0) {
+          csvRows.push("=== 服务类型分布 ===");
+          csvRows.push("类型,数量,占比");
+          exportData.服务类型分布.forEach((d) => {
+            csvRows.push(`"${d.类型}",${d.数量},"${d.占比}"`);
+          });
+          csvRows.push("");
+        }
+
+        // 问题类型分布
+        if (exportData.问题类型分布.length > 0) {
+          csvRows.push("=== 问题类型分布 ===");
+          csvRows.push("类型,数量,占比");
+          exportData.问题类型分布.forEach((d) => {
+            csvRows.push(`"${d.类型}",${d.数量},"${d.占比}"`);
+          });
+          csvRows.push("");
+        }
+
+        // 响应时间分布
+        if (exportData.响应时间分布.length > 0) {
+          csvRows.push("=== 响应时间分布 ===");
+          csvRows.push("时间范围,数量,占比");
+          exportData.响应时间分布.forEach((d) => {
+            csvRows.push(`"${d.时间范围}",${d.数量},"${d.占比}"`);
+          });
+        }
+
+        const csvContent = csvRows.join("\n");
+
+        // 添加BOM以支持中文
+        const BOM = "\uFEFF";
+        const blob = new Blob([BOM + csvContent], {
+          type: "text/csv;charset=utf-8;",
         });
-        csvRows.push("");
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute(
+          "download",
+          `服务数据分析报表_${period}_${new Date().toISOString().split("T")[0]}.csv`,
+        );
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        toast.success("CSV报表导出成功");
       }
-
-      // 问题类型分布
-      if (exportData.问题类型分布.length > 0) {
-        csvRows.push("=== 问题类型分布 ===");
-        csvRows.push("类型,数量,占比");
-        exportData.问题类型分布.forEach((d) => {
-          csvRows.push(`"${d.类型}",${d.数量},"${d.占比}"`);
-        });
-        csvRows.push("");
-      }
-
-      // 响应时间分布
-      if (exportData.响应时间分布.length > 0) {
-        csvRows.push("=== 响应时间分布 ===");
-        csvRows.push("时间范围,数量,占比");
-        exportData.响应时间分布.forEach((d) => {
-          csvRows.push(`"${d.时间范围}",${d.数量},"${d.占比}"`);
-        });
-      }
-
-      const csvContent = csvRows.join("\n");
-
-      // 添加BOM以支持中文
-      const BOM = "\uFEFF";
-      const blob = new Blob([BOM + csvContent], {
-        type: "text/csv;charset=utf-8;",
-      });
-      const link = document.createElement("a");
-      const url = URL.createObjectURL(blob);
-      link.setAttribute("href", url);
-      link.setAttribute(
-        "download",
-        `服务数据分析报表_${period}_${new Date().toISOString().split("T")[0]}.csv`,
-      );
-      link.style.visibility = "hidden";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      toast.success("报表导出成功");
     } catch (error) {
       console.error("导出失败:", error);
       toast.error("导出失败: " + (error.message || "未知错误"));
     }
+  };
+
+  // 生成Excel HTML格式
+  const generateExcelHTML = (data) => {
+    let html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="utf-8">
+        <style>
+          table { border-collapse: collapse; width: 100%; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background-color: #4f46e5; color: white; font-weight: bold; }
+          .section-title { background-color: #e5e7eb; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <h2>服务数据分析报表</h2>
+        <p>统计周期: ${data.统计周期}</p>
+        <p>导出日期: ${data.导出日期}</p>
+        <br>
+    `;
+
+    // 概览数据
+    html += '<table><tr class="section-title"><th colspan="2">概览数据</th></tr><tr><th>项目</th><th>数值</th></tr>';
+    Object.entries(data.概览).forEach(([key, value]) => {
+      html += `<tr><td>${key}</td><td>${value}</td></tr>`;
+    });
+    html += "</table><br>";
+
+    // 工单趋势
+    if (data.工单趋势.length > 0) {
+      html += '<table><tr class="section-title"><th colspan="3">工单趋势</th></tr><tr><th>月份</th><th>工单数</th><th>已解决</th></tr>';
+      data.工单趋势.forEach((t) => {
+        html += `<tr><td>${t.月份}</td><td>${t.工单数}</td><td>${t.已解决}</td></tr>`;
+      });
+      html += "</table><br>";
+    }
+
+    // 服务类型分布
+    if (data.服务类型分布.length > 0) {
+      html += '<table><tr class="section-title"><th colspan="3">服务类型分布</th></tr><tr><th>类型</th><th>数量</th><th>占比</th></tr>';
+      data.服务类型分布.forEach((d) => {
+        html += `<tr><td>${d.类型}</td><td>${d.数量}</td><td>${d.占比}</td></tr>`;
+      });
+      html += "</table><br>";
+    }
+
+    // 问题类型分布
+    if (data.问题类型分布.length > 0) {
+      html += '<table><tr class="section-title"><th colspan="3">问题类型分布</th></tr><tr><th>类型</th><th>数量</th><th>占比</th></tr>';
+      data.问题类型分布.forEach((d) => {
+        html += `<tr><td>${d.类型}</td><td>${d.数量}</td><td>${d.占比}</td></tr>`;
+      });
+      html += "</table><br>";
+    }
+
+    // 响应时间分布
+    if (data.响应时间分布.length > 0) {
+      html += '<table><tr class="section-title"><th colspan="3">响应时间分布</th></tr><tr><th>时间范围</th><th>数量</th><th>占比</th></tr>';
+      data.响应时间分布.forEach((d) => {
+        html += `<tr><td>${d.时间范围}</td><td>${d.数量}</td><td>${d.占比}</td></tr>`;
+      });
+      html += "</table>";
+    }
+
+    html += "</body></html>";
+    return html;
   };
 
   if (loading && !analytics) {
@@ -630,15 +718,26 @@ export default function ServiceAnalytics() {
               />
               刷新
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={handleExport}
-            >
-              <Download className="w-4 h-4" />
-              导出报表
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => handleExport("csv")}
+              >
+                <Download className="w-4 h-4" />
+                导出CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => handleExport("excel")}
+              >
+                <Download className="w-4 h-4" />
+                导出Excel
+              </Button>
+            </div>
           </div>
         }
       />

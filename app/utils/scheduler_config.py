@@ -214,6 +214,23 @@ SCHEDULER_TASKS = [
         },
     },
     {
+        "id": "auto_trigger_urgent_purchase_from_shortage_alerts",
+        "name": "缺料预警自动触发紧急采购",
+        "module": "app.utils.scheduled_tasks",
+        "callable": "auto_trigger_urgent_purchase_from_shortage_alerts",
+        "cron": {"hour": 7, "minute": 30},
+        "owner": "Supply Chain",
+        "category": "Shortage",
+        "description": "每天 7:30 检查紧急级别的缺料预警，自动创建采购申请。",
+        "enabled": True,
+        "dependencies_tables": ["mat_shortage_alert", "materials", "material_suppliers", "purchase_requests"],
+        "risk_level": "HIGH",
+        "sla": {
+            "max_execution_time_seconds": 600,
+            "retry_on_failure": True,
+        },
+    },
+    {
         "id": "check_task_delay_alerts",
         "name": "任务延期预警",
         "module": "app.utils.scheduled_tasks",

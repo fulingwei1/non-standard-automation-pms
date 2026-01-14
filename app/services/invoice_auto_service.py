@@ -119,6 +119,14 @@ class InvoiceAutoService:
                     logger.warning(f"收款计划 {plan.id} 的交付物不齐全，跳过自动开票")
                     continue
                 
+                # 检查验收问题：存在未闭环阻塞问题时阻止开票
+                if not self._check_acceptance_issues_resolved(order):
+                    logger.warning(
+                        f"验收单 {order.id} 存在未闭环的阻塞问题，无法开票。"
+                        f"收款计划 {plan.id} 跳过自动开票"
+                    )
+                    continue
+                
                 # 创建发票申请或直接创建发票
                 if auto_create:
                     result = self._create_invoice_directly(plan, order, milestone)
@@ -163,6 +171,42 @@ class InvoiceAutoService:
         # 如果有交付物表，可以检查交付状态
         # 这里默认返回 True，表示交付物齐全
         return True
+
+    def _check_acceptance_issues_resolved(self, order: AcceptanceOrder) -> bool:
+        """
+        检查验收问题是否已全部解决
+        
+        规则：存在未闭环的阻塞问题时，不能开票
+        
+        Args:
+            order: 验收单对象
+        
+        Returns:
+            bool: True表示所有阻塞问题已解决，可以开票；False表示存在未解决的阻塞问题
+        """
+        from app.models.acceptance import AcceptanceIssue
+        
+        # 查找所有阻塞问题
+        blocking_issues = self.db.query(AcceptanceIssue).filter(
+            AcceptanceIssue.order_id == order.id,
+            AcceptanceIssue.is_blocking == True,
+            AcceptanceIssue.status.in_(["OPEN", "PROCESSING", "RESOLVED", "DEFERRED"])
+        ).all()
+        
+        if not blocking_issues:
+            return True  # 没有阻塞问题，可以开票
+        
+        # 检查是否有未闭环的阻塞问题
+        for issue in blocking_issues:
+            if issue.status == "RESOLVED":
+                # 已解决的问题需要验证通过才能算闭环
+                if issue.verified_result != "VERIFIED":
+                    return False  # 存在已解决但未验证的问题
+            else:
+                # OPEN, PROCESSING, DEFERRED 状态的问题都算未闭环
+                return False
+        
+        return True  # 所有阻塞问题都已解决并验证通过
 
     def _create_invoice_request(
         self,

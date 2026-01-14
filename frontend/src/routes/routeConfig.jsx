@@ -336,6 +336,15 @@ export function AppRoutes() {
       <Route path="/documents" element={<Documents />} />
 
       {/* Project Management */}
+      {/* 进度跟踪模块 - 新路由 */}
+      <Route path="/progress-tracking/tasks" element={<TaskCenter />} />
+      <Route path="/progress-tracking/board" element={<ProjectBoard />} />
+      <Route path="/progress-tracking/schedule" element={<ScheduleBoard />} />
+      <Route path="/progress-tracking/reports" element={<ProgressReport />} />
+      <Route path="/progress-tracking/milestones" element={<MilestoneManagement />} />
+      <Route path="/progress-tracking/wbs" element={<WBSTemplateManagement />} />
+      <Route path="/progress-tracking/gantt" element={<ProjectGantt />} />
+      {/* 向后兼容 - 保留旧路由 */}
       <Route path="/board" element={<ProjectBoard />} />
       <Route path="/projects" element={<ProjectList />} />
       <Route path="/projects/:id" element={<ProjectDetail />} />
@@ -636,20 +645,20 @@ export function AppRoutes() {
         path="/sales/:sourceType/:sourceId/ai-clarifications"
         element={<AIClarificationChat />}
       />
+      {/* 成本报价管理模块 - 新路由 */}
+      <Route path="/cost-quotes/quotes" element={<QuoteManagement />} />
+      <Route path="/cost-quotes/quotes/:id/cost" element={<QuoteCostManagement />} />
+      <Route path="/cost-quotes/quotes/:id/cost-analysis" element={<QuoteCostAnalysis />} />
+      <Route path="/cost-quotes/material-costs" element={<PurchaseMaterialCostManagement />} />
+      <Route path="/cost-quotes/financial-costs" element={<FinancialCostUpload />} />
+      <Route path="/cost-quotes/cost-analysis" element={<QuoteCostAnalysis />} />
+      <Route path="/cost-quotes/templates" element={<SalesTemplateCenter />} />
+      {/* 向后兼容 - 保留旧路由 */}
       <Route path="/sales/quotes" element={<QuoteManagement />} />
       <Route path="/sales/quotes/:id/cost" element={<QuoteCostManagement />} />
-      <Route
-        path="/sales/quotes/:id/cost-analysis"
-        element={<QuoteCostAnalysis />}
-      />
-      <Route
-        path="/sales/cost-templates"
-        element={<CostTemplateManagement />}
-      />
-      <Route
-        path="/sales/purchase-material-costs"
-        element={<PurchaseMaterialCostManagement />}
-      />
+      <Route path="/sales/quotes/:id/cost-analysis" element={<QuoteCostAnalysis />} />
+      <Route path="/sales/cost-templates" element={<CostTemplateManagement />} />
+      <Route path="/sales/purchase-material-costs" element={<PurchaseMaterialCostManagement />} />
       <Route path="/financial-costs" element={<FinancialCostUpload />} />
       <Route path="/sales/contracts" element={<ContractManagement />} />
       <Route path="/sales/receivables" element={<ReceivableManagement />} />
@@ -860,6 +869,13 @@ export function AppRoutes() {
           </ProcurementProtectedRoute>
         }
       />
+      {/* 变更管理模块 - 新路由 */}
+      <Route path="/change-management/ecn" element={<ECNManagement />} />
+      <Route path="/change-management/ecn/:id" element={<ECNDetail />} />
+      <Route path="/change-management/ecn-types" element={<ECNTypeManagement />} />
+      <Route path="/change-management/ecn/overdue-alerts" element={<ECNOverdueAlerts />} />
+      <Route path="/change-management/ecn/statistics" element={<ECNStatistics />} />
+      {/* 向后兼容 - 保留旧路由 */}
       <Route path="/ecn" element={<ECNManagement />} />
       <Route path="/ecn/:id" element={<ECNDetail />} />
       <Route path="/ecn-types" element={<ECNTypeManagement />} />

@@ -610,6 +610,61 @@ def release_bom(
         import logging
         logging.warning(f"BOM发布后成本归集失败：{str(e)}")
     
+    # BOM审核通过后自动生成采购需求
+    try:
+        from app.services.purchase_request_from_bom_service import (
+            get_purchase_items_from_bom,
+            group_items_by_supplier,
+            build_request_items,
+            create_purchase_request,
+        )
+        from app.api.v1.endpoints.purchase import generate_request_no
+        
+        # 获取需要采购的物料
+        purchase_items = get_purchase_items_from_bom(bom)
+        
+        if purchase_items:
+            # 按供应商分组
+            supplier_items = group_items_by_supplier(db, purchase_items, None)
+            
+            created_requests = []
+            for supplier_id, items in supplier_items.items():
+                # 构建申请明细
+                request_items, total_amount = build_request_items(items)
+                
+                if not request_items:
+                    continue
+                
+                # 获取供应商名称
+                supplier_name = "未指定供应商"
+                if supplier_id and supplier_id != 0:
+                    supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
+                    if supplier:
+                        supplier_name = supplier.supplier_name
+                
+                # 创建采购申请
+                pr = create_purchase_request(
+                    db=db,
+                    bom=bom,
+                    supplier_id=supplier_id,
+                    supplier_name=supplier_name,
+                    request_items=request_items,
+                    total_amount=total_amount,
+                    current_user_id=current_user.id,
+                    generate_request_no=generate_request_no
+                )
+                created_requests.append(pr)
+            
+            if created_requests:
+                logger.info(
+                    f"BOM审核通过，已自动创建 {len(created_requests)} 个采购需求。"
+                    f"BOM ID: {bom_id}"
+                )
+    except Exception as e:
+        # 自动生成采购需求失败不影响BOM发布，记录日志
+        import logging
+        logging.warning(f"BOM审核通过后自动生成采购需求失败：{str(e)}", exc_info=True)
+    
     # Issue 1.2: BOM发布后自动触发阶段流转检查（S4→S5）
     if bom.project_id:
         try:

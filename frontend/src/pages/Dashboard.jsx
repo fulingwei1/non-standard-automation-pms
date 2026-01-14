@@ -4,11 +4,15 @@ import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
 import { projectApi, machineApi } from "../services/api";
 import { formatCurrency, getHealthColor, getStageName } from "../lib/utils";
-import { PageHeader } from "../components/layout/PageHeader";
+import {
+  DashboardLayout,
+  DashboardStatCard,
+  useDashboardData,
+  VirtualizedProjectList,
+} from "../components/dashboard";
 import {
   Card,
   CardContent,
-  StatCard,
   Progress,
   Badge,
   HealthBadge,
@@ -48,78 +52,47 @@ const staggerChild = {
 // This Dashboard component will only render for users without a specific dashboard
 
 export default function Dashboard() {
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalProjects: 0,
-    activeProjects: 0,
-    totalMachines: 0,
-    atRiskProjects: 0,
+  // 使用统一的数据获取Hook
+  const { data: projectsData, loading: projectsLoading } = useDashboardData({
+    fetchFn: () => projectApi.list(),
+    cacheKey: "dashboard_projects",
+    cacheTime: 5 * 60 * 1000, // 5分钟缓存
   });
-  const [recentProjects, setRecentProjects] = useState([]);
 
-  // Note: Role-based redirect is now handled at the route level in App.jsx
-  // This component will only render for users without a specific dashboard
+  const { data: machinesData, loading: machinesLoading } = useDashboardData({
+    fetchFn: () => machineApi.list({}),
+    cacheKey: "dashboard_machines",
+    cacheTime: 5 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [projectsRes, machinesRes] = await Promise.all([
-          projectApi.list(),
-          machineApi.list({}),
-        ]);
+  const loading = projectsLoading || machinesLoading;
 
-        // Handle different API response formats (array, {items: []}, {data: []})
-        let projects = [];
-        let machines = [];
+  // 处理不同API响应格式
+  const projects = (() => {
+    if (!projectsData) return [];
+    if (Array.isArray(projectsData)) return projectsData;
+    if (Array.isArray(projectsData.items)) return projectsData.items;
+    if (Array.isArray(projectsData.data)) return projectsData.data;
+    return [];
+  })();
 
-        if (projectsRes.data) {
-          if (Array.isArray(projectsRes.data)) {
-            projects = projectsRes.data;
-          } else if (Array.isArray(projectsRes.data.items)) {
-            projects = projectsRes.data.items;
-          } else if (Array.isArray(projectsRes.data.data)) {
-            projects = projectsRes.data.data;
-          }
-        }
+  const machines = (() => {
+    if (!machinesData) return [];
+    if (Array.isArray(machinesData)) return machinesData;
+    if (Array.isArray(machinesData.items)) return machinesData.items;
+    if (Array.isArray(machinesData.data)) return machinesData.data;
+    return [];
+  })();
 
-        if (machinesRes.data) {
-          if (Array.isArray(machinesRes.data)) {
-            machines = machinesRes.data;
-          } else if (Array.isArray(machinesRes.data.items)) {
-            machines = machinesRes.data.items;
-          } else if (Array.isArray(machinesRes.data.data)) {
-            machines = machinesRes.data.data;
-          }
-        }
+  const stats = {
+    totalProjects: projects.length,
+    activeProjects: projects.filter((p) => p.health !== "H4").length,
+    totalMachines: machines.length,
+    atRiskProjects: projects.filter((p) => ["H2", "H3"].includes(p.health))
+      .length,
+  };
 
-        setStats({
-          totalProjects: projects.length,
-          activeProjects: projects.filter((p) => p.health !== "H4").length,
-          totalMachines: machines.length,
-          atRiskProjects: projects.filter((p) =>
-            ["H2", "H3"].includes(p.health),
-          ).length,
-        });
-
-        setRecentProjects(projects.slice(0, 5));
-      } catch (err) {
-        console.error("Failed to fetch dashboard data:", err);
-        // Use empty arrays on error - don't crash the UI
-        setStats({
-          totalProjects: 0,
-          activeProjects: 0,
-          totalMachines: 0,
-          atRiskProjects: 0,
-        });
-        setRecentProjects([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const recentProjects = projects.slice(0, 5);
 
   const statCards = [
     {
@@ -227,33 +200,23 @@ export default function Dashboard() {
   ];
 
   return (
-    <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-      <motion.div variants={staggerChild}>
-        <PageHeader title="仪表盘" description="项目全局概览与关键指标" />
-      </motion.div>
-
+    <DashboardLayout
+      title="仪表盘"
+      description="项目全局概览与关键指标"
+    >
       {/* Stats Grid */}
-      <motion.div
-        variants={staggerChild}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
-      >
-        {loading
-          ? Array(4)
-              .fill(null)
-              .map((_, i) => (
-                <Card key={i} className="p-5">
-                  <div className="animate-pulse">
-                    <div className="h-10 w-10 rounded-xl bg-white/10 mb-4" />
-                    <div className="h-3 w-20 rounded bg-white/10 mb-3" />
-                    <div className="h-6 w-16 rounded bg-white/10" />
-                  </div>
-                </Card>
-              ))
-          : statCards.map((stat, i) => <StatCard key={i} {...stat} />)}
-      </motion.div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {statCards.map((stat, i) => (
+          <DashboardStatCard
+            key={i}
+            {...stat}
+            loading={loading}
+          />
+        ))}
+      </div>
 
       {/* Role Selection Grid */}
-      <motion.div variants={staggerChild} className="mb-8">
+      <div className="mb-8">
         <h3 className="text-lg font-semibold text-white mb-4">快速导航</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {roleCards.map((role, index) => {
@@ -263,7 +226,6 @@ export default function Dashboard() {
                 key={index}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                variants={staggerChild}
               >
                 <Link to={role.path}>
                   <Card
@@ -306,12 +268,12 @@ export default function Dashboard() {
             );
           })}
         </div>
-      </motion.div>
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Projects */}
-        <motion.div variants={staggerChild} className="lg:col-span-2">
+        <div className="lg:col-span-2">
           <Card hover={false}>
             <CardContent className="p-0">
               <div className="flex items-center justify-between p-5 border-b border-white/5">
@@ -333,56 +295,64 @@ export default function Dashboard() {
                     ))}
                 </div>
               ) : recentProjects.length > 0 ? (
-                <div className="divide-y divide-white/5">
-                  {recentProjects.map((project) => (
-                    <Link
-                      key={project.id}
-                      to={`/projects/${project.id}`}
-                      className="flex items-center gap-4 p-5 hover:bg-white/[0.02] transition-colors group"
-                    >
-                      {/* Icon */}
-                      <div
-                        className={cn(
-                          "p-3 rounded-xl",
-                          "bg-gradient-to-br from-primary/20 to-indigo-500/10",
-                          "ring-1 ring-primary/20",
-                          "group-hover:scale-105 transition-transform",
-                        )}
+                // 使用虚拟滚动优化长列表性能
+                recentProjects.length > 10 ? (
+                  <VirtualizedProjectList
+                    projects={recentProjects}
+                    itemHeight={80}
+                  />
+                ) : (
+                  <div className="divide-y divide-white/5">
+                    {recentProjects.map((project) => (
+                      <Link
+                        key={project.id}
+                        to={`/projects/${project.id}`}
+                        className="flex items-center gap-4 p-5 hover:bg-white/[0.02] transition-colors group"
                       >
-                        <Briefcase className="h-5 w-5 text-primary" />
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-1">
-                          <h4 className="font-medium text-white truncate">
-                            {project.project_name}
-                          </h4>
-                          <HealthBadge health={project.health || "H1"} />
+                        {/* Icon */}
+                        <div
+                          className={cn(
+                            "p-3 rounded-xl",
+                            "bg-gradient-to-br from-primary/20 to-indigo-500/10",
+                            "ring-1 ring-primary/20",
+                            "group-hover:scale-105 transition-transform",
+                          )}
+                        >
+                          <Briefcase className="h-5 w-5 text-primary" />
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-slate-500">
-                          <span>{project.project_code}</span>
-                          <span>•</span>
-                          <span>{project.customer_name}</span>
-                        </div>
-                      </div>
 
-                      {/* Progress */}
-                      <div className="w-32 hidden sm:block">
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-slate-400">进度</span>
-                          <span className="text-white">
-                            {project.progress_pct || 0}%
-                          </span>
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-1">
+                            <h4 className="font-medium text-white truncate">
+                              {project.project_name}
+                            </h4>
+                            <HealthBadge health={project.health || "H1"} />
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-slate-500">
+                            <span>{project.project_code}</span>
+                            <span>•</span>
+                            <span>{project.customer_name}</span>
+                          </div>
                         </div>
-                        <Progress value={project.progress_pct || 0} size="sm" />
-                      </div>
 
-                      {/* Arrow */}
-                      <ArrowRight className="h-5 w-5 text-slate-600 group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                    </Link>
-                  ))}
-                </div>
+                        {/* Progress */}
+                        <div className="w-32 hidden sm:block">
+                          <div className="flex justify-between text-xs mb-1">
+                            <span className="text-slate-400">进度</span>
+                            <span className="text-white">
+                              {project.progress_pct || 0}%
+                            </span>
+                          </div>
+                          <Progress value={project.progress_pct || 0} size="sm" />
+                        </div>
+
+                        {/* Arrow */}
+                        <ArrowRight className="h-5 w-5 text-slate-600 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                      </Link>
+                    ))}
+                  </div>
+                )
               ) : (
                 <div className="p-12 text-center text-slate-500">
                   暂无项目数据
@@ -390,10 +360,10 @@ export default function Dashboard() {
               )}
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
         {/* Quick Actions */}
-        <motion.div variants={staggerChild}>
+        <div>
           <Card hover={false}>
             <CardContent>
               <h3 className="text-lg font-semibold text-white mb-4">
@@ -485,8 +455,8 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
-    </motion.div>
+    </DashboardLayout>
   );
 }

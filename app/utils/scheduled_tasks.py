@@ -19,6 +19,7 @@ from app.models.material import BomHeader, BomItem
 from app.models.issue import Issue, IssueStatisticsSnapshot
 from app.models.alert import AlertRecord, AlertRule, AlertNotification, AlertStatistics
 from app.models.enums import AlertLevelEnum, AlertStatusEnum, AlertRuleTypeEnum
+from app.models.user import User
 from app.utils.spec_match_service import SpecMatchService
 from decimal import Decimal
 from datetime import timedelta
@@ -1055,6 +1056,60 @@ def generate_shortage_alerts():
             }
     except Exception as e:
         logger.error(f"[{datetime.now()}] 缺料预警生成失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {'error': str(e)}
+
+
+def auto_trigger_urgent_purchase_from_shortage_alerts():
+    """
+    P0-1.5: 缺料预警自动触发紧急采购
+    每天执行一次，检查紧急级别的缺料预警，自动创建采购申请
+    建议执行时间：缺料预警生成后（如7:30）
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        with get_db_session() as db:
+            from app.models.shortage import ShortageAlert
+            from app.services.urgent_purchase_from_shortage_service import (
+                auto_trigger_urgent_purchase_for_alerts
+            )
+            from app.api.v1.endpoints.purchase import generate_request_no
+            
+            # 获取系统用户ID（默认使用ID=1，如果不存在则使用第一个管理员）
+            system_user_id = 1
+            system_user = db.query(User).filter(User.id == system_user_id).first()
+            if not system_user:
+                # 查找第一个管理员用户
+                admin_user = db.query(User).filter(
+                    or_(User.role == 'admin', User.role == 'super_admin')
+                ).first()
+                if admin_user:
+                    system_user_id = admin_user.id
+                else:
+                    logger.warning("未找到系统用户，使用默认ID=1")
+            
+            # 调用服务自动触发紧急采购
+            result = auto_trigger_urgent_purchase_for_alerts(
+                db=db,
+                alert_levels=['level3', 'level4'],  # 只处理紧急和严重级别
+                current_user_id=system_user_id
+            )
+            
+            logger.info(
+                f"[{datetime.now()}] 缺料预警自动触发紧急采购完成: "
+                f"检查 {result.get('checked_count', 0)} 个预警，"
+                f"创建 {result.get('created_count', 0)} 个采购申请，"
+                f"跳过 {result.get('skipped_count', 0)} 个，"
+                f"失败 {result.get('failed_count', 0)} 个"
+            )
+            
+            return result
+            
+    except Exception as e:
+        logger.error(f"[{datetime.now()}] 缺料预警自动触发紧急采购失败: {str(e)}")
         import traceback
         traceback.print_exc()
         return {'error': str(e)}

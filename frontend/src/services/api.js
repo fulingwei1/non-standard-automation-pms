@@ -3029,3 +3029,34 @@ export const advantageProductApi = {
   checkMatch: (productName) =>
     api.post("/advantage-products/check-match", { product_name: productName }),
 };
+
+// ITR流程 API
+export const itrApi = {
+  // ITR流程效率分析
+  getEfficiencyAnalysis: (params) =>
+    api.get("/itr/analytics/efficiency", { params }),
+
+  // ITR满意度趋势分析
+  getSatisfactionTrend: (params) =>
+    api.get("/itr/analytics/satisfaction", { params }),
+
+  // ITR流程瓶颈分析
+  getBottlenecksAnalysis: (params) =>
+    api.get("/itr/analytics/bottlenecks", { params }),
+
+  // ITR SLA性能分析
+  getSlaAnalysis: (params) =>
+    api.get("/itr/analytics/sla", { params }),
+
+  // ITR流程看板
+  getDashboard: (params) =>
+    api.get("/itr/dashboard", { params }),
+
+  // 工单时间线
+  getTicketTimeline: (ticketId) =>
+    api.get(`/itr/tickets/${ticketId}/timeline`),
+
+  // 问题关联数据
+  getIssueRelated: (issueId) =>
+    api.get(`/itr/issues/${issueId}/related`),
+};
