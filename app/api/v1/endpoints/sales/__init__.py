@@ -6,7 +6,7 @@
 """
 
 from fastapi import APIRouter
-from . import leads, opportunities, quotes, cost_management, assessments, statistics, templates, contracts, payments, receivables, invoices, workflows, disputes, requirements, team, targets, loss_analysis, expenses, priority
+from . import leads, opportunities, quotes, cost_management, assessments, statistics, templates, contracts, payments, receivables, invoices, workflows, disputes, requirements, team, targets, loss_analysis, expenses, priority, pipeline_analysis, accountability, health, delay_analysis, cost_overrun, information_gap, cross_analysis
 
 # 创建主路由
 router = APIRouter()
@@ -31,3 +31,10 @@ router.include_router(targets.router, tags=["sales-targets"])
 router.include_router(loss_analysis.router, tags=["sales-loss-analysis"])
 router.include_router(expenses.router, tags=["sales-expenses"])
 router.include_router(priority.router, tags=["sales-priority"])
+router.include_router(pipeline_analysis.router, tags=["sales-pipeline-analysis"])
+router.include_router(accountability.router, tags=["sales-accountability"])
+router.include_router(health.router, tags=["sales-health"])
+router.include_router(delay_analysis.router, tags=["sales-delay-analysis"])
+router.include_router(cost_overrun.router, tags=["sales-cost-overrun"])
+router.include_router(information_gap.router, tags=["sales-information-gap"])
+router.include_router(cross_analysis.router, tags=["sales-cross-analysis"])

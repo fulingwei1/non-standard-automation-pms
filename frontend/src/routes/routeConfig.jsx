@@ -165,6 +165,12 @@ import SalesTemplateCenter from "../pages/SalesTemplateCenter";
 import LossAnalysis from "../pages/LossAnalysis";
 import PresaleExpenseManagement from "../pages/PresaleExpenseManagement";
 import LeadPriorityManagement from "../pages/LeadPriorityManagement";
+import PipelineBreakAnalysis from "../pages/PipelineBreakAnalysis";
+import AccountabilityAnalysis from "../pages/AccountabilityAnalysis";
+import PipelineHealthMonitoring from "../pages/PipelineHealthMonitoring";
+import DelayAnalysis from "../pages/DelayAnalysis";
+import CostOverrunAnalysis from "../pages/CostOverrunAnalysis";
+import InformationGapAnalysis from "../pages/InformationGapAnalysis";
 import PresalesWorkstation from "../pages/PresalesWorkstation";
 import PresalesManagerWorkstation from "../pages/PresalesManagerWorkstation";
 import PresalesTasks from "../pages/PresalesTasks";
@@ -653,6 +659,12 @@ export function AppRoutes() {
       <Route path="/sales/loss-analysis" element={<LossAnalysis />} />
       <Route path="/sales/presale-expenses" element={<PresaleExpenseManagement />} />
       <Route path="/sales/priority" element={<LeadPriorityManagement />} />
+      <Route path="/sales/pipeline-break-analysis" element={<PipelineBreakAnalysis />} />
+      <Route path="/sales/accountability-analysis" element={<AccountabilityAnalysis />} />
+      <Route path="/sales/health-monitoring" element={<PipelineHealthMonitoring />} />
+      <Route path="/sales/delay-analysis" element={<DelayAnalysis />} />
+      <Route path="/sales/cost-overrun-analysis" element={<CostOverrunAnalysis />} />
+      <Route path="/sales/information-gap-analysis" element={<InformationGapAnalysis />} />
 
       {/* Pre-sales Routes */}
       <Route path="/presales-dashboard" element={<PresalesWorkstation />} />

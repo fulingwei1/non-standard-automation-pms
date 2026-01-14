@@ -676,6 +676,78 @@ export const priorityApi = {
   getKeyOpportunities: () => api.get("/sales/opportunities/key-opportunities"),
 };
 
+// Pipeline Analysis APIs - 全链条断链检测与分析
+export const pipelineAnalysisApi = {
+  getPipelineBreaks: (params) =>
+    api.get("/sales/analysis/pipeline-breaks", { params }),
+  getBreakReasons: (params) =>
+    api.get("/sales/analysis/break-reasons", { params }),
+  getBreakPatterns: (params) =>
+    api.get("/sales/analysis/break-patterns", { params }),
+  getBreakWarnings: (params) =>
+    api.get("/sales/alerts/pipeline-break-warnings", { params }),
+};
+
+// Accountability Analysis APIs - 深度归责分析
+export const accountabilityApi = {
+  getByStage: (params) =>
+    api.get("/sales/analysis/accountability/by-stage", { params }),
+  getByPerson: (params) =>
+    api.get("/sales/analysis/accountability/by-person", { params }),
+  getByDepartment: (params) =>
+    api.get("/sales/analysis/accountability/by-department", { params }),
+  getCostImpact: (params) =>
+    api.get("/sales/analysis/accountability/cost-impact", { params }),
+};
+
+// Pipeline Health APIs - 全链条健康度监控
+export const healthApi = {
+  getLeadHealth: (leadId) => api.get(`/sales/health/lead/${leadId}`),
+  getOpportunityHealth: (oppId) =>
+    api.get(`/sales/health/opportunity/${oppId}`),
+  getQuoteHealth: (quoteId) => api.get(`/sales/health/quote/${quoteId}`),
+  getContractHealth: (contractId) =>
+    api.get(`/sales/health/contract/${contractId}`),
+  getPaymentHealth: (invoiceId) =>
+    api.get(`/sales/health/payment/${invoiceId}`),
+  getPipelineHealth: (params) => api.get("/sales/health/pipeline", { params }),
+  getHealthWarnings: () => api.get("/sales/alerts/health-warnings"),
+};
+
+// Delay Analysis APIs - 延期深度分析
+export const delayAnalysisApi = {
+  getRootCause: (params) =>
+    api.get("/sales/analysis/delay/root-cause", { params }),
+  getImpact: (params) => api.get("/sales/analysis/delay/impact", { params }),
+  getTrends: (params) => api.get("/sales/analysis/delay/trends", { params }),
+};
+
+// Cost Overrun Analysis APIs - 成本过高分析
+export const costOverrunApi = {
+  getReasons: (params) =>
+    api.get("/sales/analysis/cost-overrun/reasons", { params }),
+  getAccountability: (params) =>
+    api.get("/sales/analysis/cost-overrun/accountability", { params }),
+  getImpact: (params) =>
+    api.get("/sales/analysis/cost-overrun/impact", { params }),
+};
+
+// Information Gap Analysis APIs - 信息把握不足分析
+export const informationGapApi = {
+  getMissing: (params) =>
+    api.get("/sales/analysis/information-gap/missing", { params }),
+  getImpact: (params) =>
+    api.get("/sales/analysis/information-gap/impact", { params }),
+  getQualityScore: (params) =>
+    api.get("/sales/analysis/information-gap/quality-score", { params }),
+};
+
+// Cross Dimension Analysis APIs - 多维度交叉分析
+export const crossAnalysisApi = {
+  getCrossDimension: (params) =>
+    api.get("/sales/analysis/cross-dimension", { params }),
+};
+
 // Alert Management APIs
 export const alertApi = {
   // Alert Records

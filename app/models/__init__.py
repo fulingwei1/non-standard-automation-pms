@@ -75,6 +75,8 @@ from .presale import (
     PresaleWorkload, PresaleCustomerTechProfile, PresaleTenderRecord
 )
 from .presale_expense import PresaleExpense
+from .pipeline_analysis import PipelineBreakRecord, PipelineHealthSnapshot, AccountabilityRecord
+from .pipeline_analysis import PipelineBreakRecord, PipelineHealthSnapshot, AccountabilityRecord
 from .performance import (
     PerformancePeriod, PerformanceIndicator, PerformanceResult,
     PerformanceEvaluation, PerformanceAppeal, ProjectContribution,
@@ -346,4 +348,8 @@ __all__ = [
     'HrTransaction', 'EmployeeContract', 'ContractReminder', 'SalaryRecord',
     # Finance
     'FundingRound', 'Investor', 'FundingRecord', 'EquityStructure', 'FundingUsage',
+    # Presale Expense
+    'PresaleExpense',
+    # Pipeline Analysis
+    'PipelineBreakRecord', 'PipelineHealthSnapshot', 'AccountabilityRecord',
 ]
