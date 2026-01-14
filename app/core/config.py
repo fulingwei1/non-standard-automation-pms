@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     # 数据库配置
     DATABASE_URL: Optional[str] = None
     SQLITE_DB_PATH: str = "data/app.db"
+    POSTGRES_URL: Optional[str] = None  # Vercel Postgres
 
     # Redis配置
     REDIS_URL: Optional[str] = None  # Redis连接URL，格式: redis://localhost:6379/0
@@ -84,7 +85,7 @@ class Settings(BaseSettings):
     EMAIL_SMTP_PORT: int = 587
     EMAIL_USERNAME: Optional[str] = None
     EMAIL_PASSWORD: Optional[str] = None
-    
+
     # 短信通知配置（阿里云）
     SMS_ENABLED: bool = False
     SMS_PROVIDER: str = "aliyun"  # aliyun/tencent
@@ -99,7 +100,7 @@ class Settings(BaseSettings):
 
     WECHAT_WEBHOOK_URL: Optional[str] = None
     WECHAT_ENABLED: bool = False
-    
+
     # 企业微信API配置
     WECHAT_CORP_ID: Optional[str] = None  # 企业ID
     WECHAT_AGENT_ID: Optional[str] = None  # 应用ID
@@ -110,11 +111,15 @@ class Settings(BaseSettings):
     SALES_GROSS_MARGIN_THRESHOLD: float = 15.0  # 毛利率阈值（%），低于此值需要审批
     SALES_GROSS_MARGIN_WARNING: float = 20.0  # 毛利率警告阈值（%），低于此值发出警告
     SALES_MIN_LEAD_TIME_DAYS: int = 30  # 最小交期（天），低于此值发出警告
-    
+
     # 销售模块提醒配置
     SALES_GATE_TIMEOUT_DAYS: int = 3  # 阶段门超时提醒阈值（天），默认3天
     SALES_QUOTE_EXPIRE_REMINDER_DAYS: List[int] = [7, 3, 1]  # 报价过期提醒时间点（天）
-    SALES_CONTRACT_EXPIRE_REMINDER_DAYS: List[int] = [30, 15, 7]  # 合同到期提醒时间点（天）
+    SALES_CONTRACT_EXPIRE_REMINDER_DAYS: List[int] = [
+        30,
+        15,
+        7,
+    ]  # 合同到期提醒时间点（天）
     SALES_APPROVAL_TIMEOUT_HOURS: int = 24  # 审批超时提醒阈值（小时），默认24小时
 
     class Config:

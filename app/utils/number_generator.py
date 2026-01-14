@@ -328,3 +328,55 @@ def generate_material_code(db: Session, category_code: Optional[str] = None) -> 
     # 格式化序号
     seq_str = str(seq).zfill(seq_length)
     return f"{prefix}{separator}{material_category_code}{separator}{seq_str}"
+
+
+def generate_machine_code(db: Session, project_code: str) -> str:
+    """
+    生成设备编号
+    
+    格式：{project_code}-PN{seq:03d}
+    示例：PJ250708001-PN001, PJ250708001-PN002
+    
+    Args:
+        db: 数据库会话
+        project_code: 项目编码（如 'PJ250708001'）
+    
+    Returns:
+        生成的设备编号字符串
+    
+    Example:
+        ```python
+        machine_code = generate_machine_code(db, "PJ250708001")
+        # 返回: PJ250708001-PN001 (如果该项目下还没有设备)
+        # 返回: PJ250708001-PN002 (如果该项目下已有1台设备)
+        ```
+    """
+    from app.models.project import Machine
+    
+    # 查询该项目下已有的设备编码，格式：PJxxx-PNxxx
+    pattern = f"{project_code}-PN%"
+    max_record = (
+        db.query(Machine)
+        .filter(Machine.machine_code.like(pattern))
+        .order_by(desc(Machine.machine_code))
+        .first()
+    )
+    
+    if max_record:
+        try:
+            max_code = max_record.machine_code
+            # 提取序号部分：PJ250708001-PN001 -> 001
+            parts = max_code.split('-PN')
+            if len(parts) == 2:
+                seq_str = parts[1]
+                seq = int(seq_str) + 1
+            else:
+                seq = 1
+        except (ValueError, IndexError, AttributeError):
+            seq = 1
+    else:
+        seq = 1
+    
+    # 格式化序号为3位
+    seq_str = str(seq).zfill(3)
+    return f"{project_code}-PN{seq_str}"

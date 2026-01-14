@@ -67,7 +67,12 @@ class TimestampMixin:
 
 def get_database_url() -> str:
     """获取数据库连接URL"""
-    # 优先使用环境变量
+    # 优先使用 Vercel Postgres
+    postgres_url = os.getenv("POSTGRES_URL")
+    if postgres_url:
+        return postgres_url
+
+    # 其次使用 DATABASE_URL（兼容 Railway 等其他服务）
     database_url = os.getenv("DATABASE_URL")
     if database_url:
         return database_url
@@ -112,6 +117,16 @@ def get_engine(database_url: Optional[str] = None, echo: bool = False):
             cursor.close()
 
         _ensure_sqlite_schema(_engine)
+    elif url.startswith("postgres"):
+        # PostgreSQL 配置（Vercel Postgres）
+        _engine = create_engine(
+            url,
+            echo=echo,
+            pool_size=5,
+            max_overflow=10,
+            pool_recycle=300,
+            pool_pre_ping=True,
+        )
     else:
         # MySQL配置
         _engine = create_engine(
