@@ -229,6 +229,12 @@ const defaultNavGroups = [
     ],
   },
   {
+    label: "人员管理",
+    items: [
+      { name: "工程师绩效排名", path: "/engineer-performance/ranking", icon: "TrendingUp" },
+    ],
+  },
+  {
     label: "财务管理",
     items: [
       // 财务成本已迁移到"成本报价管理"模块
@@ -1199,6 +1205,12 @@ function getNavGroupsForRole(role, isSuperuser = false) {
               badge: "3",
             },
             { name: "问题管理", path: "/issues", icon: "AlertCircle" },
+          ],
+        },
+        {
+          label: "人员管理",
+          items: [
+            { name: "工程师绩效排名", path: "/engineer-performance/ranking", icon: "TrendingUp" },
           ],
         },
         {

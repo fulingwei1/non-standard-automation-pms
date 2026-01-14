@@ -394,6 +394,12 @@ export function getNavForRole(role) {
         ],
       },
       {
+        label: "人员管理",
+        items: [
+          { name: "工程师绩效排名", path: "/engineer-performance/ranking", icon: "TrendingUp" },
+        ],
+      },
+      {
         label: "重大事项",
         items: [
           { name: "审批中心", path: "/approvals", icon: "ClipboardCheck" },
@@ -426,6 +432,12 @@ export function getNavForRole(role) {
           { name: "项目看板", path: "/board", icon: "Kanban" },
           { name: "项目列表", path: "/projects", icon: "Briefcase" },
           { name: "排期看板", path: "/schedule", icon: "Calendar" },
+        ],
+      },
+      {
+        label: "人员管理",
+        items: [
+          { name: "工程师绩效排名", path: "/engineer-performance/ranking", icon: "TrendingUp" },
         ],
       },
       {
@@ -574,6 +586,7 @@ export function getNavForRole(role) {
       {
         label: "团队管理",
         items: [
+          { name: "工程师绩效排名", path: "/engineer-performance/ranking", icon: "TrendingUp" },
           { name: "审批中心", path: "/approvals", icon: "ClipboardCheck" },
           { name: "预警中心", path: "/alerts", icon: "AlertTriangle" },
         ],
