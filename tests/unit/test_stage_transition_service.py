@@ -330,9 +330,8 @@ class TestExecuteStageTransition:
         project.stage = "S3"
         project.id = 1
 
-        # 模拟异常情况 - check_gate is imported from app.api.v1.endpoints.projects
-        # 模拟异常情况 - patch正确的导入位置
-        with patch('app.api.v1.endpoints.projects.check_gate') as mock_check:
+        # 模拟异常情况 - check_gate is in utils submodule
+        with patch('app.api.v1.endpoints.projects.utils.check_gate') as mock_check:
             mock_check.side_effect = Exception("测试异常")
 
             success, result = execute_stage_transition(

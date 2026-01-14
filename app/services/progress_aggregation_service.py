@@ -375,11 +375,13 @@ class ProgressAggregationService:
                         else_=1.0
                     )
                 ).label('weighted_sum')
-                ).scalar()
-            ) or 0.0
+            )
+            .filter(base_filter)
+            .scalar()
+        ) or 0.0
 
-        if total_hours > 0:
-            overall_progress = weighted_progress_result / total_hours
+        if total_hours_result > 0:
+            overall_progress = weighted_progress_result / total_hours_result
         elif total_tasks > 0:
             # 所有任务都缺少工时估计时，退化为简单平均
             avg_progress_result = (

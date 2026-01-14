@@ -281,7 +281,7 @@ def identify_bottlenecks(
                                 "hours": time_diff,
                             })
                             break
-                        except:
+                        except (ValueError, TypeError):
                             pass
     
     if resolved_to_closed:

@@ -69,15 +69,52 @@ import {
   orgApi,
 } from "../services/api";
 
+const formatDateInput = (value) => value.toISOString().split("T")[0];
+
 const getDefaultDateRange = () => {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
   return {
-    start: start.toISOString().split("T")[0],
-    end: end.toISOString().split("T")[0],
+    start: formatDateInput(start),
+    end: formatDateInput(end),
   };
 };
+
+const getWeekDateRange = () => {
+  const now = new Date();
+  const day = now.getDay() || 7; // 周一=1, 周日=7
+  const start = new Date(now);
+  start.setDate(now.getDate() - day + 1);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  return {
+    start: formatDateInput(start),
+    end: formatDateInput(end),
+  };
+};
+
+const QUICK_RANGE_PRESETS = [
+  {
+    key: "day",
+    label: "本日",
+    getRange: () => {
+      const today = new Date();
+      const formatted = formatDateInput(today);
+      return { start: formatted, end: formatted };
+    },
+  },
+  {
+    key: "week",
+    label: "本周",
+    getRange: () => getWeekDateRange(),
+  },
+  {
+    key: "month",
+    label: "本月",
+    getRange: () => getDefaultDateRange(),
+  },
+];
 
 // Fallback empty data (演示环境备用数据已移除)
 const mockTeamMembers = []; // 空数组作为fallback，不再使用mock数据
@@ -91,6 +128,103 @@ const formatCurrency = (value) => {
     currency: "CNY",
     minimumFractionDigits: 0,
   }).format(value);
+};
+
+const DEFAULT_RANKING_METRICS = [
+  {
+    key: "contract_amount",
+    label: "合同金额",
+    weight: 0.4,
+    data_source: "contract_amount",
+    is_primary: true,
+  },
+  {
+    key: "acceptance_amount",
+    label: "验收金额",
+    weight: 0.2,
+    data_source: "acceptance_amount",
+    is_primary: true,
+  },
+  {
+    key: "collection_amount",
+    label: "回款金额",
+    weight: 0.2,
+    data_source: "collection_amount",
+    is_primary: true,
+  },
+  {
+    key: "opportunity_count",
+    label: "商机数量",
+    weight: 0.05,
+    data_source: "opportunity_count",
+    is_primary: false,
+  },
+  {
+    key: "lead_conversion_rate",
+    label: "线索成功率",
+    weight: 0.05,
+    data_source: "lead_conversion_rate",
+    is_primary: false,
+  },
+  {
+    key: "follow_up_total",
+    label: "跟进次数",
+    weight: 0.05,
+    data_source: "follow_up_total",
+    is_primary: false,
+  },
+  {
+    key: "avg_est_margin",
+    label: "平均预估毛利率",
+    weight: 0.05,
+    data_source: "avg_est_margin",
+    is_primary: false,
+  },
+];
+
+const FALLBACK_RANKING_FIELDS = [
+  { value: "lead_count", label: "线索数量" },
+  { value: "opportunity_count", label: "商机数量" },
+  { value: "contract_amount", label: "合同金额" },
+  { value: "collection_amount", label: "回款金额" },
+];
+
+const isAmountMetric = (key = "") =>
+  key.includes("amount") || key.includes("pipeline");
+const isPercentageMetric = (key = "") =>
+  key.includes("rate") || key.includes("margin");
+
+const buildMetricDetailMap = (metricDetails = []) =>
+  metricDetails.reduce((acc, detail) => {
+    const detailKey = detail.key || detail.data_source;
+    if (detailKey) {
+      acc[detailKey] = detail;
+    }
+    if (detail.data_source) {
+      acc[detail.data_source] = detail;
+    }
+    return acc;
+  }, {});
+
+const formatMetricValueDisplay = (metricDetail, metricDefinition) => {
+  if (!metricDetail) return "--";
+  const key = metricDefinition?.data_source || metricDefinition?.key || "";
+  const numericValue = Number(metricDetail.value ?? 0);
+  if (isAmountMetric(key)) {
+    return formatCurrency(numericValue || 0);
+  }
+  if (isPercentageMetric(key)) {
+    return `${numericValue.toFixed(1)}%`;
+  }
+  if (!Number.isFinite(numericValue)) return "--";
+  return Number.isInteger(numericValue)
+    ? `${numericValue}`
+    : numericValue.toFixed(2);
+};
+
+const formatMetricScoreDisplay = (metricDetail) => {
+  if (!metricDetail) return "--";
+  return `${Number(metricDetail.score ?? 0).toFixed(1)} 分`;
 };
 
 const statusConfig = {
@@ -264,6 +398,77 @@ const transformTeamMember = (member = {}) => {
     member.customerTotal ??
     customerDistribution.reduce((sum, item) => sum + (item.value || 0), 0);
 
+  const followUpStatsRaw =
+    member.follow_up_stats || member.followUpStats || member.followUpStatistics;
+  const followUpStats = {
+    call: Number(followUpStatsRaw?.CALL || 0),
+    email: Number(followUpStatsRaw?.EMAIL || 0),
+    visit: Number(followUpStatsRaw?.VISIT || 0),
+    meeting: Number(followUpStatsRaw?.MEETING || 0),
+    other: Number(followUpStatsRaw?.OTHER || 0),
+    total: Number(followUpStatsRaw?.total || 0),
+  };
+  if (!followUpStats.total) {
+    followUpStats.total =
+      followUpStats.call +
+      followUpStats.email +
+      followUpStats.visit +
+      followUpStats.meeting +
+      followUpStats.other;
+  }
+
+  const leadQualityRaw =
+    member.lead_quality_stats ||
+    member.leadQualityStats ||
+    member.leadQuality ||
+    {};
+  const leadQuality = {
+    totalLeads: Number(leadQualityRaw.total_leads || leadQualityRaw.totalLeads || member.lead_count || 0),
+    convertedLeads: Number(
+      leadQualityRaw.converted_leads || leadQualityRaw.convertedLeads || 0,
+    ),
+    modeledLeads: Number(
+      leadQualityRaw.modeled_leads || leadQualityRaw.modeledLeads || 0,
+    ),
+    conversionRate: Number(
+      leadQualityRaw.conversion_rate ||
+        leadQualityRaw.conversionRate ||
+        0,
+    ),
+    modelingRate: Number(
+      leadQualityRaw.modeling_rate || leadQualityRaw.modelingRate || 0,
+    ),
+    avgCompleteness: Number(
+      leadQualityRaw.avg_completeness ||
+        leadQualityRaw.avgCompleteness ||
+        0,
+    ),
+  };
+
+  const opportunityStatsRaw =
+    member.opportunity_stats ||
+    member.opportunityStats ||
+    member.opportunityMetrics ||
+    {};
+  const opportunityStats = {
+    opportunityCount: Number(
+      opportunityStatsRaw.opportunity_count ||
+        opportunityStatsRaw.opportunityCount ||
+        member.opportunity_count ||
+        0,
+    ),
+    pipelineAmount: Number(
+      opportunityStatsRaw.pipeline_amount ||
+        opportunityStatsRaw.pipelineAmount ||
+        0,
+    ),
+    avgEstMargin: Number(
+      opportunityStatsRaw.avg_est_margin ||
+        opportunityStatsRaw.avgEstMargin ||
+        0,
+    ),
+  };
+
   return {
     id: member.user_id,
     name: member.user_name || member.username || "未知成员",
@@ -294,6 +499,11 @@ const transformTeamMember = (member = {}) => {
     recentFollowUp,
     customerDistribution,
     customerTotal,
+    followUpStats,
+    leadQuality,
+    opportunityStats,
+    pipelineAmount: opportunityStats.pipelineAmount,
+    avgEstMargin: opportunityStats.avgEstMargin,
   };
 };
 
@@ -389,13 +599,47 @@ export default function SalesTeam() {
     startDate: defaultRange.start,
     endDate: defaultRange.end,
   });
+  const [activeQuickRange, setActiveQuickRange] = useState("month");
   const [dateError, setDateError] = useState("");
   const [exporting, setExporting] = useState(false);
-  const [rankingType, setRankingType] = useState("contract_amount");
+  const [rankingType, setRankingType] = useState("score");
   const [rankingData, setRankingData] = useState([]);
-  const [showRanking, setShowRanking] = useState(false);
+  const [rankingConfigState, setRankingConfigState] = useState(null);
+  const [showRanking, setShowRanking] = useState(true);
   const [rankingLoading, setRankingLoading] = useState(false);
   const autoRefreshTimerRef = useRef(null);
+  const metricConfigList = useMemo(() => {
+    const metrics =
+      rankingConfigState?.metrics?.length > 0
+        ? rankingConfigState.metrics
+        : DEFAULT_RANKING_METRICS;
+    return [...metrics].sort((a, b) => Number(b.weight || 0) - Number(a.weight || 0));
+  }, [rankingConfigState]);
+  const rankingOptions = useMemo(() => {
+    const options = [{ value: "score", label: "综合得分" }];
+    const seenValues = new Set(["score"]);
+    metricConfigList.forEach((metric) => {
+      const value = metric.data_source || metric.key;
+      if (!value || seenValues.has(value)) return;
+      seenValues.add(value);
+      options.push({
+        value,
+        label: metric.label || metric.key || value,
+      });
+    });
+    if (options.length === 1) {
+      FALLBACK_RANKING_FIELDS.forEach((field) => {
+        if (seenValues.has(field.value)) return;
+        seenValues.add(field.value);
+        options.push(field);
+      });
+    }
+    return options;
+  }, [metricConfigList]);
+  const selectedRankingOption = useMemo(
+    () => rankingOptions.find((option) => option.value === rankingType),
+    [rankingOptions, rankingType],
+  );
 
   useEffect(() => {
     if (filters.startDate && filters.endDate) {
@@ -608,6 +852,12 @@ export default function SalesTeam() {
     fetchTeamData();
   }, [fetchTeamData]);
 
+  useEffect(() => {
+    if (!rankingOptions.some((option) => option.value === rankingType)) {
+      setRankingType("score");
+    }
+  }, [rankingOptions, rankingType]);
+
   // Fetch ranking data
   useEffect(() => {
     const fetchRanking = async () => {
@@ -630,9 +880,11 @@ export default function SalesTeam() {
         const res = await salesTeamApi.getRanking(params);
         const payload = res.data?.data || res.data || res;
         setRankingData(payload.rankings || []);
+        setRankingConfigState(payload.config || null);
       } catch (err) {
         console.error("Failed to fetch ranking data:", err);
         setRankingData([]);
+        setRankingConfigState(null);
       } finally {
         setRankingLoading(false);
       }
@@ -649,11 +901,26 @@ export default function SalesTeam() {
   ]);
 
   const handleFilterChange = (field, value) => {
+    if (field === "startDate" || field === "endDate") {
+      setActiveQuickRange("");
+    }
     setFilters((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
+
+  const handleApplyQuickRange = useCallback((rangeKey) => {
+    const preset = QUICK_RANGE_PRESETS.find((item) => item.key === rangeKey);
+    if (!preset) return;
+    const range = preset.getRange();
+    setFilters((prev) => ({
+      ...prev,
+      startDate: range.start,
+      endDate: range.end,
+    }));
+    setActiveQuickRange(rangeKey);
+  }, []);
 
   const handleResetFilters = () => {
     const range = getDefaultDateRange();
@@ -663,6 +930,7 @@ export default function SalesTeam() {
       startDate: range.start,
       endDate: range.end,
     });
+    setActiveQuickRange("month");
   };
 
   const handleNavigatePerformance = (member) => {
@@ -859,6 +1127,30 @@ export default function SalesTeam() {
                 />
               </div>
             </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+              <span className="text-slate-500">快捷时间段</span>
+              {QUICK_RANGE_PRESETS.map((preset) => (
+                <Button
+                  key={preset.key}
+                  size="sm"
+                  variant={
+                    activeQuickRange === preset.key ? "default" : "outline"
+                  }
+                  onClick={() => handleApplyQuickRange(preset.key)}
+                  className={cn(
+                    "h-7 px-3",
+                    activeQuickRange === preset.key
+                      ? "bg-primary text-white"
+                      : "bg-slate-800/40 border-slate-700 text-slate-300",
+                  )}
+                >
+                  {preset.label}
+                </Button>
+              ))}
+              <span className="text-slate-500">
+                快速切换日/周/月，洞察销售工程师创建的商机与拜访数据
+              </span>
+            </div>
             <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
               <Button variant="ghost" size="sm" onClick={handleResetFilters}>
                 重置筛选
@@ -975,29 +1267,103 @@ export default function SalesTeam() {
       {/* Ranking Section */}
       {showRanking && (
         <motion.div variants={fadeIn}>
-          <Card>
+          <Card className="border border-slate-700/70 bg-slate-900/40">
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Award className="h-5 w-5 text-amber-400" />
-                  销售业绩排名
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/40">
+                      <Award className="h-5 w-5 text-amber-400" />
+                    </div>
+                    <div>
+                      <CardTitle className="flex items-center gap-2 text-base text-white">
+                        销售业绩排名
+                        <Badge
+                          variant="outline"
+                          className="bg-slate-800/80 text-xs border-slate-600 text-slate-200"
+                        >
+                          {rankingData.length} 名成员
+                        </Badge>
+                      </CardTitle>
+                      <p className="text-xs text-slate-500 mt-1">
+                        模型支持综合评分与多指标排名，由销售总监维护权重
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={rankingType}
+                      onChange={(e) => setRankingType(e.target.value)}
+                      className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {rankingOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => navigate("/sales-director-dashboard")}
+                    >
+                      权重配置
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={rankingType}
-                    onChange={(e) => setRankingType(e.target.value)}
-                    className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="lead_count">线索数量</option>
-                    <option value="opportunity_count">商机数量</option>
-                    <option value="contract_amount">合同金额</option>
-                    <option value="collection_amount">回款金额</option>
-                  </select>
+                <div className="flex flex-wrap gap-3 text-xs text-slate-500">
+                  <span>
+                    统计区间：{filters.startDate} ~ {filters.endDate}
+                  </span>
+                  {selectedRankingOption && (
+                    <span className="text-emerald-400">
+                      当前排序：{selectedRankingOption.label}
+                    </span>
+                  )}
+                  {rankingConfigState?.updated_at && (
+                    <span>
+                      最新调整：
+                      {formatDateTime(rankingConfigState.updated_at)}
+                    </span>
+                  )}
                 </div>
-              </CardTitle>
-              <p className="text-xs text-slate-500">
-                统计区间：{filters.startDate} ~ {filters.endDate}
-              </p>
+                {metricConfigList.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {metricConfigList.map((metric) => (
+                      <div
+                        key={`${metric.key}-${metric.data_source}`}
+                        className="p-3 rounded-lg border border-slate-700/60 bg-slate-800/50"
+                      >
+                        <div className="flex items-center justify-between text-sm text-slate-200">
+                          <span>{metric.label}</span>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-[11px]",
+                              metric.is_primary
+                                ? "text-amber-300 border-amber-400/50"
+                                : "text-slate-400 border-slate-600",
+                            )}
+                          >
+                            {(Number(metric.weight || 0) * 100).toFixed(0)}%
+                          </Badge>
+                        </div>
+                        <Progress
+                          value={Number(metric.weight || 0) * 100}
+                          className="h-1.5 bg-slate-700/60 mt-2"
+                        />
+                        <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
+                          <span>
+                            {metric.is_primary ? "核心指标" : "辅助指标"}
+                          </span>
+                          <span>{metric.data_source}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {rankingLoading ? (
@@ -1007,59 +1373,91 @@ export default function SalesTeam() {
                   暂无排名数据
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {rankingData.map((item, index) => (
-                    <div
-                      key={item.user_id}
-                      className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={cn(
-                            "w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold",
-                            index === 0 &&
-                              "bg-gradient-to-br from-amber-500 to-orange-500",
-                            index === 1 &&
-                              "bg-gradient-to-br from-blue-500 to-cyan-500",
-                            index === 2 &&
-                              "bg-gradient-to-br from-purple-500 to-pink-500",
-                            index >= 3 && "bg-slate-600",
-                          )}
-                        >
-                          {item.rank}
-                        </div>
-                        <div>
-                          <div className="font-medium text-white">
-                            {item.user_name}
-                          </div>
-                          <div className="text-xs text-slate-400">
-                            {item.department_name || "未知部门"}
-                          </div>
-                          <div className="text-[11px] text-slate-500">
-                            {item.region || item.department_name || "未分配"}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-white">
-                          {rankingType === "lead_count" &&
-                            `${item.lead_count || 0} 个`}
-                          {rankingType === "opportunity_count" &&
-                            `${item.opportunity_count || 0} 个`}
-                          {rankingType === "contract_amount" &&
-                            formatCurrency(item.contract_amount || 0)}
-                          {rankingType === "collection_amount" &&
-                            formatCurrency(item.collection_amount || 0)}
-                        </div>
-                        <div className="text-xs text-slate-400">
-                          {rankingType === "lead_count" && "线索数量"}
-                          {rankingType === "opportunity_count" && "商机数量"}
-                          {rankingType === "contract_amount" && "合同金额"}
-                          {rankingType === "collection_amount" && "回款金额"}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="overflow-x-auto -mx-4 md:mx-0">
+                  <table className="min-w-full divide-y divide-slate-700/60 text-sm">
+                    <thead>
+                      <tr>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400">
+                          排名
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400">
+                          成员
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400">
+                          综合得分
+                        </th>
+                        {metricConfigList.map((metric) => (
+                          <th
+                            key={`header-${metric.key}`}
+                            className="px-3 py-2 text-left text-xs font-semibold text-slate-400 whitespace-nowrap"
+                          >
+                            <div className="text-slate-300">
+                              {metric.label}
+                            </div>
+                            <div className="text-[11px] text-slate-500">
+                              权重 {(Number(metric.weight || 0) * 100).toFixed(0)}%
+                            </div>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800">
+                      {rankingData.map((item, index) => {
+                        const metricMap = buildMetricDetailMap(
+                          item.metrics || [],
+                        );
+                        return (
+                          <tr
+                            key={item.user_id}
+                            className={cn(
+                              "hover:bg-slate-800/40 transition-colors",
+                              index === 0 && "bg-amber-500/5",
+                              index === 1 && "bg-blue-500/5",
+                              index === 2 && "bg-purple-500/5",
+                            )}
+                          >
+                            <td className="px-3 py-3 text-base font-semibold text-white">
+                              {item.rank}
+                            </td>
+                            <td className="px-3 py-3">
+                              <div className="font-medium text-white">
+                                {item.user_name}
+                              </div>
+                              <div className="text-xs text-slate-400">
+                                {item.department_name || "未分配"}
+                              </div>
+                            </td>
+                            <td className="px-3 py-3 text-emerald-400 font-semibold whitespace-nowrap">
+                              {Number(item.score || 0).toFixed(1)} 分
+                            </td>
+                            {metricConfigList.map((metric) => {
+                              const detail =
+                                metricMap[metric.key] ||
+                                metricMap[metric.data_source];
+                              const isSortMetric =
+                                rankingType === (metric.data_source || metric.key);
+                              return (
+                                <td
+                                  key={`${item.user_id}-${metric.key}`}
+                                  className={cn(
+                                    "px-3 py-3 text-xs whitespace-nowrap",
+                                    isSortMetric && "text-emerald-300",
+                                  )}
+                                >
+                                  <div className="font-semibold text-white">
+                                    {formatMetricValueDisplay(detail, metric)}
+                                  </div>
+                                  <div className="text-[11px] text-slate-500">
+                                    {formatMetricScoreDisplay(detail)}
+                                  </div>
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </CardContent>
@@ -1157,14 +1555,65 @@ export default function SalesTeam() {
                                 {member.region || "未分配"}
                               </Badge>
                             </div>
-                            <div className="flex items-center gap-4 text-xs text-slate-400">
-                              <span>{member.leadCount || 0} 个线索</span>
-                              <span>{member.opportunityCount || 0} 个商机</span>
-                              <span>{member.contractCount || 0} 个合同</span>
-                              {member.activeProjects > 0 && (
-                                <span>{member.activeProjects} 个项目</span>
-                              )}
-                            </div>
+                      <div className="flex items-center gap-4 text-xs text-slate-400">
+                        <span>{member.leadCount || 0} 个线索</span>
+                        <span>{member.opportunityCount || 0} 个商机</span>
+                        <span>{member.contractCount || 0} 个合同</span>
+                        {member.activeProjects > 0 && (
+                          <span>{member.activeProjects} 个项目</span>
+                        )}
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px] text-slate-400">
+                        <div className="bg-slate-900/30 rounded-md p-2 border border-slate-800/60">
+                          <p>电话沟通</p>
+                          <p className="text-white text-sm font-semibold">
+                            {member.followUpStats.call || 0}
+                          </p>
+                        </div>
+                        <div className="bg-slate-900/30 rounded-md p-2 border border-slate-800/60">
+                          <p>拜访记录</p>
+                          <p className="text-white text-sm font-semibold">
+                            {member.followUpStats.visit || 0}
+                          </p>
+                        </div>
+                        <div className="bg-slate-900/30 rounded-md p-2 border border-slate-800/60">
+                          <p>会议/邮件</p>
+                          <p className="text-white text-sm font-semibold">
+                            {(member.followUpStats.meeting || 0) +
+                              (member.followUpStats.email || 0)}
+                          </p>
+                        </div>
+                        <div className="bg-slate-900/30 rounded-md p-2 border border-slate-800/60">
+                          <p>线索成功率</p>
+                          <p className="text-white text-sm font-semibold">
+                            {member.leadQuality.conversionRate || 0}%
+                          </p>
+                        </div>
+                        <div className="bg-slate-900/30 rounded-md p-2 border border-slate-800/60">
+                          <p>建模覆盖率</p>
+                          <p className="text-white text-sm font-semibold">
+                            {member.leadQuality.modelingRate || 0}%
+                          </p>
+                        </div>
+                        <div className="bg-slate-900/30 rounded-md p-2 border border-slate-800/60">
+                          <p>信息完整度</p>
+                          <p className="text-white text-sm font-semibold">
+                            {member.leadQuality.avgCompleteness || 0} 分
+                          </p>
+                        </div>
+                        <div className="bg-slate-900/30 rounded-md p-2 border border-slate-800/60">
+                          <p>在谈金额</p>
+                          <p className="text-white text-sm font-semibold">
+                            {formatCurrency(member.pipelineAmount || 0)}
+                          </p>
+                        </div>
+                        <div className="bg-slate-900/30 rounded-md p-2 border border-slate-800/60">
+                          <p>平均毛利率</p>
+                          <p className="text-white text-sm font-semibold">
+                            {member.avgEstMargin || 0}%
+                          </p>
+                        </div>
+                      </div>
                           </div>
                         </div>
                         <div className="text-right mr-4">
@@ -1526,6 +1975,80 @@ export default function SalesTeam() {
                       客户总数：{selectedMember.customerTotal || 0}，本月新增{" "}
                       {selectedMember.newCustomers || 0}
                     </p>
+                  </div>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-slate-700">
+                <h4 className="text-sm font-medium text-white mb-3">
+                  跟进行为与线索质量
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="bg-slate-900/40 border border-slate-800 rounded-lg p-3">
+                    <p className="text-slate-400 text-xs mb-2">跟进行为统计</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
+                      <div>
+                        电话沟通：
+                        <span className="text-white font-semibold ml-1">
+                          {selectedMember.followUpStats?.call || 0}
+                        </span>
+                      </div>
+                      <div>
+                        拜访次数：
+                        <span className="text-white font-semibold ml-1">
+                          {selectedMember.followUpStats?.visit || 0}
+                        </span>
+                      </div>
+                      <div>
+                        会议/邮件：
+                        <span className="text-white font-semibold ml-1">
+                          {(selectedMember.followUpStats?.meeting || 0) +
+                            (selectedMember.followUpStats?.email || 0)}
+                        </span>
+                      </div>
+                      <div>
+                        总跟进：
+                        <span className="text-white font-semibold ml-1">
+                          {selectedMember.followUpStats?.total || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-slate-900/40 border border-slate-800 rounded-lg p-3">
+                    <p className="text-slate-400 text-xs mb-2">
+                      线索质量与商机建模
+                    </p>
+                    <div className="space-y-1 text-xs text-slate-400">
+                      <div>
+                        线索成功率：
+                        <span className="text-white font-semibold ml-1">
+                          {selectedMember.leadQuality?.conversionRate || 0}%
+                        </span>
+                      </div>
+                      <div>
+                        建模覆盖率：
+                        <span className="text-white font-semibold ml-1">
+                          {selectedMember.leadQuality?.modelingRate || 0}%
+                        </span>
+                      </div>
+                      <div>
+                        商务信息完整度：
+                        <span className="text-white font-semibold ml-1">
+                          {selectedMember.leadQuality?.avgCompleteness || 0} 分
+                        </span>
+                      </div>
+                      <div>
+                        在谈金额：
+                        <span className="text-white font-semibold ml-1">
+                          {formatCurrency(selectedMember.pipelineAmount || 0)}
+                        </span>
+                      </div>
+                      <div>
+                        平均预估毛利：
+                        <span className="text-white font-semibold ml-1">
+                          {selectedMember.avgEstMargin || 0}%
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

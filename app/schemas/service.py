@@ -16,13 +16,16 @@ from app.schemas.common import PaginatedResponse
 
 class ServiceTicketCreate(BaseModel):
     """创建服务工单"""
-    project_id: int = Field(..., description="项目ID")
+    project_id: int = Field(..., description="项目ID（主项目）")
+    project_ids: Optional[List[int]] = Field(None, description="关联项目ID列表（支持多项目）")
     customer_id: int = Field(..., description="客户ID")
     problem_type: str = Field(..., description="问题类型")
     problem_desc: str = Field(..., description="问题描述")
     urgency: str = Field(..., description="紧急程度")
     reported_by: str = Field(..., description="报告人")
     reported_time: datetime = Field(..., description="报告时间")
+    assignee_id: Optional[int] = Field(None, description="处理人ID（创建时可直接分配）")
+    cc_user_ids: Optional[List[int]] = Field(None, description="抄送人员ID列表")
 
 
 class ServiceTicketUpdate(BaseModel):
@@ -35,6 +38,7 @@ class ServiceTicketUpdate(BaseModel):
 class ServiceTicketAssign(BaseModel):
     """分配服务工单"""
     assignee_id: int = Field(..., description="处理人ID")
+    cc_user_ids: Optional[List[int]] = Field(None, description="抄送人员ID列表")
 
 
 class ServiceTicketClose(BaseModel):

@@ -144,8 +144,73 @@ class ServiceTicket(Base, TimestampMixin):
         {'comment': '服务工单表'},
     )
     
+    # 多项目关联关系
+    related_projects = relationship(
+        'ServiceTicketProject',
+        back_populates='ticket',
+        cascade='all, delete-orphan'
+    )
+    
+    # 抄送人员关系
+    cc_users = relationship(
+        'ServiceTicketCcUser',
+        back_populates='ticket',
+        cascade='all, delete-orphan'
+    )
+    
     def __repr__(self):
         return f'<ServiceTicket {self.ticket_no}>'
+
+
+# ==================== 工单项目关联表 ====================
+
+class ServiceTicketProject(Base, TimestampMixin):
+    """工单项目关联表（支持多对多）"""
+    __tablename__ = 'service_ticket_projects'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ticket_id = Column(Integer, ForeignKey('service_tickets.id', ondelete='CASCADE'), nullable=False, comment='工单ID')
+    project_id = Column(Integer, ForeignKey('projects.id'), nullable=False, comment='项目ID')
+    is_primary = Column(Boolean, default=False, comment='是否主项目')
+    
+    # 关系
+    ticket = relationship('ServiceTicket', back_populates='related_projects')
+    project = relationship('Project', foreign_keys=[project_id])
+    
+    __table_args__ = (
+        Index('idx_ticket_projects_ticket', 'ticket_id'),
+        Index('idx_ticket_projects_project', 'project_id'),
+        {'comment': '工单项目关联表'},
+    )
+    
+    def __repr__(self):
+        return f'<ServiceTicketProject ticket_id={self.ticket_id} project_id={self.project_id}>'
+
+
+# ==================== 工单抄送人员表 ====================
+
+class ServiceTicketCcUser(Base, TimestampMixin):
+    """工单抄送人员表"""
+    __tablename__ = 'service_ticket_cc_users'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ticket_id = Column(Integer, ForeignKey('service_tickets.id', ondelete='CASCADE'), nullable=False, comment='工单ID')
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, comment='用户ID')
+    notified_at = Column(DateTime, comment='通知时间')
+    read_at = Column(DateTime, comment='阅读时间')
+    
+    # 关系
+    ticket = relationship('ServiceTicket', back_populates='cc_users')
+    user = relationship('User', foreign_keys=[user_id])
+    
+    __table_args__ = (
+        Index('idx_ticket_cc_ticket', 'ticket_id'),
+        Index('idx_ticket_cc_user', 'user_id'),
+        {'comment': '工单抄送人员表'},
+    )
+    
+    def __repr__(self):
+        return f'<ServiceTicketCcUser ticket_id={self.ticket_id} user_id={self.user_id}>'
 
 
 # ==================== 现场服务记录 ====================

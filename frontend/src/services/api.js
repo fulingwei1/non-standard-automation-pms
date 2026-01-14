@@ -592,6 +592,10 @@ export const salesTeamApi = {
   // 导出销售团队数据
   exportTeam: (params) =>
     api.get("/sales/team/export", { params, responseType: "blob" }),
+  // 获取/更新销售排名权重配置
+  getRankingConfig: () => api.get("/sales/team/ranking/config"),
+  updateRankingConfig: (data) =>
+    api.put("/sales/team/ranking/config", data),
 };
 
 // Sales Target Management APIs
@@ -909,6 +913,8 @@ export const serviceApi = {
     batchAssign: (data) => api.post("/service-tickets/batch-assign", data),
     close: (id, data) => api.put(`/service-tickets/${id}/close`, data),
     getStatistics: () => api.get("/service-tickets/statistics"),
+    getProjectMembers: (params) => api.get("/service-tickets/project-members", { params }),
+    getRelatedProjects: (id) => api.get(`/service-tickets/${id}/projects`),
   },
   records: {
     list: (params) => api.get("/service-records", { params }),

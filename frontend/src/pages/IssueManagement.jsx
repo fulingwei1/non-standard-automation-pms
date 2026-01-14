@@ -62,8 +62,6 @@ import {
   SimpleLineChart,
   SimplePieChart,
 } from "../components/administrative/StatisticsCharts";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs";
-import ITREfficiencyAnalysis from "../components/itr/ITREfficiencyAnalysis";
 
 // Mock issue data
 // Mock data - 已移除，使用真实API
@@ -97,7 +95,6 @@ const statusIcons = {
 };
 
 export default function IssueManagement() {
-  const [activeTab, setActiveTab] = useState("issues");
   const [issues, setIssues] = useState([]);
   const [filteredIssues, setFilteredIssues] = useState([]);
   const [selectedIssue, setSelectedIssue] = useState(null);
@@ -483,17 +480,8 @@ export default function IssueManagement() {
       />
 
       <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="issues">问题管理</TabsTrigger>
-            <TabsTrigger value="itr">ITR效率分析</TabsTrigger>
-          </TabsList>
-
-          {/* 问题管理标签页 */}
-          <TabsContent value="issues" className="space-y-6">
-            {/* 统计卡片 */}
-            <motion.div
+        {/* 统计卡片 */}
+        <motion.div
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
@@ -2042,14 +2030,6 @@ function IssueStatisticsView() {
           )}
         </div>
       )}
-          </TabsContent>
-
-          {/* ITR效率分析标签页 */}
-          <TabsContent value="itr" className="space-y-6">
-            <ITREfficiencyAnalysis />
-          </TabsContent>
-        </Tabs>
-      </div>
     </div>
   );
 }

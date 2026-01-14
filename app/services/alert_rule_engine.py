@@ -301,11 +301,7 @@ class AlertRuleEngine:
             if context:
                 eval_context.update(context)
             
-            # 注意：实际生产环境应该使用安全的表达式引擎（如 simpleeval）
-            # 这里仅做演示，不建议在生产环境直接使用 eval
-            # result = eval(rule.condition_expr, {"__builtins__": {}}, eval_context)
-            # return bool(result)
-            
+            # TODO: 实现安全的表达式引擎（如 simpleeval）替代 eval
             # 暂时返回 False，需要实现安全的表达式引擎
             return False
         except Exception:

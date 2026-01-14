@@ -196,6 +196,161 @@ const priorityConfig = {
   low: { label: "低", color: "text-slate-400" },
 };
 
+const normalizeTeamMemberData = (member = {}) => {
+  const followStats = member.follow_up_stats || member.followUpStats || {};
+  const leadStats = member.lead_quality_stats || member.leadQualityStats || {};
+  const opportunityStats =
+    member.opportunity_stats || member.opportunityStats || {};
+  const monthlyTarget = Number(member.monthly_target || 0);
+  const monthlyAchieved = Number(
+    member.monthly_actual ?? member.contract_amount ?? 0,
+  );
+  const completionRate =
+    monthlyTarget > 0
+      ? (monthlyAchieved / monthlyTarget) * 100
+      : Number(member.monthly_completion_rate || 0);
+  const totalLeads = Number(leadStats.total_leads ?? member.lead_count ?? 0);
+  const convertedLeads = Number(leadStats.converted_leads || 0);
+  const modeledLeads = Number(leadStats.modeled_leads || 0);
+  const conversionRate =
+    leadStats.conversion_rate ??
+    (totalLeads ? (convertedLeads / totalLeads) * 100 : 0);
+  const modelingRate =
+    leadStats.modeling_rate ?? (totalLeads ? (modeledLeads / totalLeads) * 100 : 0);
+  const avgCompletenessValue =
+    leadStats.avg_completeness ?? leadStats.avgCompleteness ?? 0;
+
+  return {
+    id: member.user_id,
+    name: member.user_name || member.username || "未命名成员",
+    role: member.role || member.role_name || "销售工程师",
+    monthlyTarget,
+    monthlyAchieved,
+    achievementRate: Number((completionRate || 0).toFixed(1)),
+    activeProjects: Number(member.contract_count || 0),
+    newCustomers: Number(member.new_customers || 0),
+    customerTotal: Number(member.customer_total || 0),
+    opportunityCount: Number(
+      opportunityStats.opportunity_count || member.opportunity_count || 0,
+    ),
+    followUpStats: {
+      call: Number(followStats.CALL || 0),
+      email: Number(followStats.EMAIL || 0),
+      visit: Number(followStats.VISIT || 0),
+      meeting: Number(followStats.MEETING || 0),
+      other: Number(followStats.OTHER || 0),
+    },
+    leadQuality: {
+      totalLeads,
+      convertedLeads,
+      modeledLeads,
+      conversionRate: Number((conversionRate || 0).toFixed(1)),
+      modelingRate: Number((modelingRate || 0).toFixed(1)),
+      avgCompleteness: Number(
+        avgCompletenessValue.toFixed
+          ? avgCompletenessValue.toFixed(1)
+          : avgCompletenessValue,
+      ),
+    },
+    pipelineAmount: Number(opportunityStats.pipeline_amount || 0),
+    avgEstMargin: Number(opportunityStats.avg_est_margin || 0),
+  };
+};
+
+const calculateTeamInsights = (members = []) => {
+  if (!members.length) return null;
+
+  const totals = members.reduce(
+    (acc, member) => {
+      const follow = member.followUpStats || {};
+      acc.follow.call += follow.call || 0;
+      acc.follow.email += follow.email || 0;
+      acc.follow.visit += follow.visit || 0;
+      acc.follow.meeting += follow.meeting || 0;
+      acc.follow.other += follow.other || 0;
+
+      const lead = member.leadQuality || {};
+      acc.leads.total += lead.totalLeads || 0;
+      acc.leads.converted += lead.convertedLeads || 0;
+      acc.leads.modeled += lead.modeledLeads || 0;
+      if (lead.avgCompleteness !== undefined) {
+        acc.leads.completenessSum += Number(lead.avgCompleteness) || 0;
+        acc.leads.completenessCount += 1;
+      }
+
+      acc.pipeline.amount += member.pipelineAmount || 0;
+      acc.pipeline.opportunityCount += member.opportunityCount || 0;
+      if (member.avgEstMargin) {
+        acc.pipeline.marginSum += member.avgEstMargin;
+        acc.pipeline.marginCount += 1;
+      }
+
+      return acc;
+    },
+    {
+      follow: { call: 0, email: 0, visit: 0, meeting: 0, other: 0 },
+      leads: {
+        total: 0,
+        converted: 0,
+        modeled: 0,
+        completenessSum: 0,
+        completenessCount: 0,
+      },
+      pipeline: { amount: 0, opportunityCount: 0, marginSum: 0, marginCount: 0 },
+    },
+  );
+
+  const followTotal =
+    totals.follow.call +
+    totals.follow.email +
+    totals.follow.visit +
+    totals.follow.meeting +
+    totals.follow.other;
+  const conversionRate =
+    totals.leads.total > 0
+      ? Number(((totals.leads.converted / totals.leads.total) * 100).toFixed(1))
+      : 0;
+  const modelingRate =
+    totals.leads.total > 0
+      ? Number(((totals.leads.modeled / totals.leads.total) * 100).toFixed(1))
+      : 0;
+  const avgCompleteness =
+    totals.leads.completenessCount > 0
+      ? Number(
+          (
+            totals.leads.completenessSum / totals.leads.completenessCount
+          ).toFixed(1),
+        )
+      : 0;
+  const avgMargin =
+    totals.pipeline.marginCount > 0
+      ? Number(
+          (totals.pipeline.marginSum / totals.pipeline.marginCount).toFixed(1),
+        )
+      : 0;
+
+  return {
+    followUps: {
+      total: followTotal,
+      call: totals.follow.call,
+      visit: totals.follow.visit,
+      meeting: totals.follow.meeting,
+      email: totals.follow.email,
+    },
+    leadQuality: {
+      totalLeads: totals.leads.total,
+      conversionRate,
+      modelingRate,
+      avgCompleteness,
+    },
+    pipeline: {
+      pipelineAmount: totals.pipeline.amount,
+      avgMargin,
+      opportunityCount: totals.pipeline.opportunityCount,
+    },
+  };
+};
+
 const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg }) => {
   const [isHovered, setIsHovered] = useState(false);
   return (
@@ -252,6 +407,7 @@ export default function SalesManagerWorkstation() {
   const [error, setError] = useState(null);
   const [deptStats, setDeptStats] = useState(null);
   const [teamMembers, setTeamMembers] = useState([]);
+  const [teamInsights, setTeamInsights] = useState(null);
   const [salesFunnel, setSalesFunnel] = useState({});
   const [pendingApprovals, setPendingApprovals] = useState([]);
   const [topCustomers, setTopCustomers] = useState([]);
@@ -306,8 +462,11 @@ export default function SalesManagerWorkstation() {
           })
           .catch(() => ({ data: { items: [] } })),
         salesTeamApi
-          .listDepartmentMembers()
-          .catch(() => ({ data: { items: [] } })),
+          .getTeam({
+            start_date: toISODate(start),
+            end_date: toISODate(end),
+          })
+          .catch(() => ({ data: { team_members: [] } })),
         salesStatisticsApi
           .getFunnelStatistics({
             start_date: toISODate(start),
@@ -344,8 +503,16 @@ export default function SalesManagerWorkstation() {
       ]);
 
       const funnelPayload = extractData(funnelRes);
-      const teamData =
-        extractData(teamRes)?.items || extractData(teamRes) || [];
+      const teamPayload =
+        teamRes?.data?.data ||
+        teamRes?.data ||
+        extractData(teamRes) ||
+        {};
+      const teamRaw =
+        teamPayload.team_members ||
+        teamPayload.items ||
+        (Array.isArray(teamPayload) ? teamPayload : []);
+      const normalizedTeam = teamRaw.map(normalizeTeamMemberData);
       const approvals = approvalsRes?.data?.items || approvalsRes?.data || [];
       const customerContribution = extractData(customersRes)?.customers || [];
       const planItems = plansRes?.data?.items || plansRes?.data || [];
@@ -366,7 +533,8 @@ export default function SalesManagerWorkstation() {
         won: funnelPayload.contracts || 0,
       });
 
-      setTeamMembers(teamData);
+      setTeamMembers(normalizedTeam);
+      setTeamInsights(calculateTeamInsights(normalizedTeam));
 
       const approvalsTransformed = approvals.map((contract) => ({
         id: contract.id,
@@ -401,15 +569,19 @@ export default function SalesManagerWorkstation() {
       const monthlyAchieved = summaryData?.total_contract_amount || 0;
       const achievementRate =
         monthlyTarget > 0 ? (monthlyAchieved / monthlyTarget) * 100 : 0;
-      const totalCustomers = teamData.reduce(
-        (sum, member) => sum + (member.customer_total || 0),
+      const totalCustomers = normalizedTeam.reduce(
+        (sum, member) => sum + (member.customerTotal || 0),
         0,
       );
-      const newCustomers = teamData.reduce(
-        (sum, member) => sum + (member.new_customers || 0),
+      const newCustomers = normalizedTeam.reduce(
+        (sum, member) => sum + (member.newCustomers || 0),
         0,
       );
       const overallOpportunities = summaryData?.total_opportunities || 0;
+      const teamOpportunityCount = normalizedTeam.reduce(
+        (sum, member) => sum + (member.opportunityCount || 0),
+        0,
+      );
 
       const yearTargetValue =
         yearTargetItem?.target_value ||
@@ -424,16 +596,13 @@ export default function SalesManagerWorkstation() {
         monthlyTarget,
         monthlyAchieved,
         achievementRate: Number(achievementRate.toFixed(1)),
-        teamSize: teamData.length,
+        teamSize: normalizedTeam.length,
         activeContracts: summaryData?.signed_contracts || 0,
         pendingApprovals: approvalsTransformed.length,
         totalCustomers,
         newCustomersThisMonth: newCustomers,
         activeOpportunities: overallOpportunities,
-        hotOpportunities: teamData.reduce(
-          (sum, member) => sum + (member.opportunity_count || 0),
-          0,
-        ),
+        hotOpportunities: teamOpportunityCount,
         pendingPayment: paymentSummary.total_unpaid || 0,
         overduePayment: paymentSummary.total_overdue || 0,
         collectionRate: paymentSummary.collection_rate || 0,
@@ -446,6 +615,7 @@ export default function SalesManagerWorkstation() {
       setError(err);
       setDeptStats(null);
       setTeamMembers([]);
+      setTeamInsights(null);
       setSalesFunnel({});
       setPendingApprovals([]);
       setTopCustomers([]);
@@ -571,6 +741,68 @@ export default function SalesManagerWorkstation() {
         )}
       </motion.div>
 
+      {teamInsights && (
+        <motion.div variants={fadeIn}>
+          <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base text-white">
+                <Activity className="h-5 w-5 text-cyan-400" />
+                团队行为洞察
+              </CardTitle>
+              <p className="text-sm text-slate-400">
+                跟进动作 · 线索质量 · 管道健康
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-slate-300">
+                <div className="rounded-lg border border-slate-700/60 bg-slate-900/40 p-4">
+                  <p className="text-xs text-slate-400 mb-2">跟进行为</p>
+                  <p className="text-2xl font-semibold text-white">
+                    {teamInsights.followUps.total} 次
+                  </p>
+                  <div className="mt-2 space-y-1 text-xs">
+                    <p>电话沟通：{teamInsights.followUps.call}</p>
+                    <p>拜访次数：{teamInsights.followUps.visit}</p>
+                    <p>
+                      会议/邮件：
+                      {teamInsights.followUps.meeting + teamInsights.followUps.email}
+                    </p>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-slate-700/60 bg-slate-900/40 p-4">
+                  <p className="text-xs text-slate-400 mb-2">线索质量</p>
+                  <p className="text-2xl font-semibold text-white">
+                    {teamInsights.leadQuality.totalLeads} 个线索
+                  </p>
+                  <div className="mt-2 space-y-1 text-xs">
+                    <p>线索成功率：{teamInsights.leadQuality.conversionRate}%</p>
+                    <p>建模覆盖率：{teamInsights.leadQuality.modelingRate}%</p>
+                    <p>
+                      信息完整度：{teamInsights.leadQuality.avgCompleteness} 分
+                    </p>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-slate-700/60 bg-slate-900/40 p-4">
+                  <p className="text-xs text-slate-400 mb-2">销售管道</p>
+                  <p className="text-2xl font-semibold text-white">
+                    {formatCurrency(teamInsights.pipeline.pipelineAmount || 0)}
+                  </p>
+                  <div className="mt-2 space-y-1 text-xs">
+                    <p>
+                      平均毛利率：{teamInsights.pipeline.avgMargin || 0}%
+                    </p>
+                    <p>
+                      在谈商机：
+                      {teamInsights.pipeline.opportunityCount} 个
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Sales Funnel & Team Performance */}
@@ -650,42 +882,29 @@ export default function SalesManagerWorkstation() {
                             <div>
                               <div className="flex items-center gap-2">
                                 <span className="font-medium text-white">
-                                  {member.name || member.user_name || "N/A"}
+                                  {member.name || "N/A"}
                                 </span>
                                 <Badge
                                   variant="outline"
                                   className="text-xs bg-slate-700/40"
                                 >
-                                  {member.role || member.user_role || "N/A"}
+                                  {member.role || "N/A"}
                                 </Badge>
                               </div>
                               <div className="text-xs text-slate-400 mt-1">
-                                {member.active_projects ||
-                                  member.activeProjects ||
-                                  0}{" "}
-                                个项目 ·{" "}
-                                {member.new_customers ||
-                                  member.newCustomers ||
-                                  0}{" "}
-                                个新客户
+                                {member.activeProjects || 0} 个项目 ·{" "}
+                                {member.newCustomers || 0} 个新客户
                               </div>
                             </div>
                           </div>
                           <div className="text-right">
                             <div className="text-lg font-bold text-white">
                               {formatCurrency(
-                                member.monthly_achieved ||
-                                  member.monthlyAchieved ||
-                                  0,
+                                member.monthlyAchieved || 0,
                               )}
                             </div>
                             <div className="text-xs text-slate-400">
-                              目标:{" "}
-                              {formatCurrency(
-                                member.monthly_target ||
-                                  member.monthlyTarget ||
-                                  0,
-                              )}
+                              目标: {formatCurrency(member.monthlyTarget || 0)}
                             </div>
                           </div>
                         </div>
@@ -695,31 +914,48 @@ export default function SalesManagerWorkstation() {
                             <span
                               className={cn(
                                 "font-medium",
-                                (member.achievement_rate ||
-                                  member.achievementRate ||
-                                  0) >= 90
+                                (member.achievementRate || 0) >= 90
                                   ? "text-emerald-400"
-                                  : (member.achievement_rate ||
-                                        member.achievementRate ||
-                                        0) >= 70
+                                  : (member.achievementRate || 0) >= 70
                                     ? "text-amber-400"
                                     : "text-red-400",
                               )}
                             >
-                              {member.achievement_rate ||
-                                member.achievementRate ||
-                                0}
-                              %
+                              {member.achievementRate || 0}%
                             </span>
                           </div>
                           <Progress
-                            value={
-                              member.achievement_rate ||
-                              member.achievementRate ||
-                              0
-                            }
+                            value={member.achievementRate || 0}
                             className="h-1.5 bg-slate-700/50"
                           />
+                          <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-slate-400">
+                            <div>电话：{member.followUpStats?.call || 0}</div>
+                            <div>拜访：{member.followUpStats?.visit || 0}</div>
+                            <div>
+                              会议/邮件：
+                              {(member.followUpStats?.meeting || 0) +
+                                (member.followUpStats?.email || 0)}
+                            </div>
+                            <div>
+                              线索成功率：
+                              {member.leadQuality?.conversionRate || 0}%
+                            </div>
+                            <div>
+                              建模覆盖率：
+                              {member.leadQuality?.modelingRate || 0}%
+                            </div>
+                            <div>
+                              信息完整度：
+                              {member.leadQuality?.avgCompleteness || 0} 分
+                            </div>
+                            <div>
+                              在谈金额：
+                              {formatCurrency(member.pipelineAmount || 0)}
+                            </div>
+                            <div>
+                              平均毛利率：{member.avgEstMargin || 0}%
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}

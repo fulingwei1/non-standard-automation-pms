@@ -291,12 +291,17 @@ class TestPasswordChange:
 
     def test_change_password_success(self, client: TestClient, db_session: Session):
         """测试成功修改密码"""
-        # 创建一个测试用户
+        import uuid
         from app.models.organization import Employee
+
+        # 使用唯一编码避免冲突
+        unique_suffix = uuid.uuid4().hex[:8]
+        employee_code = f"EMP-TEST-{unique_suffix}"
+        username = f"pwd_test_{unique_suffix}"
 
         # 先创建员工
         employee = Employee(
-            employee_code="EMP-PWD-TEST",
+            employee_code=employee_code,
             name="密码测试用户",
             department="测试部门",
             role="TESTER",
@@ -308,7 +313,7 @@ class TestPasswordChange:
         # 创建用户
         test_user = User(
             employee_id=employee.id,
-            username="pwd_test_user",
+            username=username,
             password_hash=get_password_hash("old_password123"),
             real_name="密码测试用户",
             department="测试部门",
@@ -319,7 +324,7 @@ class TestPasswordChange:
 
         # 登录获取token
         login_data = {
-            "username": "pwd_test_user",
+            "username": username,
             "password": "old_password123",
         }
 

@@ -4,7 +4,7 @@
  * Core Functions: Sales strategy, Team management, Performance monitoring, Contract approval
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
@@ -60,6 +60,144 @@ const DEFAULT_STATS = {
   yearTarget: 60000000,
 };
 
+const RANKING_PRIMARY_KEYS = [
+  "contract_amount",
+  "acceptance_amount",
+  "collection_amount",
+];
+
+const RANKING_METRIC_LIBRARY = [
+  {
+    value: "contract_amount",
+    label: "签单额（合同金额）",
+    description: "统计周期内签订的合同金额",
+    defaultWeight: 0.4,
+    isPrimary: true,
+  },
+  {
+    value: "acceptance_amount",
+    label: "验收金额",
+    description: "已审批/已开票金额，代表验收进度",
+    defaultWeight: 0.2,
+    isPrimary: true,
+  },
+  {
+    value: "collection_amount",
+    label: "回款金额",
+    description: "周期内到账的回款金额",
+    defaultWeight: 0.2,
+    isPrimary: true,
+  },
+  {
+    value: "opportunity_count",
+    label: "商机提交数",
+    description: "新增并推进的商机数量",
+    defaultWeight: 0.05,
+  },
+  {
+    value: "lead_conversion_rate",
+    label: "线索成功率",
+    description: "线索转商机/签单成功率",
+    defaultWeight: 0.05,
+  },
+  {
+    value: "modeling_rate",
+    label: "建模覆盖率",
+    description: "重点线索是否完成方案建模",
+    defaultWeight: 0.05,
+  },
+  {
+    value: "info_completeness",
+    label: "商务信息完整度",
+    description: "商机/客户信息补充完整情况",
+    defaultWeight: 0.05,
+  },
+  {
+    value: "follow_up_total",
+    label: "跟进行为次数",
+    description: "电话、会议、邮件等总跟进次数",
+    defaultWeight: 0.05,
+  },
+  {
+    value: "follow_up_visit",
+    label: "拜访次数",
+    description: "出差/上门拜访次数",
+    defaultWeight: 0.05,
+  },
+  {
+    value: "pipeline_amount",
+    label: "管道金额",
+    description: "当前在跟进的商机金额总和",
+    defaultWeight: 0.05,
+  },
+  {
+    value: "avg_est_margin",
+    label: "平均预估毛利率",
+    description: "商机的平均预估毛利率",
+    defaultWeight: 0.05,
+  },
+];
+
+const isPrimaryMetric = (metric = {}) =>
+  metric.is_primary ||
+  RANKING_PRIMARY_KEYS.includes(metric.data_source) ||
+  RANKING_PRIMARY_KEYS.includes(metric.key);
+
+const calculateRankingValidation = (metrics = []) => {
+  if (!metrics.length) {
+    return {
+      totalWeight: 0,
+      primaryWeight: 0,
+      errors: ["至少需要配置一条指标"],
+    };
+  }
+  const errors = [];
+  let totalWeight = 0;
+  let primaryWeight = 0;
+  const seenKeys = new Set();
+
+  metrics.forEach((metric) => {
+    const key = metric.key || metric.data_source;
+    if (!key) {
+      errors.push("存在缺少唯一 key 的指标");
+      return;
+    }
+    if (seenKeys.has(key)) {
+      errors.push(`指标 ${metric.label || key} 的 key 重复`);
+    } else {
+      seenKeys.add(key);
+    }
+    const weight = Number(metric.weight || 0);
+    if (Number.isNaN(weight) || weight <= 0) {
+      errors.push(`指标 ${metric.label || key} 的权重要大于0`);
+    }
+    totalWeight += weight;
+    const isPrimary =
+      metric.is_primary ||
+      RANKING_PRIMARY_KEYS.includes(metric.data_source) ||
+      RANKING_PRIMARY_KEYS.includes(key);
+    if (isPrimary) {
+      primaryWeight += weight;
+    }
+  });
+
+  if (Math.abs(totalWeight - 1) > 0.0001) {
+    errors.push("所有指标权重之和必须等于100%");
+  }
+  if (Math.abs(primaryWeight - 0.8) > 0.0001) {
+    errors.push("签单额+验收金额+回款金额需占80%的权重");
+  }
+
+  return { totalWeight, primaryWeight, errors };
+};
+
+const formatConfigTimestamp = (value) => {
+  if (!value) return "尚未配置";
+  const time = new Date(value);
+  if (Number.isNaN(time.getTime())) return value;
+  return time.toLocaleString("zh-CN", { hour12: false });
+};
+
 const formatCurrency = (value) => {
   if (value >= 10000) {
     return `¥${(value / 10000).toFixed(1)}万`;
@@ -88,16 +226,159 @@ const getPeriodRange = (period) => {
   return { start, end };
 };
 
-const transformTeamMember = (member) => ({
-  id: member.user_id,
-  name: member.user_name,
-  role: member.role,
-  monthlyAchieved: member.monthly_actual || member.contract_amount || 0,
-  monthlyTarget: member.monthly_target || 0,
-  achievementRate: Math.round(member.monthly_completion_rate || 0),
-  activeProjects: member.contract_count || 0,
-  newCustomers: member.new_customers || 0,
-});
+const normalizeTeamMember = (member = {}) => {
+  const followStats = member.follow_up_stats || member.followUpStats || {};
+  const leadStats = member.lead_quality_stats || member.leadQualityStats || {};
+  const opportunityStats =
+    member.opportunity_stats || member.opportunityStats || {};
+  const monthlyTarget = Number(member.monthly_target || 0);
+  const monthlyAchieved = Number(
+    member.monthly_actual ?? member.contract_amount ?? 0,
+  );
+  const completionRate =
+    monthlyTarget > 0
+      ? (monthlyAchieved / monthlyTarget) * 100
+      : Number(member.monthly_completion_rate || 0);
+  const totalLeads = Number(leadStats.total_leads ?? member.lead_count ?? 0);
+  const convertedLeads = Number(leadStats.converted_leads || 0);
+  const modeledLeads = Number(leadStats.modeled_leads || 0);
+  const conversionRate =
+    leadStats.conversion_rate ??
+    (totalLeads ? (convertedLeads / totalLeads) * 100 : 0);
+  const modelingRate =
+    leadStats.modeling_rate ?? (totalLeads ? (modeledLeads / totalLeads) * 100 : 0);
+  const avgCompletenessValue =
+    leadStats.avg_completeness ?? leadStats.avgCompleteness ?? 0;
+
+  return {
+    id: member.user_id,
+    name: member.user_name || member.username || "未命名成员",
+    role: member.role || member.role_name || "销售工程师",
+    monthlyAchieved,
+    monthlyTarget,
+    achievementRate: Number((completionRate || 0).toFixed(1)),
+    activeProjects: Number(member.contract_count || 0),
+    newCustomers: Number(member.new_customers || 0),
+    opportunityCount: Number(
+      opportunityStats.opportunity_count || member.opportunity_count || 0,
+    ),
+    followUpStats: {
+      call: Number(followStats.CALL || 0),
+      email: Number(followStats.EMAIL || 0),
+      visit: Number(followStats.VISIT || 0),
+      meeting: Number(followStats.MEETING || 0),
+      other: Number(followStats.OTHER || 0),
+    },
+    leadQuality: {
+      totalLeads,
+      convertedLeads,
+      modeledLeads,
+      conversionRate: Number((conversionRate || 0).toFixed(1)),
+      modelingRate: Number((modelingRate || 0).toFixed(1)),
+      avgCompleteness: Number(
+        avgCompletenessValue.toFixed
+          ? avgCompletenessValue.toFixed(1)
+          : avgCompletenessValue,
+      ),
+    },
+    pipelineAmount: Number(opportunityStats.pipeline_amount || 0),
+    avgEstMargin: Number(opportunityStats.avg_est_margin || 0),
+  };
+};
+
+const calculateTeamInsights = (members = []) => {
+  if (!members.length) return null;
+
+  const totals = members.reduce(
+    (acc, member) => {
+      const follow = member.followUpStats || {};
+      acc.follow.call += follow.call || 0;
+      acc.follow.email += follow.email || 0;
+      acc.follow.visit += follow.visit || 0;
+      acc.follow.meeting += follow.meeting || 0;
+      acc.follow.other += follow.other || 0;
+
+      const lead = member.leadQuality || {};
+      acc.leads.total += lead.totalLeads || 0;
+      acc.leads.converted += lead.convertedLeads || 0;
+      acc.leads.modeled += lead.modeledLeads || 0;
+      if (lead.avgCompleteness !== undefined) {
+        acc.leads.completenessSum += Number(lead.avgCompleteness) || 0;
+        acc.leads.completenessCount += 1;
+      }
+
+      acc.pipeline.amount += member.pipelineAmount || 0;
+      acc.pipeline.opportunityCount += member.opportunityCount || 0;
+      if (member.avgEstMargin) {
+        acc.pipeline.marginSum += member.avgEstMargin;
+        acc.pipeline.marginCount += 1;
+      }
+
+      return acc;
+    },
+    {
+      follow: { call: 0, email: 0, visit: 0, meeting: 0, other: 0 },
+      leads: {
+        total: 0,
+        converted: 0,
+        modeled: 0,
+        completenessSum: 0,
+        completenessCount: 0,
+      },
+      pipeline: { amount: 0, opportunityCount: 0, marginSum: 0, marginCount: 0 },
+    },
+  );
+
+  const followTotal =
+    totals.follow.call +
+    totals.follow.email +
+    totals.follow.visit +
+    totals.follow.meeting +
+    totals.follow.other;
+  const conversionRate =
+    totals.leads.total > 0
+      ? Number(((totals.leads.converted / totals.leads.total) * 100).toFixed(1))
+      : 0;
+  const modelingRate =
+    totals.leads.total > 0
+      ? Number(((totals.leads.modeled / totals.leads.total) * 100).toFixed(1))
+      : 0;
+  const avgCompleteness =
+    totals.leads.completenessCount > 0
+      ? Number(
+          (
+            totals.leads.completenessSum / totals.leads.completenessCount
+          ).toFixed(1),
+        )
+      : 0;
+  const avgMargin =
+    totals.pipeline.marginCount > 0
+      ? Number(
+          (totals.pipeline.marginSum / totals.pipeline.marginCount).toFixed(1),
+        )
+      : 0;
+
+  return {
+    followUps: {
+      total: followTotal,
+      call: totals.follow.call,
+      visit: totals.follow.visit,
+      meeting: totals.follow.meeting,
+      email: totals.follow.email,
+    },
+    leadQuality: {
+      totalLeads: totals.leads.total,
+      conversionRate,
+      modelingRate,
+      avgCompleteness,
+    },
+    pipeline: {
+      pipelineAmount: totals.pipeline.amount,
+      avgMargin,
+      opportunityCount: totals.pipeline.opportunityCount,
+    },
+  };
+};
 
 const transformApprovalItem = (contract) => ({
   id: contract.id,
@@ -223,6 +504,51 @@ export default function SalesDirectorWorkstation() {
   const [funnelData, setFunnelData] = useState(null);
   const [recentActivities, setRecentActivities] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState("month");
+  const [teamInsights, setTeamInsights] = useState(null);
+  const [rankingConfig, setRankingConfig] = useState(null);
+  const [configDraft, setConfigDraft] = useState([]);
+  const [configLoading, setConfigLoading] = useState(false);
+  const [configSaving, setConfigSaving] = useState(false);
+  const [configFormError, setConfigFormError] = useState("");
+  const [configSuccessMessage, setConfigSuccessMessage] = useState("");
+  const [isEditingConfig, setIsEditingConfig] = useState(false);
+  const [metricToAdd, setMetricToAdd] = useState("");
+  const [configLoadError, setConfigLoadError] = useState("");
+  const metricValidation = useMemo(
+    () => calculateRankingValidation(configDraft),
+    [configDraft],
+  );
+  const displayRankingMetrics = useMemo(() => {
+    const targets = isEditingConfig
+      ? configDraft
+      : rankingConfig?.metrics || [];
+    return [...targets].sort(
+      (a, b) => Number(b.weight || 0) - Number(a.weight || 0),
+    );
+  }, [configDraft, rankingConfig, isEditingConfig]);
+  const metricSelectOptions = useMemo(() => {
+    const base = [...RANKING_METRIC_LIBRARY];
+    (configDraft || []).forEach((metric) => {
+      const value = metric.data_source || metric.key;
+      if (!value) return;
+      if (!base.some((option) => option.value === value)) {
+        base.push({
+          value,
+          label: metric.label || value,
+          description: metric.description || "自定义指标",
+        });
+      }
+    });
+    return base;
+  }, [configDraft]);
+  const availableMetricOptions = useMemo(() => {
+    const usedKeys = new Set(
+      (configDraft || []).map((metric) => metric.data_source || metric.key),
+    );
+    return RANKING_METRIC_LIBRARY.filter(
+      (metric) => !usedKeys.has(metric.value),
+    );
+  }, [configDraft]);
 
   const loadDashboard = useCallback(async () => {
     try {
@@ -328,11 +654,12 @@ export default function SalesDirectorWorkstation() {
       const summaryMonth = extractData(monthlySummaryRes);
       const summaryYear = extractData(yearlySummaryRes);
       const funnelPayload = extractData(funnelRes) || {};
-      const teamMembers =
-        teamRes?.data?.team_members ||
-        teamRes?.data?.data?.team_members ||
-        teamRes?.team_members ||
-        [];
+      const teamPayload =
+        teamRes?.data?.data || teamRes?.data || teamRes || {};
+      const teamMembersRaw =
+        teamPayload.team_members ||
+        teamPayload.items ||
+        (Array.isArray(teamPayload) ? teamPayload : []);
       const approvals = approvalsRes?.data?.items || approvalsRes?.data || [];
       const customerContribution = extractData(customersRes)?.customers || [];
       const paymentSummary = extractData(paymentStatsRes)?.summary || {};
@@ -342,11 +669,12 @@ export default function SalesDirectorWorkstation() {
       const monthTarget = monthTargetsRes?.data?.items?.[0];
       const yearTarget = yearTargetsRes?.data?.items?.[0];
 
-      const normalizedTeam = teamMembers
-        .map(transformTeamMember)
+      const normalizedTeamAll = teamMembersRaw.map(normalizeTeamMember);
+      const normalizedTeam = [...normalizedTeamAll]
         .sort((a, b) => (b.monthlyAchieved || 0) - (a.monthlyAchieved || 0))
         .slice(0, 4);
       setTeamPerformance(normalizedTeam);
+      setTeamInsights(calculateTeamInsights(normalizedTeamAll));
 
       const approvalsTransformed = approvals.map(transformApprovalItem);
       setPendingApprovals(approvalsTransformed);
@@ -470,6 +798,7 @@ export default function SalesDirectorWorkstation() {
       });
       setOverallStats(null);
       setTeamPerformance([]);
+      setTeamInsights(null);
       setPendingApprovals([]);
       setTopCustomers([]);
       setRecentActivities([]);
@@ -479,9 +808,193 @@ export default function SalesDirectorWorkstation() {
     }
   }, [selectedPeriod]);
 
+  const fetchRankingConfig = useCallback(async () => {
+    try {
+      setConfigLoading(true);
+      setConfigLoadError("");
+      setConfigFormError("");
+      setConfigSuccessMessage("");
+      const res = await salesTeamApi.getRankingConfig();
+      const payload = res.data?.data || res.data || {};
+      const normalizedMetrics = (payload.metrics || []).map((metric) => {
+        const dataSource = metric.data_source || metric.key;
+        return {
+          key: metric.key || dataSource,
+          label: metric.label || metric.key || dataSource,
+          weight: Number(metric.weight || 0),
+          data_source: dataSource,
+          description: metric.description,
+          is_primary:
+            metric.is_primary ||
+            RANKING_PRIMARY_KEYS.includes(metric.key) ||
+            RANKING_PRIMARY_KEYS.includes(dataSource),
+        };
+      });
+      const normalizedConfig = {
+        ...payload,
+        metrics: normalizedMetrics,
+      };
+      setRankingConfig(normalizedConfig);
+      setConfigDraft(normalizedMetrics);
+      setIsEditingConfig(false);
+    } catch (err) {
+      console.error("Failed to fetch ranking config:", err);
+      setConfigLoadError(
+        err?.response?.data?.detail || "加载销售人员评价模型失败，请稍后重试。",
+      );
+    } finally {
+      setConfigLoading(false);
+    }
+  }, []);
+
+  const handleStartEditConfig = () => {
+    setIsEditingConfig(true);
+    setConfigDraft(rankingConfig?.metrics || []);
+    setConfigFormError("");
+    setConfigSuccessMessage("");
+  };
+
+  const handleCancelEditConfig = () => {
+    setIsEditingConfig(false);
+    setConfigDraft(rankingConfig?.metrics || []);
+    setMetricToAdd("");
+    setConfigFormError("");
+  };
+
+  const handleMetricLabelChange = (index, value) => {
+    setConfigDraft((prev) =>
+      prev.map((metric, idx) =>
+        idx === index ? { ...metric, label: value } : metric,
+      ),
+    );
+  };
+
+  const handleMetricWeightChange = (index, percentValue) => {
+    setConfigDraft((prev) =>
+      prev.map((metric, idx) => {
+        if (idx !== index) return metric;
+        const numericPercent = Number(percentValue);
+        if (Number.isNaN(numericPercent)) {
+          return { ...metric, weight: 0 };
+        }
+        const normalized = Math.min(Math.max(numericPercent, 0), 100) / 100;
+        return { ...metric, weight: Number(normalized.toFixed(4)) };
+      }),
+    );
+  };
+
+  const handleMetricDataSourceChange = (index, value) => {
+    if (!value) return;
+    setConfigDraft((prev) =>
+      prev.map((metric, idx) => {
+        if (idx !== index) return metric;
+        const option =
+          metricSelectOptions.find((item) => item.value === value) ||
+          RANKING_METRIC_LIBRARY.find((item) => item.value === value);
+        const shouldResetLabel =
+          !metric.label ||
+          metric.label === metric.key ||
+          metric.label === metric.data_source;
+        const nextKey =
+          metric.key && metric.key !== metric.data_source
+            ? metric.key
+            : value;
+        return {
+          ...metric,
+          data_source: value,
+          key: nextKey,
+          label: shouldResetLabel
+            ? option?.label || metric.label || value
+            : metric.label,
+          description: option?.description || metric.description,
+          is_primary:
+            option?.isPrimary || RANKING_PRIMARY_KEYS.includes(value),
+        };
+      }),
+    );
+  };
+
+  const handleRemoveMetric = (index) => {
+    setConfigDraft((prev) =>
+      prev.filter((metric, idx) => {
+        if (idx !== index) return true;
+        return !isPrimaryMetric(metric);
+      }),
+    );
+  };
+
+  const handleAddMetric = () => {
+    if (!metricToAdd) return;
+    const template = RANKING_METRIC_LIBRARY.find(
+      (item) => item.value === metricToAdd,
+    );
+    if (!template) return;
+    setConfigDraft((prev) => [
+      ...prev,
+      {
+        key: template.value,
+        label: template.label,
+        weight: template.defaultWeight || 0.05,
+        data_source: template.value,
+        description: template.description,
+        is_primary: Boolean(template.isPrimary),
+      },
+    ]);
+    setMetricToAdd("");
+  };
+
+  const handleSaveRankingConfig = async () => {
+    const validationResult = calculateRankingValidation(configDraft);
+    if (validationResult.errors.length > 0) {
+      setConfigFormError(validationResult.errors.join("；"));
+      return;
+    }
+    setConfigSaving(true);
+    setConfigFormError("");
+    try {
+      const payload = {
+        metrics: (configDraft || []).map((metric) => ({
+          key: metric.key || metric.data_source,
+          label: metric.label || metric.key || metric.data_source,
+          weight: Number(metric.weight || 0),
+          data_source: metric.data_source || metric.key,
+          description: metric.description,
+          is_primary: Boolean(isPrimaryMetric(metric)),
+        })),
+      };
+      const res = await salesTeamApi.updateRankingConfig(payload);
+      const responseData = res.data?.data || res.data || payload;
+      const normalizedMetrics = (responseData.metrics || payload.metrics).map(
+        (metric) => ({
+          ...metric,
+          is_primary:
+            metric.is_primary ||
+            RANKING_PRIMARY_KEYS.includes(metric.data_source) ||
+            RANKING_PRIMARY_KEYS.includes(metric.key),
+        }),
+      );
+      setRankingConfig({ ...responseData, metrics: normalizedMetrics });
+      setConfigDraft(normalizedMetrics);
+      setIsEditingConfig(false);
+      setConfigSuccessMessage("销售人员评价模型已更新");
+      setMetricToAdd("");
+    } catch (err) {
+      console.error("Failed to update ranking config:", err);
+      setConfigFormError(
+        err?.response?.data?.detail || "保存失败，请检查权重是否符合要求。",
+      );
+    } finally {
+      setConfigSaving(false);
+    }
+  };
+
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
+
+  useEffect(() => {
+    fetchRankingConfig();
+  }, [fetchRankingConfig]);
 
   if (loading && !overallStats) {
     return (
@@ -499,9 +1012,9 @@ export default function SalesDirectorWorkstation() {
         <PageHeader
           title="销售总监工作台"
           description="销售战略总览、团队绩效监控"
-        />
-        <ApiIntegrationError
-          error={error}
+      />
+      <ApiIntegrationError
+        error={error}
           apiEndpoint={
             error?.apiName
               ? error.apiName.includes("summary")
@@ -556,6 +1069,258 @@ export default function SalesDirectorWorkstation() {
           </motion.div>
         }
       />
+
+      {/* Ranking Config */}
+      <motion.div variants={fadeIn}>
+        <Card className="bg-gradient-to-br from-slate-800/70 to-slate-900/70 border border-slate-700/60">
+          <CardHeader>
+            <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-base text-white">
+                  <Award className="h-5 w-5 text-amber-400" />
+                  销售人员评价模型
+                </CardTitle>
+                <p className="text-xs text-slate-400 mt-1">
+                  顶层设定考核指标与权重，确保签单额/验收金额/回款金额占80%
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={fetchRankingConfig}
+                  disabled={configLoading}
+                >
+                  刷新配置
+                </Button>
+                {isEditingConfig ? (
+                  <Button variant="outline" size="sm" onClick={handleCancelEditConfig}>
+                    取消
+                  </Button>
+                ) : (
+                  <Button size="sm" onClick={handleStartEditConfig}>
+                    调整权重
+                  </Button>
+                )}
+              </div>
+            </div>
+            <div className="text-xs text-slate-500 mt-2">
+              最近更新时间：{formatConfigTimestamp(rankingConfig?.updated_at)}
+            </div>
+            {configLoadError && (
+              <p className="text-xs text-red-400 mt-2">{configLoadError}</p>
+            )}
+            {!isEditingConfig && configSuccessMessage && (
+              <p className="text-xs text-emerald-400 mt-2">
+                {configSuccessMessage}
+              </p>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {configLoading ? (
+              <div className="py-8 text-center text-slate-400">
+                正在读取最新配置...
+              </div>
+            ) : !rankingConfig?.metrics?.length ? (
+              <div className="py-6 text-sm text-slate-400">
+                暂无配置，请点击“调整权重”添加指标。
+              </div>
+            ) : isEditingConfig ? (
+              <div className="space-y-4">
+                <div className="overflow-x-auto rounded-lg border border-slate-700/60">
+                  <table className="min-w-full divide-y divide-slate-700/70 text-sm">
+                    <thead className="bg-slate-800/50">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400">
+                          指标名称
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400">
+                          数据来源
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400">
+                          权重 (%)
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400">
+                          属性
+                        </th>
+                        <th className="px-3 py-2" />
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800">
+                      {configDraft.map((metric, index) => {
+                        const percentValue = Number(metric.weight || 0) * 100;
+                        const primary = isPrimaryMetric(metric);
+                        return (
+                          <tr key={`${metric.key}-${metric.data_source}-${index}`}>
+                            <td className="px-3 py-3 align-top">
+                              <input
+                                value={metric.label || ""}
+                                onChange={(e) =>
+                                  handleMetricLabelChange(index, e.target.value)
+                                }
+                                className="w-full rounded-md border border-slate-700 bg-slate-900/60 px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/60"
+                              />
+                              <p className="mt-1 text-[11px] text-slate-500">
+                                {metric.description || "用于展示在排名表中的名称"}
+                              </p>
+                            </td>
+                            <td className="px-3 py-3 align-top">
+                              <select
+                                value={metric.data_source || metric.key}
+                                onChange={(e) =>
+                                  handleMetricDataSourceChange(index, e.target.value)
+                                }
+                                disabled={primary}
+                                className={cn(
+                                  "w-full rounded-md border px-2 py-1 text-sm bg-slate-900/60 text-white focus:outline-none focus:ring-2 focus:ring-primary/60",
+                                  primary
+                                    ? "border-slate-700/80 text-slate-500 cursor-not-allowed"
+                                    : "border-slate-700",
+                                )}
+                              >
+                                {metricSelectOptions.map((option) => (
+                                  <option key={option.value} value={option.value}>
+                                    {option.label}
+                                  </option>
+                                ))}
+                              </select>
+                              <p className="mt-1 text-[11px] text-slate-500">
+                                {primary ? "核心指标不可更改数据来源" : "选择需要考核的数据源字段"}
+                              </p>
+                            </td>
+                            <td className="px-3 py-3 align-top">
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  step="1"
+                                  value={percentValue.toFixed(0)}
+                                  onChange={(e) =>
+                                    handleMetricWeightChange(index, e.target.value)
+                                  }
+                                  className="w-20 rounded-md border border-slate-700 bg-slate-900/60 px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/60"
+                                />
+                                <span className="text-xs text-slate-500">%</span>
+                              </div>
+                            </td>
+                            <td className="px-3 py-3 align-top">
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "text-xs",
+                                  primary
+                                    ? "bg-amber-500/20 border-amber-500/40 text-amber-200"
+                                    : "bg-slate-700/40 border-slate-600 text-slate-300",
+                                )}
+                              >
+                                {primary ? "核心" : "辅助"}
+                              </Badge>
+                            </td>
+                            <td className="px-3 py-3 align-top text-right">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={primary}
+                                onClick={() => handleRemoveMetric(index)}
+                              >
+                                移除
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <select
+                    value={metricToAdd}
+                    onChange={(e) => setMetricToAdd(e.target.value)}
+                    className="w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/60 sm:w-64"
+                  >
+                    <option value="">选择要新增的考核指标</option>
+                    {availableMetricOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    variant="outline"
+                    onClick={handleAddMetric}
+                    disabled={!metricToAdd}
+                  >
+                    新增指标
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-4 text-xs text-slate-400">
+                  <span>
+                    总权重：{(metricValidation.totalWeight * 100).toFixed(1)}%
+                  </span>
+                  <span>
+                    核心指标权重：
+                    {(metricValidation.primaryWeight * 100).toFixed(1)}%（需80%）
+                  </span>
+                </div>
+                {configFormError && (
+                  <p className="text-xs text-red-400">{configFormError}</p>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={handleSaveRankingConfig}
+                    loading={configSaving}
+                    disabled={configSaving}
+                  >
+                    保存配置
+                  </Button>
+                  <Button variant="ghost" onClick={handleCancelEditConfig}>
+                    取消
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {displayRankingMetrics.map((metric) => (
+                    <div
+                      key={`${metric.key}-${metric.data_source}`}
+                      className="p-3 rounded-lg border border-slate-700/60 bg-slate-900/60"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm text-white">{metric.label}</p>
+                          <p className="text-[11px] text-slate-500 mt-1">
+                            {metric.description || "——"}
+                          </p>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-xs",
+                            isPrimaryMetric(metric)
+                              ? "border-amber-500/40 text-amber-200"
+                              : "border-slate-600 text-slate-300",
+                          )}
+                        >
+                          {(Number(metric.weight || 0) * 100).toFixed(0)}%
+                        </Badge>
+                      </div>
+                      <Progress
+                        value={Number(metric.weight || 0) * 100}
+                        className="h-1.5 bg-slate-800 mt-3"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-500">
+                  说明：签单额、验收金额、回款金额三项总权重固定为80%，其余指标用于衡量跟进行为、线索质量与毛利率等表现。
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Key Statistics - 6 column grid */}
       {overallStats && (
@@ -615,6 +1380,72 @@ export default function SalesDirectorWorkstation() {
             color="text-cyan-400"
             bg="bg-cyan-500/10"
           />
+        </motion.div>
+      )}
+
+      {teamInsights && (
+        <motion.div variants={fadeIn}>
+          <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/60">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-base text-white">
+                  <Activity className="h-5 w-5 text-cyan-400" />
+                  全局销售洞察
+                </CardTitle>
+                <Badge
+                  variant="outline"
+                  className="bg-slate-800/60 border-slate-700 text-slate-300"
+                >
+                  {teamInsights.leadQuality.totalLeads} 条线索
+                </Badge>
+              </div>
+              <p className="text-sm text-slate-400">
+                汇总团队跟进动作、线索质量与在谈管道，为销售决策提供依据
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-slate-200">
+                <div className="rounded-lg border border-slate-700/60 bg-slate-900/40 p-4">
+                  <p className="text-xs text-slate-400">团队跟进</p>
+                  <p className="text-2xl font-semibold text-white mt-1">
+                    {teamInsights.followUps.total} 次
+                  </p>
+                  <div className="mt-3 space-y-1 text-xs text-slate-400">
+                    <p>电话：{teamInsights.followUps.call}</p>
+                    <p>拜访：{teamInsights.followUps.visit}</p>
+                    <p>
+                      会议/邮件：
+                      {teamInsights.followUps.meeting + teamInsights.followUps.email}
+                    </p>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-slate-700/60 bg-slate-900/40 p-4">
+                  <p className="text-xs text-slate-400">线索质量</p>
+                  <p className="text-2xl font-semibold text-white mt-1">
+                    成功率 {teamInsights.leadQuality.conversionRate}%
+                  </p>
+                  <div className="mt-3 space-y-1 text-xs text-slate-400">
+                    <p>建模覆盖率：{teamInsights.leadQuality.modelingRate}%</p>
+                    <p>
+                      信息完整度：{teamInsights.leadQuality.avgCompleteness} 分
+                    </p>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-slate-700/60 bg-slate-900/40 p-4">
+                  <p className="text-xs text-slate-400">销售管道</p>
+                  <p className="text-2xl font-semibold text-white mt-1">
+                    {formatCurrency(teamInsights.pipeline.pipelineAmount || 0)}
+                  </p>
+                  <div className="mt-3 space-y-1 text-xs text-slate-400">
+                    <p>平均毛利率：{teamInsights.pipeline.avgMargin || 0}%</p>
+                    <p>
+                      在谈商机：{teamInsights.pipeline.opportunityCount} 个
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
       )}
 
@@ -778,11 +1609,11 @@ export default function SalesDirectorWorkstation() {
                                 </Badge>
                               </div>
                               <div className="text-xs text-slate-400 mt-1">
-                                {member.activeProjects} 个项目 ·{" "}
-                                {member.newCustomers} 个新客户
-                              </div>
-                            </div>
-                          </div>
+                               {member.activeProjects} 个项目 ·{" "}
+                               {member.newCustomers} 个新客户
+                             </div>
+                           </div>
+                         </div>
                           <div className="text-right">
                             <div className="text-lg font-bold text-white">
                               {formatCurrency(member.monthlyAchieved)}
@@ -812,6 +1643,32 @@ export default function SalesDirectorWorkstation() {
                             value={member.achievementRate}
                             className="h-1.5 bg-slate-700/50"
                           />
+                          <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-slate-400">
+                            <div>电话：{member.followUpStats?.call || 0}</div>
+                            <div>拜访：{member.followUpStats?.visit || 0}</div>
+                            <div>
+                              会议/邮件：
+                              {(member.followUpStats?.meeting || 0) +
+                                (member.followUpStats?.email || 0)}
+                            </div>
+                            <div>
+                              线索成功率：
+                              {member.leadQuality?.conversionRate || 0}%
+                            </div>
+                            <div>
+                              建模覆盖率：
+                              {member.leadQuality?.modelingRate || 0}%
+                            </div>
+                            <div>
+                              信息完整度：
+                              {member.leadQuality?.avgCompleteness || 0} 分
+                            </div>
+                            <div>
+                              在谈金额：
+                              {formatCurrency(member.pipelineAmount || 0)}
+                            </div>
+                            <div>平均毛利率：{member.avgEstMargin || 0}%</div>
+                          </div>
                         </div>
                       </div>
                     ))}

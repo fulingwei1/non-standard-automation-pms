@@ -1422,3 +1422,22 @@ class SalesTarget(Base, TimestampMixin):
     
     def __repr__(self):
         return f"<SalesTarget {self.target_type}-{self.period_value}>"
+
+
+class SalesRankingConfig(Base, TimestampMixin):
+    """销售排名权重配置"""
+
+    __tablename__ = "sales_ranking_configs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    metrics = Column(JSON, nullable=False, comment="指标配置(JSON数组)")
+    created_by = Column(Integer, ForeignKey("users.id"), comment="创建人ID")
+    updated_by = Column(Integer, ForeignKey("users.id"), comment="最后更新人ID")
+
+    __table_args__ = (
+        Index("idx_sales_ranking_config_updated_at", "updated_at"),
+        {"comment": "销售排名权重配置表"},
+    )
+
+    def __repr__(self):
+        return f"<SalesRankingConfig {self.id}>"

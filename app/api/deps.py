@@ -18,3 +18,4 @@ def get_db() -> Generator:
 # Re-export authentication dependencies
 get_current_user = security.get_current_user
 get_current_active_user = security.get_current_active_user
+get_current_active_superuser = security.get_current_active_superuser

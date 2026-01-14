@@ -1866,3 +1866,23 @@ class SalesTargetResponse(TimestampSchema):
     
     class Config:
         from_attributes = True
+
+
+# ==================== 销售排名权重配置 ====================
+
+
+class SalesRankingMetricConfig(BaseModel):
+    key: str = Field(..., description="指标唯一标识")
+    label: str = Field(..., description="指标名称")
+    weight: float = Field(..., gt=0, description="权重（0-1之间的小数）")
+    data_source: str = Field(..., description="数据来源标识")
+    description: Optional[str] = Field(None, description="指标说明")
+    is_primary: Optional[bool] = Field(False, description="是否主要指标")
+
+
+class SalesRankingConfigUpdateRequest(BaseModel):
+    """销售排名配置更新请求"""
+
+    metrics: List[SalesRankingMetricConfig] = Field(
+        ..., description="指标配置列表，权重和必须为1.0"
+    )

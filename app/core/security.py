@@ -284,6 +284,15 @@ async def get_current_active_user(
     return current_user
 
 
+async def get_current_active_superuser(
+    current_user: User = Depends(get_current_active_user),
+) -> User:
+    """获取当前超级管理员用户"""
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="需要管理员权限")
+    return current_user
+
+
 def check_permission(user: User, permission_code: str, db: Session = None) -> bool:
     """检查用户权限"""
     if user.is_superuser:

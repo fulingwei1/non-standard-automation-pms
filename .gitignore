@@ -45,6 +45,8 @@ data/*.sqlite3
 .env
 .env.local
 .env.*.local
+.env.production
+.env.vercel
 
 # Logs
 *.log

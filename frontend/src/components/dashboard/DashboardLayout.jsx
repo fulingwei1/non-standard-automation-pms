@@ -1,19 +1,16 @@
 /**
  * DashboardLayout - 统一的工作台布局组件
  * 提供标准的工作台页面结构
+ *
+ * @param {Object} props
+ * @param {string} props.title - 标题
+ * @param {string} props.description - 描述
+ * @param {React.ReactNode} props.actions - 操作按钮区域
+ * @param {React.ReactNode} props.children - 子内容
+ * @param {boolean} props.loading - 加载状态
  */
-import { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { PageHeader } from "../layout/PageHeader";
-import { Button } from "../ui/button";
-
-export interface DashboardLayoutProps {
-  title: string;
-  description?: string;
-  actions?: ReactNode;
-  children: ReactNode;
-  loading?: boolean;
-}
 
 // Stagger animation variants
 const staggerContainer = {
@@ -35,7 +32,7 @@ export function DashboardLayout({
   actions,
   children,
   loading = false,
-}: DashboardLayoutProps) {
+}) {
   return (
     <motion.div
       initial="hidden"

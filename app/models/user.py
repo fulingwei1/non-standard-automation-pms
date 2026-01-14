@@ -33,6 +33,10 @@ class User(Base, TimestampMixin):
     last_login_at = Column(DateTime, comment="最后登录时间")
     last_login_ip = Column(String(50), comment="最后登录IP")
 
+    # 方案生成积分系统
+    solution_credits = Column(Integer, default=100, nullable=False, comment="方案生成积分余额")
+    credits_updated_at = Column(DateTime, comment="积分最后变动时间")
+
     # 关系
     roles = relationship("UserRole", back_populates="user", lazy="dynamic")
     created_projects = relationship(
@@ -148,3 +152,64 @@ class PermissionAudit(Base, TimestampMixin):
 
     def __repr__(self):
         return f"<PermissionAudit {self.action} {self.target_type}:{self.target_id}>"
+
+
+class SolutionCreditTransaction(Base):
+    """方案生成积分交易记录表"""
+
+    __tablename__ = "solution_credit_transactions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
+
+    # 交易类型
+    transaction_type = Column(String(30), nullable=False, comment="交易类型")
+    # INIT: 初始化积分
+    # GENERATE: 生成方案扣除
+    # ADMIN_ADD: 管理员充值
+    # ADMIN_DEDUCT: 管理员扣除
+    # SYSTEM_REWARD: 系统奖励
+    # REFUND: 退还（生成失败时）
+
+    # 积分变动
+    amount = Column(Integer, nullable=False, comment="变动数量（正为增加，负为减少）")
+    balance_before = Column(Integer, nullable=False, comment="变动前余额")
+    balance_after = Column(Integer, nullable=False, comment="变动后余额")
+
+    # 关联信息
+    related_type = Column(String(50), comment="关联对象类型")
+    related_id = Column(Integer, comment="关联对象ID")
+
+    # 操作信息
+    operator_id = Column(Integer, ForeignKey("users.id"), comment="操作人ID")
+    remark = Column(Text, comment="备注说明")
+
+    # 元数据
+    ip_address = Column(String(50), comment="操作IP")
+    user_agent = Column(String(500), comment="用户代理")
+
+    created_at = Column(DateTime, server_default="CURRENT_TIMESTAMP", comment="创建时间")
+
+    # 关系
+    user = relationship("User", foreign_keys=[user_id], backref="credit_transactions")
+    operator = relationship("User", foreign_keys=[operator_id])
+
+    def __repr__(self):
+        return f"<SolutionCreditTransaction {self.transaction_type} {self.amount}>"
+
+
+class SolutionCreditConfig(Base):
+    """方案生成积分配置表"""
+
+    __tablename__ = "solution_credit_configs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    config_key = Column(String(50), unique=True, nullable=False, comment="配置键")
+    config_value = Column(String(200), nullable=False, comment="配置值")
+    description = Column(Text, comment="配置说明")
+    is_active = Column(Boolean, default=True, comment="是否启用")
+    created_at = Column(DateTime, server_default="CURRENT_TIMESTAMP", comment="创建时间")
+    updated_at = Column(DateTime, server_default="CURRENT_TIMESTAMP", comment="更新时间")
+
+    def __repr__(self):
+        return f"<SolutionCreditConfig {self.config_key}={self.config_value}>"

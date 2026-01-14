@@ -1,0 +1,93 @@
+# 全栈部署 Dockerfile - 包含前端和后端
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# 安装系统依赖
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    make \
+    libffi-dev \
+    libssl-dev \
+    curl \
+    nginx \
+    && rm -rf /var/lib/apt/lists/*
+
+# 复制并安装 Python 依赖
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 复制后端代码
+COPY app/ ./app/
+COPY migrations/ ./migrations/
+COPY init_db.py .
+
+# 创建必要的目录
+RUN mkdir -p data uploads logs
+
+# 复制前端构建产物
+COPY frontend/dist /usr/share/nginx/html
+
+# 配置 Nginx
+RUN echo 'server { \
+    listen 80; \
+    server_name localhost; \
+    \
+    # 前端静态文件 \
+    location / { \
+        root /usr/share/nginx/html; \
+        try_files $uri $uri/ /index.html; \
+    } \
+    \
+    # API 代理到后端 \
+    location /api { \
+        proxy_pass http://127.0.0.1:8000; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
+    } \
+    \
+    location /docs { \
+        proxy_pass http://127.0.0.1:8000; \
+    } \
+    \
+    location /redoc { \
+        proxy_pass http://127.0.0.1:8000; \
+    } \
+    \
+    location /health { \
+        proxy_pass http://127.0.0.1:8000; \
+    } \
+}' > /etc/nginx/sites-available/default
+
+# 暴露端口
+EXPOSE 80 8000
+
+# 启动脚本
+COPY <<'EOF' /app/start.sh
+#!/bin/bash
+set -e
+
+# 启动 Nginx
+nginx
+
+# 初始化数据库（如果需要）
+if [ ! -f /app/data/app.db ]; then
+    echo "Initializing database..."
+    python init_db.py
+fi
+
+# 启动后端服务
+echo "Starting backend server..."
+exec uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 4
+EOF
+
+RUN chmod +x /app/start.sh
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost/health || exit 1
+
+CMD ["/app/start.sh"]

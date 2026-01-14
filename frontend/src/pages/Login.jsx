@@ -606,13 +606,13 @@ export default function Login({ onLoginSuccess }) {
                   </div>
                 </motion.button>
 
-                {/* 总经理 */}
+                {/* 符凌维 - 副总经理 */}
                 <motion.button
                   type="button"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setUsername('gm')
+                    setUsername('fulingwei')
                     setPassword('123456')
                   }}
                   className={cn(
@@ -627,18 +627,18 @@ export default function Login({ onLoginSuccess }) {
                     <Zap className="h-3.5 w-3.5 text-orange-600" />
                   </div>
                   <div className="text-left min-w-0">
-                    <p className="font-medium text-gray-900 truncate">总经理</p>
-                    <p className="text-xs text-gray-500">gm</p>
+                    <p className="font-medium text-gray-900 truncate">符凌维</p>
+                    <p className="text-xs text-gray-500">副总经理</p>
                   </div>
                 </motion.button>
 
-                {/* 项目经理 */}
+                {/* 谭章斌 - 项目经理 */}
                 <motion.button
                   type="button"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setUsername('pm')
+                    setUsername('tanzhangbin')
                     setPassword('123456')
                   }}
                   className={cn(
@@ -653,18 +653,18 @@ export default function Login({ onLoginSuccess }) {
                     <GitBranch className="h-3.5 w-3.5 text-blue-600" />
                   </div>
                   <div className="text-left min-w-0">
-                    <p className="font-medium text-gray-900 truncate">项目经理</p>
-                    <p className="text-xs text-gray-500">pm</p>
+                    <p className="font-medium text-gray-900 truncate">谭章斌</p>
+                    <p className="text-xs text-gray-500">项目经理</p>
                   </div>
                 </motion.button>
 
-                {/* 销售总监 */}
+                {/* 宋魁 - 营销中心总监 */}
                 <motion.button
                   type="button"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setUsername('sales_director')
+                    setUsername('songkui')
                     setPassword('123456')
                   }}
                   className={cn(
@@ -679,18 +679,18 @@ export default function Login({ onLoginSuccess }) {
                     <TrendingUp className="h-3.5 w-3.5 text-rose-600" />
                   </div>
                   <div className="text-left min-w-0">
-                    <p className="font-medium text-gray-900 truncate">销售总监</p>
-                    <p className="text-xs text-gray-500">sales_dir</p>
+                    <p className="font-medium text-gray-900 truncate">宋魁</p>
+                    <p className="text-xs text-gray-500">营销总监</p>
                   </div>
                 </motion.button>
 
-                {/* 销售经理 */}
+                {/* 姚洪 - 销售经理 */}
                 <motion.button
                   type="button"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setUsername('sales_manager')
+                    setUsername('yaohong')
                     setPassword('123456')
                   }}
                   className={cn(
@@ -705,18 +705,18 @@ export default function Login({ onLoginSuccess }) {
                     <Briefcase className="h-3.5 w-3.5 text-pink-600" />
                   </div>
                   <div className="text-left min-w-0">
-                    <p className="font-medium text-gray-900 truncate">销售经理</p>
-                    <p className="text-xs text-gray-500">sales_mgr</p>
+                    <p className="font-medium text-gray-900 truncate">姚洪</p>
+                    <p className="text-xs text-gray-500">销售经理</p>
                   </div>
                 </motion.button>
 
-                {/* P&C (采购) */}
+                {/* 常雄 - PMC主管 */}
                 <motion.button
                   type="button"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setUsername('pmc')
+                    setUsername('changxiong')
                     setPassword('123456')
                   }}
                   className={cn(
@@ -731,34 +731,34 @@ export default function Login({ onLoginSuccess }) {
                     <ShoppingCart className="h-3.5 w-3.5 text-green-600" />
                   </div>
                   <div className="text-left min-w-0">
-                    <p className="font-medium text-gray-900 truncate">P&C</p>
-                    <p className="text-xs text-gray-500">pmc</p>
+                    <p className="font-medium text-gray-900 truncate">常雄</p>
+                    <p className="text-xs text-gray-500">PMC主管</p>
                   </div>
                 </motion.button>
 
-                {/* 机械部经理 */}
+                {/* 高勇 - 生产部经理 */}
                 <motion.button
                   type="button"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setUsername('mech_manager')
+                    setUsername('gaoyong')
                     setPassword('123456')
                   }}
                   className={cn(
                     "flex items-center gap-1.5 p-2.5 rounded-lg",
-                    "bg-gradient-to-br from-orange-50 to-orange-100",
-                    "border border-orange-200 hover:border-orange-300",
+                    "bg-gradient-to-br from-amber-50 to-amber-100",
+                    "border border-amber-200 hover:border-amber-300",
                     "transition-all duration-200",
                     "group text-xs"
                   )}
                 >
-                  <div className="p-1.5 rounded-lg bg-orange-100 group-hover:bg-orange-200 transition-colors flex-shrink-0">
-                    <Hammer className="h-3.5 w-3.5 text-orange-600" />
+                  <div className="p-1.5 rounded-lg bg-amber-100 group-hover:bg-amber-200 transition-colors flex-shrink-0">
+                    <Hammer className="h-3.5 w-3.5 text-amber-600" />
                   </div>
                   <div className="text-left min-w-0">
-                    <p className="font-medium text-gray-900 truncate">机械部经理</p>
-                    <p className="text-xs text-gray-500">mech_mgr</p>
+                    <p className="font-medium text-gray-900 truncate">高勇</p>
+                    <p className="text-xs text-gray-500">生产部经理</p>
                   </div>
                 </motion.button>
               </div>

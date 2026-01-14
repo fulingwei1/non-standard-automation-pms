@@ -49,6 +49,16 @@ def db_engine():
             conn.execute(text("DELETE FROM project_stages"))
         except Exception:
             pass
+        # 清理员工表中的非标准格式编码（用于编号生成测试）
+        try:
+            conn.execute(text("DELETE FROM employees WHERE employee_code LIKE 'EMP-%'"))
+        except Exception:
+            pass
+        # 清理客户表中的测试数据
+        try:
+            conn.execute(text("DELETE FROM customers WHERE customer_code LIKE 'CUS-%'"))
+        except Exception:
+            pass
         # Reset auto-increment counters if sqlite_sequence table exists
         try:
             conn.execute(

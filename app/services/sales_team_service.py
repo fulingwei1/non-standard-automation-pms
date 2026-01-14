@@ -11,7 +11,7 @@ from datetime import date as date_type, datetime, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, func
+from sqlalchemy import and_, func, case
 from sqlalchemy.orm import Session
 
 from app.models.sales import (
@@ -168,6 +168,119 @@ class SalesTeamService:
                 "updated_at": target.updated_at or target.created_at,
             }
 
+        return result
+
+    def get_followup_statistics_map(
+        self,
+        user_ids: List[int],
+        start_datetime: Optional[datetime],
+        end_datetime: Optional[datetime],
+    ) -> Dict[int, dict]:
+        """统计不同跟进方式的数量（电话/拜访等）"""
+        if not user_ids:
+            return {}
+
+        query = (
+            self.db.query(
+                Lead.owner_id.label("owner_id"),
+                LeadFollowUp.follow_up_type.label("follow_up_type"),
+                func.count(LeadFollowUp.id).label("count"),
+            )
+            .join(Lead, LeadFollowUp.lead_id == Lead.id)
+            .filter(Lead.owner_id.in_(user_ids))
+        )
+        if start_datetime:
+            query = query.filter(LeadFollowUp.created_at >= start_datetime)
+        if end_datetime:
+            query = query.filter(LeadFollowUp.created_at <= end_datetime)
+
+        rows = query.group_by(Lead.owner_id, LeadFollowUp.follow_up_type).all()
+        result: Dict[int, dict] = {}
+        for row in rows:
+            entry = result.setdefault(
+                row.owner_id,
+                {"CALL": 0, "EMAIL": 0, "VISIT": 0, "MEETING": 0, "OTHER": 0, "total": 0},
+            )
+            key = row.follow_up_type or "OTHER"
+            entry[key] = entry.get(key, 0) + int(row.count or 0)
+            entry["total"] += int(row.count or 0)
+        return result
+
+    def get_lead_quality_stats_map(
+        self,
+        user_ids: List[int],
+        start_datetime: Optional[datetime],
+        end_datetime: Optional[datetime],
+    ) -> Dict[int, dict]:
+        """统计线索数量、转化率、建模覆盖率和信息完整度"""
+        if not user_ids:
+            return {}
+
+        query = (
+            self.db.query(
+                Lead.owner_id.label("owner_id"),
+                func.count(Lead.id).label("total_leads"),
+                func.sum(case((Lead.status == "CONVERTED", 1), else_=0)).label("converted_leads"),
+                func.sum(case((Lead.requirement_detail_id.isnot(None), 1), else_=0)).label("modeled_leads"),
+                func.avg(func.coalesce(Lead.completeness, 0)).label("avg_completeness"),
+            )
+            .filter(Lead.owner_id.in_(user_ids))
+        )
+        if start_datetime:
+            query = query.filter(Lead.created_at >= start_datetime)
+        if end_datetime:
+            query = query.filter(Lead.created_at <= end_datetime)
+
+        rows = query.group_by(Lead.owner_id).all()
+        result: Dict[int, dict] = {}
+        for row in rows:
+            total = int(row.total_leads or 0)
+            converted = int(row.converted_leads or 0)
+            modeled = int(row.modeled_leads or 0)
+            conversion_rate = round((converted / total * 100) if total else 0.0, 1)
+            modeling_rate = round((modeled / total * 100) if total else 0.0, 1)
+            result[row.owner_id] = {
+                "total_leads": total,
+                "converted_leads": converted,
+                "modeled_leads": modeled,
+                "conversion_rate": conversion_rate,
+                "modeling_rate": modeling_rate,
+                "avg_completeness": round(float(row.avg_completeness or 0.0), 1),
+            }
+        return result
+
+    def get_opportunity_stats_map(
+        self,
+        user_ids: List[int],
+        start_datetime: Optional[datetime],
+        end_datetime: Optional[datetime],
+    ) -> Dict[int, dict]:
+        """统计商机数量、金额以及预估毛利率"""
+        if not user_ids:
+            return {}
+
+        query = (
+            self.db.query(
+                Opportunity.owner_id.label("owner_id"),
+                func.count(Opportunity.id).label("opportunity_count"),
+                func.sum(func.coalesce(Opportunity.est_amount, 0)).label("pipeline_amount"),
+                func.avg(func.coalesce(Opportunity.est_margin, 0)).label("avg_est_margin"),
+            )
+            .filter(Opportunity.owner_id.in_(user_ids))
+        )
+        if start_datetime:
+            query = query.filter(Opportunity.created_at >= start_datetime)
+        if end_datetime:
+            query = query.filter(Opportunity.created_at <= end_datetime)
+
+        rows = query.group_by(Opportunity.owner_id).all()
+        result: Dict[int, dict] = {}
+        for row in rows:
+            result[row.owner_id] = {
+                "opportunity_count": int(row.opportunity_count or 0),
+                "pipeline_amount": float(row.pipeline_amount or 0.0),
+                "avg_est_margin": round(float(row.avg_est_margin or 0.0), 1),
+            }
         return result
 
     def get_recent_followups_map(

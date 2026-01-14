@@ -218,6 +218,68 @@ def get_service_dashboard_statistics(
 
 # ==================== 服务工单 ====================
 
+@router.get("/service-tickets/project-members", response_model=dict, status_code=status.HTTP_200_OK)
+def get_project_members_for_ticket(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_ids: str = Query(..., description="项目ID列表，逗号分隔（如：1,2,3）"),
+    include_roles: Optional[str] = Query(None, description="包含的角色，逗号分隔（可选）"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取项目相关人员（用于工单分配）
+    根据项目ID列表获取所有相关人员，自动去重
+    """
+    from app.services.ticket_assignment_service import get_project_members_for_ticket
+    
+    # 解析项目ID列表
+    try:
+        project_id_list = [int(pid.strip()) for pid in project_ids.split(",") if pid.strip()]
+    except ValueError:
+        raise HTTPException(status_code=400, detail="项目ID格式错误，应为逗号分隔的数字")
+    
+    if not project_id_list:
+        raise HTTPException(status_code=400, detail="至少需要一个项目ID")
+    
+    # 解析角色列表（可选）
+    role_list = None
+    if include_roles:
+        try:
+            role_list = [role.strip() for role in include_roles.split(",") if role.strip()]
+        except:
+            pass
+    
+    # 获取项目成员
+    members = get_project_members_for_ticket(
+        db=db,
+        project_ids=project_id_list,
+        include_roles=role_list,
+        exclude_user_id=current_user.id  # 排除当前用户
+    )
+    
+    return {
+        "members": members,
+        "total": len(members)
+    }
+
+
+@router.get("/service-tickets/{ticket_id}/projects", response_model=dict, status_code=status.HTTP_200_OK)
+def get_ticket_related_projects(
+    *,
+    db: Session = Depends(deps.get_db),
+    ticket_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取工单关联的所有项目
+    """
+    from app.services.ticket_assignment_service import get_ticket_related_projects
+    
+    projects_data = get_ticket_related_projects(db, ticket_id)
+    
+    return projects_data
+
+
 @router.get("/service-tickets/statistics", response_model=dict, status_code=status.HTTP_200_OK)
 def get_service_ticket_statistics(
     db: Session = Depends(deps.get_db),
@@ -307,28 +369,58 @@ def create_service_ticket(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    创建服务工单
+    创建服务工单（支持多项目关联和直接分配）
     """
-    # 验证项目是否存在
+    from app.models.service import ServiceTicketProject, ServiceTicketCcUser
+    
+    # 验证主项目是否存在
     project = db.query(Project).filter(Project.id == ticket_in.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail=f"项目不存在 (ID: {ticket_in.project_id})")
+    
+    # 验证关联项目（如果提供了）
+    all_project_ids = [ticket_in.project_id]
+    if ticket_in.project_ids:
+        all_project_ids.extend(ticket_in.project_ids)
+        all_project_ids = list(set(all_project_ids))  # 去重
+        
+        for project_id in all_project_ids:
+            if not db.query(Project).filter(Project.id == project_id).first():
+                raise HTTPException(status_code=404, detail=f"关联项目不存在 (ID: {project_id})")
     
     # 验证客户是否存在
     customer = db.query(Customer).filter(Customer.id == ticket_in.customer_id).first()
     if not customer:
         raise HTTPException(status_code=404, detail=f"客户不存在 (ID: {ticket_in.customer_id})")
     
+    # 验证处理人（如果创建时指定）
+    assignee = None
+    if ticket_in.assignee_id:
+        assignee = db.query(User).filter(User.id == ticket_in.assignee_id).first()
+        if not assignee:
+            raise HTTPException(status_code=404, detail="处理人不存在")
+    
+    # 验证抄送人员（如果提供了）
+    if ticket_in.cc_user_ids:
+        for user_id in ticket_in.cc_user_ids:
+            if not db.query(User).filter(User.id == user_id).first():
+                raise HTTPException(status_code=404, detail=f"抄送人员不存在 (ID: {user_id})")
+    
+    # 创建工单
     ticket = ServiceTicket(
         ticket_no=generate_ticket_no(db),
-        project_id=ticket_in.project_id,
+        project_id=ticket_in.project_id,  # 主项目
         customer_id=ticket_in.customer_id,
         problem_type=ticket_in.problem_type,
         problem_desc=ticket_in.problem_desc,
         urgency=ticket_in.urgency,
         reported_by=ticket_in.reported_by,
         reported_time=ticket_in.reported_time,
-        status="PENDING",
+        status="PENDING" if not ticket_in.assignee_id else "IN_PROGRESS",  # 如果指定了处理人，直接变为处理中
+        assigned_to_id=ticket_in.assignee_id,
+        assigned_to_name=(assignee.name or assignee.username) if assignee else None,
+        assigned_time=datetime.now() if ticket_in.assignee_id else None,
+        response_time=datetime.now() if ticket_in.assignee_id else None,
         timeline=[{
             "type": "REPORTED",
             "timestamp": ticket_in.reported_time.isoformat(),
@@ -336,9 +428,42 @@ def create_service_ticket(
             "description": "客户报告问题",
         }],
     )
+    
+    # 如果创建时指定了处理人，添加分配记录
+    if ticket_in.assignee_id and assignee:
+        ticket.timeline.append({
+            "type": "ASSIGNED",
+            "timestamp": datetime.now().isoformat(),
+            "user": current_user.real_name or current_user.username,
+            "description": f"工单已分配给 {assignee.name or assignee.username}",
+        })
+    
     db.add(ticket)
     db.commit()
     db.refresh(ticket)
+    
+    # 创建项目关联
+    for project_id in all_project_ids:
+        is_primary = (project_id == ticket_in.project_id)
+        ticket_project = ServiceTicketProject(
+            ticket_id=ticket.id,
+            project_id=project_id,
+            is_primary=is_primary
+        )
+        db.add(ticket_project)
+    
+    # 创建抄送人员
+    if ticket_in.cc_user_ids:
+        for user_id in ticket_in.cc_user_ids:
+            if user_id != ticket_in.assignee_id:  # 处理人不作为抄送人
+                cc_user = ServiceTicketCcUser(
+                    ticket_id=ticket.id,
+                    user_id=user_id,
+                    notified_at=datetime.now()
+                )
+                db.add(cc_user)
+    
+    db.commit()
     
     # 创建SLA监控记录
     try:
@@ -400,8 +525,10 @@ def assign_service_ticket(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    分配服务工单
+    分配服务工单（支持抄送人员）
     """
+    from app.models.service import ServiceTicketCcUser
+    
     ticket = db.query(ServiceTicket).filter(ServiceTicket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="服务工单不存在")
@@ -409,6 +536,12 @@ def assign_service_ticket(
     assignee = db.query(User).filter(User.id == assign_in.assignee_id).first()
     if not assignee:
         raise HTTPException(status_code=404, detail="处理人不存在")
+    
+    # 验证抄送人员（如果提供了）
+    if assign_in.cc_user_ids:
+        for user_id in assign_in.cc_user_ids:
+            if not db.query(User).filter(User.id == user_id).first():
+                raise HTTPException(status_code=404, detail=f"抄送人员不存在 (ID: {user_id})")
     
     ticket.assigned_to_id = assign_in.assignee_id
     ticket.assigned_to_name = assignee.name or assignee.username
@@ -428,6 +561,23 @@ def assign_service_ticket(
         "user": current_user.real_name or current_user.username,
         "description": f"工单已分配给 {assignee.name or assignee.username}",
     })
+    
+    # 更新抄送人员
+    if assign_in.cc_user_ids is not None:
+        # 删除旧的抄送人员
+        db.query(ServiceTicketCcUser).filter(
+            ServiceTicketCcUser.ticket_id == ticket_id
+        ).delete()
+        
+        # 添加新的抄送人员（排除处理人）
+        for user_id in assign_in.cc_user_ids:
+            if user_id != assign_in.assignee_id:
+                cc_user = ServiceTicketCcUser(
+                    ticket_id=ticket_id,
+                    user_id=user_id,
+                    notified_at=datetime.now()
+                )
+                db.add(cc_user)
     
     db.add(ticket)
     db.commit()

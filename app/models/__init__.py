@@ -128,7 +128,8 @@ from .business_support import (
     Reconciliation, InvoiceRequest, CustomerSupplierRegistration
 )
 from .service import (
-    ServiceTicket, ServiceRecord, CustomerCommunication,
+    ServiceTicket, ServiceTicketProject, ServiceTicketCcUser,
+    ServiceRecord, CustomerCommunication,
     CustomerSatisfaction, KnowledgeBase
 )
 from .sla import (
@@ -298,7 +299,8 @@ __all__ = [
     'AcceptanceTracking', 'AcceptanceTrackingRecord',
     'Reconciliation', 'InvoiceRequest', 'CustomerSupplierRegistration',
     # Service
-    'ServiceTicket', 'ServiceRecord', 'CustomerCommunication',
+    'ServiceTicket', 'ServiceTicketProject', 'ServiceTicketCcUser',
+    'ServiceRecord', 'CustomerCommunication',
     'CustomerSatisfaction', 'KnowledgeBase',
     # SLA
     'SLAPolicy', 'SLAMonitor', 'SLAStatusEnum',

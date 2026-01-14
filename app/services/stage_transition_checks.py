@@ -171,12 +171,12 @@ def execute_stage_transition(
 ) -> Tuple[bool, Dict[str, Any]]:
     """
     执行阶段流转
-    
+
     Returns:
         Tuple[bool, Dict[str, Any]]: (是否成功, 结果字典)
     """
-    from app.api.v1.endpoints.projects import check_gate
-    
+    from app.api.v1.endpoints.projects.utils import check_gate
+
     try:
         gate_passed, gate_missing = check_gate(db, project, target_stage)
         

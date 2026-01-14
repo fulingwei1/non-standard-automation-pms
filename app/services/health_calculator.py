@@ -283,9 +283,10 @@ class HealthCalculator:
             return False
         
         planned_progress = (elapsed_days / total_days) * 100
-        
-        # 计算偏差
-        variance = planned_progress - (project.progress_pct or 0)
+
+        # 计算偏差 (确保类型一致，progress_pct 可能是 Decimal)
+        actual_progress = float(project.progress_pct or 0)
+        variance = planned_progress - actual_progress
         
         # 如果实际进度落后计划进度超过阈值，认为有风险
         return variance > threshold

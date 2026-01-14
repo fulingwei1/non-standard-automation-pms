@@ -69,6 +69,7 @@ from app.api.v1.endpoints import (
     advantage_products,
     procurement_analysis,
     inventory_analysis,
+    solution_credits,
 )
 
 api_router = APIRouter()
@@ -160,3 +161,6 @@ api_router.include_router(inventory_analysis.router, prefix="/inventory-analysis
 # 工程师绩效评价模块
 from app.api.v1.endpoints.engineer_performance import router as engineer_performance_router
 api_router.include_router(engineer_performance_router, prefix="", tags=["engineer-performance"])
+
+# 方案生成积分模块
+api_router.include_router(solution_credits.router, prefix="/solution-credits", tags=["solution-credits"])

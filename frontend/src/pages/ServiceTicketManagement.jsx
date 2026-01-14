@@ -70,7 +70,7 @@ import { LoadingCard, ErrorMessage, EmptyState } from "../components/common";
 import { toast } from "../components/ui/toast";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
-import { serviceApi, userApi } from "../services/api";
+import { serviceApi, userApi, projectApi, customerApi } from "../services/api";
 import { formatDate } from "../lib/utils";
 
 const statusConfig = {
@@ -528,7 +528,32 @@ export default function ServiceTicketManagement() {
 
     try {
       setSubmitting(true);
-      await serviceApi.tickets.create(ticketData);
+      
+      // 验证必填字段
+      if (!ticketData.project_id || !ticketData.project_ids || ticketData.project_ids.length === 0) {
+        toast.warning("请至少选择一个关联项目");
+        return;
+      }
+      if (!ticketData.customer_id) {
+        toast.warning("请选择客户");
+        return;
+      }
+      
+      // 准备创建数据
+      const createData = {
+        project_id: parseInt(ticketData.project_id),
+        project_ids: ticketData.project_ids.map(id => parseInt(id)),  // 关联项目列表
+        customer_id: parseInt(ticketData.customer_id),
+        problem_type: ticketData.problem_type,
+        problem_desc: ticketData.problem_desc,
+        urgency: ticketData.urgency,
+        reported_by: ticketData.reported_by,
+        reported_time: new Date().toISOString(),
+        assignee_id: ticketData.assignee_id || null,  // 处理人（可选）
+        cc_user_ids: ticketData.cc_user_ids || [],  // 抄送人员（可选）
+      };
+      
+      await serviceApi.tickets.create(createData);
       toast.success("服务工单创建成功");
       setShowCreateDialog(false);
       await loadTickets();
@@ -1325,6 +1350,7 @@ export default function ServiceTicketManagement() {
 function CreateTicketDialog({ onClose, onSubmit }) {
   const [formData, setFormData] = useState({
     project_id: "",
+    project_ids: [],  // 关联项目列表（新增）
     machine_no: "",
     customer_id: "",
     customer_name: "",
@@ -1334,9 +1360,15 @@ function CreateTicketDialog({ onClose, onSubmit }) {
     reported_by: "",
     reported_phone: "",
     remark: "",
+    assignee_id: null,  // 处理人（新增）
+    cc_user_ids: [],  // 抄送人员（新增）
   });
 
   const [submitting, setSubmitting] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [members, setMembers] = useState([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [loadingProjects, setLoadingProjects] = useState(false);
 
   const handleSubmit = async () => {
     // 表单验证
@@ -1383,20 +1415,59 @@ function CreateTicketDialog({ onClose, onSubmit }) {
         </DialogHeader>
         <DialogBody>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm text-slate-400 mb-1 block">
-                  关联项目 *
-                </label>
-                <Input
-                  value={formData.project_id}
-                  onChange={(e) =>
-                    setFormData({ ...formData, project_id: e.target.value })
-                  }
-                  placeholder="选择或输入项目编号"
-                  className="bg-slate-800/50 border-slate-700"
-                />
+            {/* 项目选择（多选） */}
+            <div>
+              <label className="text-sm text-slate-400 mb-2 block">
+                关联项目 *（可多选，第一个为主项目）
+              </label>
+              <div className="border border-slate-700 rounded-lg p-3 max-h-48 overflow-y-auto bg-slate-800/30">
+                {loadingProjects ? (
+                  <div className="text-sm text-slate-400 text-center py-4">
+                    加载项目中...
+                  </div>
+                ) : projects.length === 0 ? (
+                  <div className="text-sm text-slate-400 text-center py-4">
+                    暂无项目
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {projects.map((project) => {
+                      const isSelected = formData.project_ids?.includes(project.id);
+                      const isPrimary = formData.project_ids?.[0] === project.id;
+                      return (
+                        <div
+                          key={project.id}
+                          className="flex items-center gap-2 py-2 px-2 rounded hover:bg-slate-700/30 cursor-pointer"
+                          onClick={() => handleProjectToggle(project.id)}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleProjectToggle(project.id)}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-white flex-1">
+                            {project.project_name} ({project.project_code})
+                          </span>
+                          {isPrimary && (
+                            <Badge className="bg-blue-500/20 text-blue-400 text-xs">
+                              主项目
+                            </Badge>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
+              {formData.project_ids && formData.project_ids.length > 0 && (
+                <div className="text-xs text-slate-500 mt-1">
+                  已选择 {formData.project_ids.length} 个项目
+                </div>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-slate-400 mb-1 block">
                   机台号
@@ -1411,19 +1482,129 @@ function CreateTicketDialog({ onClose, onSubmit }) {
                 />
               </div>
             </div>
+            
+            {/* 人员分配区域 */}
+            {formData.project_ids && formData.project_ids.length > 0 && (
+              <div className="space-y-4 p-4 bg-slate-800/30 rounded-lg border border-slate-700">
+                <div className="text-sm font-semibold text-white mb-2">
+                  人员分配
+                </div>
+                
+                {/* 处理人员 */}
+                <div>
+                  <label className="text-sm text-slate-400 mb-1 block">
+                    处理人员（可选）
+                  </label>
+                  {loadingMembers ? (
+                    <div className="text-sm text-slate-400 py-2">加载相关人员...</div>
+                  ) : (
+                    <Select
+                      value={formData.assignee_id?.toString() || ""}
+                      onValueChange={(val) =>
+                        setFormData({ ...formData, assignee_id: val ? parseInt(val) : null })
+                      }
+                    >
+                      <SelectTrigger className="bg-slate-800/50 border-slate-700">
+                        <SelectValue placeholder="选择处理人员（可选）" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">不分配</SelectItem>
+                        {members
+                          .filter(m => !formData.cc_user_ids?.includes(m.user_id))
+                          .map((member) => (
+                            <SelectItem key={member.user_id} value={member.user_id.toString()}>
+                              <div className="flex items-center justify-between">
+                                <span>{member.real_name}</span>
+                                <span className="text-xs text-slate-500 ml-2">
+                                  {member.role_name}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                
+                {/* 抄送人员 */}
+                <div>
+                  <label className="text-sm text-slate-400 mb-1 block">
+                    抄送人员（可选，可多选）
+                  </label>
+                  {loadingMembers ? (
+                    <div className="text-sm text-slate-400 py-2">加载相关人员...</div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="border border-slate-700 rounded-lg p-2 max-h-32 overflow-y-auto bg-slate-800/30">
+                        {members
+                          .filter(m => m.user_id !== formData.assignee_id)
+                          .map((member) => {
+                            const isSelected = formData.cc_user_ids?.includes(member.user_id);
+                            return (
+                              <div
+                                key={member.user_id}
+                                className="flex items-center gap-2 py-1 px-2 rounded hover:bg-slate-700/30 cursor-pointer"
+                                onClick={() => {
+                                  const currentCc = formData.cc_user_ids || [];
+                                  const newCc = isSelected
+                                    ? currentCc.filter(id => id !== member.user_id)
+                                    : [...currentCc, member.user_id];
+                                  setFormData({ ...formData, cc_user_ids: newCc });
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => {}}
+                                  className="w-4 h-4"
+                                />
+                                <span className="text-white text-sm flex-1">
+                                  {member.real_name}
+                                </span>
+                                <span className="text-xs text-slate-500">
+                                  {member.role_name}
+                                </span>
+                              </div>
+                            );
+                          })}
+                      </div>
+                      {formData.cc_user_ids && formData.cc_user_ids.length > 0 && (
+                        <div className="text-xs text-slate-500">
+                          已选择 {formData.cc_user_ids.length} 个抄送人员
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-slate-400 mb-1 block">
                   客户名称 *
                 </label>
-                <Input
-                  value={formData.customer_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, customer_name: e.target.value })
-                  }
-                  placeholder="输入客户名称"
-                  className="bg-slate-800/50 border-slate-700"
-                />
+                <Select
+                  value={formData.customer_id?.toString() || ""}
+                  onValueChange={(val) => {
+                    const customer = customers.find(c => c.id.toString() === val);
+                    setFormData({
+                      ...formData,
+                      customer_id: val ? parseInt(val) : null,
+                      customer_name: customer?.customer_name || "",
+                    });
+                  }}
+                >
+                  <SelectTrigger className="bg-slate-800/50 border-slate-700">
+                    <SelectValue placeholder="选择客户" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map((customer) => (
+                      <SelectItem key={customer.id} value={customer.id.toString()}>
+                        {customer.customer_name} ({customer.customer_code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="text-sm text-slate-400 mb-1 block">
@@ -1957,22 +2138,52 @@ function TicketDetailDialog({ ticket, onClose, onAssign, onCloseTicket }) {
 function AssignTicketDialog({ ticket, onClose, onSubmit }) {
   const [assignData, setAssignData] = useState({
     assignee_id: "",
+    cc_user_ids: [],
     comment: "",
   });
   const [users, setUsers] = useState([]);
+  const [members, setMembers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [loadingMembers, setLoadingMembers] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Load users for assignment
+  // Load project members for assignment (智能分配)
   useEffect(() => {
-    const loadUsers = async () => {
+    const loadProjectMembers = async () => {
+      try {
+        setLoadingMembers(true);
+        // 获取工单关联的项目
+        const projectsRes = await serviceApi.tickets.getRelatedProjects(ticket.id);
+        const projectIds = [];
+        if (projectsRes.data?.primary_project?.id) {
+          projectIds.push(projectsRes.data.primary_project.id);
+        }
+        if (projectsRes.data?.related_projects) {
+          projectIds.push(...projectsRes.data.related_projects.map(p => p.id));
+        }
+        
+        if (projectIds.length > 0) {
+          // 获取项目相关人员
+          const membersRes = await serviceApi.tickets.getProjectMembers({
+            project_ids: projectIds.join(",")
+          });
+          const memberList = membersRes.data?.members || membersRes.data || [];
+          setMembers(memberList);
+        }
+      } catch (err) {
+        console.error("Failed to load project members:", err);
+      } finally {
+        setLoadingMembers(false);
+      }
+    };
+    
+    // 同时加载所有用户（作为备选）
+    const loadAllUsers = async () => {
       try {
         setLoadingUsers(true);
-        // Get active users, preferably from service department
         const response = await userApi.list({
           is_active: true,
           page_size: 100,
-          // Optionally filter by department: department: '售后服务部'
         });
         const userList = response.data?.items || response.data || [];
         setUsers(
@@ -1984,14 +2195,15 @@ function AssignTicketDialog({ ticket, onClose, onSubmit }) {
         );
       } catch (err) {
         console.error("Failed to load users:", err);
-        // Fallback to empty list or mock data if needed
         setUsers([]);
       } finally {
         setLoadingUsers(false);
       }
     };
-    loadUsers();
-  }, []);
+    
+    loadProjectMembers();
+    loadAllUsers();
+  }, [ticket.id]);
 
   const handleSubmit = async () => {
     if (!assignData.assignee_id) {
@@ -2009,6 +2221,14 @@ function AssignTicketDialog({ ticket, onClose, onSubmit }) {
     }
   };
 
+  const handleCcUserToggle = (userId) => {
+    const currentCc = assignData.cc_user_ids || [];
+    const newCc = currentCc.includes(userId)
+      ? currentCc.filter(id => id !== userId)
+      : [...currentCc, userId];
+    setAssignData({ ...assignData, cc_user_ids: newCc });
+  };
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-md bg-slate-900 border-slate-700">
@@ -2018,28 +2238,118 @@ function AssignTicketDialog({ ticket, onClose, onSubmit }) {
         </DialogHeader>
         <DialogBody>
           <div className="space-y-4">
+            {/* 处理人员选择 */}
             <div>
               <label className="text-sm text-slate-400 mb-1 block">
-                负责人 *
+                处理人员 *
               </label>
-              <select
-                value={assignData.assignee_id}
-                onChange={(e) =>
-                  setAssignData({ ...assignData, assignee_id: e.target.value })
-                }
-                className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white"
-                disabled={loadingUsers}
-              >
-                <option value="">
-                  {loadingUsers ? "加载中..." : "选择负责人"}
-                </option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name} ({user.role})
-                  </option>
-                ))}
-              </select>
+              {loadingMembers ? (
+                <div className="text-sm text-slate-400 py-2">加载项目相关人员...</div>
+              ) : (
+                <Select
+                  value={assignData.assignee_id?.toString() || ""}
+                  onValueChange={(val) =>
+                    setAssignData({ ...assignData, assignee_id: val ? parseInt(val) : "" })
+                  }
+                >
+                  <SelectTrigger className="bg-slate-800/50 border-slate-700">
+                    <SelectValue placeholder="选择处理人员" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {members.length > 0 ? (
+                      <>
+                        <div className="px-2 py-1 text-xs text-slate-400 border-b border-slate-700">
+                          项目相关人员（推荐）
+                        </div>
+                        {members
+                          .filter(m => !assignData.cc_user_ids?.includes(m.user_id))
+                          .map((member) => (
+                            <SelectItem key={member.user_id} value={member.user_id.toString()}>
+                              <div className="flex items-center justify-between">
+                                <span>{member.real_name}</span>
+                                <span className="text-xs text-slate-500 ml-2">
+                                  {member.role_name}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        {users.length > 0 && (
+                          <>
+                            <div className="px-2 py-1 text-xs text-slate-400 border-t border-slate-700 mt-1">
+                              其他人员
+                            </div>
+                            {users
+                              .filter(u => !members.some(m => m.user_id === u.id))
+                              .filter(u => !assignData.cc_user_ids?.includes(u.id))
+                              .map((user) => (
+                                <SelectItem key={user.id} value={user.id.toString()}>
+                                  {user.name} ({user.role})
+                                </SelectItem>
+                              ))}
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      users
+                        .filter(u => !assignData.cc_user_ids?.includes(u.id))
+                        .map((user) => (
+                          <SelectItem key={user.id} value={user.id.toString()}>
+                            {user.name} ({user.role})
+                          </SelectItem>
+                        ))
+                    )}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
+            
+            {/* 抄送人员选择 */}
+            <div>
+              <label className="text-sm text-slate-400 mb-1 block">
+                抄送人员（可选，可多选）
+              </label>
+              {loadingMembers ? (
+                <div className="text-sm text-slate-400 py-2">加载相关人员...</div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="border border-slate-700 rounded-lg p-2 max-h-32 overflow-y-auto bg-slate-800/30">
+                    {(members.length > 0 ? members : users)
+                      .filter(u => u.id !== assignData.assignee_id)
+                      .map((user) => {
+                        const isSelected = assignData.cc_user_ids?.includes(user.id);
+                        const displayName = user.real_name || user.name;
+                        const displayRole = user.role_name || user.role;
+                        return (
+                          <div
+                            key={user.id}
+                            className="flex items-center gap-2 py-1 px-2 rounded hover:bg-slate-700/30 cursor-pointer"
+                            onClick={() => handleCcUserToggle(user.id)}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => {}}
+                              className="w-4 h-4"
+                            />
+                            <span className="text-white text-sm flex-1">
+                              {displayName}
+                            </span>
+                            <span className="text-xs text-slate-500">
+                              {displayRole}
+                            </span>
+                          </div>
+                        );
+                      })}
+                  </div>
+                  {assignData.cc_user_ids && assignData.cc_user_ids.length > 0 && (
+                    <div className="text-xs text-slate-500">
+                      已选择 {assignData.cc_user_ids.length} 个抄送人员
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
             <div>
               <label className="text-sm text-slate-400 mb-1 block">
                 分配说明

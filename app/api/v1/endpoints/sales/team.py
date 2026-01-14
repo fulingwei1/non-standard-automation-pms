@@ -8,17 +8,18 @@ import io
 from typing import Any, List, Optional, Dict
 from datetime import date, datetime
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
 
 from app.api import deps
 from app.core import security
 from app.models.user import User, UserRole, Role
 from app.models.sales import Lead, Opportunity, Contract, Invoice
 from app.schemas.common import ResponseModel
+from app.schemas.sales import SalesRankingConfigUpdateRequest
 from app.services.sales_team_service import SalesTeamService
+from app.services.sales_ranking_service import SalesRankingService
 from .utils import (
     normalize_date_range,
     get_user_role_name,
@@ -27,6 +28,18 @@ from .utils import (
 )
 
 router = APIRouter()
+
+
+def _ensure_sales_director_permission(current_user: User, db: Session):
+    """检查是否为销售总监（数据范围 ALL）"""
+    if current_user.is_superuser:
+        return
+    scope = security.get_sales_data_scope(current_user, db)
+    if scope != 'ALL':
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="仅销售总监可以调整排名权重配置",
+        )
 
 
 def _collect_sales_team_members(
@@ -57,6 +70,9 @@ def _collect_sales_team_members(
     personal_targets_map = team_service.build_personal_target_map(user_ids, month_value, year_value)
     recent_followups_map = team_service.get_recent_followups_map(user_ids, start_datetime, end_datetime)
     customer_distribution_map = team_service.get_customer_distribution_map(user_ids, start_date_value, end_date_value)
+    followup_stats_map = team_service.get_followup_statistics_map(user_ids, start_datetime, end_datetime)
+    lead_quality_map = team_service.get_lead_quality_stats_map(user_ids, start_datetime, end_datetime)
+    opportunity_stats_map = team_service.get_opportunity_stats_map(user_ids, start_datetime, end_datetime)
 
     team_members: List[dict] = []
     for user in users:
@@ -94,6 +110,9 @@ def _collect_sales_team_members(
 
         customer_distribution = customer_distribution_map.get(user.id, {})
         recent_follow_up = recent_followups_map.get(user.id)
+        followup_stats = followup_stats_map.get(user.id, {})
+        lead_quality_stats = lead_quality_map.get(user.id, {})
+        opportunity_stats = opportunity_stats_map.get(user.id, {})
 
         monthly_target_value = monthly_target_info.get("target_value", 0.0)
         monthly_actual_value = monthly_target_info.get("actual_value", 0.0)
@@ -128,9 +147,58 @@ def _collect_sales_team_members(
             "customer_total": customer_distribution.get("total", 0),
             "new_customers": customer_distribution.get("new_customers", 0),
             "region": region_name,
+            "follow_up_stats": followup_stats,
+            "lead_quality_stats": lead_quality_stats,
+            "opportunity_stats": opportunity_stats,
         })
 
     return team_members
+
+
+@router.get("/team/ranking/config", response_model=ResponseModel)
+def get_sales_ranking_config(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取销售排名权重配置"""
+    service = SalesRankingService(db)
+    config = service.get_active_config()
+    return ResponseModel(
+        code=200,
+        message="success",
+        data={
+            "metrics": config.metrics,
+            "total_weight": sum(m.get("weight", 0) for m in config.metrics),
+            "updated_at": config.updated_at,
+        },
+    )
+
+
+@router.put("/team/ranking/config", response_model=ResponseModel, status_code=200)
+def update_sales_ranking_config(
+    *,
+    request: SalesRankingConfigUpdateRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """更新销售排名权重配置（仅销售总监）"""
+    _ensure_sales_director_permission(current_user, db)
+    service = SalesRankingService(db)
+    try:
+        config = service.save_config(request.metrics, operator_id=current_user.id)
+    except ValueError as exc:  # 权重校验失败
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+
+    return ResponseModel(
+        code=200,
+        message="配置已更新",
+        data={
+            "metrics": config.metrics,
+            "total_weight": sum(m.get("weight", 0) for m in config.metrics),
+            "updated_at": config.updated_at,
+        },
+    )
 
 
 # ==================== 销售团队管理与业绩排名 ====================
@@ -236,7 +304,7 @@ def export_sales_team(
 def get_sales_team_ranking(
     *,
     db: Session = Depends(deps.get_db),
-    ranking_type: str = Query("contract_amount", description="排名类型：lead_count/opportunity_count/contract_amount/collection_amount"),
+    ranking_type: str = Query("score", description="排名类型：score 或具体指标（lead_count/opportunity_count/contract_amount/collection_amount 等）"),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
     department_id: Optional[int] = Query(None, description="部门ID筛选"),
@@ -244,81 +312,28 @@ def get_sales_team_ranking(
     limit: int = Query(20, ge=1, le=100, description="返回数量"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
-    """
-    Issue 6.4: 销售业绩排名
-    支持按线索、商机、合同、回款排名
-    """
     normalized_start, normalized_end = normalize_date_range(start_date, end_date)
     start_datetime = datetime.combine(normalized_start, datetime.min.time())
     end_datetime = datetime.combine(normalized_end, datetime.max.time())
 
     users = get_visible_sales_users(db, current_user, department_id, region)
-    department_names = build_department_name_map(db, users)
-
-    # 获取用户角色映射
-    user_ids = [user.id for user in users]
-    user_roles_map = {}
-    for uid in user_ids:
-        user_roles_map[uid] = get_user_role_name(db, db.query(User).filter(User.id == uid).first())
-
-    rankings = []
-    for user in users:
-        stats = {
-            "user_id": user.id,
-            "user_name": user.real_name or user.username,
-            "username": user.username,
-            "role": user_roles_map.get(user.id, "销售专员"),
-            "department_name": user.department or "未分配",
-        }
-
-        stats["region"] = stats["department_name"]
-
-        lead_query = db.query(Lead).filter(Lead.owner_id == user.id)
-        lead_query = lead_query.filter(Lead.created_at >= start_datetime)
-        lead_query = lead_query.filter(Lead.created_at <= end_datetime)
-        stats["lead_count"] = lead_query.count()
-
-        opp_query = db.query(Opportunity).filter(Opportunity.owner_id == user.id)
-        opp_query = opp_query.filter(Opportunity.created_at >= start_datetime)
-        opp_query = opp_query.filter(Opportunity.created_at <= end_datetime)
-        stats["opportunity_count"] = opp_query.count()
-
-        contract_query = db.query(Contract).filter(Contract.owner_id == user.id)
-        contract_query = contract_query.filter(Contract.created_at >= start_datetime)
-        contract_query = contract_query.filter(Contract.created_at <= end_datetime)
-        contracts = contract_query.all()
-        stats["contract_count"] = len(contracts)
-        stats["contract_amount"] = float(sum([c.contract_amount or 0 for c in contracts]))
-
-        invoice_query = db.query(Invoice).join(Contract).filter(Contract.owner_id == user.id)
-        invoice_query = invoice_query.filter(Invoice.paid_date.isnot(None))
-        invoice_query = invoice_query.filter(Invoice.paid_date >= normalized_start)
-        invoice_query = invoice_query.filter(Invoice.paid_date <= normalized_end)
-        invoices = invoice_query.filter(Invoice.payment_status.in_(["PAID", "PARTIAL"])).all()
-        stats["collection_amount"] = float(sum([inv.paid_amount or 0 for inv in invoices]))
-
-        rankings.append(stats)
-
-    # 根据排名类型排序
-    valid_ranking_types = ["lead_count", "opportunity_count", "contract_amount", "collection_amount"]
-    if ranking_type not in valid_ranking_types:
-        ranking_type = "contract_amount"
-
-    rankings.sort(key=lambda x: x.get(ranking_type, 0), reverse=True)
-
-    # 添加排名
-    for idx, ranking in enumerate(rankings[:limit], 1):
-        ranking["rank"] = idx
-        ranking["value"] = ranking.get(ranking_type, 0)
+    ranking_service = SalesRankingService(db)
+    ranking_result = ranking_service.calculate_rankings(
+        users, start_datetime, end_datetime, ranking_type=ranking_type
+    )
+    ranking_list = ranking_result.get("rankings", [])[:limit]
+    total_count = len(ranking_result.get("rankings", []))
 
     return ResponseModel(
         code=200,
         message="success",
         data={
-            "ranking_type": ranking_type,
-            "start_date": start_date.isoformat() if start_date else None,
-            "end_date": end_date.isoformat() if end_date else None,
-            "rankings": rankings[:limit],
-            "total_count": len(rankings)
+            "ranking_type": ranking_result.get("ranking_type"),
+            "start_date": normalized_start.isoformat(),
+            "end_date": normalized_end.isoformat(),
+            "rankings": ranking_list,
+            "total_count": total_count,
+            "config": ranking_result.get("config"),
+            "max_values": ranking_result.get("max_values"),
         }
     )
