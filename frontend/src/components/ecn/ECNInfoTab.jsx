@@ -1,162 +1,214 @@
 /**
- * ECNInfoTab Component
- * ECN 基本信息 Tab 组件
+ * ECN Info Tab Component
+ * ECN 基本信息标签页
  */
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { formatDate } from "../../lib/utils";
-
-// 配置（从原文件提取）
-const typeConfigs = {
-  // 客户相关
-  CUSTOMER_REQUIREMENT: { label: "客户需求变更", color: "bg-blue-500" },
-  CUSTOMER_SPEC: { label: "客户规格调整", color: "bg-blue-400" },
-  CUSTOMER_FEEDBACK: { label: "客户现场反馈", color: "bg-blue-600" },
-  // 设计变更
-  MECHANICAL_STRUCTURE: { label: "机械结构变更", color: "bg-cyan-500" },
-  ELECTRICAL_SCHEME: { label: "电气方案变更", color: "bg-cyan-400" },
-  SOFTWARE_FUNCTION: { label: "软件功能变更", color: "bg-cyan-600" },
-  TECH_OPTIMIZATION: { label: "技术方案优化", color: "bg-teal-500" },
-  DESIGN_FIX: { label: "设计缺陷修复", color: "bg-teal-600" },
-  // 测试相关
-  TEST_STANDARD: { label: "测试标准变更", color: "bg-purple-500" },
-  TEST_FIXTURE: { label: "测试工装变更", color: "bg-purple-400" },
-  CALIBRATION_SCHEME: { label: "校准方案变更", color: "bg-purple-600" },
-  TEST_PROGRAM: { label: "测试程序变更", color: "bg-violet-500" },
-  // 生产制造
-  PROCESS_IMPROVEMENT: { label: "工艺改进", color: "bg-orange-500" },
-  MATERIAL_SUBSTITUTE: { label: "物料替代", color: "bg-orange-400" },
-  SUPPLIER_CHANGE: { label: "供应商变更", color: "bg-orange-600" },
-  COST_OPTIMIZATION: { label: "成本优化", color: "bg-amber-500" },
-  // 质量安全
-  QUALITY_ISSUE: { label: "质量问题整改", color: "bg-red-500" },
-  SAFETY_COMPLIANCE: { label: "安全合规变更", color: "bg-red-600" },
-  RELIABILITY_IMPROVEMENT: { label: "可靠性改进", color: "bg-rose-500" },
-  // 项目管理
-  SCHEDULE_ADJUSTMENT: { label: "进度调整", color: "bg-green-500" },
-  DOCUMENT_UPDATE: { label: "文档更新", color: "bg-green-400" },
-  DRAWING_CHANGE: { label: "图纸变更", color: "bg-emerald-500" },
-  // 兼容旧版本
-  DESIGN: { label: "设计变更", color: "bg-blue-500" },
-  MATERIAL: { label: "物料变更", color: "bg-amber-500" },
-  PROCESS: { label: "工艺变更", color: "bg-purple-500" },
-  SPECIFICATION: { label: "规格变更", color: "bg-green-500" },
-  SCHEDULE: { label: "计划变更", color: "bg-orange-500" },
-  OTHER: { label: "其他", color: "bg-slate-500" },
-};
-
-const priorityConfigs = {
-  URGENT: { label: "紧急", color: "bg-red-500" },
-  HIGH: { label: "高", color: "bg-orange-500" },
-  MEDIUM: { label: "中", color: "bg-amber-500" },
-  LOW: { label: "低", color: "bg-blue-500" },
-};
+import { getStatusBadge, getTypeBadge, getPriorityBadge } from "./ecnConstants";
+import { 
+  FileText, 
+  Users, 
+  Calendar, 
+  DollarSign, 
+  Layers,
+  AlertTriangle 
+} from "lucide-react";
 
 export default function ECNInfoTab({ ecn }) {
-  if (!ecn) {
-    return <div className="text-center py-10 text-slate-400">暂无数据</div>;
-  }
+  const statusBadge = getStatusBadge(ecn.status);
+  const typeBadge = getTypeBadge(ecn.change_type);
+  const priorityBadge = getPriorityBadge(ecn.priority);
+
+  const InfoRow = ({ label, value, icon: Icon }) => (
+    <div className="flex items-start py-3 border-b border-slate-200 last:border-0">
+      <div className="flex items-center gap-2 w-40 text-sm text-slate-600">
+        {Icon && <Icon className="w-4 h-4" />}
+        {label}
+      </div>
+      <div className="flex-1 text-sm font-medium">{value || "-"}</div>
+    </div>
+  );
 
   return (
-    <div className="space-y-4">
-      {/* 基本信息卡片 */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">基本信息</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <div className="text-sm text-slate-500 mb-1">ECN编号</div>
-              <div className="font-mono">{ecn.ecn_no}</div>
-            </div>
-            <div>
-              <div className="text-sm text-slate-500 mb-1">变更类型</div>
-              <Badge className={typeConfigs[ecn.ecn_type]?.color}>
-                {typeConfigs[ecn.ecn_type]?.label}
-              </Badge>
-            </div>
-            <div>
-              <div className="text-sm text-slate-500 mb-1">优先级</div>
-              <Badge className={priorityConfigs[ecn.priority]?.color}>
-                {priorityConfigs[ecn.priority]?.label}
-              </Badge>
-            </div>
-            <div>
-              <div className="text-sm text-slate-500 mb-1">项目</div>
-              <div>{ecn.project_name || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-slate-500 mb-1">申请人</div>
-              <div>{ecn.applicant_name || "-"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-slate-500 mb-1">申请时间</div>
-              <div>{ecn.applied_at ? formatDate(ecn.applied_at) : "-"}</div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 影响评估卡片 */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">影响评估</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <div className="text-sm text-slate-500 mb-1">成本影响</div>
-              <div className="text-xl font-semibold text-red-600">
-                ¥{ecn.cost_impact || 0}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-slate-500 mb-1">工期影响</div>
-              <div className="text-xl font-semibold text-orange-600">
-                {ecn.schedule_impact_days || 0} 天
-              </div>
-            </div>
-            {ecn.quality_impact && (
-              <div>
-                <div className="text-sm text-slate-500 mb-1">质量影响</div>
-                <div>{ecn.quality_impact}</div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* 变更内容卡片 */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* 基本信息 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">变更内容</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            基本信息
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {ecn.change_reason && (
-            <div>
-              <div className="text-sm text-slate-500 mb-2">变更原因</div>
-              <div className="p-3 bg-slate-50 rounded-lg">
-                {ecn.change_reason}
-              </div>
-            </div>
+        <CardContent>
+          <InfoRow label="ECN编号" value={ecn.code} icon={FileText} />
+          <InfoRow 
+            label="状态" 
+            value={<Badge className={statusBadge.color}>{statusBadge.text}</Badge>}
+          />
+          <InfoRow 
+            label="变更类型" 
+            value={<Badge className={typeBadge.color}>{typeBadge.text}</Badge>}
+          />
+          <InfoRow 
+            label="优先级" 
+            value={<Badge className={priorityBadge.color}>{priorityBadge.text}</Badge>}
+          />
+          <InfoRow label="标题" value={ecn.title} />
+          <InfoRow label="变更原因" value={ecn.change_reason} />
+          {ecn.affected_products && (
+            <InfoRow 
+              label="影响产品" 
+              value={ecn.affected_products} 
+              icon={Layers}
+            />
           )}
-          {ecn.change_description && (
-            <div>
-              <div className="text-sm text-slate-500 mb-2">变更描述</div>
-              <div className="p-3 bg-slate-50 rounded-lg whitespace-pre-wrap">
-                {ecn.change_description}
-              </div>
-            </div>
-          )}
-          {ecn.approval_note && (
-            <div>
-              <div className="text-sm text-slate-500 mb-2">审批意见</div>
-              <div className="p-3 bg-slate-50 rounded-lg">
-                {ecn.approval_note}
-              </div>
-            </div>
+          {ecn.affected_projects && (
+            <InfoRow 
+              label="影响项目" 
+              value={ecn.affected_projects}
+            />
           )}
         </CardContent>
       </Card>
+
+      {/* 人员和时间 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            人员和时间
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <InfoRow 
+            label="申请人" 
+            value={ecn.requester_name || ecn.requester_id} 
+            icon={Users}
+          />
+          <InfoRow 
+            label="申请部门" 
+            value={ecn.department_name || ecn.department}
+          />
+          <InfoRow 
+            label="申请时间" 
+            value={formatDate(ecn.request_date)} 
+            icon={Calendar}
+          />
+          <InfoRow 
+            label="要求完成日期" 
+            value={formatDate(ecn.required_complete_date)}
+            icon={AlertTriangle}
+          />
+          <InfoRow 
+            label="创建时间" 
+            value={formatDate(ecn.created_at)}
+          />
+          <InfoRow 
+            label="更新时间" 
+            value={formatDate(ecn.updated_at)}
+          />
+          {ecn.approved_at && (
+            <InfoRow 
+              label="批准时间" 
+              value={formatDate(ecn.approved_at)}
+            />
+          )}
+          {ecn.completed_at && (
+            <InfoRow 
+              label="完成时间" 
+              value={formatDate(ecn.completed_at)}
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 变更描述 */}
+      <Card className="lg:col-span-2">
+        <CardHeader>
+          <CardTitle>变更描述</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="prose prose-sm max-w-none">
+            <div className="mb-4">
+              <h4 className="text-sm font-semibold mb-2">变更内容</h4>
+              <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                {ecn.description || "无"}
+              </p>
+            </div>
+            
+            {ecn.technical_details && (
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold mb-2">技术细节</h4>
+                <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                  {ecn.technical_details}
+                </p>
+              </div>
+            )}
+
+            {ecn.implementation_plan && (
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold mb-2">实施计划</h4>
+                <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                  {ecn.implementation_plan}
+                </p>
+              </div>
+            )}
+
+            {ecn.risk_assessment && (
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold mb-2">风险评估</h4>
+                <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                  {ecn.risk_assessment}
+                </p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 成本影响 */}
+      {(ecn.estimated_cost || ecn.actual_cost) && (
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5" />
+              成本影响
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {ecn.estimated_cost && (
+                <div>
+                  <div className="text-sm text-slate-600 mb-1">预估成本</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    ¥{ecn.estimated_cost?.toLocaleString()}
+                  </div>
+                </div>
+              )}
+              {ecn.actual_cost && (
+                <div>
+                  <div className="text-sm text-slate-600 mb-1">实际成本</div>
+                  <div className="text-2xl font-bold text-emerald-600">
+                    ¥{ecn.actual_cost?.toLocaleString()}
+                  </div>
+                </div>
+              )}
+              {ecn.estimated_cost && ecn.actual_cost && (
+                <div>
+                  <div className="text-sm text-slate-600 mb-1">成本差异</div>
+                  <div className={`text-2xl font-bold ${
+                    ecn.actual_cost > ecn.estimated_cost ? 'text-red-600' : 'text-emerald-600'
+                  }`}>
+                    {ecn.actual_cost > ecn.estimated_cost ? '+' : ''}
+                    ¥{(ecn.actual_cost - ecn.estimated_cost).toLocaleString()}
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

@@ -1,58 +1,179 @@
 /**
- * ECNApprovalsTab Component
- * ECN 审批流程 Tab 组件（时间线视图）
+ * ECN审批流程标签页组件
+ * 用途：展示和管理ECN的审批流程（时间线视图）
  */
-import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { CheckCircle2, XCircle } from "lucide-react";
-import { formatDate } from "../../lib/utils";
-import { ecnApi } from "../../services/api";
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { CheckCircle2, XCircle } from 'lucide-react';
 
-export default function ECNApprovalsTab({ approvals, refetch }) {
-  const [processing, setProcessing] = useState(null);
+/**
+ * 获取审批节点样式配置
+ */
+const getApprovalNodeStyle = (approval) => {
+  const isCompleted = approval.status === 'COMPLETED';
+  const isApproved = approval.approval_result === 'APPROVED';
+  const isRejected = approval.approval_result === 'REJECTED';
+  const isPending = approval.status === 'PENDING';
 
-  // 处理审批通过
-  const handleApprove = async (approvalId) => {
-    const comment = prompt("请输入审批意见（可选）：") || "";
-    if (comment === null) return; // 用户取消
+  if (isApproved) return { color: 'bg-green-500', icon: 'approved' };
+  if (isRejected) return { color: 'bg-red-500', icon: 'rejected' };
+  if (isPending) return { color: 'bg-blue-500', icon: 'pending' };
+  return { color: 'bg-slate-300', icon: 'default' };
+};
 
-    setProcessing(approvalId);
-    try {
-      await ecnApi.approve(approvalId, comment);
-      await refetch();
-      alert("审批通过");
-    } catch (error) {
-      alert("审批失败: " + (error.response?.data?.detail || error.message));
-    } finally {
-      setProcessing(null);
+/**
+ * 获取审批状态Badge样式
+ */
+const getApprovalStatusBadge = (approval) => {
+  const isApproved = approval.approval_result === 'APPROVED';
+  const isRejected = approval.approval_result === 'REJECTED';
+  const isPending = approval.status === 'PENDING';
+
+  if (isApproved) return { className: 'bg-green-500', label: '已通过' };
+  if (isRejected) return { className: 'bg-red-500', label: '已驳回' };
+  if (isPending) return { className: 'bg-blue-500', label: '待审批' };
+  return { className: 'bg-slate-500', label: approval.status };
+};
+
+/**
+ * 时间线节点组件
+ */
+const TimelineNode = ({ approval, index }) => {
+  const { color, icon } = getApprovalNodeStyle(approval);
+  const isCompleted = approval.status === 'COMPLETED';
+  const isApproved = approval.approval_result === 'APPROVED';
+  const isRejected = approval.approval_result === 'REJECTED';
+
+  return (
+    <div className="relative z-10">
+      <div
+        className={`w-10 h-10 rounded-full flex items-center justify-center ${color} text-white font-bold shadow-lg`}
+      >
+        {isCompleted ? (
+          isApproved ? (
+            <CheckCircle2 className="w-5 h-5" />
+          ) : isRejected ? (
+            <XCircle className="w-5 h-5" />
+          ) : (
+            index + 1
+          )
+        ) : (
+          index + 1
+        )}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * 审批卡片组件
+ */
+const ApprovalCard = ({ approval, onApprove, onReject, formatDate }) => {
+  const statusBadge = getApprovalStatusBadge(approval);
+  const isPending = approval.status === 'PENDING';
+
+  const handleApprove = () => {
+    const comment = prompt('请输入审批意见（可选）：') || '';
+    onApprove(approval.id, comment);
+  };
+
+  const handleReject = () => {
+    const reason = prompt('请输入驳回原因：');
+    if (reason) {
+      onReject(approval.id, reason);
     }
   };
 
-  // 处理审批驳回
-  const handleReject = async (approvalId) => {
-    const reason = prompt("请输入驳回原因：");
-    if (!reason) return; // 用户取消或未输入
+  return (
+    <Card className="flex-1 shadow-sm">
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle className="text-base">
+              第{approval.approval_level}级审批
+            </CardTitle>
+            <CardDescription className="mt-1">
+              {approval.approval_role}
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge className={statusBadge.className}>
+              {statusBadge.label}
+            </Badge>
+            {approval.is_overdue && (
+              <Badge className="bg-red-500">超期</Badge>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {/* 审批人信息 */}
+        <div className="text-sm">
+          <span className="text-slate-500">审批人:</span>{' '}
+          {approval.approver_name || '待分配'}
+        </div>
 
-    setProcessing(approvalId);
-    try {
-      await ecnApi.reject(approvalId, reason);
-      await refetch();
-      alert("已驳回");
-    } catch (error) {
-      alert("驳回失败: " + (error.response?.data?.detail || error.message));
-    } finally {
-      setProcessing(null);
-    }
-  };
+        {/* 审批时间 */}
+        {approval.approved_at && (
+          <div className="text-sm">
+            <span className="text-slate-500">审批时间:</span>{' '}
+            {formatDate(approval.approved_at)}
+          </div>
+        )}
 
+        {/* 审批期限 */}
+        {approval.due_date && (
+          <div className="text-sm">
+            <span className="text-slate-500">审批期限:</span>{' '}
+            {formatDate(approval.due_date)}
+            {approval.is_overdue && (
+              <span className="text-red-500 ml-2">（已超期）</span>
+            )}
+          </div>
+        )}
+
+        {/* 审批意见 */}
+        {approval.approval_opinion && (
+          <div>
+            <div className="text-sm text-slate-500 mb-1">审批意见:</div>
+            <div className="p-2 bg-slate-50 rounded text-sm">
+              {approval.approval_opinion}
+            </div>
+          </div>
+        )}
+
+        {/* 审批操作按钮（仅待审批状态显示） */}
+        {isPending && (
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleReject}
+            >
+              驳回
+            </Button>
+            <Button size="sm" onClick={handleApprove}>
+              通过
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+/**
+ * ECN审批流程标签页主组件
+ */
+export const ECNApprovalsTab = ({
+  approvals = [],
+  onApprove,
+  onReject,
+  formatDate,
+}) => {
+  // 空状态
   if (approvals.length === 0) {
     return (
       <Card>
@@ -64,142 +185,32 @@ export default function ECNApprovalsTab({ approvals, refetch }) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="relative">
-        {/* 时间线 */}
-        <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-slate-200" />
+    <div className="relative">
+      {/* 时间线背景线 */}
+      <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-slate-200" />
 
-        <div className="space-y-6">
-          {approvals.map((approval, index) => {
-            const isCompleted = approval.status === "COMPLETED";
-            const isApproved = approval.approval_result === "APPROVED";
-            const isRejected = approval.approval_result === "REJECTED";
-            const isPending = approval.status === "PENDING";
-            const isProcessing = processing === approval.id;
+      {/* 审批节点列表 */}
+      <div className="space-y-6">
+        {approvals.map((approval, index) => (
+          <div
+            key={approval.id}
+            className="relative flex items-start gap-4"
+          >
+            {/* 时间线节点 */}
+            <TimelineNode approval={approval} index={index} />
 
-            return (
-              <div
-                key={approval.id}
-                className="relative flex items-start gap-4"
-              >
-                {/* 时间线节点 */}
-                <div className="relative z-10">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      isApproved
-                        ? "bg-green-500"
-                        : isRejected
-                          ? "bg-red-500"
-                          : isPending
-                            ? "bg-blue-500"
-                            : "bg-slate-300"
-                    } text-white font-bold shadow-lg`}
-                  >
-                    {isCompleted ? (
-                      isApproved ? (
-                        <CheckCircle2 className="w-5 h-5" />
-                      ) : isRejected ? (
-                        <XCircle className="w-5 h-5" />
-                      ) : (
-                        index + 1
-                      )
-                    ) : (
-                      index + 1
-                    )}
-                  </div>
-                </div>
-
-                {/* 审批卡片 */}
-                <Card className="flex-1 shadow-sm">
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <CardTitle className="text-base">
-                          第{approval.approval_level}级审批
-                        </CardTitle>
-                        <CardDescription className="mt-1">
-                          {approval.approval_role}
-                        </CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          className={
-                            isApproved
-                              ? "bg-green-500"
-                              : isRejected
-                                ? "bg-red-500"
-                                : isPending
-                                  ? "bg-blue-500"
-                                  : "bg-slate-500"
-                          }
-                        >
-                          {isApproved
-                            ? "已通过"
-                            : isRejected
-                              ? "已驳回"
-                              : isPending
-                                ? "待审批"
-                                : approval.status}
-                        </Badge>
-                        {approval.is_overdue && (
-                          <Badge className="bg-red-500">超期</Badge>
-                        )}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="text-sm">
-                      <span className="text-slate-500">审批人:</span>{" "}
-                      {approval.approver_name || "待分配"}
-                    </div>
-                    {approval.approved_at && (
-                      <div className="text-sm">
-                        <span className="text-slate-500">审批时间:</span>{" "}
-                        {formatDate(approval.approved_at)}
-                      </div>
-                    )}
-                    {approval.due_date && (
-                      <div className="text-sm">
-                        <span className="text-slate-500">审批期限:</span>{" "}
-                        {formatDate(approval.due_date)}
-                      </div>
-                    )}
-                    {approval.approval_opinion && (
-                      <div>
-                        <div className="text-sm text-slate-500 mb-1">
-                          审批意见:
-                        </div>
-                        <div className="p-2 bg-slate-50 rounded text-sm">
-                          {approval.approval_opinion}
-                        </div>
-                      </div>
-                    )}
-                    {isPending && (
-                      <div className="flex justify-end gap-2 pt-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleReject(approval.id)}
-                          disabled={isProcessing}
-                        >
-                          驳回
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleApprove(approval.id)}
-                          disabled={isProcessing}
-                        >
-                          {isProcessing ? "处理中..." : "通过"}
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            );
-          })}
-        </div>
+            {/* 审批卡片 */}
+            <ApprovalCard
+              approval={approval}
+              onApprove={onApprove}
+              onReject={onReject}
+              formatDate={formatDate}
+            />
+          </div>
+        ))}
       </div>
     </div>
   );
-}
+};
+
+export default ECNApprovalsTab;

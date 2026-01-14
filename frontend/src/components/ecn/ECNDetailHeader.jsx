@@ -1,166 +1,156 @@
 /**
- * ECNDetailHeader Component
- * ECN 详情页面头部组件（包含标题、状态、操作按钮）
+ * ECN Detail Header Component
+ * ECN 详情页头部 - 显示基本信息和操作按钮
  */
+import { ArrowLeft, RefreshCw, Edit2, CheckCircle2, XCircle } from "lucide-react";
+import { PageHeader } from "../layout";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { Card, CardContent } from "../ui/card";
-import { PageHeader } from "../layout";
-import {
-  ArrowLeft,
-  CheckCircle2,
-  Play,
-  XCircle,
-  Download,
-  RefreshCw,
-} from "lucide-react";
-
-const statusConfigs = {
-  DRAFT: { label: "草稿", color: "bg-slate-500" },
-  SUBMITTED: { label: "已提交", color: "bg-blue-500" },
-  EVALUATING: { label: "评估中", color: "bg-amber-500" },
-  EVALUATED: { label: "评估完成", color: "bg-amber-600" },
-  PENDING_APPROVAL: { label: "待审批", color: "bg-purple-500" },
-  APPROVED: { label: "已批准", color: "bg-emerald-500" },
-  REJECTED: { label: "已驳回", color: "bg-red-500" },
-  EXECUTING: { label: "执行中", color: "bg-violet-500" },
-  PENDING_VERIFY: { label: "待验证", color: "bg-indigo-500" },
-  COMPLETED: { label: "已完成", color: "bg-green-500" },
-  CLOSED: { label: "已关闭", color: "bg-gray-500" },
-  CANCELLED: { label: "已取消", color: "bg-gray-500" },
-};
-
-const statusFlow = [
-  { status: "DRAFT", label: "草稿" },
-  { status: "SUBMITTED", label: "已提交" },
-  { status: "EVALUATING", label: "评估中" },
-  { status: "PENDING_APPROVAL", label: "待审批" },
-  { status: "APPROVED", label: "已批准" },
-  { status: "EXECUTING", label: "执行中" },
-  { status: "COMPLETED", label: "已完成" },
-  { status: "CLOSED", label: "已关闭" },
-];
+import { getStatusBadge, getTypeBadge, getPriorityBadge } from "./ecnConstants";
 
 export default function ECNDetailHeader({
   ecn,
-  tasks = [],
+  loading,
   onBack,
   onRefresh,
+  onEdit,
   onSubmit,
-  onStartExecution,
+  onWithdraw,
+  onStartEval,
+  onApprove,
+  onReject,
+  onExecute,
   onVerify,
   onClose,
+  canEdit,
+  canSubmit,
+  canWithdraw,
+  canStartEval,
+  canApprove,
+  canExecute,
+  canVerify,
+  canClose,
 }) {
-  if (!ecn) return null;
+  if (loading || !ecn) {
+    return (
+      <PageHeader
+        title="加载中..."
+        description="正在加载ECN详情"
+        leftAction={<Button onClick={onBack} variant="ghost" size="sm"><ArrowLeft className="w-4 h-4" /></Button>}
+      />
+    );
+  }
 
-  const statusIndex = statusFlow.findIndex((s) => s.status === ecn.status);
-  const isPast = (index) => statusIndex >= index;
+  const statusBadge = getStatusBadge(ecn.status);
+  const typeBadge = getTypeBadge(ecn.change_type);
+  const priorityBadge = getPriorityBadge(ecn.priority);
+
+  const renderActions = () => {
+    const actions = [];
+
+    if (canEdit) {
+      actions.push(
+        <Button key="edit" onClick={onEdit} variant="outline" size="sm">
+          <Edit2 className="w-4 h-4 mr-2" />
+          编辑
+        </Button>
+      );
+    }
+
+    if (canSubmit) {
+      actions.push(
+        <Button key="submit" onClick={onSubmit} className="bg-blue-600 hover:bg-blue-700">
+          提交评估
+        </Button>
+      );
+    }
+
+    if (canWithdraw) {
+      actions.push(
+        <Button key="withdraw" onClick={onWithdraw} variant="outline">
+          撤回
+        </Button>
+      );
+    }
+
+    if (canStartEval) {
+      actions.push(
+        <Button key="startEval" onClick={onStartEval} className="bg-amber-600 hover:bg-amber-700">
+          开始评估
+        </Button>
+      );
+    }
+
+    if (canApprove) {
+      actions.push(
+        <Button key="approve" onClick={onApprove} className="bg-emerald-600 hover:bg-emerald-700">
+          <CheckCircle2 className="w-4 h-4 mr-2" />
+          批准
+        </Button>,
+        <Button key="reject" onClick={onReject} variant="destructive">
+          <XCircle className="w-4 h-4 mr-2" />
+          驳回
+        </Button>
+      );
+    }
+
+    if (canExecute) {
+      actions.push(
+        <Button key="execute" onClick={onExecute} className="bg-violet-600 hover:bg-violet-700">
+          开始执行
+        </Button>
+      );
+    }
+
+    if (canVerify) {
+      actions.push(
+        <Button key="verify" onClick={onVerify} className="bg-indigo-600 hover:bg-indigo-700">
+          验证完成
+        </Button>
+      );
+    }
+
+    if (canClose) {
+      actions.push(
+        <Button key="close" onClick={onClose} variant="outline">
+          关闭ECN
+        </Button>
+      );
+    }
+
+    return actions;
+  };
 
   return (
-    <>
-      <PageHeader
-        title={
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={onBack}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              返回
-            </Button>
-            <div>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl font-bold">{ecn.ecn_title}</span>
-                <Badge className={statusConfigs[ecn.status]?.color}>
-                  {statusConfigs[ecn.status]?.label}
-                </Badge>
-              </div>
-              <div className="text-sm text-slate-400 mt-1">
-                {ecn.ecn_no} · {ecn.project_name || "未关联项目"}
-              </div>
-            </div>
-          </div>
-        }
-        description="ECN变更管理详情"
-        actions={
-          <div className="flex gap-2">
-            {ecn.status === "DRAFT" && (
-              <Button onClick={onSubmit}>
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                提交ECN
-              </Button>
-            )}
-            {ecn.status === "APPROVED" && (
-              <Button onClick={onStartExecution}>
-                <Play className="w-4 h-4 mr-2" />
-                开始执行
-              </Button>
-            )}
-            {ecn.status === "EXECUTING" &&
-              tasks.every((t) => t.status === "COMPLETED") && (
-                <Button onClick={onVerify}>
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  验证
-                </Button>
-              )}
-            {ecn.status === "COMPLETED" && (
-              <Button onClick={onClose}>
-                <XCircle className="w-4 h-4 mr-2" />
-                关闭
-              </Button>
-            )}
-            <Button variant="outline" onClick={() => window.print()}>
-              <Download className="w-4 h-4 mr-2" />
-              打印/导出
-            </Button>
-            <Button variant="outline" onClick={onRefresh}>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              刷新
-            </Button>
-          </div>
-        }
-      />
-
-      {/* 状态流程指示器 */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            {statusFlow.map((step, index) => {
-              const isActive = ecn.status === step.status;
-              const past = isPast(index);
-
-              return (
-                <div key={step.status} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center flex-1">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        isActive
-                          ? "bg-blue-500"
-                          : past
-                            ? "bg-green-500"
-                            : "bg-slate-300"
-                      } text-white font-bold text-sm`}
-                    >
-                      {index + 1}
-                    </div>
-                    <div
-                      className={`text-xs mt-2 ${
-                        isActive ? "font-semibold" : "text-slate-400"
-                      }`}
-                    >
-                      {step.label}
-                    </div>
-                  </div>
-                  {index < statusFlow.length - 1 && (
-                    <div
-                      className={`flex-1 h-0.5 mx-2 ${
-                        past ? "bg-green-500" : "bg-slate-300"
-                      }`}
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-    </>
+    <PageHeader
+      title={
+        <div className="flex items-center gap-4">
+          <span>{ecn.code}</span>
+          <Badge className={statusBadge.color}>
+            {statusBadge.text}
+          </Badge>
+          <Badge className={typeBadge.color} variant="outline">
+            {typeBadge.text}
+          </Badge>
+          <Badge className={priorityBadge.color} variant="outline">
+            {priorityBadge.text}
+          </Badge>
+        </div>
+      }
+      description={ecn.title}
+      leftAction={
+        <Button onClick={onBack} variant="ghost" size="sm">
+          <ArrowLeft className="w-4 h-4" />
+        </Button>
+      }
+      rightAction={
+        <div className="flex items-center gap-2">
+          <Button onClick={onRefresh} variant="ghost" size="sm">
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+          {renderActions()}
+        </div>
+      }
+    />
   );
 }
