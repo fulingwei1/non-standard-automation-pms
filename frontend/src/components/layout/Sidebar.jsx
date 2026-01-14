@@ -660,6 +660,9 @@ const salesNavGroups = [
       { name: "技术评审", path: "/technical-reviews", icon: "FileCheck" },
       { name: "应收账款", path: "/sales/receivables", icon: "CreditCard" },
       { name: "回款跟踪", path: "/payments", icon: "CreditCard" },
+      { name: "未中标分析", path: "/sales/loss-analysis", icon: "TrendingDown" },
+      { name: "售前费用", path: "/sales/presale-expenses", icon: "DollarSign" },
+      { name: "优先级管理", path: "/sales/priority", icon: "Star" },
     ],
   },
   {
@@ -865,6 +868,8 @@ const presalesNavGroups = [
       { name: "需求调研", path: "/requirement-survey", icon: "ClipboardList" },
       { name: "技术评审", path: "/technical-reviews", icon: "FileCheck" },
       { name: "投标中心", path: "/bidding", icon: "Target" },
+      { name: "未中标分析", path: "/sales/loss-analysis", icon: "TrendingDown" },
+      { name: "售前费用", path: "/sales/presale-expenses", icon: "DollarSign" },
     ],
   },
   {

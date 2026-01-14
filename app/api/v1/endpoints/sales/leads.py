@@ -67,7 +67,11 @@ def read_leads(
 
     total = query.count()
     offset = (page - 1) * page_size
-    leads = query.order_by(desc(Lead.created_at)).offset(offset).limit(page_size).all()
+    # 默认按优先级排序，如果没有优先级则按创建时间排序
+    leads = query.order_by(
+        desc(Lead.priority_score).nullslast(),
+        desc(Lead.created_at)
+    ).offset(offset).limit(page_size).all()
 
     # 填充负责人名称和优势产品信息
     lead_responses = []

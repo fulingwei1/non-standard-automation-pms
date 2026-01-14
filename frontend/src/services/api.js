@@ -651,6 +651,31 @@ export const salesReportApi = {
   o2cPipeline: (params) => api.get("/sales/reports/o2c-pipeline", { params }),
 };
 
+// Loss Analysis APIs - 未中标分析
+export const lossAnalysisApi = {
+  deepAnalysis: (params) => api.get("/sales/analysis/loss-deep-analysis", { params }),
+  byStage: (params) => api.get("/sales/analysis/loss-by-stage", { params }),
+  patterns: (params) => api.get("/sales/analysis/loss-patterns", { params }),
+  byPerson: (params) => api.get("/sales/analysis/loss-by-person", { params }),
+};
+
+// Presale Expense APIs - 售前费用管理
+export const presaleExpenseApi = {
+  expenseLostProjects: (data) => api.post("/sales/expenses/expense-lost-projects", data),
+  getLostProjectExpenses: (params) => api.get("/sales/expenses/lost-project-expenses", { params }),
+  getExpenseStatistics: (params) => api.get("/sales/expenses/expense-statistics", { params }),
+};
+
+// Priority Management APIs - 优先级管理
+export const priorityApi = {
+  calculateLeadPriority: (leadId) => api.post(`/sales/leads/${leadId}/calculate-priority`),
+  getLeadPriorityRanking: (params) => api.get("/sales/leads/priority-ranking", { params }),
+  getKeyLeads: () => api.get("/sales/leads/key-leads"),
+  calculateOpportunityPriority: (oppId) => api.post(`/sales/opportunities/${oppId}/calculate-priority`),
+  getOpportunityPriorityRanking: (params) => api.get("/sales/opportunities/priority-ranking", { params }),
+  getKeyOpportunities: () => api.get("/sales/opportunities/key-opportunities"),
+};
+
 // Alert Management APIs
 export const alertApi = {
   // Alert Records

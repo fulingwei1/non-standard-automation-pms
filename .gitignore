@@ -75,6 +75,16 @@ node_modules/
 out/
 dist/
 
+# Pre-commit
+.pre-commit-config.yaml.local
+
+# Monitoring data
+monitoring/prometheus/data/
+monitoring/grafana/data/
+
+# Docker
+.env.local
+
 # OS files
 .DS_Store
 .DS_Store?

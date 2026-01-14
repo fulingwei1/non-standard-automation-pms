@@ -1,0 +1,42 @@
+# Prometheus 配置文件
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'non-standard-automation-pms'
+    environment: 'production'
+
+# 告警规则文件
+rule_files:
+  - '/etc/prometheus/alerts/*.yml'
+
+# 抓取配置
+scrape_configs:
+  # FastAPI 应用指标
+  - job_name: 'pms-app'
+    static_configs:
+      - targets: ['app:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Prometheus 自身监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # MySQL 监控
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysql:3306']
+    # 需要安装 mysqld_exporter
+
+  # Redis 监控
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    # 需要安装 redis_exporter
+
+  # Node Exporter（系统指标）
+  - job_name: 'node'
+    static_configs:
+      - targets: ['localhost:9100']

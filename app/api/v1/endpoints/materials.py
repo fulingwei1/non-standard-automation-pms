@@ -161,11 +161,29 @@ def create_material(
 ) -> Any:
     """
     创建新物料
+    
+    如果未提供物料编码，系统将根据物料类别自动生成 MAT-{类别}-xxxxx 格式的编码
     """
+    from app.utils.number_generator import generate_material_code
+    
+    # 检查分类是否存在
+    category = None
+    category_code = None
+    if material_in.category_id:
+        category = db.query(MaterialCategory).filter(MaterialCategory.id == material_in.category_id).first()
+        if not category:
+            raise HTTPException(status_code=400, detail="物料分类不存在")
+        category_code = category.category_code
+    
+    # 如果没有提供物料编码，自动生成
+    material_data = material_in.model_dump()
+    if not material_data.get('material_code'):
+        material_data['material_code'] = generate_material_code(db, category_code)
+    
     # 检查物料编码是否已存在
     material = (
         db.query(Material)
-        .filter(Material.material_code == material_in.material_code)
+        .filter(Material.material_code == material_data['material_code'])
         .first()
     )
     if material:
@@ -174,19 +192,13 @@ def create_material(
             detail="该物料编码已存在",
         )
     
-    # 检查分类是否存在
-    if material_in.category_id:
-        category = db.query(MaterialCategory).filter(MaterialCategory.id == material_in.category_id).first()
-        if not category:
-            raise HTTPException(status_code=400, detail="物料分类不存在")
-    
     # 检查默认供应商是否存在
-    if material_in.default_supplier_id:
-        supplier = db.query(Supplier).filter(Supplier.id == material_in.default_supplier_id).first()
+    if material_data.get('default_supplier_id'):
+        supplier = db.query(Supplier).filter(Supplier.id == material_data['default_supplier_id']).first()
         if not supplier:
             raise HTTPException(status_code=400, detail="默认供应商不存在")
     
-    material = Material(**material_in.model_dump())
+    material = Material(**material_data)
     material.created_by = current_user.id
     db.add(material)
     db.commit()

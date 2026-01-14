@@ -88,11 +88,20 @@ def create_customer(
 ) -> Any:
     """
     创建新客户
+    
+    如果未提供客户编码，系统将自动生成 CUS-xxxxxxx 格式的编码
     """
+    from app.utils.number_generator import generate_customer_code
+    
+    # 如果没有提供客户编码，自动生成
+    customer_data = customer_in.model_dump()
+    if not customer_data.get('customer_code'):
+        customer_data['customer_code'] = generate_customer_code(db)
+    
     # 检查客户编码是否已存在
     customer = (
         db.query(Customer)
-        .filter(Customer.customer_code == customer_in.customer_code)
+        .filter(Customer.customer_code == customer_data['customer_code'])
         .first()
     )
     if customer:
@@ -101,7 +110,7 @@ def create_customer(
             detail="该客户编码已存在",
         )
 
-    customer = Customer(**customer_in.model_dump())
+    customer = Customer(**customer_data)
     db.add(customer)
     db.commit()
     db.refresh(customer)

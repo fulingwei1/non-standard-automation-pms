@@ -38,7 +38,7 @@ class MaterialCategoryResponse(TimestampSchema):
 
 class MaterialCreate(BaseModel):
     """创建物料"""
-    material_code: str = Field(max_length=50, description="物料编码")
+    material_code: Optional[str] = Field(default=None, max_length=50, description="物料编码（不提供则根据类别自动生成）")
     material_name: str = Field(max_length=200, description="物料名称")
     category_id: Optional[int] = None
     specification: Optional[str] = None

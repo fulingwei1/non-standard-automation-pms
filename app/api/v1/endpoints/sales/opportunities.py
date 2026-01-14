@@ -70,11 +70,15 @@ def read_opportunities(
     total = query.count()
     offset = (page - 1) * page_size
     # 使用 eager loading 避免 N+1 查询
+    # 默认按优先级排序，如果没有优先级则按创建时间排序
     opportunities = query.options(
         joinedload(Opportunity.customer),
         joinedload(Opportunity.owner),
         joinedload(Opportunity.requirements)
-    ).order_by(desc(Opportunity.created_at)).offset(offset).limit(page_size).all()
+    ).order_by(
+        desc(Opportunity.priority_score).nullslast(),
+        desc(Opportunity.created_at)
+    ).offset(offset).limit(page_size).all()
 
     opp_responses = []
     for opp in opportunities:

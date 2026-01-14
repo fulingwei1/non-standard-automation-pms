@@ -44,6 +44,8 @@ from app.api.v1.endpoints import (
     business_support,
     # business_support_orders,  # 已拆分为business_support_orders包
     service,
+    sla,
+    itr,
     installation_dispatch,
     rd_project,
     engineers,
@@ -128,6 +130,8 @@ from app.api.v1.endpoints.business_support_orders import router as business_supp
 api_router.include_router(business_support_orders_router, prefix="/business-support", tags=["business-support"])
 api_router.include_router(installation_dispatch.router, prefix="/installation-dispatch", tags=["installation-dispatch"])
 api_router.include_router(service.router, prefix="/service", tags=["service"])
+api_router.include_router(sla.router, prefix="/sla", tags=["sla"])
+api_router.include_router(itr.router, prefix="/itr", tags=["itr"])
 api_router.include_router(rd_project.router, prefix="", tags=["rd-project"])
 api_router.include_router(engineers.router, prefix="/engineers", tags=["engineers"])
 api_router.include_router(technical_review.router, prefix="", tags=["technical-review"])

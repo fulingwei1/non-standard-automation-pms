@@ -6,7 +6,7 @@
 """
 
 from fastapi import APIRouter
-from . import leads, opportunities, quotes, cost_management, assessments, statistics, templates, contracts, payments, receivables, invoices, workflows, disputes, requirements, team, targets
+from . import leads, opportunities, quotes, cost_management, assessments, statistics, templates, contracts, payments, receivables, invoices, workflows, disputes, requirements, team, targets, loss_analysis, expenses, priority
 
 # 创建主路由
 router = APIRouter()
@@ -28,3 +28,6 @@ router.include_router(disputes.router, tags=["sales-disputes"])
 router.include_router(requirements.router, tags=["sales-requirements"])
 router.include_router(team.router, tags=["sales-team"])
 router.include_router(targets.router, tags=["sales-targets"])
+router.include_router(loss_analysis.router, tags=["sales-loss-analysis"])
+router.include_router(expenses.router, tags=["sales-expenses"])
+router.include_router(priority.router, tags=["sales-priority"])

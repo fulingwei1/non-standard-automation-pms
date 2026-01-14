@@ -1,0 +1,94 @@
+# 告警规则配置
+groups:
+  - name: pms_alerts
+    interval: 30s
+    rules:
+      # API 响应时间告警
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API 响应时间过高"
+          description: "95% 的 API 请求响应时间超过 1 秒"
+
+      # API 错误率告警
+      - alert: HighAPIErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API 错误率过高"
+          description: "5xx 错误率超过 5%"
+
+      # 数据库连接池告警
+      - alert: DatabaseConnectionPoolHigh
+        expr: db_pool_connections_active / db_pool_connections_max > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "数据库连接池使用率过高"
+          description: "连接池使用率超过 90%"
+
+      # Redis 缓存命中率告警
+      - alert: LowRedisCacheHitRate
+        expr: redis_cache_hits / (redis_cache_hits + redis_cache_misses) < 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis 缓存命中率过低"
+          description: "缓存命中率低于 80%"
+
+      # 内存使用告警
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes / 1024 / 1024 / 1024 > 2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "内存使用过高"
+          description: "进程内存使用超过 2GB"
+
+      # CPU 使用率告警
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CPU 使用率过高"
+          description: "CPU 使用率超过 80%"
+
+      # 慢查询告警
+      - alert: SlowDatabaseQuery
+        expr: rate(db_query_duration_seconds_bucket{le="1"}[5m]) / rate(db_query_duration_seconds_count[5m]) < 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "数据库慢查询过多"
+          description: "超过 1 秒的查询比例超过 10%"
+
+      # 未读通知堆积告警
+      - alert: UnreadNotificationBacklog
+        expr: notifications_unread_total > 1000
+        for: 15m
+        labels:
+          severity: info
+        annotations:
+          summary: "未读通知堆积"
+          description: "超过 1000 条未读通知"
+
+      # 待审批任务堆积告警
+      - alert: PendingApprovalBacklog
+        expr: tasks_pending_approval_total > 100
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "待审批任务堆积"
+          description: "超过 100 个待审批任务"

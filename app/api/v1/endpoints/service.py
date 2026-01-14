@@ -340,6 +340,17 @@ def create_service_ticket(
     db.commit()
     db.refresh(ticket)
     
+    # 创建SLA监控记录
+    try:
+        from app.services.sla_service import match_sla_policy, create_sla_monitor
+        policy = match_sla_policy(db, ticket.problem_type, ticket.urgency)
+        if policy:
+            create_sla_monitor(db, ticket, policy)
+    except Exception as e:
+        # SLA监控创建失败不影响工单创建
+        import logging
+        logging.error(f"创建SLA监控记录失败: {e}")
+    
     # 获取项目名称和客户名称
     if ticket.project_id:
         project = db.query(Project).filter(Project.id == ticket.project_id).first()
@@ -404,6 +415,10 @@ def assign_service_ticket(
     ticket.assigned_time = datetime.now()
     ticket.status = "IN_PROGRESS"
     
+    # 记录响应时间（首次分配时）
+    if not ticket.response_time:
+        ticket.response_time = datetime.now()
+    
     # 更新时间线
     if not ticket.timeline:
         ticket.timeline = []
@@ -417,6 +432,14 @@ def assign_service_ticket(
     db.add(ticket)
     db.commit()
     db.refresh(ticket)
+    
+    # 同步SLA监控状态
+    try:
+        from app.services.sla_service import sync_ticket_to_sla_monitor
+        sync_ticket_to_sla_monitor(db, ticket)
+    except Exception as e:
+        import logging
+        logging.error(f"同步SLA监控状态失败: {e}")
     
     return ticket
 
@@ -446,6 +469,10 @@ def update_service_ticket_status(
     if status in ["RESOLVED", "CLOSED"] and not ticket.resolved_time:
         ticket.resolved_time = datetime.now()
     
+    # 如果状态变为处理中，记录响应时间（如果还没有）
+    if status == "IN_PROGRESS" and not ticket.response_time:
+        ticket.response_time = datetime.now()
+    
     # 更新时间线
     if not ticket.timeline:
         ticket.timeline = []
@@ -459,6 +486,14 @@ def update_service_ticket_status(
     db.add(ticket)
     db.commit()
     db.refresh(ticket)
+    
+    # 同步SLA监控状态
+    try:
+        from app.services.sla_service import sync_ticket_to_sla_monitor
+        sync_ticket_to_sla_monitor(db, ticket)
+    except Exception as e:
+        import logging
+        logging.error(f"同步SLA监控状态失败: {e}")
     
     return ticket
 
@@ -502,6 +537,22 @@ def close_service_ticket(
     db.add(ticket)
     db.commit()
     db.refresh(ticket)
+    
+    # 同步SLA监控状态
+    try:
+        from app.services.sla_service import sync_ticket_to_sla_monitor
+        sync_ticket_to_sla_monitor(db, ticket)
+    except Exception as e:
+        import logging
+        logging.error(f"同步SLA监控状态失败: {e}")
+    
+    # 自动提取知识
+    try:
+        from app.services.knowledge_extraction_service import auto_extract_knowledge_from_ticket
+        auto_extract_knowledge_from_ticket(db, ticket, auto_publish=True)
+    except Exception as e:
+        import logging
+        logging.error(f"自动提取知识失败: {e}")
     
     return ticket
 

@@ -25,6 +25,7 @@ import {
   Eye,
   ArrowRight,
   X,
+  Star,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -84,6 +85,8 @@ export default function LeadManagement() {
   const [followUps, setFollowUps] = useState([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [sortBy, setSortBy] = useState("priority"); // priority, created_at, status
+  const [showKeyLeadsOnly, setShowKeyLeadsOnly] = useState(false);
   const pageSize = 20;
 
   // 表单数据
@@ -148,8 +151,35 @@ export default function LeadManagement() {
   }, []);
 
   // 筛选线索
+  // 计算优先级并排序
+  const processedLeads = useMemo(() => {
+    let processed = [...leads];
+    
+    // 筛选关键线索
+    if (showKeyLeadsOnly) {
+      processed = processed.filter(lead => lead.is_key_lead === true);
+    }
+    
+    // 排序
+    if (sortBy === "priority") {
+      processed.sort((a, b) => {
+        const scoreA = a.priority_score || 0;
+        const scoreB = b.priority_score || 0;
+        return scoreB - scoreA; // 降序
+      });
+    } else if (sortBy === "created_at") {
+      processed.sort((a, b) => {
+        const dateA = new Date(a.created_at || 0);
+        const dateB = new Date(b.created_at || 0);
+        return dateB - dateA;
+      });
+    }
+    
+    return processed;
+  }, [leads, showKeyLeadsOnly, sortBy]);
+
   const filteredLeads = useMemo(() => {
-    return leads.filter((lead) => {
+    return processedLeads.filter((lead) => {
       const matchesSearch =
         lead.lead_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         lead.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -385,6 +415,23 @@ export default function LeadManagement() {
               </DropdownMenuContent>
             </DropdownMenu>
             <div className="flex gap-2">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-3 py-1 border rounded text-sm bg-slate-900 text-slate-300"
+              >
+                <option value="priority">按优先级</option>
+                <option value="created_at">按创建时间</option>
+                <option value="status">按状态</option>
+              </select>
+              <Button
+                variant={showKeyLeadsOnly ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowKeyLeadsOnly(!showKeyLeadsOnly)}
+              >
+                <Star className="h-4 w-4 mr-1" />
+                关键
+              </Button>
               <Button
                 variant={viewMode === "grid" ? "default" : "outline"}
                 size="icon"
@@ -433,9 +480,19 @@ export default function LeadManagement() {
                         {lead.customer_name}
                       </p>
                     </div>
-                    <Badge className={cn(statusConfig[lead.status]?.color)}>
-                      {statusConfig[lead.status]?.label}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      {lead.is_key_lead && (
+                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                      )}
+                      <Badge className={cn(statusConfig[lead.status]?.color)}>
+                        {statusConfig[lead.status]?.label}
+                      </Badge>
+                      {lead.priority_score !== null && lead.priority_score !== undefined && (
+                        <Badge variant="outline" className="text-xs">
+                          {lead.priority_score}分
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -515,6 +572,7 @@ export default function LeadManagement() {
                     <th className="text-left p-4 text-slate-400">联系人</th>
                     <th className="text-left p-4 text-slate-400">联系电话</th>
                     <th className="text-left p-4 text-slate-400">来源</th>
+                    <th className="text-left p-4 text-slate-400">优先级</th>
                     <th className="text-left p-4 text-slate-400">状态</th>
                     <th className="text-left p-4 text-slate-400">操作</th>
                   </tr>
@@ -537,6 +595,20 @@ export default function LeadManagement() {
                       </td>
                       <td className="p-4 text-slate-300">
                         {lead.source || "-"}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          {lead.is_key_lead && (
+                            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                          )}
+                          {lead.priority_score !== null && lead.priority_score !== undefined ? (
+                            <Badge variant="outline" className="text-xs">
+                              {lead.priority_score}分
+                            </Badge>
+                          ) : (
+                            <span className="text-slate-400 text-xs">-</span>
+                          )}
+                        </div>
                       </td>
                       <td className="p-4">
                         <Badge className={cn(statusConfig[lead.status]?.color)}>

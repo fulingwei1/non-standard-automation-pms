@@ -92,9 +92,8 @@ def _build_user_response(user: User) -> UserResponse:
 
 def _generate_employee_code(db: Session) -> str:
     """生成新的员工编码"""
-    latest = db.query(Employee).order_by(Employee.id.desc()).first()
-    next_no = (latest.id + 1) if latest else 1
-    return f"E{next_no:04d}"
+    from app.utils.number_generator import generate_employee_code
+    return generate_employee_code(db)
 
 
 def _ensure_employee_unbound(db: Session, employee_id: int, current_user_id: Optional[int] = None) -> None:

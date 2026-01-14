@@ -108,13 +108,39 @@ def generate_employee_code(code_idx: int, existing_codes: Set[str]) -> str:
     """
     生成员工工号
     
+    格式：EMP-xxxxx
+    
     Returns:
         str: 员工工号
     """
-    employee_code = f"EMP{code_idx:04d}"
+    from app.utils.code_config import CODE_PREFIX, SEQ_LENGTH
+    
+    prefix = CODE_PREFIX['EMPLOYEE']
+    seq_length = SEQ_LENGTH['EMPLOYEE']
+    separator = '-'
+    
+    # 从现有编码中提取最大序号
+    max_seq = 0
+    pattern = f"{prefix}{separator}"
+    for code in existing_codes:
+        if code.startswith(pattern):
+            try:
+                parts = code.split(separator)
+                if len(parts) == 2:
+                    seq = int(parts[1])
+                    max_seq = max(max_seq, seq)
+            except (ValueError, IndexError):
+                pass
+    
+    # 从最大序号+1开始，或使用传入的code_idx
+    start_seq = max(max_seq + 1, code_idx)
+    employee_code = f"{prefix}{separator}{start_seq:0{seq_length}d}"
+    
+    # 确保不冲突
     while employee_code in existing_codes:
-        code_idx += 1
-        employee_code = f"EMP{code_idx:04d}"
+        start_seq += 1
+        employee_code = f"{prefix}{separator}{start_seq:0{seq_length}d}"
+    
     return employee_code
 
 

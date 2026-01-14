@@ -71,6 +71,12 @@ class LeadResponse(TimestampSchema):
     is_advantage_product: bool = False
     # 扩展字段（从advantage_products表join获取）
     advantage_products: Optional[List[Dict[str, Any]]] = None
+    # 优先级字段
+    priority_score: Optional[int] = None
+    is_key_lead: bool = False
+    priority_level: Optional[str] = None
+    importance_level: Optional[str] = None
+    urgency_level: Optional[str] = None
 
 
 class LeadFollowUpCreate(BaseModel):
@@ -225,6 +231,10 @@ class OpportunityResponse(TimestampSchema):
     gate_status: str = "PENDING"
     gate_passed_at: Optional[datetime] = None
     requirement: Optional[OpportunityRequirementResponse] = None
+    # 优先级字段
+    priority_score: Optional[int] = None
+    is_key_opportunity: bool = False
+    priority_level: Optional[str] = None
 
 
 class GateSubmitRequest(BaseModel):

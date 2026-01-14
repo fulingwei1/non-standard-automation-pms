@@ -11,6 +11,7 @@ import {
   costApi,
   documentApi,
   financialCostApi,
+  presaleExpenseApi,
 } from "../services/api";
 import { formatDate, formatCurrency, getStageName } from "../lib/utils";
 import { PageHeader } from "../components/layout/PageHeader";
@@ -98,6 +99,7 @@ export default function ProjectDetail() {
   const [members, setMembers] = useState([]);
   const [milestones, setMilestones] = useState([]);
   const [costs, setCosts] = useState([]);
+  const [presaleExpenses, setPresaleExpenses] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [statusLogs, setStatusLogs] = useState([]); // Sprint 3.3: 状态变更日志
   const [workspaceData, setWorkspaceData] = useState(null); // 工作空间数据
@@ -250,6 +252,7 @@ export default function ProjectDetail() {
           console.warn("获取状态日志失败:", logsRes.reason);
           setStatusLogs([]);
         }
+
       } catch (err) {
         // 这个 catch 应该不会被执行，因为使用了 Promise.allSettled
         // 但保留作为安全网
@@ -1227,20 +1230,95 @@ export default function ProjectDetail() {
 
           {/* Finance Tab */}
           {activeTab === "finance" && (
-            <Card>
-              <CardContent className="space-y-4">
-                {/* 上传成本按钮 */}
-                <div className="flex justify-end">
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      navigate(`/financial-costs?project_id=${id}`)
-                    }
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    上传成本数据
-                  </Button>
-                </div>
+            <div className="space-y-6">
+              {/* 未中标费用（如果项目未中标） */}
+              {project && (project.outcome === 'LOST' || project.outcome === 'ABANDONED') && (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-white mb-1">
+                          未中标费用
+                        </h3>
+                        <p className="text-sm text-slate-400">
+                          该项目未中标，已费用化的工时成本
+                        </p>
+                      </div>
+                      <Badge variant="destructive">
+                        {project.outcome === 'LOST' ? '丢标' : '放弃'}
+                      </Badge>
+                    </div>
+                    {presaleExpenses.length > 0 ? (
+                      <div className="space-y-3">
+                        {presaleExpenses.map((exp) => (
+                          <div
+                            key={exp.id}
+                            className="flex items-center justify-between p-4 rounded-lg bg-red-500/10 border border-red-500/20"
+                          >
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="font-medium text-white">
+                                  {exp.description || '未中标项目工时费用'}
+                                </p>
+                                <Badge variant="outline" className="text-xs">
+                                  {exp.expense_date}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-slate-400">
+                                {exp.labor_hours ? `${exp.labor_hours}h` : ''} 
+                                {exp.salesperson_name && ` · 销售: ${exp.salesperson_name}`}
+                                {exp.loss_reason && ` · 原因: ${exp.loss_reason}`}
+                              </p>
+                            </div>
+                            <p className="text-lg font-semibold text-red-400">
+                              {formatCurrency(exp.amount)}
+                            </p>
+                          </div>
+                        ))}
+                        <div className="pt-3 border-t border-slate-700">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-slate-400">总费用</span>
+                            <span className="text-xl font-bold text-red-400">
+                              {formatCurrency(
+                                presaleExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0)
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-slate-500">
+                        <p>暂无费用记录</p>
+                        <p className="text-xs mt-2">
+                          费用化处理请前往
+                          <Button
+                            variant="link"
+                            className="p-0 h-auto text-primary"
+                            onClick={() => navigate('/sales/presale-expenses')}
+                          >
+                            售前费用管理
+                          </Button>
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              <Card>
+                <CardContent className="space-y-4">
+                  {/* 上传成本按钮 */}
+                  <div className="flex justify-end">
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        navigate(`/financial-costs?project_id=${id}`)
+                      }
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      上传成本数据
+                    </Button>
+                  </div>
 
                 {(() => {
                   // 成本类型中文映射
@@ -1336,6 +1414,7 @@ export default function ProjectDetail() {
                 })()}
               </CardContent>
             </Card>
+            </div>
           )}
 
         </motion.div>

@@ -74,6 +74,7 @@ from .presale import (
     PresaleSolution, PresaleSolutionCost, PresaleSolutionTemplate,
     PresaleWorkload, PresaleCustomerTechProfile, PresaleTenderRecord
 )
+from .presale_expense import PresaleExpense
 from .performance import (
     PerformancePeriod, PerformanceIndicator, PerformanceResult,
     PerformanceEvaluation, PerformanceAppeal, ProjectContribution,
@@ -127,6 +128,9 @@ from .business_support import (
 from .service import (
     ServiceTicket, ServiceRecord, CustomerCommunication,
     CustomerSatisfaction, KnowledgeBase
+)
+from .sla import (
+    SLAPolicy, SLAMonitor, SLAStatusEnum
 )
 from .installation_dispatch import (
     InstallationDispatchOrder,
@@ -294,6 +298,8 @@ __all__ = [
     # Service
     'ServiceTicket', 'ServiceRecord', 'CustomerCommunication',
     'CustomerSatisfaction', 'KnowledgeBase',
+    # SLA
+    'SLAPolicy', 'SLAMonitor', 'SLAStatusEnum',
     # Installation Dispatch
     'InstallationDispatchOrder',
     'InstallationDispatchTaskTypeEnum',

@@ -162,6 +162,9 @@ import ContractManagement from "../pages/ContractManagement";
 import ReceivableManagement from "../pages/ReceivableManagement";
 import SalesStatistics from "../pages/SalesStatistics";
 import SalesTemplateCenter from "../pages/SalesTemplateCenter";
+import LossAnalysis from "../pages/LossAnalysis";
+import PresaleExpenseManagement from "../pages/PresaleExpenseManagement";
+import LeadPriorityManagement from "../pages/LeadPriorityManagement";
 import PresalesWorkstation from "../pages/PresalesWorkstation";
 import PresalesManagerWorkstation from "../pages/PresalesManagerWorkstation";
 import PresalesTasks from "../pages/PresalesTasks";
@@ -647,6 +650,9 @@ export function AppRoutes() {
       <Route path="/sales/statistics" element={<SalesStatistics />} />
       <Route path="/sales/templates" element={<SalesTemplateCenter />} />
       <Route path="/sales/cpq" element={<CpqConfigurator />} />
+      <Route path="/sales/loss-analysis" element={<LossAnalysis />} />
+      <Route path="/sales/presale-expenses" element={<PresaleExpenseManagement />} />
+      <Route path="/sales/priority" element={<LeadPriorityManagement />} />
 
       {/* Pre-sales Routes */}
       <Route path="/presales-dashboard" element={<PresalesWorkstation />} />
