@@ -26,6 +26,7 @@ import {
   Download,
   Upload,
   AlertTriangle,
+  MoreHorizontal,
   TrendingUp,
   Users,
   Settings

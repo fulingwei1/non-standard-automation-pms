@@ -10,7 +10,7 @@ import {
   Filter,
   Plus,
   LayoutGrid,
-  List,
+  List as ListIcon,
   Calendar,
   Building2,
   User,
@@ -483,7 +483,7 @@ const LeadAssessment = () => {
               buttonStyle="solid"
             >
               <Radio.Button value="grid"><LayoutGrid size={16} /></Radio.Button>
-              <Radio.Button value="list"><List size={16} /></Radio.Button>
+              <Radio.Button value="list"><ListIcon size={16} /></Radio.Button>
             </Radio.Group>
           </Space>
         </div>

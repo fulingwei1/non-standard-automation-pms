@@ -593,18 +593,6 @@ export const DEFAULT_CHART_CONFIG = {
   animations: true
 };
 
-// ==================== 导出配置 ====================
-export {
-  ALERT_STAT_TYPES,
-  ALERT_LEVEL_STATS,
-  ALERT_STATUS_STATS,
-  ALERT_TYPE_STATS,
-  TIME_DIMENSIONS,
-  CHART_TYPES,
-  STAT_METRICS,
-  FILTER_CONFIGS
-};
-
 export default {
   ALERT_STAT_TYPES,
   ALERT_LEVEL_STATS,

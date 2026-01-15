@@ -343,8 +343,6 @@ export default function PurchaseOrders() {
           receivedAmount: 0,
           itemCount: itemCount,
           receivedCount: receivedCount,
-          buyer: order.buyer_name || "",
-          urgency: ORDER_URGENCY.NORMAL,
           items: items.map((item) => ({
             code: item.material_code || "",
             name: item.material_name || "",

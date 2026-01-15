@@ -166,7 +166,6 @@ export default function OpportunityBoard() {
           priority: priority,
           daysInStage: daysInStage,
           score: opp.score || 0,
-          priority: priority,
           source: opp.source || SALES_SOURCE.OTHER,
           type: opp.type || OPPORTUNITY_TYPE.NEW_BUSINESS,
           expectedCloseDate: opp.expected_close_date,

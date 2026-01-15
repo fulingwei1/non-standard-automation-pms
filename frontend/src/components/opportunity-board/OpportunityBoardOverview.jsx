@@ -30,7 +30,6 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
     totalValue: opportunities.reduce((sum, opp) => sum + (opp.expectedAmount || 0), 0),
     expectedRevenue: opportunities.reduce((sum, opp) => sum + OpportunityUtils.calculateExpectedRevenue(opp), 0),
     wonThisMonth: opportunities.filter(opp => {
-      const opp = opp;
       return opp.stage === OPPORTUNITY_STAGES.WON && 
              new Date(opp.createdDate || opp.createdAt).getMonth() === new Date().getMonth();
     }).length,

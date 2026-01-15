@@ -40,7 +40,8 @@ import {
   Tabs,
   Progress,
   Badge,
-  Radio
+  Radio,
+  message
 } from "antd";
 
 // 导入拆分后的组件

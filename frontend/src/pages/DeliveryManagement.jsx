@@ -44,7 +44,8 @@ import {
   Spin,
   Tabs,
   Progress,
-  Badge
+  Badge,
+  message
 } from "antd";
 
 // 导入拆分后的组件
