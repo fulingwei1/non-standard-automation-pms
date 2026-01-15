@@ -360,6 +360,17 @@ def update_technical_review(
     db.commit()
     db.refresh(review)
     
+    # 如果评审完成，自动同步到设计评审
+    if review_in.status == 'COMPLETED' and review.conclusion:
+        try:
+            from app.services.design_review_sync_service import DesignReviewSyncService
+            sync_service = DesignReviewSyncService(db)
+            sync_service.sync_from_technical_review(review.id)
+        except Exception as e:
+            # 同步失败不影响评审更新
+            print(f"设计评审同步失败: {e}")
+    
+    
     return TechnicalReviewResponse(
         id=review.id,
         review_no=review.review_no,

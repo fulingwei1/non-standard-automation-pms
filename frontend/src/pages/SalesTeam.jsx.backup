@@ -1,0 +1,386 @@
+/**
+ * Sales Team Management Page - Refactored Version
+ * 销售团队管理页面 - 重构版本
+ * Features: Team member management, Performance tracking, Target assignment, Team analytics
+ */
+
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { PageHeader } from "../components/layout";
+import { Card, CardContent } from "../components/ui";
+import { Button } from "../components/ui/button";
+import { cn } from "../lib/utils";
+
+// Import refactored components
+import { 
+  SalesStatsOverview,
+  SalesTeamManager,
+  DEFAULT_SALES_TEAM_STATS,
+  QUICK_DATE_RANGE_PRESETS,
+  getDefaultDateRange
+} from "../components/sales";
+
+// Import services
+import {
+  salesStatisticsApi,
+  salesTeamApi,
+  salesTargetApi,
+  customerApi,
+  orgApi,
+} from "../services/api";
+
+// Import utilities
+import { fadeIn, staggerContainer } from "../lib/animations";
+
+export default function SalesTeam() {
+  const navigate = useNavigate();
+  const defaultRange = useMemo(() => getDefaultDateRange(), []);
+  
+  // 状态管理
+  const [loading, setLoading] = useState(false);
+  const [teamStats, setTeamStats] = useState(DEFAULT_SALES_TEAM_STATS);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [rankingData, setRankingData] = useState([]);
+  const [rankingLoading, setRankingLoading] = useState(false);
+  const [metricConfigList, setMetricConfigList] = useState([]);
+  const [rankingConfigState, setRankingConfigState] = useState(null);
+  
+  // 搜索和筛选
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({
+    departmentId: "",
+    region: "",
+    startDate: defaultRange.start,
+    endDate: defaultRange.end,
+  });
+  
+  // 排名相关
+  const [rankingType, setRankingType] = useState("revenue");
+  const [showRanking, setShowRanking] = useState(true);
+  
+  // 自动刷新
+  const [autoRefreshInterval, setAutoRefreshInterval] = useState(0);
+  const [lastAutoRefreshAt, setLastAutoRefreshAt] = useState(null);
+  const [highlightAutoRefresh, setHighlightAutoRefresh] = useState(false);
+  
+  // 成员选择
+  const [selectedMember, setSelectedMember] = useState(null);
+  
+  // 选项数据
+  const [departmentOptions, setDepartmentOptions] = useState([
+    { label: "全部", value: "" },
+  ]);
+  const [regionOptions, setRegionOptions] = useState([]);
+
+  // 获取团队统计数据
+  const fetchTeamStats = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await salesStatisticsApi.getTeamStats({
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+      });
+      setTeamStats(response.data || DEFAULT_SALES_TEAM_STATS);
+    } catch (error) {
+      console.error('Failed to fetch team stats:', error);
+      // 使用模拟数据
+      setTeamStats({
+        totalMembers: 12,
+        activeMembers: 10,
+        totalTarget: 5000000,
+        totalAchieved: 4200000,
+        avgAchievementRate: 84.0,
+        totalProjects: 45,
+        totalCustomers: 320,
+        newCustomersThisMonth: 18,
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [filters.startDate, filters.endDate]);
+
+  // 获取团队成员数据
+  const fetchTeamMembers = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await salesTeamApi.getTeamMembers({
+        ...filters,
+        search: searchTerm,
+      });
+      setTeamMembers(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch team members:', error);
+      // 使用模拟数据
+      setTeamMembers([
+        {
+          id: 1,
+          name: "张三",
+          email: "zhangsan@company.com",
+          phone: "13800138000",
+          position: "高级销售经理",
+          department: "销售一部",
+          region: "华东地区",
+          status: "active",
+          monthlyTarget: 500000,
+          monthlyAchieved: 620000,
+          activeProjects: 8,
+          customerTotal: 45,
+          newCustomers: 3,
+        },
+        {
+          id: 2,
+          name: "李四",
+          email: "lisi@company.com",
+          phone: "13800138001",
+          position: "销售经理",
+          department: "销售二部",
+          region: "华北地区",
+          status: "active",
+          monthlyTarget: 400000,
+          monthlyAchieved: 380000,
+          activeProjects: 6,
+          customerTotal: 32,
+          newCustomers: 2,
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters, searchTerm]);
+
+  // 获取排名数据
+  const fetchRankingData = useCallback(async () => {
+    try {
+      setRankingLoading(true);
+      const response = await salesTargetApi.getRankingData({
+        type: rankingType,
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+      });
+      setRankingData(response.data || []);
+      setMetricConfigList(response.metricConfig || []);
+      setRankingConfigState(response.configState || null);
+    } catch (error) {
+      console.error('Failed to fetch ranking data:', error);
+      // 使用模拟数据
+      setRankingData([
+        {
+          id: 1,
+          name: "张三",
+          department: "销售一部",
+          comprehensiveScore: 92.5,
+          rankingChange: 0,
+          metrics: {
+            revenue: 620000,
+            profit_margin: 15.2,
+            customer_count: 45,
+            project_count: 8,
+            conversion_rate: 85.0,
+            customer_satisfaction: 4.8,
+          },
+        },
+        {
+          id: 2,
+          name: "李四",
+          department: "销售二部",
+          comprehensiveScore: 88.3,
+          rankingChange: 1,
+          metrics: {
+            revenue: 380000,
+            profit_margin: 12.8,
+            customer_count: 32,
+            project_count: 6,
+            conversion_rate: 78.5,
+            customer_satisfaction: 4.6,
+          },
+        },
+      ]);
+      setMetricConfigList([
+        {
+          key: "revenue",
+          label: "销售业绩",
+          weight: 0.4,
+          is_primary: true,
+          data_source: "合同金额",
+        },
+        {
+          key: "profit_margin",
+          label: "利润率",
+          weight: 0.2,
+          is_primary: true,
+          data_source: "财务系统",
+        },
+      ]);
+    } finally {
+      setRankingLoading(false);
+    }
+  }, [rankingType, filters.startDate, filters.endDate]);
+
+  // 获取部门选项
+  const fetchDepartmentOptions = useCallback(async () => {
+    try {
+      const response = await orgApi.getDepartments();
+      const departments = response.data || [];
+      setDepartmentOptions([
+        { label: "全部", value: "" },
+        ...departments.map(dept => ({
+          label: dept.name,
+          value: dept.id,
+        })),
+      ]);
+    } catch (error) {
+      console.error('Failed to fetch departments:', error);
+      // 使用模拟数据
+      setDepartmentOptions([
+        { label: "全部", value: "" },
+        { label: "销售一部", value: "1" },
+        { label: "销售二部", value: "2" },
+        { label: "销售三部", value: "3" },
+      ]);
+    }
+  }, []);
+
+  // 获取区域选项
+  const fetchRegionOptions = useCallback(async () => {
+    try {
+      const response = await orgApi.getRegions();
+      const regions = response.data || [];
+      setRegionOptions(regions.map(region => ({
+        label: region.name,
+        value: region.id,
+      })));
+    } catch (error) {
+      console.error('Failed to fetch regions:', error);
+      // 使用模拟数据
+      setRegionOptions([
+        { label: "华东地区", value: "east" },
+        { label: "华北地区", value: "north" },
+        { label: "华南地区", value: "south" },
+        { label: "西南地区", value: "southwest" },
+      ]);
+    }
+  }, []);
+
+  // 刷新数据
+  const handleRefresh = useCallback(() => {
+    fetchTeamStats();
+    fetchTeamMembers();
+    fetchRankingData();
+  }, [fetchTeamStats, fetchTeamMembers, fetchRankingData]);
+
+  // 处理成员选择
+  const handleMemberSelect = useCallback((member) => {
+    setSelectedMember(member);
+  }, []);
+
+  // 处理成员编辑
+  const handleMemberEdit = useCallback((member) => {
+    navigate(`/team-member/${member.id}/edit`);
+  }, [navigate]);
+
+  // 处理筛选变化
+  const handleFilterChange = useCallback((newFilters) => {
+    setFilters(newFilters);
+  }, []);
+
+  // 处理排名类型变化
+  const handleRankingTypeChange = useCallback((newType) => {
+    setRankingType(newType);
+  }, []);
+
+  // 自动刷新逻辑
+  useEffect(() => {
+    if (autoRefreshInterval > 0) {
+      const interval = setInterval(() => {
+        handleRefresh();
+        setLastAutoRefreshAt(new Date());
+        setHighlightAutoRefresh(true);
+        setTimeout(() => setHighlightAutoRefresh(false), 2000);
+      }, autoRefreshInterval * 1000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [autoRefreshInterval, handleRefresh]);
+
+  // 初始化数据
+  useEffect(() => {
+    handleRefresh();
+    fetchDepartmentOptions();
+    fetchRegionOptions();
+  }, []);
+
+  // 当筛选条件变化时重新获取数据
+  useEffect(() => {
+    fetchTeamMembers();
+    fetchRankingData();
+  }, [filters.startDate, filters.endDate, filters.departmentId, filters.region, searchTerm]);
+
+  return (
+    <motion.div
+      initial="hidden"
+      animate="show"
+      variants={staggerContainer}
+      className="space-y-6"
+    >
+      <PageHeader
+        title="销售团队管理"
+        subtitle="团队成员管理、绩效跟踪、目标分配、团队分析"
+        breadcrumbs={[
+          { label: "销售管理", href: "/sales" },
+          { label: "团队管理", href: "/sales/team" },
+        ]}
+        actions={
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/sales/analytics")}
+            >
+              销售分析
+            </Button>
+            <Button
+              onClick={() => navigate("/team-member/create")}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              添加成员
+            </Button>
+          </div>
+        }
+      />
+
+      <motion.div variants={fadeIn} className="space-y-6">
+        {/* 统计概览 */}
+        <SalesStatsOverview
+          teamStats={teamStats}
+          autoRefreshInterval={autoRefreshInterval}
+          lastAutoRefreshAt={lastAutoRefreshAt}
+          highlightAutoRefresh={highlightAutoRefresh}
+          onRefresh={handleRefresh}
+          onAutoRefreshChange={setAutoRefreshInterval}
+          loading={loading}
+        />
+
+        {/* 团队管理 */}
+        <SalesTeamManager
+          teamMembers={teamMembers}
+          rankingData={rankingData}
+          rankingType={rankingType}
+          rankingLoading={rankingLoading}
+          metricConfigList={metricConfigList}
+          rankingConfigState={rankingConfigState}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          selectedMember={selectedMember}
+          onMemberSelect={handleMemberSelect}
+          onMemberEdit={handleMemberEdit}
+          onRankingTypeChange={handleRankingTypeChange}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          departmentOptions={departmentOptions}
+          regionOptions={regionOptions}
+        />
+      </motion.div>
+    </motion.div>
+  );
+}

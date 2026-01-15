@@ -1,0 +1,112 @@
+/**
+ * Customer 360 Component Export
+ * 客户360度视图组件导出
+ */
+
+// 导出常量配置
+export {
+  customerTypeConfigs,
+  customerStatusConfigs,
+  customerIndustryConfigs,
+  customerSourceConfigs,
+  interactionTypeConfigs,
+  contractStatusConfigs,
+  customerScoreConfigs,
+  customerTagConfigs,
+  riskLevelConfigs,
+  customer360TabConfigs,
+  DEFAULT_CUSTOMER_360_DATA,
+  getCustomerTypeConfig,
+  getCustomerStatusConfig,
+  getCustomerIndustryConfig,
+  getCustomerSourceConfig,
+  getInteractionTypeConfig,
+  getContractStatusConfig,
+  getCustomerScoreConfig,
+  getRiskLevelConfig,
+  formatCustomerType,
+  formatCustomerStatus,
+  formatCustomerIndustry,
+  formatCustomerSource,
+  formatInteractionType,
+  formatContractStatus,
+  formatCustomerScore,
+  formatRiskLevel,
+  calculateCustomerActivity,
+  calculateCustomerValueScore,
+  sortByCustomerScore,
+  sortByTotalAmount,
+  sortByLastContact,
+  isValidCustomerType,
+  isValidCustomerStatus,
+  isValidCustomerIndustry,
+  isValidInteractionType,
+  isValidContractStatus,
+  filterByCustomerType,
+  filterByCustomerStatus,
+  filterByCustomerIndustry,
+  filterByCustomerSource,
+  filterByRiskLevel,
+} from './customer360Constants';
+
+// 导出组件
+export { CustomerHeader, CustomerSummaryStats } from './CustomerHeader';
+export { InteractionTimeline, InteractionDetail } from './InteractionTimeline';
+export { PurchaseHistory, PurchaseDetail } from './PurchaseHistory';
+
+// 默认导出所有组件
+export default {
+  // 常量配置
+  customer360Constants: {
+    customerTypeConfigs,
+    customerStatusConfigs,
+    customerIndustryConfigs,
+    customerSourceConfigs,
+    interactionTypeConfigs,
+    contractStatusConfigs,
+    customerScoreConfigs,
+    customerTagConfigs,
+    riskLevelConfigs,
+    customer360TabConfigs,
+    DEFAULT_CUSTOMER_360_DATA,
+    getCustomerTypeConfig,
+    getCustomerStatusConfig,
+    getCustomerIndustryConfig,
+    getCustomerSourceConfig,
+    getInteractionTypeConfig,
+    getContractStatusConfig,
+    getCustomerScoreConfig,
+    getRiskLevelConfig,
+    formatCustomerType,
+    formatCustomerStatus,
+    formatCustomerIndustry,
+    formatCustomerSource,
+    formatInteractionType,
+    formatContractStatus,
+    formatCustomerScore,
+    formatRiskLevel,
+    calculateCustomerActivity,
+    calculateCustomerValueScore,
+    sortByCustomerScore,
+    sortByTotalAmount,
+    sortByLastContact,
+    isValidCustomerType,
+    isValidCustomerStatus,
+    isValidCustomerIndustry,
+    isValidInteractionType,
+    isValidContractStatus,
+    filterByCustomerType,
+    filterByCustomerStatus,
+    filterByCustomerIndustry,
+    filterByCustomerSource,
+    filterByRiskLevel,
+  },
+
+  // 组件
+  CustomerHeader,
+  CustomerSummaryStats,
+  InteractionTimeline,
+  InteractionDetail,
+  PurchaseHistory,
+  PurchaseDetail,
+};

@@ -269,7 +269,8 @@ class NotificationDispatcher:
                 employee = self.db.query(Employee).filter(Employee.id == user.employee_id).first()
                 if employee and employee.wechat_userid:
                     wechat_userid = employee.wechat_userid
-            except Exception:
+            except Exception as e:
+                self.logger.warning(f"获取企业微信userid失败: {e}, user_id: {user.id}")
                 pass
             
             # 如果没有，使用username作为fallback（企业微信userid可以是username）

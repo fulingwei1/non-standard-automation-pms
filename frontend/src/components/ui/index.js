@@ -91,3 +91,4 @@ export {
 export { Alert, AlertTitle, AlertDescription, alertVariants } from "./alert";
 export { Checkbox } from "./checkbox";
 export { Switch } from "./switch";
+export { Slider } from "./slider";

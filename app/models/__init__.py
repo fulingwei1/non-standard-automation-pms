@@ -80,7 +80,7 @@ from .pipeline_analysis import PipelineBreakRecord, PipelineHealthSnapshot, Acco
 from .performance import (
     PerformancePeriod, PerformanceIndicator, PerformanceResult,
     PerformanceEvaluation, PerformanceAppeal, ProjectContribution,
-    PerformanceRankingSnapshot,
+    PerformanceRankingSnapshot, PerformanceAdjustmentHistory,
     # New Performance System
     MonthlyWorkSummary, PerformanceEvaluationRecord, EvaluationWeightConfig
 )
@@ -197,6 +197,18 @@ from .organization import (
 from .finance import (
     FundingRound, Investor, FundingRecord, EquityStructure, FundingUsage
 )
+# Organization V2 - 灵活组织架构
+from .organization_v2 import (
+    OrganizationUnit, Position, JobLevel,
+    EmployeeOrgAssignment, PositionRole,
+    OrganizationUnitType, PositionCategory, JobLevelCategory, AssignmentType
+)
+# Permission V2 - 灵活权限系统
+from .permission_v2 import (
+    DataScopeRule, RoleDataScope, PermissionGroup,
+    MenuPermission, RoleMenu,
+    ScopeType, MenuType, PermissionType, ResourceType
+)
 
 __all__ = [
     # Base
@@ -260,7 +272,7 @@ __all__ = [
     # Performance
     'PerformancePeriod', 'PerformanceIndicator', 'PerformanceResult',
     'PerformanceEvaluation', 'PerformanceAppeal', 'ProjectContribution',
-    'PerformanceRankingSnapshot',
+    'PerformanceRankingSnapshot', 'PerformanceAdjustmentHistory',
     # New Performance System
     'MonthlyWorkSummary', 'PerformanceEvaluationRecord', 'EvaluationWeightConfig',
     # Timesheet
@@ -354,4 +366,12 @@ __all__ = [
     'PresaleExpense',
     # Pipeline Analysis
     'PipelineBreakRecord', 'PipelineHealthSnapshot', 'AccountabilityRecord',
+    # Organization V2 - 灵活组织架构
+    'OrganizationUnit', 'Position', 'JobLevel',
+    'EmployeeOrgAssignment', 'PositionRole',
+    'OrganizationUnitType', 'PositionCategory', 'JobLevelCategory', 'AssignmentType',
+    # Permission V2 - 灵活权限系统
+    'DataScopeRule', 'RoleDataScope', 'PermissionGroup',
+    'MenuPermission', 'RoleMenu',
+    'ScopeType', 'MenuType', 'PermissionType', 'ResourceType',
 ]

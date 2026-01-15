@@ -6,6 +6,7 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from pydantic import BaseModel, Field
 
 from app.api.deps import get_db, get_current_user
 from app.models.user import User
@@ -100,27 +101,49 @@ async def get_dimension_config(
 @router.post("/weights", summary="创建权重配置")
 async def create_dimension_config(
     data: DimensionConfigCreate,
+    require_approval: bool = True,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """创建新的五维权重配置"""
-    if data.job_type not in ['mechanical', 'test', 'electrical']:
+    """
+    创建新的五维权重配置
+    
+    支持：
+    - 全局配置（需要管理员权限）
+    - 部门级别配置（部门经理可以为部门创建，需要审批）
+    """
+    if data.job_type not in ['mechanical', 'test', 'electrical', 'solution']:
         raise HTTPException(status_code=400, detail="无效的岗位类型")
 
     service = EngineerPerformanceService(db)
 
     try:
-        config = service.create_dimension_config(data, current_user.id)
+        # 如果是全局配置，需要管理员权限
+        if not data.department_id and not current_user.is_superuser:
+            raise HTTPException(status_code=403, detail="只有管理员可以创建全局配置")
+        
+        config = service.create_dimension_config(
+            data, 
+            current_user.id,
+            department_id=data.department_id,
+            require_approval=require_approval
+        )
 
         # 统计受影响人数
-        affected_count = service.count_engineers_by_config(config.job_type, config.job_level)
+        affected_count = service.count_engineers_by_config(
+            config.job_type, 
+            config.job_level,
+            department_id=config.department_id
+        )
 
         return ResponseModel(
             code=200,
-            message="配置创建成功",
+            message="配置创建成功" + ("（待审批）" if config.approval_status == 'PENDING' else ""),
             data={
                 "id": config.id,
-                "affected_count": affected_count
+                "affected_count": affected_count,
+                "approval_status": config.approval_status,
+                "is_global": config.is_global
             }
         )
     except ValueError as e:
@@ -192,3 +215,146 @@ async def get_job_levels(
             {"value": "expert", "label": "资深/专家"},
         ]
     )
+
+
+@router.get("/department-configs", summary="获取部门评价指标配置")
+async def get_department_configs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """部门经理获取管理的部门的评价指标配置"""
+    service = EngineerPerformanceService(db)
+    
+    try:
+        configs = service.get_department_configs(current_user.id)
+        return ResponseModel(
+            code=200,
+            message="获取部门配置成功",
+            data=configs
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/department-configs", summary="创建部门级别权重配置")
+async def create_department_config(
+    data: DimensionConfigCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    部门经理为部门创建评价指标配置
+    
+    注意：
+    - 只有部门经理可以为自己的部门创建配置
+    - 部门级别配置需要审批后才能生效
+    """
+    if not data.department_id:
+        raise HTTPException(status_code=400, detail="部门级别配置必须指定部门ID")
+    
+    service = EngineerPerformanceService(db)
+    
+    try:
+        config = service.create_dimension_config(
+            data,
+            current_user.id,
+            department_id=data.department_id,
+            require_approval=True  # 部门级别配置需要审批
+        )
+        
+        return ResponseModel(
+            code=200,
+            message="部门配置创建成功，等待审批",
+            data={
+                "id": config.id,
+                "approval_status": config.approval_status,
+                "department_id": config.department_id
+            }
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/pending-approvals", summary="获取待审批配置列表")
+async def get_pending_approvals(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """获取待审批的部门级别配置（管理员功能）"""
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="只有管理员可以查看待审批配置")
+    
+    service = EngineerPerformanceService(db)
+    pending = service.get_pending_approvals()
+    
+    items = []
+    for config in pending:
+        from app.models.organization import Department
+        dept = db.query(Department).filter(Department.id == config.department_id).first()
+        
+        items.append({
+            "id": config.id,
+            "job_type": config.job_type,
+            "job_level": config.job_level,
+            "department_id": config.department_id,
+            "department_name": dept.dept_name if dept else None,
+            "technical_weight": config.technical_weight,
+            "execution_weight": config.execution_weight,
+            "cost_quality_weight": config.cost_quality_weight,
+            "knowledge_weight": config.knowledge_weight,
+            "collaboration_weight": config.collaboration_weight,
+            "config_name": config.config_name,
+            "description": config.description,
+            "effective_date": config.effective_date.isoformat() if config.effective_date else None,
+            "created_at": config.created_at.isoformat() if config.created_at else None,
+            "operator_id": config.operator_id
+        })
+    
+    return ResponseModel(
+        code=200,
+        message="获取待审批配置成功",
+        data=items
+    )
+
+
+class ApproveConfigRequest(BaseModel):
+    """审批配置请求"""
+    approved: bool = Field(..., description="是否批准")
+    approval_reason: Optional[str] = Field(None, description="审批理由")
+
+
+@router.post("/approve/{config_id}", summary="审批部门级别配置")
+async def approve_dimension_config(
+    config_id: int,
+    request: ApproveConfigRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """审批部门级别配置（管理员功能）"""
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="只有管理员可以审批配置")
+    
+    service = EngineerPerformanceService(db)
+    
+    try:
+        config = service.approve_dimension_config(
+            config_id=config_id,
+            approver_id=current_user.id,
+            approved=request.approved,
+            approval_reason=request.approval_reason
+        )
+        
+        return ResponseModel(
+            code=200,
+            message="审批" + ("通过" if request.approved else "拒绝"),
+            data={
+                "id": config.id,
+                "approval_status": config.approval_status
+            }
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

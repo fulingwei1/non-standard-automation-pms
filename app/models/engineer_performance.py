@@ -25,6 +25,7 @@ class EngineerJobTypeEnum(str, Enum):
     MECHANICAL = 'mechanical'    # 机械工程师
     TEST = 'test'                # 测试工程师
     ELECTRICAL = 'electrical'    # 电气工程师
+    SOLUTION = 'solution'        # 方案工程师（售前技术支持）
 
 
 class EngineerJobLevelEnum(str, Enum):
@@ -164,6 +165,10 @@ class EngineerDimensionConfig(Base, TimestampMixin):
     # 配置维度
     job_type = Column(String(20), nullable=False, comment='岗位类型')
     job_level = Column(String(20), comment='职级（为空表示适用所有级别）')
+    
+    # 配置范围（新增）
+    department_id = Column(Integer, comment='部门ID（为空表示全局配置）')
+    is_global = Column(Boolean, default=True, comment='是否全局配置（True=全局，False=部门级别）')
 
     # 五维权重（百分比，总和100）
     technical_weight = Column(Integer, default=30, comment='技术能力权重')
@@ -180,10 +185,16 @@ class EngineerDimensionConfig(Base, TimestampMixin):
     config_name = Column(String(100), comment='配置名称')
     description = Column(Text, comment='配置说明')
     operator_id = Column(Integer, ForeignKey('users.id'), comment='操作人ID')
+    
+    # 审批状态（部门级别配置需要审批）
+    approval_status = Column(String(20), default='APPROVED', comment='审批状态（PENDING/APPROVED/REJECTED）')
+    approval_reason = Column(Text, comment='审批理由')
 
     __table_args__ = (
         Index('idx_dimension_config_job_type', 'job_type'),
         Index('idx_dimension_config_effective', 'effective_date'),
+        Index('idx_dimension_config_dept', 'department_id'),
+        Index('idx_dimension_config_global', 'is_global'),
         {'comment': '五维权重配置表'}
     )
 

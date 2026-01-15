@@ -1,0 +1,301 @@
+import { api } from "./client.js";
+
+
+
+export const projectReviewApi = {
+  // 复盘报告
+  list: (params) => api.get("/projects/project-reviews", { params }),
+  get: (id) => api.get(`/projects/project-reviews/${id}`),
+  create: (data) => api.post("/projects/project-reviews", data),
+  update: (id, data) => api.put(`/projects/project-reviews/${id}`, data),
+  delete: (id) => api.delete(`/projects/project-reviews/${id}`),
+  publish: (id) => api.put(`/projects/project-reviews/${id}/publish`),
+  archive: (id) => api.put(`/projects/project-reviews/${id}/archive`),
+
+  // 经验教训
+  getLessons: (reviewId, params) =>
+    api.get(`/projects/project-reviews/${reviewId}/lessons`, { params }),
+  createLesson: (reviewId, data) =>
+    api.post(`/projects/project-reviews/${reviewId}/lessons`, data),
+  getLesson: (lessonId) =>
+    api.get(`/projects/project-reviews/lessons/${lessonId}`),
+  updateLesson: (lessonId, data) =>
+    api.put(`/projects/project-reviews/lessons/${lessonId}`, data),
+  deleteLesson: (lessonId) =>
+    api.delete(`/projects/project-reviews/lessons/${lessonId}`),
+  resolveLesson: (lessonId) =>
+    api.put(`/projects/project-reviews/lessons/${lessonId}/resolve`),
+
+  // 最佳实践
+  getBestPractices: (reviewId, params) =>
+    api.get(`/projects/project-reviews/${reviewId}/best-practices`, { params }),
+  createBestPractice: (reviewId, data) =>
+    api.post(`/projects/project-reviews/${reviewId}/best-practices`, data),
+  getBestPractice: (practiceId) =>
+    api.get(`/projects/project-reviews/best-practices/${practiceId}`),
+  updateBestPractice: (practiceId, data) =>
+    api.put(`/projects/project-reviews/best-practices/${practiceId}`, data),
+  deleteBestPractice: (practiceId) =>
+    api.delete(`/projects/project-reviews/best-practices/${practiceId}`),
+  validateBestPractice: (practiceId, data) =>
+    api.put(
+      `/projects/project-reviews/best-practices/${practiceId}/validate`,
+      data,
+    ),
+  reuseBestPractice: (practiceId, data) =>
+    api.post(
+      `/projects/project-reviews/best-practices/${practiceId}/reuse`,
+      data,
+    ),
+
+  // 最佳实践库
+  searchBestPractices: (params) =>
+    api.get("/projects/best-practices", { params }),
+  getBestPracticeCategories: () =>
+    api.get("/projects/best-practices/categories"),
+  getBestPracticeStatistics: () =>
+    api.get("/projects/best-practices/statistics"),
+
+  // 项目经验教训（从结项记录提取）
+  getProjectLessons: (projectId) =>
+    api.get(`/projects/${projectId}/lessons-learned`),
+
+  // 经验教训高级管理
+  searchLessonsLearned: (params) =>
+    api.get("/projects/lessons-learned", { params }),
+  getLessonsStatistics: (params) =>
+    api.get("/projects/lessons-learned/statistics", { params }),
+  getLessonCategories: () => api.get("/projects/lessons-learned/categories"),
+  updateLessonStatus: (lessonId, status) =>
+    api.put(`/projects/project-reviews/lessons/${lessonId}/status`, {
+      new_status: status,
+    }),
+  batchUpdateLessons: (lessonIds, updateData) =>
+    api.post("/projects/project-reviews/lessons/batch-update", {
+      lesson_ids: lessonIds,
+      update_data: updateData,
+    }),
+
+  // 最佳实践高级管理
+  recommendBestPractices: (data) =>
+    api.post("/projects/best-practices/recommend", data),
+  getProjectBestPracticeRecommendations: (projectId, limit) =>
+    api.get(`/projects/${projectId}/best-practices/recommend`, {
+      params: { limit },
+    }),
+  applyBestPractice: (practiceId, targetProjectId, notes) =>
+    api.post(`/projects/project-reviews/best-practices/${practiceId}/apply`, {
+      target_project_id: targetProjectId,
+      notes,
+    }),
+  getPopularBestPractices: (params) =>
+    api.get("/projects/best-practices/popular", { params }),
+};
+
+export const technicalReviewApi = {
+  // 评审主表
+  list: (params) => api.get("/technical-reviews", { params }),
+  get: (id) => api.get(`/technical-reviews/${id}`),
+  create: (data) => api.post("/technical-reviews", data),
+  update: (id, data) => api.put(`/technical-reviews/${id}`, data),
+  delete: (id) => api.delete(`/technical-reviews/${id}`),
+
+  // 评审参与人
+  getParticipants: (reviewId) =>
+    api.get(`/technical-reviews/${reviewId}/participants`),
+  addParticipant: (reviewId, data) =>
+    api.post(`/technical-reviews/${reviewId}/participants`, data),
+  updateParticipant: (participantId, data) =>
+    api.put(`/technical-reviews/participants/${participantId}`, data),
+  deleteParticipant: (participantId) =>
+    api.delete(`/technical-reviews/participants/${participantId}`),
+
+  // 评审材料
+  getMaterials: (reviewId) =>
+    api.get(`/technical-reviews/${reviewId}/materials`),
+  addMaterial: (reviewId, data) =>
+    api.post(`/technical-reviews/${reviewId}/materials`, data),
+  deleteMaterial: (materialId) =>
+    api.delete(`/technical-reviews/materials/${materialId}`),
+
+  // 检查项记录
+  getChecklistRecords: (reviewId) =>
+    api.get(`/technical-reviews/${reviewId}/checklist-records`),
+  createChecklistRecord: (reviewId, data) =>
+    api.post(`/technical-reviews/${reviewId}/checklist-records`, data),
+  updateChecklistRecord: (recordId, data) =>
+    api.put(`/technical-reviews/checklist-records/${recordId}`, data),
+
+  // 评审问题
+  getIssues: (params) => api.get("/technical-reviews/issues", { params }),
+  createIssue: (reviewId, data) =>
+    api.post(`/technical-reviews/${reviewId}/issues`, data),
+  updateIssue: (issueId, data) =>
+    api.put(`/technical-reviews/issues/${issueId}`, data),
+};
+
+export const engineersApi = {
+  // 获取项目的跨部门进度可见性视图
+  getProgressVisibility: (projectId) =>
+    api.get(`/engineers/projects/${projectId}/progress-visibility`),
+};
+
+export const technicalAssessmentApi = {
+  // 申请技术评估
+  applyForLead: (leadId, data) =>
+    api.post(`/sales/leads/${leadId}/assessments/apply`, data),
+  applyForOpportunity: (oppId, data) =>
+    api.post(`/sales/opportunities/${oppId}/assessments/apply`, data),
+
+  // 执行技术评估
+  evaluate: (assessmentId, data) =>
+    api.post(`/sales/assessments/${assessmentId}/evaluate`, data),
+
+  // 获取评估列表
+  getLeadAssessments: (leadId) => api.get(`/sales/leads/${leadId}/assessments`),
+  getOpportunityAssessments: (oppId) =>
+    api.get(`/sales/opportunities/${oppId}/assessments`),
+
+  // 获取评估详情
+  get: (assessmentId) => api.get(`/sales/assessments/${assessmentId}`),
+
+  // 评分规则管理
+  getScoringRules: () => api.get("/sales/scoring-rules"),
+  createScoringRule: (data) => api.post("/sales/scoring-rules", data),
+  activateScoringRule: (ruleId) =>
+    api.put(`/sales/scoring-rules/${ruleId}/activate`),
+
+  // 失败案例库
+  getFailureCases: (params) => api.get("/sales/failure-cases", { params }),
+  getFailureCase: (id) => api.get(`/sales/failure-cases/${id}`),
+  createFailureCase: (data) => api.post("/sales/failure-cases", data),
+  updateFailureCase: (id, data) => api.put(`/sales/failure-cases/${id}`, data),
+  findSimilarCases: (params) =>
+    api.get("/sales/failure-cases/similar", { params }),
+
+  // 未决事项
+  getOpenItems: (params) => api.get("/sales/open-items", { params }),
+  createOpenItemForLead: (leadId, data) =>
+    api.post(`/sales/leads/${leadId}/open-items`, data),
+  createOpenItemForOpportunity: (oppId, data) =>
+    api.post(`/sales/opportunities/${oppId}/open-items`, data),
+  updateOpenItem: (itemId, data) =>
+    api.put(`/sales/open-items/${itemId}`, data),
+  closeOpenItem: (itemId) => api.post(`/sales/open-items/${itemId}/close`),
+
+  // 需求详情管理
+  getRequirementDetail: (leadId) =>
+    api.get(`/sales/leads/${leadId}/requirement-detail`),
+  createRequirementDetail: (leadId, data) =>
+    api.post(`/sales/leads/${leadId}/requirement-detail`, data),
+  updateRequirementDetail: (leadId, data) =>
+    api.put(`/sales/leads/${leadId}/requirement-detail`, data),
+
+  // 需求冻结管理
+  getRequirementFreezes: (sourceType, sourceId) => {
+    const path =
+      sourceType === "lead"
+        ? `/sales/leads/${sourceId}/requirement-freezes`
+        : `/sales/opportunities/${sourceId}/requirement-freezes`;
+    return api.get(path);
+  },
+  createRequirementFreeze: (sourceType, sourceId, data) => {
+    const path =
+      sourceType === "lead"
+        ? `/sales/leads/${sourceId}/requirement-freezes`
+        : `/sales/opportunities/${sourceId}/requirement-freezes`;
+    return api.post(path, data);
+  },
+
+  // AI澄清管理
+  getAIClarifications: (params) =>
+    api.get("/sales/ai-clarifications", { params }),
+  createAIClarificationForLead: (leadId, data) =>
+    api.post(`/sales/leads/${leadId}/ai-clarifications`, data),
+  createAIClarificationForOpportunity: (oppId, data) =>
+    api.post(`/sales/opportunities/${oppId}/ai-clarifications`, data),
+  updateAIClarification: (clarificationId, data) =>
+    api.put(`/sales/ai-clarifications/${clarificationId}`, data),
+  getAIClarification: (clarificationId) =>
+    api.get(`/sales/ai-clarifications/${clarificationId}`),
+};
+
+export const rdProjectApi = {
+  // 研发项目分类
+  getCategories: (params) => api.get("/rd-project-categories", { params }),
+
+  // 研发项目管理
+  list: (params) => api.get("/rd-projects", { params }),
+  get: (id) => api.get(`/rd-projects/${id}`),
+  create: (data) => api.post("/rd-projects", data),
+  update: (id, data) => api.put(`/rd-projects/${id}`, data),
+  approve: (id, data) => api.put(`/rd-projects/${id}/approve`, data),
+  close: (id, data) => api.put(`/rd-projects/${id}/close`, data),
+  linkProject: (id, data) => api.put(`/rd-projects/${id}/link-project`, data),
+
+  // 研发费用类型
+  getCostTypes: (params) => api.get("/rd-cost-types", { params }),
+
+  // 研发费用管理
+  getCosts: (params) => api.get("/rd-costs", { params }),
+  createCost: (data) => api.post("/rd-costs", data),
+  updateCost: (id, data) => api.put(`/rd-costs/${id}`, data),
+  calculateLaborCost: (data) => api.post("/rd-costs/calc-labor", data),
+
+  // 费用汇总
+  getCostSummary: (projectId) =>
+    api.get(`/rd-projects/${projectId}/cost-summary`),
+  getTimesheetSummary: (projectId, params) =>
+    api.get(`/rd-projects/${projectId}/timesheet-summary`, { params }),
+
+  // 费用分摊规则
+  getAllocationRules: (params) =>
+    api.get("/rd-cost-allocation-rules", { params }),
+  applyAllocation: (ruleId, data) =>
+    api.post("/rd-costs/apply-allocation", data, {
+      params: { rule_id: ruleId, ...data },
+    }),
+
+  // 研发项目工作日志
+  getWorklogs: (projectId, params) =>
+    api.get(`/rd-projects/${projectId}/worklogs`, { params }),
+  createWorklog: (projectId, data) =>
+    api.post(`/rd-projects/${projectId}/worklogs`, data),
+
+  // 研发项目文档管理
+  getDocuments: (projectId, params) =>
+    api.get(`/rd-projects/${projectId}/documents`, { params }),
+  createDocument: (projectId, data) =>
+    api.post(`/rd-projects/${projectId}/documents`, data),
+  uploadDocument: (projectId, formData) =>
+    api.post(`/rd-projects/${projectId}/documents/upload`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  downloadDocument: (projectId, docId) =>
+    api.get(`/rd-projects/${projectId}/documents/${docId}/download`, {
+      responseType: "blob",
+    }),
+};
+
+export const rdReportApi = {
+  // 研发费用辅助账
+  getAuxiliaryLedger: (params) =>
+    api.get("/reports/rd-auxiliary-ledger", { params }),
+
+  // 研发费用加计扣除明细
+  getDeductionDetail: (params) =>
+    api.get("/reports/rd-deduction-detail", { params }),
+
+  // 高新企业研发费用表
+  getHighTechReport: (params) => api.get("/reports/rd-high-tech", { params }),
+
+  // 研发投入强度报表
+  getIntensityReport: (params) => api.get("/reports/rd-intensity", { params }),
+
+  // 研发人员统计
+  getPersonnelReport: (params) => api.get("/reports/rd-personnel", { params }),
+
+  // 导出研发费用报表
+  exportReport: (params) =>
+    api.get("/reports/rd-export", { params, responseType: "blob" }),
+};

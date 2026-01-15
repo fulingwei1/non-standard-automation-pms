@@ -177,15 +177,29 @@ class PerformanceResult(Base, TimestampMixin):
     # 计算时间
     calculated_at = Column(DateTime, comment='计算时间')
     
+    # 部门经理调整字段（新增）
+    original_total_score = Column(Numeric(5, 2), comment='原始综合得分（调整前）')
+    adjusted_total_score = Column(Numeric(5, 2), comment='调整后综合得分')
+    original_dept_rank = Column(Integer, comment='原始部门排名（调整前）')
+    adjusted_dept_rank = Column(Integer, comment='调整后部门排名')
+    original_company_rank = Column(Integer, comment='原始公司排名（调整前）')
+    adjusted_company_rank = Column(Integer, comment='调整后公司排名')
+    adjustment_reason = Column(Text, comment='调整理由（必填）')
+    adjusted_by = Column(Integer, ForeignKey('users.id'), comment='调整人ID（部门经理）')
+    adjusted_at = Column(DateTime, comment='调整时间')
+    is_adjusted = Column(Boolean, default=False, comment='是否已调整')
+    
     # 关系
     period = relationship('PerformancePeriod', back_populates='results')
     evaluations = relationship('PerformanceEvaluation', back_populates='result')
+    adjustment_history = relationship('PerformanceAdjustmentHistory', back_populates='result', cascade='all, delete-orphan')
     
     __table_args__ = (
         Index('idx_perf_result_period', 'period_id'),
         Index('idx_perf_result_user', 'user_id'),
         Index('idx_perf_result_dept', 'department_id'),
         Index('idx_perf_result_score', 'total_score'),
+        Index('idx_perf_result_adjusted', 'is_adjusted'),
         {'comment': '绩效结果表'}
     )
 
@@ -264,6 +278,45 @@ class PerformanceAppeal(Base, TimestampMixin):
         Index('idx_appeal_appellant', 'appellant_id'),
         Index('idx_appeal_status', 'status'),
         {'comment': '绩效申诉表'}
+    )
+
+
+# ==================== 绩效调整历史记录 ====================
+
+class PerformanceAdjustmentHistory(Base, TimestampMixin):
+    """绩效调整历史记录表"""
+    __tablename__ = 'performance_adjustment_history'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
+    result_id = Column(Integer, ForeignKey('performance_result.id'), nullable=False, comment='绩效结果ID')
+    
+    # 调整前数据
+    original_total_score = Column(Numeric(5, 2), comment='原始综合得分')
+    original_dept_rank = Column(Integer, comment='原始部门排名')
+    original_company_rank = Column(Integer, comment='原始公司排名')
+    original_level = Column(String(20), comment='原始等级')
+    
+    # 调整后数据
+    adjusted_total_score = Column(Numeric(5, 2), comment='调整后综合得分')
+    adjusted_dept_rank = Column(Integer, comment='调整后部门排名')
+    adjusted_company_rank = Column(Integer, comment='调整后公司排名')
+    adjusted_level = Column(String(20), comment='调整后等级')
+    
+    # 调整信息
+    adjustment_reason = Column(Text, nullable=False, comment='调整理由（必填）')
+    adjusted_by = Column(Integer, ForeignKey('users.id'), nullable=False, comment='调整人ID')
+    adjusted_by_name = Column(String(50), comment='调整人姓名')
+    adjusted_at = Column(DateTime, default=datetime.now, comment='调整时间')
+    
+    # 关系
+    result = relationship('PerformanceResult', back_populates='adjustment_history')
+    adjuster = relationship('User', foreign_keys=[adjusted_by])
+    
+    __table_args__ = (
+        Index('idx_adj_history_result', 'result_id'),
+        Index('idx_adj_history_adjuster', 'adjusted_by'),
+        Index('idx_adj_history_time', 'adjusted_at'),
+        {'comment': '绩效调整历史记录表'}
     )
 
 

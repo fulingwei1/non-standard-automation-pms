@@ -610,18 +610,19 @@ class TemplateReportService:
         project_id: Optional[int],
         department_id: Optional[int],
         start_date: date,
-        end_date: date
+        end_date: date,
     ) -> Dict[str, Any]:
         """生成通用报表"""
         return {
             "report_type": report_type,
             "period": {
                 "start_date": start_date.isoformat(),
-                "end_date": end_date.isoformat()
+                "end_date": end_date.isoformat(),
             },
             "sections": {},
             "metrics": {},
-            "message": "该报表类型待扩展"
+            "message": "该报表类型待扩展",
+        }
 
 
 # 创建单例

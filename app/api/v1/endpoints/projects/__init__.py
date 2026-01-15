@@ -3,10 +3,22 @@
 项目管理模块路由聚合
 
 将拆分后的各个子模块路由聚合到统一的router中
+
+模块结构:
+├── core.py           # 核心CRUD
+├── status.py         # 状态管理
+├── payment_plans.py  # 付款计划
+├── templates.py      # 项目模板
+├── cache.py          # 缓存管理
+├── archive.py        # 归档管理
+├── overview.py       # 概览/仪表盘 (新)
+├── sync.py           # 数据同步/ERP (新)
+├── extended.py       # 扩展功能（复盘、分析等）
+└── utils.py          # 工具函数
 """
 
 from fastapi import APIRouter
-from . import core, status, payment_plans, templates, cache, archive, extended
+from . import core, status, payment_plans, templates, cache, archive, extended, overview, sync
 
 # 创建主路由
 router = APIRouter()
@@ -23,6 +35,12 @@ router.include_router(cache.router, tags=["projects-cache"])
 # 归档管理路由
 router.include_router(archive.router, tags=["projects-archive"])
 
+# 概览和仪表盘路由
+router.include_router(overview.router, tags=["projects-overview"])
+
+# 数据同步路由（合同同步、ERP集成）
+router.include_router(sync.router, tags=["projects-sync"])
+
 # 核心CRUD路由
 router.include_router(core.router, tags=["projects-core"])
 
@@ -32,5 +50,5 @@ router.include_router(status.router, tags=["projects-status"])
 # 付款计划路由
 router.include_router(payment_plans.router, tags=["projects-payment-plans"])
 
-# 扩展功能路由（复盘、经验教训、最佳实践、数据同步、ERP集成等）
+# 扩展功能路由（复盘、经验教训、最佳实践、高级分析等）
 router.include_router(extended.router, tags=["projects-extended"])

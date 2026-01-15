@@ -149,9 +149,9 @@ class MaterialTransferService:
                 db,
                 transfer.from_project_id,
                 transfer.material_id,
-                -qty  # 减少库存
+                -qty,  # 减少库存
                 "TRANSFER_OUT",
-                f"调拨至项目 {transfer.to_project_id}"
+                f"调拨至项目 {transfer.to_project_id}",
             )
             updates["from_project"] = from_stock
 
@@ -162,7 +162,7 @@ class MaterialTransferService:
             transfer.material_id,
             qty,  # 增加库存
             "TRANSFER_IN",
-            f"从项目 {transfer.from_project_id} 调入"
+            f"从项目 {transfer.from_project_id} 调入",
         )
         updates["to_project"] = to_stock
 

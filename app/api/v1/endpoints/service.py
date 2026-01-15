@@ -246,8 +246,9 @@ def get_project_members_for_ticket(
     if include_roles:
         try:
             role_list = [role.strip() for role in include_roles.split(",") if role.strip()]
-        except:
-            pass
+        except (ValueError, AttributeError) as e:
+            logger.warning(f"解析角色列表失败: {e}, include_roles: {include_roles}")
+            role_list = None
     
     # 获取项目成员
     members = get_project_members_for_ticket(

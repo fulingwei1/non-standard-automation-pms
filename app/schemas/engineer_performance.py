@@ -68,6 +68,7 @@ class DimensionConfigBase(BaseModel):
     """五维权重配置基础"""
     job_type: str = Field(..., description="岗位类型")
     job_level: Optional[str] = Field(None, description="职级")
+    department_id: Optional[int] = Field(None, description="部门ID（为空表示全局配置）")
     technical_weight: int = Field(30, ge=0, le=100, description="技术能力权重")
     execution_weight: int = Field(25, ge=0, le=100, description="项目执行权重")
     cost_quality_weight: int = Field(20, ge=0, le=100, description="成本质量权重")
@@ -97,8 +98,10 @@ class DimensionConfigUpdate(BaseModel):
 class DimensionConfigResponse(DimensionConfigBase):
     """五维配置响应"""
     id: int
+    is_global: bool = Field(..., description="是否全局配置")
     expired_date: Optional[date] = None
     operator_id: Optional[int] = None
+    approval_status: Optional[str] = Field(None, description="审批状态")
     affected_count: Optional[int] = Field(None, description="受影响人数")
     created_at: datetime
 
@@ -459,12 +462,13 @@ class PlcModuleLibraryResponse(PlcModuleLibraryBase):
 # ==================== 绩效汇总 Schemas ====================
 
 class EngineerDimensionScore(BaseModel):
-    """工程师五维得分"""
+    """工程师五维得分（或方案工程师六维得分）"""
     technical_score: Decimal = Field(..., description="技术能力得分")
     execution_score: Decimal = Field(..., description="项目执行得分")
     cost_quality_score: Decimal = Field(..., description="成本质量得分")
     knowledge_score: Decimal = Field(..., description="知识沉淀得分")
     collaboration_score: Decimal = Field(..., description="团队协作得分")
+    solution_success_score: Optional[Decimal] = Field(None, description="方案成功率得分（仅方案工程师）")
 
 
 class EngineerPerformanceSummary(BaseModel):

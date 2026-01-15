@@ -1,20 +1,18 @@
 /**
- * HR组件统一导出入口
+ * HR Components Export
+ * 人力资源组件统一导出
  */
 
 // 配置和常量
-export * from './hrConstants';
+export * from "./hrConstants";
 
-// 基础组件
-export { default as StatCard } from './StatCard';
-export { default as HRDashboardOverview } from './HRDashboardOverview';
+// HR 管理组件
+export { HRStatsOverview } from "./HRStatsOverview";
+export { EmployeeManager } from "./EmployeeManager";
 
-// 标签页组件
-export { HRRecruitmentTab } from './HRRecruitmentTab';
-export { HREmployeesTab } from './HREmployeesTab';
-export { HRPerformanceTab } from './HRPerformanceTab';
-export { HRAttendanceTab } from './HRAttendanceTab';
-export { HRTrainingTab } from './HRTrainingTab';
-export { HRRelationsTab } from './HRRelationsTab';
-
-// TODO: 添加其他HR组件的导出
+// TODO: 添加其他组件的导出
+// export { AttendanceManager } from "./AttendanceManager";
+// export { PayrollManager } from "./PayrollManager";
+// export { PerformanceManager } from "./PerformanceManager";
+// export { TrainingManager } from "./TrainingManager";
+// export { HRAnalytics } from "./HRAnalytics";
