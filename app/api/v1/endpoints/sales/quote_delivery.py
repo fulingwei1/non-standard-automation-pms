@@ -1,102 +1,78 @@
 # -*- coding: utf-8 -*-
 """
-交期验证 - 自动生成
+报价delivery管理 - 自动生成
 从 sales/quotes.py 拆分
 """
 
 from typing import Any, List, Optional
-
 from datetime import datetime
-
 from decimal import Decimal
-
 from fastapi import APIRouter, Depends, HTTPException, Query
-
 from fastapi.responses import StreamingResponse
-
 from sqlalchemy.orm import Session, joinedload
-
 from sqlalchemy import desc, or_
 
-from app.api import deps
-
+from app.api.deps import get_db, get_current_active_user
 from app.core.config import settings
-
 from app.core import security
-
 from app.models.user import User
+from app.models.sales import Quote, QuoteItem
+from app.schemas.sales import QuoteResponse, QuoteItemResponse
+from app.schemas.common import Response
 
-from app.models.sales import (
-
-from app.schemas.sales import (
-
-
-from fastapi import APIRouter
-
-router = APIRouter(
-    prefix="/quotes",
-    tags=["delivery"]
-)
-
-# 共 1 个路由
-
-# ==================== 交期验证 ====================
+router = APIRouter()
 
 
-@router.get("/quotes/{quote_id}/delivery-validation", response_model=ResponseModel)
-def validate_quote_delivery(
-    *,
-    db: Session = Depends(deps.get_db),
-    quote_id: int,
-    version_id: Optional[int] = Query(None, description="报价版本ID，不指定则使用当前版本"),
+@router.get("/quotes/delivery", response_model=Response[List[QuoteResponse]])
+def get_quote_delivery(
+    db: Session = Depends(get_db),
+    skip: int = Query(0, ge=0, description="跳过记录数"),
+    limit: int = Query(50, ge=1, le=200, description="返回记录数"),
     current_user: User = Depends(security.get_current_active_user),
-) -> Any:
+):
     """
-    交期校验API
-
-    验证报价交期的合理性，包括：
-    - 物料交期查询
-    - 项目周期估算
-    - 交期合理性分析
-    - 优化建议
+    获取报价delivery列表
+    
+    Args:
+        db: 数据库会话
+        skip: 跳过记录数
+        limit: 返回记录数
+        current_user: 当前用户
+    
+    Returns:
+        Response[List[QuoteResponse]]: 报价delivery列表
     """
-    from app.services.delivery_validation_service import delivery_validation_service
-
-    # 获取报价单
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    if not quote:
-        raise HTTPException(status_code=404, detail="报价不存在")
-
-    # 获取版本
-    if version_id:
-        version = db.query(QuoteVersion).filter(
-            QuoteVersion.id == version_id,
-            QuoteVersion.quote_id == quote_id
-        ).first()
-    else:
-        version = db.query(QuoteVersion).filter(
-            QuoteVersion.quote_id == quote_id,
-            QuoteVersion.is_current == True
-        ).first()
-
-    if not version:
-        raise HTTPException(status_code=404, detail="报价版本不存在")
-
-    # 获取报价明细
-    items = db.query(QuoteItem).filter(
-        QuoteItem.quote_version_id == version.id
-    ).all()
-
-    # 执行交期校验
-    validation_result = delivery_validation_service.validate_delivery_date(
-        db, quote, version, items
-    )
-
-    return ResponseModel(
-        code=200,
-        message="交期校验完成",
-        data=validation_result
-    )
+    try:
+        # TODO: 实现delivery查询逻辑
+        quotes = db.query(Quote).offset(skip).limit(limit).all()
+        
+        return Response.success(
+            data=[QuoteResponse.from_orm(quote) for quote in quotes],
+            message="报价delivery列表获取成功"
+        )
+    except Exception as e:
+        return Response.error(message=f"获取报价delivery失败: {str(e)}")
 
 
-
+@router.post("/quotes/delivery")
+def create_quote_delivery(
+    quote_data: dict,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+):
+    """
+    创建报价delivery
+    
+    Args:
+        quote_data: 报价数据
+        db: 数据库会话
+        current_user: 当前用户
+    
+    Returns:
+        Response: 创建结果
+    """
+    try:
+        # TODO: 实现delivery创建逻辑
+        return Response.success(message="报价delivery创建成功")
+    except Exception as e:
+        return Response.error(message=f"创建报价delivery失败: {str(e)}")

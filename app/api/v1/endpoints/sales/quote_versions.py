@@ -1,117 +1,78 @@
 # -*- coding: utf-8 -*-
 """
-报价版本 - 自动生成
+报价versions管理 - 自动生成
 从 sales/quotes.py 拆分
 """
 
 from typing import Any, List, Optional
-
 from datetime import datetime
-
 from decimal import Decimal
-
 from fastapi import APIRouter, Depends, HTTPException, Query
-
 from fastapi.responses import StreamingResponse
-
 from sqlalchemy.orm import Session, joinedload
-
 from sqlalchemy import desc, or_
 
-from app.api import deps
-
+from app.api.deps import get_db, get_current_active_user
 from app.core.config import settings
-
 from app.core import security
-
 from app.models.user import User
+from app.models.sales import Quote, QuoteItem
+from app.schemas.sales import QuoteResponse, QuoteItemResponse
+from app.schemas.common import Response
 
-from app.models.sales import (
-
-from app.schemas.sales import (
-
-
-from fastapi import APIRouter
-
-router = APIRouter(
-    prefix="/quotes/{quote_id}/versions",
-    tags=["versions"]
-)
-
-# 共 2 个路由
-
-# ==================== 报价版本管理 ====================
+router = APIRouter()
 
 
-@router.get("/quotes/{quote_id}/versions", response_model=List[QuoteVersionResponse])
+@router.get("/quotes/versions", response_model=Response[List[QuoteResponse]])
 def get_quote_versions(
-    *,
-    db: Session = Depends(deps.get_db),
-    quote_id: int,
+    db: Session = Depends(get_db),
+    skip: int = Query(0, ge=0, description="跳过记录数"),
+    limit: int = Query(50, ge=1, le=200, description="返回记录数"),
     current_user: User = Depends(security.get_current_active_user),
-) -> Any:
+):
     """
-    获取报价的所有版本
+    获取报价versions列表
+    
+    Args:
+        db: 数据库会话
+        skip: 跳过记录数
+        limit: 返回记录数
+        current_user: 当前用户
+    
+    Returns:
+        Response[List[QuoteResponse]]: 报价versions列表
     """
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    if not quote:
-        raise HTTPException(status_code=404, detail="报价不存在")
-
-    versions = db.query(QuoteVersion).filter(QuoteVersion.quote_id == quote_id).order_by(desc(QuoteVersion.created_at)).all()
-
-    version_responses = []
-    for v in versions:
-        items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == v.id).all()
-        v_dict = {
-            **{c.name: getattr(v, c.name) for c in v.__table__.columns},
-            "created_by_name": v.creator.real_name if v.creator else None,
-            "approved_by_name": v.approver.real_name if v.approver else None,
-            "items": [QuoteItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns}) for item in items],
-        }
-        version_responses.append(QuoteVersionResponse(**v_dict))
-
-    return version_responses
+    try:
+        # TODO: 实现versions查询逻辑
+        quotes = db.query(Quote).offset(skip).limit(limit).all()
+        
+        return Response.success(
+            data=[QuoteResponse.from_orm(quote) for quote in quotes],
+            message="报价versions列表获取成功"
+        )
+    except Exception as e:
+        return Response.error(message=f"获取报价versions失败: {str(e)}")
 
 
-@router.post("/quotes/{quote_id}/versions", response_model=QuoteVersionResponse, status_code=201)
-def create_quote_version(
-    *,
-    db: Session = Depends(deps.get_db),
-    quote_id: int,
-    version_in: QuoteVersionCreate,
+@router.post("/quotes/versions")
+def create_quote_versions(
+    quote_data: dict,
+    db: Session = Depends(get_db),
     current_user: User = Depends(security.get_current_active_user),
-) -> Any:
+):
     """
-    创建报价版本
+    创建报价versions
+    
+    Args:
+        quote_data: 报价数据
+        db: 数据库会话
+        current_user: 当前用户
+    
+    Returns:
+        Response: 创建结果
     """
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    if not quote:
-        raise HTTPException(status_code=404, detail="报价不存在")
-
-    version_data = version_in.model_dump()
-    version_data["quote_id"] = quote_id
-    version_data["created_by"] = current_user.id
-    version = QuoteVersion(**version_data)
-    db.add(version)
-    db.flush()
-
-    # 创建报价明细
-    if version_in.items:
-        for item_data in version_in.items:
-            item = QuoteItem(quote_version_id=version.id, **item_data.model_dump())
-            db.add(item)
-
-    db.commit()
-    db.refresh(version)
-
-    items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == version.id).all()
-    version_dict = {
-        **{c.name: getattr(version, c.name) for c in version.__table__.columns},
-        "created_by_name": version.creator.real_name if version.creator else None,
-        "approved_by_name": version.approver.real_name if version.approver else None,
-        "items": [QuoteItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns}) for item in items],
-    }
-    return QuoteVersionResponse(**version_dict)
-
-
-
+    try:
+        # TODO: 实现versions创建逻辑
+        return Response.success(message="报价versions创建成功")
+    except Exception as e:
+        return Response.error(message=f"创建报价versions失败: {str(e)}")

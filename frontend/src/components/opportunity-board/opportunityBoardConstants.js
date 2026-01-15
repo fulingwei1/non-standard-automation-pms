@@ -79,11 +79,11 @@ export const OPPORTUNITY_PRIORITY_CONFIGS = {
     textColor: "text-amber-400",
     icon: "Clock" 
   },
-  [OPORTUNITY_PRIORITY.LOW]: { 
-    label: "低优先级", 
+  [OPPORTUNITY_PRIORITY.LOW]: {
+    label: "低优先级",
     color: "bg-green-500",
     textColor: "text-green-400",
-    icon: "TrendingDown" 
+    icon: "TrendingDown"
   },
 };
 
@@ -110,7 +110,7 @@ export const OPPORTUNITY_TYPE_CONFIGS = {
     color: "bg-purple-500",
     description: "通过合作伙伴引入的机会" 
   },
-  [OPORTUNITY_TYPE.INTERNAL]: { 
+  [OPPORTUNITY_TYPE.INTERNAL]: { 
     label: "内部推荐", 
     color: "bg-amber-500",
     description: "公司内部推荐的机会" 
@@ -257,7 +257,7 @@ export const OpportunityUtils = {
     const priorityMultiplier = {
       [OPPORTUNITY_PRIORITY.HIGH]: 1.5,
       [OPPORTUNITY_PRIORITY.MEDIUM]: 1.0,
-      [OPORTUNITY_PRIORITY.LOW]: 0.7,
+      [OPPORTUNITY_PRIORITY.LOW]: 0.7,
     }[opportunity.priority] || 1.0;
 
     const agePenalty = this.calculateAgePenalty(opportunity.createdDate);
@@ -331,9 +331,9 @@ export const OpportunityUtils = {
     const salesCycle = this.getSalesCycleConfig(opportunity.salesCycle);
     const averageStageDays = {
       [OPPORTUNITY_STAGES.DISCOVERY]: salesCycle.days * 0.2,
-      [OPORTUNITY_STAGES.QUALIFIED]: salesCycle.days * 0.4,
-      [OPORTUNITY_STAGES.PROPOSAL]: salesCycle.days * 0.6,
-      [OPORTUNITY_STAGES.NEGOTIATION]: salesCycle.days * 0.8,
+      [OPPORTUNITY_STAGES.QUALIFIED]: salesCycle.days * 0.4,
+      [OPPORTUNITY_STAGES.PROPOSAL]: salesCycle.days * 0.6,
+      [OPPORTUNITY_STAGES.NEGOTIATION]: salesCycle.days * 0.8,
     };
 
     const remainingDays = averageStageDays[stage.key] || 30;
@@ -361,7 +361,7 @@ export const OpportunityUtils = {
   // 按阶段分组机会
   groupByStage(opportunities) {
     const groups = {};
-    Object.values(OPORTUNITY_STAGES).forEach(stage => {
+    Object.values(OPPORTUNITY_STAGES).forEach(stage => {
       const config = this.getStageConfig(stage);
       groups[config.frontendKey] = opportunities.filter(opp => opp.stage === stage);
     });
@@ -429,7 +429,7 @@ export const OpportunityUtils = {
 
   // 计算转化率
   calculateConversionRates(opportunities) {
-    const stages = Object.values(OPORTUNITY_STAGES);
+    const stages = Object.values(OPPORTUNITY_STAGES);
     const conversionRates = {};
     
     for (let i = 0; i < stages.length - 1; i++) {
@@ -472,7 +472,7 @@ export const OpportunityUtils = {
     const expectedRevenue = filteredOpportunities.reduce((sum, opp) => sum + this.calculateExpectedRevenue(opp), 0);
 
     const byStage = {};
-    Object.values(OPORTUNITY_STAGES).forEach(stage => {
+    Object.values(OPPORTUNITY_STAGES).forEach(stage => {
       const stageOpportunities = filteredOpportunities.filter(opp => opp.stage === stage);
       byStage[stage] = {
         count: stageOpportunities.length,

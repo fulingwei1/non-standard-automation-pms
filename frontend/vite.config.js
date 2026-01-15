@@ -10,8 +10,16 @@ export default defineConfig({
     tailwindcss(),
   ],
   resolve: {
+    // pnpm 会使用 symlink 结构；明确关闭 preserveSymlinks，避免 dev 依赖预构建阶段出现
+    // "Outdated Optimize Dep" / "Could not resolve ..." 之类问题
+    preserveSymlinks: false,
     alias: {
       '@': path.resolve(__dirname, './src'),
+    },
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      preserveSymlinks: false,
     },
   },
   server: {

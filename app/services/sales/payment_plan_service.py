@@ -10,7 +10,8 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 
-from app.models.sales import Contract, ProjectPaymentPlan
+from app.models.sales import Contract
+from app.models.project import ProjectPaymentPlan
 from app.models.project import Project, ProjectMilestone
 
 

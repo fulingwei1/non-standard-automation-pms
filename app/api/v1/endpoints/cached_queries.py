@@ -9,7 +9,7 @@ from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.deps import deps
+from app.api.deps import get_db, get_current_active_user
 from app.services.database.query_optimizer import QueryOptimizer
 from app.services.cache.business_cache import get_business_cache, invalidate_cache_on_change
 from app.schemas.project import ProjectResponse
@@ -20,7 +20,7 @@ router = APIRouter()
 
 @router.get("/projects/cached", response_model=Response[List[ProjectResponse]])
 def get_projects_cached(
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(get_db),
     skip: int = Query(0, ge=0, description="跳过记录数"),
     limit: int = Query(50, ge=1, le=200, description="返回记录数"),
     status: Optional[str] = Query(None, description="项目状态"),
@@ -65,7 +65,7 @@ def get_projects_cached(
 @router.get("/dashboard/{project_id}/cached")
 def get_project_dashboard_cached(
     project_id: int,
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(get_db),
 ):
     """
     获取项目仪表板数据（缓存版本）
@@ -103,7 +103,7 @@ def get_project_dashboard_cached(
 
 @router.get("/alerts/statistics/cached")
 def get_alert_statistics_cached(
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(get_db),
     days: int = Query(30, ge=1, le=365, description="统计天数"),
 ):
     """
@@ -140,7 +140,7 @@ def get_alert_statistics_cached(
 @router.get("/projects/hot/cached")
 def get_hot_projects_cached(
     limit: int = Query(10, ge=1, le=50, description="返回数量"),
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(get_db),
 ):
     """
     获取热门项目（缓存版本）
@@ -226,7 +226,7 @@ def clear_all_cache():
 
 @router.get("/search/projects/cached")
 def search_projects_cached(
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(get_db),
     keyword: str = Query(..., min_length=2, description="搜索关键词"),
     skip: int = Query(0, ge=0, description="跳过记录数"),
     limit: int = Query(50, ge=1, le=100, description="返回记录数"),
