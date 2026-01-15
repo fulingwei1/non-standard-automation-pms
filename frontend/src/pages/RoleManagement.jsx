@@ -65,100 +65,25 @@ export default function RoleManagement() {
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
 
-  // 角色编码选项（带说明）
-  const roleCodeOptions = [
-    {
-      code: "ADMIN",
-      name: "系统管理员",
-      description: "系统管理权限，可管理所有功能和数据",
-    },
-    {
-      code: "SUPER_ADMIN",
-      name: "超级管理员",
-      description: "系统最高权限，拥有所有权限",
-    },
-    {
-      code: "PROJECT_MANAGER",
-      name: "项目经理",
-      description: "项目管理权限，可管理项目全流程",
-    },
-    {
-      code: "PM",
-      name: "项目经理",
-      description: "项目全权管理，进度/变更/验收/成本",
-    },
-    { code: "GM", name: "总经理", description: "全局数据只读，关键审批权限" },
-    {
-      code: "CFO",
-      name: "财务总监",
-      description: "财务相关全局权限，成本与回款管理",
-    },
-    {
-      code: "CTO",
-      name: "技术总监",
-      description: "技术相关全局权限，研发管理",
-    },
-    {
-      code: "SALES_DIR",
-      name: "销售总监",
-      description: "销售部门全局权限，商机与合同管理",
-    },
-    {
-      code: "PMC",
-      name: "计划管理",
-      description: "生产计划、物料齐套、进度协调",
-    },
-    {
-      code: "QA_MGR",
-      name: "质量主管",
-      description: "质量管理、验收审批、问题闭环",
-    },
-    {
-      code: "PU_MGR",
-      name: "采购主管",
-      description: "采购管理、供应商管理、成本控制",
-    },
-    {
-      code: "ENGINEER",
-      name: "工程师",
-      description: "工程执行权限，执行设计任务",
-    },
-    {
-      code: "ME",
-      name: "机械工程师",
-      description: "机械设计任务执行、交付物提交",
-    },
-    {
-      code: "EE",
-      name: "电气工程师",
-      description: "电气设计任务执行、交付物提交",
-    },
-    {
-      code: "PURCHASER",
-      name: "采购员",
-      description: "采购相关权限，执行采购任务",
-    },
-    {
-      code: "QA",
-      name: "质量工程师",
-      description: "质量管理权限，质量检查与验收",
-    },
-    {
-      code: "FINANCE",
-      name: "财务人员",
-      description: "财务相关权限，财务数据处理",
-    },
-    {
-      code: "WAREHOUSE",
-      name: "仓库管理员",
-      description: "仓库管理权限，库存管理",
-    },
-    { code: "VIEWER", name: "查看者", description: "只读权限，仅可查看数据" },
-    {
-      code: "CUSTOMER",
-      name: "客户",
-      description: "客户门户权限，查看项目进度",
-    },
+  // 数据权限范围选项
+  const dataScopeOptions = [
+    { value: "ALL", label: "全部数据", description: "可访问系统所有数据" },
+    { value: "BUSINESS_UNIT", label: "本事业部", description: "可访问本事业部及下属部门的数据" },
+    { value: "DEPARTMENT", label: "本部门", description: "可访问本部门及下属团队的数据" },
+    { value: "TEAM", label: "本团队", description: "仅可访问本团队的数据" },
+    { value: "PROJECT", label: "参与项目", description: "仅可访问参与项目的数据" },
+    { value: "OWN", label: "仅本人", description: "仅可访问自己创建或负责的数据" },
+  ];
+
+  // 角色类别选项
+  const roleCategoryOptions = [
+    { value: "MANAGEMENT", label: "管理类" },
+    { value: "TECHNICAL", label: "技术类" },
+    { value: "SALES", label: "销售类" },
+    { value: "FINANCE", label: "财务类" },
+    { value: "PRODUCTION", label: "生产类" },
+    { value: "SUPPORT", label: "支持类" },
+    { value: "OTHER", label: "其他" },
   ];
 
   const [newRole, setNewRole] = useState({
@@ -166,6 +91,7 @@ export default function RoleManagement() {
     role_name: "",
     description: "",
     data_scope: "OWN",
+    role_category: "",
     permission_ids: [],
   });
 
@@ -240,6 +166,7 @@ export default function RoleManagement() {
         role_name: "",
         description: "",
         data_scope: "OWN",
+        role_category: "",
         permission_ids: [],
       });
       loadRoles();
@@ -509,22 +436,26 @@ export default function RoleManagement() {
                           </td>
                           <td className="px-4 py-2 text-sm text-muted-foreground">
                             <Badge variant="outline">
-                              {role.data_scope === "OWN" && "本人"}
-                              {role.data_scope === "DEPT" && "本部门"}
-                              {role.data_scope === "ALL" && "全部"}
+                              {dataScopeOptions.find(opt => opt.value === role.data_scope)?.label || role.data_scope || "未设置"}
                             </Badge>
                           </td>
                           <td className="px-4 py-2 text-sm">
-                            <Badge
-                              variant={role.is_active ? "default" : "secondary"}
-                            >
-                              {role.is_active ? "启用" : "禁用"}
-                            </Badge>
-                            {role.is_system && (
-                              <Badge variant="destructive" className="ml-1">
-                                <Shield className="h-3 w-3 mr-1" /> 系统
+                            <div className="flex items-center gap-1 flex-wrap">
+                              <Badge
+                                variant={role.is_active ? "default" : "secondary"}
+                              >
+                                {role.is_active ? "启用" : "禁用"}
                               </Badge>
-                            )}
+                              {role.role_type === "SYSTEM" || role.is_system ? (
+                                <Badge variant="destructive">
+                                  <Shield className="h-3 w-3 mr-1" /> 系统
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-blue-600 border-blue-300">
+                                  自定义
+                                </Badge>
+                              )}
+                            </div>
                           </td>
                           <td className="px-4 py-2 text-sm">
                             <div className="flex items-center space-x-1">
@@ -623,6 +554,7 @@ export default function RoleManagement() {
               role_name: "",
               description: "",
               data_scope: "OWN",
+              role_category: "",
               permission_ids: [],
             });
           }
@@ -633,59 +565,23 @@ export default function RoleManagement() {
             <DialogTitle>新增角色</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="create-role-code" className="text-right pt-2">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="create-role-code" className="text-right">
                 角色编码 *
               </Label>
-              <div className="col-span-3 space-y-2">
-                <Select
+              <div className="col-span-3 space-y-1">
+                <Input
+                  id="create-role-code"
+                  name="role_code"
                   value={newRole.role_code}
-                  onValueChange={(value) => {
-                    const selected = roleCodeOptions.find(
-                      (opt) => opt.code === value,
-                    );
-                    setNewRole((prev) => ({
-                      ...prev,
-                      role_code: value,
-                      // 如果角色名称为空，则自动填充；否则保持用户输入的值
-                      role_name:
-                        prev.role_name || (selected ? selected.name : ""),
-                    }));
-                  }}
-                >
-                  <SelectTrigger id="create-role-code" className="w-full">
-                    <SelectValue placeholder="请选择角色编码" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
-                    {roleCodeOptions.map((option) => (
-                      <SelectItem
-                        key={option.code}
-                        value={option.code}
-                        title={option.description}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-medium">
-                            {option.code}
-                          </span>
-                          <span className="text-muted-foreground">-</span>
-                          <span>{option.name}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {newRole.role_code && (
-                  <div className="rounded-md bg-muted/50 p-2">
-                    <p className="text-xs text-muted-foreground">
-                      <span className="font-medium">说明：</span>
-                      {
-                        roleCodeOptions.find(
-                          (opt) => opt.code === newRole.role_code,
-                        )?.description
-                      }
-                    </p>
-                  </div>
-                )}
+                  onChange={handleCreateChange}
+                  placeholder="如：SALES_MANAGER, TECH_LEAD"
+                  className="font-mono"
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  建议使用大写字母和下划线，如 PROJECT_MANAGER
+                </p>
               </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -711,28 +607,59 @@ export default function RoleManagement() {
                 value={newRole.description}
                 onChange={handleCreateChange}
                 className="col-span-3"
-                rows={3}
+                rows={2}
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="create-data-scope" className="text-right">
-                数据权限
+              <Label htmlFor="create-role-category" className="text-right">
+                角色类别
               </Label>
               <Select
-                value={newRole.data_scope}
+                value={newRole.role_category}
                 onValueChange={(value) =>
-                  setNewRole((prev) => ({ ...prev, data_scope: value }))
+                  setNewRole((prev) => ({ ...prev, role_category: value }))
                 }
               >
                 <SelectTrigger className="col-span-3">
-                  <SelectValue />
+                  <SelectValue placeholder="请选择角色类别" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="OWN">本人</SelectItem>
-                  <SelectItem value="DEPT">本部门</SelectItem>
-                  <SelectItem value="ALL">全部</SelectItem>
+                  {roleCategoryOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label htmlFor="create-data-scope" className="text-right pt-2">
+                数据权限
+              </Label>
+              <div className="col-span-3 space-y-2">
+                <Select
+                  value={newRole.data_scope}
+                  onValueChange={(value) =>
+                    setNewRole((prev) => ({ ...prev, data_scope: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {dataScopeOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {newRole.data_scope && (
+                  <p className="text-xs text-muted-foreground">
+                    {dataScopeOptions.find(opt => opt.value === newRole.data_scope)?.description}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -777,28 +704,59 @@ export default function RoleManagement() {
                   value={editRole.description || ""}
                   onChange={handleEditChange}
                   className="col-span-3"
-                  rows={3}
+                  rows={2}
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-data-scope" className="text-right">
-                  数据权限
+                <Label htmlFor="edit-role-category" className="text-right">
+                  角色类别
                 </Label>
                 <Select
-                  value={editRole.data_scope || "OWN"}
+                  value={editRole.role_category || ""}
                   onValueChange={(value) =>
-                    setEditRole((prev) => ({ ...prev, data_scope: value }))
+                    setEditRole((prev) => ({ ...prev, role_category: value }))
                   }
                 >
                   <SelectTrigger className="col-span-3">
-                    <SelectValue />
+                    <SelectValue placeholder="请选择角色类别" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="OWN">本人</SelectItem>
-                    <SelectItem value="DEPT">本部门</SelectItem>
-                    <SelectItem value="ALL">全部</SelectItem>
+                    {roleCategoryOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label htmlFor="edit-data-scope" className="text-right pt-2">
+                  数据权限
+                </Label>
+                <div className="col-span-3 space-y-2">
+                  <Select
+                    value={editRole.data_scope || "OWN"}
+                    onValueChange={(value) =>
+                      setEditRole((prev) => ({ ...prev, data_scope: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {dataScopeOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {editRole.data_scope && (
+                    <p className="text-xs text-muted-foreground">
+                      {dataScopeOptions.find(opt => opt.value === editRole.data_scope)?.description}
+                    </p>
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-is-active" className="text-right">
@@ -1025,6 +983,26 @@ export default function RoleManagement() {
                   <Label className="text-muted-foreground">角色名称</Label>
                   <p className="font-medium">{selectedRole.role_name}</p>
                 </div>
+                <div>
+                  <Label className="text-muted-foreground">角色类型</Label>
+                  <p className="font-medium">
+                    {selectedRole.role_type === "SYSTEM" || selectedRole.is_system ? (
+                      <Badge variant="destructive">
+                        <Shield className="h-3 w-3 mr-1" /> 系统角色
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-blue-600 border-blue-300">
+                        自定义角色
+                      </Badge>
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">角色类别</Label>
+                  <p className="font-medium">
+                    {roleCategoryOptions.find(opt => opt.value === selectedRole.role_category)?.label || "-"}
+                  </p>
+                </div>
                 <div className="col-span-2">
                   <Label className="text-muted-foreground">描述</Label>
                   <p className="font-medium">
@@ -1035,9 +1013,7 @@ export default function RoleManagement() {
                   <Label className="text-muted-foreground">数据权限</Label>
                   <p className="font-medium">
                     <Badge variant="outline">
-                      {selectedRole.data_scope === "OWN" && "本人"}
-                      {selectedRole.data_scope === "DEPT" && "本部门"}
-                      {selectedRole.data_scope === "ALL" && "全部"}
+                      {dataScopeOptions.find(opt => opt.value === selectedRole.data_scope)?.label || selectedRole.data_scope || "未设置"}
                     </Badge>
                   </p>
                 </div>

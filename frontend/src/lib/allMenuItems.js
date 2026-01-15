@@ -621,6 +621,18 @@ export const allMenuGroups = [
         path: "/department-management",
         icon: "Building2",
       },
+      {
+        id: "organization-management",
+        name: "组织架构管理",
+        path: "/organization-management",
+        icon: "Network",
+      },
+      {
+        id: "position-management",
+        name: "岗位管理",
+        path: "/position-management",
+        icon: "UserCog",
+      },
     ],
   },
 ];

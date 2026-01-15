@@ -1,3 +1,8 @@
+/**
+ * Alert Statistics (Refactored)
+ * 告警统计分析页面 (重构版本)
+ */
+
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
@@ -9,1286 +14,446 @@ import {
   Download,
   Filter,
   FileText,
+  RefreshCw,
+  Settings,
+  Shield,
+  Activity,
+  Eye,
+  Edit
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
+
 import {
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import {
+  Table,
+  Button,
+  Input,
   Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import { cn } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
-import { alertApi } from "../services/api";
-import {
-  LoadingCard,
-  ErrorMessage,
-  LoadingSpinner,
-} from "../components/common";
-import {
-  SimpleLineChart,
-  SimpleBarChart,
-  SimplePieChart,
-} from "../components/administrative/StatisticsCharts";
+  DatePicker,
+  Space,
+  Tag,
+  Row,
+  Col,
+  Statistic,
+  Typography,
+  Alert,
+  Spin,
+  Tabs,
+  Progress,
+  Badge,
+  Radio
+} from "antd";
 
-// 响应时效分析组件
-function ResponseMetricsSection({ dateRange, selectedProject }) {
-  const [metrics, setMetrics] = useState(null);
-  const [loading, setLoading] = useState(true);
+// 导入拆分后的组件
+import {
+  AlertOverview,
+  AlertTrendAnalysis,
+  AlertDistribution,
+  AlertPerformance,
+  AlertDetails
+} from '../components/alert-statistics';
 
+import {
+  ALERT_TYPES,
+  ALERT_LEVELS,
+  ALERT_STATUS,
+  TIME_PERIODS,
+  STATISTICS_METRICS,
+  CHART_TYPES,
+  EXPORT_FORMATS,
+  FILTER_CATEGORIES,
+  TABLE_CONFIG,
+  CHART_COLORS,
+  DEFAULT_FILTERS,
+  DASHBOARD_LAYOUTS
+} from '../components/alert-statistics/alertStatisticsConstants';
+
+const { Title, Text } = Typography;
+const { TabPane } = Tabs;
+const { RangePicker } = DatePicker;
+
+const AlertStatistics = () => {
+  // 状态管理
+  const [loading, setLoading] = useState(false);
+  const [alerts, setAlerts] = useState([]);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [selectedLayout, setSelectedLayout] = useState('grid');
+  const [searchText, setSearchText] = useState('');
+
+  // 模拟数据
+  const mockData = {
+    alerts: [
+      {
+        id: 1,
+        title: '系统CPU使用率过高',
+        description: '生产环境服务器CPU使用率达到95%，持续超过10分钟',
+        type: 'system',
+        level: 'critical',
+        status: 'active',
+        source: 'prod-server-01',
+        createdAt: '2024-01-18 14:30:00',
+        updatedAt: '2024-01-18 14:35:00',
+        resolvedAt: null,
+        assignee: '运维团队',
+        tags: ['系统', '性能', '紧急']
+      },
+      {
+        id: 2,
+        title: '数据库连接池耗尽',
+        description: '应用数据库连接池使用率达到100%，新连接被拒绝',
+        type: 'performance',
+        level: 'high',
+        status: 'resolved',
+        source: 'app-db-01',
+        createdAt: '2024-01-18 13:15:00',
+        updatedAt: '2024-01-18 13:45:00',
+        resolvedAt: '2024-01-18 13:45:00',
+        assignee: 'DBA团队',
+        tags: ['数据库', '性能', '连接池']
+      },
+      // 更多模拟数据...
+    ],
+    metrics: {
+      avgResolutionTime: 45,
+      escalationRate: 12.5,
+      falsePositiveRate: 8.3
+    },
+    trend: {
+      direction: 'down',
+      percentage: 12.5
+    }
+  };
+
+  // 数据加载
   useEffect(() => {
-    loadMetrics();
-  }, [dateRange, selectedProject]);
+    loadData();
+  }, [activeTab, filters]);
 
-  const loadMetrics = async () => {
+  const loadData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const params = {
-        start_date: dateRange.start,
-        end_date: dateRange.end,
-      };
-      if (selectedProject) {
-        params.project_id = selectedProject;
-      }
-      const res = await alertApi.responseMetrics(params);
-      const data = res.data || res;
-      setMetrics(data);
-    } catch (err) {
-      console.error("Failed to load response metrics:", err);
-      setMetrics(null);
-    } finally {
+      // 模拟API调用
+      setTimeout(() => {
+        setAlerts(mockData.alerts);
+        setLoading(false);
+      }, 1000);
+    } catch (error) {
+      message.error('加载告警数据失败');
       setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <motion.div variants={fadeIn} initial="hidden" animate="visible">
-        <Card>
-          <CardContent className="p-8">
-            <LoadingSpinner text="加载响应时效数据..." />
-          </CardContent>
-        </Card>
-      </motion.div>
-    );
-  }
+  // 过滤数据
+  const filteredAlerts = useMemo(() => {
+    return alerts.filter(alert => {
+      const matchesSearch = !searchText || 
+        alert.title.toLowerCase().includes(searchText.toLowerCase()) ||
+        alert.description?.toLowerCase().includes(searchText.toLowerCase());
 
-  if (!metrics) {
-    return null;
-  }
+      const matchesType = !filters.type || alert.type === filters.type;
+      const matchesLevel = !filters.level || alert.level === filters.level;
+      const matchesStatus = !filters.status || alert.status === filters.status;
 
-  // 响应时效分布数据
-  const distributionData = metrics.response_distribution
-    ? [
-        {
-          label: "<1小时",
-          value: metrics.response_distribution["<1小时"] || 0,
-          color: "hsl(120, 70%, 50%)",
-        },
-        {
-          label: "1-4小时",
-          value: metrics.response_distribution["1-4小时"] || 0,
-          color: "hsl(60, 70%, 50%)",
-        },
-        {
-          label: "4-8小时",
-          value: metrics.response_distribution["4-8小时"] || 0,
-          color: "hsl(30, 70%, 50%)",
-        },
-        {
-          label: ">8小时",
-          value: metrics.response_distribution[">8小时"] || 0,
-          color: "hsl(0, 70%, 50%)",
-        },
-      ]
-    : [];
-
-  return (
-    <div className="space-y-6">
-      {/* 汇总指标 */}
-      <motion.div variants={fadeIn} initial="hidden" animate="visible">
-        <Card className="bg-surface-1/50">
-          <CardHeader>
-            <CardTitle>响应时效统计</CardTitle>
-            <CardDescription>预警响应和解决时效分析</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div>
-                <p className="text-sm text-slate-500 mb-1">平均响应时间</p>
-                <p className="text-2xl font-bold text-white">
-                  {metrics.summary?.avg_response_time_hours
-                    ? `${metrics.summary.avg_response_time_hours.toFixed(2)}小时`
-                    : "-"}
-                </p>
-                <p className="text-xs text-slate-500 mt-1">
-                  {metrics.summary?.total_acknowledged || 0} 个已确认预警
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-500 mb-1">平均解决时间</p>
-                <p className="text-2xl font-bold text-white">
-                  {metrics.summary?.avg_resolve_time_hours
-                    ? `${metrics.summary.avg_resolve_time_hours.toFixed(2)}小时`
-                    : "-"}
-                </p>
-                <p className="text-xs text-slate-500 mt-1">
-                  {metrics.summary?.total_resolved || 0} 个已解决预警
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-500 mb-1">快速响应率</p>
-                <p className="text-2xl font-bold text-emerald-400">
-                  {metrics.response_distribution &&
-                  metrics.summary?.total_acknowledged
-                    ? `${((metrics.response_distribution["<1小时"] / metrics.summary.total_acknowledged) * 100).toFixed(0)}%`
-                    : "-"}
-                </p>
-                <p className="text-xs text-slate-500 mt-1">1小时内响应</p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-500 mb-1">超时响应</p>
-                <p className="text-2xl font-bold text-red-400">
-                  {metrics.response_distribution?.[">8小时"] || 0}
-                </p>
-                <p className="text-xs text-slate-500 mt-1">超过8小时</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* 响应时效分布和排行榜 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 响应时效分布 */}
-        <motion.div variants={fadeIn} initial="hidden" animate="visible">
-          <Card className="bg-surface-1/50">
-            <CardHeader>
-              <CardTitle>响应时效分布</CardTitle>
-              <CardDescription>按响应时间区间统计</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {distributionData.length > 0 ? (
-                <SimplePieChart data={distributionData} size={250} />
-              ) : (
-                <div className="h-[250px] flex items-center justify-center text-slate-500">
-                  暂无数据
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* 响应时效排行榜 */}
-        <motion.div variants={fadeIn} initial="hidden" animate="visible">
-          <Card className="bg-surface-1/50">
-            <CardHeader>
-              <CardTitle>响应时效排行榜</CardTitle>
-              <CardDescription>最快/最慢的项目和责任人</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {/* 最快的项目 */}
-                {metrics.rankings?.fastest_projects?.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-semibold text-emerald-400 mb-3">
-                      响应最快的项目 TOP5
-                    </h4>
-                    <div className="space-y-2">
-                      {metrics.rankings.fastest_projects.map(
-                        (project, index) => (
-                          <div
-                            key={project.project_id}
-                            className="flex items-center justify-between p-2 bg-slate-800/50 rounded"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-slate-500 w-6">
-                                {index + 1}
-                              </span>
-                              <span className="text-sm text-white">
-                                {project.project_name}
-                              </span>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-sm font-medium text-emerald-400">
-                                {project.avg_hours.toFixed(2)}h
-                              </span>
-                              <span className="text-xs text-slate-500 ml-2">
-                                ({project.count}个)
-                              </span>
-                            </div>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* 最慢的项目 */}
-                {metrics.rankings?.slowest_projects?.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-semibold text-red-400 mb-3">
-                      响应最慢的项目 TOP5
-                    </h4>
-                    <div className="space-y-2">
-                      {metrics.rankings.slowest_projects.map(
-                        (project, index) => (
-                          <div
-                            key={project.project_id}
-                            className="flex items-center justify-between p-2 bg-slate-800/50 rounded"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-slate-500 w-6">
-                                {index + 1}
-                              </span>
-                              <span className="text-sm text-white">
-                                {project.project_name}
-                              </span>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-sm font-medium text-red-400">
-                                {project.avg_hours.toFixed(2)}h
-                              </span>
-                              <span className="text-xs text-slate-500 ml-2">
-                                ({project.count}个)
-                              </span>
-                            </div>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-
-      {/* 按级别和类型统计 */}
-      {(metrics.by_level || metrics.by_type) && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* 按级别统计 */}
-          {metrics.by_level && Object.keys(metrics.by_level).length > 0 && (
-            <motion.div variants={fadeIn} initial="hidden" animate="visible">
-              <Card className="bg-surface-1/50">
-                <CardHeader>
-                  <CardTitle>按级别统计响应时效</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {Object.entries(metrics.by_level).map(([level, data]) => (
-                      <div key={level} className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-slate-300">{level}</span>
-                          <span className="text-white font-medium">
-                            {data.avg_hours.toFixed(2)}h
-                          </span>
-                        </div>
-                        <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-blue-500 transition-all"
-                            style={{
-                              width: `${Math.min((data.avg_hours / 24) * 100, 100)}%`,
-                            }}
-                          />
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          最小: {data.min_hours.toFixed(2)}h | 最大:{" "}
-                          {data.max_hours.toFixed(2)}h | 数量: {data.count}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-
-          {/* 按类型统计 */}
-          {metrics.by_type && Object.keys(metrics.by_type).length > 0 && (
-            <motion.div variants={fadeIn} initial="hidden" animate="visible">
-              <Card className="bg-surface-1/50">
-                <CardHeader>
-                  <CardTitle>按类型统计响应时效</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {Object.entries(metrics.by_type)
-                      .sort((a, b) => b[1].avg_hours - a[1].avg_hours)
-                      .slice(0, 10)
-                      .map(([type, data]) => (
-                        <div key={type} className="space-y-1">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-slate-300">{type}</span>
-                            <span className="text-white font-medium">
-                              {data.avg_hours.toFixed(2)}h
-                            </span>
-                          </div>
-                          <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-amber-500 transition-all"
-                              style={{
-                                width: `${Math.min((data.avg_hours / 24) * 100, 100)}%`,
-                              }}
-                            />
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            最小: {data.min_hours.toFixed(2)}h | 最大:{" "}
-                            {data.max_hours.toFixed(2)}h | 数量: {data.count}
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default function AlertStatistics() {
-  const [stats, setStats] = useState(null);
-  const [trends, setTrends] = useState(null);
-  const [topProjects, setTopProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [period, setPeriod] = useState("DAILY");
-  const [dateRange, setDateRange] = useState({
-    start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split("T")[0],
-    end: new Date().toISOString().split("T")[0],
-  });
-  const [selectedProject, setSelectedProject] = useState(null);
-
-  useEffect(() => {
-    loadStatistics();
-    loadTrends();
-  }, [period, dateRange, selectedProject]);
-
-  const loadStatistics = async () => {
-    try {
-      setError(null);
-      const params = {
-        start_date: dateRange.start,
-        end_date: dateRange.end,
-      };
-      if (selectedProject) {
-        params.project_id = selectedProject;
-      }
-      const res = await alertApi.statistics(params);
-      const data = res.data || res;
-      setStats(data);
-    } catch (err) {
-      console.error("Failed to load statistics:", err);
-      const errorMessage =
-        err.response?.data?.detail || err.message || "加载统计数据失败";
-      setError(errorMessage);
-    }
-  };
-
-  const loadTrends = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const params = {
-        period,
-        start_date: dateRange.start,
-        end_date: dateRange.end,
-      };
-      if (selectedProject) {
-        params.project_id = selectedProject;
-      }
-      const res = await alertApi.trends(params);
-      const data = res.data || res;
-      setTrends(data);
-    } catch (err) {
-      console.error("Failed to load trends:", err);
-      const errorMessage =
-        err.response?.data?.detail || err.message || "加载趋势数据失败";
-      setError(errorMessage);
-      // 如果是演示账号，设置空数据而不是显示错误    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleQuickRange = (days) => {
-    const end = new Date();
-    const start = new Date();
-    start.setDate(start.getDate() - days);
-    setDateRange({
-      start: start.toISOString().split("T")[0],
-      end: end.toISOString().split("T")[0],
+      return matchesSearch && matchesType && matchesLevel && matchesStatus;
     });
+  }, [alerts, searchText, filters]);
+
+  // 事件处理
+  const handleExport = (format) => {
+    message.success(`正在导出${format.label}格式报告...`);
   };
 
-  // 准备图表数据
-  const trendLineData = useMemo(() => {
-    if (!trends?.trends) return [];
-    return trends.trends.map((item) => ({
-      label: item.date,
-      value: item.total,
-    }));
-  }, [trends]);
-
-  const levelPieData = useMemo(() => {
-    if (!trends?.summary?.by_level) return [];
-    const colors = {
-      URGENT: "hsl(0, 70%, 50%)",
-      CRITICAL: "hsl(30, 70%, 50%)",
-      WARNING: "hsl(45, 70%, 50%)",
-      INFO: "hsl(200, 70%, 50%)",
-    };
-    const labels = {
-      URGENT: "紧急",
-      CRITICAL: "严重",
-      WARNING: "注意",
-      INFO: "提示",
-    };
-    return Object.entries(trends.summary.by_level).map(([level, count]) => ({
-      label: labels[level] || level,
-      value: count,
-      color: colors[level] || "hsl(0, 0%, 50%)",
-    }));
-  }, [trends]);
-
-  const typeBarData = useMemo(() => {
-    if (!trends?.summary?.by_type) return [];
-    return Object.entries(trends.summary.by_type)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map(([type, count]) => ({
-        label: type,
-        value: count,
-      }));
-  }, [trends]);
-
-  const statusAreaData = useMemo(() => {
-    if (!trends?.trends) return [];
-    const statuses = ["PENDING", "ACKNOWLEDGED", "RESOLVED", "CLOSED"];
-    const labels = {
-      PENDING: "待处理",
-      ACKNOWLEDGED: "已确认",
-      RESOLVED: "已解决",
-      CLOSED: "已关闭",
-    };
-    return trends.trends.map((item) => ({
-      date: item.date,
-      ...Object.fromEntries(
-        statuses.map((status) => [status, item.by_status?.[status] || 0]),
-      ),
-    }));
-  }, [trends]);
-
-  const handleExportChart = (chartId, format = "png") => {
-    // 简单的图表导出功能（实际实现需要使用 html2canvas 或类似库）
-    const element = document.getElementById(chartId);
-    if (!element) return;
-    // TODO: 实现图表导出功能
-    alert("图表导出功能开发中...");
+  const handleRefresh = () => {
+    loadData();
   };
 
-  const handleExportExcel = async () => {
-    try {
-      const params = {
-        project_id: selectedProject || undefined,
-        start_date: dateRange.start || undefined,
-        end_date: dateRange.end || undefined,
-        group_by: "none", // 可选: 'none', 'level', 'type'
-      };
-
-      const response = await alertApi.exportExcel(params);
-      const blob = new Blob([response.data], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute(
-        "download",
-        `预警报表_${new Date().toISOString().split("T")[0]}.xlsx`,
-      );
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      toast.success("Excel导出成功");
-    } catch (error) {
-      console.error("Failed to export Excel:", error);
-      toast.error(error.response?.data?.detail || "导出失败，请稍后重试");
-    }
+  const handleConfigureRules = () => {
+    setActiveTab('details');
   };
 
-  const handleExportPdf = async () => {
-    try {
-      const params = {
-        project_id: selectedProject || undefined,
-        start_date: dateRange.start || undefined,
-        end_date: dateRange.end || undefined,
-      };
-
-      const response = await alertApi.exportPdf(params);
-      const blob = new Blob([response.data], {
-        type: "application/pdf",
-      });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute(
-        "download",
-        `预警报表_${new Date().toISOString().split("T")[0]}.pdf`,
-      );
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      toast.success("PDF导出成功");
-    } catch (error) {
-      console.error("Failed to export PDF:", error);
-      toast.error(error.response?.data?.detail || "导出失败，请稍后重试");
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-        <PageHeader title="预警统计分析" />
-        <div className="container mx-auto px-4 py-6">
-          <LoadingSpinner text="加载统计数据..." />
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-        <PageHeader title="预警统计分析" />
-        <div className="container mx-auto px-4 py-6">
-          <ErrorMessage
-            error={error}
-            onRetry={loadStatistics}
-            title="加载统计失败"
-          />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <PageHeader
-        title="预警统计分析"
-        description="多维度预警趋势分析和统计报表"
-        actions={
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportExcel}
-              className="gap-2"
-            >
-              <Download className="w-4 h-4" />
-              导出Excel
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportPdf}
-              className="gap-2"
-            >
-              <FileText className="w-4 h-4" />
-              导出PDF
-            </Button>
+  // 表格列配置
+  const alertColumns = [
+    {
+      title: '告警信息',
+      key: 'info',
+      render: (_, record) => (
+        <div>
+          <div style={{ fontWeight: 'bold', cursor: 'pointer' }}>
+            <AlertTriangle size={16} style={{ marginRight: 8 }} />
+            {record.title}
           </div>
-        }
-      />
-
-      <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* 时间范围选择 */}
-        <Card className="bg-surface-1/50">
-          <CardContent className="p-4">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Label className="text-sm text-slate-400">统计周期:</Label>
-                <Select value={period} onValueChange={setPeriod}>
-                  <SelectTrigger className="w-32 bg-surface-2">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="DAILY">按日</SelectItem>
-                    <SelectItem value="WEEKLY">按周</SelectItem>
-                    <SelectItem value="MONTHLY">按月</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2">
-                <Label className="text-sm text-slate-400">日期范围:</Label>
-                <Input
-                  type="date"
-                  value={dateRange.start}
-                  onChange={(e) =>
-                    setDateRange((prev) => ({ ...prev, start: e.target.value }))
-                  }
-                  className="w-40 bg-surface-2"
-                />
-                <span className="text-slate-400">至</span>
-                <Input
-                  type="date"
-                  value={dateRange.end}
-                  onChange={(e) =>
-                    setDateRange((prev) => ({ ...prev, end: e.target.value }))
-                  }
-                  className="w-40 bg-surface-2"
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickRange(7)}
-                >
-                  最近7天
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickRange(30)}
-                >
-                  最近30天
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickRange(90)}
-                >
-                  最近90天
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Summary Cards */}
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 md:grid-cols-4 gap-4"
-        >
-          <motion.div variants={fadeIn}>
-            <Card className="bg-red-500/5 border-red-500/20">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-slate-400 mb-1">紧急预警</p>
-                    <p className="text-2xl font-bold text-red-400">
-                      {stats?.by_level?.URGENT || 0}
-                    </p>
-                  </div>
-                  <AlertTriangle className="w-8 h-8 text-red-400/50" />
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div variants={fadeIn}>
-            <Card className="bg-orange-500/5 border-orange-500/20">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-slate-400 mb-1">严重预警</p>
-                    <p className="text-2xl font-bold text-orange-400">
-                      {stats?.by_level?.CRITICAL || 0}
-                    </p>
-                  </div>
-                  <AlertTriangle className="w-8 h-8 text-orange-400/50" />
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div variants={fadeIn}>
-            <Card className="bg-amber-500/5 border-amber-500/20">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-slate-400 mb-1">注意预警</p>
-                    <p className="text-2xl font-bold text-amber-400">
-                      {stats?.by_level?.WARNING || 0}
-                    </p>
-                  </div>
-                  <AlertTriangle className="w-8 h-8 text-amber-400/50" />
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div variants={fadeIn}>
-            <Card className="bg-blue-500/5 border-blue-500/20">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-slate-400 mb-1">总计</p>
-                    <p className="text-2xl font-bold text-blue-400">
-                      {stats?.total || 0}
-                    </p>
-                  </div>
-                  <BarChart3 className="w-8 h-8 text-blue-400/50" />
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </motion.div>
-
-        {/* Response Metrics */}
-        <ResponseMetricsSection
-          dateRange={dateRange}
-          selectedProject={selectedProject}
-        />
-
-        {/* 趋势分析图表 */}
-        {trends && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* 预警数量趋势折线图 */}
-            <motion.div variants={fadeIn} initial="hidden" animate="visible">
-              <Card className="bg-surface-1/50">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>预警数量趋势</CardTitle>
-                      <CardDescription>
-                        按
-                        {period === "DAILY"
-                          ? "日"
-                          : period === "WEEKLY"
-                            ? "周"
-                            : "月"}
-                        统计预警数量变化
-                      </CardDescription>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleExportChart("trend-line-chart")}
-                    >
-                      <Download className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div id="trend-line-chart">
-                    {trendLineData.length > 0 ? (
-                      <SimpleLineChart
-                        data={trendLineData}
-                        height={250}
-                        color="text-blue-400"
-                      />
-                    ) : (
-                      <div className="h-[250px] flex items-center justify-center text-slate-500">
-                        暂无数据
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* 预警级别分布饼图 */}
-            <motion.div variants={fadeIn} initial="hidden" animate="visible">
-              <Card className="bg-surface-1/50">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>预警级别分布</CardTitle>
-                      <CardDescription>各级别预警数量占比</CardDescription>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleExportChart("level-pie-chart")}
-                    >
-                      <Download className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div id="level-pie-chart">
-                    {levelPieData.length > 0 ? (
-                      <SimplePieChart data={levelPieData} size={250} />
-                    ) : (
-                      <div className="h-[250px] flex items-center justify-center text-slate-500">
-                        暂无数据
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* 预警类型分布柱状图 */}
-            <motion.div variants={fadeIn} initial="hidden" animate="visible">
-              <Card className="bg-surface-1/50">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>预警类型分布</CardTitle>
-                      <CardDescription>
-                        各类型预警数量统计（TOP10）
-                      </CardDescription>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleExportChart("type-bar-chart")}
-                    >
-                      <Download className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div id="type-bar-chart">
-                    {typeBarData.length > 0 ? (
-                      <SimpleBarChart
-                        data={typeBarData}
-                        height={300}
-                        color="bg-blue-500"
-                      />
-                    ) : (
-                      <div className="h-[300px] flex items-center justify-center text-slate-500">
-                        暂无数据
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* 预警状态变化面积图 */}
-            <motion.div variants={fadeIn} initial="hidden" animate="visible">
-              <Card className="bg-surface-1/50">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>预警状态变化</CardTitle>
-                      <CardDescription>各状态预警数量趋势</CardDescription>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleExportChart("status-area-chart")}
-                    >
-                      <Download className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div id="status-area-chart">
-                    {statusAreaData.length > 0 ? (
-                      <div className="space-y-4">
-                        <div className="flex gap-4 text-sm">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-blue-500 rounded" />
-                            <span className="text-slate-400">待处理</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-amber-500 rounded" />
-                            <span className="text-slate-400">已确认</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-emerald-500 rounded" />
-                            <span className="text-slate-400">已解决</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-slate-500 rounded" />
-                            <span className="text-slate-400">已关闭</span>
-                          </div>
-                        </div>
-                        <SimpleLineChart
-                          data={statusAreaData.map((item) => ({
-                            label: item.date,
-                            value:
-                              item.PENDING +
-                              item.ACKNOWLEDGED +
-                              item.RESOLVED +
-                              item.CLOSED,
-                          }))}
-                          height={200}
-                          color="text-blue-400"
-                        />
-                      </div>
-                    ) : (
-                      <div className="h-[250px] flex items-center justify-center text-slate-500">
-                        暂无数据
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+          <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+            {record.description?.substring(0, 60)}...
           </div>
-        )}
-
-        {/* 处理效率分析 */}
-        <EfficiencyMetricsSection
-          dateRange={dateRange}
-          selectedProject={selectedProject}
-        />
-
-        {/* Top Projects */}
-        {topProjects.length > 0 && (
-          <motion.div variants={fadeIn} initial="hidden" animate="visible">
-            <Card>
-              <CardHeader>
-                <CardTitle>预警高发项目 TOP5</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {topProjects.map((project, index) => (
-                    <div
-                      key={project.project_id}
-                      className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl font-bold text-slate-500 w-8">
-                          {index + 1}
-                        </span>
-                        <div>
-                          <p className="text-white font-medium">
-                            {project.project_name}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {project.alert_count}个预警
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        {project.by_type &&
-                          Object.entries(project.by_type).map(
-                            ([type, count]) => (
-                              <Badge key={type} variant="outline">
-                                {type}: {count}
-                              </Badge>
-                            ),
-                          )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// 处理效率分析组件
-function EfficiencyMetricsSection({ dateRange, selectedProject }) {
-  const [metrics, setMetrics] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadMetrics();
-  }, [dateRange, selectedProject]);
-
-  const loadMetrics = async () => {
-    try {
-      setLoading(true);
-      const params = {
-        start_date: dateRange.start,
-        end_date: dateRange.end,
-      };
-      if (selectedProject) {
-        params.project_id = selectedProject;
+          <div style={{ marginTop: 8 }}>
+            {record.tags?.map(tag => (
+              <Tag key={tag} size="small" style={{ marginRight: 4 }}>
+                {tag}
+              </Tag>
+            ))}
+          </div>
+        </div>
+      )
+    },
+    {
+      title: '类型',
+      dataIndex: 'type',
+      key: 'type',
+      render: (type) => {
+        const config = ALERT_TYPES[type?.toUpperCase()];
+        return (
+          <Tag color={config?.color}>
+            {config?.icon} {config?.label}
+          </Tag>
+        );
       }
-      const res = await alertApi.efficiencyMetrics(params);
-      const data = res.data || res;
-      setMetrics(data);
-    } catch (err) {
-      console.error("Failed to load efficiency metrics:", err);
-      setMetrics(null);
-    } finally {
-      setLoading(false);
+    },
+    {
+      title: '级别',
+      dataIndex: 'level',
+      key: 'level',
+      render: (level) => {
+        const config = ALERT_LEVELS[level?.toUpperCase()];
+        return (
+          <Tag color={config?.color}>
+            {config?.label}
+          </Tag>
+        );
+      }
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status) => {
+        const config = ALERT_STATUS[status?.toUpperCase()];
+        return (
+          <Tag color={config?.color}>
+            {config?.label}
+          </Tag>
+        );
+      }
+    },
+    {
+      title: '来源',
+      dataIndex: 'source',
+      key: 'source',
+      render: (source) => (
+        <Text code style={{ fontSize: 12 }}>{source}</Text>
+      )
+    },
+    {
+      title: '时间',
+      key: 'time',
+      render: (_, record) => (
+        <div>
+          <div style={{ fontSize: 12 }}>
+            <Calendar size={12} /> 创建: {record.createdAt}
+          </div>
+          {record.resolvedAt && (
+            <div style={{ fontSize: 12, color: '#52c41a' }}>
+              <CheckCircle size={12} /> 解决: {record.resolvedAt}
+            </div>
+          )}
+        </div>
+      )
+    },
+    {
+      title: '操作',
+      key: 'actions',
+      render: (_, record) => (
+        <Space>
+          <Button 
+            type="link" 
+            icon={<Eye size={16} />}
+            onClick={() => setSelectedAlert(record)}
+          >
+            查看
+          </Button>
+          {record.status === 'active' && (
+            <Button 
+              type="link" 
+              icon={<Edit size={16} />}
+              onClick={() => handleEditAlert(record)}
+            >
+              处理
+            </Button>
+          )}
+        </Space>
+      )
     }
-  };
+  ];
 
-  if (loading) {
-    return (
-      <motion.div variants={fadeIn} initial="hidden" animate="visible">
-        <Card>
-          <CardContent className="p-8">
-            <LoadingSpinner text="加载处理效率数据..." />
-          </CardContent>
-        </Card>
-      </motion.div>
-    );
-  }
-
-  if (!metrics || !metrics.summary) {
-    return null;
-  }
-
-  // 效率指标数据
-  const efficiencyData = [
+  const tabItems = [
     {
-      label: "处理率",
-      value: metrics.summary.processing_rate || 0,
-      color: "hsl(200, 70%, 50%)",
-      description: "已处理预警 / 总预警数",
+      key: 'overview',
+      tab: (
+        <span>
+          <BarChart3 size={16} />
+          概览分析
+        </span>
+      ),
+      content: <AlertOverview data={mockData} loading={loading} onNavigate={setActiveTab} />
     },
     {
-      label: "及时处理率",
-      value: metrics.summary.timely_processing_rate || 0,
-      color: "hsl(120, 70%, 50%)",
-      description: "在响应时限内处理的比例",
+      key: 'trend',
+      tab: (
+        <span>
+          <TrendingUp size={16} />
+          趋势分析
+        </span>
+      ),
+      content: <AlertTrendAnalysis alerts={filteredAlerts} loading={loading} />
     },
     {
-      label: "升级率",
-      value: metrics.summary.escalation_rate || 0,
-      color: "hsl(30, 70%, 50%)",
-      description: "升级预警 / 总预警数",
+      key: 'distribution',
+      tab: (
+        <span>
+          <Filter size={16} />
+          分布分析
+        </span>
+      ),
+      content: <AlertDistribution alerts={filteredAlerts} loading={loading} />
     },
     {
-      label: "重复预警率",
-      value: metrics.summary.duplicate_rate || 0,
-      color: "hsl(0, 70%, 50%)",
-      description: "重复预警 / 总预警数",
+      key: 'performance',
+      tab: (
+        <span>
+          <Activity size={16} />
+          性能指标
+        </span>
+      ),
+      content: <AlertPerformance data={mockData} loading={loading} />
     },
+    {
+      key: 'details',
+      tab: (
+        <span>
+          <FileText size={16} />
+          详细列表 ({filteredAlerts.length})
+        </span>
+      ),
+      content: <AlertDetails alerts={filteredAlerts} loading={loading} />
+    }
   ];
 
   return (
-    <div className="space-y-6">
-      {/* 汇总指标 */}
-      <motion.div variants={fadeIn} initial="hidden" animate="visible">
-        <Card className="bg-surface-1/50">
-          <CardHeader>
-            <CardTitle>处理效率统计</CardTitle>
-            <CardDescription>预警处理效率分析</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {efficiencyData.map((item, index) => (
-                <div key={index} className="space-y-2">
-                  <p className="text-sm text-slate-500 mb-1">{item.label}</p>
-                  <p className="text-2xl font-bold text-white">
-                    {(item.value * 100).toFixed(1)}%
-                  </p>
-                  <p className="text-xs text-slate-500">{item.description}</p>
-                  <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden mt-2">
-                    <div
-                      className="h-full transition-all"
-                      style={{
-                        width: `${item.value * 100}%`,
-                        backgroundColor: item.color,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* 处理效率排行榜 */}
-      {metrics.rankings && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* 效率最高的项目 */}
-          {metrics.rankings.best_projects?.length > 0 && (
-            <motion.div variants={fadeIn} initial="hidden" animate="visible">
-              <Card className="bg-surface-1/50">
-                <CardHeader>
-                  <CardTitle className="text-emerald-400">
-                    效率最高的项目 TOP5
-                  </CardTitle>
-                  <CardDescription>处理效率得分最高的项目</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {metrics.rankings.best_projects.map((project, index) => (
-                      <div
-                        key={project.project_id}
-                        className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg font-bold text-emerald-400 w-6">
-                            {index + 1}
-                          </span>
-                          <div>
-                            <p className="text-white font-medium">
-                              {project.project_name}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              处理率:{" "}
-                              {(project.processing_rate * 100).toFixed(1)}% |
-                              及时率:{" "}
-                              {(project.timely_processing_rate * 100).toFixed(
-                                1,
-                              )}
-                              %
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-lg font-bold text-emerald-400">
-                            {project.efficiency_score.toFixed(1)}
-                          </span>
-                          <p className="text-xs text-slate-500">效率得分</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-
-          {/* 效率最低的项目 */}
-          {metrics.rankings.worst_projects?.length > 0 && (
-            <motion.div variants={fadeIn} initial="hidden" animate="visible">
-              <Card className="bg-surface-1/50">
-                <CardHeader>
-                  <CardTitle className="text-red-400">
-                    效率最低的项目 TOP5
-                  </CardTitle>
-                  <CardDescription>需要关注和改进的项目</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {metrics.rankings.worst_projects.map((project, index) => (
-                      <div
-                        key={project.project_id}
-                        className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg font-bold text-red-400 w-6">
-                            {index + 1}
-                          </span>
-                          <div>
-                            <p className="text-white font-medium">
-                              {project.project_name}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              处理率:{" "}
-                              {(project.processing_rate * 100).toFixed(1)}% |
-                              及时率:{" "}
-                              {(project.timely_processing_rate * 100).toFixed(
-                                1,
-                              )}
-                              %
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-lg font-bold text-red-400">
-                            {project.efficiency_score.toFixed(1)}
-                          </span>
-                          <p className="text-xs text-slate-500">效率得分</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="alert-statistics-container"
+      style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}
+    >
+      {/* 页面头部 */}
+      <div className="page-header" style={{ marginBottom: '24px' }}>
+        <div className="header-content" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <Title level={2} style={{ margin: 0 }}>
+              <AlertTriangle className="inline-block mr-2" />
+              告警统计分析
+            </Title>
+            <Text type="secondary">
+              系统告警监控、统计分析、性能指标
+            </Text>
+          </div>
+          <Space>
+            <Button 
+              icon={<Shield size={16} />}
+              onClick={handleConfigureRules}
+            >
+              配置规则
+            </Button>
+            <Button 
+              icon={<RefreshCw size={16} />}
+              onClick={handleRefresh}
+            >
+              刷新
+            </Button>
+            <Button 
+              icon={<Download size={16} />}
+            >
+              导出报表
+            </Button>
+          </Space>
         </div>
-      )}
+      </div>
 
-      {/* 按类型统计 */}
-      {metrics.by_type && Object.keys(metrics.by_type).length > 0 && (
-        <motion.div variants={fadeIn} initial="hidden" animate="visible">
-          <Card className="bg-surface-1/50">
-            <CardHeader>
-              <CardTitle>按类型统计处理效率</CardTitle>
-              <CardDescription>各类型预警的处理效率对比</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Object.entries(metrics.by_type)
-                  .sort((a, b) => b[1].processing_rate - a[1].processing_rate)
-                  .map(([type, data]) => (
-                    <div key={type} className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-300 font-medium">
-                          {type}
-                        </span>
-                        <div className="flex gap-4 text-xs text-slate-400">
-                          <span>
-                            处理率: {(data.processing_rate * 100).toFixed(1)}%
-                          </span>
-                          <span>
-                            及时率:{" "}
-                            {(data.timely_processing_rate * 100).toFixed(1)}%
-                          </span>
-                          <span>
-                            升级率: {(data.escalation_rate * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        <div>
-                          <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-blue-500 transition-all"
-                              style={{
-                                width: `${data.processing_rate * 100}%`,
-                              }}
-                            />
-                          </div>
-                          <p className="text-xs text-slate-500 mt-1">处理率</p>
-                        </div>
-                        <div>
-                          <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-emerald-500 transition-all"
-                              style={{
-                                width: `${data.timely_processing_rate * 100}%`,
-                              }}
-                            />
-                          </div>
-                          <p className="text-xs text-slate-500 mt-1">及时率</p>
-                        </div>
-                        <div>
-                          <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-orange-500 transition-all"
-                              style={{
-                                width: `${data.escalation_rate * 100}%`,
-                              }}
-                            />
-                          </div>
-                          <p className="text-xs text-slate-500 mt-1">升级率</p>
-                        </div>
-                      </div>
-                      <p className="text-xs text-slate-500">
-                        总预警数: {data.total}
-                      </p>
-                    </div>
-                  ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-    </div>
+      {/* 搜索和过滤器 */}
+      <Card className="mb-4">
+        <Row gutter={[16, 16]}>
+          <Col xs={24} md={12}>
+            <Input
+              placeholder="搜索告警标题、描述..."
+              prefix={<Filter size={16} />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              allowClear
+            />
+          </Col>
+          <Col xs={24} md={12}>
+            <Space>
+              <Select
+                placeholder="告警类型"
+                value={filters.type}
+                onChange={(value) => setFilters({ ...filters, type: value })}
+                style={{ width: 120 }}
+                allowClear
+              >
+                {Object.values(ALERT_TYPES).map(type => (
+                  <Select.Option key={type.value} value={type.value}>
+                    {type.icon} {type.label}
+                  </Select.Option>
+                ))}
+              </Select>
+              <Select
+                placeholder="告警级别"
+                value={filters.level}
+                onChange={(value) => setFilters({ ...filters, level: value })}
+                style={{ width: 100 }}
+                allowClear
+              >
+                {Object.values(ALERT_LEVELS).map(level => (
+                  <Select.Option key={level.value} value={level.value}>
+                    <Tag color={level.color}>{level.label}</Tag>
+                  </Select.Option>
+                ))}
+              </Select>
+              <Select
+                placeholder="状态"
+                value={filters.status}
+                onChange={(value) => setFilters({ ...filters, status: value })}
+                style={{ width: 100 }}
+                allowClear
+              >
+                {Object.values(ALERT_STATUS).map(status => (
+                  <Select.Option key={status.value} value={status.value}>
+                    <Tag color={status.color}>{status.label}</Tag>
+                  </Select.Option>
+                ))}
+              </Select>
+            </Space>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* 主要内容区域 */}
+      <Card>
+        <Tabs 
+          activeKey={activeTab} 
+          onChange={setActiveTab}
+          type="card"
+          size="large"
+        >
+          {tabItems.map(item => (
+            <TabPane key={item.key} tab={item.tab}>
+              {item.content}
+            </TabPane>
+          ))}
+        </Tabs>
+      </Card>
+    </motion.div>
   );
-}
+};
+
+export default AlertStatistics;

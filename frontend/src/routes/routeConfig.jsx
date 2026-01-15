@@ -223,6 +223,8 @@ import CustomerManagement from "../pages/CustomerManagement";
 import Customer360 from "../pages/Customer360";
 import SupplierManagementData from "../pages/SupplierManagementData";
 import DepartmentManagement from "../pages/DepartmentManagement";
+import OrganizationManagement from "../pages/OrganizationManagement";
+import PositionManagement from "../pages/PositionManagement";
 import MobileWorkerTaskList from "../pages/mobile/MobileWorkerTaskList";
 import MobileScanStart from "../pages/mobile/MobileScanStart";
 import MobileProgressReport from "../pages/mobile/MobileProgressReport";
@@ -1171,6 +1173,8 @@ export function AppRoutes() {
         element={<SupplierManagementData />}
       />
       <Route path="/department-management" element={<DepartmentManagement />} />
+      <Route path="/organization-management" element={<OrganizationManagement />} />
+      <Route path="/position-management" element={<PositionManagement />} />
 
       {/* Mobile Pages */}
       <Route path="/mobile/tasks" element={<MobileWorkerTaskList />} />
