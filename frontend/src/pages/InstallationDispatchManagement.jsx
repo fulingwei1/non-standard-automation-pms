@@ -225,7 +225,8 @@ export default function InstallationDispatchManagement() {
   const fetchUsers = async () => {
     try {
       const res = await userApi.list({ page_size: 1000 });
-      setUsers(res.data || []);
+      const data = res.data || res;
+      setUsers(data.items || data || []);
     } catch (error) {
       console.error("Failed to fetch users:", error);
       toast.error("获取用户列表失败");

@@ -133,7 +133,8 @@ export default function UserManagement() {
       };
 
       const response = await userApi.list(params);
-      setUsers(response.data || []);
+      const data = response.data || response;
+      setUsers(data.items || data || []);
     } catch (error) {
       console.error("Failed to fetch users:", error);
       toast.error("获取用户列表失败");
@@ -145,7 +146,8 @@ export default function UserManagement() {
   const fetchRoles = async () => {
     try {
       const response = await roleApi.list({ page: 1, page_size: 100 });
-      setRoles(response.data || []);
+      const data = response.data || response;
+      setRoles(data.items || data || []);
     } catch (error) {
       console.error("Failed to fetch roles:", error);
       toast.error("获取角色列表失败");

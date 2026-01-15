@@ -25,6 +25,7 @@ import {
   MessageSquare,
   Calendar,
   User,
+  Users,
   Clock,
   FileText,
   CheckCircle2,
@@ -201,15 +202,19 @@ export default function CustomerCommunication() {
         userApi.list({ page_size: 1000 }),
       ]);
 
-      const transformedCommunications = commRes.data.map((comm) => ({
+      const commData = commRes.data?.items || commRes.data || [];
+      const customerData = customerRes.data?.items || customerRes.data || [];
+      const userData = userRes.data?.items || userRes.data || [];
+
+      const transformedCommunications = commData.map((comm) => ({
         ...comm,
-        customer: customerRes.data.find((c) => c.id === comm.customer_id),
-        assigned_user: userRes.data.find((u) => u.id === comm.assigned_to),
+        customer: customerData.find((c) => c.id === comm.customer_id),
+        assigned_user: userData.find((u) => u.id === comm.assigned_to),
       }));
 
       setCommunications(transformedCommunications);
-      setCustomers(customerRes.data);
-      setUsers(userRes.data);
+      setCustomers(customerData);
+      setUsers(userData);
     } catch (error) {
       console.error("Failed to fetch data:", error);
       toast.error("加载数据失败");
