@@ -120,28 +120,28 @@ from app.api.v1.endpoints.ecn import router as ecn_router
 api_router.include_router(ecn_router, prefix="", tags=["ecn"])
 # 外协管理模块已拆分为outsourcing包
 from app.api.v1.endpoints.outsourcing import router as outsourcing_router
-api_router.include_router(outsourcing_router, prefix="/outsourcing", tags=["outsourcing"])
+api_router.include_router(outsourcing_router, prefix="", tags=["outsourcing"])
 api_router.include_router(acceptance.router, prefix="", tags=["acceptance"])
 api_router.include_router(material_demands.router, prefix="", tags=["material-demands"])
 # 任务中心模块已拆分为task_center包
 from app.api.v1.endpoints.task_center import router as task_center_router
-api_router.include_router(task_center_router, prefix="/task-center", tags=["task-center"])
+api_router.include_router(task_center_router, prefix="", tags=["task-center"])
 api_router.include_router(workload.router, prefix="", tags=["workload"])
 # 工时管理模块已拆分为timesheet包
 from app.api.v1.endpoints.timesheet import router as timesheet_router
-api_router.include_router(timesheet_router, prefix="/timesheet", tags=["timesheet"])
+api_router.include_router(timesheet_router, prefix="", tags=["timesheet"])
 # PMO模块已拆分为pmo包
 from app.api.v1.endpoints.pmo import router as pmo_router
-api_router.include_router(pmo_router, prefix="/pmo", tags=["pmo"])
+api_router.include_router(pmo_router, prefix="", tags=["pmo"])
 # 售前模块已拆分为presale包
 from app.api.v1.endpoints.presale import router as presale_router
-api_router.include_router(presale_router, prefix="/presale", tags=["presale"])
+api_router.include_router(presale_router, prefix="", tags=["presale"])
 # 绩效管理模块已拆分为performance包
 from app.api.v1.endpoints.performance import router as performance_router
-api_router.include_router(performance_router, prefix="/performance", tags=["performance"])
+api_router.include_router(performance_router, prefix="", tags=["performance"])
 # 报表中心模块已拆分为report_center包
 from app.api.v1.endpoints.report_center import router as report_center_router
-api_router.include_router(report_center_router, prefix="/report-center", tags=["report-center"])
+api_router.include_router(report_center_router, prefix="", tags=["report-center"])
 api_router.include_router(data_import_export.router, prefix="/import", tags=["data-import-export"])
 api_router.include_router(business_support.router, prefix="/business-support", tags=["business-support"])
 # 商务支持订单模块已拆分为子模块，从business_support_orders包导入
@@ -150,29 +150,29 @@ api_router.include_router(business_support_orders_router, prefix="/business-supp
 api_router.include_router(installation_dispatch.router, prefix="/installation-dispatch", tags=["installation-dispatch"])
 # 售后服务模块已拆分为service包
 from app.api.v1.endpoints.service import router as service_router
-api_router.include_router(service_router, prefix="/service", tags=["service"])
+api_router.include_router(service_router, prefix="", tags=["service"])
 api_router.include_router(sla.router, prefix="/sla", tags=["sla"])
 api_router.include_router(itr.router, prefix="/itr", tags=["itr"])
 # 研发项目模块已拆分为rd_project包
 from app.api.v1.endpoints.rd_project import router as rd_project_router
-api_router.include_router(rd_project_router, prefix="/rd-project", tags=["rd-project"])
+api_router.include_router(rd_project_router, prefix="", tags=["rd-project"])
 api_router.include_router(engineers.router, prefix="/engineers", tags=["engineers"])
 api_router.include_router(technical_review.router, prefix="", tags=["technical-review"])
 # 奖金管理模块已拆分为bonus包
 from app.api.v1.endpoints.bonus import router as bonus_router
-api_router.include_router(bonus_router, prefix="/bonus", tags=["bonus"])
+api_router.include_router(bonus_router, prefix="", tags=["bonus"])
 api_router.include_router(project_evaluation.router, prefix="/project-evaluation", tags=["project-evaluation"])
 api_router.include_router(hourly_rate.router, prefix="/hourly-rates", tags=["hourly-rates"])
 api_router.include_router(qualification.router, prefix="/qualifications", tags=["qualifications"])
 api_router.include_router(scheduler.router, prefix="/scheduler", tags=["scheduler"])
 # 装配套件模块已拆分为assembly_kit包
 from app.api.v1.endpoints.assembly_kit import router as assembly_kit_router
-api_router.include_router(assembly_kit_router, prefix="/assembly-kit", tags=["assembly-kit"])
+api_router.include_router(assembly_kit_router, prefix="", tags=["assembly-kit"])
 api_router.include_router(staff_matching.router, prefix="/staff-matching", tags=["staff-matching"])
 api_router.include_router(project_roles.router, prefix="/project-roles", tags=["project-roles"])
 # 管理节律模块已拆分为management_rhythm包
 from app.api.v1.endpoints.management_rhythm import router as management_rhythm_router
-api_router.include_router(management_rhythm_router, prefix="/management-rhythm", tags=["management-rhythm"])
+api_router.include_router(management_rhythm_router, prefix="", tags=["management-rhythm"])
 api_router.include_router(culture_wall.router, prefix="", tags=["culture-wall"])
 from app.api.v1.endpoints import culture_wall_config
 api_router.include_router(culture_wall_config.router, prefix="", tags=["culture-wall-config"])

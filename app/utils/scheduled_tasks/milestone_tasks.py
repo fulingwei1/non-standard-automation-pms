@@ -17,145 +17,24 @@ logger = logging.getLogger(__name__)
 def check_milestone_alerts():
     """
     里程碑预警服务
-    每天执行一次，检查即将到期或已逾期的里程碑
+    
+    使用重构后的MilestoneAlertService，将原来133行的复杂函数拆分为多个小函数
     """
     try:
         with get_db_session() as db:
-            today = date.today()
-            # 提前3天预警
-            warning_date = today + timedelta(days=3)
-
-            # 查询未完成且计划日期在3天内的里程碑
-            upcoming_milestones = db.query(ProjectMilestone).filter(
-                ProjectMilestone.status != 'COMPLETED',
-                ProjectMilestone.planned_date <= warning_date,
-                ProjectMilestone.planned_date >= today
-            ).all()
-
-            # 查询已逾期的里程碑
-            overdue_milestones = db.query(ProjectMilestone).filter(
-                ProjectMilestone.status != 'COMPLETED',
-                ProjectMilestone.planned_date < today
-            ).all()
-
-            # 获取或创建预警规则
-            warning_rule = db.query(AlertRule).filter(
-                AlertRule.rule_code == 'MILESTONE_WARNING',
-                AlertRule.is_enabled == True
-            ).first()
-
-            if not warning_rule:
-                warning_rule = AlertRule(
-                    rule_code='MILESTONE_WARNING',
-                    rule_name='里程碑即将到期预警',
-                    rule_type=AlertRuleTypeEnum.MILESTONE_DUE.value,
-                    target_type='MILESTONE',
-                    condition_type='THRESHOLD',
-                    condition_operator='LT',
-                    threshold_value='3',
-                    alert_level=AlertLevelEnum.WARNING.value,
-                    is_enabled=True,
-                    is_system=True,
-                    description='当里程碑将在3天内到期时触发预警'
-                )
-                db.add(warning_rule)
-                db.flush()
-
-            critical_rule = db.query(AlertRule).filter(
-                AlertRule.rule_code == 'MILESTONE_OVERDUE',
-                AlertRule.is_enabled == True
-            ).first()
-
-            if not critical_rule:
-                critical_rule = AlertRule(
-                    rule_code='MILESTONE_OVERDUE',
-                    rule_name='里程碑逾期预警',
-                    rule_type=AlertRuleTypeEnum.MILESTONE_DUE.value,
-                    target_type='MILESTONE',
-                    condition_type='THRESHOLD',
-                    condition_operator='LT',
-                    threshold_value='0',
-                    alert_level=AlertLevelEnum.CRITICAL.value,
-                    is_enabled=True,
-                    is_system=True,
-                    description='当里程碑已逾期时触发预警'
-                )
-                db.add(critical_rule)
-                db.flush()
-
-            alert_count = 0
-
-            # 处理即将到期的里程碑
-            for milestone in upcoming_milestones:
-                existing_alert = db.query(AlertRecord).filter(
-                    AlertRecord.target_type == 'MILESTONE',
-                    AlertRecord.target_id == milestone.id,
-                    AlertRecord.status == 'PENDING'
-                ).first()
-
-                if not existing_alert:
-                    days_left = (milestone.planned_date - today).days
-                    alert_no = f'MS{today.strftime("%Y%m%d")}{str(alert_count + 1).zfill(4)}'
-
-                    alert = AlertRecord(
-                        alert_no=alert_no,
-                        rule_id=warning_rule.id,
-                        target_type='MILESTONE',
-                        target_id=milestone.id,
-                        target_no=milestone.milestone_code,
-                        target_name=milestone.milestone_name,
-                        project_id=milestone.project_id,
-                        alert_level=AlertLevelEnum.WARNING.value,
-                        alert_title=f'里程碑即将到期：{milestone.milestone_name}',
-                        alert_content=f'里程碑 {milestone.milestone_code} 将在 {days_left} 天后到期'
-                                      f'（计划日期：{milestone.planned_date}）',
-                        status=AlertStatusEnum.PENDING.value,
-                        triggered_at=datetime.now()
-                    )
-                    db.add(alert)
-                    alert_count += 1
-
-            # 处理已逾期的里程碑
-            for milestone in overdue_milestones:
-                existing_alert = db.query(AlertRecord).filter(
-                    AlertRecord.target_type == 'MILESTONE',
-                    AlertRecord.target_id == milestone.id,
-                    AlertRecord.status == 'PENDING'
-                ).first()
-
-                if not existing_alert:
-                    days_overdue = (today - milestone.planned_date).days
-                    alert_no = f'MS{today.strftime("%Y%m%d")}{str(alert_count + 1).zfill(4)}'
-
-                    alert = AlertRecord(
-                        alert_no=alert_no,
-                        rule_id=critical_rule.id,
-                        target_type='MILESTONE',
-                        target_id=milestone.id,
-                        target_no=milestone.milestone_code,
-                        target_name=milestone.milestone_name,
-                        project_id=milestone.project_id,
-                        alert_level=AlertLevelEnum.CRITICAL.value,
-                        alert_title=f'里程碑已逾期：{milestone.milestone_name}',
-                        alert_content=f'里程碑 {milestone.milestone_code} 已逾期 {days_overdue} 天'
-                                      f'（计划日期：{milestone.planned_date}）',
-                        status=AlertStatusEnum.PENDING.value,
-                        triggered_at=datetime.now()
-                    )
-                    db.add(alert)
-                    alert_count += 1
-
+            from app.services.alert.milestone_alert_service import MilestoneAlertService
+            
+            alert_service = MilestoneAlertService(db)
+            alert_count = alert_service.check_milestone_alerts()
+            
             db.commit()
 
             logger.info(
                 f"[{datetime.now()}] 里程碑预警检查完成: "
-                f"即将到期 {len(upcoming_milestones)} 个, "
-                f"已逾期 {len(overdue_milestones)} 个, 生成 {alert_count} 个预警"
+                f"生成 {alert_count} 个预警"
             )
 
             return {
-                'upcoming_count': len(upcoming_milestones),
-                'overdue_count': len(overdue_milestones),
                 'alert_count': alert_count,
                 'timestamp': datetime.now().isoformat()
             }

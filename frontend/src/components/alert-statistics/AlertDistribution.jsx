@@ -525,3 +525,5 @@ export function AlertDistribution({
     </Card>
   );
 }
+
+export default AlertDistribution;

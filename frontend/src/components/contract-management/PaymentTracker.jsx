@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, Row, Col, Statistic, Table, Tag } from 'antd';
-import { DollarSignOutlined } from '@ant-design/icons';
+import { DollarSign } from 'lucide-react';
 import { CONTRACT_STATUS, CHART_COLORS } from './contractManagementConstants';
 
 const PaymentTracker = ({ contracts = [], loading = false }) => {
@@ -53,7 +53,7 @@ const PaymentTracker = ({ contracts = [], loading = false }) => {
             <Statistic
               title="合同总金额"
               value={stats.total}
-              prefix={<DollarSignOutlined />}
+              prefix={<DollarSign size={16} />}
               valueStyle={{ color: CHART_COLORS.POSITIVE }}
             />
           </Card>
@@ -78,4 +78,3 @@ const PaymentTracker = ({ contracts = [], loading = false }) => {
 };
 
 export default PaymentTracker;
-

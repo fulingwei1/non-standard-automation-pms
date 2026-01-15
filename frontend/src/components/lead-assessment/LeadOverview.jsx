@@ -6,17 +6,15 @@
 import React, { useState, useMemo } from 'react';
 import { Card, Row, Col, Statistic, Progress, Tag, List, Timeline, Alert } from 'antd';
 import { 
-  Target, 
-  TrendingUp, 
+  Target,
+  TrendingUp,
   Users,
   Star,
   Calendar,
   Phone,
-  CheckCircle,
-  ExclamationTriangle,
   Trophy,
   Clock
-} from '@ant-design/icons';
+} from 'lucide-react';
 import { 
   LEAD_SOURCES, 
   LEAD_STATUS, 
@@ -54,13 +52,14 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
     if (!data?.leads) return {};
 
     const distribution = {};
-    Object.keys(LEAD_SOURCES).forEach(key => {
-      distribution[key] = 0;
+    LEAD_SOURCES.forEach(source => {
+      distribution[source.value] = 0;
     });
 
     data.leads.forEach(lead => {
-      if (lead.source && LEAD_SOURCES[lead.source.toUpperCase()]) {
-        distribution[lead.source.toUpperCase()]++;
+      if (!lead.source) return;
+      if (distribution[lead.source] !== undefined) {
+        distribution[lead.source] += 1;
       }
     });
 
@@ -108,23 +107,23 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const renderSourceCard = (sourceKey, count) => {
-    const config = LEAD_SOURCES[sourceKey];
+    const config = LEAD_SOURCES.find((source) => source.value === sourceKey);
     const total = data?.leads?.length || 0;
     const percentage = total > 0 ? (count / total * 100).toFixed(1) : 0;
 
     return (
       <Card key={sourceKey} size="small" className="source-card">
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 14, marginBottom: 4 }}>{config.icon}</div>
-          <div style={{ color: config.color, fontWeight: 'bold', fontSize: 14 }}>
+          <div style={{ fontSize: 14, marginBottom: 4 }}>{config?.icon}</div>
+          <div style={{ color: config?.color, fontWeight: 'bold', fontSize: 14 }}>
             {count}
           </div>
           <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>
-            {config.label}
+            {config?.label || sourceKey}
           </div>
           <Progress 
             percent={percentage} 
-            strokeColor={config.color}
+            strokeColor={config?.color}
             showInfo={false}
             size="small"
           />

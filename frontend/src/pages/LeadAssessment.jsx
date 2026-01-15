@@ -255,7 +255,8 @@ const LeadAssessment = () => {
     let totalScore = 0;
     
     // 预算评分
-    const budgetScore = BUDGET_RANGES[lead.budget?.toUpperCase()]?.weight * 5 || 0;
+    const budgetScore =
+      (BUDGET_RANGES.find((b) => b.value === lead.budget)?.weight || 0) * 5;
     totalScore += budgetScore * ASSESSMENT_CRITERIA.BUDGET.weight;
     
     // 权限评分
@@ -361,10 +362,10 @@ const LeadAssessment = () => {
       dataIndex: 'source',
       key: 'source',
       render: (source) => {
-        const config = LEAD_SOURCES[source?.toUpperCase()];
+        const config = LEAD_SOURCES.find((item) => item.value === source);
         return (
           <Tag color={config?.color}>
-            {config?.icon} {config?.label}
+            {config?.icon} {config?.label || source}
           </Tag>
         );
       }

@@ -6,8 +6,8 @@
 import React, { useState, useMemo } from 'react';
 import { Card, Row, Col, Statistic, Progress, Tag, List, Timeline, Alert, Rate } from 'antd';
 import { 
-  AlertCircle, 
-  CheckCircle, 
+  AlertCircle,
+  CheckCircle2,
   Clock,
   TrendingUp,
   Users,
@@ -15,10 +15,10 @@ import {
   Phone,
   Star,
   Trophy,
-  ExclamationTriangle,
+  AlertTriangle,
   Calendar,
   MessageSquare
-} from '@ant-design/icons';
+} from 'lucide-react';
 import { 
   TICKET_STATUS, 
   PRIORITY_LEVELS, 
@@ -175,7 +175,7 @@ const ServiceOverview = ({ data, loading, onNavigate }) => {
     return (
       <List.Item key={ticket.id}>
         <List.Item.Meta
-          avatar={<AlertCircle style={{ color: priorityConfig?.color, fontSize: 20 }} />}
+          avatar={<AlertCircle size={20} style={{ color: priorityConfig?.color }} />}
           title={
             <div>
               <span style={{ fontWeight: 'bold' }}>{ticket.title}</span>
@@ -234,7 +234,7 @@ const ServiceOverview = ({ data, loading, onNavigate }) => {
             <Statistic
               title="今日解决"
               value={overviewStats.resolvedToday}
-              prefix={<CheckCircle />}
+              prefix={<CheckCircle2 />}
               valueStyle={{ color: CHART_COLORS.POSITIVE }}
             />
           </Card>

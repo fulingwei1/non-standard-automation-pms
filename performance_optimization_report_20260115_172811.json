@@ -1,0 +1,31 @@
+{
+  "test_timestamp": "2026-01-15T17:28:11.700644",
+  "function_complexity": {
+    "improvement_percent": -33.815816488418534,
+    "complex_avg_time": 0.0025547504425048827,
+    "simple_avg_time": 0.0034186601638793944
+  },
+  "cache_performance": {
+    "improvement_percent": 98.82470707827785,
+    "db_avg_time": 0.10446419715881347,
+    "cache_avg_time": 0.0012277603149414063
+  },
+  "code_reduction": {
+    "overall_reduction_percent": 86.34068945622386,
+    "original_total_lines": 6933,
+    "optimized_total_lines": 947,
+    "file_details": {
+      "payment_plan_function": 157,
+      "milestone_alerts": 133,
+      "alerts_py": 2232,
+      "service_py": 2208,
+      "quotes_py": 2203
+    }
+  },
+  "summary": {
+    "function_improvement": false,
+    "cache_improvement": true,
+    "code_reduction": true,
+    "overall_success": false
+  }
+}

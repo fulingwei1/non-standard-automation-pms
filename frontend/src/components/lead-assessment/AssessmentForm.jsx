@@ -38,7 +38,6 @@ import {
 import { Checkbox } from "../../components/ui/checkbox";
 import {
   Textarea,
-  TextareaAutosize,
 } from "../../components/ui/textarea";
 import {
   Dialog,
@@ -154,7 +153,8 @@ export const AssessmentForm = ({
         }
       });
 
-      return totalWeight > 0 ? Math.round((totalScore / totalWeight) * 100) / 100 : 0;
+      // 将 0-5 的评分标准转换为 0-100 的百分制，便于与进度条/阈值配置一致
+      return totalWeight > 0 ? Math.round(((totalScore / totalWeight) * 20) * 100) / 100 : 0;
     };
   }, []);
 

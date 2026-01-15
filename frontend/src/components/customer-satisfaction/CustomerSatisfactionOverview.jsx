@@ -4,13 +4,14 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { Card, Row, Col, Statistic, Progress, Rate, Trend } from 'antd';
+import { Card, Row, Col, Statistic, Progress, Rate } from 'antd';
 import { 
   SmileOutlined, 
   MehOutlined, 
   FrownOutlined,
   TrophyOutlined,
   RiseOutlined,
+  FallOutlined,
   UserOutlined
 } from '@ant-design/icons';
 import { 
@@ -131,7 +132,7 @@ const CustomerSatisfactionOverview = ({ data, loading, onRefresh }) => {
               value={overviewStats.trend.percentage}
               suffix="%"
               prefix={overviewStats.trend.direction === 'up' ? 
-                <RiseOutlined /> : <Trend />}
+                <RiseOutlined /> : <FallOutlined />}
               valueStyle={{ 
                 color: overviewStats.trend.direction === 'up' ? 
                   CHART_COLORS.POSITIVE : CHART_COLORS.NEGATIVE 

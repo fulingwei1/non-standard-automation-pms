@@ -6,15 +6,15 @@
 import React, { useState, useMemo } from 'react';
 import { Card, Row, Col, Statistic, Progress, Tag, Timeline, Alert } from 'antd';
 import { 
-  FileCheck, 
-  DollarSign, 
+  FileCheck,
+  DollarSign,
   Clock,
-  CheckCircle,
-  ExclamationCircle,
+  CheckCircle2,
+  AlertTriangle,
   TrendingUp,
   Users,
   Calendar
-} from '@ant-design/icons';
+} from 'lucide-react';
 import { 
   CONTRACT_STATUS, 
   SIGNATURE_STATUS, 
@@ -123,7 +123,7 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
       <Timeline.Item
         key={contract.id}
         color={urgencyConfig.color}
-        dot={urgency === 'critical' ? <ExclamationCircle /> : <Clock />}
+        dot={urgency === 'critical' ? <AlertTriangle /> : <Clock />}
       >
         <div>
           <div style={{ fontWeight: 'bold' }}>{contract.title}</div>
@@ -183,7 +183,7 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
               title="完成率"
               value={overviewStats.completionRate}
               suffix="%"
-              prefix={<CheckCircle />}
+              prefix={<CheckCircle2 />}
               valueStyle={{ color: CHART_COLORS.SECONDARY }}
               trend={overviewStats.monthlyGrowth}
             />

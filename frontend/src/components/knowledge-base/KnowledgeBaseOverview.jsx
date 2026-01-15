@@ -6,16 +6,16 @@
 import React, { useState, useMemo } from 'react';
 import { Card, Row, Col, Statistic, Progress, Tag, Avatar, List, Button } from 'antd';
 import { 
-  BookOpen, 
-  FileText, 
-  Users, 
+  BookOpen,
+  FileText,
+  Users,
   Download,
   Eye,
   Star,
   TrendingUp,
   FolderOpen,
   Clock
-} from '@ant-design/icons';
+} from 'lucide-react';
 import { 
   KNOWLEDGE_TYPES, 
   FILE_TYPES, 
