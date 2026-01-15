@@ -1,0 +1,320 @@
+# -*- coding: utf-8 -*-
+"""
+外协供应商 - 自动生成
+从 outsourcing.py 拆分
+"""
+
+# -*- coding: utf-8 -*-
+"""
+外协管理 API endpoints
+包含：外协供应商、外协订单、交付与质检、进度与付款
+"""
+
+import logging
+from typing import Any, List, Optional
+from datetime import date, datetime
+from decimal import Decimal
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+logger = logging.getLogger(__name__)
+from sqlalchemy.orm import Session
+from sqlalchemy import or_, desc
+
+from app.api import deps
+from app.core import security
+from app.core.config import settings
+from app.models.user import User
+from app.models.project import Project, Machine
+from app.models.outsourcing import (
+    OutsourcingVendor, OutsourcingOrder, OutsourcingOrderItem,
+    OutsourcingDelivery, OutsourcingDeliveryItem,
+    OutsourcingInspection, OutsourcingProgress, OutsourcingEvaluation, OutsourcingPayment
+)
+from app.schemas.outsourcing import (
+    VendorCreate, VendorUpdate, VendorResponse,
+    OutsourcingOrderCreate, OutsourcingOrderUpdate, OutsourcingOrderResponse, OutsourcingOrderListResponse,
+    OutsourcingOrderItemCreate, OutsourcingOrderItemResponse,
+    OutsourcingDeliveryCreate, OutsourcingDeliveryResponse,
+    OutsourcingInspectionCreate, OutsourcingInspectionResponse,
+    OutsourcingProgressCreate, OutsourcingProgressResponse,
+    OutsourcingPaymentCreate, OutsourcingPaymentUpdate, OutsourcingPaymentResponse
+)
+from app.schemas.common import ResponseModel, PaginatedResponse
+
+router = APIRouter()
+
+
+def generate_order_no(db: Session) -> str:
+    """生成外协订单号：OS-yymmdd-xxx"""
+    today = datetime.now().strftime("%y%m%d")
+    max_order = (
+        db.query(OutsourcingOrder)
+        .filter(OutsourcingOrder.order_no.like(f"OS-{today}-%"))
+        .order_by(desc(OutsourcingOrder.order_no))
+        .first()
+    )
+    if max_order:
+        seq = int(max_order.order_no.split("-")[-1]) + 1
+    else:
+        seq = 1
+    return f"OS-{today}-{seq:03d}"
+
+
+def generate_delivery_no(db: Session) -> str:
+    """生成交付单号：DL-yymmdd-xxx"""
+    today = datetime.now().strftime("%y%m%d")
+    max_delivery = (
+        db.query(OutsourcingDelivery)
+        .filter(OutsourcingDelivery.delivery_no.like(f"DL-{today}-%"))
+        .order_by(desc(OutsourcingDelivery.delivery_no))
+        .first()
+    )
+    if max_delivery:
+        seq = int(max_delivery.delivery_no.split("-")[-1]) + 1
+    else:
+        seq = 1
+    return f"DL-{today}-{seq:03d}"
+
+
+def generate_inspection_no(db: Session) -> str:
+    """生成质检单号：IQ-yymmdd-xxx"""
+    today = datetime.now().strftime("%y%m%d")
+    max_inspection = (
+        db.query(OutsourcingInspection)
+        .filter(OutsourcingInspection.inspection_no.like(f"IQ-{today}-%"))
+        .order_by(desc(OutsourcingInspection.inspection_no))
+        .first()
+    )
+    if max_inspection:
+        seq = int(max_inspection.inspection_no.split("-")[-1]) + 1
+    else:
+        seq = 1
+    return f"IQ-{today}-{seq:03d}"
+
+
+
+from fastapi import APIRouter
+
+router = APIRouter(
+    prefix="/outsourcing/suppliers",
+    tags=["suppliers"]
+)
+
+# 共 5 个路由
+
+# ==================== 外协供应商 ====================
+
+@router.get("/outsourcing-vendors", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
+def read_vendors(
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    keyword: Optional[str] = Query(None, description="关键词搜索（编码/名称）"),
+    vendor_type: Optional[str] = Query(None, description="外协商类型筛选"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取外协商列表
+    """
+    query = db.query(OutsourcingVendor)
+    
+    if keyword:
+        query = query.filter(
+            or_(
+                OutsourcingVendor.vendor_code.like(f"%{keyword}%"),
+                OutsourcingVendor.vendor_name.like(f"%{keyword}%"),
+            )
+        )
+    
+    if vendor_type:
+        query = query.filter(OutsourcingVendor.vendor_type == vendor_type)
+    
+    if status:
+        query = query.filter(OutsourcingVendor.status == status)
+    
+    total = query.count()
+    offset = (page - 1) * page_size
+    vendors = query.order_by(OutsourcingVendor.created_at).offset(offset).limit(page_size).all()
+    
+    items = []
+    for vendor in vendors:
+        items.append(VendorResponse(
+            id=vendor.id,
+            vendor_code=vendor.vendor_code,
+            vendor_name=vendor.vendor_name,
+            vendor_short_name=vendor.vendor_short_name,
+            vendor_type=vendor.vendor_type,
+            contact_person=vendor.contact_person,
+            contact_phone=vendor.contact_phone,
+            quality_rating=vendor.quality_rating or Decimal("0"),
+            delivery_rating=vendor.delivery_rating or Decimal("0"),
+            service_rating=vendor.service_rating or Decimal("0"),
+            overall_rating=vendor.overall_rating or Decimal("0"),
+            status=vendor.status,
+            cooperation_start=vendor.cooperation_start,
+            last_order_date=vendor.last_order_date,
+            created_at=vendor.created_at,
+            updated_at=vendor.updated_at
+        ))
+    
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
+    )
+
+
+@router.get("/outsourcing-vendors/{vendor_id}", response_model=VendorResponse, status_code=status.HTTP_200_OK)
+def read_vendor(
+    vendor_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取外协商详情
+    """
+    vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == vendor_id).first()
+    if not vendor:
+        raise HTTPException(status_code=404, detail="外协商不存在")
+    
+    return VendorResponse(
+        id=vendor.id,
+        vendor_code=vendor.vendor_code,
+        vendor_name=vendor.vendor_name,
+        vendor_short_name=vendor.vendor_short_name,
+        vendor_type=vendor.vendor_type,
+        contact_person=vendor.contact_person,
+        contact_phone=vendor.contact_phone,
+        quality_rating=vendor.quality_rating or Decimal("0"),
+        delivery_rating=vendor.delivery_rating or Decimal("0"),
+        service_rating=vendor.service_rating or Decimal("0"),
+        overall_rating=vendor.overall_rating or Decimal("0"),
+        status=vendor.status,
+        cooperation_start=vendor.cooperation_start,
+        last_order_date=vendor.last_order_date,
+        created_at=vendor.created_at,
+        updated_at=vendor.updated_at
+    )
+
+
+@router.post("/outsourcing-vendors", response_model=VendorResponse, status_code=status.HTTP_201_CREATED)
+def create_vendor(
+    *,
+    db: Session = Depends(deps.get_db),
+    vendor_in: VendorCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    创建外协商
+    """
+    # 检查编码是否已存在
+    existing = db.query(OutsourcingVendor).filter(OutsourcingVendor.vendor_code == vendor_in.vendor_code).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="外协商编码已存在")
+    
+    vendor = OutsourcingVendor(
+        vendor_code=vendor_in.vendor_code,
+        vendor_name=vendor_in.vendor_name,
+        vendor_short_name=vendor_in.vendor_short_name,
+        vendor_type=vendor_in.vendor_type,
+        contact_person=vendor_in.contact_person,
+        contact_phone=vendor_in.contact_phone,
+        contact_email=vendor_in.contact_email,
+        address=vendor_in.address,
+        business_license=vendor_in.business_license,
+        qualification=vendor_in.qualification,
+        capabilities=vendor_in.capabilities,
+        bank_name=vendor_in.bank_name,
+        bank_account=vendor_in.bank_account,
+        tax_number=vendor_in.tax_number,
+        status="ACTIVE",
+        created_by=current_user.id,
+        remark=vendor_in.remark
+    )
+    
+    db.add(vendor)
+    db.commit()
+    db.refresh(vendor)
+    
+    return read_vendor(vendor.id, db, current_user)
+
+
+@router.put("/outsourcing-vendors/{vendor_id}", response_model=VendorResponse, status_code=status.HTTP_200_OK)
+def update_vendor(
+    *,
+    db: Session = Depends(deps.get_db),
+    vendor_id: int,
+    vendor_in: VendorUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    更新外协商
+    """
+    vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == vendor_id).first()
+    if not vendor:
+        raise HTTPException(status_code=404, detail="外协商不存在")
+    
+    update_data = vendor_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(vendor, field, value)
+    
+    db.add(vendor)
+    db.commit()
+    db.refresh(vendor)
+    
+    return read_vendor(vendor_id, db, current_user)
+
+
+@router.post("/outsourcing-vendors/{vendor_id}/evaluations", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+def create_vendor_evaluation(
+    *,
+    db: Session = Depends(deps.get_db),
+    vendor_id: int,
+    quality_rating: Decimal = Query(..., ge=0, le=5, description="质量评分"),
+    delivery_rating: Decimal = Query(..., ge=0, le=5, description="交期评分"),
+    service_rating: Decimal = Query(..., ge=0, le=5, description="服务评分"),
+    eval_period: Optional[str] = Query(None, description="评价周期（如：2025-01）"),
+    remark: Optional[str] = Query(None, description="评价备注"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    外协商评价
+    """
+    vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == vendor_id).first()
+    if not vendor:
+        raise HTTPException(status_code=404, detail="外协商不存在")
+    
+    # 计算综合评分（简单平均）
+    overall_rating = (quality_rating + delivery_rating + service_rating) / 3
+    
+    # 更新外协商评分（取最近评价的平均值或直接更新）
+    vendor.quality_rating = quality_rating
+    vendor.delivery_rating = delivery_rating
+    vendor.service_rating = service_rating
+    vendor.overall_rating = overall_rating
+    
+    # 创建评价记录
+    evaluation = OutsourcingEvaluation(
+        vendor_id=vendor_id,
+        eval_period=eval_period or datetime.now().strftime("%Y-%m"),
+        quality_score=quality_rating,
+        delivery_score=delivery_rating,
+        service_score=service_rating,
+        overall_score=overall_rating,
+        evaluator_id=current_user.id,
+        evaluated_at=datetime.now(),
+        remark=remark
+    )
+    
+    db.add(vendor)
+    db.add(evaluation)
+    db.commit()
+    
+    return ResponseModel(message="评价成功")
+
+
+
